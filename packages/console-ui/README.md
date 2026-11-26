@@ -1,7 +1,8 @@
 # `@shepherdjerred/console-ui`
 
 The shared look of the ops consoles — Hub (`alert-dashboard`), Delivery
-(`delivery`), Go link (`golink`), Flags (`flags`) and Mail (`mail`) — and the
+(`delivery`), Tracker (`tracker`), Go link (`golink`), Flags (`flags`) and
+Mail (`mail`) — and the
 colour source for the ops emails.
 
 It ships a stylesheet, a set of small router-agnostic React components and one

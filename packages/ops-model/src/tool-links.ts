@@ -42,9 +42,10 @@ const POSTHOG_PROJECT_ID = 549_883;
 export type ConsoleLinkGroup = "Apps" | "Tools";
 
 /**
- * One entry in the app switcher shared by Hub, Go link and Flags, and in
- * Hub's launcher and command palette. `id` is stable so each console can
- * mark itself as current and attach its own icon.
+ * One entry in the app switcher shared by the consoles (Hub, Delivery,
+ * Tracker, Go link, Flags), and in Hub's launcher and command palette. `id`
+ * is stable so each console can mark itself as current and attach its own
+ * icon.
  */
 export type ConsoleLink = {
   readonly id: string;

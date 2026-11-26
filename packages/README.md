@@ -83,7 +83,7 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
-| [console-ui](console-ui/)                         | Shared console shell, components and colour tokens for Hub, Go link and Flags  |
+| [console-ui](console-ui/)                         | Shared console shell, components and colour tokens for the ops consoles        |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
 | [bugsink-config](bugsink-config/)                 | Browser-safe Bugsink data collection policy shared by application clients      |
