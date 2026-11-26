@@ -113,11 +113,14 @@ describe("ResultStrip", () => {
 });
 
 describe("WinRateBar", () => {
-  test("formats at most one decimal", () => {
-    expect(formatPercent(65)).toBe("65%");
+  test("always shows one decimal, so 52.0% sits beside 52.6%", () => {
+    expect(formatPercent(65)).toBe("65.0%");
+    expect(formatPercent(52)).toBe("52.0%");
     expect(formatPercent(51.8)).toBe("51.8%");
     expect(formatPercent(43.14)).toBe("43.1%");
-    expect(formatPercent(50.04)).toBe("50%");
+    expect(formatPercent(50.04)).toBe("50.0%");
+    expect(formatPercent(0)).toBe("0.0%");
+    expect(formatPercent(100)).toBe("100.0%");
   });
 
   test("places values on a track the way the public page does", () => {
@@ -130,7 +133,8 @@ describe("WinRateBar", () => {
   test("renders a filled bar with its value and an accessible summary", () => {
     const html = renderToStaticMarkup(<WinRateBar value={65} even you />);
     expect(html).toContain('style="width:65%"');
-    expect(html).toContain('aria-label="Win rate 65%."');
+    expect(html).toContain("65.0%</b>");
+    expect(html).toContain('aria-label="Win rate 65.0%."');
     expect(html).toContain('data-you="true"');
     expect(html).toContain("scout-win-rate__even");
   });
@@ -152,6 +156,22 @@ describe("WinRateBar", () => {
     expect(html).toContain("left:36.25%");
     expect(html).toContain("width:22.5%");
     expect(html).toContain("50%, even");
+  });
+
+  test("shows the ends of a likely range with one decimal", () => {
+    const html = renderToStaticMarkup(
+      <WinRateBar
+        variant="range"
+        value={52}
+        range={{ low: 51, high: 53 }}
+        domain={[48, 56]}
+      />,
+    );
+    expect(html).toContain("51.0%");
+    expect(html).toContain("53.0%");
+    expect(html).toContain(
+      'aria-label="52.0%, likely between 51.0% and 53.0%.',
+    );
   });
 
   test("fails loudly on a value outside 0 to 100 or a backwards range", () => {
