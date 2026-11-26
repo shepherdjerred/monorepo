@@ -1,0 +1,11 @@
+$ErrorActionPreference = 'Stop'
+
+$name = 'HerdrWorktreePool'
+$bun = (Get-Command bun).Source
+$worker = Join-Path '{{ .chezmoi.homeDir }}' 'bin\herdr-worktree-pool.ts'
+$action = New-ScheduledTaskAction -Execute 'conhost.exe' -Argument "--headless `"$bun`" `"$worker`" --seed"
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -StartWhenAvailable -MultipleInstances Queue
+Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
+Start-ScheduledTask -TaskName $name

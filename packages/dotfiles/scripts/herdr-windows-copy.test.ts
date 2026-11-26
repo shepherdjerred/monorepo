@@ -1,4 +1,4 @@
-// Shared Herdr layout, themes, and mods live once in packages/dotfiles and are
+// Shared Herdr layout, themes, mods, and alert sounds live once in packages/dotfiles and are
 // synced onto Windows as real files by run_onchange_after_sync-herdr-app.ps1.tmpl
 // (Herdr on Windows does not load a mod's SVGs through a symlinked folder).
 // Only Windows-specific settings.json and keys.json belong under
@@ -30,14 +30,16 @@ test("packages/dotfiles-windows keeps only Windows-specific Herdr configs", () =
   expect(listFiles(windowsHerdr)).toEqual(["keys.json", "settings.json"]);
 });
 
-test("canonical macOS Herdr source still holds shared layout, themes, and mods", () => {
+test("canonical Herdr source holds the layout, themes, mods, and alert sounds", () => {
   const canonical = listFiles(macHerdr);
   expect(canonical).toContain("layouts/mine.json");
   expect(canonical.some((file) => file.startsWith("themes/"))).toBe(true);
   expect(canonical.some((file) => file.startsWith("mods/"))).toBe(true);
+  expect(canonical).toContain("sounds/agent-done.mp3");
+  expect(canonical).toContain("sounds/agent-needs-attention.mp3");
 });
 
-test("Windows Herdr sync template hashes and copies canonical layout, themes, and mods", async () => {
+test("Windows Herdr sync copies shared files and preserves destination-only files", async () => {
   const source = await Bun.file(syncTemplate).text();
   expect(source).toContain(
     'joinPath (dir .chezmoi.sourceDir) "dotfiles" "private_dot_config" "herdr-app"',
@@ -45,7 +47,22 @@ test("Windows Herdr sync template hashes and copies canonical layout, themes, an
   expect(source).toContain("layouts");
   expect(source).toContain("themes");
   expect(source).toContain("mods");
+  expect(source).toContain('glob (joinPath $srcRoot "sounds" "**" "*")');
+  expect(source).toContain("Sync-DirectoryTree 'sounds'");
+  expect(source).not.toContain("Remove-Item");
   expect(source).toContain("gpui-kit.d.ts");
   expect(source).toContain("jsconfig.json");
   expect(source).toContain("sha256sum");
+});
+
+test("Windows Herdr settings reference the shared alert sounds", async () => {
+  const settings: unknown = await Bun.file(
+    path.join(windowsHerdr, "settings.json"),
+  ).json();
+  expect(settings).toMatchObject({
+    sounds: {
+      done: "sounds/agent-done.mp3",
+      blocked: "sounds/agent-needs-attention.mp3",
+    },
+  });
 });

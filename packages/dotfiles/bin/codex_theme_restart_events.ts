@@ -265,3 +265,31 @@ export function statusReport(input: StatusInput): {
   }
   return { lines, ok };
 }
+
+export async function readAppearance(
+  file: string,
+): Promise<Appearance | undefined> {
+  let contents: string;
+  try {
+    contents = await readFile(file, "utf8");
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return undefined;
+    throw error;
+  }
+  const value = object(JSON.parse(contents)).get("appearance");
+  if (value !== "light" && value !== "dark")
+    throw new Error("Invalid appearance state file");
+  return value;
+}
+
+export async function recordAppearance(
+  file: string,
+  mode: Appearance,
+): Promise<void> {
+  const temporary = `${file}.${String(process.pid)}.tmp`;
+  await writeFile(temporary, `${JSON.stringify({ appearance: mode })}\n`, {
+    mode: 0o600,
+  });
+  await rename(temporary, file);
+}
