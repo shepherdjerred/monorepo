@@ -9,7 +9,6 @@ import {
   type MapScenario as Scenario,
 } from "./scenario.ts";
 import { trainingScenarioFor } from "./training-scenarios.ts";
-import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 
 /** Remap just the disposable match's roster; region and schematic identity stay original. */
 export function controlledMap(raw: unknown, scenario: Scenario): MapContent {
@@ -59,12 +58,21 @@ export async function stageMap(
   source: string,
   output: string,
   mapId: string,
-  options: { duel: boolean; mapTool: string; trainingScenario?: Scenario },
+  options: {
+    duel: boolean;
+    mapTool: string;
+    trainingScenario?: Scenario;
+    /**
+     * Makes the baked nav meshes under `source` present and exact before they
+     * are copied. Git holds only their manifest, so a real caller passes
+     * `ensureNavMeshes`; staging itself never starts a build or a download, and
+     * unit tests pass a no-op.
+     */
+    ensureMeshes: (source: string) => Promise<void>;
+  },
 ) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(mapId))
     throw new Error("Invalid map selection");
-  // Bots need the map's and the lobby's baked nav meshes, which a checkout only has once fetched.
-  await ensureNavMeshes(source);
   const folder = path.join(source, "rwf/maps", mapId);
   const map = MapContent.parse(
     Bun.YAML.parse(await Bun.file(path.join(folder, "map.yml")).text()),
@@ -80,6 +88,8 @@ export async function stageMap(
     ownedScenario,
     options.trainingScenario,
   );
+  // After every input check: a rejected request never reaches the fetch.
+  await options.ensureMeshes(source);
   await mkdir(output, { recursive: false, mode: 0o700 });
   const content = path.join(output, "TheStorm");
   await mkdir(content);

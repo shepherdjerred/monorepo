@@ -73,7 +73,8 @@ final class ShippedMapsTest {
 
     // A refresh re-reads every artifact on disk, so equality proves each hash and size, that the
     // lobby and every map folder has an entry, and that no entry outlives its folder.
-    assertThat(NavManifest.refreshed(RWF)).isEqualTo(manifest);
+    var all = manifest.objects().stream().map(NavManifest.Entry::path).toList();
+    assertThat(NavManifest.refreshed(RWF, all)).isEqualTo(manifest);
     assertThat(manifest.objects())
         .extracting(NavManifest.Entry::path)
         .contains("lobby/" + MapFolder.NAV_FILE)

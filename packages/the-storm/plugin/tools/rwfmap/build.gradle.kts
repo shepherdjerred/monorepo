@@ -41,16 +41,24 @@ val lobbyFolder = rwfRoot.resolve("lobby")
 val mapFolders =
     (mapsRoot.listFiles { file -> file.isDirectory } ?: emptyArray()).sortedBy { it.name }
 
-// A bake changes an artifact's bytes, so every bake ends by recording them. The task reads
-// whichever artifacts are on disk and keeps the entry of one this checkout has not fetched.
-val writeRwfNavManifest =
-    tasks.register<JavaExec>("writeRwfNavManifest") {
-      group = "rwf"
-      description = "Records the sha256 and size of every baked nav.rwfnav in nav-manifest.json."
-      classpath = sourceSets.main.get().runtimeClasspath
-      mainClass = mainClassName
-      args("manifest", rwfRoot.absolutePath)
-    }
+// A bake changes one artifact's bytes, so each bake ends by recording that artifact and no other:
+// a nav.rwfnav left on disk by another branch is stale, never a reason to rewrite its entry.
+// The recorders share one file, so they run one at a time, in this order.
+val navManifestWriters = mutableListOf<TaskProvider<JavaExec>>()
+
+fun registerNavManifestWriter(name: String, artifact: String): TaskProvider<JavaExec> {
+  val writer =
+      tasks.register<JavaExec>(name) {
+        group = "rwf"
+        description = "Records the sha256 and size of the baked $artifact in nav-manifest.json."
+        classpath = sourceSets.main.get().runtimeClasspath
+        mainClass = mainClassName
+        args("manifest", rwfRoot.absolutePath, artifact)
+      }
+  navManifestWriters.lastOrNull()?.let { previous -> writer { mustRunAfter(previous) } }
+  navManifestWriters.add(writer)
+  return writer
+}
 
 // Everything that reads a shipped nav.rwfnav depends on this task: the files are ignored by Git
 // and exist in a checkout only once fetched. A missing or altered object fails the build.
@@ -68,8 +76,6 @@ val fetchRwfNavs =
       outputs
           .files((mapFolders + lobbyFolder).map { it.resolve("nav.rwfnav") })
           .withPropertyName("navFiles")
-      // A rebake in the same invocation wins: its bytes are already what the manifest names.
-      mustRunAfter(writeRwfNavManifest)
     }
 
 fun taskSuffix(mapId: String) =
@@ -89,6 +95,7 @@ val verifyRwfMaps =
 
 mapFolders.forEach { folder ->
   val suffix = taskSuffix(folder.name)
+  val writer = registerNavManifestWriter("writeRwfNavManifest$suffix", "maps/${folder.name}/nav.rwfnav")
   val bake =
       tasks.register<JavaExec>("bakeRwfMap$suffix") {
         group = "rwf"
@@ -98,7 +105,7 @@ mapFolders.forEach { folder ->
         args("bake", folder.absolutePath)
         inputs.files(folder.resolve("map.yml"), folder.resolve("blocks.schem"))
         outputs.files(folder.resolve("nav.rwfnav"), folder.resolve("nav.summary.json"))
-        finalizedBy(writeRwfNavManifest)
+        finalizedBy(writer)
       }
   val verify =
       tasks.register<JavaExec>("verifyRwfMap$suffix") {
@@ -123,9 +130,10 @@ mapFolders.forEach { folder ->
   bakeRwfMaps { dependsOn(bake) }
   verifyRwfMaps { dependsOn(verify, verifyDetails) }
   tasks.test { mustRunAfter(bake) }
-  writeRwfNavManifest { mustRunAfter(bake) }
   fetchRwfNavs { mustRunAfter(bake) }
 }
+
+val lobbyWriter = registerNavManifestWriter("writeRwfNavManifestLobby", "lobby/nav.rwfnav")
 
 val bakeRwfLobby =
     tasks.register<JavaExec>("bakeRwfLobby") {
@@ -136,12 +144,13 @@ val bakeRwfLobby =
       args("bake-lobby", lobbyFolder.absolutePath)
       inputs.files(lobbyFolder.resolve("lobby.yml"), lobbyFolder.resolve("blocks.schem"))
       outputs.files(lobbyFolder.resolve("nav.rwfnav"), lobbyFolder.resolve("nav.summary.json"))
-      finalizedBy(writeRwfNavManifest)
+      finalizedBy(lobbyWriter)
     }
 
-writeRwfNavManifest { mustRunAfter(bakeRwfLobby) }
-
 fetchRwfNavs { mustRunAfter(bakeRwfLobby) }
+
+// A fetch in the same invocation as a bake runs last, so the bake's bytes are what it finds.
+navManifestWriters.forEach { writer -> fetchRwfNavs { mustRunAfter(writer) } }
 
 val verifyRwfLobby =
     tasks.register<JavaExec>("verifyRwfLobby") {
@@ -161,7 +170,8 @@ bakeRwfMaps { dependsOn(bakeRwfLobby) }
 // requests a rebake and tests in one invocation, finish generation before reading those inputs.
 listOf(":rwf", ":rwfbots").forEach { consumer ->
   rootProject.project(consumer).tasks.named("test") {
-    mustRunAfter(bakeRwfMaps, bakeRwfLobby, writeRwfNavManifest)
+    mustRunAfter(bakeRwfMaps, bakeRwfLobby)
+    navManifestWriters.forEach { writer -> mustRunAfter(writer) }
   }
 }
 
@@ -176,7 +186,8 @@ tasks.test {
   // The largest shipped navigation artifact expands to over 200 MiB before its graph is decoded.
   maxHeapSize = "2g"
   dependsOn(fetchRwfNavs)
-  mustRunAfter(bakeRwfLobby, writeRwfNavManifest)
+  mustRunAfter(bakeRwfLobby)
+  navManifestWriters.forEach { writer -> mustRunAfter(writer) }
   inputs.dir(mapsRoot).withPropertyName("shippedMaps").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
       .dir(lobbyFolder)

@@ -15,9 +15,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.function.Function;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * {@code rwf/nav-manifest.json}: the tracked description of every baked {@code nav.rwfnav}. The
@@ -100,31 +99,42 @@ public record NavManifest(String baseUrl, List<Entry> objects) {
   }
 
   /**
-   * The manifest of {@code rwfRoot} after a bake: every artifact present on disk is described by
-   * its current bytes, and one that has not been fetched into this checkout keeps the entry it
-   * already has. A lobby or map folder with neither fails; an entry whose folder is gone is
-   * dropped.
+   * The manifest of {@code rwfRoot} after {@code baked} were baked: each of those artifacts is
+   * described by its bytes on disk, and every other entry is kept exactly as the manifest has it. A
+   * file left on disk by another branch is stale, not authoritative, so an untouched artifact is
+   * never rehashed; {@link NavFetch} restores it. Naming a path that is not a lobby or map
+   * artifact, or one that was not written, fails, as does a folder left with no entry. An entry
+   * whose folder is gone is dropped.
+   *
+   * @param baked paths below {@code rwfRoot}, such as {@code maps/valley/nav.rwfnav}
    */
-  public static NavManifest refreshed(Path rwfRoot) {
+  public static NavManifest refreshed(Path rwfRoot, List<String> baked) {
     var current = load(rwfRoot);
-    var known =
-        current.objects().stream()
-            .collect(Collectors.toUnmodifiableMap(Entry::path, Function.identity()));
-    var entries = new ArrayList<Entry>();
-    for (var path : artifactPaths(rwfRoot)) {
-      var file = rwfRoot.resolve(path);
-      if (Files.isRegularFile(file)) {
-        entries.add(describe(path, file));
-        continue;
+    var folders = artifactPaths(rwfRoot);
+    var entries = new TreeMap<String, Entry>();
+    for (var entry : current.objects()) {
+      if (folders.contains(entry.path())) {
+        entries.put(entry.path(), entry);
       }
-      var kept = known.get(path);
-      if (kept == null) {
-        throw new IllegalStateException(
-            file + " is missing and " + FILE_NAME + " has no entry for it; bake it first");
-      }
-      entries.add(kept);
     }
-    return new NavManifest(current.baseUrl(), entries);
+    for (var path : baked) {
+      if (!folders.contains(path)) {
+        throw new IllegalArgumentException(
+            path + " is not the nav.rwfnav of a lobby or map folder under " + rwfRoot);
+      }
+      var file = rwfRoot.resolve(path);
+      if (!Files.isRegularFile(file)) {
+        throw new IllegalStateException(file + " was not written, so it cannot be recorded");
+      }
+      entries.put(path, describe(path, file));
+    }
+    for (var path : folders) {
+      if (!entries.containsKey(path)) {
+        throw new IllegalStateException(
+            FILE_NAME + " has no entry for " + path + "; bake it before recording it");
+      }
+    }
+    return new NavManifest(current.baseUrl(), List.copyOf(entries.values()));
   }
 
   /** Writes this manifest into {@code rwfRoot} in the repository's JSON formatting. */

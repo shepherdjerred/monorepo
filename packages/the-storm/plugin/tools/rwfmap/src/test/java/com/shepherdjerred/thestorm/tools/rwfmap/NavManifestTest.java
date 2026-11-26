@@ -81,39 +81,69 @@ final class NavManifestTest {
   }
 
   @Test
-  void refreshingDescribesBakedFilesAndKeepsEntriesOfArtifactsNotFetched() throws IOException {
+  void refreshingRecordsTheBakedArtifactAndLeavesEveryOtherEntryAlone() throws IOException {
+    // Map "stale" holds a mesh another branch left behind; the manifest says it is sha('2').
     nav("lobby", "abc");
     nav("maps/baked", "rebaked");
+    nav("maps/stale", "left by another branch");
     Files.createDirectories(rwf.resolve("maps/unfetched"));
     new NavManifest(
             BASE,
             List.of(
+                new NavManifest.Entry("lobby/nav.rwfnav", sha('9'), 11),
                 new NavManifest.Entry("maps/baked/nav.rwfnav", sha('1'), 99),
-                new NavManifest.Entry("maps/removed/nav.rwfnav", sha('2'), 7),
+                new NavManifest.Entry("maps/removed/nav.rwfnav", sha('7'), 7),
+                new NavManifest.Entry("maps/stale/nav.rwfnav", sha('2'), 5),
                 new NavManifest.Entry("maps/unfetched/nav.rwfnav", sha('3'), 8)))
         .write(rwf);
 
-    var refreshed = NavManifest.refreshed(rwf);
+    var refreshed = NavManifest.refreshed(rwf, List.of("maps/baked/nav.rwfnav"));
 
     assertThat(refreshed.baseUrl()).isEqualTo(BASE);
     assertThat(refreshed.objects())
         .containsExactly(
-            new NavManifest.Entry("lobby/nav.rwfnav", ABC_SHA, 3),
+            new NavManifest.Entry("lobby/nav.rwfnav", sha('9'), 11),
             new NavManifest.Entry(
                 "maps/baked/nav.rwfnav",
                 NavManifest.sha256(rwf.resolve("maps/baked/nav.rwfnav")),
                 7),
+            new NavManifest.Entry("maps/stale/nav.rwfnav", sha('2'), 5),
             new NavManifest.Entry("maps/unfetched/nav.rwfnav", sha('3'), 8));
+
+    var lobby = NavManifest.refreshed(rwf, List.of("lobby/nav.rwfnav", "maps/baked/nav.rwfnav"));
+    assertThat(lobby.objects().getFirst())
+        .isEqualTo(new NavManifest.Entry("lobby/nav.rwfnav", ABC_SHA, 3));
+  }
+
+  @Test
+  void refreshingRejectsAPathThatIsNotABakedArtifact() throws IOException {
+    nav("lobby", "abc");
+    Files.createDirectories(rwf.resolve("maps/unwritten"));
+    new NavManifest(
+            BASE,
+            List.of(
+                new NavManifest.Entry("lobby/nav.rwfnav", sha('9'), 3),
+                new NavManifest.Entry("maps/unwritten/nav.rwfnav", sha('8'), 3)))
+        .write(rwf);
+
+    assertThatThrownBy(() -> NavManifest.refreshed(rwf, List.of("maps/elsewhere/nav.rwfnav")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("maps/elsewhere/nav.rwfnav is not the nav.rwfnav");
+    assertThatThrownBy(() -> NavManifest.refreshed(rwf, List.of("maps/unwritten/nav.rwfnav")))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("was not written");
   }
 
   @Test
   void refreshingFailsForAFolderWithNeitherAnArtifactNorAnEntry() throws IOException {
+    nav("lobby", "abc");
     Files.createDirectories(rwf.resolve("maps/never-baked"));
-    new NavManifest(BASE, List.of()).write(rwf);
+    new NavManifest(BASE, List.of(new NavManifest.Entry("lobby/nav.rwfnav", sha('9'), 3)))
+        .write(rwf);
 
-    assertThatThrownBy(() -> NavManifest.refreshed(rwf))
+    assertThatThrownBy(() -> NavManifest.refreshed(rwf, List.of("lobby/nav.rwfnav")))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("never-baked")
-        .hasMessageContaining("bake it first");
+        .hasMessageContaining("maps/never-baked/nav.rwfnav")
+        .hasMessageContaining("bake it before recording it");
   }
 }

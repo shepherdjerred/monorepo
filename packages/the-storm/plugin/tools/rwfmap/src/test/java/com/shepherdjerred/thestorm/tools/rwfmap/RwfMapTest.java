@@ -36,7 +36,7 @@ final class RwfMapTest {
     assertThat(run("bake", "x", "--outt", "y")).isEqualTo(RwfMap.USAGE);
     assertThat(run("fetch")).isEqualTo(RwfMap.USAGE);
     assertThat(run("fetch", "x", "y")).isEqualTo(RwfMap.USAGE);
-    assertThat(run("manifest", "x", "y")).isEqualTo(RwfMap.USAGE);
+    assertThat(run("manifest", "x")).isEqualTo(RwfMap.USAGE);
     assertThat(err()).contains("usage:");
   }
 
@@ -53,8 +53,12 @@ final class RwfMapTest {
     assertThat(err()).contains(NavManifest.FILE_NAME).contains("could not be read");
 
     new NavManifest("https://assets.example/nav", java.util.List.of()).write(rwf);
-    assertThat(run("manifest", rwf.toString())).as(err()).isEqualTo(RwfMap.OK);
-    assertThat(out.toString(UTF_8)).contains("recorded 1 nav files").contains("maps:publish-nav");
+    assertThat(run("manifest", rwf.toString(), "maps/training-yard/nav.rwfnav"))
+        .as(err())
+        .isEqualTo(RwfMap.OK);
+    assertThat(out.toString(UTF_8))
+        .contains("recorded 1 baked nav files")
+        .contains("maps:publish-nav");
     assertThat(NavManifest.load(rwf).objects())
         .containsExactly(
             new NavManifest.Entry(

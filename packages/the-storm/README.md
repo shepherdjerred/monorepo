@@ -2154,8 +2154,10 @@ the `fetch` stage.
 After changing a map's or the lobby's terrain or metadata:
 
 1. Bake: `mise exec -- gradle bakeRwfMaps` (or one `bakeRwfMap<Id>`, or
-   `bakeRwfLobby`). The bake rewrites `nav-manifest.json` for the files it
-   wrote; `writeRwfNavManifest` does that step alone.
+   `bakeRwfLobby`). Each bake then records the sha256 and size of the one
+   mesh it wrote in `nav-manifest.json` (`writeRwfNavManifest<Id>`), and no
+   other entry: a stale `nav.rwfnav` left by another branch is replaced by the
+   next fetch, never promoted into the manifest.
 2. Publish: `bun run maps:publish-nav`. It uploads each new mesh under its
    sha256 with the `seaweedfs` AWS profile, then downloads every mesh the
    manifest names from the public URL and compares its bytes. Objects are
