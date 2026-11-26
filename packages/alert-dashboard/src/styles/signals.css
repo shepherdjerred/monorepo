@@ -1,0 +1,337 @@
+/*
+ * Home and every signal list on the console look: sections with a muted
+ * heading row over a hairline `ui-table`, signals under one heading row per
+ * severity, and the change timeline as a table.
+ */
+
+/* ---- Sections on Home ---- */
+.home-section {
+  margin-top: 26px;
+}
+.home-section > .ui-section-head {
+  padding: 0 0 10px;
+}
+.home-section .section-action {
+  margin-left: auto;
+}
+/* Home's tables reach the panel's edges, as the console draws them. */
+.home .home-section > .ui-table-scroll {
+  margin-inline: -24px;
+}
+.home .home-section .ui-table :is(th, td):first-child {
+  padding-left: 24px;
+}
+.home .home-section .ui-table :is(th, td):last-child {
+  padding-right: 24px;
+}
+.home .home-section > .list-empty {
+  padding-inline: 0;
+}
+.home .home-section > .list-toggle {
+  margin-top: 10px;
+}
+.attention-panel {
+  scroll-margin-top: 16px;
+}
+@media (max-width: 900px) {
+  /* The top bar is sticky at this width and would cover the heading. */
+  .attention-panel {
+    scroll-margin-top: calc(var(--hub-topbar-h) + 12px);
+  }
+}
+@media (max-width: 600px) {
+  .home .home-section > .ui-table-scroll {
+    margin-inline: -14px;
+  }
+  .home .home-section .ui-table :is(th, td):first-child {
+    padding-left: 14px;
+  }
+  .home .home-section .ui-table :is(th, td):last-child {
+    padding-right: 14px;
+  }
+}
+
+/* ---- Areas ---- */
+.areas-table .area-name {
+  font-weight: 600;
+}
+.areas-table .area-name a {
+  text-decoration: none;
+}
+.areas-table .area-name a:hover {
+  text-decoration: underline;
+}
+.area-note {
+  display: block;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.areas-table .area-metrics {
+  padding-block: 6px;
+  line-height: 2;
+}
+.areas-table .ui-chip .ui-glyph {
+  margin-left: -2px;
+}
+.areas-table .ui-chip .ui-glyph-icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---- Signal tables ---- */
+.signal-list .signal-cell {
+  min-width: 14rem;
+  padding-block: 8px;
+  font-weight: 400;
+  vertical-align: top;
+}
+.signal-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.signal-line > .ui-glyph {
+  margin-top: 2px;
+}
+.signal-title {
+  min-width: 0;
+  color: var(--ui-ink);
+  font-weight: 500;
+  overflow-wrap: break-word;
+}
+.signal-title a {
+  text-decoration: none;
+}
+.signal-title a:hover {
+  text-decoration: underline;
+}
+.signal-detail {
+  display: block;
+  margin: 2px 0 0 23px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.signal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 4px 0 0 23px;
+  font-size: 12px;
+}
+.signal-list td {
+  padding-block: 8px;
+  vertical-align: top;
+}
+.signal-list .signal-place {
+  color: var(--ui-ink-2);
+}
+.signal-list .signal-since {
+  color: var(--ui-muted);
+}
+.signal-list .ui-table-group th {
+  font-weight: 600;
+}
+.signal-list .ui-table-group .ui-count {
+  margin-left: 8px;
+}
+/* A same-kind group: its title is the disclosure button. */
+.signal-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.signal-group-toggle:hover {
+  text-decoration: underline;
+}
+.signal-group-marker {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+  transition: rotate 120ms ease-out;
+}
+.signal-group-toggle[aria-expanded="true"] .signal-group-marker {
+  rotate: 90deg;
+}
+.new-count {
+  margin-left: 4px;
+  color: var(--ui-muted);
+  font-weight: 400;
+}
+.signal-list .ui-table-child td,
+.signal-list .ui-table-child th {
+  background: var(--ui-head);
+}
+.signal-list .ui-table-child .signal-cell {
+  padding-left: 44px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .signal-group-marker {
+    transition: none;
+  }
+}
+
+/* "Show N more" under a capped list. */
+.list-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  margin: 8px 0;
+  padding: 0 10px;
+  border: 1px solid var(--ui-btn-edge);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: 0 2px 0 var(--ui-btn-edge);
+  cursor: pointer;
+}
+.list-toggle svg {
+  width: 13px;
+  height: 13px;
+  color: var(--ui-muted);
+}
+.list-panel > .list-toggle,
+.ui-table-child .list-toggle {
+  margin-left: 18px;
+}
+
+/* ---- Change timeline ---- */
+.change-list .change-when {
+  width: 6rem;
+  color: var(--ui-muted);
+  text-align: left;
+}
+.change-list td,
+.change-list th {
+  padding-block: 8px;
+  vertical-align: top;
+}
+.change-kind {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--ui-track);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.change-list .change-title {
+  font-weight: 400;
+  overflow-wrap: break-word;
+}
+.change-list .change-title a {
+  text-decoration: none;
+}
+.change-list .change-title a:hover {
+  text-decoration: underline;
+}
+.change-list .change-title .chip {
+  margin-left: 8px;
+}
+
+/* ---- Launcher: two compact groups of links ---- */
+.launcher-groups {
+  display: grid;
+  gap: 14px;
+}
+.launcher-group {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+.launcher-group-label {
+  margin: 5px 0 0;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.launcher-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.launcher-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.launcher-card:hover {
+  background: var(--ui-hover);
+}
+.launcher-card svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
+.launcher-card .launcher-external {
+  width: 11px;
+  height: 11px;
+}
+@container content (max-width: 600px) {
+  .launcher-group {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}
+
+/* ---- Narrow widths ---- */
+/* The place and usage columns fold into the signal cell (a copy that is
+   hidden at wider widths), so the title keeps the room. */
+.signal-inline {
+  display: none;
+}
+@container content (max-width: 640px) {
+  .signal-list :is(th, td).signal-place,
+  .signal-list :is(th, td).signal-used {
+    display: none;
+  }
+  .signal-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin: 4px 0 0 23px;
+    color: var(--ui-ink-2);
+    font-size: 12px;
+  }
+  .signal-list .signal-cell {
+    min-width: 0;
+  }
+  /* An area's verdict and issues stay; its other counts and metrics are on
+     the area's own page. */
+  .areas-table :is(th, td):nth-child(n + 4) {
+    display: none;
+  }
+  .areas-table :is(th, td):nth-child(3) {
+    padding-right: 14px;
+  }
+}
+.areas-table .area-name {
+  white-space: nowrap;
+}

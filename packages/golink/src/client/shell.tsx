@@ -1,214 +1,144 @@
-import type { ReactNode, RefObject } from "react";
-import { CommandIcon, PlusIcon } from "lucide-react";
+import { CommandIcon, LinkIcon, SearchIcon } from "lucide-react";
 import {
   AppSwitcher,
-  Button,
-  Field,
-  HeaderBar,
+  IconButton,
   Sidebar,
   SidebarGroup,
   SidebarItem,
   ThemeRow,
+  TopBar,
   type SidebarLinkProps,
   type ThemeStore,
 } from "@shepherdjerred/console-ui";
 import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
-import {
-  KIND_FILTER_OPTIONS,
-  type KindCounts,
-  type KindFilter,
-} from "./directory-sections.tsx";
 
-const SWITCHER_CURRENT = { label: "Go links", mark: "go" } as const;
+const SWITCHER_CURRENT = { label: "Go links", mark: "G" } as const;
+const SWITCHER_APPS = CONSOLE_LINKS.map(({ label, url, group }) => ({
+  label,
+  url,
+  group,
+}));
+const NAV_LABEL = "Go links";
+const SEARCH_LABEL = "Search links";
 
-function SwitcherForGolink() {
-  return (
-    <AppSwitcher
-      current={SWITCHER_CURRENT}
-      apps={CONSOLE_LINKS.map(({ label, url, group }) => ({
-        label,
-        url,
-        group,
-      }))}
-    />
-  );
+function Switcher() {
+  return <AppSwitcher current={SWITCHER_CURRENT} apps={SWITCHER_APPS} />;
 }
 
-/** A source row is a filter, not a page: a button that reports `aria-current`. */
-function SourceButton({
-  className,
-  "aria-current": ariaCurrent,
-  children,
-  onSelect,
-}: SidebarLinkProps & { onSelect: () => void }) {
-  return (
-    <button
-      type="button"
-      className={className}
-      aria-current={ariaCurrent}
-      onClick={onSelect}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function SourcesSidebar({
-  counts,
-  shortcutCount,
-  kindFilter,
-  theme,
-  onKindFilterChange,
-}: {
-  counts: KindCounts;
+type DirectoryNavProps = {
+  linkCount: number;
   shortcutCount: number;
-  kindFilter: KindFilter;
-  theme: ThemeStore;
-  onKindFilterChange: (next: KindFilter) => void;
-}) {
+};
+
+/** The page's sections, as in-page links. */
+function DirectoryNav({
+  linkCount,
+  shortcutCount,
+  onNavigate,
+}: DirectoryNavProps & { onNavigate?: () => void }) {
+  const renderLink =
+    onNavigate === undefined
+      ? undefined
+      : ({
+          href,
+          className,
+          "aria-current": ariaCurrent,
+          children,
+        }: SidebarLinkProps) => (
+          <a
+            href={href}
+            className={className}
+            aria-current={ariaCurrent}
+            onClick={onNavigate}
+          >
+            {children}
+          </a>
+        );
+  return (
+    <SidebarGroup label="Directory">
+      <SidebarItem
+        href="#links"
+        label="Links"
+        icon={LinkIcon}
+        count={linkCount}
+        current
+        {...(renderLink === undefined ? {} : { renderLink })}
+      />
+      {shortcutCount > 0 && (
+        <SidebarItem
+          href="#shortcuts"
+          label="Shortcuts"
+          icon={CommandIcon}
+          count={shortcutCount}
+          {...(renderLink === undefined ? {} : { renderLink })}
+        />
+      )}
+    </SidebarGroup>
+  );
+}
+
+/** The navigation above phone width: switcher and search, sections, theme. */
+export function GolinkSidebar({
+  linkCount,
+  shortcutCount,
+  theme,
+  onSearch,
+}: DirectoryNavProps & { theme: ThemeStore; onSearch: () => void }) {
   return (
     <Sidebar
-      top={<SwitcherForGolink />}
-      navLabel="Go links"
+      label="Go links"
+      navLabel={NAV_LABEL}
+      top={
+        <>
+          <Switcher />
+          <IconButton
+            icon={SearchIcon}
+            label={SEARCH_LABEL}
+            aria-keyshortcuts="/"
+            title="Search (/)"
+            onClick={onSearch}
+          />
+        </>
+      }
       footer={<ThemeRow store={theme} />}
     >
-      <SidebarGroup label="Sources">
-        {KIND_FILTER_OPTIONS.map((option) => (
-          <SidebarItem
-            key={option.value}
-            href={`#${option.value}`}
-            label={option.label}
-            icon={option.icon}
-            count={counts[option.value]}
-            current={kindFilter === option.value}
-            renderLink={(props) => (
-              <SourceButton
-                {...props}
-                onSelect={() => {
-                  onKindFilterChange(option.value);
-                }}
-              />
-            )}
-          />
-        ))}
-      </SidebarGroup>
-      {shortcutCount > 0 && (
-        <SidebarGroup label="Reference">
-          <SidebarItem
-            href="#shortcuts"
-            label="Shortcuts"
-            icon={CommandIcon}
-            count={shortcutCount}
-          />
-        </SidebarGroup>
-      )}
+      <DirectoryNav linkCount={linkCount} shortcutCount={shortcutCount} />
     </Sidebar>
   );
 }
 
-/** Below 900px the sidebar is hidden; this bar keeps the switcher and the filter. */
-export function MobileBar({
-  kindFilter,
-  counts,
+/** The navigation at phone width: the shared top bar and drawer. */
+export function GolinkTopBar({
+  linkCount,
+  shortcutCount,
   theme,
-  onKindFilterChange,
-}: {
-  kindFilter: KindFilter;
-  counts: KindCounts;
-  theme: ThemeStore;
-  onKindFilterChange: (next: KindFilter) => void;
-}) {
+  onSearch,
+}: DirectoryNavProps & { theme: ThemeStore; onSearch: () => void }) {
   return (
-    <div className="golink-mobile-bar">
-      <SwitcherForGolink />
-      <Field label="Source" layout="inline">
-        {(control) => (
-          <select
-            {...control}
-            value={kindFilter}
-            onChange={(event) => {
-              const next = KIND_FILTER_OPTIONS.find(
-                (option) => option.value === event.target.value,
-              );
-              if (next !== undefined) {
-                onKindFilterChange(next.value);
-              }
-            }}
-          >
-            {KIND_FILTER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} ({String(counts[option.value])})
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-      <ThemeRow store={theme} />
-    </div>
-  );
-}
-
-export function GolinkHeader({
-  query,
-  searchInputRef,
-  viewerLogin,
-  writesEnabled,
-  onQueryChange,
-  onNewLink,
-}: {
-  query: string;
-  searchInputRef: RefObject<HTMLInputElement | null>;
-  viewerLogin: string | null;
-  writesEnabled: boolean;
-  onQueryChange: (next: string) => void;
-  onNewLink: () => void;
-}): ReactNode {
-  return (
-    <HeaderBar
-      title="Go links"
-      meta={viewerLogin ?? undefined}
+    <TopBar
+      switcher={<Switcher />}
+      brand="Go links"
+      navLabel={NAV_LABEL}
+      theme={theme}
       actions={
-        <>
-          <search aria-label="Filter go links" className="golink-search">
-            <form
-              action="/"
-              method="get"
-              onSubmit={(event) => {
-                event.preventDefault();
-              }}
-            >
-              <Field label="Filter" layout="inline">
-                {(control) => (
-                  <input
-                    {...control}
-                    ref={searchInputRef}
-                    name="q"
-                    type="search"
-                    value={query}
-                    placeholder="Name, host or service (/)"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    enterKeyHint="search"
-                    onChange={(event) => {
-                      onQueryChange(event.target.value);
-                    }}
-                  />
-                )}
-              </Field>
-            </form>
-          </search>
-          {writesEnabled ? (
-            <Button variant="primary" onClick={onNewLink}>
-              <PlusIcon aria-hidden />
-              New link
-            </Button>
-          ) : (
-            <span className="ui-chip">Read-only</span>
-          )}
-        </>
+        <button
+          className="ui-topbar-btn"
+          type="button"
+          aria-label={SEARCH_LABEL}
+          aria-keyshortcuts="/"
+          onClick={onSearch}
+        >
+          <SearchIcon aria-hidden="true" />
+        </button>
       }
-    />
+    >
+      {(close) => (
+        <DirectoryNav
+          linkCount={linkCount}
+          shortcutCount={shortcutCount}
+          onNavigate={close}
+        />
+      )}
+    </TopBar>
   );
 }

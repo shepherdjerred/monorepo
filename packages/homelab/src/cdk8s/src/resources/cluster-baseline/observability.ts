@@ -4,6 +4,7 @@ import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
 import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-snapshots.ts";
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
+import { createHostCollectorNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/host-collector-network-policy.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 import { createLokiAlertRules } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/loki.ts";
@@ -16,10 +17,17 @@ import { createKueueMetricsServiceMonitor } from "@shepherdjerred/homelab/cdk8s/
  */
 export async function createPrometheusExporters(chart: Chart): Promise<void> {
   createPrometheusMonitoring(chart);
-  await createSmartctlMonitoring(chart);
-  await createNvmeMetricsMonitoring(chart);
-  await createZfsSnapshotsMonitoring(chart);
-  await createZfsZpoolMonitoring(chart);
+  const { smartctlDaemonSet } = await createSmartctlMonitoring(chart);
+  const { nvmeMetricsDaemonSet } = await createNvmeMetricsMonitoring(chart);
+  const { zfsSnapshotsDaemonSet } = await createZfsSnapshotsMonitoring(chart);
+  const { zfsZpoolDaemonSet } = await createZfsZpoolMonitoring(chart);
+  const collectors = [
+    smartctlDaemonSet,
+    nvmeMetricsDaemonSet,
+    zfsSnapshotsDaemonSet,
+    zfsZpoolDaemonSet,
+  ];
+  createHostCollectorNetworkPolicies(chart, collectors);
   createKubernetesEventExporter(chart);
 }
 

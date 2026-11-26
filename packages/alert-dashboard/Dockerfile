@@ -40,6 +40,9 @@ COPY --parents \
   packages/loaded \
   packages/ops-model \
   packages/ops-clients \
+  packages/llm-observability \
+  packages/llm-models \
+  packages/s3-signed-request \
   packages/config \
   packages/feature-flags \
   ./
@@ -61,11 +64,16 @@ COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig
 # over this tree would point at packages that do not exist in prod-deps.
 COPY --from=build --exclude=node_modules /app/packages/alert-dashboard /app/packages/alert-dashboard
 # These are production dependencies, so the prod install symlinks them; without
-# the source here those symlinks dangle in the runtime image.
+# the source here those symlinks dangle in the runtime image. The traces module
+# reads the LLM archive index through llm-observability, which in turn imports
+# llm-models and s3-signed-request from source.
 COPY --parents \
   packages/loaded \
   packages/ops-model \
   packages/ops-clients \
+  packages/llm-observability \
+  packages/llm-models \
+  packages/s3-signed-request \
   packages/config \
   packages/feature-flags \
   ./

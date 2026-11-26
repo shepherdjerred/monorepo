@@ -1,17 +1,36 @@
+// @vitest-environment jsdom
+import { act, type ReactNode } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { expect, test } from "vitest";
+import { QueryClientProvider } from "@tanstack/react-query";
+import {
+  MemoryRouter,
+  useLocation,
+  useNavigate,
+  type NavigateFunction,
+} from "react-router";
+import { afterEach, expect, test, vi } from "vitest";
 import {
   createThemeStore,
   type ThemeEnvironment,
 } from "@shepherdjerred/console-ui";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
+import { createQueryClient } from "./api.ts";
+import { App } from "./app.tsx";
 import { ConflictBanner } from "./conflict-banner.tsx";
 import { FlagTable } from "./flag-table.tsx";
 import { DeploymentPicker, DeploymentSidebar } from "./sidebar.tsx";
 
+Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
+
 const noop = (): void => {
-  // The static render never fires events.
+  // The theme store's environment never fires events here.
 };
+
+/** Static markup inside a router, which `<Link>` needs. */
+function staticHtml(node: ReactNode): string {
+  return renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
+}
 const environment: ThemeEnvironment = {
   storage: () => ({ getItem: () => null, setItem: noop, removeItem: noop }),
   darkQuery: { matches: false, addEventListener: noop },
@@ -27,7 +46,7 @@ const counts = new Map([
 ]);
 
 test("the sidebar groups Beta and Prod and marks the selected deployment", () => {
-  const html = renderToStaticMarkup(
+  const html = staticHtml(
     <DeploymentSidebar
       ids={ids}
       counts={counts}
@@ -66,7 +85,7 @@ const flags: FlagValue[] = [
 ];
 
 test("the flag table shows state words, mono variant values and the selected row", () => {
-  const html = renderToStaticMarkup(
+  const html = staticHtml(
     <FlagTable
       catalog="scout"
       stage="prod"
@@ -95,7 +114,7 @@ test("the conflict banner shows both versions and offers theirs when it exists",
     rollouts: [],
   };
   const draft: FlagValue = { ...theirs, default: true };
-  const html = renderToStaticMarkup(
+  const html = staticHtml(
     <ConflictBanner
       revision={7}
       theirs={theirs}
@@ -110,7 +129,7 @@ test("the conflict banner shows both versions and offers theirs when it exists",
   expect(html).toContain("Your draft");
   expect(html).toContain("Load their version");
 
-  const gone = renderToStaticMarkup(
+  const gone = staticHtml(
     <ConflictBanner
       revision={8}
       theirs={undefined}
@@ -123,10 +142,317 @@ test("the conflict banner shows both versions and offers theirs when it exists",
 });
 
 test("the narrow-width picker keeps the app switcher and the deployment select", () => {
-  const html = renderToStaticMarkup(
+  const html = staticHtml(
     <DeploymentPicker ids={ids} route={{ catalog: "scout", stage: "prod" }} />,
   );
   expect(html).toContain("switch app");
   expect(html).toContain("<select");
   expect(html).toContain('<option value="scout/prod" selected');
+});
+
+// ---- Client-side navigation, rendered in jsdom against a stubbed API ----
+
+const documents: Readonly<
+  Record<
+    string,
+    {
+      readonly id: string;
+      readonly revision: number;
+      readonly flags: readonly FlagValue[];
+    }
+  >
+> = {
+  "scout/prod": {
+    id: "scout/prod",
+    revision: 4,
+    flags: [...flags, { type: "variant", key: "model", value: "luna" }],
+  },
+  "scout/beta": {
+    id: "scout/beta",
+    revision: 2,
+    flags: [{ type: "variant", key: "budget", value: "500" }],
+  },
+  "golink/prod": {
+    id: "golink/prod",
+    revision: 9,
+    flags: [{ type: "boolean", key: "debug", default: false, rollouts: [] }],
+  },
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  document.body.replaceChildren();
+});
+
+/**
+ * Serves the deployment list and documents. Every request is recorded;
+ * `hold(url)` keeps that URL's response back until the returned release runs.
+ */
+function stubApi() {
+  const calls: string[] = [];
+  const held = new Map<string, Promise<undefined>>();
+  vi.stubGlobal("fetch", async (input: string): Promise<Response> => {
+    calls.push(input);
+    await held.get(input);
+    if (input === "/v1/deployments") {
+      return Response.json({
+        deployments: Object.values(documents).map((stored) => ({
+          id: stored.id,
+          revision: stored.revision,
+          flagCount: stored.flags.length,
+        })),
+      });
+    }
+    const id = decodeURIComponent(input.replace("/v1/deployments/", ""));
+    const found = documents[id];
+    return found === undefined
+      ? Response.json({ error: "unknown deployment" }, { status: 404 })
+      : Response.json(found);
+  });
+  return {
+    calls,
+    hold(url: string): () => Promise<void> {
+      const gate = Promise.withResolvers<undefined>();
+      held.set(url, gate.promise);
+      return async () => {
+        await act(async () => {
+          gate.resolve(undefined);
+          await Promise.resolve();
+        });
+        await settle();
+      };
+    },
+  };
+}
+
+/** Lets fetches resolve and React Query and React commit what they bring. */
+async function settle(): Promise<void> {
+  for (let round = 0; round < 4; round += 1)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+}
+
+let go: NavigateFunction | undefined;
+
+/** Shows the router's location and hands the test its `navigate`. */
+function Probe() {
+  const location = useLocation();
+  go = useNavigate();
+  return <output id="probe">{`${location.pathname}${location.search}`}</output>;
+}
+
+async function mount(entry: string) {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={createQueryClient()}>
+        <MemoryRouter initialEntries={[entry]} useTransitions={false}>
+          <App theme={theme} />
+          <Probe />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await Promise.resolve();
+  });
+  await settle();
+  const query = (selector: string): Element => {
+    const found = container.querySelector(selector);
+    if (found === null) throw new Error(`nothing matches ${selector}`);
+    return found;
+  };
+  const input = (selector: string): HTMLInputElement => {
+    const found = query(selector);
+    if (!(found instanceof HTMLInputElement))
+      throw new TypeError(`${selector} is not an input`);
+    return found;
+  };
+  const select = (selector: string): HTMLSelectElement => {
+    const found = query(selector);
+    if (!(found instanceof HTMLSelectElement))
+      throw new TypeError(`${selector} is not a select`);
+    return found;
+  };
+  const link = (selector: string, text: string): HTMLAnchorElement => {
+    const found = [
+      ...container.querySelectorAll<HTMLAnchorElement>(selector),
+    ].find((anchor) => anchor.textContent.includes(text));
+    if (found === undefined) throw new Error(`no ${selector} link "${text}"`);
+    return found;
+  };
+  return {
+    container,
+    query,
+    input,
+    select,
+    link,
+    location: () => query("#probe").textContent,
+    heading: () => query("h1").textContent,
+  };
+}
+
+/**
+ * Clicks like a user and reports whether the page kept the click: a link the
+ * router handles cancels the browser's default document navigation.
+ */
+async function click(element: HTMLElement): Promise<boolean> {
+  const event = new MouseEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+  });
+  await act(async () => {
+    element.dispatchEvent(event);
+    await Promise.resolve();
+  });
+  await settle();
+  return event.defaultPrevented;
+}
+
+async function type(input: HTMLInputElement, value: string): Promise<void> {
+  await act(async () => {
+    // The prototype's setter, so React's value tracker sees a real change.
+    Reflect.set(HTMLInputElement.prototype, "value", value, input);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await Promise.resolve();
+  });
+  await settle();
+}
+
+async function navigate(to: string): Promise<void> {
+  if (go === undefined) throw new Error("the probe has not rendered");
+  const navigateTo = go;
+  await act(async () => {
+    await navigateTo(to);
+  });
+  await settle();
+}
+
+function documentCalls(calls: readonly string[], id: string): number {
+  return calls.filter((call) => call === `/v1/deployments/${id}`).length;
+}
+
+test("the sidebar and flag rows navigate in the page and a flag reuses its deployment's document", async () => {
+  const api = stubApi();
+  const page = await mount("/");
+  expect(page.heading()).toBe("Flags");
+  expect(document.title).toBe("Flags");
+
+  expect(await click(page.link("a.ui-nav-item", "golink"))).toBe(true);
+  expect(page.location()).toBe("/golink/prod");
+  expect(page.heading()).toBe("golink / prod");
+  expect(document.title).toBe("golink/prod · Flags");
+  expect(
+    page.link("a.ui-nav-item", "golink").getAttribute("aria-current"),
+  ).toBe("page");
+
+  expect(await click(page.link("a.fl-key", "debug"))).toBe(true);
+  expect(page.location()).toBe("/golink/prod/debug");
+  expect(page.query("#flag-heading").textContent).toBe("debug");
+  expect(document.title).toBe("debug · golink/prod · Flags");
+  expect(page.query("a.fl-key[aria-current=page]").textContent).toBe("debug");
+
+  // The list, the deployment and the flag came from one fetch each.
+  expect(api.calls.filter((call) => call === "/v1/deployments")).toHaveLength(
+    1,
+  );
+  expect(documentCalls(api.calls, "golink/prod")).toBe(1);
+});
+
+test("the search lives in ?q= and survives choosing a flag and going back", async () => {
+  stubApi();
+  const page = await mount("/scout/prod");
+  const search = () => page.input('input[type="search"]');
+
+  await type(search(), "flag ");
+  expect(page.location()).toBe("/scout/prod?q=flag+");
+  expect(search().value).toBe("flag ");
+  expect(page.query(".ui-count").textContent).toBe("3 of 5");
+
+  expect(await click(page.link("a.fl-key", "off_flag"))).toBe(true);
+  expect(page.location()).toBe("/scout/prod/off_flag?q=flag");
+  expect(search().value).toBe("flag");
+  expect(page.query(".ui-count").textContent).toBe("3 of 5");
+
+  expect(await click(page.link("a.fl-back", "All flags"))).toBe(true);
+  expect(page.location()).toBe("/scout/prod?q=flag");
+  expect(search().value).toBe("flag");
+
+  await type(search(), "");
+  expect(page.location()).toBe("/scout/prod");
+});
+
+test("the editor draft resets when the flag or the deployment changes", async () => {
+  const api = stubApi();
+  const page = await mount("/scout/beta/budget");
+  const value = () => page.input(".fl-form input");
+  expect(value().value).toBe("500");
+
+  await navigate("/scout/prod/budget");
+  expect(value().value).toBe("20000000");
+  await type(value(), "draft");
+  expect(value().value).toBe("draft");
+
+  // Same flag key, already-loaded deployment: the editor must not keep the draft.
+  await navigate("/scout/beta/budget");
+  expect(value().value).toBe("500");
+
+  await navigate("/scout/prod/budget");
+  await type(value(), "draft");
+  await click(page.link("a.fl-key", "model"));
+  expect(value().value).toBe("luna");
+  await click(page.link("a.fl-key", "budget"));
+  expect(value().value).toBe("20000000");
+
+  expect(documentCalls(api.calls, "scout/prod")).toBe(1);
+  expect(documentCalls(api.calls, "scout/beta")).toBe(1);
+});
+
+test("switching deployments keeps the previous table, busy, under the new header", async () => {
+  const api = stubApi();
+  const page = await mount("/scout/prod/on_flag");
+  const release = api.hold("/v1/deployments/golink/prod");
+
+  await click(page.link("a.ui-nav-item", "golink"));
+  expect(page.location()).toBe("/golink/prod");
+  expect(page.heading()).toBe("golink / prod");
+  expect(document.title).toBe("golink/prod · Flags");
+  expect(page.query(".ui-header-meta").textContent).toBe("Loading…");
+  expect(page.query(".fl-body").getAttribute("aria-busy")).toBe("true");
+  expect(page.query(".fl-list").hasAttribute("inert")).toBe(true);
+  // The kept rows still link to the deployment they belong to.
+  expect(page.link("a.fl-key", "on_flag").getAttribute("href")).toBe(
+    "/scout/prod/on_flag",
+  );
+
+  await release();
+  expect(page.query(".fl-body").hasAttribute("aria-busy")).toBe(false);
+  expect(page.query(".ui-header-meta").textContent).toBe("Revision 9");
+  expect(page.link("a.fl-key", "debug").getAttribute("href")).toBe(
+    "/golink/prod/debug",
+  );
+  expect(page.container.querySelectorAll("a.fl-key")).toHaveLength(1);
+});
+
+test("the narrow-width picker navigates in the page", async () => {
+  stubApi();
+  const page = await mount("/scout/prod");
+  const select = page.select(".fl-picker select");
+  await act(async () => {
+    select.value = "golink/prod";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await Promise.resolve();
+  });
+  await settle();
+  expect(page.location()).toBe("/golink/prod");
+  expect(page.heading()).toBe("golink / prod");
+});
+
+test("an encoded flag key is decoded from the route", async () => {
+  stubApi();
+  const page = await mount("/scout/prod");
+  await navigate("/scout/prod/on%5Fflag");
+  expect(page.query("#flag-heading").textContent).toBe("on_flag");
 });

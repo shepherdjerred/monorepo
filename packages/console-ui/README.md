@@ -49,24 +49,50 @@ exports the raw tokens.
 
 ## Components
 
-| Export             | Renders                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| `ShellFrame`       | Sidebar beside an inset panel. The document scrolls; the panel never does.                              |
-| `Sidebar`          | `<aside>` (named by `label`) with a top row, a named `<nav>`, and a footer pinned to the bottom.        |
-| `SidebarGroup`     | A muted label and a `<ul>` labelled by it.                                                              |
-| `SidebarItem`      | `<li><a>` with icon, label, optional count and `aria-current`. `renderLink` lets a router draw the `a`. |
-| `AppSwitcher`      | Workspace button opening a Base UI menu of `{ label, url, group }` links, same tab.                     |
-| `IconButton`       | Icon-only button; `label` is required and becomes its accessible name.                                  |
-| `HeaderBar`        | 48px bar: `<h1>` title, optional tabs, muted meta, actions.                                             |
-| `Tabs`             | Underlined view toggle as a radio group with one tab stop and arrow, Home and End keys.                 |
-| `FigureStrip`      | A `<dl>` of headline figures with optional hint and severity colour.                                    |
-| `StatusGlyph`      | Severity icon plus its word; `hideLabel` keeps the word for assistive technology.                       |
-| `Meter`            | `role="meter"` 64px bar with visible figure; values past `max` fill the bar.                            |
-| `Chip`             | Bordered label/value pair for key metrics.                                                              |
-| `Button`           | Base UI button, 28px, pressable edge; `variant` is `default` or `primary`.                              |
-| `Field`            | Label, control, hint and error wired with `id`, `aria-describedby` and `aria-invalid`.                  |
-| `ThemeRow`         | Sidebar row cycling system → light → dark.                                                              |
-| `createThemeStore` | Theme preference in `localStorage`, reflected as `html[data-theme]`; React hooks for both values.       |
+| Export             | Renders                                                                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `ShellFrame`       | Sidebar beside an inset panel. The document scrolls; the panel never does.                                |
+| `Sidebar`          | `<aside>` (named by `label`) with a top row, a named `<nav>`, and a footer pinned to the bottom.          |
+| `SidebarGroup`     | A muted label and a `<ul>` labelled by it.                                                                |
+| `SidebarItem`      | `<li><a>` with icon, label, optional count and `aria-current`. `renderLink` lets a router draw the `a`.   |
+| `AppSwitcher`      | Workspace button opening a Base UI menu of `{ label, url, group }` links, same tab.                       |
+| `IconButton`       | Icon-only button; `label` is required and becomes its accessible name.                                    |
+| `HeaderBar`        | 48px bar: `<h1>` title, optional tabs, muted meta, actions.                                               |
+| `Tabs`             | Underlined view toggle as a radio group with one tab stop and arrow, Home and End keys.                   |
+| `FigureStrip`      | A `<dl>` of headline figures with optional hint and severity colour.                                      |
+| `StatusGlyph`      | Severity icon plus its word; `hideLabel` keeps the word for assistive technology.                         |
+| `Meter`            | `role="meter"` 64px bar with visible figure; values past `max` fill the bar.                              |
+| `Chip`             | Bordered label/value pair for key metrics.                                                                |
+| `Button`           | Base UI button, 28px, pressable edge; `variant` is `default` or `primary`.                                |
+| `Field`            | Label, control, hint and error wired with `id`, `aria-describedby` and `aria-invalid`.                    |
+| `ThemeRow`         | Sidebar row cycling system → light → dark.                                                                |
+| `TopBar`           | Phone-width sticky bar (menu, switcher, actions, `ThemeToggle`) opening the navigation in a modal drawer. |
+| `ThemeToggle`      | 44px icon button cycling the theme; used by `TopBar`.                                                     |
+| `createThemeStore` | Theme preference in `localStorage`, reflected as `html[data-theme]`; React hooks for both values.         |
+
+### Page kit
+
+Hub's page layout, for consoles whose pages should read like Hub's. The
+values match Hub's own page styles (`packages/alert-dashboard/src/styles`).
+
+| Export          | Renders                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| `PageBody`      | The page's `<main>`: centred at 1440px, padded, and the `ui-page` size container.         |
+| `PageHeading`   | Accent uppercase eyebrow, large `<h1>`, optional muted description and top-right actions. |
+| `SummaryGrid`   | A named `<dl>` of headline figures, one bordered card each, optional severity colour.     |
+| `Card`          | Rounded, bordered surface (a named `<section>` when given a `label`) for tables.          |
+| `CardToolbar`   | The filter row along the top of a card.                                                   |
+| `SearchField`   | Icon-prefixed 36px search input with a visually hidden label; forwards `ref`.             |
+| `Segmented`     | Pill filter as a radio group with counts, one tab stop, arrow/Home/End keys.              |
+| `Tag`           | Small filled mono label for a category, e.g. a link's source.                             |
+| `Button` `size` | `compact` (default, 28px pressable) or `page` (Hub's 36px quiet button).                  |
+
+Classes: `ui-input` and `ui-select` (36px page controls), `ui-data` and
+`ui-data-scroll` (mono data table with uppercase headers; at phone width each
+row becomes a card whose cells are labelled by `data-label`), `ui-block-head`
+(heading between cards), `ui-banner` (left severity bar, set `data-sev`) and
+`ui-state` (centred loading, empty or error text). Go link uses the page kit;
+Hub's own pages still use its app styles.
 
 Tables, section headings and toolbars are plain markup with classes:
 `ui-table`, `ui-table-scroll`, `ui-table-group`, `ui-table-child`, `ui-num`,
@@ -106,6 +132,8 @@ colours.
 
 - Every rule lives in `@layer ui.reset, ui.tokens, ui.components`, declared in
   that order by `index.css`. An app's unlayered CSS always wins.
+  `components.css` holds the shell and compact components; `page.css` holds
+  the page kit and the top bar.
 - Every class starts with `ui-`, and every colour is a `--ui-*` token.
 - `reset.css` replaces Tailwind v4 Preflight. Its header lists the Preflight
   rules it drops.

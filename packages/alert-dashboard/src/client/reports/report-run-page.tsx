@@ -1,3 +1,5 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
+import { pillSeverity } from "#client/visuals/pill.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { TOOL_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
@@ -6,7 +8,7 @@ import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 
-import { PageHeading, SeverityBadge } from "#client/ops/ops-ui.tsx";
+import { PageHeading } from "#client/ops/ops-ui.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import type { ReportRunDetail } from "#shared/reports-schema";
 import "#styles/engineering.css";
@@ -55,21 +57,21 @@ export function ReportRunBody({
       </Link>
 
       <div className="rep-heading-badges">
-        <SeverityBadge severity={verdictToSeverity(report.verdict)} />
-        <span className="visual-pill visual-pill-neutral">
+        <StatusGlyph severity={verdictToSeverity(report.verdict)} />
+        <span className="visual-pill">
           {verdictLabel(report.verdict)} · {report.execution}
         </span>
-        <span className={`visual-pill visual-pill-${delivery.tone}`}>
+        <span className="visual-pill" data-sev={pillSeverity(delivery.tone)}>
           {delivery.label}
         </span>
         <code className="rep-mailbox-chip">{detail.mailboxTo}</code>
       </div>
 
-      <PageHeading eyebrow={detail.eyebrow} title={detail.subject}>
-        <div className="heading-actions">
+      <PageHeading meta={detail.eyebrow} title={detail.subject}>
+        <>
           {report.remediation?.prUrl === undefined ? null : (
             <a
-              className="button"
+              className="ui-btn"
               href={report.remediation.prUrl}
               target="_blank"
               rel="noreferrer"
@@ -80,7 +82,7 @@ export function ReportRunBody({
           )}
           {report.provenance.temporalUrl === undefined ? null : (
             <a
-              className="button"
+              className="ui-btn"
               href={report.provenance.temporalUrl}
               target="_blank"
               rel="noreferrer"
@@ -100,7 +102,7 @@ export function ReportRunBody({
               <ExternalLinkIcon aria-hidden="true" />
             </a>
           )}
-        </div>
+        </>
       </PageHeading>
 
       <p className="rep-finding-detail">{report.headline}</p>

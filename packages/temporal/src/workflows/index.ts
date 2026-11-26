@@ -46,6 +46,8 @@ import {
 import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
+import { applyClimateSchedule as _applyClimateSchedule } from "./ha/apply-climate-schedule.ts";
+import { reconcileClimate as _reconcileClimate } from "./ha/reconcile-climate.ts";
 import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { reconcileRoborock as _reconcileRoborock } from "./ha/reconcile-roborock.ts";
 import {
@@ -233,6 +235,9 @@ export const welcomeHome = (firstArrival = true): Promise<void> =>
   _welcomeHome(firstArrival);
 export const leavingHome = (): Promise<void> => _leavingHome();
 export const reconcileLock = (): Promise<void> => _reconcileLock();
+export const reconcileClimate = (): Promise<void> => _reconcileClimate();
+export const applyClimateSchedule = (): Promise<void> =>
+  _applyClimateSchedule();
 export const reconcileRoborock = (): Promise<void> => _reconcileRoborock();
 export const petCareAlerts = (s: PetCareAlertsState = {}) => _petCareAlerts(s);
 export const runVacuumIfNotHome = (): Promise<void> => _runVacuumIfNotHome();

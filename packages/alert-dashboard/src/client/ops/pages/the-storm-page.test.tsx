@@ -120,7 +120,7 @@ describe("TheStormPage", () => {
 
     expect(html).toContain("<title>The Storm · Hub</title>");
     expect(html).toContain("Minecraft &amp; community");
-    expect(html).toContain("<h1>The Storm</h1>");
+    expect(html).toContain('<h1 class="ui-header-title">The Storm</h1>');
 
     // Required quick links
     expect(html).toContain('href="/promotion"');

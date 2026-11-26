@@ -159,9 +159,10 @@ write a session journal.
 
 ## Git and pull requests
 
-Feature work uses `toolkit git-spice`; a single PR is a stack of one. Load the
-`monorepo-delivery` skill before branch, stack, PR, or CI-recovery work. Never
-hand-roll a stack rebase or create a feature PR with bare `gh pr create`.
+Feature work uses `toolkit git-spice`. Every stack, including a single PR, is a
+git-spice stack. Load `monorepo-delivery` before branch, stack, PR, or CI work.
+Never hand-roll a rebase, use `gh pr create` or `gh stack` / `github/gh-stack`,
+or set PR bases into a chain. git-spice may register its stacks with GitHub.
 
 The primary commit includes `Why`, `What`, and `Verification` (including live
 checks not run); the PR body adds `Demo` from the complete branch diff so a

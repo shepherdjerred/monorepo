@@ -40,7 +40,7 @@ function render(
 }
 
 function rows(html: string): number {
-  return html.split('<li class="signal"').length - 1;
+  return html.split('<tr class="signal" ').length - 1;
 }
 
 describe("SignalList", () => {
@@ -57,7 +57,9 @@ describe("SignalList", () => {
   it("caps a longer list behind a real, labelled button", () => {
     const html = render(signals(13, "alert"));
     expect(rows(html)).toBe(10);
-    const listId = /<ul class="signal-list" id="([^"]+)"/u.exec(html)?.[1];
+    const listId = /<table class="ui-table signal-list" id="([^"]+)"/u.exec(
+      html,
+    )?.[1];
     expect(listId).toBeDefined();
     expect(html).toContain(
       `<button type="button" class="list-toggle" aria-expanded="false" aria-controls="${listId ?? ""}">Show 3 more`,
@@ -82,19 +84,21 @@ describe("SignalList", () => {
     // Two alerts and the group: three entries, so no cap toggle.
     expect(html).not.toContain("list-toggle");
     expect(rows(html)).toBe(2);
-    expect(html.split('<li class="signal-group"')).toHaveLength(2);
+    expect(html.split('<tr class="signal-group"')).toHaveLength(2);
 
-    const summary = /<summary>(.*?)<\/summary>/u.exec(html)?.[1] ?? "";
+    // The group's row; its title is the disclosure button.
+    const summary =
+      /<tr class="signal-group"(.*?)<\/tr>/u.exec(html)?.[1] ?? "";
     expect(summary).toContain("10 failed Velero restores");
     // Severity is an icon plus a word, never colour alone.
     expect(summary).toContain("Warning");
-    expect(summary).toContain('<span class="new-tag">2 new</span>');
+    expect(summary).toContain('<span class="new-count">2 new</span>');
     expect(summary).toMatch(/oldest \d+d ago/u);
     // The summary is the control; a link inside it would steal the click.
     expect(summary).not.toContain("<a ");
     // Members mount only once the disclosure is opened.
     expect(html).not.toContain("restore-failure 0");
-    expect(html).not.toContain("<details open");
+    expect(html).not.toContain('aria-expanded="true"');
   });
 
   it("counts a group as one entry against the cap", () => {
@@ -127,15 +131,25 @@ describe("estimatedListLines", () => {
   it("gives a row its padding and title, and more for what else it shows", () => {
     const [plain] = signals(1, "alert");
     if (plain === undefined) throw new Error("no signal");
-    expect(estimatedListLines([plain])).toBe(2);
+    // The column head and the one severity heading row come first.
+    expect(estimatedListLines([plain])).toBe(2 + 2);
+    // A second link adds a line of chips; `since` has its own column.
     expect(
-      estimatedListLines([{ ...plain, since: "2026-08-01T00:00:00.000Z" }]),
-    ).toBe(3);
+      estimatedListLines([
+        {
+          ...plain,
+          links: [
+            ...plain.links,
+            { kind: "native", label: "More", url: "https://example.com/more" },
+          ],
+        },
+      ]),
+    ).toBe(2 + 3);
     expect(
       estimatedListLines([
         { ...plain, title: "t".repeat(80), detail: "d".repeat(120) },
       ]),
-    ).toBe(1 + 3 + 3);
+    ).toBe(2 + 1 + 3 + 3);
   });
 
   it("counts a collapsed group as one short row", () => {
@@ -144,14 +158,14 @@ describe("estimatedListLines", () => {
       section: "maintenance",
       detail: "d".repeat(120),
     });
-    expect(estimatedListLines(restores)).toBe(2);
+    expect(estimatedListLines(restores)).toBe(2 + 2);
   });
 
   it("stops at the cap and leaves room for the toggle", () => {
     const list = signals(30, "alert");
-    expect(estimatedListLines(list)).toBe(10 * 2 + 2);
-    expect(estimatedListLines(list, 5)).toBe(5 * 2 + 2);
+    expect(estimatedListLines(list)).toBe(2 + 10 * 2 + 2);
+    expect(estimatedListLines(list, 5)).toBe(2 + 5 * 2 + 2);
     // Twelve fit within the slack, so all twelve show and there is no toggle.
-    expect(estimatedListLines(signals(12, "alert"))).toBe(12 * 2);
+    expect(estimatedListLines(signals(12, "alert"))).toBe(2 + 12 * 2);
   });
 });

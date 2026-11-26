@@ -326,23 +326,56 @@ test("keeps Storm tool versions managed at the authoritative Gradle catalog", as
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),
   );
-  const consumer =
-    "packages/the-storm/plugin/build-logic/src/main/kotlin/storm.java-conventions.gradle.kts";
+  const properties = "packages/the-storm/plugin/gradle.properties";
   const rule = config.packageRules.find(
     (candidate) =>
       candidate.matchManagers?.includes("gradle") === true &&
-      candidate.matchFileNames?.includes(consumer) === true,
+      candidate.matchFileNames?.includes(properties) === true,
   );
   expect(rule?.enabled).toBe(false);
-  expect(rule?.matchFileNames).toEqual([consumer]);
-  const source = await Bun.file(`${root}/${consumer}`).text();
-  expect(source).toContain('toolVersion = version("jacoco")');
-  expect(source).toContain('toolVersion = version("pmd")');
+  expect(rule?.matchDepNames).toEqual(["jacoco", "pmd"]);
+  expect(rule?.matchFileNames).toEqual([properties]);
   const catalog = "packages/the-storm/plugin/gradle/libs.versions.toml";
   expect(config.ignorePaths).not.toContain(catalog);
   const catalogSource = await Bun.file(`${root}/${catalog}`).text();
   expect(catalogSource).toMatch(/^jacoco = "\d+\.\d+\.\d+"$/m);
   expect(catalogSource).toMatch(/^pmd = "\d+\.\d+\.\d+"$/m);
+  for (const line of [
+    'pmd-java = { module = "net.sourceforge.pmd:pmd-java", version.ref = "pmd" }',
+    'jacoco-agent = { module = "org.jacoco:org.jacoco.agent", version.ref = "jacoco" }',
+    'google-java-format = { module = "com.google.googlejavaformat:google-java-format", version.ref = "google-java-format" }',
+  ]) {
+    expect(catalogSource.split("\n")).toContain(line);
+  }
+});
+
+test("holds fabric-api to the client Minecraft line, Node 26 tsconfig bases, and groups Bun", async () => {
+  const config = await loadRenovateConfig();
+  const byName = (name: string) =>
+    config.packageRules.filter((rule) =>
+      rule.matchPackageNames?.includes(name),
+    );
+  const fabric = byName("net.fabricmc.fabric-api:fabric-api")[0];
+  const allowed = new RegExp(String(fabric?.allowedVersions).slice(1, -1));
+  expect(allowed.test("0.165.2+26.3")).toBe(true);
+  expect(allowed.test("0.170.0+26.4")).toBe(false);
+  const replacement = byName("@tsconfig/node24")[0];
+  expect(replacement?.matchUpdateTypes).toEqual(["replacement"]);
+  expect(replacement?.enabled).toBe(false);
+  expect(byName("@tsconfig/node-lts")[0]?.allowedVersions).toBe("<26");
+  const bun = config.packageRules.find((rule) => rule.groupName === "Bun");
+  expect(bun?.matchPackageNames).toEqual([
+    "bun",
+    "oven-sh/bun",
+    "oven/bun",
+    "@types/bun",
+  ]);
+  const fixture = config.packageRules.find((rule) =>
+    rule.matchFileNames?.includes(
+      "scripts/checks/dockerfile-workspace-copies.test.ts",
+    ),
+  );
+  expect(fixture?.enabled).toBe(false);
 });
 
 test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
@@ -642,6 +675,12 @@ const HINTED_PINS: [
     "packages/toolkit/src/lib/brim/capture/engine.ts",
     "pypi",
     "mitmproxy",
+    "plain",
+  ],
+  [
+    "packages/toolkit/src/lib/brim/capture/engine.ts",
+    "python-version",
+    "python",
     "plain",
   ],
   [

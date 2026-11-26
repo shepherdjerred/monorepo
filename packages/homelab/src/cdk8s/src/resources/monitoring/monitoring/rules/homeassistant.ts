@@ -12,6 +12,7 @@ export const TEMPORAL_AUTOMATION_ENTITY_IDS = [
   "light.bedroom",
   "climate.bedroom",
   "climate.master_bathroom",
+  "climate.living_room",
   "sensor.master_bathroom_temperature",
   "zone.home",
   "lock.front_door",

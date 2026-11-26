@@ -3,8 +3,9 @@ import { describe, expect, test } from "vitest";
 import { createThemeStore } from "@shepherdjerred/console-ui";
 import type { LinkItem } from "#shared/contract.ts";
 import { DeleteConfirmDialog } from "./link-dialogs.tsx";
+import { LinksCard, summaryItems } from "./links-card.tsx";
 import { LinksTable } from "./links-table.tsx";
-import { SourcesSidebar } from "./shell.tsx";
+import { GolinkSidebar } from "./shell.tsx";
 
 const noop = (): void => undefined;
 
@@ -38,11 +39,15 @@ const LINKS: readonly LinkItem[] = [
   },
 ];
 
-function renderTable(writesEnabled: boolean, items = LINKS): string {
+function renderTable(
+  writesEnabled: boolean,
+  items = LINKS,
+  totalCount = items.length,
+): string {
   return renderToStaticMarkup(
     <LinksTable
       items={items}
-      totalCount={items.length}
+      totalCount={totalCount}
       writesEnabled={writesEnabled}
       copiedShort={null}
       deletingShort={null}
@@ -91,14 +96,33 @@ describe("LinksTable", () => {
     expect(html).toContain("Read-only");
   });
 
-  test("renders an empty state", () => {
-    expect(renderTable(true, [])).toContain(
-      "No shortlinks match the current filter.",
+  test("renders an empty state for a filter and for an empty directory", () => {
+    expect(renderTable(true, [], LINKS.length)).toBe(
+      '<p class="ui-state">No shortlinks match the current filter.</p>',
+    );
+    expect(renderTable(true, [], 0)).toContain("No shortlinks yet.");
+  });
+
+  test("is a Hub data table whose cells carry their phone-card labels", () => {
+    const html = renderTable(true);
+    expect(html).toMatch(
+      /^<div class="ui-data-scroll"><table class="ui-data golink-links">/u,
+    );
+    for (const label of ["Shortlink", "Destination", "Source", "Clicks"]) {
+      expect(html).toContain(`data-label="${label}"`);
+    }
+  });
+
+  test("shows the source as a tag titled with its detail", () => {
+    expect(renderTable(true)).toMatch(
+      /<span class="ui-tag" title="Tailscale cluster ingress"><svg[^>]*>(?:(?!<\/span>)[\s\S])*Tailnet Ingress<\/span>/u,
     );
   });
 });
 
-describe("SourcesSidebar", () => {
+const COUNTS = { all: 67, manual: 4, ingress: 36, site: 25, alias: 2 };
+
+describe("GolinkSidebar", () => {
   const theme = createThemeStore("golink-theme", {
     storage: () => ({ getItem: () => null, setItem: noop, removeItem: noop }),
     darkQuery: { matches: false, addEventListener: noop },
@@ -106,16 +130,70 @@ describe("SourcesSidebar", () => {
     onStorage: noop,
   });
   const html = renderToStaticMarkup(
-    <SourcesSidebar
-      counts={{ all: 67, manual: 4, ingress: 36, site: 25, alias: 2 }}
+    <GolinkSidebar
+      linkCount={67}
       shortcutCount={7}
-      kindFilter="ingress"
       theme={theme}
-      onKindFilterChange={noop}
+      onSearch={noop}
     />,
   );
 
-  test("lists every source with its count", () => {
+  test("links to the page's sections with their counts", () => {
+    expect(html).toContain(
+      '<a href="#links" class="ui-nav-item" aria-current="page">',
+    );
+    expect(html).toMatch(
+      /<span class="ui-nav-text">Links<\/span><span class="ui-nav-count">67<\/span>/u,
+    );
+    expect(html).toMatch(
+      /<span class="ui-nav-text">Shortcuts<\/span><span class="ui-nav-count">7<\/span>/u,
+    );
+  });
+
+  test("offers search with its keyboard shortcut", () => {
+    expect(html).toMatch(
+      /aria-keyshortcuts="\/"[^>]*aria-label="Search links"|aria-label="Search links"[^>]*aria-keyshortcuts="\/"/u,
+    );
+  });
+
+  test("shows Go links as the current app and a theme row", () => {
+    expect(html).toContain("Go links");
+    expect(html).toContain('aria-label="Theme: system"');
+  });
+});
+
+describe("LinksCard", () => {
+  const html = renderToStaticMarkup(
+    <LinksCard
+      searchInputRef={{ current: null }}
+      query=""
+      kindFilter="ingress"
+      counts={COUNTS}
+      onQueryChange={noop}
+      onKindFilterChange={noop}
+      loadError={null}
+      isInitialLoading={false}
+      items={LINKS}
+      totalCount={LINKS.length}
+      writesEnabled
+      copiedShort={null}
+      deletingShort={null}
+      onRetry={noop}
+      onCopy={noop}
+      onEdit={noop}
+      onOverride={noop}
+      onDelete={noop}
+    />,
+  );
+
+  test("is a named card with a search field and a source filter", () => {
+    expect(html).toMatch(
+      /^<section class="ui-card" aria-label="Links" id="links"><div class="ui-card-toolbar"><label class="ui-search">/u,
+    );
+    expect(html).toContain('role="radiogroup" aria-label="Source"');
+  });
+
+  test("every source is an option with its count; only the selected one is checked", () => {
     for (const [label, count] of [
       ["All", "67"],
       ["Manual", "4"],
@@ -125,23 +203,60 @@ describe("SourcesSidebar", () => {
     ] as const) {
       expect(html).toMatch(
         new RegExp(
-          `<span class="ui-nav-text">${label}</span><span class="ui-nav-count">${count}</span>`,
+          `${label}<span class="ui-segmented-count">${count}</span>`,
           "u",
         ),
       );
     }
+    expect(html.match(/aria-checked="true"/gu)).toHaveLength(1);
+    expect(html).toMatch(/aria-checked="true"[^>]*>Tailnet</u);
   });
 
-  test("marks only the selected source as current", () => {
-    expect(html.match(/aria-current="page"/gu)).toHaveLength(1);
-    expect(html).toMatch(
-      /aria-current="page"[^>]*>(?:(?!<\/button>)[\s\S])*Tailnet/u,
+  test("shows a load error with a retry button in place of the table", () => {
+    const failed = renderToStaticMarkup(
+      <LinksCard
+        searchInputRef={{ current: null }}
+        query=""
+        kindFilter="all"
+        counts={COUNTS}
+        onQueryChange={noop}
+        onKindFilterChange={noop}
+        loadError="Unable to load shortlink directory."
+        isInitialLoading={false}
+        items={[]}
+        totalCount={0}
+        writesEnabled
+        copiedShort={null}
+        deletingShort={null}
+        onRetry={noop}
+        onCopy={noop}
+        onEdit={noop}
+        onOverride={noop}
+        onDelete={noop}
+      />,
     );
+    expect(failed).toContain('role="alert"');
+    expect(failed).toContain("Unable to load shortlink directory.");
+    expect(failed).toContain(">Retry</button>");
+    expect(failed).not.toContain("<table");
+  });
+});
+
+describe("summaryItems", () => {
+  test("counts links by source and sums clicks", () => {
+    expect(summaryItems(COUNTS, LINKS, true)).toEqual([
+      { label: "Links", value: "67" },
+      { label: "Manual", value: "4" },
+      { label: "Tailnet", value: "36" },
+      { label: "Public sites", value: "25" },
+      { label: "Clicks", value: "12" },
+    ]);
   });
 
-  test("shows Go links as the current app and a theme row", () => {
-    expect(html).toContain("Go links");
-    expect(html).toContain('aria-label="Theme: system"');
+  test("shows dashes until the directory loads", () => {
+    expect(
+      summaryItems(COUNTS, [], false).every((item) => item.value === "—"),
+    ).toBe(true);
   });
 });
 

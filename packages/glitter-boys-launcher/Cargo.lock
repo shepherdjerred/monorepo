@@ -1448,7 +1448,6 @@ dependencies = [
  "glitter-boys-core",
  "open",
  "rfd",
- "serde_json",
  "tempfile",
  "tracing",
  "winresource",

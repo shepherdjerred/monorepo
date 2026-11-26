@@ -27,6 +27,7 @@ export {
 export {
   Button,
   type ButtonProps,
+  type ButtonSize,
   type ButtonVariant,
 } from "@shepherdjerred/console-ui/components/button.tsx";
 export {
@@ -71,6 +72,25 @@ export {
   type SidebarLinkProps,
 } from "@shepherdjerred/console-ui/components/sidebar-item.tsx";
 export {
+  Card,
+  CardToolbar,
+  PageBody,
+  PageHeading,
+  SummaryGrid,
+  Tag,
+  type CardProps,
+  type PageBodyProps,
+  type PageHeadingProps,
+  type SummaryGridProps,
+  type SummaryItem,
+  type TagProps,
+} from "@shepherdjerred/console-ui/components/page.tsx";
+export {
+  SearchField,
+  type SearchFieldProps,
+} from "@shepherdjerred/console-ui/components/search-field.tsx";
+export { Segmented } from "@shepherdjerred/console-ui/components/segmented.tsx";
+export {
   SEVERITY_ICON,
   SEVERITY_LABEL,
   StatusGlyph,
@@ -81,6 +101,11 @@ export {
   type TabOption,
   type TabsProps,
 } from "@shepherdjerred/console-ui/components/tabs.tsx";
+export {
+  ThemeToggle,
+  TopBar,
+  type TopBarProps,
+} from "@shepherdjerred/console-ui/components/top-bar.tsx";
 export {
   ThemeRow,
   type ThemeRowProps,

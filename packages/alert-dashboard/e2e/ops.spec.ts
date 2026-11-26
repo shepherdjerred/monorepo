@@ -27,7 +27,7 @@ test("home answers what is wrong, where, and what waits on me", async ({
   await expect(firing).toContainText("3");
   await expect(firing).toContainText("in 1 group · 1 critical");
   await expect(firing).toHaveAttribute("href", "/alerts");
-  // Severity is a badge with a word, not only the tile's border colour.
+  // Severity is a glyph with a word, not only the figure's colour.
   await expect(firing).toContainText("Error");
   const houseTile = glance.getByRole("link", { name: /House/u });
   await expect(houseTile).toContainText("3");
@@ -45,12 +45,20 @@ test("home answers what is wrong, where, and what waits on me", async ({
   );
 
   await expect(
-    page.getByRole("region", { name: "Areas" }).locator(".section-card"),
+    page
+      .getByRole("region", { name: "Areas" })
+      .getByRole("table", { name: "Areas" })
+      .locator("tbody")
+      .getByRole("row"),
   ).toHaveCount(9);
 
   const attention = page.getByRole("region", { name: "Needs attention" });
-  const all = attention.getByRole("radio", { name: /^All/u });
-  const waiting = attention.getByRole("radio", { name: /^Waiting on you/u });
+  // The filter is the header bar's view tabs, named for the list it filters.
+  const filter = page.getByRole("radiogroup", {
+    name: "Needs attention filter",
+  });
+  const all = filter.getByRole("radio", { name: /^All/u });
+  const waiting = filter.getByRole("radio", { name: /^Waiting on you/u });
   await expect(all).toHaveAttribute("aria-checked", "true");
   await expect(waiting).toContainText("4");
   await expect(attention.locator(".signal").first()).toContainText(
@@ -79,7 +87,9 @@ test("the waiting tile filters the attention panel and brings it into view", asy
     .click();
   await expect(page).toHaveURL(/\/\?show=waiting$/u);
   await expect(
-    attention.getByRole("radio", { name: /^Waiting on you/u }),
+    page
+      .getByRole("radiogroup", { name: "Needs attention filter" })
+      .getByRole("radio", { name: /^Waiting on you/u }),
   ).toHaveAttribute("aria-checked", "true");
   await expect(attention.locator(".signal")).toHaveCount(4);
   await expect(heading).toBeInViewport();
@@ -191,10 +201,10 @@ test("a section page leads with summaries, then trends, then the signals", async
 
   // A metric that needs attention says so in words, not only with its bar.
   const stale = maintenance.locator(".metric", { hasText: "Stale backups" });
-  await expect(stale).toHaveClass(/\bmetric-error\b/u);
-  await expect(stale).toContainText("error");
+  await expect(stale).toHaveAttribute("data-sev", "error");
+  await expect(stale).toContainText("Error");
   const disk = maintenance.locator(".metric", { hasText: "Max disk used" });
-  await expect(disk).toHaveClass(/\bmetric-ok\b/u);
+  await expect(disk).toHaveAttribute("data-sev", "ok");
   await expect(disk).toHaveText("Max disk used71%");
 
   // One panel per section, each with its count, below the charts.
@@ -251,7 +261,7 @@ test("review leads with its verdict, then numbers, charts and lists", async ({
     page.getByRole("region", { name: "Compared with the previous week" }),
   ).toBeVisible();
   const incidents = page.getByRole("region", { name: "Incidents" });
-  await expect(incidents.locator(".metric")).toHaveCount(3);
+  await expect(incidents.getByRole("term")).toHaveCount(3);
   const changes = page.getByRole("region", { name: "Changes" });
   await expect(changes.locator(".change").first()).toBeVisible();
 
@@ -289,7 +299,7 @@ test("/overview redirects to / and keeps the query string", async ({
   await expect(page).toHaveURL(/\/\?show=waiting$/u);
   await expect(
     page
-      .getByRole("region", { name: "Needs attention" })
+      .getByRole("radiogroup", { name: "Needs attention filter" })
       .getByRole("radio", { name: /^Waiting on you/u }),
   ).toHaveAttribute("aria-checked", "true");
 });
@@ -343,7 +353,7 @@ test("a long change timeline shows fifteen changes until it is expanded", async 
   await expect(rows.last()).toContainText("Change 15");
   const more = changes.getByRole("button", { name: "Show 25 more" });
   await expect(more).toHaveAttribute("aria-expanded", "false");
-  await expect(changes.getByRole("list")).toHaveAttribute(
+  await expect(changes.getByRole("table", { name: "Changes" })).toHaveAttribute(
     "id",
     (await more.getAttribute("aria-controls")) ?? "missing",
   );
@@ -433,16 +443,16 @@ test("AI page explains its status, groups quota by provider and ranks tools", as
   const weekly = quota.getByRole("row").filter({
     has: page.getByRole("meter", { name: "Claude 7d Weekly quota used" }),
   });
-  // Severity is the signal's, as a class for the colour and a word beside it.
-  await expect(weekly).toHaveClass(/\bquota-warning\b/u);
+  // Severity is the signal's, as data-sev for the colour and a word beside it.
+  await expect(weekly).toHaveAttribute("data-sev", "warning");
   await expect(weekly).toContainText("84%");
-  await expect(weekly).toContainText("warning");
+  await expect(weekly).toContainText("Warning");
   await expect(weekly).toContainText(/resets in \dd/u);
   await expect(
     quota.getByRole("row").filter({
       has: page.getByRole("meter", { name: "Codex 5h Session quota used" }),
     }),
-  ).toHaveClass(/\bquota-ok\b/u);
+  ).toHaveAttribute("data-sev", "ok");
 
   const tools = page.getByRole("table", { name: "Usage by tool" });
   await expect(tools.getByRole("columnheader")).toHaveText([

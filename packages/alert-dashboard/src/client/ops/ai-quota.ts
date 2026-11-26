@@ -18,6 +18,16 @@ const QuotaAttributesSchema = z.object({
   resetsAt: z.iso.datetime({ offset: true }).optional(),
 });
 
+/**
+ * How much of its quota a `quota-window` signal reports used, or undefined
+ * for any other signal (or one sent without the attribute).
+ */
+export function signalUsedRatio(signal: Signal): number | undefined {
+  if (signal.kind !== "quota-window") return undefined;
+  const parsed = QuotaAttributesSchema.safeParse(signal.attributes);
+  return parsed.success ? parsed.data.usedRatio : undefined;
+}
+
 export type QuotaRow = {
   /** The signal's id. */
   readonly id: string;

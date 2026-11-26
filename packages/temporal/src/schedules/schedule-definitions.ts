@@ -23,6 +23,7 @@ import { MEDIA_SCHEDULES } from "./media.ts";
 import { MEDIA_PLAYBACK_SCHEDULE } from "./media-playback.ts";
 import { MEDIA_QUALITY_GUIDE_SCHEDULE } from "./quality-guide/definition.ts";
 import { MEDIA_SUBTITLE_MAINTENANCE_SCHEDULES_V1 } from "./subtitle-maintenance/definition.ts";
+import { CLIMATE_SCHEDULES } from "./climate-schedule-definitions.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -488,29 +489,12 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {
-    // Floor preheat 2h15m before wake: the bathroom floor ramps ~8.3°C/hour
-    // (measured 2026-07-09), so reaching the 40°C setpoint from a ~22°C
-    // overnight start needs ~2¼ hours. The workflow holds the setpoint for
-    // 195m (13 × 15m presence-checked chunks) then turns off as its own
-    // backstop; the timeout carries generous slack so worker delay or activity
-    // retries can never time the run out before the turn-off executes.
+    // Floor preheat at 08:00, one hour before the 09:00 wake. 39 heating
+    // sessions from 12 Oct–24 Nov 2026 reached 28°C within 60 minutes
+    // (median 40). New runs hold 8 × 15m and turn off at 10:00; the 240
+    // minute timeout still covers a replay of the previous 195-minute hold.
     id: "good-morning-weekday-preheat",
     workflowType: "goodMorningPreheat",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "45 5 * * 1-5",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "240 minutes",
-    catchupWindow: CATCHUP_TIGHT,
-    memo: "Bathroom floor preheat (weekdays 5:45 AM)",
-  },
-  {
-    id: "good-morning-weekday-wake",
-    workflowType: "goodMorningWakeUp",
     args: [],
     timing: {
       kind: "cron",
@@ -519,11 +503,26 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "240 minutes",
+    catchupWindow: CATCHUP_TIGHT,
+    memo: "Bathroom floor preheat (weekdays 8:00 AM)",
+  },
+  {
+    id: "good-morning-weekday-wake",
+    workflowType: "goodMorningWakeUp",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "0 9 * * 1-5",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
     // as the fallback when the preheat run was skipped; needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
     catchupWindow: CATCHUP_TIGHT,
-    memo: "Good morning wake-up + bathroom heat (weekdays 8 AM)",
+    memo: "Good morning wake-up + bathroom heat (weekdays 9 AM)",
   },
   {
     id: "good-morning-weekday-up",
@@ -531,30 +530,30 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      expression: "15 8 * * 1-5",
+      expression: "15 9 * * 1-5",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     catchupWindow: CATCHUP_TIGHT,
-    memo: "Good morning get-up (weekdays 8:15 AM)",
+    memo: "Good morning get-up (weekdays 9:15 AM)",
   },
   {
-    // Weekend preheat: 2h15m before the 9 AM weekend wake.
+    // Weekend floor preheat uses the same 08:00 clock as weekdays.
     id: "good-morning-weekend-preheat",
     workflowType: "goodMorningPreheat",
     args: [],
     timing: {
       kind: "cron",
-      expression: "45 6 * * 0,6",
+      expression: "0 8 * * 0,6",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "240 minutes",
     catchupWindow: CATCHUP_TIGHT,
-    memo: "Bathroom floor preheat (weekends 6:45 AM)",
+    memo: "Bathroom floor preheat (weekends 8:00 AM)",
   },
   {
     id: "good-morning-weekend-wake",
@@ -588,4 +587,5 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning get-up (weekends 9:15 AM)",
   },
+  ...CLIMATE_SCHEDULES,
 ]);

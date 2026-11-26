@@ -98,7 +98,7 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
           // The image lanes drive builds through buildkitd's plaintext gRPC
           // endpoint. It is the one in-cluster destination steps need, and the
           // only reason this policy is not HTTPS-only; buildkitd's own policy
-          // already restricts ingress to this namespace.
+          // already restricts ingress to these step pods.
           to: [nsPeer(BUILDKITD_NAMESPACE)],
           ports: [tcp(BUILDKITD_PORT)],
         },

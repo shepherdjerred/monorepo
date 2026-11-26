@@ -285,7 +285,7 @@ describe("Button and IconButton", () => {
       </Button>,
     );
     expect(html).toMatch(
-      /^<button type="button"[^>]*data-variant="primary" class="ui-btn">/,
+      /^<button type="button"[^>]*data-variant="primary" data-size="compact" class="ui-btn">/,
     );
     expect(html).toContain("Refresh</button>");
   });

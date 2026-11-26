@@ -7,10 +7,16 @@ description: Deliver changes in this monorepo through Git-Spice, focused checks,
 
 Use `toolkit git-spice` (or its `toolkit spice` alias in isolated Claude
 worktrees, where the worktree guard refuses `git-spice` operands) for every
-feature branch and PR operation. A single PR is a stack of one. Always pass
-`--no-prompt` in agent shells so PTY sessions never block on interactive input,
-and never use `gs`, hand-roll a stack rebase, or create a feature PR with
-`gh pr create`.
+feature branch and PR operation. A single PR is a stack of one, and every
+stack is a git-spice stack. Always pass `--no-prompt` in agent shells so PTY
+sessions never block on interactive input, and never use `gs`, hand-roll a
+stack rebase, or create a feature PR with `gh pr create`.
+
+Do not drive GitHub stacked pull requests outside git-spice. Do not run
+`gh stack`, install `github/gh-stack`, or open a chain of pull requests by
+pointing each base at the branch below it. git-spice may register submitted
+stacks with GitHub's native stack feature. Leave that registration to
+git-spice.
 
 ## Work locally
 
@@ -123,8 +129,9 @@ reason to omit it; test pass counts stay in `## Verification`, alongside any
 unperformed live or production checks).
 
 Complex work may use several commits inside this one branch. Use multiple
-stacked PRs only when each branch is independently landable and the requested
-scope permits more than one PR.
+git-spice stacked PRs only when each branch is independently landable and the
+requested scope permits more than one PR. Those stacks are still git-spice
+stacks.
 
 ## Merge when authorized
 

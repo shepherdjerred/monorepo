@@ -4,6 +4,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { mediaAppEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/media-app-egress.ts";
 
 export function createRadarrDeployment(
   chart: Chart,
@@ -48,5 +49,12 @@ export function createRadarrDeployment(
       },
     },
     tailscale: { host: tailnetService("radarr") },
+    policies: [
+      {
+        name: "radarr-egress-netpol",
+        selects: "app",
+        egress: mediaAppEgress(),
+      },
+    ],
   });
 }
