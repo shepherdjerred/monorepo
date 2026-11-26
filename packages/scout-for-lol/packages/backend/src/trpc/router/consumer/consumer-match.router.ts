@@ -20,11 +20,9 @@ import { normalizeRiotIdPart } from "#src/explore-match/match-view.ts";
 import {
   fetchFullMatch,
   fetchTimelineChartFrames,
-  fetchTimelineCoverage,
-  fetchTimelineEventPage,
-  fetchTimelineCheckpointFrames,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import { fetchMatchDetailRead } from "#src/reports/duckdb/consumer/match-detail-reads.ts";
 import { fetchMatchStoryRead } from "#src/reports/duckdb/consumer/match-story-reads.ts";
 import { buildGoldLead } from "#src/trpc/router/consumer/match-gold-lead.ts";
 import {
@@ -286,41 +284,34 @@ function matchView(
 
 export const consumerMatchRouter = router({
   detail: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
-    const authorized = await authorizeMatch(ctx.user, input);
+    const scoped = await findScopedPlayer(ctx.user, input);
+    // One lake slot for the roster and the timeline reads. Nothing read here
+    // reaches the caller until the roster confirms the viewer's player played.
+    const read = await fetchMatchDetailRead({
+      matchId: input.matchId,
+      checkpointMs: LANE_DELTA_CHECKPOINT_MS,
+      keyEventTypes: MATCH_KEY_EVENT_TYPES,
+    });
+    const authorized = await completeAuthorization(scoped, read.rows);
     const first = authorized.rows[0];
     if (first === undefined) {
       throw new Error("Authorized match has no participants");
     }
-    const [lpByPuuid, coverage, keyEvents, laneDeltaFrames] = await Promise.all(
-      [
-        loadMatchLpDeltas({
-          matchId: input.matchId,
-          queueId: first.queue_id,
-          remake: matchWasRemade(authorized.rows),
-          puuids: [...authorized.aliasesByPuuid.keys()],
-        }),
-        fetchTimelineCoverage({ matchId: input.matchId }),
-        fetchTimelineEventPage({
-          matchId: input.matchId,
-          offset: 0,
-          limit: 40,
-          eventTypes: MATCH_KEY_EVENT_TYPES,
-        }),
-        fetchTimelineCheckpointFrames({
-          matchId: input.matchId,
-          checkpointMs: LANE_DELTA_CHECKPOINT_MS,
-        }),
-      ],
-    );
+    const lpByPuuid = await loadMatchLpDeltas({
+      matchId: input.matchId,
+      queueId: first.queue_id,
+      remake: matchWasRemade(authorized.rows),
+      puuids: [...authorized.aliasesByPuuid.keys()],
+    });
     return {
       match: {
         ...matchView(authorized, lpByPuuid),
         roleMatchups: buildRoleMatchups({
           rows: authorized.rows,
-          frames: laneDeltaFrames,
+          frames: read.laneDeltaFrames,
         }),
       },
-      timeline: { coverage, keyEvents },
+      timeline: { coverage: read.coverage, keyEvents: read.keyEvents },
     };
   }),
 

@@ -546,3 +546,91 @@ describe("consumerMatch.chartSeries gold lead", () => {
     expect(result.points).toHaveLength(29);
   });
 });
+
+/** The payload as JSON, with the database's player ids named by who they are. */
+function detailSnapshot(
+  detail: unknown,
+  playerIds: ReadonlyMap<number, string>,
+): string {
+  return `${JSON.stringify(
+    detail,
+    (key, value: unknown) =>
+      key === "playerId" && typeof value === "number"
+        ? (playerIds.get(value) ?? value)
+        : value,
+    2,
+  )}\n`;
+}
+
+describe("consumerMatch.detail", () => {
+  test("keeps its payload for a match with a timeline and a recorded rank change", async () => {
+    const { viewer, friend } = await seedStoryMatch();
+    await recordRank({
+      puuid: VIEWER_PUUID,
+      before: SOLO_BEFORE,
+      after: SOLO_AFTER,
+    });
+    const detail = await trpc
+      .authedCaller(actor)
+      .consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
+    await expect(
+      detailSnapshot(
+        detail,
+        new Map([
+          [viewer.id, "viewer"],
+          [friend.id, "friend"],
+        ]),
+      ),
+    ).toMatchFileSnapshot(
+      "./__snapshots__/consumer-match-detail.timeline.snap",
+    );
+  });
+
+  test("takes one lake slot per call, and none when access is refused", async () => {
+    const { viewer } = await seedStoryMatch();
+    const stranger = await trackedPlayer({
+      guildId,
+      alias: "Stranger",
+      puuid: testPuuid("detail-stranger"),
+    });
+    const caller = trpc.authedCaller(actor);
+    await recordRank({
+      puuid: VIEWER_PUUID,
+      before: SOLO_BEFORE,
+      after: SOLO_AFTER,
+    });
+    slots.taken = 0;
+    await caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
+    expect(slots.taken).toBe(1);
+    await caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
+    expect(slots.taken).toBe(2);
+    await expect(
+      caller.consumerMatch.detail({ playerId: stranger.id, matchId: MATCH }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    trpc.setMembership([]);
+    slots.taken = 0;
+    await expect(
+      caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(slots.taken).toBe(0);
+  });
+
+  test("keeps its payload for a match with no timeline", async () => {
+    const { viewer, friend } = await seedStoryMatch({ withTimeline: false });
+    const detail = await trpc
+      .authedCaller(actor)
+      .consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
+    await expect(
+      detailSnapshot(
+        detail,
+        new Map([
+          [viewer.id, "viewer"],
+          [friend.id, "friend"],
+        ]),
+      ),
+    ).toMatchFileSnapshot(
+      "./__snapshots__/consumer-match-detail.no-timeline.snap",
+    );
+  });
+});

@@ -17,7 +17,14 @@ import {
   MATCH_UI_READ_COLUMNS,
   MatchLoadoutLakeRowSchema,
 } from "#src/report-lake/loadout.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import {
+  withDuckDBConnection,
+  type DuckDBSession,
+} from "#src/reports/duckdb/instance.ts";
+import {
+  inLakeScope,
+  type LakeReadScope,
+} from "#src/reports/duckdb/consumer/lake-read-scope.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
@@ -43,19 +50,23 @@ export async function runSource<T>(options: {
   trailingParams?: BoundParam[];
   schema: z.ZodType<T>;
   abortSignal?: AbortSignal | undefined;
+  /** Run on this connection instead of taking a slot of its own. */
+  session?: DuckDBSession | undefined;
 }): Promise<T[]> {
+  const run = async (session: DuckDBSession): Promise<T[]> => {
+    const rows = await session.run(
+      options.sql,
+      bindParams(session, [
+        ...(options.leadingParams ?? []),
+        ...options.source.params,
+        ...(options.trailingParams ?? []),
+      ]),
+    );
+    return rows.map((row) => options.schema.parse(row));
+  };
+  if (options.session !== undefined) return await run(options.session);
   return await withDuckDBConnection(
-    async (session) => {
-      const rows = await session.run(
-        options.sql,
-        bindParams(session, [
-          ...(options.leadingParams ?? []),
-          ...options.source.params,
-          ...(options.trailingParams ?? []),
-        ]),
-      );
-      return rows.map((row) => options.schema.parse(row));
-    },
+    run,
     options.abortSignal === undefined
       ? {}
       : { abortSignal: options.abortSignal },
@@ -133,29 +144,28 @@ export function fullMatchRowsSql(sourceSql: string): string {
 export async function fetchFullMatch(options: {
   matchId: RiotMatchId;
   lakeDir?: string;
+  scope?: LakeReadScope;
   /** `all` finds a crawled game too (Explore's match cards); default tracked. */
   population?: LakePopulation;
 }): Promise<LakeMatchParticipantRow[]> {
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) => {
-      const source = buildMatchesSource(
-        files,
-        {
-          sql: "match_id = ?",
-          params: [scalarParam(options.matchId)],
-        },
-        MATCH_UI_READ_COLUMNS,
-        { population: options.population },
-      );
-      if (source === undefined) return [];
-      return await runSource({
-        source,
-        sql: fullMatchRowsSql(source.sql),
-        schema: MatchParticipantRowSchema,
-      });
-    },
-  );
+  return await inLakeScope(options, async (files, session) => {
+    const source = buildMatchesSource(
+      files,
+      {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      },
+      MATCH_UI_READ_COLUMNS,
+      { population: options.population },
+    );
+    if (source === undefined) return [];
+    return await runSource({
+      session,
+      source,
+      sql: fullMatchRowsSql(source.sql),
+      schema: MatchParticipantRowSchema,
+    });
+  });
 }
 
 export async function fetchFullMatchTeams(options: {
@@ -198,27 +208,26 @@ export async function fetchTimelineCoverage(options: {
   matchId: RiotMatchId;
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
+  scope?: LakeReadScope;
 }): Promise<LakeTimelineCoverage | null> {
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) => {
-      const source = buildTimelineCoverageSource(files, {
-        sql: "match_id = ?",
-        params: [scalarParam(options.matchId)],
-      });
-      if (source === undefined) return null;
-      const rows = await runSource({
-        source,
-        sql:
-          `SELECT coverage_state, data_version, frame_interval_ms, frame_count, event_count, ` +
-          `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
-          `FROM (${source.sql}) LIMIT 1`,
-        schema: TimelineCoverageRowSchema,
-        abortSignal: options.abortSignal,
-      });
-      return rows[0] ?? null;
-    },
-  );
+  return await inLakeScope(options, async (files, session) => {
+    const source = buildTimelineCoverageSource(files, {
+      sql: "match_id = ?",
+      params: [scalarParam(options.matchId)],
+    });
+    if (source === undefined) return null;
+    const rows = await runSource({
+      session,
+      source,
+      sql:
+        `SELECT coverage_state, data_version, frame_interval_ms, frame_count, event_count, ` +
+        `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
+        `FROM (${source.sql}) LIMIT 1`,
+      schema: TimelineCoverageRowSchema,
+      abortSignal: options.abortSignal,
+    });
+    return rows[0] ?? null;
+  });
 }
 
 const TimelineEventReadSchema = TimelineEventLakeRowSchema.omit({
@@ -268,56 +277,55 @@ export async function fetchTimelineEventPage(options: {
   participantIds?: number[];
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
+  scope?: LakeReadScope;
 }): Promise<TimelineEventRead[]> {
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) => {
-      const clauses = ["match_id = ?"];
-      const params: BoundParam[] = [scalarParam(options.matchId)];
-      if (options.eventTypes !== undefined) {
-        clauses.push("event_type IN (SELECT unnest(?))");
-        params.push(listParam(options.eventTypes));
-      }
-      const source = buildTimelineEventsSource(files, {
-        sql: clauses.join(" AND "),
-        params,
-      });
-      if (source === undefined) return [];
-      const participantSource =
-        options.participantIds === undefined
-          ? undefined
-          : buildTimelineEventParticipantsSource(files, {
-              sql: "match_id = ? AND participant_id IN (SELECT unnest(?))",
-              params: [
-                scalarParam(options.matchId),
-                listParam(options.participantIds),
-              ],
-            });
-      if (
-        participantSource === undefined &&
-        options.participantIds !== undefined
-      ) {
-        return [];
-      }
-      const participantClause =
-        participantSource === undefined
-          ? ""
-          : `WHERE event_id IN (SELECT event_id FROM (${participantSource.sql}))`;
-      return await runSource({
-        source,
-        trailingParams: [
-          ...(participantSource?.params ?? []),
-          scalarParam(Math.floor(options.limit)),
-          scalarParam(Math.floor(options.offset)),
-        ],
-        sql:
-          `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
-          `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
-        schema: TimelineEventReadSchema,
-        abortSignal: options.abortSignal,
-      });
-    },
-  );
+  return await inLakeScope(options, async (files, session) => {
+    const clauses = ["match_id = ?"];
+    const params: BoundParam[] = [scalarParam(options.matchId)];
+    if (options.eventTypes !== undefined) {
+      clauses.push("event_type IN (SELECT unnest(?))");
+      params.push(listParam(options.eventTypes));
+    }
+    const source = buildTimelineEventsSource(files, {
+      sql: clauses.join(" AND "),
+      params,
+    });
+    if (source === undefined) return [];
+    const participantSource =
+      options.participantIds === undefined
+        ? undefined
+        : buildTimelineEventParticipantsSource(files, {
+            sql: "match_id = ? AND participant_id IN (SELECT unnest(?))",
+            params: [
+              scalarParam(options.matchId),
+              listParam(options.participantIds),
+            ],
+          });
+    if (
+      participantSource === undefined &&
+      options.participantIds !== undefined
+    ) {
+      return [];
+    }
+    const participantClause =
+      participantSource === undefined
+        ? ""
+        : `WHERE event_id IN (SELECT event_id FROM (${participantSource.sql}))`;
+    return await runSource({
+      session,
+      source,
+      trailingParams: [
+        ...(participantSource?.params ?? []),
+        scalarParam(Math.floor(options.limit)),
+        scalarParam(Math.floor(options.offset)),
+      ],
+      sql:
+        `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
+        `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
+      schema: TimelineEventReadSchema,
+      abortSignal: options.abortSignal,
+    });
+  });
 }
 
 const TimelineFrameReadSchema = TimelineParticipantFrameLakeRowSchema.omit({
@@ -397,26 +405,25 @@ export async function fetchTimelineCheckpointFrames(options: {
   matchId: RiotMatchId;
   checkpointMs: number;
   lakeDir?: string;
+  scope?: LakeReadScope;
 }): Promise<LaneDeltaFrame[]> {
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) => {
-      const source = buildTimelineParticipantFramesSource(files, {
-        sql: "match_id = ? AND frame_timestamp_ms >= ? AND frame_timestamp_ms < ?",
-        params: [
-          scalarParam(options.matchId),
-          scalarParam(options.checkpointMs),
-          scalarParam(options.checkpointMs + TIMELINE_CHECKPOINT_WINDOW_MS),
-        ],
-      });
-      if (source === undefined) return [];
-      return await runSource({
-        source,
-        sql: `SELECT ${Object.keys(LaneDeltaFrameSchema.shape).join(", ")} FROM (${source.sql}) QUALIFY frame_timestamp_ms = min(frame_timestamp_ms) OVER () ORDER BY participant_id`,
-        schema: LaneDeltaFrameSchema,
-      });
-    },
-  );
+  return await inLakeScope(options, async (files, session) => {
+    const source = buildTimelineParticipantFramesSource(files, {
+      sql: "match_id = ? AND frame_timestamp_ms >= ? AND frame_timestamp_ms < ?",
+      params: [
+        scalarParam(options.matchId),
+        scalarParam(options.checkpointMs),
+        scalarParam(options.checkpointMs + TIMELINE_CHECKPOINT_WINDOW_MS),
+      ],
+    });
+    if (source === undefined) return [];
+    return await runSource({
+      session,
+      source,
+      sql: `SELECT ${Object.keys(LaneDeltaFrameSchema.shape).join(", ")} FROM (${source.sql}) QUALIFY frame_timestamp_ms = min(frame_timestamp_ms) OVER () ORDER BY participant_id`,
+      schema: LaneDeltaFrameSchema,
+    });
+  });
 }
 
 export async function fetchTimelineFramePage(options: {
