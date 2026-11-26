@@ -12,6 +12,14 @@ const CHARTS_BOOTSTRAP_OCI_LOCATION = registryLocation(
 );
 const HELM_CHART_CONFIG_MEDIA_TYPE = "application/vnd.cncf.helm.config.v1+json";
 
+/**
+ * Staged rollout gate: remains `false` until `woodpecker/prod` rolls out the
+ * `DOCKERHUB_PUBLISH` grant on `helm-push` and `tofu-dockerhub/prod` creates
+ * `shepherdjerred/charts-bootstrap`, then flips to `true` before retiring
+ * `chartmuseum`.
+ */
+export const CHARTS_BOOTSTRAP_OCI_ENABLED = false;
+
 const OciHelmManifestSchema = z.looseObject({
   config: z.looseObject({ mediaType: z.literal(HELM_CHART_CONFIG_MEDIA_TYPE) }),
   layers: z.array(
@@ -170,10 +178,12 @@ export async function resolveRetainedProducerDigest(
   version: string,
   ensureOciBootstrap?: EnsureOciBootstrapFn,
 ): Promise<string> {
-  if (name !== "charts-bootstrap") return archive.digest;
-  if (ensureOciBootstrap === undefined || archive.archivePath === undefined) {
+  if (name !== "charts-bootstrap" || ensureOciBootstrap === undefined) {
+    return archive.digest;
+  }
+  if (archive.archivePath === undefined) {
     throw new Error(
-      "Retained same-producer charts-bootstrap requires its verified archive path and OCI publisher",
+      "Retained same-producer charts-bootstrap requires its verified archive path",
     );
   }
   return ensureOciBootstrap({
@@ -181,4 +191,43 @@ export async function resolveRetainedProducerDigest(
     archiveDigest: archive.digest,
     version,
   });
+}
+
+export async function publishedChartReceiptDigest(options: {
+  readonly name: string;
+  readonly archivePath: string;
+  readonly archiveDigest: string;
+  readonly version: string;
+  readonly runCommand: (command: readonly string[]) => Promise<void>;
+  readonly ociEnabled?: boolean;
+}): Promise<string> {
+  const { ociEnabled = CHARTS_BOOTSTRAP_OCI_ENABLED } = options;
+  if (options.name !== "charts-bootstrap" || !ociEnabled) {
+    return options.archiveDigest;
+  }
+  return publishOciBootstrapChart(
+    options.archivePath,
+    options.version,
+    options.runCommand,
+    fetch,
+    options.archiveDigest,
+  );
+}
+
+export function chartsBootstrapRetainOptions(
+  version: string,
+  runCommand: (command: readonly string[]) => Promise<void>,
+  ociEnabled = CHARTS_BOOTSTRAP_OCI_ENABLED,
+): RetainProducerOptions {
+  if (!ociEnabled) return { version };
+  return {
+    version,
+    ensureOciBootstrap: ({ archivePath, archiveDigest }) =>
+      ensureOciBootstrapChart({
+        archivePath,
+        archiveDigest,
+        version,
+        runCommand,
+      }),
+  };
 }

@@ -61,13 +61,25 @@ export async function downloadChartArtifact(
   return { uri: uri.href, digest: `sha256:${digest}` };
 }
 
+/**
+ * Staged rollout gate matching `helm-oci-bootstrap.ts`: stays `false` until
+ * `woodpecker/prod` rolls out `DOCKERHUB_PUBLISH` on `helm-push` and
+ * `tofu-dockerhub/prod` creates `shepherdjerred/charts-bootstrap`.
+ */
+export const CHARTS_BOOTSTRAP_OCI_ENABLED = false;
+
 export async function resolvePublishedChartArtifact(
   name: string,
   version: string,
-  options: { origin?: string; fetch?: ChartFetch } = {},
+  options: {
+    origin?: string;
+    fetch?: ChartFetch;
+    ociBootstrapEnabled?: boolean;
+  } = {},
 ) {
   const transport = options.fetch ?? fetch;
-  if (name === "charts-bootstrap") {
+  const { ociBootstrapEnabled = CHARTS_BOOTSTRAP_OCI_ENABLED } = options;
+  if (name === "charts-bootstrap" && ociBootstrapEnabled) {
     const digest = await resolveManifestDigest(
       registryLocation(
         "https://registry-1.docker.io",
