@@ -1,6 +1,5 @@
-import { appendFile, mkdir, open, rm } from "node:fs/promises";
+import { appendFile, mkdir } from "node:fs/promises";
 import os from "node:os";
-import { z } from "zod";
 import type { PinchtabClientOptions } from "#lib/pinchtab-cli/http.ts";
 import { sweepArtifacts } from "./artifacts.ts";
 import { sweepDedupe } from "./dedupe.ts";
@@ -22,14 +21,9 @@ import {
 } from "./paths.ts";
 import { sweepPostgres } from "./postgres.ts";
 import type { SharedPostgresAdapter } from "./postgres-databases.ts";
-import {
-  defaultCommandRunner,
-  defaultTcpPortProbe,
-  isProcessAliveByKillZero,
-  processStartsMatch,
-  readSingleProcessStart,
-} from "./process-probe.ts";
+import { defaultCommandRunner, defaultTcpPortProbe } from "./process-probe.ts";
 import { type ProcessSignaler, sweepProcesses } from "./processes.ts";
+import { acquireTendRunLockWaiting, type LockTiming } from "./run-lock.ts";
 import { sweepTailscaleServe } from "./tailscale-serve.ts";
 import {
   type CommandRunner,
@@ -44,99 +38,6 @@ import {
   type TendSurface,
 } from "./types.ts";
 import { sweepWorktrees } from "./worktrees.ts";
-
-const LockOwnerSchema = z.strictObject({
-  pid: z.number().int().positive(),
-  processStart: z.string().min(1),
-  acquiredAt: z.string(),
-});
-
-function isEexistError(error: unknown): boolean {
-  const parsed = z.looseObject({ code: z.string() }).safeParse(error);
-  return parsed.success && parsed.data.code === "EEXIST";
-}
-
-export async function acquireTendRunLock(options: {
-  readonly paths?: TendPaths | undefined;
-  readonly ownerPid?: number | undefined;
-  readonly processStart?: string | undefined;
-  readonly runner?: CommandRunner | undefined;
-  readonly platform?: NodeJS.Platform | undefined;
-  readonly isPidAlive?: ((pid: number) => boolean) | undefined;
-  readonly readPidStart?:
-    ((pid: number) => Promise<string | undefined>) | undefined;
-}): Promise<() => Promise<void>> {
-  const paths = options.paths ?? resolveTendPaths();
-  const ownerPid = options.ownerPid ?? process.pid;
-  const checkAlive = options.isPidAlive ?? isProcessAliveByKillZero;
-  const readStart =
-    options.readPidStart ??
-    ((pid: number) =>
-      readSingleProcessStart(pid, {
-        runner: options.runner,
-        platform: options.platform,
-      }));
-  const ownStart =
-    options.processStart ??
-    (await readStart(ownerPid)) ??
-    `unknown-${String(ownerPid)}`;
-
-  await mkdir(paths.rootDir, { recursive: true, mode: 0o700 });
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      const handle = await open(paths.lockFile, "wx", 0o600);
-      try {
-        const payload = JSON.stringify({
-          pid: ownerPid,
-          processStart: ownStart,
-          acquiredAt: new Date().toISOString(),
-        });
-        await handle.writeFile(`${payload}\n`, "utf8");
-      } finally {
-        await handle.close();
-      }
-      return () => rm(paths.lockFile, { force: true });
-    } catch (error: unknown) {
-      if (!isEexistError(error)) {
-        throw error;
-      }
-      if (attempt > 0) {
-        break;
-      }
-      if (!(await isLockFileStale(paths.lockFile, checkAlive, readStart))) {
-        throw new Error(
-          `Another toolkit tend --apply run is active (${paths.lockFile})`,
-          { cause: error },
-        );
-      }
-      await rm(paths.lockFile, { force: true });
-    }
-  }
-  throw new Error(`Could not acquire toolkit tend lock at ${paths.lockFile}`);
-}
-
-async function isLockFileStale(
-  lockFile: string,
-  checkAlive: (pid: number) => boolean,
-  readStart: (pid: number) => Promise<string | undefined>,
-): Promise<boolean> {
-  try {
-    const text = await Bun.file(lockFile).text();
-    const parsed = LockOwnerSchema.safeParse(JSON.parse(text));
-    if (!parsed.success || !checkAlive(parsed.data.pid)) {
-      return true;
-    }
-    if (parsed.data.processStart.startsWith("unknown-")) {
-      return false;
-    }
-    const currentStart = await readStart(parsed.data.pid);
-    return currentStart === undefined
-      ? !checkAlive(parsed.data.pid)
-      : !processStartsMatch(currentStart, parsed.data.processStart);
-  } catch {
-    return true;
-  }
-}
 
 export async function readLastTendRunSummary(
   paths: TendPaths = resolveTendPaths(),
@@ -210,6 +111,9 @@ export type RunTendOptions = {
   readonly dedupeWorktree?: string | undefined;
   /** `false` never refreshes an index after dedupe replaces files. */
   readonly dedupeRefreshIndex?: boolean | undefined;
+  /** How long an applied run waits for another applied run to finish. */
+  readonly lockWaitMs?: number | undefined;
+  readonly lockTiming?: LockTiming | undefined;
   readonly nowMs?: number | undefined;
 };
 
@@ -388,8 +292,14 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
   const selectedSurfaces = TEND_SURFACES.filter((surface) =>
     (options.surfaces ?? TEND_SURFACES).includes(surface),
   );
+  // Only a run that changes something takes the lock; a dry run never waits.
   const releaseLock = apply
-    ? await acquireTendRunLock({ paths, runner })
+    ? await acquireTendRunLockWaiting({
+        paths,
+        runner,
+        waitMs: options.lockWaitMs,
+        timing: options.lockTiming,
+      })
     : undefined;
 
   try {

@@ -18,6 +18,7 @@ import {
   defaultCommandRunner,
   snapshotOsProcesses,
 } from "#lib/tend/process-probe.ts";
+import type { LockTiming } from "#lib/tend/run-lock.ts";
 import { runTend } from "#lib/tend/runner.ts";
 import {
   buildTailscaleServeOffArgv,
@@ -40,9 +41,9 @@ toolkit tend — inspect and reap orphaned local dev resources (dry-run by defau
 
 Usage:
   toolkit tend status [--json] [--worktree-min-age 3d] [--offline]
-  toolkit tend run [--apply] [--only <surfaces>] [--worktree-min-age 3d] [--immediate-proxies] [--offline] [--json]
-  toolkit tend worktrees [--apply] [--worktree-min-age 3d] [--git-dir <dir>] [--include-closed-prs] [--summary] [--verbose] [--json]
-  toolkit tend dedupe [--apply] [--worktree <path>] [--dedupe-min-size 64k] [--no-refresh] [--git-dir <dir>] [--summary] [--json]
+  toolkit tend run [--apply] [--only <surfaces>] [--worktree-min-age 3d] [--immediate-proxies] [--lock-wait 0s] [--offline] [--json]
+  toolkit tend worktrees [--apply] [--worktree-min-age 3d] [--git-dir <dir>] [--include-closed-prs] [--lock-wait 0s] [--summary] [--verbose] [--json]
+  toolkit tend dedupe [--apply] [--worktree <path>] [--dedupe-min-size 64k] [--no-refresh] [--lock-wait 0s] [--git-dir <dir>] [--summary] [--json]
   toolkit tend schedule install | uninstall | status [--json]
   toolkit tend lease list [--json]
   toolkit tend lease acquire --kind <kind> --target <target> [--ttl 4h] [--worktree <path>] [--id <id>] [--json]
@@ -53,7 +54,9 @@ Surfaces (--only comma-separated):
   worktrees, dedupe, postgres, processes, tailscale-serve, docker, artifacts, leases
 
 Notes:
-  - Runs are read-only / dry-run unless --apply is passed.
+  - Runs are read-only / dry-run unless --apply is passed. Only one applied
+    run works at a time: a second one fails at once, or with --lock-wait
+    <duration> waits that long for the first to finish. Dry runs never wait.
   - A worktree is removed only when nothing holds it (live Herdr terminal,
     process, lease, Forum notice, pool or live-agent lock), it has no open
     pull request, and it has been idle for 3d (72h) by default. Uncommitted
@@ -105,6 +108,7 @@ function parseTendSweepArgs(args: readonly string[]) {
       worktree: { type: "string" },
       "dedupe-min-size": { type: "string" },
       "no-refresh": { type: "boolean", default: false },
+      "lock-wait": { type: "string" },
       "immediate-proxies": { type: "boolean", default: false },
       "include-closed-prs": { type: "boolean", default: false },
       "remove-clean-worktrees": { type: "boolean", default: false },
@@ -343,6 +347,7 @@ export async function handleTendCommand(
     readonly paths?: TendPaths | undefined;
     readonly pinchtab?: PinchtabClientOptions | undefined;
     readonly schedule?: TendScheduleDeps | undefined;
+    readonly lockTiming?: LockTiming | undefined;
   } = {},
 ): Promise<void> {
   if (
@@ -388,6 +393,7 @@ async function runTendSweepCommand(
     readonly runner?: CommandRunner | undefined;
     readonly paths?: TendPaths | undefined;
     readonly pinchtab?: PinchtabClientOptions | undefined;
+    readonly lockTiming?: LockTiming | undefined;
   },
 ): Promise<void> {
   const { values, positionals } = parseTendSweepArgs(args);
@@ -418,6 +424,10 @@ async function runTendSweepCommand(
       : { dedupeMinSizeBytes: parseByteSize(values["dedupe-min-size"]) }),
     dedupeWorktree: values.worktree,
     dedupeRefreshIndex: !values["no-refresh"],
+    ...(values["lock-wait"] === undefined
+      ? {}
+      : { lockWaitMs: parseDurationMs(values["lock-wait"]) }),
+    lockTiming: injected.lockTiming,
     checkPullRequests: !values["no-prs"],
     includeClosedPrs: values["include-closed-prs"],
     immediateProxies: values["immediate-proxies"],

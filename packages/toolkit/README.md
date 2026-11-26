@@ -1810,6 +1810,16 @@ with `databases` or `testing` in its scopes holds `postgres` and `processes`
 sweeps automatically; failed Forum queries fail closed unless `--offline` is
 passed.
 
+Only one applied run works at a time, guarded by `~/.toolkit/tend/run.lock`.
+A second `--apply` fails at once with "Another toolkit tend --apply run is
+active". `--lock-wait <duration>` (on `tend run`, `tend worktrees` and
+`tend dedupe`; for example `--lock-wait 15m`) makes it wait that long for the
+first run to finish, checking once a second, and fail with the same message
+and the time waited if it does not. A lock whose owner has died is taken over
+immediately either way. Dry runs never take the lock and never wait. The daily
+schedule does not wait; a per-worktree `tend dedupe --worktree <path> --apply`
+started while it runs should.
+
 Tailscale Serve sweeps never touch port `443` or root `/`, and unleased
 high-port listeners require two consecutive unreachable sweeps before teardown
 unless `--immediate-proxies` is passed. Docker sweeps skip cleanly when the
@@ -1941,7 +1951,7 @@ blocks that change and never touches the other worktrees.
 toolkit tend dedupe --summary                    # dry run: files and bytes per worktree
 toolkit tend dedupe --apply
 toolkit tend dedupe --worktree <path> --apply    # one worktree, e.g. right after creating it
-toolkit tend dedupe --worktree <path> --apply --no-refresh
+toolkit tend dedupe --worktree <path> --apply --no-refresh --lock-wait 15m
 toolkit tend dedupe --dedupe-min-size 4k         # default 64k
 ```
 
