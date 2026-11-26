@@ -155,8 +155,14 @@ export function Editor({
   }
 
   function confirmSave() {
-    dialogRef.current?.close();
-    if (draft === undefined || saving.current) return;
+    const dialog = dialogRef.current;
+    // Save only from an open review of a savable draft: the same checks as
+    // Review, so a stray click on a closed dialog never writes.
+    const reviewed = dialog?.open === true;
+    dialog?.close();
+    if (blocked || !reviewed || draft === undefined || saving.current) return;
+    if (draftError(draft) !== undefined) return;
+    if (baseFlag !== undefined && sameFlag(draft, baseFlag)) return;
     void save(draft);
   }
 

@@ -709,6 +709,21 @@ test("the server's 400 issues are shown against the value", async () => {
   expect(issueText(page)).toBe("");
 });
 
+test("Save writes nothing unless a review is open", async () => {
+  onTestFinished(stubDialogs());
+  const api = stubApi();
+  const page = await mount("/delivery/prod/delivery-enabled-environments");
+  await typeInto(jsonEditor(page), '[\n  "beta",\n  "staging"\n]');
+
+  // The dialog is closed: a stray click on its Save button must not write.
+  await click(button(page, 'dialog button[value="save"]'));
+  expect(api.applied).toEqual([]);
+
+  await click(review(page));
+  await click(button(page, 'dialog button[value="save"]'));
+  expect(api.applied).toHaveLength(1);
+});
+
 test("switching between Form and JSON keeps one draft, and keeps unparsed text", async () => {
   stubApi();
   const page = await mount("/scout/prod/on_flag");
