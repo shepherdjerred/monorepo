@@ -1,6 +1,5 @@
+import { isCommandPaletteShortcut } from "@shepherdjerred/console-ui";
 import { useSyncExternalStore } from "react";
-
-import { isPaletteShortcut } from "./platform/palette.tsx";
 
 // Wider viewports show the sidebar instead of the drawer. `globals.css`
 // switches the two at the same width.
@@ -35,5 +34,5 @@ sidebarQuery.addEventListener("change", (event) => {
 // The palette is a modal of its own; opening it replaces the drawer rather
 // than stacking a second dialog on top of it.
 document.addEventListener("keydown", (event) => {
-  if (isPaletteShortcut(event)) setNavDrawerOpen(false);
+  if (isCommandPaletteShortcut(event)) setNavDrawerOpen(false);
 });
