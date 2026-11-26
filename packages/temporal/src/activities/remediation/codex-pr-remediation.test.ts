@@ -191,7 +191,6 @@ describe("runCodexPrRemediation", () => {
         denyReadPaths: expect.arrayContaining([
           "/run/secrets",
           "/var/run/secrets",
-          "/etc/freshrss",
           "/proc/1",
           `/proc/${String(process.pid)}`,
         ]),

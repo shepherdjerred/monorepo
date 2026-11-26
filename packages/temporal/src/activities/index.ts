@@ -40,7 +40,6 @@ import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciWorkspaceReaperActivities } from "./maintenance/ci-workspace-reaper.ts";
 import { ciWorkspaceGoldenActivities } from "./maintenance/ci-workspace-golden.ts";
-import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { feedsActivities } from "./maintenance/feeds/feeds.ts";
 import { flagInventoryActivities } from "./flag-inventory-sync.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
@@ -127,7 +126,6 @@ export const repoActivities = {
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
-  ...freshrssActivities,
   ...feedsActivities,
   ...flagInventoryActivities,
 };

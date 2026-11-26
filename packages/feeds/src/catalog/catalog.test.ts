@@ -1,5 +1,3 @@
-import path from "node:path";
-import { DomUtils, parseDocument } from "htmlparser2";
 import { describe, expect, test } from "vitest";
 import { matchesAutoReadRule } from "@shepherdjerred/feeds/server/auto-read.ts";
 import type { DeclaredFeed } from "@shepherdjerred/feeds/shared/contract.ts";
@@ -10,65 +8,8 @@ import {
   validateCatalog,
 } from "./catalog.ts";
 
-const FRESHRSS_OPML_PATH = path.join(
-  import.meta.dirname,
-  "../../../homelab/src/cdk8s/helm/freshrss/feeds.opml",
-);
-
-type OpmlEntry = {
-  readonly group: string;
-  readonly text: string;
-  readonly xmlUrl: string;
-  readonly htmlUrl: string | undefined;
-  readonly description: string | undefined;
-  readonly priority: string | undefined;
-  readonly filterRead: string | undefined;
-};
-
-function parseOpmlFeeds(opmlXml: string): OpmlEntry[] {
-  const doc = parseDocument(opmlXml, { xmlMode: true });
-  const outlines = DomUtils.getElementsByTagName("outline", doc, true);
-  const entries: OpmlEntry[] = [];
-  for (const node of outlines) {
-    const xmlUrl = node.attribs["xmlUrl"];
-    if (
-      xmlUrl === undefined ||
-      xmlUrl === "https://github.com/FreshRSS/FreshRSS/releases.atom"
-    ) {
-      continue;
-    }
-    const parent = DomUtils.getParent(node);
-    const group =
-      parent !== null && "attribs" in parent
-        ? (parent.attribs["text"] ?? "")
-        : "";
-    entries.push({
-      group,
-      text: node.attribs["text"] ?? "",
-      xmlUrl,
-      htmlUrl: node.attribs["htmlUrl"],
-      description: node.attribs["description"],
-      priority: node.attribs["frss:priority"],
-      filterRead: node.attribs["frss:filtersActionRead"],
-    });
-  }
-  return entries;
-}
-
-function expectedRuleForOpmlFilter(filterRead: string | undefined) {
-  if (
-    filterRead ===
-    String.raw`intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i`
-  ) {
-    return PRERELEASE_RULE;
-  }
-  return filterRead === String.raw`-intitle:/\bAI SDK\b/i`
-    ? AI_SDK_ONLY_RULE
-    : undefined;
-}
-
 describe("DECLARED_FEEDS catalog", () => {
-  test("passes catalog validation and matches exact counts from FreshRSS OPML", () => {
+  test("passes catalog validation and maintains category, hidden, and rule counts", () => {
     expect(() => validateCatalog(DECLARED_FEEDS)).not.toThrow();
 
     expect(DECLARED_FEEDS).toHaveLength(65);
@@ -96,38 +37,11 @@ describe("DECLARED_FEEDS catalog", () => {
     expect(aiSdkFeeds).toHaveLength(1);
     expect(aiSdkFeeds[0]?.title).toBe("Vercel News — AI SDK");
 
-    expect(
-      DECLARED_FEEDS.some(
-        (f) => f.url === "https://github.com/FreshRSS/FreshRSS/releases.atom",
-      ),
-    ).toBe(false);
-  });
-
-  test("preserves exact titles, URLs, descriptions, and rules from feeds.opml", async () => {
-    const opmlXml = await Bun.file(FRESHRSS_OPML_PATH).text();
-    const parsed = parseOpmlFeeds(opmlXml);
-    expect(parsed).toHaveLength(DECLARED_FEEDS.length);
-
-    const byUrl = new Map(DECLARED_FEEDS.map((f) => [f.url, f]));
-    for (const opmlItem of parsed) {
-      const declared = byUrl.get(opmlItem.xmlUrl);
-      expect(declared).toBeDefined();
-      if (opmlItem.xmlUrl === "https://danluu.com/atom.xml") {
-        expect(declared?.title).toBe("Dan Luu");
-        expect(declared?.htmlUrl).toBe("https://danluu.com/");
-      } else {
-        expect(declared?.title).toBe(opmlItem.text);
-        expect(declared?.htmlUrl).toBe(opmlItem.htmlUrl);
-        expect(declared?.description).toBe(opmlItem.description);
-      }
-      expect(declared?.category).toBe(
-        opmlItem.group === "Repo Stack" ? "Repo Stack" : "Blogs",
-      );
-      expect(declared?.hidden === true).toBe(opmlItem.priority === "hidden");
-      expect(declared?.autoRead).toEqual(
-        expectedRuleForOpmlFilter(opmlItem.filterRead),
-      );
-    }
+    const danLuu = DECLARED_FEEDS.find(
+      (f) => f.url === "https://danluu.com/atom.xml",
+    );
+    expect(danLuu?.title).toBe("Dan Luu");
+    expect(danLuu?.htmlUrl).toBe("https://danluu.com/");
   });
 
   test("autoRead rules match prereleases and negated AI SDK titles accurately", () => {

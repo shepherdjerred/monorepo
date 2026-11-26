@@ -72,7 +72,6 @@ describe("remediationAgentEnv and remediationDenyReadPaths", () => {
     const denied = remediationDenyReadPaths(4242);
     expect(denied).toContain("/run/secrets");
     expect(denied).toContain("/var/run/secrets");
-    expect(denied).toContain("/etc/freshrss");
     expect(denied).toContain("/proc/1");
     expect(denied).toContain("/proc/4242");
   });
