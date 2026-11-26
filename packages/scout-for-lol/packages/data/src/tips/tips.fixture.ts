@@ -31,12 +31,22 @@ export function ability(
 
 export const CHARMED_ID = GlossaryIdSchema.parse("charmed");
 
+/** Charm's slow, stored in the ability facts as the ratio `-0.65`. */
+export const CHARM_SLOW: Cite = {
+  kind: "abilityNumber",
+  champion: AHRI,
+  slot: "E",
+  field: "SlowPercent",
+  values: [-0.65],
+};
+
 export const CHARMED: GlossaryEntry = {
   id: CHARMED_ID,
   term: "Charmed",
   aliases: ["charm", "charms"],
-  definition: "Walks helplessly toward the caster and cannot attack or cast.",
-  cites: [ability(AHRI, "E", "Charm")],
+  definition:
+    "Walks toward the caster, slowed by 65%, and cannot attack or cast.",
+  cites: [ability(AHRI, "E", "Charm"), CHARM_SLOW],
 };
 
 export const AHRI_MID_GENERAL_TIPS: Tip[] = [

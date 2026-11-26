@@ -1,15 +1,21 @@
 /**
  * Text rules shared by tips and glossary definitions. Tips state facts and
  * advice only (the Scout copy rule): no statistics, no lead-ins that explain
- * the tip, and every number grounded in a cited ability value.
+ * the tip, and every number grounded in a cited ability value. A percentage is
+ * an ability value too ("slows by 65%") when it matches a cited value, stored
+ * either as a ratio (`-0.65`) or in percent (`65`); any other percentage is a
+ * statistic.
  */
 
 export const TIP_MAX_SENTENCES = 2;
 
-/** A tip never cites statistics; those belong to the numbers sections. */
+/**
+ * A tip never cites statistics; those belong to the numbers sections. A
+ * percentage attached to a number is judged against the cites instead.
+ */
 const STATISTIC_PATTERNS: readonly (readonly [RegExp, string])[] = [
-  [/%/u, "a percentage"],
-  [/\bper ?cent/iu, "a percentage"],
+  [/(?<!\d\s?)%/u, "a percentage"],
+  [/(?<!\d\s?)\bper ?cent/iu, "a percentage"],
   [/\bwin ?rates?\b/iu, "a win rate"],
   [/\b(?:pick|ban) ?rates?\b/iu, "a pick or ban rate"],
   [/\bgames\b/iu, "a game count"],
@@ -67,8 +73,51 @@ function isLevelNumber(text: string, token: NumberToken): boolean {
   return /\blevel\s+$/iu.test(text.slice(0, token.index));
 }
 
+function isPercentage(text: string, token: NumberToken): boolean {
+  return /^\s?(?:%|per ?cent\b)/iu.test(
+    text.slice(token.index + token.text.length),
+  );
+}
+
 function sameNumber(left: number, right: number): boolean {
-  return Math.abs(left - right) < 1e-9;
+  return Math.abs(left - right) < 1e-6;
+}
+
+/** A cited value written as a percentage: a ratio (`-0.65`) or already in percent (`65`). */
+function matchesPercentage(cited: number, percent: number): boolean {
+  return (
+    sameNumber(Math.abs(cited) * 100, percent) ||
+    sameNumber(Math.abs(cited), percent)
+  );
+}
+
+function numberIssues(
+  text: string,
+  citedNumbers: readonly number[],
+): TextIssue[] {
+  return findNumbers(text).flatMap((token): TextIssue[] => {
+    if (isLevelNumber(text, token)) {
+      return [];
+    }
+    if (isPercentage(text, token)) {
+      return citedNumbers.some((value) => matchesPercentage(value, token.value))
+        ? []
+        : [
+            {
+              code: "statistic",
+              message: `"${token.text}%" is a percentage that is not a cited ability value`,
+            },
+          ];
+    }
+    return citedNumbers.some((value) => sameNumber(value, token.value))
+      ? []
+      : [
+          {
+            code: "uncited-number",
+            message: `"${token.text}" is not a cited ability value or a level`,
+          },
+        ];
+  });
 }
 
 export function validateText(
@@ -108,17 +157,7 @@ export function validateText(
       });
     }
   }
-  for (const token of findNumbers(text)) {
-    if (isLevelNumber(text, token)) {
-      continue;
-    }
-    if (!options.citedNumbers.some((value) => sameNumber(value, token.value))) {
-      issues.push({
-        code: "uncited-number",
-        message: `"${token.text}" is not a cited ability value or a level`,
-      });
-    }
-  }
+  issues.push(...numberIssues(text, options.citedNumbers));
   return issues;
 }
 

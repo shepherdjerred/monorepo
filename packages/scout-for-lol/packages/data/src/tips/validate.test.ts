@@ -9,6 +9,7 @@ import {
   AHRI,
   CHARMED,
   CHARMED_ID,
+  CHARM_SLOW,
   SYNDRA,
   ability,
   ahriMidGeneralSet,
@@ -132,6 +133,42 @@ describe("the round-5 example tips", () => {
       }),
     ).toEqual(["uncited-number", "bad-cite"]);
   });
+});
+
+describe("percentages, statistics, copy rules and pairs", () => {
+  test("pass with a percentage that is a cited ability value", () => {
+    expect(
+      codes({
+        text: "Charm slows them by 65%, so walk them into your Fox-Fire.",
+        cites: [
+          ability(AHRI, "E", "Charm"),
+          ability(AHRI, "W", "Fox-Fire"),
+          CHARM_SLOW,
+        ],
+      }),
+    ).toEqual([]);
+    expect(
+      codes({
+        text: "Charm slows them by 65 percent.",
+        cites: [ability(AHRI, "E", "Charm"), CHARM_SLOW],
+      }),
+    ).toEqual([]);
+  });
+
+  test("fail with a percentage that is not a cited ability value", () => {
+    expect(
+      codes({
+        text: "Charm slows them by 65%.",
+        cites: [ability(AHRI, "E", "Charm")],
+      }),
+    ).toEqual(["statistic"]);
+    expect(
+      codes({
+        text: "Charm slows them by 50%.",
+        cites: [ability(AHRI, "E", "Charm"), CHARM_SLOW],
+      }),
+    ).toEqual(["statistic"]);
+  });
 
   test("fail with a percentage or other statistic", () => {
     expect(
@@ -139,7 +176,10 @@ describe("the round-5 example tips", () => {
         text: "Syndra wins 52% of these lanes, so play safe.",
         cites: [],
       }),
-    ).toEqual(["statistic", "uncited-number"]);
+    ).toEqual(["statistic"]);
+    expect(
+      codes({ text: "Play for the percent chance she misses.", cites: [] }),
+    ).toEqual(["statistic"]);
     expect(
       codes({ text: "She loses most games after a lost lane.", cites: [] }),
     ).toEqual(["statistic"]);
@@ -232,12 +272,23 @@ describe("the round-5 example tips", () => {
   });
 
   test("glossary definitions follow the same rules", () => {
+    // The definition's 65% is Charm's cited SlowPercent.
     expect(validateGlossaryEntry(CHARMED, matchup)).toEqual([]);
     expect(
       validateGlossaryEntry(
-        { ...CHARMED, definition: "Note that charmed units walk 50% slower." },
+        { ...CHARMED, cites: [ability(AHRI, "E", "Charm")] },
         matchup,
       ).map((issue) => issue.code),
-    ).toEqual(["statistic", "lead-in", "uncited-number"]);
+    ).toEqual(["statistic"]);
+    expect(
+      validateGlossaryEntry(
+        {
+          ...CHARMED,
+          definition:
+            "Note that charmed units walk toward the caster, slowed by 65%.",
+        },
+        matchup,
+      ).map((issue) => issue.code),
+    ).toEqual(["lead-in"]);
   });
 });

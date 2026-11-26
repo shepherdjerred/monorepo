@@ -130,8 +130,9 @@ cites the facts it leans on; ability cites drive the icons beside a tip.
   (opponents estimated from lane shares) or from meta serving slices.
 - `validate.ts` checks a tip against the committed ability facts and Data
   Dragon: every ability name belongs to the unit's champions and is cited,
-  every number is a cited ability value or a level, no statistics, at most two
-  sentences, no explanatory lead-ins, and no near-duplicates across the two
+  every number is a cited ability value or a level, a percentage is allowed
+  only when it matches a cited ability value ("slows by 65%"), no statistics
+  such as win rates or game counts, at most two sentences, no explanatory lead-ins, and no near-duplicates across the two
   directions of a pair or against the general tips.
 - `input-hash.ts` hashes the prompt version with a stable projection of the
   unit's grounding (ability facts, tags, Riot's ally and enemy tips). A set
