@@ -4,6 +4,7 @@ import { ChampionFace } from "./champion-face.tsx";
 import { DuelHero } from "./duel-hero.tsx";
 import { isArtMirrored } from "./hero-art.tsx";
 import { HeroPanel } from "./hero-panel.tsx";
+import { NameText } from "./name-text.tsx";
 import { initialOf, PersonInitial } from "./person-initial.tsx";
 import { RankLockup } from "./rank-lockup.tsx";
 import {
@@ -343,5 +344,22 @@ describe("RankLockup", () => {
     expect(html).toContain("Challenger");
     expect(html).not.toContain("LP");
     expect(html).not.toContain("<small");
+  });
+});
+
+describe("NameText", () => {
+  test("keeps the whole name as text and in the title", () => {
+    const name = "A friend with a very long summoner name";
+    const html = renderToStaticMarkup(<NameText>{name}</NameText>);
+    expect(html).toContain(`title="${name}"`);
+    expect(html).toContain(`>${name}</span>`);
+    expect(html).toContain("scout-name");
+  });
+
+  test("escapes the name in the title", () => {
+    const html = renderToStaticMarkup(
+      <NameText>{'Nunu & "Willump"'}</NameText>,
+    );
+    expect(html).toContain('title="Nunu &amp; &quot;Willump&quot;"');
   });
 });

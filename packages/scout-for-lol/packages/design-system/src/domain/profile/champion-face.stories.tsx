@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { NameText } from "./name-text.tsx";
 import {
   CHAMPION_FACE_SIZES,
   ChampionFace,
@@ -28,7 +29,14 @@ export const Decorative: Story = {
   args: { champion: "Syndra", alt: "" },
 };
 
-const champions = ["Ahri", "Syndra", "Jinx", "Thresh", "Nunu", "Renata"];
+const rows = [
+  { key: "Ahri", name: "Ahri" },
+  { key: "Syndra", name: "Syndra" },
+  { key: "Jinx", name: "Jinx" },
+  { key: "Thresh", name: "Thresh" },
+  { key: "Nunu", name: "Nunu & Willump" },
+  { key: "Renata", name: "Renata Glasc" },
+];
 
 export const Sizes: Story = {
   parameters: { controls: { disable: true } },
@@ -64,33 +72,46 @@ export const SizesWithResults: Story = {
   ),
 };
 
-export const InAFeed: Story = {
-  parameters: { controls: { disable: true } },
-  render: () => (
+function FeedRows(props: { maxWidth?: string }) {
+  return (
     <ul
       style={{
         display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr)",
         gap: "0.875rem",
         listStyle: "none",
         margin: 0,
         padding: 0,
+        ...(props.maxWidth === undefined ? {} : { maxWidth: props.maxWidth }),
       }}
     >
-      {champions.map((champion, index) => (
+      {rows.map((row, index) => (
         <li
-          key={champion}
+          key={row.key}
           style={{ display: "flex", alignItems: "center", gap: "1rem" }}
         >
           <ChampionFace
-            champion={champion}
+            champion={row.key}
             result={index % 3 === 1 ? "loss" : "win"}
             alt=""
           />
-          <span>
-            {index % 3 === 1 ? "Lost" : "Won"} as {champion}
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <NameText>
+              {`${index % 3 === 1 ? "Lost" : "Won"} as ${row.name}, 9/2/11, +21 LP`}
+            </NameText>
           </span>
         </li>
       ))}
     </ul>
-  ),
+  );
+}
+
+export const InAFeed: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <FeedRows />,
+};
+
+export const LongTextInANarrowFeed: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <FeedRows maxWidth="17rem" />,
 };

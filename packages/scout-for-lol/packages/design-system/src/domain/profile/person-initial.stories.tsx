@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { NameText } from "./name-text.tsx";
 import { PersonInitial } from "./person-initial.tsx";
 
 const meta = {
@@ -70,28 +71,46 @@ export const UnusualNames: Story = {
   ),
 };
 
-export const BesideNames: Story = {
-  parameters: { controls: { disable: true } },
-  render: () => (
+const people = [
+  "Northstar",
+  "RiverQuartz",
+  "A friend with a very long summoner name that keeps going",
+];
+
+function BesideRows(props: { maxWidth: string }) {
+  return (
     <ul
       style={{
         display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr)",
         gap: "0.875rem",
         listStyle: "none",
         margin: 0,
         padding: 0,
-        maxWidth: "20rem",
+        maxWidth: props.maxWidth,
       }}
     >
-      {["Northstar", "RiverQuartz", "MapleCarry"].map((name, index) => (
+      {people.map((name, index) => (
         <li
           key={name}
           style={{ display: "flex", alignItems: "center", gap: "1rem" }}
         >
           <PersonInitial name={name} you={index === 0} live={index === 1} />
-          <b>{name}</b>
+          <b style={{ flex: 1, minWidth: 0 }}>
+            <NameText>{name}</NameText>
+          </b>
         </li>
       ))}
     </ul>
-  ),
+  );
+}
+
+export const BesideNames: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <BesideRows maxWidth="20rem" />,
+};
+
+export const BesideLongNames: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <BesideRows maxWidth="14rem" />,
 };
