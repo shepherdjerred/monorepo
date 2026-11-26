@@ -4212,9 +4212,9 @@ Destroy. Citizens NPCs are excluded from every session, combat, and snapshot sur
 - Joining players' peer `InetAddress` (populated by `mc-router` PROXY protocol on `tsmc`) is
   resolved in-memory against a bundled offline RIR allocation table
   (`plugin/modules/stats/src/main/resources/geoip-rir.bin.gz`, refreshed via
-  `bun plugin/modules/stats/scripts/generate-rir-geoip.ts`) into `(countryCode, countryName)` on
-  `session_started`; private/CGNAT/loopback peers are ignored and raw IP addresses are never stored
-  or exported.
+  `bun plugin/modules/stats/scripts/generate-rir-geoip.ts` and loaded off-thread via `ComputePool`
+  during module startup) into `(countryCode, countryName)` on `session_started`; private/CGNAT/loopback
+  peers are ignored and raw IP addresses are never stored or exported.
 - When `STORM_STATS_INGEST_URL` and `STORM_STATS_INGEST_TOKEN` are set and the managed flag
   `the-storm-stats-export-enabled` evaluates true, queued outbox events and latest snapshots are
   exported in bounded HTTP batches (`../storm-stats/contracts/ingest-v1.json`) on virtual threads.

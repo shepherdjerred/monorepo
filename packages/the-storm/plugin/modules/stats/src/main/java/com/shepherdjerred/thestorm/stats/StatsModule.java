@@ -21,6 +21,7 @@ import com.shepherdjerred.thestorm.stats.app.StatsTransport;
 import com.shepherdjerred.thestorm.stats.domain.GeoIpDatabase;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -39,19 +40,31 @@ public final class StatsModule implements StormModule {
   private static final UUID SYSTEM_ACTOR = new UUID(0L, 0L);
 
   private final Function<String, Optional<String>> environment;
+  private final Supplier<GeoIpDatabase> geoIpSupplier;
+  private @Nullable StatsService activeService;
   private @Nullable Running running;
 
   public StatsModule() {
-    this(name -> Optional.ofNullable(System.getenv(name)));
+    this(name -> Optional.ofNullable(System.getenv(name)), GeoIpDatabase::bundled);
   }
 
   public StatsModule(Function<String, Optional<String>> environment) {
-    this.environment = environment;
+    this(environment, GeoIpDatabase::bundled);
+  }
+
+  public StatsModule(
+      Function<String, Optional<String>> environment, Supplier<GeoIpDatabase> geoIpSupplier) {
+    this.environment = Objects.requireNonNull(environment, "environment");
+    this.geoIpSupplier = Objects.requireNonNull(geoIpSupplier, "geoIpSupplier");
   }
 
   @Override
   public String id() {
     return "stats";
+  }
+
+  public boolean ready() {
+    return running != null;
   }
 
   @Override
@@ -70,6 +83,7 @@ public final class StatsModule implements StormModule {
 
     context.services().provide(StatsService.class, service);
     context.services().require(PlayerResetRegistry.class).register(id(), service::resetPlayer);
+    activeService = service;
 
     var _ =
         service
@@ -83,8 +97,69 @@ public final class StatsModule implements StormModule {
             });
 
     var server = context.plugin().getServer();
+    var command =
+        new StatsCommand(
+            new StatsCommand.Dependencies(server, config, store),
+            context.scheduler().mainThread(),
+            context.logger());
+    context
+        .lifecycle()
+        .registerEventHandler(
+            LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
+
+    var bootstrap = new Bootstrap(context, config, endpoint, service);
+    var _ =
+        context
+            .compute()
+            .submit(geoIpSupplier)
+            .whenCompleteAsync(
+                (geoIp, failure) -> completePaperStartup(bootstrap, geoIp, failure),
+                context.scheduler().mainThread());
+  }
+
+  @Override
+  public void disable() {
+    var current = running;
+    running = null;
+    var service = activeService;
+    activeService = null;
+    if (current != null) {
+      current.samplerTask().cancel();
+      current.flushTask().cancel();
+      current.afkUnsubscribe().run();
+      HandlerList.unregisterAll(current.sessionListener());
+      HandlerList.unregisterAll(current.combatListener());
+    }
+    if (service != null) {
+      service.close();
+    }
+  }
+
+  private void completePaperStartup(
+      Bootstrap bootstrap, @Nullable GeoIpDatabase geoIp, @Nullable Throwable failure) {
+    if (activeService != bootstrap.service()) {
+      return;
+    }
+    var context = bootstrap.context();
+    if (failure != null || geoIp == null) {
+      context
+          .logger()
+          .error(
+              "Stats module failed to load bundled GeoIP database; stopping the server", failure);
+      disable();
+      context.plugin().getServer().shutdown();
+      return;
+    }
+    running = installPaperRuntime(bootstrap, geoIp);
+  }
+
+  private static Running installPaperRuntime(Bootstrap bootstrap, GeoIpDatabase geoIp) {
+    var context = bootstrap.context();
+    var config = bootstrap.config();
+    var service = bootstrap.service();
+    var server = context.plugin().getServer();
     var ports = StatsPaperPorts.discover(context.services());
-    var stateReader = new PlayerStateReader(server, ports, context.time(), GeoIpDatabase.bundled());
+    var stateReader = new PlayerStateReader(server, ports, context.time(), geoIp);
     var sampler =
         new StatsSampler(
             new StatsSampler.Context(server, service, ports, stateReader),
@@ -110,56 +185,36 @@ public final class StatsModule implements StormModule {
     var snapshotPeriod = Duration.ofSeconds(config.snapshotIntervalSeconds());
     var samplerTask =
         context.scheduler().repeatOnMainThread(snapshotPeriod, snapshotPeriod, sampler::sample);
+    var flushTask = scheduleFlushTask(bootstrap);
+    return new Running(sessionListener, combatListener, afkUnsubscribe, samplerTask, flushTask);
+  }
 
-    Cancellable flushTask = () -> {};
-    if (endpoint.isPresent()) {
-      var flushPeriod = Duration.ofSeconds(config.flushIntervalSeconds());
-      flushTask =
-          context
-              .scheduler()
-              .repeatOnMainThread(
-                  flushPeriod,
-                  flushPeriod,
-                  () -> {
-                    var _ = service.flush();
-                  });
-      context.logger().info("Stats export enabled toward {}", endpoint.orElseThrow().ingestUri());
-    } else {
+  private static Cancellable scheduleFlushTask(Bootstrap bootstrap) {
+    var context = bootstrap.context();
+    var config = bootstrap.config();
+    if (bootstrap.endpoint().isEmpty()) {
       context
           .logger()
           .info(
               "Stats ingest env ({} / {}) unset; recording local summaries only",
               config.ingestUrlEnv(),
               config.ingestTokenEnv());
+      return () -> {};
     }
-
-    var command =
-        new StatsCommand(
-            new StatsCommand.Dependencies(server, config, store),
-            context.scheduler().mainThread(),
-            context.logger());
+    var flushPeriod = Duration.ofSeconds(config.flushIntervalSeconds());
+    var task =
+        context
+            .scheduler()
+            .repeatOnMainThread(
+                flushPeriod,
+                flushPeriod,
+                () -> {
+                  var _ = bootstrap.service().flush();
+                });
     context
-        .lifecycle()
-        .registerEventHandler(
-            LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
-
-    running =
-        new Running(
-            service, sessionListener, combatListener, afkUnsubscribe, samplerTask, flushTask);
-  }
-
-  @Override
-  public void disable() {
-    var current = running;
-    running = null;
-    if (current != null) {
-      current.samplerTask().cancel();
-      current.flushTask().cancel();
-      current.afkUnsubscribe().run();
-      HandlerList.unregisterAll(current.sessionListener());
-      HandlerList.unregisterAll(current.combatListener());
-      current.service().close();
-    }
+        .logger()
+        .info("Stats export enabled toward {}", bootstrap.endpoint().orElseThrow().ingestUri());
+    return task;
   }
 
   private static Supplier<CompletableFuture<Boolean>> exportGate(ModuleContext context) {
@@ -191,8 +246,13 @@ public final class StatsModule implements StormModule {
     return new UUID(msb, lsb);
   }
 
+  private record Bootstrap(
+      ModuleContext context,
+      StatsConfig config,
+      Optional<StatsEndpoint> endpoint,
+      StatsService service) {}
+
   private record Running(
-      StatsService service,
       StatsSessionListener sessionListener,
       StatsCombatListener combatListener,
       Runnable afkUnsubscribe,

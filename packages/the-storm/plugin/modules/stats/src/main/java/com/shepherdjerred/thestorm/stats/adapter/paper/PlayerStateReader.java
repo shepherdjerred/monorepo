@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.stats.domain.SessionLedger;
 import com.shepherdjerred.thestorm.stats.domain.WorldBucket;
 import com.shepherdjerred.thestorm.stats.domain.WorldClassifier;
 import java.time.InstantSource;
+import java.util.Objects;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.GameMode;
 import org.bukkit.Server;
@@ -23,16 +24,12 @@ public final class PlayerStateReader {
   private final InstantSource time;
   private final GeoIpDatabase geoIp;
 
-  public PlayerStateReader(Server server, StatsPaperPorts ports, InstantSource time) {
-    this(server, ports, time, GeoIpDatabase.bundled());
-  }
-
   public PlayerStateReader(
       Server server, StatsPaperPorts ports, InstantSource time, GeoIpDatabase geoIp) {
-    this.server = server;
-    this.ports = ports;
-    this.time = time;
-    this.geoIp = geoIp;
+    this.server = Objects.requireNonNull(server, "server");
+    this.ports = Objects.requireNonNull(ports, "ports");
+    this.time = Objects.requireNonNull(time, "time");
+    this.geoIp = Objects.requireNonNull(geoIp, "geoIp");
   }
 
   public boolean inArena(Player player) {
