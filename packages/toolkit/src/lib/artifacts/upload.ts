@@ -52,14 +52,18 @@ export function unchangedVersion(
   client: Pick<ArtifactsClient, "baseUrl">,
   artifact: ArtifactDetail,
   source: ArtifactSource,
-  note: string | undefined,
+  requested: { note?: string | undefined; viewport?: Viewport | undefined },
 ): UploadResult | null {
+  const { note, viewport } = requested;
   const version = artifact.current;
   if (version === null || version.purged) return null;
   if (
     version.entryPath !== source.entryPath ||
     version.files.length !== source.files.length ||
-    (note !== undefined && note !== version.note)
+    (note !== undefined && note !== version.note) ||
+    (viewport !== undefined &&
+      (version.viewport?.width !== viewport.width ||
+        version.viewport.height !== viewport.height))
   )
     return null;
   const have = new Map(version.files.map((file) => [file.path, file.sha256]));

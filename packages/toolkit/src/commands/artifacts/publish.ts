@@ -320,7 +320,10 @@ async function publishOne(
   const unchanged =
     current === null
       ? null
-      : unchangedVersion(client, current, source, plan.note);
+      : unchangedVersion(client, current, source, {
+          note: plan.note,
+          viewport: fixed ? plan.viewport : undefined,
+        });
   if (unchanged !== null) return { title, result: unchanged };
   const result = await uploadVersion(
     client,

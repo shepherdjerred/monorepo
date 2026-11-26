@@ -1,5 +1,5 @@
 import { callOptions } from "#lib/artifacts/client.ts";
-import { EXIT, usageError } from "#lib/artifacts/errors.ts";
+import { EXIT, redactTokens, usageError } from "#lib/artifacts/errors.ts";
 import { readTextFile } from "./files.ts";
 import { onlyPositional, parseCommandArgs, parseId } from "./options.ts";
 import type { Runtime } from "./runtime.ts";
@@ -64,7 +64,7 @@ export async function replyCommand(
     );
     await runtime.io.stdout(
       values.json
-        ? `${JSON.stringify(thread)}\n`
+        ? `${redactTokens(JSON.stringify(thread))}\n`
         : `Replied to thread ${thread.id}${thread.state === "resolved" ? " and resolved it" : ""}.\n`,
     );
     return EXIT.ok;
@@ -98,7 +98,7 @@ export async function resolveCommand(
     );
     await runtime.io.stdout(
       values.json
-        ? `${JSON.stringify(thread)}\n`
+        ? `${redactTokens(JSON.stringify(thread))}\n`
         : `Resolved thread ${thread.id}.\n`,
     );
     return EXIT.ok;

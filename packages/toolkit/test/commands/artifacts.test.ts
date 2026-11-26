@@ -82,6 +82,8 @@ function publishService(
       size: number;
       mediaType: string;
     }[];
+    /** The viewport the artifact's current version was published with. */
+    unchangedViewport?: { width: number; height: number };
   } = {},
 ) {
   const created: Created[] = [];
@@ -126,7 +128,7 @@ function publishService(
                 totalBytes: 5,
                 fileCount: options.unchangedFiles.length,
                 note: "",
-                viewport: null,
+                viewport: options.unchangedViewport ?? null,
                 createdAt: "2026-11-26T08:00:00.000Z",
                 publisher: {
                   key: "claude-code:s",
@@ -393,6 +395,32 @@ test("republishing identical files as a new version creates nothing and says so"
   expect(noted.created).toHaveLength(1);
 });
 
+test("a changed --viewport is a real change; a matching or absent one is not", async () => {
+  const file = await htmlFile("viewport.html", "<h1>same</h1>");
+  const source = await buildSource(file);
+  const unchangedViewport = { width: 1440, height: 900 };
+  const publishWith = async (viewport: string | undefined) => {
+    const { service, created } = publishService({
+      unchangedFiles: source.files,
+      unchangedViewport,
+    });
+    await artifactsCommand(
+      "publish",
+      [
+        file,
+        "--version-of",
+        IDS.artifact,
+        ...(viewport === undefined ? [] : ["--viewport", viewport]),
+      ],
+      runtimeFor(service).runtime,
+    );
+    return created.length;
+  };
+  expect(await publishWith("390x844")).toBe(1);
+  expect(await publishWith("1440x900")).toBe(0);
+  expect(await publishWith(undefined)).toBe(0);
+});
+
 test("a human caller must name a board or artifact to wait", async () => {
   const { service } = waitService([claimWith([])]);
   const human = { ...ACTOR, key: "human:jerred", kind: "human" as const };
@@ -549,6 +577,20 @@ test("wait --json prints only {outcome, items} on stdout", async () => {
   expect(report.outcome).toBe("feedback");
   expect(report.items).toHaveLength(1);
   expect(err.join("")).toContain("Waiting for review feedback");
+});
+
+test("wait --json redacts content tokens in feedback bodies", async () => {
+  const token = "t0ken".repeat(5);
+  const { service } = waitService([
+    claimWith([
+      feedbackItem({ body: `see https://content.test/_t/${token}/x` }),
+    ]),
+  ]);
+  const { runtime, out } = runtimeFor(service, { wait: FAST_WAIT });
+  expect(await artifactsCommand("wait", ["--json"], runtime)).toBe(0);
+  const raw = out.join("");
+  expect(raw).not.toContain(token);
+  expect(raw).toContain("/_t/[redacted]/");
 });
 
 test("wait --timeout ends with exit 6 and says it is not a failure", async () => {
@@ -758,6 +800,32 @@ test("reply sends the body and --resolve in one call", async () => {
   expect(out.join("")).toBe(
     `Replied to thread ${IDS.thread} and resolved it.\n`,
   );
+});
+
+test("reply --json and resolve --json redact content tokens in comment bodies", async () => {
+  const token = "t0ken".repeat(5);
+  const leaky = {
+    ...thread("open"),
+    comments: thread("open").comments.map((comment) => ({
+      ...comment,
+      body: `see https://content.test/_t/${token}/x`,
+    })),
+  };
+  const service = fakeService({
+    trpc: { "threads.reply": () => leaky, "threads.resolve": () => leaky },
+  });
+  const body = path.join(await tempDirectory(), "reply.md");
+  await writeFile(body, "ok");
+  for (const [command, args] of [
+    ["reply", [IDS.thread, "--body-file", body, "--json"]],
+    ["resolve", [IDS.thread, "--json"]],
+  ] as const) {
+    const { runtime, out } = runtimeFor(service);
+    expect(await artifactsCommand(command, [...args], runtime)).toBe(0);
+    const raw = out.join("");
+    expect(raw).not.toContain(token);
+    expect(raw).toContain("/_t/[redacted]/");
+  }
 });
 
 test("reply reads stdin for --body-file - and rejects empty or missing bodies", async () => {

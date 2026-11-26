@@ -57,10 +57,12 @@ function render(
   timeout = "the requested deadline",
 ): string {
   if (json)
-    return `${JSON.stringify({
-      outcome: result.outcome,
-      items: result.outcome === "feedback" ? result.items : [],
-    })}\n`;
+    return `${redactTokens(
+      JSON.stringify({
+        outcome: result.outcome,
+        items: result.outcome === "feedback" ? result.items : [],
+      }),
+    )}\n`;
   switch (result.outcome) {
     case "feedback":
       return formatFeedbackDigest(result.items);
@@ -160,7 +162,7 @@ function waitDeps(
     present: (items) =>
       runtime.io.stdout(
         plan.json
-          ? `${JSON.stringify({ outcome: "feedback", items })}\n`
+          ? `${redactTokens(JSON.stringify({ outcome: "feedback", items }))}\n`
           : formatFeedbackDigest(items),
       ),
     heartbeat: ({ elapsedMs, connected }) => {
