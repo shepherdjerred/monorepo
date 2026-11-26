@@ -63,9 +63,10 @@ pipeline pod; see [How CI selects work](/explanation/ci-pipeline-shape/#the-revi
 Presence data flaps. A phone at the edge of the home zone can report leave and
 arrive several times a minute.
 
-Everything presence-driven is built around a 90-second settle window, and the
-front door lock gets stronger treatment still: a singleton reconciler that reads
-live state after the window rather than acting on the edge that woke it.
+Everything presence-driven is built around a 90-second settle window. The front
+door lock and occupied heat use a stronger shape: a singleton reconciler that
+reads live state after the window rather than acting on the edge that woke it.
+Heat parameters are on [Home automation routines](/reference/home-automation-routines/).
 
 The predecessor design ran independent timers per edge and could audibly
 unlock-then-lock on a single flap. When the side effect is a deadbolt in a quiet

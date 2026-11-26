@@ -5,6 +5,7 @@ import type { PetCareSensorUpdate } from "#shared/infra/pet-care.ts";
 import {
   handleIosAction,
   handleStateChanged,
+  signalClimateReconciler,
   syncPetCareStates,
   syncRoborockStates,
 } from "./triggers.ts";
@@ -35,6 +36,15 @@ function fakeClient(start: WorkflowStart): Client {
 function fakeSignalClient(signalWithStart: WorkflowSignalWithStart): Client {
   const client = Object.create(null);
   client.workflow = { signalWithStart };
+  return client;
+}
+
+function fakeStartAndSignalClient(
+  start: WorkflowStart,
+  signalWithStart: WorkflowSignalWithStart,
+): Client {
+  const client = Object.create(null);
+  client.workflow = { start, signalWithStart };
   return client;
 }
 
@@ -197,5 +207,45 @@ describe("Home Assistant event routing", () => {
     await syncRoborockStates(client, rest);
     expect(signalWithStart).toHaveBeenCalledTimes(1);
     expect(signalWithStart.mock.calls[0]?.[0]).toBe("reconcileRoborock");
+  });
+
+  test("signals the climate reconciler on startup and on a person transition", async () => {
+    const signalWithStart = vi.fn<WorkflowSignalWithStart>(() =>
+      Promise.resolve(),
+    );
+    const start = vi.fn<WorkflowStart>(() => Promise.resolve());
+    const client = fakeStartAndSignalClient(start, signalWithStart);
+
+    await signalClimateReconciler(client);
+    expect(signalWithStart).toHaveBeenCalledTimes(1);
+    expect(signalWithStart.mock.calls[0]?.[0]).toBe("reconcileClimate");
+    expect(signalWithStart.mock.calls[0]?.[1]).toMatchObject({
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      workflowId: "reconcile-climate",
+      workflowExecutionTimeout: "10 minutes",
+      signal: "presenceChanged",
+      signalArgs: [],
+    });
+
+    const rest = Object.create(null);
+    rest.getState = (entityId: string) =>
+      Promise.resolve({ entity_id: entityId, state: "not_home" });
+    await handleStateChanged(
+      client,
+      rest,
+    )({
+      data: {
+        entity_id: "person.jerred",
+        old_state: { state: "not_home" },
+        new_state: { state: "home" },
+      },
+    });
+
+    const workflowTypes = signalWithStart.mock.calls.map((call) => call[0]);
+    expect(workflowTypes).toEqual([
+      "reconcileClimate",
+      "reconcileLock",
+      "reconcileClimate",
+    ]);
   });
 });
