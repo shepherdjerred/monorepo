@@ -399,13 +399,14 @@ summary {
   border-radius: 6px;
   background: var(--ui-panel);
   border: 1px solid var(--ui-line);
-  box-shadow: var(--shadow);
   font-size: 12px;
   font-weight: 500;
   transform: translateY(-200%);
 }
+/* The shadow only while shown: parked above the viewport it bleeds into the header. */
 .skip-link:focus {
   transform: none;
+  box-shadow: var(--shadow);
 }
 main:focus {
   outline: none;

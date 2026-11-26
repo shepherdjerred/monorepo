@@ -204,7 +204,7 @@ select.picker-action::picker-icon {
   border-radius: 8px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
+  box-shadow: var(--shadow-menu);
 }
 select.picker::picker(select) {
   min-width: 200px;
@@ -216,7 +216,7 @@ select.picker::picker(select) {
   border-radius: 8px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
+  box-shadow: var(--shadow-menu);
   margin-block: 4px;
 }
 /* Rows are flat menu items, whatever element renders them. */
@@ -382,7 +382,7 @@ select.picker option[hidden] {
   border-radius: 8px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
+  box-shadow: var(--shadow-menu);
   outline: none;
   max-height: var(--available-height);
   overflow-y: auto;
@@ -541,7 +541,7 @@ select.picker option[hidden] {
   border: 1px solid var(--ui-line);
   border-radius: 8px;
   background: var(--ui-panel);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
+  box-shadow: var(--shadow-menu);
   transform: translateX(-50%);
 }
 .bulk-count {
