@@ -23,7 +23,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "^7.10.1",
-    "@sentry/bun": "^11.16.0",
+    "@sentry/bun": "^11.18.0",
     "@shepherdjerred/bugsink-config": "workspace:*",
     "hono": "^4.12.18",
     "prisma": "^7.10.1",
@@ -41,7 +41,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   }
 }

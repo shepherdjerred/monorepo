@@ -15,16 +15,16 @@
     "format": "bun x --no-install prettier --check ."
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.14.0",
+    "@axe-core/playwright": "^4.14.1",
     "zod": "^4.4.3",
     "@playwright/test": "1.64.0",
     "@types/bun": "^1.4.5",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.5",
+    "@vitest/coverage-istanbul": "5.1.2",
     "eslint": "^10.7.0",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.1.2"
   },
   "license": "GPL-3.0-only",
   "imports": {

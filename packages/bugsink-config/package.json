@@ -16,10 +16,10 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/core": "11.16.0"
+    "@sentry/core": "11.18.0"
   },
   "devDependencies": {
-    "@sentry/bun": "11.16.0",
+    "@sentry/bun": "11.18.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",
@@ -29,7 +29,7 @@
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   }
 }

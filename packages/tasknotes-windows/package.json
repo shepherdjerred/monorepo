@@ -18,7 +18,7 @@
     "tasknotes-server": "workspace:*",
     "typescript": "^6.0.3",
     "zod": "^4.4.3",
-    "vitest": "5.0.5"
+    "vitest": "5.1.2"
   },
   "scripts": {
     "generate": "bun scripts/generate-notices.ts",

@@ -61,8 +61,8 @@
     "@opentelemetry/sdk-node": "^0.223.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@sentry/bun": "^11.16.0",
-    "@sentry/react": "^11.16.0",
+    "@sentry/bun": "^11.18.0",
+    "@sentry/react": "^11.18.0",
     "@shepherdjerred/bugsink-config": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
@@ -95,13 +95,13 @@
     "@typescript-eslint/utils": "^8.72.2",
     "@typescript/native": "npm:typescript@7.0.2",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-istanbul": "5.0.5",
+    "@vitest/coverage-istanbul": "5.1.2",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "jsdom": "^31.0.1",
-    "openai": "7.62.0",
+    "openai": "7.64.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "5.0.5"
+    "vitest": "5.1.2"
   }
 }

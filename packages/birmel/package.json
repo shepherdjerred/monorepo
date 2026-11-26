@@ -46,14 +46,14 @@
     "@prisma/adapter-libsql": "7.10.1",
     "@prisma/client": "^7.10.1",
     "@prisma/client-runtime-utils": "7.10.1",
-    "@sentry/bun": "11.16.0",
+    "@sentry/bun": "11.18.0",
     "@shepherdjerred/glitter-context": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/text": "workspace:*",
-    "ai": "^7.0.179",
+    "ai": "^7.0.183",
     "chrono-node": "^2.9.1",
     "cron-parser": "^5.5.0",
     "discord.js": "^14.27.0",
@@ -70,7 +70,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   }
 }
