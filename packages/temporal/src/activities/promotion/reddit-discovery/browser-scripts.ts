@@ -71,7 +71,10 @@ export function redditListingScript(limit: number): string {
   })()`;
 }
 
-export function redditThreadScript(account: string): string {
+export function redditThreadScript(
+  account: string,
+  includeComments = false,
+): string {
   return String.raw`(() => {
     const parts = location.pathname.split('/');
     const id = parts[4];
@@ -79,7 +82,7 @@ export function redditThreadScript(account: string): string {
     if (!post) throw new Error('Exact old Reddit post did not render');
     const body = post.querySelector('.usertext-body .md')?.textContent?.trim() || '';
     const comments = Array.from(document.querySelectorAll('.commentarea .thing.comment'));
-    return {
+    const thread = {
       id,
       subreddit: post.getAttribute('data-subreddit') || parts[2],
       url: 'https://www.reddit.com/r/' + parts[2] + '/comments/' + id + '/',
@@ -93,6 +96,26 @@ export function redditThreadScript(account: string): string {
       locked: post.classList.contains('locked') || post.querySelector('.locked-tagline') !== null || document.querySelector('.commentarea .locked-infobar') !== null,
       archived: post.classList.contains('archived') || post.querySelector('.archived-tagline') !== null || document.querySelector('.commentarea .archived-infobar') !== null,
       loggedInUsername: document.querySelector('#header-bottom-right .user a')?.textContent?.trim() || null,
+    };
+    if (!${String(includeComments)}) return thread;
+    const ownIds = new Set(thread.ownReplyIds);
+    return {
+      post: thread,
+      comments: comments.flatMap(comment => {
+        const fullname = comment.getAttribute('data-fullname') || '';
+        if (!/^t1_[a-z0-9]+$/.test(fullname)) return [];
+        const id = fullname.slice(3);
+        const entry = comment.querySelector(':scope > .entry');
+        const parent = comment.parentElement?.closest('.thing.comment[data-fullname]');
+        const createdAt = Date.parse(entry?.querySelector('.tagline time[datetime]')?.getAttribute('datetime'));
+        return [{
+          id,
+          parentId: parent?.getAttribute('data-fullname') || 't3_' + thread.id,
+          body: entry?.querySelector('.usertext-body .md')?.textContent?.trim() || null,
+          createdAt: Number.isFinite(createdAt) ? new Date(createdAt).toISOString() : null,
+          isStormReply: ownIds.has(id),
+        }];
+      }),
     };
   })()`;
 }

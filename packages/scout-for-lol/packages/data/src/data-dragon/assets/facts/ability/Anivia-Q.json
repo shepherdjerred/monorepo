@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Anivia-Q",
+  "name": "Flash Frost",
+  "description": "Anivia fires a massive chunk of ice, dealing 50/70/90/110/130 (+25% AP) magic damage and Chilling enemies for 3 seconds, Slowing them by 20/30/40%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/85/90/95/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1075"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Anivia-Q.png",
+  "slot": "Q",
+  "championKey": "Anivia",
+  "championName": "Anivia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    80,
+    85,
+    90,
+    95,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1075,
+    1075,
+    1075,
+    1075,
+    1075
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

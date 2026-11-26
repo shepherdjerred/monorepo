@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Malphite-R",
+  "name": "Unstoppable Force",
+  "description": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite Knocks Up for 1.5 seconds and deals 200/300/400 (+90% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Malphite-R.png",
+  "slot": "R",
+  "championKey": "Malphite",
+  "championName": "Malphite",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    115,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/115/100 s"
+  }
+}

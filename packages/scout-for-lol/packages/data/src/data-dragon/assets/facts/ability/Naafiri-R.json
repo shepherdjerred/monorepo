@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Naafiri-R",
+  "name": "Hounds' Pursuit",
+  "description": "Naafiri dashes at an enemy champion, dealing 125/200/275 (+100% bonus AD) physical damage and briefly Slowing them. Packmates become Untargetable and dash alongside Naafiri, dealing 12.5/20/27.5 (+10% bonus AD) physical damage per Packmate.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Naafiri-R.png",
+  "slot": "R",
+  "championKey": "Naafiri",
+  "championName": "Naafiri",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    95,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/95/80 s"
+  }
+}

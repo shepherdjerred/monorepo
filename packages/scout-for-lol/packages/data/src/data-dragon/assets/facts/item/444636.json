@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "444636",
+  "name": "Night Harvester",
+  "description": "Soulrend: (0s) per champion Damaging a champion with Attacks or Abilities deals an additional magic damage and grants you 60% Move Speed for 1 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "90"
+    },
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/444636.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

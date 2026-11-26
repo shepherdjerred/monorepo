@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shaco-Q",
+  "name": "Deceive",
+  "description": "Shaco teleports and becomes Invisible for 2.5/2.75/3/3.25/3.5 seconds. Using Jack In The Box or Hallucinate does not break Invisibility.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shaco-Q.png",
+  "slot": "Q",
+  "championKey": "Shaco",
+  "championName": "Shaco",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12.5,
+    12,
+    11.5,
+    11
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12.5/12/11.5/11 s"
+  }
+}

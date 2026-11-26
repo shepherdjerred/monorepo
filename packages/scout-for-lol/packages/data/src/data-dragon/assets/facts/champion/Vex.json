@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Vex",
+  "name": "Vex",
+  "description": "In the black heart of the Shadow Isles, a lone yordle trudges through the spectral fog, content in its murky misery.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Vex-passive",
+      "name": "Doom 'n Gloom",
+      "icon": "img/ability/Vex-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vex-Q",
+      "name": "Mistral Bolt",
+      "icon": "img/ability/Vex-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vex-W",
+      "name": "Personal Space",
+      "icon": "img/ability/Vex-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vex-E",
+      "name": "Looming Darkness",
+      "icon": "img/ability/Vex-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vex-R",
+      "name": "Shadow Surge",
+      "icon": "img/ability/Vex-R.png"
+    }
+  ],
+  "icon": "img/champion/Vex.png",
+  "art": "img/champion-splash/Vex_0.jpg",
+  "title": "the Gloomist",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "XinZhao-E",
+  "name": "Audacious Charge",
+  "description": "Xin Zhao charges an enemy, dealing 50/75/100/125/150 (+120% AP) magic damage to nearby enemies and Slowing them by 30% for 0.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/XinZhao-E.png",
+  "slot": "E",
+  "championKey": "XinZhao",
+  "championName": "Xin Zhao",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    11,
+    11,
+    11,
+    11
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11 s"
+  }
+}

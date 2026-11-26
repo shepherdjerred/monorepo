@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9402",
+  "name": "Anima Echo",
+  "description": "Waves now come back upon reaching their end point, dealing damage again and shooting past Seraphine Damage, Ability Haste, Crit Chance, Projectile Count, Duration",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9402.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

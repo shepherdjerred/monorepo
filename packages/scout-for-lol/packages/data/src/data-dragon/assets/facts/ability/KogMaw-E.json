@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KogMaw-E",
+  "name": "Void Ooze",
+  "description": "Kog'Maw spits bile, dealing 70/110/150/190/230 (+65% AP) magic damage and leaving a trail of ooze for 3 seconds. Enemies in the ooze are Slowed by 40/45/50/55/60%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/55/70/85/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KogMaw-E.png",
+  "slot": "E",
+  "championKey": "KogMaw",
+  "championName": "Kog'Maw",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    40,
+    55,
+    70,
+    85,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

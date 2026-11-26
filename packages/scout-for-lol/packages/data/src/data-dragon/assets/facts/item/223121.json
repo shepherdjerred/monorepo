@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223121",
+  "name": "Fimbulwinter",
+  "description": "Awe: Gain bonus Health based on Mana. Everlasting: Immobilizing or Slowing an enemy champion grants a Shield.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223121.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9273",
+  "name": "Explosive Embrace",
+  "description": "Damages nearby enemies, scaling with your Max Health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9273.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

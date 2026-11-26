@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9290",
+  "name": "Vayne's Chromablades",
+  "description": "Fires projectiles that bounce off walls, damaging all enemies they pass through.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9290.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

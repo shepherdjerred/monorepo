@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Rumble",
+  "name": "Rumble",
+  "description": "Rumble is a young inventor with a temper. Using nothing more than his own two hands and a heap of scrap, the feisty yordle constructed a colossal mech suit outfitted with an arsenal of electrified harpoons and incendiary rockets.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Rumble-passive",
+      "name": "Junkyard Titan",
+      "icon": "img/ability/Rumble-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rumble-Q",
+      "name": "Flamespitter",
+      "icon": "img/ability/Rumble-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rumble-W",
+      "name": "Scrap Shield",
+      "icon": "img/ability/Rumble-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rumble-E",
+      "name": "Electro Harpoon",
+      "icon": "img/ability/Rumble-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rumble-R",
+      "name": "The Equalizer",
+      "icon": "img/ability/Rumble-R.png"
+    }
+  ],
+  "icon": "img/champion/Rumble.png",
+  "art": "img/champion-splash/Rumble_0.jpg",
+  "title": "the Mechanized Menace",
+  "roles": [
+    "Fighter",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Mage"
+  }
+}

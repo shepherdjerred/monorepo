@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zilean-Q",
+  "name": "Time Bomb",
+  "description": "Zilean tosses a time-delayed bomb that sticks to the first unit which comes within a small area around it. After 3 seconds it detonates, dealing 75/115/165/230/300 (+90% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zilean-Q.png",
+  "slot": "Q",
+  "championKey": "Zilean",
+  "championName": "Zilean",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

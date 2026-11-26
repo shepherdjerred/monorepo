@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Darius-W",
+  "name": "Crippling Strike",
+  "description": "Darius's next attack strikes an enemy's crucial artery. As they bleed out, their Move Speed is slowed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Darius-W.png",
+  "slot": "W",
+  "championKey": "Darius",
+  "championName": "Darius",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

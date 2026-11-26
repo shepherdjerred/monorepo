@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kled-passive",
+  "name": "Skaarl, the Cowardly Lizard",
+  "description": "Kled rides his trusty steed, Skaarl, who takes damage for him. When Skaarl's health depletes, Kled dismounts.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kled-passive.png",
+  "slot": "passive",
+  "championKey": "Kled",
+  "championName": "Kled",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

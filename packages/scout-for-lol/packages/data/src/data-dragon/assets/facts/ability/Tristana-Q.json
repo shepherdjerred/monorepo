@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tristana-Q",
+  "name": "Rapid Fire",
+  "description": "Tristana goes full-auto, gaining 40/60/80/100/120% Attack Speed for 7 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "15/20/25/30/35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Tristana-Q.png",
+  "slot": "Q",
+  "championKey": "Tristana",
+  "championName": "Tristana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    19,
+    18,
+    17,
+    16
+  ],
+  "costByRank": [
+    15,
+    20,
+    25,
+    30,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/19/18/17/16 s"
+  }
+}

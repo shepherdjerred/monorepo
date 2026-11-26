@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Renekton",
+  "name": "Renekton",
+  "description": "Renekton is a terrifying, rage-fueled Ascended being from the scorched deserts of Shurima. Once, he was his empire's most esteemed warrior, leading the nation's armies to countless victories.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "660"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Renekton-passive",
+      "name": "Reign of Anger",
+      "icon": "img/ability/Renekton-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renekton-Q",
+      "name": "Cull the Meek",
+      "icon": "img/ability/Renekton-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renekton-W",
+      "name": "Ruthless Predator",
+      "icon": "img/ability/Renekton-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renekton-E",
+      "name": "Slice and Dice",
+      "icon": "img/ability/Renekton-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renekton-R",
+      "name": "Dominus",
+      "icon": "img/ability/Renekton-R.png"
+    }
+  ],
+  "icon": "img/champion/Renekton.png",
+  "art": "img/champion-splash/Renekton_0.jpg",
+  "title": "the Butcher of the Sands",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4643",
+  "name": "Vigilant Wardstone",
+  "description": "Arcane Cache: This item can store up to 3 purchased Control Wards. Behold: Increase your Stealth Ward and Control Ward placement caps by 1.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Armor",
+      "value": "25"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "4638",
+      "name": "Watchful Wardstone",
+      "icon": "img/item/4638.png"
+    }
+  ],
+  "icon": "img/item/4643.png",
+  "goldTotal": 2300,
+  "goldCombine": 1200,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2300 gold"
+  }
+}

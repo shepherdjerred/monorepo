@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kaisa-passive",
+  "name": "Second Skin",
+  "description": "Kai'Sa's basic attacks stack Plasma, dealing increasing bonus magic damage. Allies' immobilizing effects help stack Plasma.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kaisa-passive.png",
+  "slot": "passive",
+  "championKey": "Kaisa",
+  "championName": "Kai'Sa",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

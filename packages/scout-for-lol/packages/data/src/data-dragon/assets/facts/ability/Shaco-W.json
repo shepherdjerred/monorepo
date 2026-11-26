@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shaco-W",
+  "name": "Jack In The Box",
+  "description": "Shaco creates a trap that stealths itself after 2 seconds and lasts for 40 (+10% AP) seconds. It activates when an enemy comes near or when revealed, Fearing nearby enemy Champions for 0.5/0.75/1/1.25/1.5 seconds, or 2 seconds for minions and jungle monsters.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/65/60/55/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shaco-W.png",
+  "slot": "W",
+  "championKey": "Shaco",
+  "championName": "Shaco",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costByRank": [
+    70,
+    65,
+    60,
+    55,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15 s"
+  }
+}

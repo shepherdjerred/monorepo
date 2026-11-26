@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Hwei",
+  "name": "Hwei",
+  "description": "Hwei is a brooding painter who creates brilliant art in order to confront Ionia's criminals and comfort their victims.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Hwei-passive",
+      "name": "Signature of the Visionary",
+      "icon": "img/ability/Hwei-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hwei-Q",
+      "name": "Subject: Disaster",
+      "icon": "img/ability/Hwei-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hwei-W",
+      "name": "Subject: Serenity",
+      "icon": "img/ability/Hwei-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hwei-E",
+      "name": "Subject: Torment",
+      "icon": "img/ability/Hwei-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hwei-R",
+      "name": "Spiraling Despair",
+      "icon": "img/ability/Hwei-R.png"
+    }
+  ],
+  "icon": "img/champion/Hwei.png",
+  "art": "img/champion-splash/Hwei_0.jpg",
+  "title": "the Visionary",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

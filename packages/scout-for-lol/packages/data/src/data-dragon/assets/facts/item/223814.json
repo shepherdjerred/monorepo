@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223814",
+  "name": "Edge of Night",
+  "description": "Annul: (0s) Gain a Spell Shield that blocks the next enemy Ability.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Lethality",
+      "value": "14"
+    },
+    {
+      "label": "Health",
+      "value": "375"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223814.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

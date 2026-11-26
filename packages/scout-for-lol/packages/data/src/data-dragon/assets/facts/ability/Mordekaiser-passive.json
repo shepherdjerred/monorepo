@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mordekaiser-passive",
+  "name": "Darkness Rise",
+  "description": "Mordekaiser gains a powerful damage aura and Move Speed after landing 3 attacks or spells against champions or monsters.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Mordekaiser-passive.png",
+  "slot": "passive",
+  "championKey": "Mordekaiser",
+  "championName": "Mordekaiser",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

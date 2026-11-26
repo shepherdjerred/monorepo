@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1052",
+  "name": "Amplifying Tome",
+  "description": "Grants 20 Ability Power.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1052.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

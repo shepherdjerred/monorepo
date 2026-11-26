@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yorick-W",
+  "name": "Dark Procession",
+  "description": "Yorick summons a wall of spirits blocking enemies' path, but not allies'. The wall has 2/2/3/3/4 Health and disappears after 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yorick-W.png",
+  "slot": "W",
+  "championKey": "Yorick",
+  "championName": "Yorick",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    18,
+    16,
+    14,
+    12
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18/16/14/12 s"
+  }
+}

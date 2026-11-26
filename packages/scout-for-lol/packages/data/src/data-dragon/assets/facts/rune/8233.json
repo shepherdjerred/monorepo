@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8233",
+  "name": "Absolute Focus",
+  "description": "While above 70% health, gain extra adaptive damage.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/AbsoluteFocus.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

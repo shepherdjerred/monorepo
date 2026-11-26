@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shyvana-passive",
+  "name": "Scalemail",
+  "description": "Takedowns on enemy champions, large minions, and large monsters grant Shyvana Scalemail stacks, improving her defenses.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Shyvana-passive.png",
+  "slot": "passive",
+  "championKey": "Shyvana",
+  "championName": "Shyvana",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

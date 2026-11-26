@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223008",
+  "name": "Gluttonous Greaves",
+  "description": "Slay: Gain 0.6% Omnivamp on Champion takedown, stacking up to 10 times.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "45"
+    },
+    {
+      "label": "Omnivamp",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223008.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

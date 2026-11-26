@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kaisa",
+  "name": "Kai'Sa",
+  "description": "Claimed by the Void when she was only a child, Kai'Sa managed to survive through sheer tenacity and strength of will. Her experiences have made her a deadly hunter and, to some, the harbinger of a future they would rather not live to see.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kaisa-passive",
+      "name": "Second Skin",
+      "icon": "img/ability/Kaisa-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kaisa-Q",
+      "name": "Icathian Rain",
+      "icon": "img/ability/Kaisa-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kaisa-W",
+      "name": "Void Seeker",
+      "icon": "img/ability/Kaisa-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kaisa-E",
+      "name": "Supercharge",
+      "icon": "img/ability/Kaisa-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kaisa-R",
+      "name": "Killer Instinct",
+      "icon": "img/ability/Kaisa-R.png"
+    }
+  ],
+  "icon": "img/champion/Kaisa.png",
+  "art": "img/champion-splash/Kaisa_0.jpg",
+  "title": "Daughter of the Void",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

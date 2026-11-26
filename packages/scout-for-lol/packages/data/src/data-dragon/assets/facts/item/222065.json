@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222065",
+  "name": "Shurelya's Battlesong",
+  "description": "+0 Health Regen per 5s +0 Mana Regen per 5s -0% Cooldown Reduction Inspiring Speech: Grants nearby allies Move Speed for a few seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "55"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222065.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

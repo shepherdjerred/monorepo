@@ -381,7 +381,6 @@ describe("agent task environment boundary", () => {
         OPENAI_API_KEY: "codex-secret",
         MAIL_API_TOKEN: "mail-secret",
         MAIL_API_URL: "http://mail.mail.svc:7371",
-        POSTAL_API_KEY: "postal-secret",
         AGENT_TASK_API_TOKEN: "api-secret",
       }),
     ).toEqual({
@@ -409,7 +408,6 @@ describe("agent task environment boundary", () => {
       ALERT_DASHBOARD_URL: "http://alerts.local",
       MAIL_API_TOKEN: "mail-secret",
       MAIL_API_URL: "http://mail.mail.svc:7371",
-      POSTAL_API_KEY: "postal-secret",
       SENDER_EMAIL: "sender@example.test",
       GITHUB_WEBHOOK_SECRET: "webhook-secret",
       BUGSINK_TOKEN: "bugsink-secret",
@@ -430,7 +428,6 @@ describe("agent task environment boundary", () => {
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
     expect(environment).not.toHaveProperty("MAIL_API_TOKEN");
     expect(environment).not.toHaveProperty("MAIL_API_URL");
-    expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("SENDER_EMAIL");
     expect(environment).not.toHaveProperty("GITHUB_WEBHOOK_SECRET");
     expect(environment).not.toHaveProperty("BUGSINK_TOKEN");
@@ -460,7 +457,6 @@ describe("agent task environment boundary", () => {
         MAIL_API_TOKEN: "mail-secret",
         MAIL_API_URL: "http://mail.mail.svc:7371",
         MAIL_FROM: "reports@sjer.red",
-        POSTAL_API_KEY: "postal-secret",
         RECIPIENT_EMAIL: "recipient@example.test",
       },
     );
@@ -479,7 +475,6 @@ describe("agent task environment boundary", () => {
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
     expect(environment).not.toHaveProperty("MAIL_API_TOKEN");
     expect(environment).not.toHaveProperty("MAIL_API_URL");
-    expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("MAIL_FROM");
     expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
   });

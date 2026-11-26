@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zeri-R",
+  "name": "Lightning Crash",
+  "description": "Zeri discharges a nova of electricity, dealing 150/250/350 (+110% AP) (+60% bonus AD) magic damage to nearby enemies. If she hits an enemy champion, Zeri gains 30% Attack Speed and 15% Move Speed for 5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zeri-R.png",
+  "slot": "R",
+  "championKey": "Zeri",
+  "championName": "Zeri",
+  "maxRank": 3,
+  "cooldownByRank": [
+    80,
+    75,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "80/75/70 s"
+  }
+}

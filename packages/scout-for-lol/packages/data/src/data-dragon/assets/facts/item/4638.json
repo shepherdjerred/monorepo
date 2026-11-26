@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4638",
+  "name": "Watchful Wardstone",
+  "description": "Arcane Cache: This item can store up to 3 purchased Control Wards.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "150"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    },
+    {
+      "label": "Armor",
+      "value": "10"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/4638.png",
+  "goldTotal": 1100,
+  "goldCombine": 1100,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

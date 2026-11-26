@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viktor-E",
+  "name": "Hextech Ray",
+  "description": "Viktor fires a hextech ray in a chosen direction, dealing 70/110/150/190/230 (+50% AP) magic damage to any enemies it hits. Upgraded: An aftershock follows Hextech Ray, dealing 20/50/80/110/140 (+80% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "525"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viktor-E.png",
+  "slot": "E",
+  "championKey": "Viktor",
+  "championName": "Viktor",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    525,
+    525,
+    525,
+    525,
+    525
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

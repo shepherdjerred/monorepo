@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zyra",
+  "name": "Zyra",
+  "description": "Born in an ancient, sorcerous catastrophe, Zyra is the wrath of nature given form—an alluring hybrid of plant and human, kindling new life with every step.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "574"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "575"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zyra-passive",
+      "name": "Garden of Thorns",
+      "icon": "img/ability/Zyra-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zyra-Q",
+      "name": "Deadly Spines",
+      "icon": "img/ability/Zyra-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zyra-W",
+      "name": "Rampant Growth",
+      "icon": "img/ability/Zyra-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zyra-E",
+      "name": "Grasping Roots",
+      "icon": "img/ability/Zyra-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zyra-R",
+      "name": "Stranglethorns",
+      "icon": "img/ability/Zyra-R.png"
+    }
+  ],
+  "icon": "img/champion/Zyra.png",
+  "art": "img/champion-splash/Zyra_0.jpg",
+  "title": "Rise of the Thorns",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

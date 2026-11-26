@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Poppy-R",
+  "name": "Keeper's Verdict",
+  "description": "Begin Casting: Poppy begins charging her hammer for up to 4 seconds, Slowing herself by 15%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Poppy-R.png",
+  "slot": "R",
+  "championKey": "Poppy",
+  "championName": "Poppy",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

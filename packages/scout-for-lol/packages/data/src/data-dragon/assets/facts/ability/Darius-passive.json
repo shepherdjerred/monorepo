@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Darius-passive",
+  "name": "Hemorrhage",
+  "description": "Darius' attacks and damaging abilities cause enemies to bleed for physical damage over 5 seconds, stacking up to 5 times. Darius enrages and gains massive Attack Damage when his target reaches max stacks.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Darius-passive.png",
+  "slot": "passive",
+  "championKey": "Darius",
+  "championName": "Darius",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

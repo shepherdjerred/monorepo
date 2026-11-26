@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9178",
+  "name": "The Annihilator",
+  "description": "A massive explosion that kills all normal enemies and heavily damages Elites.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9178.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

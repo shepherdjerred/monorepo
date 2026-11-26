@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Morgana-W",
+  "name": "Tormented Shadow",
+  "description": "Morgana casts a cursed shadow on an area, damaging enemies who dare stand in her dark circle. They receive magic damage over time, which increases the lower health they are.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/80/90/100/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Morgana-W.png",
+  "slot": "W",
+  "championKey": "Morgana",
+  "championName": "Morgana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    70,
+    80,
+    90,
+    100,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

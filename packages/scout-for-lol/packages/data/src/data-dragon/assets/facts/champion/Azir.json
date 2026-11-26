@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Azir",
+  "name": "Azir",
+  "description": "Azir was a mortal emperor of Shurima in a far distant age, a proud man who stood at the cusp of immortality.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "575"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Azir-passive",
+      "name": "Shurima's Legacy",
+      "icon": "img/ability/Azir-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Azir-Q",
+      "name": "Conquering Sands",
+      "icon": "img/ability/Azir-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Azir-W",
+      "name": "Arise!",
+      "icon": "img/ability/Azir-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Azir-E",
+      "name": "Shifting Sands",
+      "icon": "img/ability/Azir-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Azir-R",
+      "name": "Emperor's Divide",
+      "icon": "img/ability/Azir-R.png"
+    }
+  ],
+  "icon": "img/champion/Azir.png",
+  "art": "img/champion-splash/Azir_0.jpg",
+  "title": "the Emperor of the Sands",
+  "roles": [
+    "Mage",
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Marksman"
+  }
+}

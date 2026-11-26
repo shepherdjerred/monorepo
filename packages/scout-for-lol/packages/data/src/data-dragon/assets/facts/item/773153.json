@@ -1,0 +1,48 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773153",
+  "name": "Blade of The Ruined King",
+  "description": "Ruination: Basic Attacks deal 5% of the target's current Health as bonus physical damage On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Life Steal",
+      "value": "15%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771042",
+      "name": "Dagger",
+      "icon": "img/item/771042.png"
+    },
+    {
+      "kind": "item",
+      "key": "773144",
+      "name": "Bilgewater Cutlass",
+      "icon": "img/item/773144.png"
+    },
+    {
+      "kind": "item",
+      "key": "771042",
+      "name": "Dagger",
+      "icon": "img/item/771042.png"
+    }
+  ],
+  "icon": "img/item/773153.png",
+  "goldTotal": 3200,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3200 gold"
+  }
+}

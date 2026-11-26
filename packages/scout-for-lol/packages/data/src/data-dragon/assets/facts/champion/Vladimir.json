@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Vladimir",
+  "name": "Vladimir",
+  "description": "A fiend with a thirst for mortal blood, Vladimir has influenced the affairs of Noxus since the empire's earliest days.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "450"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Vladimir-passive",
+      "name": "Crimson Pact",
+      "icon": "img/ability/Vladimir-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vladimir-Q",
+      "name": "Transfusion",
+      "icon": "img/ability/Vladimir-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vladimir-W",
+      "name": "Sanguine Pool",
+      "icon": "img/ability/Vladimir-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vladimir-E",
+      "name": "Tides of Blood",
+      "icon": "img/ability/Vladimir-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vladimir-R",
+      "name": "Hemoplague",
+      "icon": "img/ability/Vladimir-R.png"
+    }
+  ],
+  "icon": "img/champion/Vladimir.png",
+  "art": "img/champion-splash/Vladimir_0.jpg",
+  "title": "the Crimson Reaper",
+  "roles": [
+    "Mage",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Fighter"
+  }
+}

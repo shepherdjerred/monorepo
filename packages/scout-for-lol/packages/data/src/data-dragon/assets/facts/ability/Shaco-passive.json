@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shaco-passive",
+  "name": "Backstab",
+  "description": "Shaco's basic attacks and Two-Shiv Poison deal additional damage when striking from behind.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Shaco-passive.png",
+  "slot": "passive",
+  "championKey": "Shaco",
+  "championName": "Shaco",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

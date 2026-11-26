@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nasus-W",
+  "name": "Wither",
+  "description": "Nasus ages a champion, Slowing them by 35%, increasing to 47/59/71/83/95% over 5 seconds. Their Attack Speed is also reduced by 75% of the Slow.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nasus-W.png",
+  "slot": "W",
+  "championKey": "Nasus",
+  "championName": "Nasus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

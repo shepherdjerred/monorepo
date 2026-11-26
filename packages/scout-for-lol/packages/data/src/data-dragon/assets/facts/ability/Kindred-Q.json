@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kindred-Q",
+  "name": "Dance of Arrows",
+  "description": "Kindred tumbles and shoots up to three arrows at nearby targets.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "340"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kindred-Q.png",
+  "slot": "Q",
+  "championKey": "Kindred",
+  "championName": "Kindred",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    9,
+    9,
+    9,
+    9
+  ],
+  "costByRank": [
+    35,
+    35,
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    340,
+    340,
+    340,
+    340,
+    340
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9 s"
+  }
+}

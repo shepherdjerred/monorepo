@@ -1,0 +1,23 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773037",
+  "name": "Mana Manipulator",
+  "description": "Aura - Mana Warp: Grants nearby allied champions 5 Mana Regen per 5 seconds.",
+  "facts": [],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771004",
+      "name": "Faerie Charm",
+      "icon": "img/item/771004.png"
+    }
+  ],
+  "icon": "img/item/773037.png",
+  "goldTotal": 300,
+  "goldCombine": 120,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}

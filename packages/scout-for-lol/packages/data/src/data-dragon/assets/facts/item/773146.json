@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773146",
+  "name": "Hextech Gunblade",
+  "description": "Hex Cannon: 20% Spell Vamp Reload: Basic Attacks (On-Hit) and single-target spells against champions reduce the cooldown of this item by 3 seconds.Active 60s Deals magic damage and Slows the target champion's Move Speed by 40% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    },
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Life Steal",
+      "value": "12%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773145",
+      "name": "Hextech Revolver",
+      "icon": "img/item/773145.png"
+    },
+    {
+      "kind": "item",
+      "key": "773144",
+      "name": "Bilgewater Cutlass",
+      "icon": "img/item/773144.png"
+    }
+  ],
+  "icon": "img/item/773146.png",
+  "goldTotal": 3400,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3400 gold"
+  }
+}

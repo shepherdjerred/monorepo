@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443080",
+  "name": "Twin Mask",
+  "description": "Unanimity: Gain a percent of your teammate's Health, Armor, Magic Resist, Attack Damage, Ability Power, Attack Speed, and Ability Haste, increased significantly if they also have Twin Mask and are alive.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/443080.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

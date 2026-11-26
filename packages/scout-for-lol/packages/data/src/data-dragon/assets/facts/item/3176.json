@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3176",
+  "name": "Forever Forward",
+  "description": "Omnipresent: Gain a new Active: Teleport. Voidborn: Gain Empowered Recall.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "55"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3013",
+      "name": "Synchronized Souls",
+      "icon": "img/item/3013.png"
+    }
+  ],
+  "icon": "img/item/3176.png",
+  "goldTotal": 900,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

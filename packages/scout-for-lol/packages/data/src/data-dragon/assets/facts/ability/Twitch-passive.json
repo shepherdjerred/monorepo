@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Twitch-passive",
+  "name": "Deadly Venom",
+  "description": "Twitch's basic attacks infect the target On-Hit, dealing true damage each second.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Twitch-passive.png",
+  "slot": "passive",
+  "championKey": "Twitch",
+  "championName": "Twitch",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

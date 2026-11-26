@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2145",
+  "name": "Lucky Dice",
+  "description": "Active - Consume: Roll to gain 1 additional reroll.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2145.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

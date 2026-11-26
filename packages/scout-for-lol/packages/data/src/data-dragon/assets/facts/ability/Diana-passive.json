@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Diana-passive",
+  "name": "Moonsilver Blade",
+  "description": "Every third strike cleaves nearby enemies for an additional magic damage. After casting a spell, Diana gains Attack Speed for 5 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Diana-passive.png",
+  "slot": "passive",
+  "championKey": "Diana",
+  "championName": "Diana",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

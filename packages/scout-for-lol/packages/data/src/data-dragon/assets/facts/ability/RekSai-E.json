@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "RekSai-E",
+  "name": "Furious Bite / Tunnel",
+  "description": "Unburrowed: Rek'Sai bites a target, dealing 70/95/120/145/170 (+60% bonus AD) physical damage. At max Fury, the bite deals 84/114/144/174/204 (+72% bonus AD) true damage instead.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/RekSai-E.png",
+  "slot": "E",
+  "championKey": "RekSai",
+  "championName": "Rek'Sai",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    250,
+    250,
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

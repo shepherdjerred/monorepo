@@ -40,6 +40,8 @@ import {
   readMovieEditionRequests,
 } from "./movie-editions/view.ts";
 import { captureMovieActionAccessV4 } from "./movie-editions/lifecycle/public/public-access.ts";
+import type { LegacyActivityQuery } from "#shared/legacy-activity/contract.ts";
+import { readLegacyActivity } from "./legacy-activity/persistence.ts";
 
 /**
  * A series request fans out into one claim per episode, and the list holds 200
@@ -267,6 +269,10 @@ export class PrismaMediaApplication
       serverMachineId: this.settings.serverMachineId,
       movieSectionId: this.settings.movieSectionId,
     });
+  }
+
+  importedActivity(actor: MediaActor, query: LegacyActivityQuery) {
+    return readLegacyActivity(this.db, actor, query);
   }
 
   async activity(actor: MediaActor) {

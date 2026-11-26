@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447109",
+  "name": "Cruelty",
+  "description": "Watch Them Fall: On Immobilize or Grounding an enemy champion, summon a comet above them.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "80"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447109.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

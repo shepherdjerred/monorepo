@@ -113,6 +113,12 @@ test("rebuilds infra for the launcher service's Cargo workspace only", async () 
   ).toEqual([]);
 });
 
+test("selects tasknotes-server when the baked web client changes", async () => {
+  expect(await select(["packages/tasknotes-web/src/app.tsx"])).toEqual([
+    "tasknotes-server",
+  ]);
+});
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([

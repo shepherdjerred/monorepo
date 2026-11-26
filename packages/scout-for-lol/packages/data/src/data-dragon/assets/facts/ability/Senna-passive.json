@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Senna-passive",
+  "name": "Absolution",
+  "description": "When units die near Senna, their souls are periodically trapped by the Black Mist. Senna can attack these souls to free them, absorbing the Mist that held them in death.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Senna-passive.png",
+  "slot": "passive",
+  "championKey": "Senna",
+  "championName": "Senna",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

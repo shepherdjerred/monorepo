@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zyra-passive",
+  "name": "Garden of Thorns",
+  "description": "Seeds spawn around Zyra periodically, becoming faster with level. Zyra can cast Deadly Spines or Grasping Roots near seeds to grow plants, who fight for Zyra.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zyra-passive.png",
+  "slot": "passive",
+  "championKey": "Zyra",
+  "championName": "Zyra",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

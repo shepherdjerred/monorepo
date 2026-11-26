@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TahmKench-R",
+  "name": "Devour",
+  "description": "Tahm Kench devours a champion for a few seconds. He can Recast to spit them out.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TahmKench-R.png",
+  "slot": "R",
+  "championKey": "TahmKench",
+  "championName": "Tahm Kench",
+  "maxRank": 3,
+  "cooldownByRank": [
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

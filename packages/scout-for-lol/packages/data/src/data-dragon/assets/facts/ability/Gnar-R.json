@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gnar-R",
+  "name": "GNAR!",
+  "description": "Mini Gnar Passive: Increase Hyper's Move Speed. Mega Gnar: Gnar tosses nearby enemies, dealing 200/300/400 (+100% AP) (+50% bonus AD) physical damage, Knocking Back, and Slowing them by 45% for 1.25/1.5/1.75 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "590"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gnar-R.png",
+  "slot": "R",
+  "championKey": "Gnar",
+  "championName": "Gnar",
+  "maxRank": 3,
+  "cooldownByRank": [
+    90,
+    60,
+    30
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    590,
+    590,
+    590
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "90/60/30 s"
+  }
+}

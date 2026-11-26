@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3170",
+  "name": "Swiftmarch",
+  "description": "Fleetfooted: Reduce the effectiveness of Slows by 25%. Noxian Fervor: Gain 5% of your Move Speed as Adaptive Force.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "65"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3009",
+      "name": "Boots of Swiftness",
+      "icon": "img/item/3009.png"
+    }
+  ],
+  "icon": "img/item/3170.png",
+  "goldTotal": 1000,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

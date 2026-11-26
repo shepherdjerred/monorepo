@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Jinx",
+  "name": "Jinx",
+  "description": "An unhinged and impulsive criminal from the undercity, Jinx is haunted by the consequences of her past—but that doesn't stop her from bringing her own chaotic brand of pandemonium to Piltover and Zaun.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Jinx-passive",
+      "name": "Get Excited!",
+      "icon": "img/ability/Jinx-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jinx-Q",
+      "name": "Switcheroo!",
+      "icon": "img/ability/Jinx-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jinx-W",
+      "name": "Zap!",
+      "icon": "img/ability/Jinx-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jinx-E",
+      "name": "Flame Chompers!",
+      "icon": "img/ability/Jinx-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jinx-R",
+      "name": "Super Mega Death Rocket!",
+      "icon": "img/ability/Jinx-R.png"
+    }
+  ],
+  "icon": "img/champion/Jinx.png",
+  "art": "img/champion-splash/Jinx_0.jpg",
+  "title": "the Loose Cannon",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6667",
+  "name": "Radiant Virtue",
+  "description": "Guiding Light: Upon casting your Ultimate you Transcend, increasing your Max Health by 12.5% for 9s.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3105",
+      "name": "Aegis of the Legion",
+      "icon": "img/item/3105.png"
+    },
+    {
+      "kind": "item",
+      "key": "1011",
+      "name": "Giant's Belt",
+      "icon": "img/item/1011.png"
+    }
+  ],
+  "icon": "img/item/6667.png",
+  "goldTotal": 2600,
+  "goldCombine": 600,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

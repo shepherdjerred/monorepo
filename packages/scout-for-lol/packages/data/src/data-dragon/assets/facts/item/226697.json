@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226697",
+  "name": "Hubris",
+  "description": "Eminence: When a champion that you have damaged with the last 3 seconds dies, gain Attack Damage for the rest of the round, or until slain.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Lethality",
+      "value": "18"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226697.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

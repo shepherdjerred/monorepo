@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yorick-Q",
+  "name": "Last Rites",
+  "description": "Yorick's next Attack deals an additional 30/50/70/90/110 (+50% AD) physical damage and restores 10-68 (based on level) plus 6/7/8/9/10% of his missing Health, reduced by 50% against non-Champions.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yorick-Q.png",
+  "slot": "Q",
+  "championKey": "Yorick",
+  "championName": "Yorick",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5.5,
+    5,
+    4.5,
+    4
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5.5/5/4.5/4 s"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6029",
+  "name": "Ironspike Whip",
+  "description": "Active -. Crescent: Deal damage to nearby enemies.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "30"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1037",
+      "name": "Pickaxe",
+      "icon": "img/item/1037.png"
+    }
+  ],
+  "icon": "img/item/6029.png",
+  "goldTotal": 1100,
+  "goldCombine": 225,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

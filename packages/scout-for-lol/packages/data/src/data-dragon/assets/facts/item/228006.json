@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228006",
+  "name": "Sanguine Blade",
+  "description": "Cleave: Attacks deal physical damage to nearby enemies. Ravenous Crescent: Deal physical damage to enemies around you.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "130"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Life Steal",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/228006.png",
+  "goldTotal": 3000,
+  "goldCombine": 3000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

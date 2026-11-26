@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "323107",
+  "name": "Redemption",
+  "description": "Intervention: Restore 150 - 350 Health to allied units and deal 10% max Health true damage to enemy champions after 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "30"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    },
+    {
+      "kind": "item",
+      "key": "3114",
+      "name": "Forbidden Idol",
+      "icon": "img/item/3114.png"
+    }
+  ],
+  "icon": "img/item/323107.png",
+  "goldTotal": 2800,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2800 gold"
+  }
+}

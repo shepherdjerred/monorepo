@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kaisa-Q",
+  "name": "Icathian Rain",
+  "description": "Kai'Sa shoots a swarm of missiles that seek out nearby targets. Living Weapon: Icathian Rain is upgraded to shoot more missiles.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kaisa-Q.png",
+  "slot": "Q",
+  "championKey": "Kaisa",
+  "championName": "Kai'Sa",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    55,
+    55,
+    55,
+    55,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

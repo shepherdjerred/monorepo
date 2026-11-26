@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sejuani-passive",
+  "name": "Fury of the North",
+  "description": "After being out of combat, Sejuani gains Frost Armor which grants Armor and Magic Resist and immunity to slows. Frost Armor persists for a short time after Sejuani takes damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Sejuani-passive.png",
+  "slot": "passive",
+  "championKey": "Sejuani",
+  "championName": "Sejuani",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

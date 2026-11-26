@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Orianna-passive",
+  "name": "Clockwork Windup",
+  "description": "Orianna's Attacks deal additional magic damage. This damage increases the more Orianna Attacks the same target.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Orianna-passive.png",
+  "slot": "passive",
+  "championKey": "Orianna",
+  "championName": "Orianna",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

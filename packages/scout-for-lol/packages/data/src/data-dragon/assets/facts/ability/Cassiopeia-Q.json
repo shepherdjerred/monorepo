@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Cassiopeia-Q",
+  "name": "Noxious Blast",
+  "description": "Cassiopeia blasts noxious gas, Poisoning enemies and dealing 65/100/135/170/205 (+75% AP) magic damage over 3 seconds. Hitting a champion grants Cassiopeia 30/35/40/45/50% Move Speed decaying over 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Cassiopeia-Q.png",
+  "slot": "Q",
+  "championKey": "Cassiopeia",
+  "championName": "Cassiopeia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3.5 s"
+  }
+}

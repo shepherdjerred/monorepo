@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Syndra-Q",
+  "name": "Dark Sphere",
+  "description": "Syndra conjures a Dark Sphere, dealing 90/125/160/195/230 (+70% AP) magic damage. The Dark Sphere remains for 6 seconds and can be manipulated by Syndra's other Abilities. 40 Splinters of Wrath: Syndra can store 2 charges of Dark Sphere.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Syndra-Q.png",
+  "slot": "Q",
+  "championKey": "Syndra",
+  "championName": "Syndra",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

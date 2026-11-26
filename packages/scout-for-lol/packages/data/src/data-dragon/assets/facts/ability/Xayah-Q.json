@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xayah-Q",
+  "name": "Double Daggers",
+  "description": "Xayah throws two daggers, dealing 45/60/75/90/105 (+50% bonus AD) physical damage each and leaving two Feathers. Targets hit after the first take 22.5/30/37.5/45/52.5 (+25% bonus AD) damage from each dagger.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Xayah-Q.png",
+  "slot": "Q",
+  "championKey": "Xayah",
+  "championName": "Xayah",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    35,
+    35,
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

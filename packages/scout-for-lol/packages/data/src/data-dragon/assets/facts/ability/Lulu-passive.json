@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lulu-passive",
+  "name": "Pix, Faerie Companion",
+  "description": "Pix fires magical bolts of energy whenever the champion he's following attacks another enemy unit. These bolts are homing, but can be intercepted by other units.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Lulu-passive.png",
+  "slot": "passive",
+  "championKey": "Lulu",
+  "championName": "Lulu",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

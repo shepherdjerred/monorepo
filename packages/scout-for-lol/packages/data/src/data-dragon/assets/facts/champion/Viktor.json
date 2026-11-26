@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Viktor",
+  "name": "Viktor",
+  "description": "The fully biomechanical evolution of his former self, Viktor has embraced his Glorious Evolution and become something of a messiah to his followers.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Viktor-passive",
+      "name": "Glorious Evolution",
+      "icon": "img/ability/Viktor-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viktor-Q",
+      "name": "Siphon Power",
+      "icon": "img/ability/Viktor-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viktor-W",
+      "name": "Gravity Field",
+      "icon": "img/ability/Viktor-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viktor-E",
+      "name": "Hextech Ray",
+      "icon": "img/ability/Viktor-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viktor-R",
+      "name": "Arcane Storm",
+      "icon": "img/ability/Viktor-R.png"
+    }
+  ],
+  "icon": "img/champion/Viktor.png",
+  "art": "img/champion-splash/Viktor_0.jpg",
+  "title": "the Herald of the Arcane",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

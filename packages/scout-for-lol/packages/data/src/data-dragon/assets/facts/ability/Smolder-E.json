@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Smolder-E",
+  "name": "Flap, Flap, Flap",
+  "description": "Smolder takes flight, gaining 75% Move Speed and ignoring terrain for 1.25 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Smolder-E.png",
+  "slot": "E",
+  "championKey": "Smolder",
+  "championName": "Smolder",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    22,
+    20,
+    18,
+    16
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/22/20/18/16 s"
+  }
+}

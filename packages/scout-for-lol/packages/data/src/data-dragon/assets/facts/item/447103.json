@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447103",
+  "name": "Hemomancer's Helm",
+  "description": "Scarlet Allegiance: Threshold 30% Lifesteal/Omnivamp: Gain 500 Max Health.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "70"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "30"
+    },
+    {
+      "label": "Omnivamp",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447103.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

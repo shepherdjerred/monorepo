@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sylas-passive",
+  "name": "Petricite Burst",
+  "description": "After casting a spell, Sylas stores a charge of Petricite Burst. Sylas's basic attacks will expend a charge and whirl his energized chains around him dealing bonus magic damage to enemies hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Sylas-passive.png",
+  "slot": "passive",
+  "championKey": "Sylas",
+  "championName": "Sylas",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

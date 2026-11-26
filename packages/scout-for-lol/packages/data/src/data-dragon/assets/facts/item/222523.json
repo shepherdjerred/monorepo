@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222523",
+  "name": "Hexoptics C44",
+  "description": "Magnification: Deal up to 10% increased damage with Attacks, based on how far away the enemy is (max damage at 500 range). Arcane Aim: When a champion that you damaged within 3 seconds dies, gain 150 additional attack range for 15 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222523.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

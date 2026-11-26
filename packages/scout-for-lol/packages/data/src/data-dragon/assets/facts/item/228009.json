@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228009",
+  "name": "Multitool",
+  "description": "Molds into another item each Shopping Phase.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/228009.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

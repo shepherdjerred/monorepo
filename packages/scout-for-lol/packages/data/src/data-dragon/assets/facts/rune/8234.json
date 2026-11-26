@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8234",
+  "name": "Celerity",
+  "description": "All Move Speed bonuses are 7% more effective on you and gain 1% Move Speed.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/CelerityTemp.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

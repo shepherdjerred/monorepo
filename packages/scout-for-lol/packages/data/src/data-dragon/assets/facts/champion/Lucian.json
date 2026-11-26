@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Lucian",
+  "name": "Lucian",
+  "description": "Lucian, a Sentinel of Light, is a grim hunter of wraiths and specters, pursuing them relentlessly and annihilating them with his twin relic pistols.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "641"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Lucian-passive",
+      "name": "Lightslinger",
+      "icon": "img/ability/Lucian-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lucian-Q",
+      "name": "Piercing Light",
+      "icon": "img/ability/Lucian-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lucian-W",
+      "name": "Ardent Blaze",
+      "icon": "img/ability/Lucian-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lucian-E",
+      "name": "Relentless Pursuit",
+      "icon": "img/ability/Lucian-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lucian-R",
+      "name": "The Culling",
+      "icon": "img/ability/Lucian-R.png"
+    }
+  ],
+  "icon": "img/champion/Lucian.png",
+  "art": "img/champion-splash/Lucian_0.jpg",
+  "title": "the Purifier",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

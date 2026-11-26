@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "AurelionSol-passive",
+  "name": "Cosmic Creator",
+  "description": "Aurelion Sol's damaging Abilities break down enemies into stacks of Stardust, which permanently improves each of his abilities.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/AurelionSol-passive.png",
+  "slot": "passive",
+  "championKey": "AurelionSol",
+  "championName": "Aurelion Sol",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

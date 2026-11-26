@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772042",
+  "name": "Oracle's Elixir",
+  "description": "Click to Consume: Grants detection of nearby invisible units for up to 4 minutes.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772042.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

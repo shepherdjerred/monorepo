@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4645",
+  "name": "Shadowflame",
+  "description": "Cinderbloom: Magic and true damage Critically Strike enemies below 40% Health, dealing 20% increased damage.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "110"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3145",
+      "name": "Hextech Alternator",
+      "icon": "img/item/3145.png"
+    },
+    {
+      "kind": "item",
+      "key": "1058",
+      "name": "Needlessly Large Rod",
+      "icon": "img/item/1058.png"
+    }
+  ],
+  "icon": "img/item/4645.png",
+  "goldTotal": 3200,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3200 gold"
+  }
+}

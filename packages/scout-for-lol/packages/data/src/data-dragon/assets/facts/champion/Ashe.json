@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ashe",
+  "name": "Ashe",
+  "description": "Iceborn warmother of the Avarosan tribe, Ashe commands the most populous horde in the north.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "600"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ashe-passive",
+      "name": "Frost Shot",
+      "icon": "img/ability/Ashe-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ashe-Q",
+      "name": "Ranger's Focus",
+      "icon": "img/ability/Ashe-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ashe-W",
+      "name": "Volley",
+      "icon": "img/ability/Ashe-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ashe-E",
+      "name": "Hawkshot",
+      "icon": "img/ability/Ashe-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ashe-R",
+      "name": "Enchanted Crystal Arrow",
+      "icon": "img/ability/Ashe-R.png"
+    }
+  ],
+  "icon": "img/champion/Ashe.png",
+  "art": "img/champion-splash/Ashe_0.jpg",
+  "title": "the Frost Archer",
+  "roles": [
+    "Marksman",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Support"
+  }
+}

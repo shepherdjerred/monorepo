@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rell-W",
+  "name": "Ferromancy: Crash Down",
+  "description": "Passive - Mounted Alacrity: Rell gains 20/25/30/35/40 Move Speed while mounted. Active - Ferromancy: Crash Down: Rell leaps off her mount, Knocking Up enemies and dealing 60/90/120/150/180 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rell-W.png",
+  "slot": "W",
+  "championKey": "Rell",
+  "championName": "Rell",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

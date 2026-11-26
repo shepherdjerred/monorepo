@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Morgana-Q",
+  "name": "Dark Binding",
+  "description": "Morgana hurls a blast of starfire that Roots the first enemy hit for 2/2.25/2.5/2.75/3 seconds and deals 80/135/190/245/300 (+90% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Morgana-Q.png",
+  "slot": "Q",
+  "championKey": "Morgana",
+  "championName": "Morgana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1250,
+    1250,
+    1250,
+    1250,
+    1250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KSante-R",
+  "name": "All Out",
+  "description": "K'Sante shatters his ntofos to Knock Back an enemy champion, dealing 80/115/150 physical damage, then dashes behind them and goes All Out for 15s.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KSante-R.png",
+  "slot": "R",
+  "championKey": "KSante",
+  "championName": "K'Sante",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

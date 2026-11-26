@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Cassiopeia-passive",
+  "name": "Serpentine Grace",
+  "description": "All Move Speed bonuses are more effective on Cassiopeia.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Cassiopeia-passive.png",
+  "slot": "passive",
+  "championKey": "Cassiopeia",
+  "championName": "Cassiopeia",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

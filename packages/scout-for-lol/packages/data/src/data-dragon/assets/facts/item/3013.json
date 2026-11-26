@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3013",
+  "name": "Synchronized Souls",
+  "description": "Voidborn: Gain Empowered Recall. Synchrony: Gain 45 Move Speed when out of combat.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3010",
+      "name": "Symbiotic Soles",
+      "icon": "img/item/3010.png"
+    }
+  ],
+  "icon": "img/item/3013.png",
+  "goldTotal": 900,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

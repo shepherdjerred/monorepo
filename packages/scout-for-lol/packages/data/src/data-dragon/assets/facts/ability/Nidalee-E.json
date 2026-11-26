@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nidalee-E",
+  "name": "Primal Surge / Swipe",
+  "description": "In human form, Nidalee channels the spirit of the cougar to heal her allies and imbue them with Attack Speed for a short duration. As a cougar, she claws in a direction, dealing damage to enemies in front of her.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nidalee-E.png",
+  "slot": "E",
+  "championKey": "Nidalee",
+  "championName": "Nidalee",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6610",
+  "name": "Sundered Sky",
+  "description": "Lightshield Strike: Your first Attack against a champion Critically Strikes and restores Health.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "2021",
+      "name": "Tunneler",
+      "icon": "img/item/2021.png"
+    },
+    {
+      "kind": "item",
+      "key": "3133",
+      "name": "Caulfield's Warhammer",
+      "icon": "img/item/3133.png"
+    }
+  ],
+  "icon": "img/item/6610.png",
+  "goldTotal": 3100,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3100 gold"
+  }
+}

@@ -1,15 +1,23 @@
 #!/usr/bin/env bun
 import { Database } from "bun:sqlite";
 import { spawn } from "node:child_process";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import path from "node:path";
 import {
   discover,
   errorMessage,
+  waitForReadiness,
   restart,
+  verifiedSnapshot,
   type Outcome,
+  type Target,
 } from "./codex_theme_restart_core.ts";
+import {
+  adoptResumedIdentity,
+  verifyIdentity,
+} from "./codex_theme_restart_identity.ts";
+import { activeThreadIn } from "./codex_theme_restart_status.ts";
 import {
   object,
   parseCodexTerminals,
@@ -19,16 +27,22 @@ import {
 } from "./codex_theme_restart_terminal.ts";
 import {
   parseOptions,
+  usage,
   type Options,
   type Appearance,
 } from "./codex_theme_restart_options.ts";
-import { themeForAppearance } from "./codex_theme_restart_config.ts";
+import {
+  launchedTheme,
+  themeForAppearance,
+} from "./codex_theme_restart_config.ts";
 import {
   appendEvent,
   countOutcomes,
   countsLine,
   failureLines,
   readLastEvent,
+  readAppearance,
+  recordAppearance,
   statusReport,
   succeeded,
   summaryLine,
@@ -97,22 +111,19 @@ async function command(args: string[], timeout = 15_000): Promise<string> {
 }
 
 const runtime: Runtime = {
-  conversationSaved(thread) {
-    const catalog = new Database(
-      path.join(homedir(), ".codex/state_5.sqlite"),
-      { readonly: true },
-    );
-    try {
-      return (
-        catalog
-          .query("SELECT 1 FROM threads WHERE id = ? AND archived = 0")
-          .get(thread) !== null
-      );
-    } finally {
-      catalog.close();
-    }
-  },
   hc: (args) => command([hcPath, ...args], 35_000),
+  async identity(snapshot) {
+    const thread = activeThreadIn(await this.hc(["read", snapshot.terminal]));
+    return verifyIdentity(snapshot, thread);
+  },
+  async adoptIdentity(replacement, original, thread) {
+    const observed = activeThreadIn(
+      await this.hc(["read", replacement.terminal]),
+    );
+    return (
+      observed === thread && adoptResumedIdentity(replacement, original, thread)
+    );
+  },
   now: Date.now,
   sleep: (milliseconds) =>
     new Promise((resolve) => setTimeout(resolve, milliseconds)),
@@ -124,29 +135,6 @@ async function appearance(): Promise<Appearance> {
   if (mode !== "light" && mode !== "dark")
     throw new Error("dark-notify returned an invalid appearance");
   return mode;
-}
-
-async function previousAppearance(): Promise<Appearance | undefined> {
-  let contents: string;
-  try {
-    contents = await readFile(statePath, "utf8");
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT")
-      return undefined;
-    throw error;
-  }
-  const value = object(JSON.parse(contents)).get("appearance");
-  if (value !== "light" && value !== "dark")
-    throw new Error("Invalid appearance state file");
-  return value;
-}
-
-async function recordAppearance(mode: Appearance): Promise<void> {
-  const temporary = `${statePath}.${String(process.pid)}.tmp`;
-  await writeFile(temporary, `${JSON.stringify({ appearance: mode })}\n`, {
-    mode: 0o600,
-  });
-  await rename(temporary, statePath);
 }
 
 async function acquireLock(): Promise<Database> {
@@ -187,31 +175,42 @@ function report(outcome: Outcome): void {
 async function restartTerminals(
   options: Options,
   mode: Appearance,
+  queued?: Target,
+  themeOnly = options.onChange,
 ): Promise<Outcome[]> {
-  const continued = new Set<string>();
   try {
-    const discovered = await discover(runtime, mode, {
-      ...(options.terminal === undefined ? {} : { terminal: options.terminal }),
-      probe: !options.dryRun,
-    });
+    const discovered =
+      queued === undefined
+        ? await discover(runtime, mode, {
+            ...(options.terminal === undefined
+              ? {}
+              : { terminal: options.terminal }),
+            onChange: options.onChange,
+          })
+        : { targets: [{ ...queued, mode }], outcomes: [] };
     const outcomes = [...discovered.outcomes];
     for (const outcome of discovered.outcomes) report(outcome);
     for (const target of discovered.targets) {
+      const { terminal, status: agentStatus } = target.snapshot;
       const outcome: Outcome = options.probeIdentities
         ? {
-            terminal: target.terminal,
+            terminal,
             status: "identified",
-            message: `Native /status verified conversation ${String(target.thread)}; client left running`,
+            message: "Codex hook and saved transcript verified",
           }
         : options.dryRun
           ? {
-              terminal: target.terminal,
+              terminal,
               status: "would-restart",
-              message: `${mode} appearance; ${target.status}; conversation is verified by native /status at restart`,
+              message: `${mode} appearance, current agent status ${agentStatus}`,
             }
-          : await restart(runtime, target, continued);
+          : await restart(runtime, target, options);
       outcomes.push(outcome);
       report(outcome);
+      // A queued worker finds its conversation unready again if a turn or draft
+      // began before it held the lock, so it keeps waiting as a fresh worker.
+      const waiting = queued !== undefined || options.onChange;
+      if (waiting && outcome.retry === true) await queue(target, themeOnly);
     }
     return outcomes;
   } catch (error) {
@@ -231,34 +230,42 @@ type Progress = Pick<
 >;
 
 /** Fills `progress` as facts become known, so a thrown error still records them. */
-async function run(options: Options, progress: Progress): Promise<boolean> {
+async function run(
+  options: Options,
+  progress: Progress,
+  queued?: Target,
+): Promise<boolean> {
   const mode = await appearance();
   progress.mode = mode;
   progress.theme = themeForAppearance(mode);
-  const previous = await previousAppearance();
+  const previous = await readAppearance(statePath);
   progress.previous = previous ?? null;
-  if (previous === mode && options.onChange) {
-    progress.action = "unchanged";
-    console.log(`Appearance remains ${mode}; no restarts`);
-    return true;
-  }
-  if (previous === undefined && options.onChange) {
-    progress.action = "initialized";
-    if (!options.dryRun) await recordAppearance(mode);
-    console.log(`Initialized ${mode} appearance; no restarts`);
-    return true;
+  if (queued !== undefined && options.onChange) {
+    const current = await verifiedSnapshot(runtime, queued);
+    if (launchedTheme(current.foreground.argv) === themeForAppearance(mode)) {
+      progress.action = "unchanged";
+      return true;
+    }
   }
   progress.action = "restart";
-  // Record an event before side effects. A duplicate must not repeat a prompt
-  // after a crash or uncertain CLI acknowledgement; explicit manual runs can retry.
   if (
+    queued === undefined &&
+    options.terminal === undefined &&
     !options.dryRun &&
-    !options.probeIdentities &&
-    options.terminal === undefined
+    !options.probeIdentities
   )
-    await recordAppearance(mode);
-  const outcomes = await restartTerminals(options, mode);
+    await recordAppearance(statePath, mode);
+  const outcomes = await restartTerminals(
+    queued === undefined ? options : { ...options, onChange: false },
+    mode,
+    queued,
+    options.onChange,
+  );
   progress.panes = outcomes;
+  if (options.onChange && outcomes.length === 0) {
+    if (previous === undefined) progress.action = "initialized";
+    else if (previous === mode) progress.action = "unchanged";
+  }
   console.log(`Appearance ${mode}: ${countsLine(countOutcomes(outcomes))}`);
   return succeeded(outcomes);
 }
@@ -290,7 +297,7 @@ async function mirror(event: RunEvent): Promise<void> {
 }
 
 /** Every worker run, including one that throws, ends as exactly one event. */
-async function work(options: Options): Promise<number> {
+async function work(options: Options, queued?: Target): Promise<number> {
   const ts = new Date().toISOString();
   const progress = emptyProgress();
   let ok = false;
@@ -303,7 +310,7 @@ async function work(options: Options): Promise<number> {
     );
     // Read the actual appearance after acquiring the lock, so queued workers
     // converge on the latest system setting rather than replaying stale events.
-    ok = await run(options, progress);
+    ok = await run(options, progress, queued);
   } catch (error) {
     failure = errorMessage(error);
     console.error(failure);
@@ -384,7 +391,7 @@ async function liveTerminals(): Promise<TerminalProcess[]> {
 async function status(): Promise<number> {
   const summary = statusReport({
     last: await readLastEvent(eventsPath),
-    recorded: await previousAppearance(),
+    recorded: await readAppearance(statePath),
     current: await appearance(),
     configTheme: await codexConfigTheme(),
     terminals: await liveTerminals(),
@@ -393,54 +400,103 @@ async function status(): Promise<number> {
   return summary.ok ? 0 : 1;
 }
 
-const usage = `Usage: restart-codex-panes [--dry-run | --probe-identities | --on-change | --status] [--terminal ADDRESS]
-Restart each local Codex terminal so its \`codex\` wrapper relaunches it with the
-theme for the current macOS appearance.
-  (none)              restart now in an independent worker
-  --on-change         restart only when the appearance differs from the last recorded one
-  --dry-run           read-only preview of eligible terminals
-  --probe-identities  query native /status in each terminal without restarting
-  --status            read-only report: last run, recorded vs current appearance,
-                      and each live local Codex terminal's launch theme; exits 1 on
-                      any mismatch or a failed last run
-  --terminal ADDRESS  restrict a manual run to one hc address such as t7
-Each worker run appends one JSON line to ${eventsPath}
-and mirrors its summary to the unified log:
-  /usr/bin/log show --last 1d --style compact --predicate 'eventMessage CONTAINS "${logTag}"'`;
-
-async function main(): Promise<number> {
-  if (process.argv.includes("--help")) {
-    console.log(usage);
-    return 0;
-  }
-  const options = parseOptions(process.argv.slice(2));
-  if (process.platform !== "darwin")
-    throw new Error("Codex theme restarts require macOS");
-  if (options.status) return status();
-  if (options.dryRun) {
-    const ok = await run(options, emptyProgress());
-    return ok ? 0 : 1;
-  }
-  await mkdir(stateDirectory, { recursive: true, mode: 0o700 });
-  if (options.worker) return work(options);
-  // The worker records its own result; nothing is left to read its output.
-  const child = spawn(
-    process.execPath,
-    [import.meta.path, ...process.argv.slice(2), "--worker"],
-    {
-      cwd: homedir(),
-      env: commandEnvironment(),
-      detached: true,
-      stdio: "ignore",
-    },
-  );
+async function detach(args: string[]): Promise<number | undefined> {
+  const child = spawn(process.execPath, [import.meta.path, ...args], {
+    cwd: homedir(),
+    env: commandEnvironment(),
+    detached: true,
+    stdio: "ignore",
+  });
   await new Promise<void>((resolve, reject) => {
     child.once("spawn", resolve);
     child.once("error", reject);
   });
   child.unref();
+  return child.pid;
+}
+
+async function queue(target: Target, themeOnly: boolean): Promise<void> {
+  const { terminal, created, foreground } = target.snapshot;
+  await detach([
+    "--wait-worker",
+    terminal,
+    String(created),
+    String(foreground.pid),
+    target.thread,
+    themeOnly ? "theme" : "manual",
+  ]);
   console.log(
-    `Restart worker ${String(child.pid)} started. Results: ${eventsPath} (summarize with --status)`,
+    `Queued restart for ${terminal}. Waiting up to one hour for an empty, idle composer.`,
+  );
+}
+
+async function waitWorker(args: string[]): Promise<number> {
+  const [terminal, created, pid, thread, kind] = args;
+  if (
+    terminal === undefined ||
+    !/^t[a-z0-9]+$/.test(terminal) ||
+    (kind !== "theme" && kind !== "manual")
+  )
+    throw new Error("Invalid queued restart");
+  const mode = await appearance();
+  const snapshot = await snapshotOf(runtime, terminal);
+  if (
+    thread === undefined ||
+    snapshot.created !== Number(created) ||
+    snapshot.foreground.pid !== Number(pid) ||
+    (await runtime.identity(snapshot)) !== thread
+  )
+    return 0; // The originating session is gone.
+  const target: Target = { snapshot, thread, mode };
+  const options = parseOptions(["--terminal", terminal, "--worker"]);
+  options.onChange = kind === "theme";
+  const ready = await waitForReadiness(
+    runtime,
+    target,
+    async (current) =>
+      options.onChange &&
+      launchedTheme(current.foreground.argv) ===
+        themeForAppearance(await appearance()),
+  );
+  return ready ? work(options, target) : 0;
+}
+
+async function main(): Promise<number> {
+  if (process.argv.includes("--help")) {
+    console.log(usage(eventsPath, logTag));
+    return 0;
+  }
+  if (process.platform !== "darwin")
+    throw new Error("Codex theme restarts require macOS");
+  const args = process.argv.slice(2);
+  if (args[0] === "--wait-worker") return waitWorker(args.slice(1));
+  const options = parseOptions(args);
+  if (options.status) return status();
+  if (options.dryRun || options.probeIdentities) {
+    const ok = await run(options, emptyProgress());
+    return ok ? 0 : 1;
+  }
+  await mkdir(stateDirectory, { recursive: true, mode: 0o700 });
+  if (options.wait === true) {
+    const mode = await appearance();
+    const result = await discover(
+      runtime,
+      mode,
+      options.terminal === undefined ? {} : { terminal: options.terminal },
+    );
+    const target = result.targets[0];
+    if (target === undefined)
+      throw new Error(
+        result.outcomes[0]?.message ?? "No eligible Codex terminal",
+      );
+    await queue(target, false);
+    return 0;
+  }
+  if (options.worker) return work(options);
+  // The worker records its own result; nothing is left to read its output.
+  const pid = await detach([...args, "--worker"]);
+  console.log(
+    `Restart worker ${String(pid)} started. Results: ${eventsPath} (summarize with --status)`,
   );
   return 0;
 }

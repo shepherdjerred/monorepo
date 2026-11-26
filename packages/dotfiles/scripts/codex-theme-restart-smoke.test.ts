@@ -69,6 +69,7 @@ async function fixture() {
       ),
   );
   for (const name of [
+    "codex_theme_restart_identity.ts",
     "codex_theme_restart_launch.ts",
     "codex_theme_restart_core.ts",
     "codex_theme_restart_options.ts",
@@ -162,23 +163,23 @@ async function waitFor(check: () => boolean | Promise<boolean>): Promise<void> {
   }
 }
 
-test("initializes without restart, deduplicates events, and scans live local terminals once", async () => {
+test("reconciles on repeated appearance events", async () => {
   const context = await fixture();
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
-    stdout: expect.stringContaining("Initialized light"),
+    stdout: expect.stringContaining("Appearance light"),
   });
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
-    stdout: expect.stringContaining("Appearance remains light"),
+    stdout: expect.stringContaining("Appearance light"),
   });
-  expect(await context.calls()).toEqual([]);
+  expect(await context.calls()).toHaveLength(2);
   await writeFile(path.join(context.directory, "mode"), "dark");
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
     stdout: expect.stringContaining("Appearance dark"),
   });
-  expect(await context.calls()).toEqual([["ls", "--json"]]);
+  expect(await context.calls()).toHaveLength(3);
   expect(JSON.parse(await readFile(context.state, "utf8"))).toEqual({
     appearance: "dark",
   });
@@ -206,9 +207,9 @@ test("initializes without restart, deduplicates events, and scans live local ter
   ]);
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
-    stdout: expect.stringContaining("Appearance remains dark"),
+    stdout: expect.stringContaining("Appearance dark"),
   });
-  expect(await context.calls()).toHaveLength(1);
+  expect(await context.calls()).toHaveLength(4);
 });
 
 test("dry-run creates no state directory and sends only discovery commands", async () => {
@@ -329,8 +330,8 @@ test("serializes concurrent appearance events with a real SQLite lock", async ()
   const second = context.start(["--worker", "--on-change"]);
   const results = await Promise.all([finish(first), finish(second)]);
   expect(results.map((result) => result.code)).toEqual([0, 0]);
-  expect(results[1]?.stdout).toContain("Appearance remains dark");
-  expect(await context.calls()).toHaveLength(1);
+  expect(results[1]?.stdout).toContain("Appearance dark");
+  expect(await context.calls()).toHaveLength(3);
 });
 
 test("releases the lock after a worker crash without a stale PID file", async () => {
@@ -367,5 +368,5 @@ test("corrupt appearance state fails loudly before any terminal operation", asyn
     code: 1,
     stderr: expect.stringContaining("Invalid appearance state"),
   });
-  expect(await context.calls()).toEqual([]);
+  expect(await context.calls()).toEqual([["ls", "--json"]]); // Initial setup only.
 });

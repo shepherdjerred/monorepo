@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yone-Q",
+  "name": "Mortal Steel",
+  "description": "Yone thrusts forward, dealing 25/50/75/100/125 (+105% AD) physical damage. On hit, grants a stack for 6 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yone-Q.png",
+  "slot": "Q",
+  "championKey": "Yone",
+  "championName": "Yone",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zilean-W",
+  "name": "Rewind",
+  "description": "Zilean turns time, reducing his other basic Ability Cooldowns by 10 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zilean-W.png",
+  "slot": "W",
+  "championKey": "Zilean",
+  "championName": "Zilean",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    12,
+    10,
+    8,
+    6
+  ],
+  "costByRank": [
+    35,
+    35,
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/12/10/8/6 s"
+  }
+}

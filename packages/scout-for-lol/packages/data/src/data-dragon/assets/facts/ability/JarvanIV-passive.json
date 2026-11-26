@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "JarvanIV-passive",
+  "name": "Martial Cadence",
+  "description": "Jarvan's first basic attack on an enemy deals bonus physical damage based on their current Health. This effect cannot occur again on the same enemy for a few seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/JarvanIV-passive.png",
+  "slot": "passive",
+  "championKey": "JarvanIV",
+  "championName": "Jarvan IV",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

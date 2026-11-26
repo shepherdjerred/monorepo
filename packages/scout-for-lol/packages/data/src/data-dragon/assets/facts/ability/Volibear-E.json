@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Volibear-E",
+  "name": "Sky Splitter",
+  "description": "Volibear summons a thundercloud that fires a lightning bolt, dealing 80/110/140/170/200 (+70% AP) plus 11/12/13/14/15% max Health magic damage and Slowing by 40% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Volibear-E.png",
+  "slot": "E",
+  "championKey": "Volibear",
+  "championName": "Volibear",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16 s"
+  }
+}

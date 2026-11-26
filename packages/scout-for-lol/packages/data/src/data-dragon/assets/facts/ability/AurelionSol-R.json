@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "AurelionSol-R",
+  "name": "Falling Star / The Skies Descend",
+  "description": "Aurelion Sol plucks a star from the heavens and crashes it into the earth, dealing 150/250/350 (+75% AP) magic damage, Stunning enemies 1 second, and absorbing 5 Stardust for each champion hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/AurelionSol-R.png",
+  "slot": "R",
+  "championKey": "AurelionSol",
+  "championName": "Aurelion Sol",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1250,
+    1250,
+    1250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}

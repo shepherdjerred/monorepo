@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9177",
+  "name": "Searing Shortbow",
+  "description": "Fires projectiles that create lingering fire areas.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9177.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

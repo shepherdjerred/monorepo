@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Riven-passive",
+  "name": "Runic Blade",
+  "description": "Riven's abilities charge her blade, and her basic attacks expend charges to deal an additional damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Riven-passive.png",
+  "slot": "passive",
+  "championKey": "Riven",
+  "championName": "Riven",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

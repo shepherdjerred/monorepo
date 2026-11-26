@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pyke-W",
+  "name": "Ghostwater Dive",
+  "description": "Pyke gains Camouflage and 45% (+200% Lethality) Move Speed decaying over 5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Pyke-W.png",
+  "slot": "W",
+  "championKey": "Pyke",
+  "championName": "Pyke",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

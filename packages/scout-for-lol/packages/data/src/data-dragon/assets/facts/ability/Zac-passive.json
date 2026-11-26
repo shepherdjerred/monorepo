@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zac-passive",
+  "name": "Cell Division",
+  "description": "Each time Zac hits an enemy with an ability, he sheds a chunk of himself that can be reabsorbed to restore Health. Upon taking fatal damage, Zac splits into 4 bloblets that attempt to recombine.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zac-passive.png",
+  "slot": "passive",
+  "championKey": "Zac",
+  "championName": "Zac",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

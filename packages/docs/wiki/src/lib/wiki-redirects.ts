@@ -42,4 +42,5 @@ export const wikiRedirects = {
   "/explanation/homelab/postal-smtp-tls/":
     "/explanation/homelab/mail-smtp-tls/",
   "/how-to/check-flipt-flag-inventory/": "/how-to/check-flag-inventory/",
+  "/how-to/manage-freshrss-repo-feeds/": "/how-to/manage-feeds/",
 };

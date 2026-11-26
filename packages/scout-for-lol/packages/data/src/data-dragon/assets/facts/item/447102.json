@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447102",
+  "name": "Reality Fracture",
+  "description": "ZZ'Rot: (0s) On Attack or when damaging an enemy with an ability, summon 8 Voidgrubs to Attack the target.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "80"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Health",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447102.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

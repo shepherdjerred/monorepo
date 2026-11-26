@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "323504",
+  "name": "Ardent Censer",
+  "description": "Sanctify: Healing or Shielding an ally enhances you both for 6 seconds, granting 25% Attack Speed and 20 magic damage On-Hit.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "55"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3113",
+      "name": "Aether Wisp",
+      "icon": "img/item/3113.png"
+    },
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    },
+    {
+      "kind": "item",
+      "key": "3114",
+      "name": "Forbidden Idol",
+      "icon": "img/item/3114.png"
+    }
+  ],
+  "icon": "img/item/323504.png",
+  "goldTotal": 2600,
+  "goldCombine": 700,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

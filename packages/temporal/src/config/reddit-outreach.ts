@@ -26,6 +26,13 @@ export const DEFAULT_REDDIT_OUTREACH_SETTINGS: RedditOutreachSettings = {
   maxRepliesPerDay: 10,
 };
 
+export function validateRedditOutreachSubreddits(subreddits: unknown) {
+  return RedditOutreachSettingsSchema.parse({
+    ...DEFAULT_REDDIT_OUTREACH_SETTINGS,
+    subreddits,
+  }).subreddits;
+}
+
 /** Re-evaluated for each sweep and immediately before submitting a reply. */
 export async function redditOutreachConfig() {
   const flags = promotionFlagSource(

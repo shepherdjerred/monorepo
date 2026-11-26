@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   CatalogDetailSchema,
   CatalogSearchSchema,
@@ -20,6 +21,7 @@ import {
   PlaybackHistorySchema,
   PlaybackPeopleSchema,
   PlaybackStatisticsSchema,
+  PlaybackTimelineSchema,
 } from "#shared/household/playback.ts";
 import { PlexHistoricalViewsSchema } from "#shared/household/plex-history.ts";
 import { RequestInterestProgressSchema } from "#shared/household/progress.ts";
@@ -49,6 +51,7 @@ import {
   playbackHistory,
   playbackPeople,
   playbackStatistics,
+  playbackTimeline,
 } from "#testing/fixture-api/fixtures/playback.ts";
 import { plexRequestHistory } from "#testing/fixture-api/fixtures/migration/plex-history.ts";
 import {
@@ -67,6 +70,11 @@ import { FEATURED, titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 import { KIDS, OWNER } from "#testing/fixture-api/personas.ts";
 import { FixtureFailure } from "#testing/fixture-api/scenario.ts";
 import { NOW } from "#testing/fixture-api/support.ts";
+import {
+  LegacyActivityPageSchema,
+  LegacyActivityQuerySchema,
+} from "#shared/legacy-activity/contract.ts";
+import { importedActivityPage } from "#testing/fixture-api/fixtures/imported-activity.ts";
 
 function subjectOf(request: FixtureRequest): string {
   return request.query.get("subjectUserId") ?? request.user.id;
@@ -267,12 +275,17 @@ const calendar: readonly FixtureEndpoint[] = [
 const playback: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/playback/history",
-    schema: PlaybackHistorySchema,
-    respond: (request) => playbackHistory(request.query, request),
+    schema: z.union([PlaybackTimelineSchema, PlaybackHistorySchema]),
+    respond: (request) =>
+      request.query.get("view") === "timeline"
+        ? playbackTimeline(request)
+        : playbackHistory(request.query, request),
     samples: [
       "/playback/history",
       "/playback/history?search=bear",
       "/playback/history?limit=25",
+      "/playback/history?view=timeline",
+      "/playback/history?view=timeline&source=plex&search=bear",
     ],
   }),
   endpoint({
@@ -317,8 +330,23 @@ const removals: readonly FixtureEndpoint[] = [
 const notifications: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/activity",
-    schema: OperationListSchema,
-    respond: () => operationList(),
+    schema: z.union([OperationListSchema, LegacyActivityPageSchema]),
+    respond: ({ persona, query }) => {
+      const source = query.get("source");
+      if (source === null) return operationList();
+      if (persona !== "owner")
+        throw new FixtureFailure(
+          403,
+          "forbidden",
+          "Library owner access is required.",
+        );
+      return importedActivityPage(
+        LegacyActivityQuerySchema.parse({
+          source,
+          before: query.get("before") ?? undefined,
+        }),
+      );
+    },
     samples: ["/activity"],
   }),
   endpoint({

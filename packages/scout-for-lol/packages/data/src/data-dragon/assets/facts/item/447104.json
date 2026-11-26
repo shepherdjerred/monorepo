@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447104",
+  "name": "Innervating Locket",
+  "description": "Fill the Soul: Any Ability cast within 800 range grants you a charge.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447104.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

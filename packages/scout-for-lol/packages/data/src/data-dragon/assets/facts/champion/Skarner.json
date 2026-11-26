@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Skarner",
+  "name": "Skarner",
+  "description": "The ancient, colossal brackern Skarner is revered in Ixtal as one of the founding members of its ruling caste, the Yun Tal.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Skarner-passive",
+      "name": "Threads of Vibration",
+      "icon": "img/ability/Skarner-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Skarner-Q",
+      "name": "Shattered Earth / Upheaval",
+      "icon": "img/ability/Skarner-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Skarner-W",
+      "name": "Seismic Bastion",
+      "icon": "img/ability/Skarner-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Skarner-E",
+      "name": "Ixtal's Impact",
+      "icon": "img/ability/Skarner-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Skarner-R",
+      "name": "Impale",
+      "icon": "img/ability/Skarner-R.png"
+    }
+  ],
+  "icon": "img/champion/Skarner.png",
+  "art": "img/champion-splash/Skarner_0.jpg",
+  "title": "the Primordial Sovereign",
+  "roles": [
+    "Tank",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Fighter"
+  }
+}

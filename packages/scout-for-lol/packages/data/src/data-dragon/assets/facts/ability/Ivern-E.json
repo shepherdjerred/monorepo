@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ivern-E",
+  "name": "Triggerseed",
+  "description": "Ivern grants 75/115/155/195/235 (+50% AP) Shield to an ally champion or Daisy. After 2 seconds, it bursts, dealing 70/90/110/130/150 (+80% AP) magic damage and Slowing enemies by 40/45/50/55/60% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ivern-E.png",
+  "slot": "E",
+  "championKey": "Ivern",
+  "championName": "Ivern",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    750,
+    750,
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

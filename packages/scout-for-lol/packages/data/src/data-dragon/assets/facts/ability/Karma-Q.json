@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karma-Q",
+  "name": "Inner Flame",
+  "description": "Karma fires a blast of energy, dealing 60/110/160/210/260 (+70% AP) magic damage to the first target hit and surrounding enemies, and Slowing them by 40% for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/50/60/70/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karma-Q.png",
+  "slot": "Q",
+  "championKey": "Karma",
+  "championName": "Karma",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    40,
+    50,
+    60,
+    70,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

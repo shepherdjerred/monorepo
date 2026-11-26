@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Jayce",
+  "name": "Jayce",
+  "description": "Jayce Talis is a brilliant inventor who, along with his friend Viktor, made the first great discoveries in the field of hextech.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Jayce-passive",
+      "name": "Hextech Capacitor",
+      "icon": "img/ability/Jayce-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jayce-Q",
+      "name": "To the Skies! / Shock Blast",
+      "icon": "img/ability/Jayce-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jayce-W",
+      "name": "Lightning Field / Hyper Charge",
+      "icon": "img/ability/Jayce-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jayce-E",
+      "name": "Thundering Blow / Acceleration Gate",
+      "icon": "img/ability/Jayce-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jayce-R",
+      "name": "Mercury Cannon / Mercury Hammer",
+      "icon": "img/ability/Jayce-R.png"
+    }
+  ],
+  "icon": "img/champion/Jayce.png",
+  "art": "img/champion-splash/Jayce_0.jpg",
+  "title": "the Defender of Tomorrow",
+  "roles": [
+    "Fighter",
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Marksman"
+  }
+}

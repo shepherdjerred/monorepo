@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ivern-passive",
+  "name": "Friend of the Forest",
+  "description": "Ivern cannot attack or be attacked by non-epic monsters. Ivern can create magical groves on jungle camps which grow over time.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ivern-passive.png",
+  "slot": "passive",
+  "championKey": "Ivern",
+  "championName": "Ivern",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223742",
+  "name": "Dead Man's Plate",
+  "description": "Shipwrecker: While moving, build up Move Speed. Unsinkable: The strength of movement slowing effects is reduced.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "40"
+    },
+    {
+      "label": "Move Speed",
+      "value": "7%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223742.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

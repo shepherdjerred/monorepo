@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223009",
+  "name": "Boots of Swiftness",
+  "description": "The strength of movement slowing effects is reduced by 40%.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "70"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223009.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

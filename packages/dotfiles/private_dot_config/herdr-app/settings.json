@@ -1,7 +1,9 @@
 {
   "zoom": 1,
   "sounds": {
-    "enabled": true
+    "enabled": true,
+    "done": "sounds/agent-done.mp3",
+    "blocked": "sounds/agent-needs-attention.mp3"
   },
   "font": "Berkeley Mono",
   "minimum_contrast": 1,

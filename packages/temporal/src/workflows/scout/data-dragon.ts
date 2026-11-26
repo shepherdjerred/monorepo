@@ -344,7 +344,7 @@ export async function runScoutDataDragonUpdate(
   let result: DataDragonUpdateResult | undefined;
   let report: ActivityReportInput;
   // Only collection and the update itself belong in this catch. Report
-  // delivery runs after it, so a Postal/S3 outage cannot record a
+  // delivery runs after it, so a Mail/S3 outage cannot record a
   // `scout_data_dragon_runs{outcome="failed"}` sample (and fire
   // ScoutDataDragonUpdateFailed) for a run whose updater actually succeeded.
   try {

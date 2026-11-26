@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6700",
+  "name": "Shield of the Rakkor",
+  "description": "Aegis: Every 8(0s), block the first Attack that would hit you.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Move Speed",
+      "value": "5%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "6690",
+      "name": "Rectrix",
+      "icon": "img/item/6690.png"
+    },
+    {
+      "kind": "item",
+      "key": "2019",
+      "name": "Steel Sigil",
+      "icon": "img/item/2019.png"
+    }
+  ],
+  "icon": "img/item/6700.png",
+  "goldTotal": 2675,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2675 gold"
+  }
+}

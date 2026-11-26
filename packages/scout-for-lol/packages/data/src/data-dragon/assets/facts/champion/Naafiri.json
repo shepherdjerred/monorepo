@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Naafiri",
+  "name": "Naafiri",
+  "description": "Across the sands of Shurima, a chorus of howls rings out. It is the call of the dune hounds, voracious predators who form packs and compete for the right to hunt in these barren lands.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Naafiri-passive",
+      "name": "We Are More",
+      "icon": "img/ability/Naafiri-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Naafiri-Q",
+      "name": "Darkin Daggers",
+      "icon": "img/ability/Naafiri-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Naafiri-W",
+      "name": "The Call of the Pack",
+      "icon": "img/ability/Naafiri-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Naafiri-E",
+      "name": "Eviscerate",
+      "icon": "img/ability/Naafiri-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Naafiri-R",
+      "name": "Hounds' Pursuit",
+      "icon": "img/ability/Naafiri-R.png"
+    }
+  ],
+  "icon": "img/champion/Naafiri.png",
+  "art": "img/champion-splash/Naafiri_0.jpg",
+  "title": "the Hound of a Hundred Bites",
+  "roles": [
+    "Assassin",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Fighter"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kindred",
+  "name": "Kindred",
+  "description": "Separate, but never parted, Kindred represents the twin essences of death. Lamb's bow offers a swift release from the mortal realm for those who accept their fate.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "595"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kindred-passive",
+      "name": "Mark of the Kindred",
+      "icon": "img/ability/Kindred-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kindred-Q",
+      "name": "Dance of Arrows",
+      "icon": "img/ability/Kindred-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kindred-W",
+      "name": "Wolf's Frenzy",
+      "icon": "img/ability/Kindred-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kindred-E",
+      "name": "Mounting Dread",
+      "icon": "img/ability/Kindred-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kindred-R",
+      "name": "Lamb's Respite",
+      "icon": "img/ability/Kindred-R.png"
+    }
+  ],
+  "icon": "img/champion/Kindred.png",
+  "art": "img/champion-splash/Kindred_0.jpg",
+  "title": "The Eternal Hunters",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

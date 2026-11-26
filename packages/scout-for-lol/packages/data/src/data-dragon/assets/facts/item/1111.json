@@ -1,0 +1,45 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1111",
+  "name": "Jarvan I's",
+  "description": "Jarvan One: Gives you stats and passives from all boots.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "25%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "100"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "12"
+    },
+    {
+      "label": "Armor",
+      "value": "25"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "20"
+    },
+    {
+      "label": "Tenacity",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1111.png",
+  "goldTotal": 300,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}

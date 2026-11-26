@@ -6,6 +6,7 @@ import {
   parseRequest,
   repoName,
   slug,
+  startDetachedToolkit,
   type ExecResult,
   type Request,
   type Runtime,
@@ -33,26 +34,22 @@ function fakeRuntime(
   overrides: Partial<Runtime> = {},
   existing: readonly string[] = [],
 ) {
-  const git: string[][] = [];
+  const allocations: (readonly [Request, string])[] = [];
   const spaces: Record<string, unknown>[] = [];
   const hc: string[][] = [];
-  const toolkit: string[][] = [];
   const runtime: Runtime = {
     name: () => Promise.resolve(named),
-    async freeBranch(name, taken) {
+    allocate(request, name) {
+      allocations.push([request, name]);
       for (let n = 1; ; n++) {
         const candidate = n === 1 ? name : `${name}-${String(n)}`;
-        if (!(await taken(candidate))) return candidate;
+        if (request.branch !== undefined || !existing.includes(candidate))
+          return Promise.resolve({
+            branch: candidate,
+            path: `${request.root}/${slug(candidate)}`,
+            dedupe: "started",
+          });
       }
-    },
-    git(machine, cwd, args) {
-      git.push([String(machine), cwd, ...args]);
-      if (args[0] === "show-ref")
-        return Promise.resolve({
-          ...ok,
-          code: existing.includes(String(args[3]).slice(11)) ? 0 : 1,
-        });
-      return Promise.resolve(ok);
     },
     newSpace(args) {
       spaces.push(args);
@@ -68,14 +65,9 @@ function fakeRuntime(
       return Promise.resolve(ok);
     },
     sleep: () => Promise.resolve(),
-    platform: "darwin",
-    startToolkit(cwd, args) {
-      toolkit.push([cwd, ...args]);
-      return Promise.resolve(true);
-    },
     ...overrides,
   };
-  return { runtime, git, spaces, hc, toolkit };
+  return { runtime, allocations, spaces, hc };
 }
 
 test("requests are checked strictly", () => {
@@ -278,10 +270,11 @@ test("when sendMessage is false, branch and tab are still named from description
     },
   );
   expect(outcome.messageSent).toBe("none");
-  expect(fake.hc).toEqual([]);
+  expect(fake.hc).toEqual([["label", "t9", "agent.task=Fix the cache"]]);
   expect(fake.spaces[0]).toEqual({
     folder: "/home/.herdr/worktrees/repo/fix-cache",
     machine: "",
+    focus: false,
     name: "Fix the cache",
     tab: "Fix the cache",
     argv: ["brim", "--provider", "kimi", "--"],
@@ -303,29 +296,51 @@ test("creates a fresh branch and opens the space on the right machine", async ()
     path: "/home/.herdr/worktrees/repo/fix-cache-2",
     terminal: "t9",
     messageSent: "argument",
-    dedupe: "skipped",
+    dedupe: "started",
   });
-  expect(fake.toolkit).toEqual([]);
-  expect(fake.git).toContainEqual([
-    "mac-mini",
-    "/repo",
-    "worktree",
-    "add",
-    "-b",
-    "fix-cache-2",
-    "/home/.herdr/worktrees/repo/fix-cache-2",
-    "HEAD",
+  expect(fake.allocations).toEqual([
+    [{ ...base, machine: "mac-mini" }, "fix-cache"],
   ]);
   expect(fake.spaces).toEqual([
     {
       folder: "/home/.herdr/worktrees/repo/fix-cache-2",
       machine: "mac-mini",
+      focus: false,
       name: "Fix the cache",
       tab: "Fix the cache",
       argv: ["brim", "--provider", "codex", "--", "--"],
       task: "- fix the cache",
     },
   ]);
+  expect(fake.hc).toEqual([
+    ["label", "mac-mini/t9", "agent.task=Fix the cache"],
+  ]);
+});
+
+test("an explicit branch skips naming and opens an unnamed background space", async () => {
+  const fake = fakeRuntime({
+    name: () => Promise.reject(new Error("Unexpected naming")),
+  });
+  const request = parseRequest(
+    JSON.stringify({ ...base, branch: "feat/keep" }),
+  );
+  const outcome = await createWorktree(request, fake.runtime, (update) => {
+    steps.push(update.step);
+  });
+  expect(outcome).toMatchObject({
+    branch: "feat/keep",
+    title: null,
+    messageSent: "none",
+  });
+  expect(fake.spaces).toEqual([
+    {
+      folder: "/home/.herdr/worktrees/repo/feat-keep",
+      machine: "",
+      focus: false,
+      argv: ["brim", "--provider", "codex", "--"],
+    },
+  ]);
+  expect(fake.hc).toEqual([]);
 });
 
 test("Kimi's message is typed once it is idle, at its machine address", async () => {
@@ -352,14 +367,11 @@ test("Kimi's message is typed once it is idle, at its machine address", async ()
     },
   );
   expect(outcome.messageSent).toBe("typed");
-  expect(steps.slice(-5)).toEqual([
-    "naming",
-    "branch",
-    "worktree",
-    "space",
-    "message",
+  expect(steps.slice(-4)).toEqual(["naming", "worktree", "space", "message"]);
+  expect(fake.hc).toEqual([
+    ["label", "mac-mini/t9", "agent.task=Fix the cache"],
+    ["send", "mac-mini/t9", "- fix the cache"],
   ]);
-  expect(fake.hc).toEqual([["send", "mac-mini/t9", "- fix the cache"]]);
 });
 
 test("failures stop before any side effect they depend on", async () => {
@@ -371,14 +383,9 @@ test("failures stop before any side effect they depend on", async () => {
       steps.push(update.step);
     }),
   ).rejects.toThrow("OpenAI 401");
-  expect(naming.git).toEqual([]);
+  expect(naming.allocations).toEqual([]);
   const adding = fakeRuntime({
-    git: (_machine, _cwd, args) =>
-      Promise.resolve(
-        args[0] === "worktree"
-          ? { code: 128, stdout: "", stderr: "fatal: path exists\n" }
-          : { ...ok, code: args[0] === "show-ref" ? 1 : 0 },
-      ),
+    allocate: () => Promise.reject(new Error("fatal: path exists")),
   });
   await expect(
     createWorktree(base, adding.runtime, (update) => {
@@ -386,73 +393,26 @@ test("failures stop before any side effect they depend on", async () => {
     }),
   ).rejects.toThrow("fatal: path exists");
   expect(adding.spaces).toEqual([]);
-  expect(adding.toolkit).toEqual([]);
 });
 
-test("a worktree on this Mac starts sharing its files with the main checkout before the space opens", async () => {
-  const order: string[] = [];
+test("a checkout with unavailable dedupe still opens its space", async () => {
   const fake = fakeRuntime({
-    startToolkit(cwd, args) {
-      order.push("toolkit");
-      fake.toolkit.push([cwd, ...args]);
-      return Promise.resolve(true);
-    },
-    newSpace() {
-      order.push("space");
-      return Promise.resolve("t9");
-    },
+    allocate: (request) =>
+      Promise.resolve({
+        branch: "work",
+        path: `${request.root}/work`,
+        dedupe: "skipped",
+      }),
   });
   const outcome = await createWorktree(base, fake.runtime, (update) => {
     steps.push(update.step);
   });
-  expect(outcome.dedupe).toBe("started");
-  expect(fake.toolkit).toEqual([
-    [
-      "/home/.herdr/worktrees/repo/fix-cache",
-      "tend",
-      "dedupe",
-      "--worktree",
-      "/home/.herdr/worktrees/repo/fix-cache",
-      "--apply",
-      "--no-refresh",
-      "--lock-wait",
-      "15m",
-    ],
-  ]);
-  expect(order).toEqual(["toolkit", "space"]);
+  expect(outcome).toMatchObject({ terminal: "t9", dedupe: "skipped" });
+  expect(fake.spaces).toHaveLength(1);
 });
 
-test("sharing is skipped off macOS and without a toolkit, and never fails the worktree", async () => {
-  const linux = fakeRuntime({ platform: "linux" });
-  const onLinux = await createWorktree(base, linux.runtime, (update) => {
-    steps.push(update.step);
-  });
-  expect(onLinux.dedupe).toBe("skipped");
-  expect(linux.toolkit).toEqual([]);
-  const missing = fakeRuntime({ startToolkit: () => Promise.resolve(false) });
-  const withoutToolkit = await createWorktree(
-    base,
-    missing.runtime,
-    (update) => {
-      steps.push(update.step);
-    },
-  );
-  expect(withoutToolkit.dedupe).toBe("skipped");
-  for (const startToolkit of [
-    () => Promise.reject(new Error("spawn EACCES")),
-    () => {
-      throw new Error("spawn ENOENT");
-    },
-  ]) {
-    const failing = fakeRuntime({ startToolkit });
-    const outcome = await createWorktree(base, failing.runtime, (update) => {
-      steps.push(update.step);
-    });
-    expect(outcome).toMatchObject({
-      path: "/home/.herdr/worktrees/repo/fix-cache",
-      terminal: "t9",
-      dedupe: "skipped",
-    });
-    expect(failing.spaces).toHaveLength(1);
-  }
+test("the detached toolkit starter reports a missing toolkit instead of failing", async () => {
+  expect(
+    await startDetachedToolkit("/nonexistent/.local/bin/toolkit", "/", ["x"]),
+  ).toBe(false);
 });

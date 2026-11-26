@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lulu-W",
+  "name": "Whimsy",
+  "description": "If cast on an ally, grants them Attack Speed and Move Speed for a short time. If cast on an enemy, turns them into an adorable critter that can't attack or cast spells.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lulu-W.png",
+  "slot": "W",
+  "championKey": "Lulu",
+  "championName": "Lulu",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    18,
+    18,
+    18,
+    18
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18 s"
+  }
+}

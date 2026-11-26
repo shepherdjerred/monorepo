@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yuumi-E",
+  "name": "Zoomies",
+  "description": "Yuumi shields herself, blocking 65/90/115/140/165 (+40% AP) damage and gains 25/27.5/30/32.5/35% (+8% AP) Attack Speed for 3 seconds. While the shield persists, the target also gains 20% Move Speed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/90/100/110/120 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yuumi-E.png",
+  "slot": "E",
+  "championKey": "Yuumi",
+  "championName": "Yuumi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    80,
+    90,
+    100,
+    110,
+    120
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

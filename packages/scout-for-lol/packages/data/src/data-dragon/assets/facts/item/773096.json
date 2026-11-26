@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773096",
+  "name": "Philosopher's Stone",
+  "description": "Transmute: 5 Gold per 10 seconds.",
+  "facts": [
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "7"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "9"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771004",
+      "name": "Faerie Charm",
+      "icon": "img/item/771004.png"
+    },
+    {
+      "kind": "item",
+      "key": "771006",
+      "name": "Rejuvenation Bead",
+      "icon": "img/item/771006.png"
+    }
+  ],
+  "icon": "img/item/773096.png",
+  "goldTotal": 700,
+  "goldCombine": 340,
+  "keyFact": {
+    "label": "Cost",
+    "value": "700 gold"
+  }
+}

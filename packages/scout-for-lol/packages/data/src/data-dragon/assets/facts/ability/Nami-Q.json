@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nami-Q",
+  "name": "Aqua Prison",
+  "description": "Nami hurls a bubble, Stunning for 1.5 seconds and dealing 90/145/200/255/310 (+50% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "875"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nami-Q.png",
+  "slot": "Q",
+  "championKey": "Nami",
+  "championName": "Nami",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    875,
+    875,
+    875,
+    875,
+    875
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

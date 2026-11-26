@@ -1,6 +1,7 @@
 @import "./generated/tokens.css";
 @import "./fonts.css";
 @import "./components.css";
+@import "./friendly.css";
 
 * {
   border-color: var(--scout-color-border);

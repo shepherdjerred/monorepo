@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Naafiri-passive",
+  "name": "We Are More",
+  "description": "Naafiri spawns packmates that attack the targets of her attacks and abilities.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Naafiri-passive.png",
+  "slot": "passive",
+  "championKey": "Naafiri",
+  "championName": "Naafiri",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

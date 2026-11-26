@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1207",
+  "name": "Bot Lane Quest Reward",
+  "description": "Rewards • +300immediately and Boots move to a 7th slot, freeing up your inventory for 6 items • +2from Minion kills • +40from Champion takedowns",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/1207.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

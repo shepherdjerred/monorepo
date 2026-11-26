@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771039",
+  "name": "Hunter's Machete",
+  "description": "Passive: Basic Attacks deal 10 magic damage to monsters On-Hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/771039.png",
+  "goldTotal": 300,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}

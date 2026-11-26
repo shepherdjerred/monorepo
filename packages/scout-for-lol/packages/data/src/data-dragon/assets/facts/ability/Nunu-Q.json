@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nunu-Q",
+  "name": "Consume",
+  "description": "Nunu asks Willump to take a bite of an enemy, dealing 400/600/800/1000/1200 true damage and restoring 65/95/125/155/185 (+10% bonus Health) (+90% AP) Health when used against a minion or jungle monster.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "125"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nunu-Q.png",
+  "slot": "Q",
+  "championKey": "Nunu",
+  "championName": "Nunu & Willump",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    125,
+    125,
+    125,
+    125,
+    125
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

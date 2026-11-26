@@ -1,0 +1,36 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3173",
+  "name": "Chainlaced Crushers",
+  "description": "Noxian Persistence: (0s) After taking magic damage from a Champion, gain a magic shield for 5 seconds.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    },
+    {
+      "label": "Move Speed",
+      "value": "45"
+    },
+    {
+      "label": "Tenacity",
+      "value": "30%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3111",
+      "name": "Mercury's Treads",
+      "icon": "img/item/3111.png"
+    }
+  ],
+  "icon": "img/item/3173.png",
+  "goldTotal": 1250,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1250 gold"
+  }
+}

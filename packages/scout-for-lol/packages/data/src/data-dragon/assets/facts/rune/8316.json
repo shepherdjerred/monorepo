@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8316",
+  "name": "Jack Of All Trades",
+  "description": "For each different stat gained from items, gain one Jack stack. Each stack grants you 1 Ability Haste.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/JackofAllTrades2.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

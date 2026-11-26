@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aatrox-passive",
+  "name": "Deathbringer Stance",
+  "description": "Periodically, Aatrox's next basic attack deals bonus magic damage and heals him, based on the target's max health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Aatrox-passive.png",
+  "slot": "passive",
+  "championKey": "Aatrox",
+  "championName": "Aatrox",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

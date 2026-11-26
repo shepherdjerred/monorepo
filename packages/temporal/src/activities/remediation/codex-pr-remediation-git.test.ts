@@ -36,7 +36,6 @@ describe("remediationAgentEnv and remediationDenyReadPaths", () => {
       GITHUB_APP_PRIVATE_KEY: "dummy-pem",
       MAIL_API_TOKEN: "dummy-mail-token",
       MAIL_API_URL: "http://mail.mail.svc:7371",
-      POSTAL_API_KEY: "dummy-postal",
       AWS_ACCESS_KEY_ID: "dummy-aws-id",
       AWS_SECRET_ACCESS_KEY: "dummy-aws",
       S3_ENDPOINT: "https://s3.internal",
@@ -56,7 +55,6 @@ describe("remediationAgentEnv and remediationDenyReadPaths", () => {
     expect(env["GITHUB_APP_PRIVATE_KEY"]).toBeUndefined();
     expect(env["MAIL_API_TOKEN"]).toBeUndefined();
     expect(env["MAIL_API_URL"]).toBeUndefined();
-    expect(env["POSTAL_API_KEY"]).toBeUndefined();
     expect(env["AWS_ACCESS_KEY_ID"]).toBeUndefined();
     expect(env["AWS_SECRET_ACCESS_KEY"]).toBeUndefined();
     expect(env["S3_ENDPOINT"]).toBeUndefined();
@@ -72,7 +70,6 @@ describe("remediationAgentEnv and remediationDenyReadPaths", () => {
     const denied = remediationDenyReadPaths(4242);
     expect(denied).toContain("/run/secrets");
     expect(denied).toContain("/var/run/secrets");
-    expect(denied).toContain("/etc/freshrss");
     expect(denied).toContain("/proc/1");
     expect(denied).toContain("/proc/4242");
   });

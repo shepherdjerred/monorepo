@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223031",
+  "name": "Infinity Edge",
+  "description": "Grants 75 Attack Damage, 25% Critical Strike Chance, 30% Critical Strike Damage.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "75"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    },
+    {
+      "label": "Critical Strike Damage",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223031.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

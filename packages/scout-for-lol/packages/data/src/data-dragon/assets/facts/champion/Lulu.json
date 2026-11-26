@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Lulu",
+  "name": "Lulu",
+  "description": "The yordle mage Lulu is known for conjuring dreamlike illusions and fanciful creatures as she roams Runeterra with her fairy companion Pix.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "565"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Lulu-passive",
+      "name": "Pix, Faerie Companion",
+      "icon": "img/ability/Lulu-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lulu-Q",
+      "name": "Glitterlance",
+      "icon": "img/ability/Lulu-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lulu-W",
+      "name": "Whimsy",
+      "icon": "img/ability/Lulu-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lulu-E",
+      "name": "Help, Pix!",
+      "icon": "img/ability/Lulu-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lulu-R",
+      "name": "Wild Growth",
+      "icon": "img/ability/Lulu-R.png"
+    }
+  ],
+  "icon": "img/champion/Lulu.png",
+  "art": "img/champion-splash/Lulu_0.jpg",
+  "title": "the Fae Sorceress",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

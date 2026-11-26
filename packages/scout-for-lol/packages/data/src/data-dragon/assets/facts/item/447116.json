@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447116",
+  "name": "Kinkou Jitte",
+  "description": "Between the Ribs: You can see weakpoints in nearby enemy champions.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "85"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "30"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447116.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

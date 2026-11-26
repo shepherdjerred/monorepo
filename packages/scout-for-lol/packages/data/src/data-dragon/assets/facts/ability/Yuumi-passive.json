@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yuumi-passive",
+  "name": "Feline Friendship",
+  "description": "Periodically, when Yuumi strikes a champion with an attack or ability, she restores health to herself and the next ally she Attaches to. While Attached, Yuumi generates a special bond with her allies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Yuumi-passive.png",
+  "slot": "passive",
+  "championKey": "Yuumi",
+  "championName": "Yuumi",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

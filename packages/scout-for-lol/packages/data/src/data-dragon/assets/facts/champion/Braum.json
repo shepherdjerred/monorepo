@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Braum",
+  "name": "Braum",
+  "description": "Blessed with massive biceps and an even bigger heart, Braum is a beloved hero of the Freljord.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Braum-passive",
+      "name": "Concussive Blows",
+      "icon": "img/ability/Braum-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Braum-Q",
+      "name": "Winter's Bite",
+      "icon": "img/ability/Braum-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Braum-W",
+      "name": "Stand Behind Me",
+      "icon": "img/ability/Braum-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Braum-E",
+      "name": "Unbreakable",
+      "icon": "img/ability/Braum-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Braum-R",
+      "name": "Glacial Fissure",
+      "icon": "img/ability/Braum-R.png"
+    }
+  ],
+  "icon": "img/champion/Braum.png",
+  "art": "img/champion-splash/Braum_0.jpg",
+  "title": "the Heart of the Freljord",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pyke-R",
+  "name": "Death From Below",
+  "description": "Pyke strikes all enemy champions in an X, teleporting to and executing targets below 250-550 (based on level) (+80% bonus AD) (+150% Lethality) Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Pyke-R.png",
+  "slot": "R",
+  "championKey": "Pyke",
+  "championName": "Pyke",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    85,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/85/70 s"
+  }
+}

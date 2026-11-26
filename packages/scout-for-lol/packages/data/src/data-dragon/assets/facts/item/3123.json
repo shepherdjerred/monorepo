@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3123",
+  "name": "Executioner's Calling",
+  "description": "Grievous Wounds: Dealing physical damage to champions applies 40% Wounds for 3 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/3123.png",
+  "goldTotal": 800,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "800 gold"
+  }
+}

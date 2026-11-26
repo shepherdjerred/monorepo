@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gangplank-R",
+  "name": "Cannon Barrage",
+  "description": "Gangplank signals his ship to fire 12 waves of cannonballs anywhere on the map over 8 seconds. Each wave Slows by 30% for 0.5 seconds and deals 40/70/100 (+10% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "30000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gangplank-R.png",
+  "slot": "R",
+  "championKey": "Gangplank",
+  "championName": "Gangplank",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    140,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    30000,
+    30000,
+    30000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/140/120 s"
+  }
+}

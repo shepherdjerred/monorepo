@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pyke-passive",
+  "name": "Gift of the Drowned Ones",
+  "description": "When Pyke is hidden from enemies, he regenerates damage that he has recently taken from champions. Pyke also cannot gain extra Maximum Health from any source, and instead gains Bonus AD.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Pyke-passive.png",
+  "slot": "passive",
+  "championKey": "Pyke",
+  "championName": "Pyke",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

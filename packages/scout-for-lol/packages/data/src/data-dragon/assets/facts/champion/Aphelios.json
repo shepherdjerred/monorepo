@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Aphelios",
+  "name": "Aphelios",
+  "description": "Emerging from moonlight's shadow with weapons drawn, Aphelios kills the enemies of his faith in brooding silence—speaking only through the certainty of his aim, and the firing of each gun.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Aphelios-passive",
+      "name": "The Hitman and the Seer",
+      "icon": "img/ability/Aphelios-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aphelios-Q",
+      "name": "Weapon Abilites",
+      "icon": "img/ability/Aphelios-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aphelios-W",
+      "name": "Phase",
+      "icon": "img/ability/Aphelios-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aphelios-E",
+      "name": "Weapon Queue System",
+      "icon": "img/ability/Aphelios-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aphelios-R",
+      "name": "Moonlight Vigil",
+      "icon": "img/ability/Aphelios-R.png"
+    }
+  ],
+  "icon": "img/champion/Aphelios.png",
+  "art": "img/champion-splash/Aphelios_0.jpg",
+  "title": "the Weapon of the Faithful",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

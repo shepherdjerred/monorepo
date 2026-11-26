@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2162",
+  "name": "Bandle Juice of Vitality",
+  "description": "Drink to permanently gain 200+ 3% Health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2162.png",
+  "goldTotal": 1000,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

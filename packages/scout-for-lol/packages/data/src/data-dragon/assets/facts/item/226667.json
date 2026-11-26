@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226667",
+  "name": "Radiant Virtue",
+  "description": "Guiding Light: Upon casting your Ultimate you Transcend, increasing your Max Health by 12.5% for 9s.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226667.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

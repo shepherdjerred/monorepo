@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773209",
+  "name": "Spirit of the Elder Lizard",
+  "description": "Butcher: Damage dealt to monsters increased by 30%.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "35"
+    },
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "14"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "7"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771080",
+      "name": "Spirit Stone",
+      "icon": "img/item/771080.png"
+    },
+    {
+      "kind": "item",
+      "key": "771036",
+      "name": "Long Sword",
+      "icon": "img/item/771036.png"
+    },
+    {
+      "kind": "item",
+      "key": "771036",
+      "name": "Long Sword",
+      "icon": "img/item/771036.png"
+    }
+  ],
+  "icon": "img/item/773209.png",
+  "goldTotal": 2000,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2000 gold"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kassadin",
+  "name": "Kassadin",
+  "description": "Cutting a burning swath through the darkest places of the world, Kassadin knows his days are numbered.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "646"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kassadin-passive",
+      "name": "Void Stone",
+      "icon": "img/ability/Kassadin-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kassadin-Q",
+      "name": "Null Sphere",
+      "icon": "img/ability/Kassadin-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kassadin-W",
+      "name": "Nether Blade",
+      "icon": "img/ability/Kassadin-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kassadin-E",
+      "name": "Force Pulse",
+      "icon": "img/ability/Kassadin-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kassadin-R",
+      "name": "Riftwalk",
+      "icon": "img/ability/Kassadin-R.png"
+    }
+  ],
+  "icon": "img/champion/Kassadin.png",
+  "art": "img/champion-splash/Kassadin_0.jpg",
+  "title": "the Void Walker",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

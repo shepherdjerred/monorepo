@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renata-W",
+  "name": "Bailout",
+  "description": "Renata buffs an allied champion to fight harder, delaying their death and potentially saving them if they get a takedown.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renata-W.png",
+  "slot": "W",
+  "championKey": "Renata",
+  "championName": "Renata Glasc",
+  "maxRank": 5,
+  "cooldownByRank": [
+    28,
+    27,
+    26,
+    25,
+    24
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "28/27/26/25/24 s"
+  }
+}

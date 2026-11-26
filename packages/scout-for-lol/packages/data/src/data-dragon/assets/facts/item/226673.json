@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226673",
+  "name": "Immortal Shieldbow",
+  "description": "Lifeline: Taking damage that would reduce your Health below 30% grants a Shield for 3 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226673.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

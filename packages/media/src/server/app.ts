@@ -94,6 +94,7 @@ import {
   RestrictSchema,
   mediaErrorResponse,
 } from "./validation.ts";
+import { registerActivityRoute } from "./household/activity.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
 import {
   SaveQualityProfileSchema,
@@ -335,9 +336,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
       refreshProfileAccess: (actor, userId) =>
         dependencies.plexAdmin.refreshProfileAccess(actor, userId),
     });
-  app.get("/api/v1/activity", async (c) =>
-    c.json(await dependencies.media.activity(c.get("actor"))),
-  );
+  registerActivityRoute(app, dependencies.media);
   app.get("/api/v1/removals", async (c) =>
     c.json(await dependencies.media.removals(c.get("actor"))),
   );

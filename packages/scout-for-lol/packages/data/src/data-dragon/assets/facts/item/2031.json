@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2031",
+  "name": "Refillable Potion",
+  "description": "Active: (2 charges) Restores 100 Health over 12 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2031.png",
+  "goldTotal": 150,
+  "goldCombine": 150,
+  "keyFact": {
+    "label": "Cost",
+    "value": "150 gold"
+  }
+}

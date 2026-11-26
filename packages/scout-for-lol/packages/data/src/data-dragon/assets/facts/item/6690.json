@@ -1,0 +1,32 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6690",
+  "name": "Rectrix",
+  "description": "Grants 15 Attack Damage, 4% Move Speed.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "15"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/6690.png",
+  "goldTotal": 775,
+  "goldCombine": 425,
+  "keyFact": {
+    "label": "Cost",
+    "value": "775 gold"
+  }
+}

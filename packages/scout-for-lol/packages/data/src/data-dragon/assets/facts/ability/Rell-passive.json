@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rell-passive",
+  "name": "Break the Mold",
+  "description": "Rell's Attacks and Abilities deal additional magic damage and steal Armor and Magic Resist on hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Rell-passive.png",
+  "slot": "passive",
+  "championKey": "Rell",
+  "championName": "Rell",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

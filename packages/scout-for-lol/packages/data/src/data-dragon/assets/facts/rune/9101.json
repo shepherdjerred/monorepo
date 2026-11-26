@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "9101",
+  "name": "Absorb Life",
+  "description": "Killing a target heals you.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/AbsorbLife.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}
