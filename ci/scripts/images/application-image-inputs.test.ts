@@ -109,7 +109,7 @@ describe("application image inputs", () => {
   test("ships the local in-image smoke harness with fallback Bun binary for pure-Rust images", async () => {
     const dockerfile = await read("ci/application-image-smoke.Dockerfile");
     expect(dockerfile).toContain(
-      "FROM oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61 AS bun-harness",
+      "FROM oven/bun:1.4.5-slim@sha256:b780593f3e10918cbdaec3d5a08d52224b9198069a65eb47812085c2ec007643 AS bun-harness",
     );
     expect(dockerfile).toContain("/tmp/smoke-bun");
     expect(dockerfile).toContain(

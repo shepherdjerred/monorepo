@@ -1,27 +1,26 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod";
 import {
-  CodeReviewSettingsSchema,
   DEFAULT_CODE_REVIEW_SETTINGS_JSON,
+  ProviderWeightsSchema,
   type CodeReviewSettings,
 } from "#shared/ci/code-review.ts";
 
-const CodeReviewSettingsJsonSchema = z
-  .string()
-  .transform((value, context) => {
-    try {
-      const parsed: unknown = JSON.parse(value);
-      return parsed;
-    } catch {
-      context.addIssue({
-        code: "custom",
-        message: "Expected valid JSON for temporal-code-review-settings",
-      });
-      return z.NEVER;
-    }
-  })
-  .pipe(CodeReviewSettingsSchema);
+/**
+ * The registry validates the stored settings; `ProviderWeightsSchema` then
+ * drops absent providers so `weights` is a `ProviderWeights`.
+ */
+const CodeReviewSettingsFlagSchema = flagValueSchema(
+  "temporal-code-review-settings",
+).transform((settings): CodeReviewSettings => ({
+  ...settings,
+  weights: ProviderWeightsSchema.parse(settings.weights),
+}));
 
 export type CodeReviewRuntimeConfig = {
   enabled: boolean;
@@ -42,7 +41,7 @@ export async function codeReviewConfig(): Promise<CodeReviewRuntimeConfig> {
         names: { flag: "temporal-code-review-enabled" },
       },
       settings: {
-        schema: CodeReviewSettingsJsonSchema,
+        schema: CodeReviewSettingsFlagSchema,
         sources: ["flag", "default"],
         default: DEFAULT_CODE_REVIEW_SETTINGS_JSON,
         names: { flag: "temporal-code-review-settings" },
@@ -53,7 +52,7 @@ export async function codeReviewConfig(): Promise<CodeReviewRuntimeConfig> {
         targetingKey: "temporal-code-review-worker",
         kinds: {
           enabled: "boolean",
-          settings: "string",
+          settings: flagValueKind("temporal-code-review-settings"),
         },
       }),
     },

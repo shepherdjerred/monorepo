@@ -12,7 +12,6 @@ import { createIntelGpuDevicePluginApp } from "@shepherdjerred/homelab/cdk8s/src
 import { createCertManagerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 import { createCloudflareOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/cloudflare-operator.ts";
 import { createNfdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/nfd.ts";
-import { createChartMuseumApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/chartmuseum.ts";
 import { createMinecraftTsmcApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts";
 import { createMcRouterApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/mc-router.ts";
 import { createLokiApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/loki.ts";
@@ -29,7 +28,6 @@ import { createVeleroApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createPostgresOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/postgres-operator.ts";
 import { createSeaweedfsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs.ts";
 import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
-import { createDdnsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/ddns.ts";
 import { createAppsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/apps.ts";
 import { createScoutBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-beta.ts";
 import { createScoutProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-prod.ts";
@@ -46,7 +44,6 @@ import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/freshrss.ts";
 import { createPinchtabApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/pinchtab.ts";
 import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
-import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-db.ts";
 import { createDeliveryDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/delivery-data.ts";
 import { createTemporalDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/temporal-data.ts";
@@ -60,8 +57,6 @@ import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/service-probes.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts";
-import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/turbo-cache.ts";
-import { createGradleBuildCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/gradle-build-cache.ts";
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkitd.ts";
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
@@ -117,7 +112,6 @@ export async function createAppsChart(app: App) {
   createCertManagerApp(chart);
   createCloudflareOperatorApp(chart);
   createNfdApp(chart);
-  createChartMuseumApp(chart);
   createMcRouterApp(chart);
   createMinecraftTsmcApp(chart);
   createLokiApp(chart);
@@ -133,11 +127,10 @@ export async function createAppsChart(app: App) {
   createVeleroApp(chart);
   createPostgresOperatorApp(chart);
   createSeaweedfsApp(chart);
-  // Create all Grafana dashboards (gitckup, scout, smartctl, velero, zfs, …)
+  // Create all Grafana dashboards (scout, smartctl, velero, zfs, …)
   createAllGrafanaDashboards(chart);
 
   // Per-service ArgoCD apps
-  createDdnsApp(chart);
   createScoutBetaApp(chart);
   createScoutProdApp(chart);
   createStarlightKarmaBotBetaApp(chart);
@@ -162,7 +155,6 @@ export async function createAppsChart(app: App) {
   createPinchtabApp(chart);
   createGlitterBoysLauncherApp(chart);
   createArcadeApp(chart);
-  createGickupApp(chart);
   createGrafanaDbApp(chart);
   // Operator-run data layers take the self-hosted PostgreSQL clusters over
   // from the application charts in the cutover window's final root release.
@@ -178,8 +170,6 @@ export async function createAppsChart(app: App) {
     createDeliveryControlPlaneApp(chart);
   createServiceProbesApp(chart);
   createTrmnlDashboardApp(chart);
-  createTurboCacheApp(chart);
-  createGradleBuildCacheApp(chart);
   createBuildkitdApp(chart);
   createAlertDashboardApp(chart);
   createStashApp(chart);

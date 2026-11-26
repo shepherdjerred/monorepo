@@ -464,15 +464,16 @@ describe("a release a row names shows its own state", () => {
     await publish("golink", sha("6"), 1602, "verified");
     const database = context.cluster.database;
     const partly = await commitStatus(database, sha("9"));
-    expect(partly.builtCount).toBe(1);
+    expect(partly.built).toEqual({ services: 1, changed: 1 });
     expect(partly.carriedFailures).toHaveLength(1);
     const wholly = await commitStatus(database, sha("5"));
-    expect(wholly.builtCount).toBe(0);
+    expect(wholly.built).toEqual({ services: 0, changed: 0 });
     expect(wholly.carriedFailures).toHaveLength(1);
     // The list row carries the same count.
     const page = await commitPage(database, {});
-    expect(page.items.find((item) => item.sha === sha("9"))?.builtCount).toBe(
-      1,
-    );
+    expect(page.items.find((item) => item.sha === sha("9"))?.built).toEqual({
+      services: 1,
+      changed: 1,
+    });
   });
 });

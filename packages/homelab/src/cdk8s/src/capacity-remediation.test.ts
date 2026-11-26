@@ -296,7 +296,6 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
   expect(ingressClasses).toEqual({
     "argocd/apps-argocd-ingress": "medium",
     "prometheus/apps-alertmanager-ingress": "medium",
-    "chartmuseum/apps-chartmuseum-ingress": "heavy",
     "minecraft-tsmc/apps-minecraft-tsmc-bluemap-ingress": "medium",
     "loki/apps-loki-ingress": "medium",
     "seaweedfs/apps-seaweedfs-s3-ingress": "heavy",
@@ -306,9 +305,6 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
     "media/media-maintainerr-tailscale-ingress-ingress": "medium",
     "pinchtab/pinchtab-pinchtab-tailscale-ingress-ingress": "medium",
     "stash/stash-stash-ingress-ingress": "medium",
-    "turbo-cache/turbo-cache-turbo-cache-tailscale-ingress-ingress": "heavy",
-    "gradle-build-cache/gradle-build-cache-gradle-build-cache-ingress-ingress":
-      "medium",
   });
 }
 
@@ -347,16 +343,6 @@ describe("capacity-remediation synthesis", () => {
 
   it("keeps Tempo and Loki at the audited resource matrix", () => {
     assertTempoAndLoki(documents);
-  });
-
-  it("rolls chartmuseum out by stopping the pod that holds its RWO volume first", () => {
-    const values = z
-      .object({ strategy: z.unknown() })
-      .parse(applicationValues(documents, "chartmuseum"));
-    expect(values.strategy).toEqual({
-      type: "RollingUpdate",
-      rollingUpdate: { maxSurge: 0, maxUnavailable: 1 },
-    });
   });
 
   it("adds request-only baselines to monitoring helpers", () => {

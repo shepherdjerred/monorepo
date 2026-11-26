@@ -1,3 +1,4 @@
+import { pillSeverity } from "#client/visuals/pill.ts";
 import type { ReportEvidenceReceiptV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { ExternalLinkIcon } from "lucide-react";
 import { Link } from "react-router";
@@ -26,21 +27,25 @@ function ReceiptItem(p: {
         <div className="eng-pill-row">
           <code className="visual-branch-chip">#{receipt.id}</code>
           <span
-            className={`visual-pill visual-pill-${receipt.status === "success" ? "ok" : "error"}`}
+            className="visual-pill"
+            data-sev={pillSeverity(
+              receipt.status === "success" ? "ok" : "error",
+            )}
           >
             {receipt.status}
           </span>
           {receipt.semanticStatus === undefined ? null : (
             <span
-              className={`visual-pill visual-pill-${receipt.semanticStatus === "passed" ? "ok" : "warning"}`}
+              className="visual-pill"
+              data-sev={pillSeverity(
+                receipt.semanticStatus === "passed" ? "ok" : "warning",
+              )}
             >
               predicate: {receipt.semanticStatus}
             </span>
           )}
           {receipt.origin === undefined ? null : (
-            <span className="visual-pill visual-pill-neutral">
-              {receipt.origin}
-            </span>
+            <span className="visual-pill">{receipt.origin}</span>
           )}
         </div>
         {receipt.url === undefined ? null : (
@@ -172,7 +177,10 @@ export function ProvenanceAndHistoryPanel({
           <div>
             <dt>Delivery status</dt>
             <dd>
-              <span className={`visual-pill visual-pill-${delivery.tone}`}>
+              <span
+                className="visual-pill"
+                data-sev={pillSeverity(delivery.tone)}
+              >
                 {delivery.label}
               </span>
               {detail.skipReason === undefined ? null : (
@@ -244,7 +252,8 @@ export function ProvenanceAndHistoryPanel({
                     </span>
                     <span className="eng-pill-row">
                       <span
-                        className={`visual-pill visual-pill-${verdictTone}`}
+                        className="visual-pill"
+                        data-sev={pillSeverity(verdictTone)}
                       >
                         {verdictLabel(sibling.verdict)}
                       </span>

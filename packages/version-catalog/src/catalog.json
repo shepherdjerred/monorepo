@@ -390,18 +390,6 @@
       "value": "4.0.20@sha256:c7d1df25e428da6c9ace05daea0d34e59522978a3843ea1944812f855af4086c"
     },
     {
-      "name": "timothyjmiller/cloudflare-ddns",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "latest@sha256:7e43f85f03b94513d2f05d84ac0f39293e9d339e00b2d64b5cc7bf73e8429d94"
-    },
-    {
       "name": "tailscale/tailscale",
       "category": "upstream",
       "artifactType": "image",
@@ -582,19 +570,6 @@
         "versioning": "semver-coerced"
       },
       "value": "v3.0.9"
-    },
-    {
-      "name": "chartmuseum",
-      "category": "upstream",
-      "artifactType": "helm-chart",
-      "management": {
-        "managed": true,
-        "datasource": "helm",
-        "registryUrl": "https://chartmuseum.github.io/charts",
-        "versioning": "semver"
-      },
-      "value": "3.10.4",
-      "component": true
     },
     {
       "name": "minecraft",
@@ -895,21 +870,6 @@
       "value": "2.12.1@sha256:b8d2401997be68ec25d62bd753fe5d30236e029fe007a5e823177e0e485ae205"
     },
     {
-      "name": "ducktors/turborepo-remote-cache",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver"
-      },
-      "value": "3.0.3@sha256:2ad6692bf9c5eed7a3c12f606820abd0af3b2b0f081c7d3bf40f2a015fe27a2f",
-      "notes": [
-        "Self-hosted Turborepo remote cache backing the workspace task graph."
-      ]
-    },
-    {
       "name": "kueue",
       "category": "upstream",
       "artifactType": "helm-chart",
@@ -1104,18 +1064,6 @@
       },
       "value": "2.0.3",
       "component": true
-    },
-    {
-      "name": "cooperspencer/gickup",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
-        "versioning": "semver"
-      },
-      "value": "0.10.47@sha256:a0307e9c131b45b0d2039417f291b7ef44580d9d9e303bb5a6083aaf82691044"
     },
     {
       "name": "esanchezm/prometheus-qbittorrent-exporter",

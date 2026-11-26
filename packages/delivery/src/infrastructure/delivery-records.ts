@@ -87,6 +87,8 @@ export const ARTIFACT_STORES = [
 export type ArtifactStore = (typeof ARTIFACT_STORES)[number];
 const STORE_PREFIXES: [string, ArtifactStore][] = [
   ["docker.io/", "docker-hub"],
+  ["oci://registry-1.docker.io/shepherdjerred/", "docker-hub"],
+  ["https://charts.tailnet-1a49.ts.net/", "chartmuseum"],
   ["https://chartmuseum.tailnet-1a49.ts.net/", "chartmuseum"],
   ["https://chartmuseum.sjer.red/", "chartmuseum"],
   ["s3://delivery-artifacts/", "delivery-artifacts"],

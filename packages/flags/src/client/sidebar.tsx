@@ -5,9 +5,11 @@ import {
   SidebarGroup,
   SidebarItem,
   ThemeRow,
+  type SidebarLinkProps,
   type ThemeStore,
 } from "@shepherdjerred/console-ui";
 import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
+import { Link, useNavigate } from "react-router";
 import {
   deploymentPath,
   sidebarEntries,
@@ -26,6 +28,11 @@ function hrefOf(id: string): string {
   return catalog === undefined || stage === undefined
     ? "/"
     : deploymentPath(catalog, stage);
+}
+
+/** A sidebar row that navigates in the page instead of reloading it. */
+function routerLink({ href, ...props }: SidebarLinkProps): React.JSX.Element {
+  return <Link to={href} {...props} />;
 }
 
 function countProps(
@@ -83,6 +90,7 @@ export function DeploymentSidebar({
               label={entry.label}
               {...countProps(counts, entry.id)}
               current={isCurrent(route, entry.id)}
+              renderLink={routerLink}
             />
           ))}
         </SidebarGroup>
@@ -96,6 +104,7 @@ export function DeploymentSidebar({
               label={stage.label}
               {...countProps(counts, stage.id)}
               current={isCurrent(route, stage.id)}
+              renderLink={routerLink}
             />
           ))}
         </SidebarGroup>
@@ -115,6 +124,7 @@ export function DeploymentPicker({
   readonly ids: readonly string[];
   readonly route: Route | undefined;
 }): React.JSX.Element {
+  const navigate = useNavigate();
   const selected = ids.find((id) => isCurrent(route, id));
   return (
     <div className="ui-toolbar fl-picker">
@@ -126,7 +136,7 @@ export function DeploymentPicker({
             value={selected ?? ""}
             onChange={(event) => {
               if (event.target.value.length > 0)
-                globalThis.location.assign(hrefOf(event.target.value));
+                void navigate(hrefOf(event.target.value));
             }}
           >
             {selected === undefined ? <option value="">Choose…</option> : null}

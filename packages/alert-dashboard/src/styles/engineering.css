@@ -17,19 +17,15 @@
   align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
-  border: 1px solid var(--line);
-  border-inline-start: 4px solid var(--status-info);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-inline-start: 4px solid var(--ui-sev-info);
+  border-radius: 8px;
+  background: var(--ui-panel);
   min-width: 0;
 }
 
 .eng-callout-warning {
-  border-inline-start-color: var(--status-warning);
-}
-
-.eng-callout-error {
-  border-inline-start-color: var(--status-critical);
+  border-inline-start-color: var(--ui-sev-warning);
 }
 
 .eng-callout-body {
@@ -41,7 +37,7 @@
 
 .eng-callout-title {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.88rem;
   font-weight: 650;
 }
@@ -50,7 +46,7 @@
   margin: 2px 0 0;
   padding-inline-start: 18px;
   list-style: none;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.8rem;
 }
 
@@ -68,9 +64,9 @@
 
 .eng-meter-card {
   padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
   min-width: 0;
 }
 
@@ -88,27 +84,10 @@
   justify-content: space-between;
   gap: 4px;
   padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-block-start: 3px solid var(--status-good);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
   min-width: 0;
-}
-
-.eng-kpi-info {
-  border-block-start-color: var(--status-info);
-}
-
-.eng-kpi-warning {
-  border-block-start-color: var(--status-warning);
-}
-
-.eng-kpi-error {
-  border-block-start-color: var(--status-critical);
-}
-
-.eng-kpi-unknown {
-  border-block-start-color: var(--status-unknown);
 }
 
 .eng-kpi-top {
@@ -120,15 +99,20 @@
 }
 
 .eng-kpi-label {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.75rem;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
 .eng-kpi-value {
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+}
+.eng-kpi-card:is([data-sev="warning"], [data-sev="error"]) .eng-kpi-value {
+  color: var(--ui-sev-ink);
+}
+.eng-kpi-value {
+  font-family: var(--ui-font-mono);
   font-size: 1.35rem;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
@@ -136,7 +120,7 @@
 }
 
 .eng-kpi-hint {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.73rem;
   overflow-wrap: anywhere;
 }
@@ -148,18 +132,17 @@
   justify-content: space-between;
   gap: 18px;
   padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
   min-width: 0;
 }
 
 .eng-mix-panel h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.9rem;
   letter-spacing: 0;
-  text-transform: none;
 }
 
 /* ---- Accessible Single-Row Tablist ---- */
@@ -168,7 +151,7 @@
   align-items: stretch;
   gap: 4px;
   overflow-x: auto;
-  border-block-end: 1px solid var(--line);
+  border-block-end: 1px solid var(--ui-line);
   margin-bottom: 14px;
   scrollbar-width: thin;
 }
@@ -182,9 +165,9 @@
   min-height: 40px;
   padding: 0.5rem 0.85rem;
   border: 0;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-radius: 6px 6px 0 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.84rem;
   font-weight: 600;
   white-space: nowrap;
@@ -192,24 +175,24 @@
 }
 
 .eng-tab:hover {
-  background: var(--control-hover);
-  color: var(--ink);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 
 .eng-tab:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: -3px;
 }
 
 .eng-tab[aria-selected="true"] {
-  color: var(--ink);
+  color: var(--ui-ink);
 }
 
 .eng-tab[aria-selected="true"]::after {
   content: "";
   position: absolute;
   inset: auto 0 0;
-  border-block-end: 3px solid var(--accent);
+  border-block-end: 3px solid var(--ui-accent);
 }
 
 .eng-tab-count {
@@ -217,9 +200,9 @@
   min-width: 1.4rem;
   padding: 0.05rem 0.38rem;
   border-radius: 999px;
-  background: var(--code-bg);
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  background: var(--ui-track);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -238,12 +221,17 @@
   min-width: 0;
 }
 
+/* Identifiers wrap only where `Identifier` allows (after "/" or "#"); its
+   segments never wrap inside (see `.id-seg` in visuals.css). */
 .eng-pkg-name {
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.8rem;
   font-weight: 650;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+.eng-pkg-sub code {
+  overflow-wrap: break-word;
 }
 
 .eng-pkg-sub {
@@ -251,7 +239,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 6px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.72rem;
 }
 
@@ -262,14 +250,14 @@
 }
 
 .eng-version-arrow {
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-family: var(--ui-font-mono);
   font-size: 0.76rem;
   white-space: nowrap;
 }
 
 .eng-summary-clamp {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.78rem;
   line-height: 1.35;
   max-width: 34rem;
@@ -287,8 +275,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--accent);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-accent);
+  font-family: var(--ui-font-mono);
   font-size: 0.76rem;
   font-weight: 650;
   text-decoration: none;
@@ -309,7 +297,7 @@
   display: grid;
   gap: 12px;
   min-width: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ui-font-sans);
 }
 
 .eng-delta-meta {
@@ -318,9 +306,9 @@
   gap: 8px 14px;
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
 }
 
 .eng-delta-meta div {
@@ -328,17 +316,16 @@
 }
 
 .eng-delta-meta dt {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: normal;
 }
 
 .eng-delta-meta dd {
   margin: 2px 0 0;
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.78rem;
   overflow-wrap: anywhere;
 }
@@ -354,28 +341,27 @@
   align-content: start;
   gap: 6px;
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
   min-width: 0;
 }
 
 .eng-delta-box-breaking {
-  border-inline-start: 3px solid var(--status-critical);
+  border-inline-start: 3px solid var(--ui-sev-error);
 }
 
 .eng-delta-box h4 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: normal;
 }
 
 .eng-delta-box p {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.8rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -385,7 +371,7 @@
   margin: 0;
   padding-inline-start: 18px;
   list-style: none;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.78rem;
   line-height: 1.4;
 }
@@ -400,16 +386,16 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--code-bg);
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-track);
   min-width: 0;
 }
 
 .eng-cmd-code {
   flex: 1 1 16rem;
   min-width: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.74rem;
   overflow-wrap: anywhere;
 }
@@ -429,7 +415,7 @@
 }
 
 .eng-copy-status {
-  color: var(--accent);
+  color: var(--ui-accent);
   font-size: 0.74rem;
   font-weight: 650;
   opacity: 0;
@@ -452,9 +438,9 @@
   display: grid;
   gap: 6px;
   padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
   min-width: 0;
 }
 
@@ -467,7 +453,7 @@
 }
 
 .eng-audit-title {
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.84rem;
   font-weight: 650;
   overflow-wrap: anywhere;
@@ -478,7 +464,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 8px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.72rem;
 }
 
@@ -495,7 +481,7 @@
   width: 48px;
   height: 7px;
   border-radius: 999px;
-  background: var(--meter-track);
+  background: var(--ui-track);
   overflow: hidden;
   flex: none;
 }
@@ -504,7 +490,7 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--ui-accent);
 }
 
 /* ---- Flow Enrichment & Service Views ---- */
@@ -514,46 +500,49 @@
   min-width: 0;
 }
 
+/* One panel per row, so their tables have the width to stay tables. */
 .eng-flow-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
 
+/* A boxed panel on the console look: a section head, then tables flush
+   with the box's edges, as the signal tables draw them. */
 .eng-flow-panel {
-  display: grid;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
   min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
 }
-
-.eng-flow-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.eng-flow-panel > .ui-section-head {
+  padding: 12px 16px 9px;
 }
-
-.eng-flow-head h3 {
+.eng-flow-panel .visual-stack-tree {
+  border-top: 1px solid var(--ui-line);
+}
+/* A DataTable inside the panel drops its own frame and runs edge to edge. */
+.eng-flow-panel .visual-data-table {
+  border-width: 1px 0 0;
+  border-radius: 0;
+}
+.eng-flow-panel .visual-empty {
   margin: 0;
-  color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 650;
-  letter-spacing: 0;
-  text-transform: none;
+  padding: 0 16px 14px;
+}
+.eng-flow-panel .list-toggle {
+  margin: 8px 16px 0;
 }
 
 .eng-rate-limits {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding-top: 10px;
-  border-block-start: 1px solid var(--line-soft);
+  gap: 12px 24px;
+  margin-top: 12px;
+  padding: 12px 16px 14px;
+  border-block-start: 1px solid var(--ui-line);
 }
 
 .eng-throughput-strip {
@@ -561,23 +550,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  padding: 0 16px 12px;
 }
-
-.eng-mini-stat {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 5px 10px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
-  font-size: 0.76rem;
-}
-
-.eng-mini-stat strong {
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
+.eng-flow-panel .visual-data-table + .visual-data-table {
+  margin-top: 14px;
 }
 
 .eng-service-view {

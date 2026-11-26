@@ -1,5 +1,6 @@
 import { cp, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 
 async function digest(file: string) {
   return new Bun.CryptoHasher("sha256")
@@ -9,6 +10,8 @@ async function digest(file: string) {
 
 /** Freeze built producers so development cannot change a running conversion batch. */
 export async function freezeInputs(root: string, output: string) {
+  // The frozen content must carry every baked nav mesh; Git holds only their manifest.
+  await ensureNavMeshes(path.join(root, "server/owned/plugins/TheStorm"));
   const producer = path.join(output, "producer");
   await mkdir(producer, { mode: 0o700 });
   const stormJar = path.join(producer, "TheStorm.jar");

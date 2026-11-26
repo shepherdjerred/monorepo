@@ -56,15 +56,20 @@ const MORNING_HEAT_TEMP_C = 30;
 const HEAT_INDOOR_THRESHOLD_C = 20;
 const HEAT_OUTDOOR_THRESHOLD_C = 15;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
-// The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
-// wake window), so hitting 30°C from a ~22°C start needs ~1 hour of lead.
-// goodMorningPreheat fires 2h15m before wake and owns its own turn-off as a
-// backstop (wake time + 60m), so heat never stays on if the wake run skips.
-// The 195-minute hold is chunked so a mid-hold departure (everyone leaves
-// after preheat started) turns the floor off within one chunk instead of
-// heating an empty house until the backstop.
+// 12 Oct–24 Nov 2026, 39 heating sessions: the floor reached 28°C within
+// 60 minutes every time (median 40, coldest starts ~21°C took 50–60). The
+// 2h15m lead was sized for the retired 40°C target. Preheat now starts at
+// 08:00, one hour before the 09:00 wake, and new runs hold 120 minutes so
+// the backstop is 10:00. Histories that started on the 195-minute hold keep
+// that length via patched().
 const PREHEAT_HOLD_CHUNK = "15 minutes" as const;
-const PREHEAT_HOLD_CHUNKS = 13; // 13 × 15m = 195m total window
+export const FLOOR_PREHEAT_HOLD_PATCH = "floor-preheat-120m";
+export const FLOOR_PREHEAT_LEGACY_CHUNKS = 13;
+export const FLOOR_PREHEAT_CHUNKS = 8;
+
+export function floorPreheatHoldChunks(shortHold: boolean): number {
+  return shortHold ? FLOOR_PREHEAT_CHUNKS : FLOOR_PREHEAT_LEGACY_CHUNKS;
+}
 
 const WAKE_MEDIA = {
   media_content_id: "FV:2/5",
@@ -206,13 +211,12 @@ async function floorHeatDecision(): Promise<{
   return { heat: shouldHeatFloor({ indoorC, outdoorC }), indoorC, outdoorC };
 }
 
-// Fires 2h15m before the wake routine so the bathroom floor is at temperature
-// when goodMorningWakeUp runs (the floor's thermal mass needs ~1h to climb
-// 22→30°C; the window stays 2h15m as a safe superset). Skips entirely on warm
-// mornings (shouldHeatFloor). Owns its own turn-off so the heat can't stay on
-// if the wake run never fires; the wake run's turn-off at the same wall-clock
-// time is an idempotent no-op on an already-off thermostat. The hold re-checks
-// presence every chunk and aborts early if the house empties mid-preheat.
+// Fires at 08:00 so the bathroom floor is near 30°C by the 09:00 wake.
+// Skips entirely on warm mornings (shouldHeatFloor). Owns its own turn-off
+// so the heat can't stay on if the wake run never fires; the wake run's
+// turn-off at 10:00 is an idempotent no-op on an already-off thermostat.
+// The hold re-checks presence every chunk and aborts early if the house
+// empties mid-preheat.
 export async function goodMorningPreheat(): Promise<void> {
   if (!(await anyoneHome())) {
     log.info("Good-morning preheat skipped", { reason: "no-one-home" });
@@ -250,7 +254,8 @@ export async function goodMorningPreheat(): Promise<void> {
     hvac_mode: "heat",
   });
 
-  for (let chunk = 0; chunk < PREHEAT_HOLD_CHUNKS; chunk += 1) {
+  const holdChunks = floorPreheatHoldChunks(patched(FLOOR_PREHEAT_HOLD_PATCH));
+  for (let chunk = 0; chunk < holdChunks; chunk += 1) {
     await sleep(PREHEAT_HOLD_CHUNK);
     if (!(await anyoneHome())) {
       log.info("Good-morning preheat stopped", {
@@ -278,8 +283,8 @@ export async function goodMorningWakeUp(): Promise<void> {
   }
 
   // Re-assert the heat setpoint on cold mornings (goodMorningPreheat normally
-  // started it 2h15m ago; this is the fallback if the preheat run was skipped
-  // or paused). On warm mornings the heat stays off; the rest of the wake
+  // started it at 08:00; this is the fallback if that run was skipped or
+  // paused). On warm mornings the heat stays off; the rest of the wake
   // routine (notification, media, lights) is unconditional.
   let heat: boolean;
   let sensorUnavailable = false;

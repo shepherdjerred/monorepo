@@ -5,6 +5,7 @@ import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s
 import {
   blackboxProbeIngressRule,
   dnsEgressRule,
+  publicAddressPeer,
   tailscaleIngressRule,
   tcp,
   udp,
@@ -42,6 +43,7 @@ export function createSyncthingDeployment(chart: Chart) {
       {
         // Allow ingress from Tailscale only
         name: "syncthing-ingress-netpol",
+        selects: "namespace",
         ingress: [
           tailscaleIngressRule(),
           // Allow blackbox-exporter's in-cluster health probe (GUI service port
@@ -52,6 +54,7 @@ export function createSyncthingDeployment(chart: Chart) {
       {
         // Allow egress to DNS and Syncthing protocols
         name: "syncthing-egress-netpol",
+        selects: "namespace",
         egress: [
           // DNS
           dnsEgressRule(),
@@ -85,19 +88,7 @@ export function createSyncthingDeployment(chart: Chart) {
           // public addresses; private and CGNAT ranges stay limited to the
           // Syncthing ports above.
           {
-            to: [
-              {
-                ipBlock: {
-                  cidr: "0.0.0.0/0",
-                  except: [
-                    "10.0.0.0/8",
-                    "172.16.0.0/12",
-                    "192.168.0.0/16",
-                    "100.64.0.0/10",
-                  ],
-                },
-              },
-            ],
+            to: [publicAddressPeer()],
             ports: [{ protocol: "TCP" }, { protocol: "UDP" }],
           },
         ],

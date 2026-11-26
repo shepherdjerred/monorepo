@@ -7,9 +7,10 @@
   min-width: 0;
 }
 
-.traces-page .page-heading,
-.traces-detail-page .page-heading {
-  margin-bottom: 4px;
+/* The page's grid gap spaces the header bar from what follows. */
+.traces-page .page-head,
+.traces-detail-page .page-head {
+  margin-bottom: 0;
 }
 
 .traces-detail-page .back-link {
@@ -39,7 +40,7 @@
   justify-content: space-between;
   gap: 8px 12px;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--ui-line-soft);
 }
 
 .traces-filter-bar {
@@ -48,8 +49,8 @@
   gap: 10px;
   align-items: end;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-panel);
 }
 
 .traces-filter-field {
@@ -60,7 +61,7 @@
 }
 
 .traces-filter-field label {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.71rem;
   font-weight: 650;
 }
@@ -76,14 +77,14 @@
 }
 
 .traces-table-wrap:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: -3px;
 }
 
 .traces-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ui-font-sans);
   font-size: 0.79rem;
 }
 
@@ -91,14 +92,14 @@
   position: sticky;
   inset-block-start: 0;
   z-index: 1;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--line);
+  background: var(--ui-head);
+  border-bottom: 1px solid var(--ui-line);
   white-space: nowrap;
 }
 
 .traces-row-link {
   display: inline-block;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.84rem;
   font-weight: 650;
   text-decoration: none;
@@ -106,12 +107,12 @@
 }
 
 .traces-row-link:hover {
-  color: var(--accent);
+  color: var(--ui-accent);
   text-decoration: underline;
 }
 
 .traces-short-id {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.71rem;
 }
 
@@ -130,7 +131,7 @@
 }
 
 .traces-tokens-cell {
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-family: var(--ui-font-mono);
   font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -140,7 +141,7 @@
   display: flex;
   justify-content: center;
   padding: 14px;
-  border-top: 1px solid var(--line-soft);
+  border-top: 1px solid var(--ui-line-soft);
 }
 
 /* ---- Trajectory Step Cards ---- */
@@ -164,34 +165,34 @@
   justify-content: space-between;
   gap: 8px 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--ui-line-soft);
 }
 
 .traces-step-title {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.92rem;
   font-weight: 650;
   overflow-wrap: anywhere;
 }
 
 .traces-disclosure {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-head);
   padding: 8px 12px;
   margin-top: 0;
 }
 
 .traces-disclosure > summary {
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 .traces-disclosure > summary:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: 2px;
 }
 
@@ -199,10 +200,10 @@
   margin: 8px 0 0;
   padding: 10px 12px;
   max-width: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--pre-bg);
-  color: var(--pre-ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  border-radius: 6px;
+  background: var(--ui-head);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.74rem;
   line-height: 1.45;
   white-space: pre-wrap;
@@ -219,19 +220,19 @@
   display: grid;
   gap: 6px;
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel-2);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-head);
   min-width: 0;
 }
 
 .traces-msg-assistant {
-  border-inline-start: 3px solid var(--accent);
-  background: var(--panel);
+  border-inline-start: 3px solid var(--ui-accent);
+  background: var(--ui-panel);
 }
 
 .traces-msg-tool {
-  border-inline-start: 3px solid var(--status-info);
+  border-inline-start: 3px solid var(--ui-sev-info);
 }
 
 .traces-msg-role {
@@ -239,17 +240,15 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-sans);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .traces-msg-text {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.82rem;
   line-height: 1.45;
   white-space: pre-wrap;
@@ -258,10 +257,10 @@
 
 .traces-reasoning {
   padding: 8px 10px;
-  border-inline-start: 2px solid var(--line);
-  background: var(--code-bg);
-  border-radius: var(--radius-sm);
-  color: var(--ink);
+  border-inline-start: 2px solid var(--ui-line);
+  background: var(--ui-track);
+  border-radius: 6px;
+  color: var(--ui-ink);
   font-size: 0.78rem;
   line-height: 1.4;
   white-space: pre-wrap;
@@ -281,9 +280,9 @@
   align-content: start;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel-2);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-head);
   min-width: 0;
 }
 
@@ -301,8 +300,8 @@
 }
 
 .traces-cmd-code {
-  background: var(--code-bg);
-  color: var(--ink);
+  background: var(--ui-track);
+  color: var(--ui-ink);
   padding: 0.2rem 0.5rem;
   border-radius: 5px;
   font-size: 0.76rem;
@@ -339,25 +338,25 @@
   width: 100%;
   padding: 9px 14px;
   border: 0;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--ui-line-soft);
   background: transparent;
-  color: var(--ink);
+  color: var(--ui-ink);
   text-align: left;
   cursor: pointer;
 }
 
 .traces-wf-row:hover {
-  background: var(--row-hover);
+  background: var(--ui-hover);
 }
 
 .traces-wf-row:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: -3px;
 }
 
 .traces-wf-row[aria-pressed="true"] {
-  background: var(--panel-2);
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--ui-head);
+  box-shadow: inset 3px 0 0 var(--ui-accent);
 }
 
 .traces-wf-name {
@@ -394,8 +393,8 @@
 }
 
 .traces-wf-dur {
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -412,21 +411,21 @@
   grid-template-columns: minmax(8rem, 40%) minmax(0, 1fr);
   gap: 8px;
   padding: 5px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
+  border-radius: 6px;
+  background: var(--ui-head);
   font-size: 0.74rem;
 }
 
 .traces-attr-row dt {
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
   overflow-wrap: anywhere;
 }
 
 .traces-attr-row dd {
   margin: 0;
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   overflow-wrap: anywhere;
 }
 
@@ -462,7 +461,7 @@
   .traces-table-wrap {
     overflow-x: visible;
     padding: 10px;
-    background: var(--panel-2);
+    background: var(--ui-head);
   }
   .traces-table,
   .traces-table tbody,
@@ -480,9 +479,9 @@
   }
   .traces-table tbody tr {
     padding: 8px 12px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--ui-line);
     border-radius: 9px;
-    background: var(--panel);
+    background: var(--ui-panel);
   }
   .traces-table td {
     display: grid;
@@ -490,7 +489,7 @@
     gap: 10px;
     align-items: start;
     padding: 6px 0;
-    border-bottom: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--ui-line-soft);
     white-space: normal;
   }
   .traces-table td:last-child {
@@ -498,13 +497,8 @@
   }
   .traces-table td::before {
     content: attr(data-label);
-    color: var(--muted);
-    font:
-      700 0.65rem "Berkeley Mono",
-      ui-monospace,
-      monospace;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    color: var(--ui-muted);
+    font: 500 12px var(--ui-font-sans);
   }
   .traces-tokens-cell {
     white-space: normal;

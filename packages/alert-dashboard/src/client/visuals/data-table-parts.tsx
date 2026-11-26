@@ -1,3 +1,4 @@
+import { Button, Tabs } from "@shepherdjerred/console-ui";
 import { ChevronRightIcon, SearchIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -84,39 +85,26 @@ export function TableToolbar(
       {hasFilters ? (
         <div className="visual-filter-group">
           {filters.map((filter) => (
-            <div
+            <Tabs
               key={filter.key}
-              className="segmented visual-filter-pills"
-              role="radiogroup"
-              aria-label={filter.label}
-            >
-              {filter.options.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={option.value === filter.value}
-                  onClick={() => {
-                    filter.onChange(option.value);
-                  }}
-                >
-                  {option.label}
-                  {option.count === undefined ? null : (
-                    <span className="segmented-count">{option.count}</span>
-                  )}
-                </button>
-              ))}
-            </div>
+              label={filter.label}
+              options={filter.options.map((option) => ({
+                value: option.value,
+                label: option.label,
+                ...(option.count === undefined ? {} : { count: option.count }),
+              }))}
+              value={filter.value}
+              onChange={filter.onChange}
+            />
           ))}
         </div>
       ) : null}
       {canExport ? (
         <div className="visual-export-group">
           {(["csv", "json"] as const).map((fmt) => (
-            <button
+            <Button
               key={fmt}
-              type="button"
-              className="button visual-export-btn"
+              className="visual-export-btn"
               onClick={() => {
                 onCopy(fmt);
               }}
@@ -124,7 +112,7 @@ export function TableToolbar(
               {copiedFormat === fmt
                 ? `Copied ${fmt.toUpperCase()}`
                 : `Copy ${fmt.toUpperCase()}`}
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}

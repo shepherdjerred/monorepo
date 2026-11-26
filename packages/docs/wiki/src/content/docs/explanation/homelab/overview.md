@@ -12,10 +12,10 @@ services around them — and delivered by ArgoCD.
 ```mermaid
 flowchart LR
   accTitle: Homelab topology
-  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Woodpecker step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress. Arcade also supports direct HTTPS through the home router and Caddy.
+  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to the first-party Charts registry. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Woodpecker step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress. Arcade also supports direct HTTPS through the home router and Caddy.
 
   PR[Pull request] --> CI[Woodpecker CI]
-  CI --> CM[ChartMuseum<br/>immutable charts]
+  CI --> CM[Charts<br/>immutable charts]
   CM --> ARGO[ArgoCD]
   ARGO --> T[torvalds<br/>control plane + all prod]
   ARGO --> L[liskov<br/>CI only]

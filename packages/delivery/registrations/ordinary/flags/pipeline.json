@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "flags",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "flags",
   "chartComponent": "chart:flags",
   "namespace": "flags",

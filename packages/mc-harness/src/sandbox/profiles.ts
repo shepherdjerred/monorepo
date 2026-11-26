@@ -22,6 +22,7 @@ import { basePaperEnv } from "#sandbox/paper-env.ts";
 import {
   STORM_BUILD_COMMAND,
   STORM_DEV_WITH_CREATIVE,
+  STORM_NAV_ASSETS,
   STORM_PATHS,
   stormImageConfig,
 } from "#sandbox/storm.ts";
@@ -63,7 +64,17 @@ export type StagedEntry =
       publicHub?: boolean;
     }
   | { kind: "repo-file"; source: string; target: string; build?: string }
-  | { kind: "repo-dir"; source: string; target: string }
+  | {
+      kind: "repo-dir";
+      source: string;
+      target: string;
+      /**
+       * Files of the directory that Git does not hold. When the source tree
+       * carries `manifest`, they are made present and exact before the copy,
+       * by running `fetch` from the repository root if any is not.
+       */
+      assets?: { manifest: string; fetch: readonly string[] };
+    }
   | {
       kind: "storm-config";
       /** The repository-owned config.yml whose module keys are kept. */
@@ -218,6 +229,7 @@ function stormDevProfile(
         kind: "repo-dir",
         source: STORM_PATHS.ownedConfigDir,
         target: "TheStorm",
+        assets: STORM_NAV_ASSETS,
       },
       {
         kind: "repo-dir",

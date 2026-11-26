@@ -35,6 +35,7 @@ import {
   unchangedLine,
   verdictView,
 } from "./commit-model.ts";
+import { includedIntro } from "./commit-release.ts";
 
 /** The states of the environments a commit's blocker list names. */
 const blockerStates = (blocker: CommitSummary["blocker"]) =>
@@ -340,7 +341,7 @@ function CommitPage() {
       />
       <BuildList
         title="Included in a newer commit"
-        intro="CI failed for these services on this commit, so it was not built on its own. A newer commit includes this one, and its build of the same service passed and published the change; that commit's releases, shown below, decide whether it is live."
+        intro={includedIntro(carried, data.built)}
         builds={data.failedBuilds.filter((build) => isCarried(build))}
         carried={carried}
       />

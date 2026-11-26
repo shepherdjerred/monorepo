@@ -109,13 +109,17 @@
     background-color var(--dur-1) var(--ease-out),
     border-color var(--dur-1) var(--ease-out);
 }
+/* The tint lies over the column's own fill, whichever surface that is. */
 .board-column.over {
-  background-color: color-mix(in srgb, var(--accent) 7%, var(--sidebar));
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--ui-accent) 7%, transparent),
+    color-mix(in srgb, var(--ui-accent) 7%, transparent)
+  );
 }
 .board-card.dragging {
   user-select: none;
-  border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--border));
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--ui-accent) 60%, var(--ui-line));
+  background: color-mix(in srgb, var(--ui-accent) 4%, transparent);
   box-shadow: none;
 }
 .board-card.dragging > * {

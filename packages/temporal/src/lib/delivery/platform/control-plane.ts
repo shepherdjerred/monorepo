@@ -48,10 +48,22 @@ export function controlPlaneSelections(
   const selected = (prior: boolean) => {
     const image = prior ? snapshot.previousArtifact : snapshot.nextArtifact;
     const chart = prior ? snapshot.priorChartArtifact : snapshot.chartArtifact;
+    const repository = new URL(chart.uri).origin;
+    if (
+      ![
+        "https://charts.tailnet-1a49.ts.net",
+        "https://chartmuseum.tailnet-1a49.ts.net",
+      ].includes(repository) ||
+      chart.uri !==
+        `${repository}/charts/delivery-control-plane-${chart.version}.tgz`
+    )
+      throw new Error(
+        "Control-plane chart URI differs from its frozen owner/version",
+      );
     const selection = DeliverySelectionSchema.parse({
       application: "delivery-control-plane",
       environmentId: "delivery-control-plane/prod",
-      repository: "https://chartmuseum.tailnet-1a49.ts.net",
+      repository,
       chart: "delivery-control-plane",
       revision: chart.version,
       namespace: "temporal",
@@ -64,13 +76,6 @@ export function controlPlaneSelections(
             }),
       },
     });
-    if (
-      chart.uri !==
-      `https://chartmuseum.tailnet-1a49.ts.net/charts/delivery-control-plane-${chart.version}.tgz`
-    )
-      throw new Error(
-        "Control-plane chart URI differs from its frozen owner/version",
-      );
     return { selection, chart };
   };
   return { prior: selected(true), next: selected(false), snapshot };

@@ -18,6 +18,15 @@ describe("dynamic config", () => {
   test("falls back to the declared default with no flag and no env", async () => {
     await initializeConfig({ environment: DISABLED });
     await expect(karmaEmoji("guild-1")).resolves.toBe("⭐");
+    // "" is the "no administrator" default and must parse through the registry.
+    await expect(karmaAdminUserId("guild-1")).resolves.toBe("");
+  });
+
+  test("an env admin id that is not a Discord snowflake is refused", async () => {
+    await initializeConfig({
+      environment: { ...DISABLED, KARMA_ADMIN_USER_ID: "not-an-id" },
+    });
+    await expect(karmaAdminUserId("guild-1")).rejects.toThrow();
   });
 
   test("env overrides the default", async () => {

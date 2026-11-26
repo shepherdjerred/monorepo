@@ -164,6 +164,7 @@ function stripDeliveryImageBindings(line: string, chart: string): string {
   if (
     ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined ||
     [
+      "charts-bootstrap",
       "temporal",
       "scout-beta",
       "scout-prod",

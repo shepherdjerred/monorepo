@@ -165,7 +165,12 @@ export function DataTable<T>({
   const CapIcon = showAll ? ChevronUpIcon : ChevronDownIcon;
 
   return (
-    <div className="visual-data-table">
+    <div
+      className="visual-data-table"
+      // A table of up to three columns fits a phone as a table; a wider one
+      // becomes a stack of labelled cards when its container is narrow.
+      data-layout={colCount <= 3 ? "table" : "cards"}
+    >
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}
       </div>
@@ -191,7 +196,7 @@ export function DataTable<T>({
         aria-labelledby={captionId}
         tabIndex={0}
       >
-        <table className="visual-table" role="table">
+        <table className="visual-table ui-table" role="table">
           <caption
             id={captionId}
             className={hideCaption ? "sr-only" : "visual-table-caption"}

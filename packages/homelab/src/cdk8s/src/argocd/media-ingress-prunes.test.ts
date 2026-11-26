@@ -14,7 +14,7 @@ const homelabRoot = new URL("../../../../", import.meta.url).pathname;
 const revision = "2.0.0-42";
 const requestId = "11111111-1111-4111-8111-111111111111";
 const source = {
-  repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+  repoURL: "https://charts.tailnet-1a49.ts.net",
   chart: "media",
   targetRevision: revision,
   helm: {

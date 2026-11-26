@@ -33,6 +33,7 @@ import {
 } from "#src/pipeline/turbo-cache.ts";
 import { npmPackageArchiveSteps } from "#src/pipeline/lanes/npm-packages.ts";
 import { GRADLE_BUILD_CACHE_ENVIRONMENT } from "#src/pipeline/gradle-build-cache.ts";
+import { SCCACHE_WEBDAV_ENVIRONMENT } from "#src/pipeline/sccache-webdav.ts";
 
 /**
  * The CI graph, as data.
@@ -163,6 +164,7 @@ export function buildPipelineSteps({
         // The Storm's Gradle builds (~30 plugin modules) dominate verify when
         // their Turbo task misses; the node returns unchanged modules' outputs.
         ...GRADLE_BUILD_CACHE_ENVIRONMENT,
+        ...SCCACHE_WEBDAV_ENVIRONMENT,
         CI_CHANGED_BASE: verifyBase,
       },
       // A first run in a new trust domain must rebuild every cache entry rather

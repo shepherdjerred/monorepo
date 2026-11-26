@@ -191,7 +191,7 @@ async function publish(number: number) {
         id: `pilot/chart/${String(number)}`,
         component: "chart:arcade",
         kind: "chart",
-        uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-${chartVersion}.tgz`,
+        uri: `https://charts.tailnet-1a49.ts.net/charts/arcade-${chartVersion}.tgz`,
         digest: `sha256:${"a".repeat(64)}`,
         version: chartVersion,
       },

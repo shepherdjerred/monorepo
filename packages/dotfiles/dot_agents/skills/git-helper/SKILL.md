@@ -9,11 +9,11 @@ Inspect first, preserve user work, and use the repository's owning branch workfl
 
 ## Branch workflow ownership
 
-In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `monorepo-delivery` first; it is authoritative for branch creation, restacking, and publishing.
+In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `monorepo-delivery` first; it is authoritative for branch creation, restacking, and publishing. Do not drive GitHub stacked pull requests outside git-spice (`gh stack` or `github/gh-stack`). git-spice may register its own stacks with GitHub.
 
 Use the provided isolated workspace; do not create a second worktree unless the
-user explicitly asks for one. Do not use a bare `gh pr create` or hand-written
-rebase in place of the owning stack tool.
+user explicitly asks for one. Do not use a bare `gh pr create`, `gh stack`, or
+hand-written rebase in place of the owning stack tool.
 
 ## Current baseline
 

@@ -11,6 +11,7 @@ import {
   grantGradleBuildCache,
   withoutGradleBuildCache,
 } from "./gradle-build-cache.ts";
+import { grantSccacheWebdav, withoutSccacheWebdav } from "./sccache-webdav.ts";
 import { RAM_SCRATCH } from "./ram-scratch.ts";
 import {
   DISABLED_PERFORMANCE,
@@ -130,7 +131,7 @@ export function benchmarkSteps(
       // A cold benchmark measures a build with no shared results, so it must
       // not load Gradle outputs either.
       ...(request.cache === "cold"
-        ? withoutGradleBuildCache(template.environment)
+        ? withoutSccacheWebdav(withoutGradleBuildCache(template.environment))
         : template.environment),
       CI_CHANGED_BASE: "",
       CI_BENCHMARK_PROFILE: request.profile,
@@ -157,9 +158,12 @@ export function benchmarkSteps(
         }),
   }));
   const trustDomain = request.main ? "trusted" : "pull-request";
-  return grantGradleBuildCache(
-    signRemoteCacheSteps(
-      performanceSteps(cached, options, request.main, false),
+  return grantSccacheWebdav(
+    grantGradleBuildCache(
+      signRemoteCacheSteps(
+        performanceSteps(cached, options, request.main, false),
+        trustDomain,
+      ),
       trustDomain,
     ),
     trustDomain,

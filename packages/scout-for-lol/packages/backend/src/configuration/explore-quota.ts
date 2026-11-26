@@ -3,9 +3,13 @@ import type {
   ExploreQuotaWindow,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { ExploreQuotaLimitsSchema } from "@shepherdjerred/feature-flags/flag-value-settings.ts";
 
 /**
- * How many Explore questions each window allows.
+ * How many Explore questions each window allows. The schema lives in the
+ * feature-flags value registry (`ExploreQuotaLimitsSchema`), which enforces
+ * the window ordering and per-user-below-global rules for the flag and env
+ * layers alike.
  *
  * One key rather than seven, because these move together. A rollback is
  * "put the ceilings back", not seven coordinated flips with the system
@@ -17,61 +21,6 @@ import { z } from "zod";
  * user and reads the whole lake. The global rules exist to bound total spend
  * across concurrent explorers, not to be the wall one person meets.
  */
-export const ExploreQuotaLimitsSchema = z
-  .object({
-    userMinute: z.coerce.number().int().positive(),
-    userHour: z.coerce.number().int().positive(),
-    userDay: z.coerce.number().int().positive(),
-    userWeek: z.coerce.number().int().positive(),
-    globalHour: z.coerce.number().int().positive(),
-    globalDay: z.coerce.number().int().positive(),
-    globalWeek: z.coerce.number().int().positive(),
-  })
-  .superRefine((limits, ctx) => {
-    // A wider window that allows fewer questions than a narrower one is not a
-    // stricter policy, it is an unreachable one: the narrow window can never
-    // be the binding constraint, and the reason a request was refused stops
-    // matching the window named in the refusal.
-    const ordered: [string, number[]][] = [
-      [
-        "user",
-        [limits.userMinute, limits.userHour, limits.userDay, limits.userWeek],
-      ],
-      ["global", [limits.globalHour, limits.globalDay, limits.globalWeek]],
-    ];
-    for (const [scope, windows] of ordered) {
-      windows.forEach((limit, index) => {
-        const narrower = index === 0 ? undefined : windows[index - 1];
-        if (narrower !== undefined && limit < narrower) {
-          ctx.addIssue({
-            code: "custom",
-            message: `${scope} quota windows must not shrink as they widen`,
-          });
-        }
-      });
-    }
-    // A per-user ceiling above its global counterpart is meaningless: the
-    // global rule refuses the request first, so the user is told they have
-    // allowance left right up until Explore says it is busy. Every shared
-    // window is checked, not just the hourly one — lowering only the longer
-    // global windows is the likelier operator mistake, and checking one pair
-    // would let it through while this comment claimed otherwise. The minute
-    // window has no global counterpart and is bounded by `userHour` above.
-    const shared = [
-      ["hourly", limits.userHour, limits.globalHour],
-      ["daily", limits.userDay, limits.globalDay],
-      ["weekly", limits.userWeek, limits.globalWeek],
-    ] as const;
-    for (const [window, user, global] of shared) {
-      if (user > global) {
-        ctx.addIssue({
-          code: "custom",
-          message: `user ${window} quota must not exceed the global ${window} quota`,
-        });
-      }
-    }
-  });
-
 export type ExploreQuotaLimits = z.infer<typeof ExploreQuotaLimitsSchema>;
 
 /**

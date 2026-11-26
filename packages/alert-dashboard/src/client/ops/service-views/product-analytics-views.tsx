@@ -12,7 +12,7 @@ import {
   txtCol,
   type PresetSpec,
 } from "./product-view-helpers.tsx";
-import { MetricTile } from "#client/ops/ops-ui.tsx";
+import { MetricStrip } from "#client/ops/ops-ui.tsx";
 import { age } from "#client/time.ts";
 import {
   DataTable,
@@ -24,7 +24,7 @@ import { formatValue } from "#shared/ops-format";
 import type { SeriesRange } from "#shared/ops-schema";
 
 const SCOUT_CHARTS: readonly PresetSpec[] = [
-  { preset: "scout-guilds", title: "Scout Discord guilds (Prod vs Beta)" },
+  { preset: "scout-guilds", title: "Scout Discord guilds (prod vs beta)" },
   { preset: "scout-matches", title: "Scout tracked players", mode: "bar" },
   { preset: "scout-riot-requests", title: "Riot API request rate" },
   {
@@ -107,7 +107,7 @@ export function ScoutServiceView({
   return (
     <div className="product-scope product-service-stack">
       <PresetGrid
-        heading="Scout Prod & Beta telemetry"
+        heading="Scout prod & beta telemetry"
         syncKey="scout"
         range={range}
         charts={SCOUT_CHARTS}
@@ -197,27 +197,25 @@ export function BugsinkServiceView({
       <FacetSection facetKey="bugsink" label="Bugsink">
         {(bugsink) => (
           <>
-            <div className="product-kpi-grid">
-              <MetricTile
-                metric={kpi(
+            <MetricStrip
+              metrics={[
+                kpi(
                   "bugsink.unresolved",
-                  "Total Unresolved Issues",
+                  "Total unresolved issues",
                   bugsink.totalUnresolved,
                   {
                     severity: bugsink.totalUnresolved > 0 ? "warning" : "ok",
                     source: "bugsink",
                   },
-                )}
-              />
-              <MetricTile
-                metric={kpi(
+                ),
+                kpi(
                   "bugsink.digested",
-                  "Total Digested Events",
+                  "Total digested events",
                   bugsink.totalDigestedEvents,
                   { source: "bugsink" },
-                )}
-              />
-            </div>
+                ),
+              ]}
+            />
             <PresetGrid
               heading="Error trends"
               syncKey="bugsink"

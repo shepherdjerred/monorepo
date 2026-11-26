@@ -1,3 +1,5 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
+import { pillSeverity } from "#client/visuals/pill.ts";
 import type {
   ReportCheckV1,
   ReportEnvelopeV1,
@@ -7,7 +9,6 @@ import type {
 import { ExternalLinkIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { SeverityBadge } from "#client/ops/ops-ui.tsx";
 import { DataTable, type DataTableColumn } from "#client/visuals/index.ts";
 
 export type FindingStateFilter =
@@ -65,10 +66,13 @@ function RemediationHeader({
         <h2 className="rep-panel-title">Remediation &amp; next steps</h2>
         {rem === undefined ? null : (
           <>
-            <span className="visual-pill visual-pill-info">{rem.outcome}</span>
+            <span className="visual-pill" data-sev="info">
+              {rem.outcome}
+            </span>
             {rem.autoMergeEnabled === undefined ? null : (
               <span
-                className={`visual-pill visual-pill-${rem.autoMergeEnabled ? "ok" : "warning"}`}
+                className="visual-pill"
+                data-sev={pillSeverity(rem.autoMergeEnabled ? "ok" : "warning")}
               >
                 {rem.autoMergeEnabled
                   ? "Auto-merge enabled"
@@ -335,12 +339,10 @@ export function FindingsExplorer(p: {
               >
                 <div className="rep-card-top">
                   <div className="eng-pill-row">
-                    <SeverityBadge
+                    <StatusGlyph
                       severity={findingSeverityToOps(finding.severity)}
                     />
-                    <span className="visual-pill visual-pill-neutral">
-                      {state}
-                    </span>
+                    <span className="visual-pill">{state}</span>
                     {finding.section === undefined ? null : (
                       <code className="rep-mailbox-chip">
                         {finding.section}
@@ -389,7 +391,8 @@ export function ChecksBreakdown(p: {
         sortValue: (check) => (check.required ? 1 : 0),
         render: (check) => (
           <span
-            className={`visual-pill visual-pill-${check.required ? "info" : "neutral"}`}
+            className="visual-pill"
+            data-sev={pillSeverity(check.required ? "info" : "neutral")}
           >
             {check.required ? "Required" : "Optional"}
           </span>
@@ -401,13 +404,14 @@ export function ChecksBreakdown(p: {
         sortValue: (check) => check.status,
         render: (check) => (
           <span
-            className={`visual-pill visual-pill-${
+            className="visual-pill"
+            data-sev={pillSeverity(
               check.status === "passed"
                 ? "ok"
                 : check.status === "failed"
                   ? "error"
-                  : "warning"
-            }`}
+                  : "warning",
+            )}
           >
             {check.status}
           </span>

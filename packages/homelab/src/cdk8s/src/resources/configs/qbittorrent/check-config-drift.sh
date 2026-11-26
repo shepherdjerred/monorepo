@@ -8,8 +8,8 @@
 # fails the pod so the operator must reconcile by committing the change.
 #
 # Only the keys WE declare in the committed seed are enforced. Keys qBittorrent
-# writes on its own that we do not declare (e.g. WebUI\Password_PBKDF2,
-# Network\Cookies) are ignored, so the guard never false-positives on the app's
+# writes on its own that we do not declare (e.g. [WebUI] Password_PBKDF2
+# and [Network] Cookies) are ignored, so the guard never false-positives on the app's
 # own runtime churn.
 #
 # A small set of ENGINE-OWNED keys are excluded from enforcement even though they
@@ -78,15 +78,26 @@ report=$(
     }
 
     END {
+      migration = "Meta" SUBSEP "MigrationVersion"
+      version = (migration in haveLive) ? live[migration] : "0"
+      legacyWebUI = version ~ /^[0-9]+$/ && version + 0 < 11
+
       drift = 0
       for (k in managed) {
         if (k in excluded) { continue }
         split(k, a, SUBSEP)
-        if (!(k in haveLive)) {
+        actual = k
+        # Before migration 11, qBittorrent moves the old WebUI settings into
+        # [WebUI], overwriting any existing value there for the same key.
+        if (legacyWebUI && a[1] == "WebUI" && a[2] ~ /^(Address|ServerDomains|Username)$/) {
+          legacy = "Preferences" SUBSEP "WebUI\\" a[2]
+          if (legacy in haveLive) { actual = legacy }
+        }
+        if (!(actual in haveLive)) {
           printf("  - [%s] %s : missing from live config (declared=<%s>)\n", a[1], a[2], seed[k])
           drift = 1
-        } else if (live[k] != seed[k]) {
-          printf("  - [%s] %s : declared=<%s> live=<%s>\n", a[1], a[2], seed[k], live[k])
+        } else if (live[actual] != seed[k]) {
+          printf("  - [%s] %s : declared=<%s> live=<%s>\n", a[1], a[2], seed[k], live[actual])
           drift = 1
         }
       }

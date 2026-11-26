@@ -11,3 +11,7 @@ plugin/dist/build/
 client/.gradle/
 client/.kotlin/
 client/build/
+# Baked rwf navigation meshes are fetched build output: rwf/nav-manifest.json names
+# each one by sha256 and `bun run maps:fetch-nav` materialises them.
+server/owned/plugins/TheStorm/rwf/**/nav.rwfnav
+server/owned/plugins/TheStorm/rwf/**/nav.rwfnav.*.partial

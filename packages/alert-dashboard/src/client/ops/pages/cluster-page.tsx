@@ -18,6 +18,7 @@ import type { SeriesPresetId, SeriesRange } from "#shared/ops-schema";
 import "#styles/platform.css";
 
 import { ClusterExplorerBody } from "./cluster-workloads-section.tsx";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 export const CLUSTER_TABS = [
   "nodes",
@@ -28,7 +29,7 @@ export const CLUSTER_TABS = [
 export type ClusterTab = (typeof CLUSTER_TABS)[number];
 
 const CLUSTER_TAB_LABELS: Record<ClusterTab, string> = {
-  nodes: "Nodes & Hardware",
+  nodes: "Nodes & hardware",
   workloads: "Workloads",
   databases: "Databases",
   storage: "Storage, ZFS & NVMe",
@@ -128,7 +129,7 @@ export function statusPill(
   text: string,
 ): React.JSX.Element {
   return (
-    <span className={`visual-pill visual-pill-${tone}`}>
+    <span className="visual-pill" data-sev={pillSeverity(tone)}>
       <span aria-hidden="true">{glyph}</span>
       <span>{text}</span>
     </span>
@@ -245,7 +246,7 @@ export const WORKLOAD_COLUMNS: readonly DataTableColumn<ClusterWorkload>[] = [
   ),
   tableCol(
     "restarts",
-    "24h Restarts / OOMs",
+    "24h restarts / OOMs",
     (r) =>
       r.oomKills24h > 0 ? (
         statusPill(
@@ -278,7 +279,7 @@ export const WORKLOAD_COLUMNS: readonly DataTableColumn<ClusterWorkload>[] = [
   ),
   tableCol(
     "argoApp",
-    "Argo App",
+    "Argo app",
     (r) => <span className="mono">{r.argoApp ?? "—"}</span>,
     (r) => r.argoApp,
   ),
@@ -289,13 +290,13 @@ export const ZPOOL_COLUMNS: readonly DataTableColumn<
 >[] = [
   tableCol(
     "pool",
-    "Node / Pool",
+    "Node / pool",
     (r) => <span className="mono">{`${r.node}/${r.pool}`}</span>,
     (r) => `${r.node}/${r.pool}`,
   ),
   tableCol(
     "usage",
-    "Used / Size",
+    "Used / size",
     (r) =>
       inlineBudgetMeter(
         `${r.node}/${r.pool} capacity`,
@@ -349,7 +350,7 @@ export function ClusterPage(): React.JSX.Element {
             <StaleNotice errors={meta.errors} />
             {envelope.data === null ? (
               <>
-                <PageHeading eyebrow="Kubernetes & Talos" title="Cluster" />
+                <PageHeading title="Cluster" meta="Kubernetes & Talos" />
                 <div className="empty-state">
                   No cluster facet has been ingested yet. The Temporal
                   ops-snapshot workflow posts one every five minutes.

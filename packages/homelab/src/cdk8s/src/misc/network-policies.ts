@@ -224,6 +224,36 @@ export function externalHttpsEgressRule() {
   };
 }
 
+/**
+ * The private and shared address ranges: RFC 1918 and the RFC 6598 CGNAT
+ * range Tailscale assigns. Excluding them from `0.0.0.0/0` leaves the public
+ * internet, so a broad rule cannot reach the LAN, the tailnet or the pod and
+ * Service networks.
+ */
+const NON_PUBLIC_CIDRS = [
+  "10.0.0.0/8",
+  "172.16.0.0/12",
+  "192.168.0.0/16",
+  "100.64.0.0/10",
+] as const;
+
+/** Every public address: the internet, without the LAN, tailnet or cluster. */
+export function publicAddressPeer() {
+  return { ipBlock: { cidr: "0.0.0.0/0", except: [...NON_PUBLIC_CIDRS] } };
+}
+
+/**
+ * Outbound HTTPS and plain HTTP to any public address.
+ *
+ * For a workload whose destinations follow its inputs rather than this
+ * source, such as a build fetching what a Dockerfile names. Plain HTTP is
+ * included because package mirrors and arbitrary links still serve it. The
+ * private ranges stay closed, so a cluster peer still needs its own rule.
+ */
+export function publicWebEgressRule() {
+  return { to: [publicAddressPeer()], ports: [tcp(443), tcp(80)] };
+}
+
 /** The address and port the `kubernetes` Service's Endpoints advertise. */
 export const KUBERNETES_API_ENDPOINT = {
   cidr: `${PROD_NODE_INTERNAL_IP}/32`,

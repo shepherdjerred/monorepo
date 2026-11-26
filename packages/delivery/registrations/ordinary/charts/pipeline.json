@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "charts",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
+  "chartName": "charts-bootstrap",
+  "chartComponent": "chart:charts-bootstrap",
+  "namespace": "charts",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.charts": "image:charts"
+  },
+  "verification": {
+    "url": "https://charts.tailnet-1a49.ts.net/readyz",
+    "expectedStatus": 200
+  }
+}

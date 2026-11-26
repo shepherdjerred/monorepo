@@ -139,7 +139,6 @@ export const CORE_MODULE_ID = "core";
 const SERVER_SEGMENTS: ReadonlySet<string> = new Set([
   "api",
   "assets",
-  "fonts",
   "healthz",
   "internal",
   "metrics",

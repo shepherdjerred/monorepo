@@ -5,7 +5,6 @@ import {
   CARGO_CACHE,
   GO_CACHE,
   MISE_INSTALLS,
-  SCCACHE,
   TOOL_CACHE,
   UV_CACHE,
   sharedCacheEnvironment,
@@ -65,20 +64,29 @@ test("every trusted toolchain container mounts the tool cache; full scopes mount
     expect(sharedCacheEnvironment(step.volumes), step.key).not.toHaveProperty(
       "GRADLE_USER_HOME",
     );
+    expect(claims(step), step.key).not.toContain("woodpecker-sccache");
+    expect(sharedCacheEnvironment(step.volumes), step.key).not.toHaveProperty(
+      "SCCACHE_DIR",
+    );
     const narrow = step.commands.every(
       (command) =>
         !command.includes("ci/scripts/toolchain.sh") ||
         command.includes("MISE_TOOLCHAIN_SCOPE="),
     );
-    for (const cache of [CARGO_CACHE, SCCACHE, GO_CACHE, UV_CACHE]) {
+    for (const cache of [CARGO_CACHE, GO_CACHE, UV_CACHE]) {
       if (narrow) expect(claims(step), step.key).not.toContain(cache.claim);
       else expect(claims(step), step.key).toContain(cache.claim);
     }
   }
   const verify = testPipelineSteps().find((step) => step.key === "verify");
   expect(verify).toBeDefined();
-  expect(sharedCacheEnvironment(verify?.volumes)).toMatchObject({
+  expect(verify?.environment).toMatchObject({
     RUSTC_WRAPPER: "sccache",
+    CARGO_INCREMENTAL: "0",
+    SCCACHE_WEBDAV_ENDPOINT: "https://ci-cache.tailnet-1a49.ts.net/sccache/",
+  });
+  expect(verify?.environment).not.toHaveProperty("SCCACHE_DIR");
+  expect(sharedCacheEnvironment(verify?.volumes)).toMatchObject({
     GOMODCACHE: "/woodpecker/go-cache/mod",
     UV_PYTHON_INSTALL_DIR: "/woodpecker/uv-cache/python",
     BUN_INSTALL: "/woodpecker/tool-cache/bun",
@@ -117,7 +125,6 @@ test("toolchain caches follow the toolchain scope of each container", () => {
   expect(claims(full)).toEqual([
     TOOL_CACHE.claim,
     CARGO_CACHE.claim,
-    SCCACHE.claim,
     GO_CACHE.claim,
     UV_CACHE.claim,
   ]);
@@ -133,7 +140,6 @@ test("toolchain caches follow the toolchain scope of each container", () => {
   expect(claims(withSharedToolCaches(already))).toEqual([
     TOOL_CACHE.claim,
     CARGO_CACHE.claim,
-    SCCACHE.claim,
     GO_CACHE.claim,
     UV_CACHE.claim,
   ]);
@@ -217,15 +223,9 @@ test("download caches are explicitly directed to their mounted volumes", () => {
     UV_CACHE_DIR: "/woodpecker/uv-cache",
     UV_PYTHON_INSTALL_DIR: "/woodpecker/uv-cache/python",
   });
-  expect(
-    sharedCacheEnvironment([CARGO_CACHE, SCCACHE, GO_CACHE, TOOL_CACHE]),
-  ).toEqual({
+  expect(sharedCacheEnvironment([CARGO_CACHE, GO_CACHE, TOOL_CACHE])).toEqual({
     BUN_INSTALL_LOCK_MODE: "local",
     CI_CARGO_CACHE_DIR: "/woodpecker/cargo-cache",
-    RUSTC_WRAPPER: "sccache",
-    SCCACHE_DIR: "/woodpecker/sccache",
-    SCCACHE_CACHE_SIZE: "30G",
-    CARGO_INCREMENTAL: "0",
     GOMODCACHE: "/woodpecker/go-cache/mod",
     GOCACHE: "/woodpecker/go-cache/build",
     GOLANGCI_LINT_CACHE: "/woodpecker/go-cache/golangci-lint",
@@ -253,7 +253,6 @@ test("partial and misdirected cache mounts fail generation", () => {
     [{ ...BUN_CACHE, path: "/wrong" }, BUN_CACHE_CONTROL],
     [BUN_CACHE, { ...BUN_CACHE_CONTROL, path: "/wrong" }],
     [{ ...UV_CACHE, path: "/wrong" }],
-    [{ ...SCCACHE, path: "/wrong" }],
     [{ ...TOOL_CACHE, path: "/wrong" }],
   ])
     expect(() => sharedCacheEnvironment(volumes)).toThrow();

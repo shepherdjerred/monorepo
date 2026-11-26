@@ -21,8 +21,12 @@ dependencies {
 // The shipped-content tests read the repository-owned server files; declaring them as inputs
 // makes a content change rerun the tests instead of reusing a cached result.
 tasks.test {
+  // The rwf bots' nav.rwfnav artifacts are fetched build output, not content these tests read.
   inputs
-      .dir(layout.projectDirectory.dir("../../../server/owned/plugins/TheStorm"))
+      .files(
+          fileTree(layout.projectDirectory.dir("../../../server/owned/plugins/TheStorm")) {
+            exclude("rwf/**/nav.rwfnav")
+          })
       .withPathSensitivity(PathSensitivity.RELATIVE)
       .withPropertyName("ownedContent")
 }

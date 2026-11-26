@@ -3,6 +3,7 @@ import type {
   PromotionRunSummary,
   PromotionSourceActivity,
 } from "@shepherdjerred/ops-model/promotion/model.ts";
+import { StatusGlyph, type Severity } from "@shepherdjerred/console-ui";
 import { LinkOut, time } from "./ui.tsx";
 import { ActivityStrip } from "./activity-strip.tsx";
 
@@ -28,27 +29,44 @@ function SourceTime({
   );
 }
 
-function outcome(row: PromotionRunRow) {
+function outcome(row: PromotionRunRow): {
+  label: string;
+  severity: Severity;
+} {
   switch (row.outcome) {
     case "done":
-      return "Done";
+      return { label: "Done", severity: "ok" };
     case "disabled":
-      return "Disabled";
+      return { label: "Disabled", severity: "unknown" };
     case "not_due":
-      return "Not due";
+      return { label: "Not due", severity: "ok" };
     case "running":
-      return "Running";
+      return { label: "Running", severity: "info" };
     case "queued":
-      return "Queued";
+      return { label: "Queued", severity: "info" };
     case "error":
       return row.health === "disabled"
-        ? "Failed; paused"
+        ? { label: "Failed; paused", severity: "error" }
         : /confirm/i.test(row.reason)
-          ? "Unconfirmed"
-          : "Failed";
+          ? { label: "Unconfirmed", severity: "warning" }
+          : { label: "Failed", severity: "error" };
     case "not_run":
-      return "Not run";
+      return { label: "Not run", severity: "unknown" };
   }
+}
+
+function Outcome({ row }: { row: PromotionRunRow }) {
+  const { label, severity } = outcome(row);
+  return <StatusGlyph severity={severity} label={label} />;
+}
+
+function GroupHead({ title, count }: { title: string; count: number }) {
+  return (
+    <header className="ui-section-head">
+      <h2 className="ui-section-title">{title}</h2>
+      <span className="ui-count">{count}</span>
+    </header>
+  );
 }
 
 function SourceList({
@@ -64,12 +82,12 @@ function SourceList({
 }) {
   return (
     <div
-      className="p-source-list"
+      className="ui-table-scroll p-table-wrap p-source-list"
       role="region"
       aria-label={label}
       tabIndex={0}
     >
-      <table className="p-source-table">
+      <table className="ui-table p-source-table">
         <caption className="sr-only">{label}. All times are Pacific.</caption>
         <thead>
           <tr>
@@ -89,9 +107,7 @@ function SourceList({
                 <small>{row.platform}</small>
               </th>
               <td className="p-source-reason" data-label="Outcome">
-                <span className={`p-outcome p-outcome-${row.health}`}>
-                  {outcome(row)}
-                </span>
+                <Outcome row={row} />
                 <p>{row.reason}</p>
                 <details className="p-row-detail">
                   <summary>Details and receipt</summary>
@@ -198,12 +214,10 @@ export function SourceGroups({
   const checking = summary.rows.filter((row) => row.health === "checking");
   return (
     <>
-      <section id="sources-error" className="p-source-group p-group-error">
-        <h2>
-          Needs attention <span>{issues.length}</span>
-        </h2>
+      <section id="sources-error" className="p-section p-source-group">
+        <GroupHead title="Needs attention" count={issues.length} />
         {issues.length === 0 ? (
-          <p className="p-muted">No unresolved errors for this run.</p>
+          <p className="p-muted p-empty">No unresolved errors for this run.</p>
         ) : (
           <SourceList
             rows={issues}
@@ -214,10 +228,11 @@ export function SourceGroups({
         )}
       </section>
       {checking.length > 0 && (
-        <section className="p-source-group">
-          <h2>
-            In progress / not yet verified <span>{checking.length}</span>
-          </h2>
+        <section className="p-section p-source-group">
+          <GroupHead
+            title="In progress or not yet verified"
+            count={checking.length}
+          />
           <SourceList
             rows={checking}
             label="Sources in progress"
@@ -226,10 +241,11 @@ export function SourceGroups({
           />
         </section>
       )}
-      <section id="sources-working" className="p-source-group">
-        <h2>
-          Working as expected <span>{done.length + waiting.length}</span>
-        </h2>
+      <section id="sources-working" className="p-section p-source-group">
+        <GroupHead
+          title="Working as expected"
+          count={done.length + waiting.length}
+        />
         {done.length > 0 && (
           <SourceList
             rows={done}
@@ -241,7 +257,7 @@ export function SourceGroups({
         {waiting.length > 0 && (
           <details className="p-fold">
             <summary>
-              {waiting.length} not run — cooldown or not selected
+              {waiting.length} not run: cooldown or not selected
             </summary>
             <SourceList
               rows={waiting}
@@ -252,16 +268,15 @@ export function SourceGroups({
           </details>
         )}
         {done.length + waiting.length === 0 && (
-          <p className="p-muted">
+          <p className="p-muted p-empty">
             No confirmed automated results recorded for this run.
           </p>
         )}
       </section>
-      <details className="p-source-group p-disabled-group">
-        <summary>
-          <strong>
-            Disabled <span>{disabled.length}</span>
-          </strong>
+      <details className="p-section p-source-group p-disabled-group">
+        <summary className="ui-section-head">
+          <span className="ui-section-title">Disabled</span>
+          <span className="ui-count">{disabled.length}</span>
           <span className="p-muted">
             Missing implementation, credentials, access or paused
           </span>

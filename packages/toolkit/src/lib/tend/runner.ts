@@ -1,8 +1,13 @@
-import { appendFile, mkdir, open, rm, statfs } from "node:fs/promises";
+import { appendFile, mkdir } from "node:fs/promises";
 import os from "node:os";
-import { z } from "zod";
 import type { PinchtabClientOptions } from "#lib/pinchtab-cli/http.ts";
 import { sweepArtifacts } from "./artifacts.ts";
+import { sweepDedupe } from "./dedupe.ts";
+import {
+  collectDockerDiskSummary,
+  collectHostDiskCapacity,
+  type StatDisk,
+} from "./disk-summary.ts";
 import { sweepDocker } from "./docker.ts";
 import { listLeases, sweepLeases } from "./leases.ts";
 import {
@@ -16,22 +21,13 @@ import {
 } from "./paths.ts";
 import { sweepPostgres } from "./postgres.ts";
 import type { SharedPostgresAdapter } from "./postgres-databases.ts";
-import {
-  defaultCommandRunner,
-  defaultTcpPortProbe,
-  isProcessAliveByKillZero,
-  processStartsMatch,
-  readSingleProcessStart,
-} from "./process-probe.ts";
+import { defaultCommandRunner, defaultTcpPortProbe } from "./process-probe.ts";
 import { type ProcessSignaler, sweepProcesses } from "./processes.ts";
+import { acquireTendRunLockWaiting, type LockTiming } from "./run-lock.ts";
 import { sweepTailscaleServe } from "./tailscale-serve.ts";
 import {
   type CommandRunner,
-  type DiskCapacitySummary,
-  type DockerDiskSummary,
-  evaluateDiskCapacity,
   type LivenessSnapshot,
-  parseDockerSystemDfOutput,
   type SurfaceSweepResult,
   type TcpPortProbe,
   TEND_SURFACES,
@@ -42,99 +38,6 @@ import {
   type TendSurface,
 } from "./types.ts";
 import { sweepWorktrees } from "./worktrees.ts";
-
-const LockOwnerSchema = z.strictObject({
-  pid: z.number().int().positive(),
-  processStart: z.string().min(1),
-  acquiredAt: z.string(),
-});
-
-function isEexistError(error: unknown): boolean {
-  const parsed = z.looseObject({ code: z.string() }).safeParse(error);
-  return parsed.success && parsed.data.code === "EEXIST";
-}
-
-export async function acquireTendRunLock(options: {
-  readonly paths?: TendPaths | undefined;
-  readonly ownerPid?: number | undefined;
-  readonly processStart?: string | undefined;
-  readonly runner?: CommandRunner | undefined;
-  readonly platform?: NodeJS.Platform | undefined;
-  readonly isPidAlive?: ((pid: number) => boolean) | undefined;
-  readonly readPidStart?:
-    ((pid: number) => Promise<string | undefined>) | undefined;
-}): Promise<() => Promise<void>> {
-  const paths = options.paths ?? resolveTendPaths();
-  const ownerPid = options.ownerPid ?? process.pid;
-  const checkAlive = options.isPidAlive ?? isProcessAliveByKillZero;
-  const readStart =
-    options.readPidStart ??
-    ((pid: number) =>
-      readSingleProcessStart(pid, {
-        runner: options.runner,
-        platform: options.platform,
-      }));
-  const ownStart =
-    options.processStart ??
-    (await readStart(ownerPid)) ??
-    `unknown-${String(ownerPid)}`;
-
-  await mkdir(paths.rootDir, { recursive: true, mode: 0o700 });
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      const handle = await open(paths.lockFile, "wx", 0o600);
-      try {
-        const payload = JSON.stringify({
-          pid: ownerPid,
-          processStart: ownStart,
-          acquiredAt: new Date().toISOString(),
-        });
-        await handle.writeFile(`${payload}\n`, "utf8");
-      } finally {
-        await handle.close();
-      }
-      return () => rm(paths.lockFile, { force: true });
-    } catch (error: unknown) {
-      if (!isEexistError(error)) {
-        throw error;
-      }
-      if (attempt > 0) {
-        break;
-      }
-      if (!(await isLockFileStale(paths.lockFile, checkAlive, readStart))) {
-        throw new Error(
-          `Another toolkit tend --apply run is active (${paths.lockFile})`,
-          { cause: error },
-        );
-      }
-      await rm(paths.lockFile, { force: true });
-    }
-  }
-  throw new Error(`Could not acquire toolkit tend lock at ${paths.lockFile}`);
-}
-
-async function isLockFileStale(
-  lockFile: string,
-  checkAlive: (pid: number) => boolean,
-  readStart: (pid: number) => Promise<string | undefined>,
-): Promise<boolean> {
-  try {
-    const text = await Bun.file(lockFile).text();
-    const parsed = LockOwnerSchema.safeParse(JSON.parse(text));
-    if (!parsed.success || !checkAlive(parsed.data.pid)) {
-      return true;
-    }
-    if (parsed.data.processStart.startsWith("unknown-")) {
-      return false;
-    }
-    const currentStart = await readStart(parsed.data.pid);
-    return currentStart === undefined
-      ? !checkAlive(parsed.data.pid)
-      : !processStartsMatch(currentStart, parsed.data.processStart);
-  } catch {
-    return true;
-  }
-}
 
 export async function readLastTendRunSummary(
   paths: TendPaths = resolveTendPaths(),
@@ -201,57 +104,18 @@ export type RunTendOptions = {
   readonly processSignaler?: ProcessSignaler | undefined;
   readonly livenessOverride?: LivenessSnapshot | undefined;
   readonly pinchtab?: PinchtabClientOptions | undefined;
-  readonly statDisk?:
-    | ((
-        targetPath: string,
-      ) => Promise<{ availableBytes: number; totalBytes: number } | null>)
-    | undefined;
+  readonly statDisk?: StatDisk | undefined;
+  /** Smallest file the dedupe surface replaces with a clone. */
+  readonly dedupeMinSizeBytes?: number | undefined;
+  /** Limit the dedupe surface to replacing files in this one worktree. */
+  readonly dedupeWorktree?: string | undefined;
+  /** `false` never refreshes an index after dedupe replaces files. */
+  readonly dedupeRefreshIndex?: boolean | undefined;
+  /** How long an applied run waits for another applied run to finish. */
+  readonly lockWaitMs?: number | undefined;
+  readonly lockTiming?: LockTiming | undefined;
   readonly nowMs?: number | undefined;
 };
-
-async function collectHostDiskCapacity(
-  homeDir: string,
-  statDisk: RunTendOptions["statDisk"],
-): Promise<DiskCapacitySummary | null> {
-  try {
-    const raw =
-      statDisk === undefined
-        ? await statfs(homeDir).then((s) => ({
-            availableBytes: s.bavail * s.bsize,
-            totalBytes: s.blocks * s.bsize,
-          }))
-        : await statDisk(homeDir);
-    return raw === null
-      ? null
-      : evaluateDiskCapacity(homeDir, raw.availableBytes, raw.totalBytes);
-  } catch {
-    return null;
-  }
-}
-
-async function collectDockerDiskSummary(
-  mode: "status" | "run",
-  selectedSurfaces: readonly TendSurface[],
-  runner: CommandRunner,
-): Promise<DockerDiskSummary | null> {
-  if (mode !== "status" || !selectedSurfaces.includes("docker")) {
-    return null;
-  }
-  const res = await runner(["docker", "system", "df", "--format", "json"], {
-    timeoutMs: 3000,
-  });
-  if (res.exitCode !== 0) {
-    return {
-      available: false,
-      rows: [],
-      skippedReason:
-        res.timedOut === true
-          ? "docker system df timed out"
-          : "docker daemon not running",
-    };
-  }
-  return { available: true, rows: parseDockerSystemDfOutput(res.stdout) };
-}
 
 async function executeSelectedSurface(
   surface: TendSurface,
@@ -279,6 +143,34 @@ async function executeSelectedSurface(
         homeDir: ctx.options.homeDir,
         checkPullRequests: ctx.options.checkPullRequests,
         includeClosedPrs: ctx.options.includeClosedPrs,
+        nowMs: ctx.nowMs,
+      });
+    case "dedupe":
+      // Planning reads every worktree's index and takes the better part of a
+      // minute, which a status report should not cost unless asked for.
+      if (
+        ctx.options.mode === "status" &&
+        ctx.options.surfaces?.includes("dedupe") !== true
+      ) {
+        return {
+          surface: "dedupe",
+          skippedReason: "planning pass; run `toolkit tend dedupe`",
+          inspectedCount: 0,
+          candidates: [],
+          actions: [],
+          warnings: [],
+        };
+      }
+      return sweepDedupe({
+        liveness: ctx.liveness,
+        runner: ctx.runner,
+        apply: ctx.apply,
+        paths: ctx.paths,
+        gitDirs: ctx.options.gitDirs,
+        homeDir: ctx.options.homeDir,
+        minSizeBytes: ctx.options.dedupeMinSizeBytes,
+        worktree: ctx.options.dedupeWorktree,
+        refreshIndex: ctx.options.dedupeRefreshIndex,
         nowMs: ctx.nowMs,
       });
     case "postgres":
@@ -396,9 +288,18 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
   const probePort = options.probePort ?? defaultTcpPortProbe;
   const worktreeMinAgeMs =
     options.worktreeMinAgeMs ?? DEFAULT_WORKTREE_MIN_AGE_MS;
-  const selectedSurfaces = options.surfaces ?? TEND_SURFACES;
+  // Canonical order whatever --only said: dedupe shares what the reaper kept.
+  const selectedSurfaces = TEND_SURFACES.filter((surface) =>
+    (options.surfaces ?? TEND_SURFACES).includes(surface),
+  );
+  // Only a run that changes something takes the lock; a dry run never waits.
   const releaseLock = apply
-    ? await acquireTendRunLock({ paths, runner })
+    ? await acquireTendRunLockWaiting({
+        paths,
+        runner,
+        waitMs: options.lockWaitMs,
+        timing: options.lockTiming,
+      })
     : undefined;
 
   try {

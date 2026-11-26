@@ -1,5 +1,5 @@
 {
-  "id": "errors/prod/2",
+  "id": "errors/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "errors"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "errors"
       },
       "syncOptions": ["CreateNamespace=true"],

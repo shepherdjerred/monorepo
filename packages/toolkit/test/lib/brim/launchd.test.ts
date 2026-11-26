@@ -20,6 +20,71 @@ describe("LaunchAgent plists", () => {
     expect(plist).toContain("/Users/tester/.toolkit/brim-sync/logs");
   });
 
+  test("a job that does not say otherwise runs at load, byte for byte as before", () => {
+    const unscheduled = {
+      label: "com.example.job",
+      plistPath: "/tmp/job.plist",
+      programArguments: ["/bin/tool", "sync & run"],
+      logsDir: "/tmp/logs",
+      keepAlive: false,
+      environment: { PATH: "/usr/bin" },
+    };
+    const spec = { ...unscheduled, startIntervalSeconds: 300 };
+    const expected = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.job</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/tool</string>
+    <string>sync &amp; run</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/bin</string>
+  </dict>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>/tmp/logs/launchd.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/logs/launchd.stderr.log</string>
+</dict>
+</plist>
+`;
+    expect(renderLaunchAgentPlist(spec)).toBe(expected);
+    expect(renderLaunchAgentPlist({ ...spec, runAtLoad: true })).toBe(expected);
+    expect(renderLaunchAgentPlist({ ...spec, runAtLoad: false })).toBe(
+      expected.replace(
+        "<key>RunAtLoad</key>\n  <true/>",
+        "<key>RunAtLoad</key>\n  <false/>",
+      ),
+    );
+    expect(
+      renderLaunchAgentPlist({
+        ...unscheduled,
+        startCalendarInterval: { hour: 4, minute: 30 },
+      }),
+    ).toBe(
+      expected.replace(
+        "<key>StartInterval</key>\n  <integer>300</integer>",
+        "<key>StartCalendarInterval</key>\n  <dict>\n    <key>Hour</key>\n    <integer>4</integer>\n    <key>Minute</key>\n    <integer>30</integer>\n  </dict>",
+      ),
+    );
+    expect(
+      renderLaunchAgentPlist(
+        syncLaunchAgent(defaultBrimSyncPaths("/Users/tester"), []),
+      ),
+    ).toContain("<key>RunAtLoad</key>\n  <true/>");
+  });
+
   test("a job without an environment renders no EnvironmentVariables", () => {
     const plist = renderLaunchAgentPlist({
       label: "com.example.job",

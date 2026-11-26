@@ -9,6 +9,7 @@ import {
   NodeLabelQuery,
   Secret,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
@@ -31,14 +32,16 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
  * service is a reviewed change of its own: see the wiki how-to "Add a hosted
  * service".
  */
-export const CI_CACHE_ACTIVE = false;
+export const CI_CACHE_ACTIVE = true;
 
 const CI_CACHE_PORT = 7380;
 const CI_TURBO_CACHE_ITEM_ID = "mzvcz4pqqbda75ufu7l5myd4ey";
 
+// CI step pods are absent: they reach the CI cache over the tailnet, and their own
+// Egress policy (`woodpecker-step-netpol`) opens no in-cluster path to port
+// 7380. Add `woodpecker-ci` back together with that Egress rule.
 const CONSUMER_NAMESPACES = [
   "tailscale",
-  "woodpecker-ci",
   "delivery-worker-jobs",
   "delivery-platform-jobs",
 ] as const;
@@ -122,14 +125,7 @@ export function createCiCacheDeployment(chart: Chart) {
       hosts: [
         {
           id: "ci-cache-ingress",
-          // A prepared service renders nothing, so the platform model cannot
-          // declare its tailnet name yet. Activation declares "ci-cache" in
-          // platform-model.json and replaces this with tailnetService("ci-cache").
-          host: {
-            host: "ci-cache",
-            namespace: "ci-cache",
-            exposure: "ingress",
-          },
+          host: tailnetService("ci-cache"),
         },
       ],
     },
@@ -140,7 +136,15 @@ export function createCiCacheDeployment(chart: Chart) {
         ingress: [
           prometheusIngressRule([CI_CACHE_PORT]),
           {
-            from: CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
+            from: [
+              ...CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
+              {
+                ...nsPeer("woodpecker-ci"),
+                podSelector: {
+                  matchLabels: { component: "maintenance-worker" },
+                },
+              },
+            ],
             ports: [tcp(CI_CACHE_PORT)],
           },
         ],

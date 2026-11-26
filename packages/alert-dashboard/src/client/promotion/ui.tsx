@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { systemClock, toContractDate } from "#shared/time";
 import type { PromotionHistoryEntry } from "@shepherdjerred/ops-model/promotion/model.ts";
 export const money = (amount: number) =>
@@ -46,13 +47,21 @@ export function Stamp({ value }: { value: string | null }) {
     </span>
   );
 }
+/** A history entry's status as glyph and word. */
 export function Badge({ label }: { label: string }) {
   return (
-    <span
-      className={`p-badge ${/verified|preview|completed/.test(label) ? "p-good" : /blocked|failed|uncertain|interrupted|Paused|reconciliation/.test(label) ? "p-warn" : ""}`}
-    >
-      {label}
-    </span>
+    <StatusGlyph
+      severity={
+        /verified|preview|completed/.test(label)
+          ? "ok"
+          : /blocked|failed|uncertain|interrupted|Paused|reconciliation/.test(
+                label,
+              )
+            ? "warning"
+            : "unknown"
+      }
+      label={label}
+    />
   );
 }
 export function LinkOut({ url, label }: { url: string | null; label: string }) {
@@ -62,10 +71,19 @@ export function LinkOut({ url, label }: { url: string | null; label: string }) {
     </a>
   ) : null;
 }
-export function HistoryItem({ entry }: { entry: PromotionHistoryEntry }) {
+export function HistoryItem({
+  entry,
+  source,
+}: {
+  entry: PromotionHistoryEntry;
+  source?: string;
+}) {
   return (
     <article className="p-history-item">
       <div className="p-flex">
+        {source !== undefined && (
+          <strong className="p-history-source">{source}</strong>
+        )}
         <Badge label={entry.status} />
         <span className="p-muted">
           {entry.timeBasis === "attempt"

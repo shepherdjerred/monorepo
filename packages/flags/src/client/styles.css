@@ -1,7 +1,7 @@
 /*
  * What Flags needs on top of @shepherdjerred/console-ui: the two-pane body,
- * the editor, the conflict banner and the review dialog. Every colour is a
- * `--ui-*` token.
+ * the editor and its Monaco hosts, the conflict banner and the review dialog.
+ * Every colour is a `--ui-*` token.
  */
 
 .fl-workspace {
@@ -28,6 +28,11 @@
 
 .fl-list {
   min-width: 0;
+}
+
+/* The previous deployment's table, kept on screen while the next one loads. */
+.fl-body[aria-busy="true"] {
+  opacity: 0.55;
 }
 
 .fl-list .ui-toolbar {
@@ -220,36 +225,110 @@ p.fl-detail {
   justify-self: start;
 }
 
-.fl-compare {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.fl-compare h3,
-.fl-compare h4 {
-  margin-bottom: 4px;
-  color: var(--ui-muted);
+.fl-conflict-legend,
+.fl-dialog-legend {
   font-size: 12px;
-  font-weight: 500;
 }
 
-.fl-compare pre {
+/* Form / JSON modes */
+.fl-mode .ui-tabs {
+  height: 30px;
+  margin-left: 0;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.fl-json {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fl-json-label {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+.fl-textarea {
+  width: 100%;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.fl-form .ui-field-control[aria-invalid="true"] {
+  border-color: var(--ui-sev-error);
+}
+
+/* Monaco hosts and their plain-text stand-in while the editor chunk loads */
+.fl-code {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+}
+
+.fl-code-editor:focus-within {
+  border-color: var(--ui-accent);
+}
+
+.fl-code-editor[data-invalid] {
+  border-color: var(--ui-sev-error);
+}
+
+.fl-code-loading {
   max-height: 16rem;
   margin: 0;
   padding: 8px 10px;
   overflow: auto;
-  border: 1px solid var(--ui-line);
-  border-radius: 6px;
-  background: var(--ui-panel);
-  font: 12px/1.45 var(--ui-font-mono);
+  color: var(--ui-muted);
+  font: 12.5px/19px var(--ui-font-mono);
   letter-spacing: 0;
-  white-space: pre;
+  white-space: pre-wrap;
+}
+
+/* The draft's issues, one per path; an empty list takes no room. */
+.fl-issues {
+  display: grid;
+  gap: 4px;
+  padding: 0;
+  list-style: none;
+  color: var(--ui-sev-error-text);
+  font-size: 12px;
+}
+
+.fl-issues:empty {
+  height: 0;
+  margin-top: -14px;
+}
+
+.fl-issues li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fl-issues code {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--ui-sev-error-soft);
+  font-size: 11.5px;
+}
+
+.fl-notice {
+  padding: 8px 10px;
+  border: 1px solid var(--ui-sev-info);
+  border-radius: 8px;
+  background: var(--ui-sev-info-soft);
+  color: var(--ui-sev-info-text);
+  font-size: 12.5px;
 }
 
 /* Review dialog */
 .fl-dialog {
-  width: min(44rem, calc(100vw - 2rem));
+  width: min(64rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   margin: auto;
   padding: 16px 18px;
@@ -265,7 +344,13 @@ p.fl-detail {
   gap: 12px;
 }
 
+.fl-dialog:modal {
+  overscroll-behavior: contain;
+}
+
 .fl-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: color-mix(in srgb, var(--ui-ink) 35%, transparent);
 }
 
@@ -307,9 +392,6 @@ p.fl-detail {
   }
   .fl-back {
     display: inline-flex;
-  }
-  .fl-compare {
-    grid-template-columns: minmax(0, 1fr);
   }
   .fl-list input[type="search"] {
     width: 100%;

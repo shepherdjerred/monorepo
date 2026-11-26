@@ -1,12 +1,19 @@
-import { condition, defineSignal, log, setHandler } from "@temporalio/workflow";
+import {
+  condition,
+  defineSignal,
+  log,
+  patched,
+  setHandler,
+} from "@temporalio/workflow";
 import { callServiceUnchecked, getEntityStateUnchecked } from "./util.ts";
 import {
+  HOUSEHOLD_JERRED_ONLY_PATCH,
+  householdResidents,
   PRESENCE_COOLDOWN_SECONDS,
   shouldLock,
 } from "#shared/infra/presence.ts";
 
 const FRONT_DOOR_LOCK = "lock.front_door" as const;
-const PERSONS = ["person.jerred", "person.shuxin"] as const;
 
 /**
  * Sent by the trigger handler on every `person.*` home/away transition. Each
@@ -58,7 +65,9 @@ export async function reconcileLock(): Promise<void> {
 
     // Settled — decide from live state, not from the triggering edge.
     const states = await Promise.all(
-      PERSONS.map((person) => getEntityStateUnchecked(person)),
+      householdResidents(patched(HOUSEHOLD_JERRED_ONLY_PATCH)).map((person) =>
+        getEntityStateUnchecked(person),
+      ),
     );
     const desiredLocked = shouldLock(states.map((state) => state.state));
 

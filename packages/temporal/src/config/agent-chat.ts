@@ -1,11 +1,14 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
-import { z } from "zod/v4";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import type { AgentChatProvider } from "#shared/agent/agent-chat.ts";
 
 const DEFINITION = {
   discordClaudeDefaultModel: {
-    schema: z.string().min(1).max(200),
+    schema: flagValueSchema("temporal-agent-chat-discord-claude-default-model"),
     sources: ["flag", "default"],
     default: "claude-opus-5-5",
     names: {
@@ -13,7 +16,7 @@ const DEFINITION = {
     },
   },
   discordCodexDefaultModel: {
-    schema: z.string().min(1).max(200),
+    schema: flagValueSchema("temporal-agent-chat-discord-codex-default-model"),
     sources: ["flag", "default"],
     default: "gpt-6-luna",
     names: {
@@ -28,8 +31,12 @@ const resolver = defineConfig({
     flag: createFlagConfigSource({
       targetingKey: "temporal-agent-chat-discord",
       kinds: {
-        discordClaudeDefaultModel: "string",
-        discordCodexDefaultModel: "string",
+        discordClaudeDefaultModel: flagValueKind(
+          "temporal-agent-chat-discord-claude-default-model",
+        ),
+        discordCodexDefaultModel: flagValueKind(
+          "temporal-agent-chat-discord-codex-default-model",
+        ),
       },
     }),
   },
