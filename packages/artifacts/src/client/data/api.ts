@@ -13,9 +13,7 @@ export const queryClient = new QueryClient({
 
 type Output = inferRouterOutputs<AppRouter>;
 export type InboxBoard = Output["inbox"]["list"]["boards"][number];
-export type BoardData = Output["boards"]["get"];
 export type ArtifactDetail = Output["artifacts"]["get"];
-export type Thread = Output["threads"]["list"][number];
 
 export const keys = {
   inbox: ["inbox"] as const,

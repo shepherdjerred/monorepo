@@ -1,14 +1,21 @@
 /**
- * Deterministic fixture artifacts, generated into a directory at run time so
- * no binary is ever committed: HTML (two versions, plus a multi-file site), a
- * PNG, a three-page PDF, MP4 and WebM clips, Markdown, an asciicast, a
- * Mermaid source and an opaque binary.
+ * Deterministic fixture artifacts, generated into a directory at run time:
+ * HTML (two versions, plus a multi-file site), a PNG, a three-page PDF,
+ * Markdown, an asciicast, a Mermaid source and an opaque binary. The MP4 and
+ * WebM clips are the one exception: they are checked in under `e2e/media`
+ * (a two-second 320x240 test pattern, about 59 KB) because the Playwright CI
+ * image has no ffmpeg to encode them.
  */
 import { deflateSync } from "node:zlib";
 import path from "node:path";
-import { mkdir, mkdtemp } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import type { ArtifactKind, Viewport } from "#shared/contract.ts";
+
+const CLIPS = {
+  mp4: path.join(import.meta.dir, "media/clip.mp4"),
+  webm: path.join(import.meta.dir, "media/clip.webm"),
+} as const;
 
 export type FixtureFile = {
   /** The path inside the artifact. */
@@ -162,39 +169,6 @@ export function pdfBytes(
   return new TextEncoder().encode(out);
 }
 
-async function ffmpegClip(
-  target: string,
-  codec: readonly string[],
-): Promise<void> {
-  const executable = Bun.which("ffmpeg");
-  if (executable === null)
-    throw new Error("ffmpeg is required to generate the video fixtures");
-  const encoder = Bun.spawn(
-    [
-      executable,
-      "-y",
-      "-hide_banner",
-      "-loglevel",
-      "error",
-      "-f",
-      "lavfi",
-      "-i",
-      "testsrc=duration=2:size=320x240:rate=15",
-      ...codec,
-      "-map_metadata",
-      "-1",
-      "-fflags",
-      "+bitexact",
-      target,
-    ],
-    { stdout: "ignore", stderr: "pipe" },
-  );
-  if ((await encoder.exited) !== 0)
-    throw new Error(
-      `ffmpeg failed: ${await new Response(encoder.stderr).text()}`,
-    );
-}
-
 // ── Text generators ─────────────────────────────────────────────────────────
 
 const htmlPage = (title: string, body: string, head = ""): string =>
@@ -319,15 +293,8 @@ export async function generateFixtures(dir?: string): Promise<Fixtures> {
   );
   await mkdir(at("video"), { recursive: true });
   await Promise.all([
-    ffmpegClip(at("video/clip.mp4"), [
-      "-c:v",
-      "libx264",
-      "-pix_fmt",
-      "yuv420p",
-      "-movflags",
-      "+faststart",
-    ]),
-    ffmpegClip(at("video/clip.webm"), ["-c:v", "libvpx", "-b:v", "200k"]),
+    copyFile(CLIPS.mp4, at("video/clip.mp4")),
+    copyFile(CLIPS.webm, at("video/clip.webm")),
   ]);
   const mp4: FixtureFile = {
     path: "clip.mp4",

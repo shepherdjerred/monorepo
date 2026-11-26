@@ -27,7 +27,6 @@
     "test:e2e": "bun --no-install --bun playwright test"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "^7.10.1",
     "@prisma/client-runtime-utils": "7.10.1",

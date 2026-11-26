@@ -113,7 +113,7 @@ inventory with the activation.
 ## Review UI
 
 `src/client` is a React 19 / Vite single-page app on the console look
-(`@shepherdjerred/console-ui`, TanStack Query, `@base-ui/react`, tRPC over
+(`@shepherdjerred/console-ui`, TanStack Query, tRPC over
 `/trpc`). `vite build` writes `dist/client`, which the app host serves.
 
 | Route               | Shows                                                                           |

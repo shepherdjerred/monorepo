@@ -194,7 +194,6 @@
       "name": "@shepherdjerred/artifacts",
       "version": "0.1.0",
       "dependencies": {
-        "@base-ui/react": "^1.6.0",
         "@prisma/adapter-pg": "7.10.1",
         "@prisma/client": "^7.10.1",
         "@prisma/client-runtime-utils": "7.10.1",

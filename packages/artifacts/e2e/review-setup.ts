@@ -5,7 +5,7 @@ import { seedBoard, type SeededBoards } from "./seed.ts";
 
 let fixtures: Promise<Fixtures> | undefined;
 
-/** Fixtures are generated once per process; ffmpeg makes them slow. */
+/** Fixtures are generated once per process. */
 export function sharedFixtures(): Promise<Fixtures> {
   fixtures ??= generateFixtures();
   return fixtures;
