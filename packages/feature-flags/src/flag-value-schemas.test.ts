@@ -121,6 +121,16 @@ describe("flagValueSchemas", () => {
     }
   });
 
+  test("accepts empty values that mean none for allowlists and admins", () => {
+    expect(validateVariantValue("explore-guild-allowlist", "")).toEqual({
+      ok: true,
+    });
+    expect(validateVariantValue("karma-admin-user-id", "")).toEqual({
+      ok: true,
+    });
+    expect(validateVariantValue("karma-admin-user-id", "abc").ok).toBe(false);
+  });
+
   test("encodes canonically", () => {
     expect(encodeVariantValue("delivery-lease-seconds", 900)).toBe("900");
     expect(encodeVariantValue("birmel-llm-decisions-threshold", 0.25)).toBe(

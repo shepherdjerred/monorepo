@@ -166,8 +166,15 @@ export const flagValueSchemas = {
   "birmel-responder-transcript-window-ms": variantNumber(PositiveIntSchema),
 
   // scout (`scout-for-lol/packages/backend/src/config/dynamic.ts`)
+  /** Empty denies every guild deliberately. */
   "explore-guild-allowlist": variantString(
-    commaListSchema(String.raw`\d{1,25}`, "Expected comma-separated guild ids"),
+    z.union([
+      z.literal(""),
+      commaListSchema(
+        String.raw`\d{1,25}`,
+        "Expected comma-separated guild ids, or empty to deny every guild",
+      ),
+    ]),
   ),
   "llm-daily-token-budget": variantNumber(PositiveIntSchema),
   "llm-hourly-token-budget": variantNumber(PositiveIntSchema),
@@ -187,7 +194,10 @@ export const flagValueSchemas = {
   ),
 
   // starlight-karma-bot (`starlight-karma-bot/src/config.ts`)
-  "karma-admin-user-id": variantString(SnowflakeSchema),
+  /** Empty means no admin is configured. */
+  "karma-admin-user-id": variantString(
+    z.union([z.literal(""), SnowflakeSchema]),
+  ),
   "karma-emoji": variantString(
     z.string().regex(/^\S+$/u, "Expected one emoji or emoji id"),
   ),
