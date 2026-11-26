@@ -1,11 +1,9 @@
-// TODO(incidents-integration): import from "@shepherdjerred/incidents/contract"
-// once the package declares that export.
 import {
   IncidentSignalBatchSchema,
   type IncidentLinkInput,
   type IncidentSignalBatch,
   type IncidentSuspect,
-} from "@shepherdjerred/incidents/src/shared/contract.ts";
+} from "@shepherdjerred/incidents/contract";
 import type {
   BranchStatus,
   WoodpeckerPipelineDetail,
