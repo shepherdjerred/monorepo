@@ -2651,7 +2651,15 @@ stored per UTC day.
   depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket
   once, lists ranked solo, ranked flex and normal draft matches from the last
   28 days, and stores unseen Summoner's Rift games. A deterministic 20% of
-  matches also get a timeline, reduced to item and skill events.
+  matches also get a timeline, reduced to item and skill events plus each
+  participant's gold, XP and minions (`minionsKilled + jungleMinionsKilled`) at
+  10 and 15 minutes. A checkpoint at T is the first frame stamped at or after T
+  and before T + 60 seconds (Riot stamps the frame for 10:00 at about 600249
+  ms), and there is none when no frame falls in that window: a game that ended
+  first, or a missing frame, has no row and no neighbouring frame stands in.
+  This differs from today's `fetchTimelineFramesAtTime`, which takes the latest
+  frame at or before T. A segment written before the crawl kept checkpoints has
+  none, and lane data cannot be backfilled from raw segments.
 - **Riot client.** `crawl-riot-client.ts` is a dedicated `RiotClient` with no
   retries and no payload capture; every call is the `crawl` priority class, so
   the budget ledger stops it at a quarter of each window. A 429 ends the tick.
@@ -2670,12 +2678,16 @@ stored per UTC day.
   renamed into place, so the folding pod never reads half a segment). The lake
   fold (`src/report-lake/crawl/`) turns the inbox into sibling Parquet tables
   in the same build and `CURRENT`: `matches_crawl/`, `match_teams_crawl/`,
-  `match_team_bans_crawl/`, `timeline_events_crawl/` and
-  `timeline_event_participants_crawl/`, each partitioned by `ingest_day`. The
+  `match_team_bans_crawl/`, `timeline_events_crawl/`,
+  `timeline_event_participants_crawl/` and `timeline_checkpoints_crawl/`, each
+  partitioned by `ingest_day`. The
   participant, team and ban tables carry every tracked column plus the crawl's
   own (`ingest_day`, `crawled_at`, `crawl_depth`, `bracket_tier`,
-  `bracket_division`); the timeline tables hold only item and skill events,
-  and there is no `timeline_coverage` for a reduced timeline. The tables have
+  `bracket_division`); the timeline event tables hold only item and skill
+  events, `timeline_checkpoints_crawl` one row per participant per checkpoint
+  (`match_id`, `checkpoint_ms`, `frame_timestamp_ms`, `participant_id`, `puuid`,
+  `total_gold`, `xp`, `minions`), and there is no `timeline_coverage` for a
+  reduced timeline. The tables have
   their own `crawlSchemaFingerprint`, recorded with the folded segment ledger
   in each build's `crawl-manifest.json`; the tracked lake fingerprint never
   covers them, so a crawl column change costs no tracked migration.

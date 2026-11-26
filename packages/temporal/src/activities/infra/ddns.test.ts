@@ -339,6 +339,87 @@ describe("DDNS IPv6 fallback and failure safety", () => {
     });
   });
 
+  test("returns ipv6: null on ECONNREFUSED and ETIMEDOUT for IPv6 while IPv4 ECONNREFUSED still fails loudly", async () => {
+    const cf = createFakeCloudflare([
+      {
+        id: "rec-ddns-v4",
+        type: "A",
+        name: "ddns.sjer.red",
+        content: "203.0.113.42",
+        proxied: false,
+        ttl: 300,
+      },
+      {
+        id: "rec-existing-aaaa",
+        type: "AAAA",
+        name: "ddns.sjer.red",
+        content: "2001:db8::abcd",
+        proxied: false,
+        ttl: 300,
+      },
+      {
+        id: "rec-ipv4-only",
+        type: "A",
+        name: "ipv4.ddns.sjer.red",
+        content: "203.0.113.42",
+        proxied: false,
+        ttl: 300,
+      },
+    ]);
+
+    const refusedResult = await reconcileDdnsWithDependencies({
+      readToken: () => Promise.resolve("cf-secret-token-123"),
+      traceTransport: (family) =>
+        family === 6
+          ? Promise.reject(
+              Object.assign(
+                new Error("connect ECONNREFUSED 2606:4700:4700::1111:443"),
+                { code: "ECONNREFUSED" },
+              ),
+            )
+          : Promise.resolve("ip=203.0.113.42\n"),
+      cloudflareFetch: cf.fetchImpl,
+      now: () => new Date("2026-11-26T02:10:00.000Z"),
+    });
+
+    expect(refusedResult.ipv4).toBe("203.0.113.42");
+    expect(refusedResult.ipv6).toBeNull();
+    expect(cf.records.get("rec-existing-aaaa")?.content).toBe("2001:db8::abcd");
+    expect(cf.mutations).toEqual([]);
+
+    const timeoutResult = await reconcileDdnsWithDependencies({
+      readToken: () => Promise.resolve("cf-secret-token-123"),
+      traceTransport: (family) =>
+        family === 6
+          ? Promise.reject(new Error("Cloudflare IPv6 trace timed out"))
+          : Promise.resolve("ip=203.0.113.42\n"),
+      cloudflareFetch: cf.fetchImpl,
+      now: () => new Date("2026-11-26T02:15:00.000Z"),
+    });
+    expect(timeoutResult.ipv6).toBeNull();
+
+    await expect(
+      reconcileDdnsWithDependencies({
+        readToken: () => Promise.resolve("cf-secret-token-123"),
+        traceTransport: () =>
+          Promise.reject(
+            Object.assign(new Error("connect ECONNREFUSED 1.1.1.1:443"), {
+              code: "ECONNREFUSED",
+            }),
+          ),
+        cloudflareFetch: cf.fetchImpl,
+        now: () => new Date("2026-11-26T02:20:00.000Z"),
+      }),
+    ).rejects.toThrow("connect ECONNREFUSED 1.1.1.1:443");
+  });
+});
+
+describe("DDNS failure safety", () => {
+  beforeEach(() => {
+    temporalDdnsLastSuccessTimestampSeconds.reset();
+    temporalDdnsUpdatesTotal.reset();
+  });
+
   test("rejects malformed trace IP values and redacts token on Cloudflare API errors", async () => {
     expect(() => parseCloudflareTraceIp("ip=not-an-ip\n", 4)).toThrow(
       "expected IPv4",

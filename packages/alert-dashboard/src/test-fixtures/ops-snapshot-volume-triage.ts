@@ -92,9 +92,9 @@ const ALERTS: readonly AlertRow[] = [
     hours: 110,
   },
   {
-    alertname: "GitckupRepoSuccessLow",
-    namespace: "gickup",
-    summary: "Gickup backed up 91% of repositories",
+    alertname: "GitBackupRepoFailed",
+    namespace: "temporal",
+    summary: "Git backup failed for 2 repositories",
     hours: 126,
   },
   {

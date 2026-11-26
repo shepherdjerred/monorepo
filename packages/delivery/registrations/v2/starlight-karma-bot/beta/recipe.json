@@ -1,5 +1,5 @@
 {
-  "id": "starlight-karma-bot/beta/2",
+  "id": "starlight-karma-bot/beta/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "starlight-karma-bot-beta"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "starlight-karma-bot-beta"
       },
       "syncOptions": ["CreateNamespace=true"],

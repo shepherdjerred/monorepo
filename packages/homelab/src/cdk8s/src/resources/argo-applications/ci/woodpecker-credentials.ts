@@ -103,9 +103,10 @@ const CI_CREDENTIAL_ITEMS = [
 export const CI_NPM_CREDENTIALS_ITEM = ciCredentialItem("ci-npm-credentials");
 
 /**
- * The Gradle build cache node renders its users from the same item CI's
- * per-step grants read (fields GRADLE_BUILD_CACHE_READ_PASSWORD and
- * GRADLE_BUILD_CACHE_WRITE_PASSWORD), so a rotation changes both sides.
+ * First-party `ci-cache` reads its Gradle and sccache WebDAV Basic Auth
+ * passwords from the same item CI's per-step grants read (fields
+ * GRADLE_BUILD_CACHE_READ_PASSWORD and GRADLE_BUILD_CACHE_WRITE_PASSWORD), so a
+ * rotation changes both sides.
  */
 export const CI_GRADLE_BUILD_CACHE_ITEM = ciCredentialItem(
   "ci-gradle-build-cache-credentials",

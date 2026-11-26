@@ -1,5 +1,9 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod";
 import { PrincipalSchema } from "#shared/contract.ts";
 
@@ -99,18 +103,6 @@ export const BootstrapSchema = z
           "Forum archive reader credentials must be provisioned together",
       });
   });
-const StringListSchema = z.string().transform((value, context) => {
-  try {
-    const raw: unknown = JSON.parse(value);
-    return z.array(z.string().min(1)).parse(raw);
-  } catch {
-    context.addIssue({
-      code: "custom",
-      message: "Expected a JSON array of nonempty strings",
-    });
-    return z.NEVER;
-  }
-});
 export function behaviorConfig(stage: string) {
   return defineConfig({
     definition: {
@@ -121,33 +113,33 @@ export function behaviorConfig(stage: string) {
         names: { flag: "delivery-writes-enabled" },
       },
       enabledEnvironments: {
-        schema: StringListSchema,
+        schema: flagValueSchema("delivery-enabled-environments"),
         sources: ["flag", "default"],
         default: "[]",
         names: { flag: "delivery-enabled-environments" },
       },
       operatorLogins: {
-        schema: StringListSchema,
+        schema: flagValueSchema("delivery-operator-logins"),
         sources: ["flag", "default"],
         default: "[]",
         names: { flag: "delivery-operator-logins" },
       },
       enrichmentSources: {
-        schema: StringListSchema,
+        schema: flagValueSchema("delivery-enrichment-sources"),
         sources: ["flag", "default"],
         default: "[]",
         names: { flag: "delivery-enrichment-sources" },
       },
       /** Simultaneously owned deployments across the executor (model D10). */
       executorConcurrency: {
-        schema: z.number().int().min(1).max(64),
+        schema: flagValueSchema("delivery-executor-concurrency"),
         sources: ["flag", "default"],
         default: 4,
         names: { flag: "delivery-executor-concurrency" },
       },
       /** How long an owned deployment stays provably owned without renewal (model D7). */
       leaseSeconds: {
-        schema: z.number().int().min(60).max(7200),
+        schema: flagValueSchema("delivery-lease-seconds"),
         sources: ["flag", "default"],
         default: 900,
         names: { flag: "delivery-lease-seconds" },
@@ -160,11 +152,11 @@ export function behaviorConfig(stage: string) {
         requireFreshSnapshot: true,
         kinds: {
           writesEnabled: "boolean",
-          enabledEnvironments: "string",
-          operatorLogins: "string",
-          enrichmentSources: "string",
-          executorConcurrency: "number",
-          leaseSeconds: "number",
+          enabledEnvironments: flagValueKind("delivery-enabled-environments"),
+          operatorLogins: flagValueKind("delivery-operator-logins"),
+          enrichmentSources: flagValueKind("delivery-enrichment-sources"),
+          executorConcurrency: flagValueKind("delivery-executor-concurrency"),
+          leaseSeconds: flagValueKind("delivery-lease-seconds"),
         },
       }),
     },

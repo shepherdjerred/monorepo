@@ -274,6 +274,7 @@ describe("the v2 catalog's ci service", () => {
     expect(holders(graph, "DOCKERHUB_PUBLISH_TOKEN")).toEqual([
       "ci-base-refresh",
       "ci-playwright-refresh",
+      "helm-push",
       "images",
     ]);
     expect(holders(graph, "DOCKERHUB_READ_CONFIG_JSON")).toEqual([

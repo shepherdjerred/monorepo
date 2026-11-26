@@ -81,6 +81,10 @@ function centralLabels(
     .parse(raw).spec.template.metadata.labels;
 }
 
+function ordinaryDeliveryApp(chartId: string): string {
+  return chartId === "charts-bootstrap" ? "charts" : chartId;
+}
+
 function bindResource(resource: ApiObject, catalog: ServiceIndex) {
   const chart = Chart.of(resource);
   const central = chart.node.id === "temporal";
@@ -88,7 +92,8 @@ function bindResource(resource: ApiObject, catalog: ServiceIndex) {
   if (
     !central &&
     !controlPlane &&
-    ORDINARY_DELIVERY_ENVIRONMENTS[chart.node.id] === undefined
+    ORDINARY_DELIVERY_ENVIRONMENTS[ordinaryDeliveryApp(chart.node.id)] ===
+      undefined
   )
     return;
   const podPath = POD_PATHS[resource.kind];
@@ -141,7 +146,8 @@ function bindRecipes(
     if (image === undefined) return;
     const chart = Chart.of(resource).node.id;
     const runtime =
-      (ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined &&
+      (ORDINARY_DELIVERY_ENVIRONMENTS[ordinaryDeliveryApp(chart)] !==
+        undefined &&
         catalog.byChart(chart)?.images.includes(image) === true) ||
       (chart === "temporal" && image === "temporal-worker");
     const field = runtime ? "images" : "dependencies";

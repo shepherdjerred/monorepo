@@ -36,8 +36,9 @@ cd packages/the-storm/plugin
 mise exec -- gradle check                  # everything, including PMD and JaCoCo
 mise exec -- gradle spotlessApply          # format
 mise exec -- gradle :dist:runServer        # local Paper 26.3 with the plugin
+mise exec -- gradle fetchRwfNavs           # fetch the baked nav.rwfnav files nav-manifest.json names
 mise exec -- gradle bakeRwfMaps            # (re)bake rwf/maps/*/nav.rwfnav for the bots
-mise exec -- gradle verifyRwfMaps          # fail if a committed nav.rwfnav is stale (part of check)
+mise exec -- gradle verifyRwfMaps          # fail if a shipped nav.rwfnav is stale (part of check)
 mise exec -- gradle resolveAndLockAll --write-locks   # after changing dependencies
 mise exec -- gradle --write-verification-metadata sha256 build
 ```
@@ -1749,6 +1750,8 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   generated 64x16x64 sample; its generator lives in the module's test sources.
 - `rwf/maps/<id>/nav.rwfnav` and `nav.summary.json`: the map's baked navigation
   data for the bots, produced offline by the `rwfmap` tool (see Maps below).
+  The summary is committed. The `nav.rwfnav` is not: `rwf/nav-manifest.json`
+  names it by sha256 and it is fetched (see Navigation meshes below).
 - `rwf/maps/<id>/details.json`: required inventories and literal sign text,
   bound to the terrain hash. Empty maps declare empty lists explicitly.
 - `rwf/lobby/lobby.yml` and `blocks.schem`: the lobby every player and bot
@@ -1806,9 +1809,11 @@ fails the bake and must be added to the table, never guessed), bakes the nav
 graph, regions, cover, chokepoints and routes with `rwfbots`' `MapBaker`, and
 writes `nav.rwfnav` plus a `nav.summary.json` of counts for diff review. The
 artifact carries the schematic's `blocksSha256`, so `rwfbots` refuses it when
-the world's blocks change. Commit metadata, terrain, details and navigation together.
+the world's blocks change. Every bake ends by recording the new files in
+`rwf/nav-manifest.json`. Publish them, then commit metadata, terrain, details,
+summary and manifest together (see Navigation meshes below).
 `mise exec -- gradle verifyRwfMaps` re-bakes every map in memory and fails
-if a committed `nav.rwfnav` or summary differs
+if a shipped `nav.rwfnav` or summary differs
 byte for byte; the bake is deterministic, so a diff means the map, the block
 table or the baker changed and the artifacts must be rebaked. A bake that
 `NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
@@ -2076,7 +2081,9 @@ bombs. `verifyRwfLobby` (run by `verifyRwfMaps`, so by `check`) fails when the
 hash disagrees, a stand is not standable, a kit in `KitBook.ALL` has no alcove
 (or the alcoves show any other kit), the rotation wall does not have one slot
 per weekly free kit, a team colour has no side, any place cannot be reached from the spawn, or the nav files are
-not what a fresh bake produces. Rebake and commit the four files together. The
+not what a fresh bake produces. Rebake, publish the mesh, and commit
+`lobby.yml`, `blocks.schem`, `nav.summary.json` and `rwf/nav-manifest.json`
+together. The
 MockBukkit suites paste a small test lobby
 (`modules/rwf/src/test/resources/fixtures/lobby`), because MockBukkit cannot
 make block data for the build's walls, panes and lanterns.
@@ -2101,6 +2108,67 @@ matches, re-pasting whatever differs), `/rwf admin loadtest <n>` (only when
 through the shared crash-safe snapshot machinery and restores them on leave,
 death, disconnect or the next login. A player may join again straight after a
 match; see the arena section for how the restore is confirmed.
+
+### Navigation meshes
+
+The baked `nav.rwfnav` files are not in Git. They are deterministic build
+output, 386 MB across the lobby and 44 maps, so Git tracks
+`server/owned/plugins/TheStorm/rwf/nav-manifest.json` instead: one entry per
+file with its path below `rwf/`, its `sha256` and its `bytes`. Each file is
+stored once in the `public-sjer-red` bucket and served at
+`<baseUrl>/<sha256>.rwfnav`
+(`https://public.sjer.red/the-storm/nav/sha256/<sha256>.rwfnav`). The object
+keeps the `.rwfnav` suffix because the public site redirects any path without
+a dot to a directory and never serves it. The wiki page
+`packages/docs/wiki/src/content/docs/explanation/large-assets-outside-git.md`
+explains the rule and why Git LFS was not chosen.
+
+Fetching is automatic wherever the files are read:
+
+| Consumer                                                                 | How the meshes arrive                                                                      |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `:rwfmap:test`, `:rwfbots:test`, `simulationTest`, `verifyRwfMaps`       | depend on `:rwfmap:fetchRwfNavs`                                                           |
+| `:dist:runServer`                                                        | `prepareRunServerContent` depends on `:rwfmap:fetchRwfNavs`                                |
+| Server image (`server/Dockerfile`)                                       | the `fetch` stage runs `server/fetch.sh nav`; the `smoke` stage checks every mesh          |
+| `tests/e2e` harness, `tools/maps`, `tools/learning`, `storm-dev` sandbox | check the checkout against the manifest and run the fetch when a mesh is absent or differs |
+
+```bash
+bun run maps:fetch-nav      # mise exec -- gradle -p plugin :rwfmap:fetchRwfNavs
+```
+
+`rwfmap fetch` leaves a file alone when it already holds the manifest's bytes.
+Otherwise it replaces it from `~/.cache/the-storm/nav/sha256/`, one cache for
+every checkout, downloading into it first when the object is not there. The
+cache follows `XDG_CACHE_HOME` when that is set, which is how CI keeps it on
+its persistent tool-cache volume; `THE_STORM_NAV_CACHE` names a directory
+outright. The copy into the
+checkout shares the cache's disk blocks on APFS, Btrfs and XFS. A stale mesh
+left by another branch is replaced the same way.
+
+Every byte is checked against the manifest's sha256 and size. Nothing falls
+back: an object the bucket does not serve, one whose bytes differ, or a cache
+entry that does not hold its own name's bytes fails the fetch and names the
+file. In CI that fails the Gradle test step, and in the image build it fails
+the `fetch` stage.
+
+After changing a map's or the lobby's terrain or metadata:
+
+1. Bake: `mise exec -- gradle bakeRwfMaps` (or one `bakeRwfMap<Id>`, or
+   `bakeRwfLobby`). Each bake then records the sha256 and size of the one
+   mesh it wrote in `nav-manifest.json` (`writeRwfNavManifest<Id>`), and no
+   other entry: a stale `nav.rwfnav` left by another branch is replaced by the
+   next fetch, never promoted into the manifest.
+2. Publish: `bun run maps:publish-nav`. It uploads each new mesh under its
+   sha256 with the `seaweedfs` AWS profile, then downloads every mesh the
+   manifest names from the public URL and compares its bytes. Objects are
+   immutable; a key that already holds other bytes stops the run.
+3. Commit `nav-manifest.json` with the map's other files, only after the
+   publish passed. `ShippedMapsTest` fails when a mesh on disk is not the one
+   the manifest names, and a manifest whose objects were never published fails
+   the fetch on the first machine that does not already have the files.
+
+`bun run maps:connect --install` records the meshes it installs the same way;
+publish before committing.
 
 ### Match experience
 

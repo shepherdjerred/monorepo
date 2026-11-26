@@ -199,12 +199,6 @@
   },
   {
     "namespace": "woodpecker-ci",
-    "name": "woodpecker-sccache",
-    "backup": "disabled",
-    "reason": "Disposable Rust compiler object cache - rebuilt by compiling"
-  },
-  {
-    "namespace": "woodpecker-ci",
     "name": "woodpecker-go-cache",
     "backup": "disabled",
     "reason": "Disposable Go module and build caches - re-downloadable, verified by go.sum"
@@ -258,12 +252,6 @@
     "reason": "Rebuildable vulnerability database cache"
   },
   {
-    "namespace": "chartmuseum",
-    "name": "chartmuseum",
-    "backup": "enabled",
-    "reason": "Published chart bytes embed frozen image digests and Delivery selection state, so they are not reproducible from Git; Delivery set revisions and accepted selections reference them by digest (PC1)"
-  },
-  {
     "namespace": "freshrss",
     "name": "freshrss-data",
     "backup": "enabled",
@@ -274,12 +262,6 @@
     "name": "freshrss-extensions",
     "backup": "enabled",
     "reason": "FreshRSS extension state"
-  },
-  {
-    "namespace": "gickup",
-    "name": "gickup-backup-pvc",
-    "backup": "disabled",
-    "reason": "Replicated Git repository data"
   },
   {
     "namespace": "golink",
@@ -604,18 +586,6 @@
     "name": "pgdata-tracker-postgresql-0",
     "backup": "enabled",
     "reason": "Tracker PostgreSQL database"
-  },
-  {
-    "namespace": "turbo-cache",
-    "name": "turbo-cache-liskov",
-    "backup": "disabled",
-    "reason": "Rebuildable Turbo cache"
-  },
-  {
-    "namespace": "gradle-build-cache",
-    "name": "gradle-build-cache-liskov",
-    "backup": "disabled",
-    "reason": "Rebuildable Gradle build cache"
   },
   {
     "namespace": "flags",

@@ -43,7 +43,9 @@ state cancels a pending hold and preserves an active incident.
 | `not_home` or a named zone | away                                              | away             |
 | `unknown` or `unavailable` | home                                              | away             |
 
-`reconcile-lock` and `reconcile-climate` are singletons. Every presence
+The household resident is `person.jerred`. Presence routines do not read any other person.
+
+`reconcile-lock` and `reconcile-climate` are singletons. Every resident presence
 transition does a `signalWithStart` on each fixed workflow ID, and each signal
 restarts that workflow's quiet window. Neither `welcome-home` nor
 `leaving-home` touches the lock or the heat.
@@ -68,14 +70,14 @@ has no weather integration.
 bath, and the bathroom floor stay on their own routines. Source:
 [`climate-policy.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ha/climate-policy.ts).
 
-| Clock, someone home | Bedroom    | Living room |
-| ------------------- | ---------- | ----------- |
-| 00:00–08:00         | 18 °C heat | heat off    |
-| 08:00–24:00         | 21 °C heat | 21 °C heat  |
+| Clock, Jerred home | Bedroom    | Living room |
+| ------------------ | ---------- | ----------- |
+| 00:00–08:00        | 18 °C heat | heat off    |
+| 08:00–24:00        | 21 °C heat | 21 °C heat  |
 
 | Condition                     | Both rooms      |
 | ----------------------------- | --------------- |
-| Everyone confirmed away       | heat off        |
+| Jerred confirmed away         | heat off        |
 | Mode is `cool`                | left as-is      |
 | Already at the phase setpoint | no service call |
 

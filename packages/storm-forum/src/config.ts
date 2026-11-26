@@ -3,7 +3,10 @@ import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { z } from "zod";
 import manifest from "#config/forum.json";
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
-import { SeasonChoiceSchema } from "@shepherdjerred/storm-theme";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 
 const NodeSchema = z
   .object({
@@ -180,7 +183,7 @@ export function createForumConfig(flagSource?: ConfigSource) {
         names: { flag: "storm-forum-registration-enabled" },
       },
       season: {
-        schema: SeasonChoiceSchema,
+        schema: flagValueSchema("storm-forum-season"),
         sources: ["flag", "default"],
         default: "auto",
         names: { flag: "storm-forum-season" },
@@ -202,7 +205,7 @@ export function forumFlagOptions(stage: Stage) {
     attributes: { stage },
     kinds: {
       registrationEnabled: "boolean",
-      season: "string",
+      season: flagValueKind("storm-forum-season"),
       calendarEnabled: "boolean",
     } as const,
   };

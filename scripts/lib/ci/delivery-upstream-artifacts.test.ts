@@ -247,7 +247,8 @@ async function chartTransport(name: string, version: string, mirror: boolean) {
     if (location === archive) return new Response(bytes);
     if (
       mirror &&
-      location === `https://chartmuseum.sjer.red/charts/${name}-${version}.tgz`
+      location ===
+        `https://charts.tailnet-1a49.ts.net/charts/${name}-${version}.tgz`
     )
       return new Response(bytes);
     throw new Error(`Unexpected request ${location}`);
@@ -293,7 +294,7 @@ test.each([
       component: `chart:${name}`,
       kind: "chart",
       uri: mirrored
-        ? `https://chartmuseum.sjer.red/charts/${name}-1.2.3.tgz`
+        ? `https://charts.tailnet-1a49.ts.net/charts/${name}-1.2.3.tgz`
         : fixture.archive,
       digest: fixture.digest,
       version: "1.2.3",
@@ -306,7 +307,7 @@ test.each([
       },
     });
     expect(
-      fixture.urls.some((url) => url.includes("chartmuseum.sjer.red")),
+      fixture.urls.some((url) => url.includes("charts.tailnet-1a49.ts.net")),
     ).toBe(mirrored);
     expect(fixture.urls.every((url) => url.startsWith("GET "))).toBe(true);
   },

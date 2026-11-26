@@ -74,6 +74,12 @@ async function rowsByFile(
   return result;
 }
 
+async function checkpointRows(buildDir: string) {
+  return Object.values(
+    await rowsByFile(buildDir, "timeline_checkpoints_crawl"),
+  ).flat();
+}
+
 async function snapshot(buildDir: string) {
   const tables: Record<string, Record<string, Record<string, unknown>[]>> = {};
   for (const table of CRAWL_LAKE_TABLES) {
@@ -169,6 +175,30 @@ describe("eraseCrawlMatchesInBuild", () => {
     }
     // The published build it was linked from still has its own copy.
     expect(await snapshot(published)).toEqual(before);
+  });
+
+  test("removes the erased player's checkpoint rows and keeps every other player's", async () => {
+    const before = await checkpointRows(build);
+    const victim = before.filter((row) => row["match_id"] === VICTIM_MATCH);
+    // Ten participants at two checkpoints, one of them the erased player.
+    expect(victim).toHaveLength(20);
+    expect(victim.filter((row) => row["puuid"] === ERASED)).toHaveLength(2);
+    expect(before).toHaveLength(4 * 20);
+
+    await eraseCrawlMatchesInBuild({
+      buildDir: build,
+      buildId: "2",
+      erased: ERASED_SET,
+    });
+
+    const after = await checkpointRows(build);
+    expect(after).toHaveLength(3 * 20);
+    expect(after.some((row) => row["match_id"] === VICTIM_MATCH)).toBe(false);
+    expect(after.some((row) => row["puuid"] === ERASED)).toBe(false);
+    // The other players' checkpoints in other matches are untouched.
+    expect(
+      after.filter((row) => row["puuid"] === distinctCrawlPuuid("other")),
+    ).toHaveLength(2);
   });
 
   test("a second run finds nothing and changes no file", async () => {

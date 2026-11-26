@@ -80,6 +80,14 @@ with the message. A generated branch that already exists gets a `-2` suffix. A
 given `{ branch }` skips naming and runs in the dialog; that space stays
 unnamed.
 
+A worktree created on this Mac then shares its unchanged files with the main
+checkout: the worker starts `~/.local/bin/toolkit tend dedupe --worktree <path>
+--apply --no-refresh --lock-wait 15m` in the background, which replaces them
+with APFS clones and queues behind any other tend run. Nothing waits on it, and
+it is skipped on other machines and platforms and
+when toolkit is missing or does not provide the command. The run's
+`events.jsonl` line records `dedupe` as `started` or `skipped`.
+
 While a run is in progress it writes
 `~/.local/state/herdr-worktree/active/<id>.json` (the step, and the title,
 branch and path once known; no message text) and deletes it when the run

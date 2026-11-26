@@ -10,7 +10,8 @@ const version = "5.2.0";
 const repository = "https://itzg.github.io/minecraft-server-charts/";
 const upstreamArchive =
   "https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-5.2.0/minecraft-5.2.0.tgz";
-const mirrorArchive = "https://chartmuseum.sjer.red/charts/minecraft-5.2.0.tgz";
+const mirrorArchive =
+  "https://charts.tailnet-1a49.ts.net/charts/minecraft-5.2.0.tgz";
 const credentials = () => ({
   username: "fixture",
   password: "fixture-password",
@@ -95,7 +96,7 @@ async function fixture(
         : new Response(null, { status: 404 });
     }
     if (
-      location === "https://chartmuseum.sjer.red/api/charts" &&
+      location === "https://charts.tailnet-1a49.ts.net/api/charts" &&
       init?.method === "POST"
     ) {
       expect(
@@ -140,7 +141,7 @@ test.each([false, true])(
     expect(calls.at(-1)?.url).toBe(mirrorArchive);
     expect(calls.filter((call) => call.authorization !== null)).toEqual([
       {
-        url: "https://chartmuseum.sjer.red/api/charts",
+        url: "https://charts.tailnet-1a49.ts.net/api/charts",
         method: "POST",
         authorization: `Basic ${btoa("fixture:fixture-password")}`,
       },

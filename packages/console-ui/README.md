@@ -1,7 +1,8 @@
 # `@shepherdjerred/console-ui`
 
 The shared look of the ops consoles — Hub (`alert-dashboard`), Delivery
-(`delivery`), Go link (`golink`), Flags (`flags`) and Mail (`mail`) — and the
+(`delivery`), Tracker (`tracker`), Go link (`golink`), Flags (`flags`) and
+Mail (`mail`) — and the
 colour source for the ops emails.
 
 It ships a stylesheet, a set of small router-agnostic React components and one
@@ -70,6 +71,23 @@ exports the raw tokens.
 | `ThemeToggle`      | 44px icon button cycling the theme; used by `TopBar`.                                                     |
 | `createThemeStore` | Theme preference in `localStorage`, reflected as `html[data-theme]`; React hooks for both values.         |
 
+### Severity badge and command palette
+
+| Export                      | Renders                                                                                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `SeverityBadge`             | Uppercase pill tinted with the severity's soft colour: glyph plus word. `label` renames it, `size="large"` suits a page verdict, `icon` swaps the glyph (a lucide icon). |
+| `createCommandPaletteStore` | Open state kept outside React. Creating it binds ⌘K and Ctrl+K on the document (pass `null` to skip), so the shortcut needs no effect. One store per app.                |
+| `CommandPalette`            | The modal ⌘K dialog (`store`, `label`, `children`); its body mounts with each opening.                                                                                   |
+| `CommandPaletteSearch`      | Combobox over grouped options with arrow, Enter and highlight handling. The app passes `query`, `sections`, `onSelect` and an optional `status`.                         |
+| `CommandPaletteButton`      | Sidebar search icon button that opens the store.                                                                                                                         |
+| `isCommandPaletteShortcut`  | Whether a key event is ⌘K or Ctrl+K, for apps that react to the shortcut themselves.                                                                                     |
+
+The palette owns the shell: keyboard, focus, layout and styling. The app owns
+what goes in it: it builds the `sections` (each item has `id`, `label`,
+optional `detail` and a lucide `icon`) and acts on `onSelect`, which runs after
+the dialog has closed and returned focus. Hub supplies its pages, commands and
+search this way.
+
 ### Page kit
 
 Hub's page layout, for consoles whose pages should read like Hub's. The
@@ -101,8 +119,9 @@ Tables, section headings and toolbars are plain markup with classes:
 `ui-muted`, `ui-strong` and `ui-sr-only`. See `src/styles/components.css`.
 
 Severity is one of `ok`, `info`, `unknown`, `warning` or `error`. Set
-`data-sev` on an element to expose `--ui-sev` (glyph and fill colour) and
-`--ui-sev-ink` (text colour) to its descendants.
+`data-sev` on an element to expose `--ui-sev` (glyph and fill colour),
+`--ui-sev-ink` (text colour) and `--ui-sev-soft` (badge tint) to its
+descendants.
 
 ## Tokens
 
@@ -137,9 +156,10 @@ colours.
 - Every class starts with `ui-`, and every colour is a `--ui-*` token.
 - `reset.css` replaces Tailwind v4 Preflight. Its header lists the Preflight
   rules it drops.
-- Inter comes from `@fontsource-variable/inter`. Berkeley Mono is licensed: the
-  stack names it so it renders where installed, and its font files are never
-  committed to this public repository.
+- Inter comes from `@fontsource-variable/inter`. Berkeley Mono's Regular and
+  Bold WOFF2 files live in `src/styles/fonts/`; `fonts.css` declares them with
+  relative URLs, so every app's Vite build emits them as hashed `/assets/`
+  files. No app serves its own copy.
 
 ## Development
 

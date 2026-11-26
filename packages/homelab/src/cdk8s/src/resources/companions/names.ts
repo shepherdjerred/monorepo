@@ -11,7 +11,6 @@ export const COMPANION_APPLICATIONS = [
   "tailscale",
   "prometheus",
   "cloudflare-operator",
-  "chartmuseum",
   "minecraft-tsmc",
   "loki",
   "tempo",

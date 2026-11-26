@@ -164,11 +164,11 @@ export function ViewsNav({
     return null;
   }
   return (
-    <>
-      <p className="nav-heading" id="views-heading">
+    <div className="ui-nav-group">
+      <p className="ui-nav-label" id="views-heading">
         Views
       </p>
-      <ul className="view-nav" aria-labelledby="views-heading">
+      <ul className="ui-nav-list view-nav" aria-labelledby="views-heading">
         {shown.map((view, index) => (
           <li
             key={view.id}
@@ -192,7 +192,7 @@ export function ViewsNav({
           >
             <Link
               to={viewUrl(view, { teamKey, me })}
-              className={active(view) ? "active" : ""}
+              className="ui-nav-item"
               aria-current={active(view) ? "page" : undefined}
               data-view={view.id}
               draggable={writable && settled}
@@ -232,7 +232,7 @@ export function ViewsNav({
               }}
             >
               <ViewIcon name={view.icon} />
-              <span>{view.name}</span>
+              <span className="ui-nav-text">{view.name}</span>
               {view.teamKey === null && (
                 <span className="view-scope" title="Shown in every team">
                   <span className="sr-only">, all teams</span>
@@ -315,6 +315,6 @@ export function ViewsNav({
           </button>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }

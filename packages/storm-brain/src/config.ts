@@ -1,5 +1,6 @@
 import { defineConfig } from "@shepherdjerred/config";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
+import { flagValueSchema } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { requireNativeRoute } from "@shepherdjerred/llm-models";
 import { z } from "zod";
 
@@ -10,19 +11,19 @@ const DEFAULT_LLM_TIMEOUT_MS = 60_000;
 
 const ModelConfigDefinition = {
   conversationModel: {
-    schema: z.literal("gpt-6-luna"),
+    schema: flagValueSchema("storm-brain-conversation-model"),
     sources: ["flag", "default"],
     default: "gpt-6-luna",
     names: { flag: "storm-brain-conversation-model" },
   },
   decisionsModel: {
-    schema: z.string().min(1),
+    schema: flagValueSchema("storm-brain-decisions-model"),
     sources: ["flag", "default"],
     default: DEFAULT_DECISIONS_MODEL,
     names: { flag: "storm-brain-decisions-model" },
   },
   model: {
-    schema: z.string().min(1),
+    schema: flagValueSchema("storm-brain-model"),
     sources: ["flag", "default"],
     default: DEFAULT_MODEL,
     names: { flag: "storm-brain-model" },

@@ -35,6 +35,21 @@ export {
   type ChipProps,
 } from "@shepherdjerred/console-ui/components/chip.tsx";
 export {
+  CommandPalette,
+  CommandPaletteButton,
+  CommandPaletteSearch,
+  createCommandPaletteStore,
+  isCommandPaletteShortcut,
+  type CommandPaletteButtonProps,
+  type CommandPaletteItem,
+  type CommandPaletteKeyEvent,
+  type CommandPaletteKeyTarget,
+  type CommandPaletteProps,
+  type CommandPaletteSearchProps,
+  type CommandPaletteSection,
+  type CommandPaletteStore,
+} from "@shepherdjerred/console-ui/components/command-palette.tsx";
+export {
   Field,
   type FieldControlProps,
   type FieldProps,
@@ -56,6 +71,10 @@ export {
   Meter,
   type MeterProps,
 } from "@shepherdjerred/console-ui/components/meter.tsx";
+export {
+  SeverityBadge,
+  type SeverityBadgeProps,
+} from "@shepherdjerred/console-ui/components/severity-badge.tsx";
 export {
   ShellFrame,
   type ShellFrameProps,

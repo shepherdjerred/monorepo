@@ -52,6 +52,7 @@ hold only scoped invariants that agents must keep in context.
 | [facet-protocol](facet-protocol/)         | Canonical wire protocol, codegen (Swift/TS/C#), and design tokens |
 | [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app with SQLite sync             |
 | [tasknotes-server](tasknotes-server/)     | Facet sync server (Bun + Hono + PostgreSQL/Prisma)                |
+| [tasknotes-web](tasknotes-web/)           | Facet in the browser — Inbox, Today, Upcoming, and the inspector  |
 | [tasknotes-windows](tasknotes-windows/)   | Facet for Windows — native WinUI 3 app with SQLite sync           |
 | [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — native SwiftUI app and widget over `TaskNotesKit` |
 
@@ -83,7 +84,7 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
-| [console-ui](console-ui/)                         | Shared console shell, components and colour tokens for Hub, Go link and Flags  |
+| [console-ui](console-ui/)                         | Shared console shell, components and colour tokens for the ops consoles        |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
 | [bugsink-config](bugsink-config/)                 | Browser-safe Bugsink data collection policy shared by application clients      |

@@ -64,7 +64,20 @@ describe("Woodpecker log retention configuration", () => {
     },
   );
 
-  test.each([0, 29, 30.5, 3651, "30", null, true, Number.NaN, Infinity])(
+  // The registry's number schema also takes a decimal string (the env-layer
+  // form), so "30" is valid; the flag layer's number kind never yields one.
+  test.each([
+    0,
+    29,
+    30.5,
+    3651,
+    "29",
+    "3e1x",
+    null,
+    true,
+    Number.NaN,
+    Infinity,
+  ])(
     "rejects a present invalid retention horizon %s without defaulting",
     async (days) => {
       flag.mockImplementation((names) =>

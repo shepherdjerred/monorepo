@@ -262,7 +262,6 @@ export function createApp(options: AppOptions): Hono {
   app.all("/internal/*", apiNotFound);
 
   app.use("/assets/*", serveStatic({ root: clientRoot }));
-  app.use("/fonts/*", serveStatic({ root: clientRoot }));
   app.get("*", serveStatic({ root: clientRoot, path: "index.html" }));
   app.notFound((context) => context.json({ error: "Not found" }, 404));
   app.onError((error, context) => {

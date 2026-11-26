@@ -1,5 +1,5 @@
 {
-  "id": "birmel/prod/2",
+  "id": "birmel/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "birmel"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "birmel"
       },
       "syncOptions": ["CreateNamespace=true"],

@@ -49,6 +49,7 @@ export const layers = [
   "scout-client",
   "seasons",
   "testing",
+  "tips",
   "util",
 ];
 

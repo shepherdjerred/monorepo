@@ -41,6 +41,7 @@ const herdrAppPath = windows
 // On Windows the dialog passes the request in this variable: Start-Process
 // does not quote arguments, so JSON cannot go on the command line.
 const requestVariable = "HERDR_WORKTREE_REQUEST";
+const toolkitPath = path.join(home, ".local/bin/toolkit");
 // The mod's pure naming module, as installed: one copy of the prompt and schema.
 const namingPath = path.join(
   home,
@@ -301,6 +302,19 @@ function runtime(naming: Naming): Runtime {
     },
     hc: async (args) => capture([hcPath, ...args]),
     sleep: async (ms) => Bun.sleep(ms),
+    platform: process.platform,
+    async startToolkit(cwd, args) {
+      if (!(await Bun.file(toolkitPath).exists())) return false;
+      // Its own session and no stdio: it outlives this worker, unobserved.
+      Bun.spawn([toolkitPath, ...args], {
+        cwd,
+        detached: true,
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "ignore",
+      }).unref();
+      return true;
+    },
   };
 }
 
@@ -318,6 +332,7 @@ type Event = {
   path: string | null;
   terminal: string | null;
   messageSent: string | null;
+  dedupe: string | null;
 };
 
 function summary(event: Event): string {
@@ -398,6 +413,7 @@ async function run(json: string): Promise<number> {
     path: null,
     terminal: null,
     messageSent: null,
+    dedupe: null,
   };
   try {
     try {
