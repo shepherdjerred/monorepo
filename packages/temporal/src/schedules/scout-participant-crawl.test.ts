@@ -3,6 +3,7 @@ import { SCOUT_WORKFLOW_NAMES } from "@scout-for-lol/temporal";
 import { describe, expect, test } from "vitest";
 import { buildSchedulePolicies } from "./register-schedules.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
+import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 
 function crawlSchedule(stage: "beta" | "prod") {
   const schedule = SCHEDULES.find(
@@ -41,11 +42,23 @@ describe("Scout participant crawl schedule", () => {
     expect(crawlSchedule(stage).initialPauseNote ?? "").not.toBe("");
   });
 
-  test("reconciliation clears the crawl pause on beta only", () => {
-    const beta = crawlSchedule("beta");
-    const prod = crawlSchedule("prod");
-    const note = beta.initialPauseNote;
-    expect(beta.retiredPauseNotes).toContain(note);
-    expect(prod.retiredPauseNotes ?? []).not.toContain(prod.initialPauseNote);
+  test.each(["beta", "prod"] as const)(
+    "reconciliation clears the crawl pause on %s",
+    (stage) => {
+      const schedule = crawlSchedule(stage);
+      expect(schedule.retiredPauseNotes).toContain(schedule.initialPauseNote);
+    },
+  );
+
+  test("only the crawl's pause is retired in production", () => {
+    const prod = SCOUT_SCHEDULES.filter(
+      (candidate) => candidate.namespace === "prod",
+    );
+    const retiring = prod.filter(
+      (candidate) => candidate.retiredPauseNotes !== undefined,
+    );
+    expect(retiring.map((candidate) => candidate.id)).toEqual([
+      "scout-prod-participant-crawl",
+    ]);
   });
 });
