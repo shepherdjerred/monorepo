@@ -26,12 +26,13 @@ import { mkdir } from "node:fs/promises";
 import { MC_SANDBOX_STORM_IMAGE_PARAMETERS } from "#cdk8s/src/resources/mc-sandbox/image-parameters.ts";
 import path from "node:path";
 import {
-  resolveRetainedProducerDigest,
+  appendRetainedProducerCharts,
+  isRetainableChartOrigin,
   type RetainProducerOptions,
 } from "./helm-oci-bootstrap.ts";
 
 const BUILD_REVISION_RE = /^2\.0\.0-[1-9]\d*$/u;
-export const CHARTMUSEUM_ORIGIN = "https://charts.tailnet-1a49.ts.net";
+export const CHARTMUSEUM_ORIGIN = "https://chartmuseum.tailnet-1a49.ts.net";
 export const CHARTMUSEUM_API = `${CHARTMUSEUM_ORIGIN}/api/charts`;
 
 export type ChartMuseumRelease = NonNullable<
@@ -424,7 +425,11 @@ export async function deliveryChartBase(
     throw new Error(
       `Delivery chart ${name} differs from its canonical owner, component, or CI revision`,
     );
-  if (artifact.contentFingerprint === undefined) return undefined;
+  if (
+    artifact.contentFingerprint === undefined ||
+    !isRetainableChartOrigin(name, artifact.uri, CHARTMUSEUM_ORIGIN)
+  )
+    return undefined;
   return {
     version: artifact.version,
     fingerprint: artifact.contentFingerprint,
@@ -484,23 +489,12 @@ export async function retainCurrentProducerArchives(
   options: RetainProducerOptions,
 ): Promise<void> {
   if (publication === undefined) return;
-  const { version, ensureOciBootstrap } =
-    typeof options === "string" ? { version: options } : options;
-  for (const skipped of plan.skipped) {
-    const archive = bases.get(skipped.name);
-    if (archive?.version !== version) continue;
-    publication.charts.push({
-      name: skipped.name,
-      revision: version,
-      digest: await resolveRetainedProducerDigest(
-        skipped.name,
-        archive,
-        version,
-        ensureOciBootstrap,
-      ),
-      contentFingerprint: archive.fingerprint,
-    });
-  }
+  await appendRetainedProducerCharts(
+    publication.charts,
+    bases,
+    plan.skipped,
+    options,
+  );
 }
 
 /** An unchanged chart is retained by reference to the Delivery artifact it was planned against. */

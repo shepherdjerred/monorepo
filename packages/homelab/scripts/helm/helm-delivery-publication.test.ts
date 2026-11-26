@@ -39,7 +39,10 @@ import {
   type ChartInput,
 } from "./helm-release-core.ts";
 import { runCommand, stageChart } from "./helm-push.ts";
-import { ensureOciBootstrapChart } from "./helm-oci-bootstrap.ts";
+import {
+  ensureOciBootstrapChart,
+  isRetainableChartOrigin,
+} from "./helm-oci-bootstrap.ts";
 import { validateHelmTemplate } from "./helm-template-validation.ts";
 import { z } from "zod";
 
@@ -789,4 +792,37 @@ test("after the catalog flip, bases come from the v2 owner and apps has none", a
     },
   ]);
   expect([...bases.keys()]).toEqual(["arcade"]);
+});
+
+test("switching expected chart origin to charts invalidates legacy chartmuseum bases once", () => {
+  expect(
+    isRetainableChartOrigin(
+      "arcade",
+      `https://chartmuseum.sjer.red/charts/arcade-${qualifiedVersion}.tgz`,
+      "https://charts.tailnet-1a49.ts.net",
+    ),
+  ).toBe(false);
+  expect(
+    isRetainableChartOrigin(
+      "arcade",
+      `https://charts.tailnet-1a49.ts.net/charts/arcade-${qualifiedVersion}.tgz`,
+      "https://charts.tailnet-1a49.ts.net",
+    ),
+  ).toBe(true);
+  expect(
+    isRetainableChartOrigin(
+      "charts-bootstrap",
+      `https://charts.tailnet-1a49.ts.net/charts/charts-bootstrap-${qualifiedVersion}.tgz`,
+      "https://charts.tailnet-1a49.ts.net",
+      true,
+    ),
+  ).toBe(false);
+  expect(
+    isRetainableChartOrigin(
+      "charts-bootstrap",
+      "oci://registry-1.docker.io/shepherdjerred/charts-bootstrap",
+      "https://charts.tailnet-1a49.ts.net",
+      true,
+    ),
+  ).toBe(true);
 });

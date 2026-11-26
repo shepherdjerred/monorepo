@@ -833,6 +833,7 @@ describe("published chart artifact verification", () => {
       "arcade",
       "2.0.0-42",
       {
+        origin: "https://charts.tailnet-1a49.ts.net",
         fetch: async (url) => {
           httpRequests.push(requestUrl(url));
           return requestUrl(url).includes("/api/")
