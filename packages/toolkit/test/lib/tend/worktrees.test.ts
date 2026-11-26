@@ -804,6 +804,55 @@ describe("sweepWorktrees re-verifies before removing", () => {
     expect(calls.filter((call) => call[0] === "branch")).toEqual([]);
   });
 
+  it("keeps a merged branch that a worktree has checked out, or that cannot be checked", async () => {
+    const merged: WorktreeSpec = {
+      name: "squash",
+      branch: "feat/squash",
+      ageDays: 9,
+      ahead: 3,
+    };
+    const allPrs: PullRequestRow[] = [
+      {
+        headRefName: "feat/squash",
+        state: "MERGED",
+        updatedAt: isoDaysAgo(9),
+        headRefOid: "head-squash",
+      },
+    ];
+    const elsewhere = await runSweep([merged], {
+      allPrs,
+      override: (command) =>
+        command.argv.includes("for-each-ref")
+          ? ok("/somewhere/else\n")
+          : undefined,
+    });
+    expect(elsewhere.result.actions[0]).toMatchObject({
+      status: "removed",
+      detail: "branch feat/squash kept (checked out in /somewhere/else)",
+    });
+    expect(gitCalls(elsewhere.recorded)).toContainEqual([
+      "for-each-ref",
+      "--format=%(worktreepath)",
+      "refs/heads/feat/squash",
+    ]);
+
+    const unknown = await runSweep([merged], {
+      allPrs,
+      override: (command) =>
+        command.argv.includes("for-each-ref")
+          ? { exitCode: 129, stdout: "", stderr: "unknown field name" }
+          : undefined,
+    });
+    expect(unknown.result.actions[0]?.detail).toBe(
+      "branch feat/squash kept (could not tell whether it is checked out)",
+    );
+    for (const sweep of [elsewhere, unknown]) {
+      expect(
+        gitCalls(sweep.recorded).filter((call) => call[0] === "update-ref"),
+      ).toEqual([]);
+    }
+  });
+
   it("leaves a worktree that was locked, or re-locked, after it was inspected", async () => {
     const { recorded, result } = await runSweep(
       [

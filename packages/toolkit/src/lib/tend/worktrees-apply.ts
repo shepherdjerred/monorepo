@@ -171,9 +171,31 @@ async function changedSinceSnapshot(
 }
 
 /**
- * Delete the branch only if it is still the commit the decision was made on.
- * A forced delete is done as a compare-and-delete of the ref, so a commit
- * that lands on the branch in between is never dropped with it.
+ * Why a branch must not be deleted by ref: some worktree has it checked out.
+ * `git branch -D` refuses such a branch; deleting the ref directly does not,
+ * and would leave that checkout on a branch that no longer exists.
+ */
+async function checkedOutProblem(
+  repoPath: string,
+  branch: string,
+  runner: CommandRunner,
+): Promise<string | null> {
+  const res = await runner(
+    ["git", "for-each-ref", "--format=%(worktreepath)", `refs/heads/${branch}`],
+    { cwd: repoPath, timeoutMs: 5000 },
+  );
+  if (res.exitCode !== 0) {
+    return "could not tell whether it is checked out";
+  }
+  const worktreePath = res.stdout.trim();
+  return worktreePath.length === 0 ? null : `checked out in ${worktreePath}`;
+}
+
+/**
+ * Delete the branch only if it is still the commit the decision was made on
+ * and no worktree has it checked out. A forced delete is done as a
+ * compare-and-delete of the ref, so a commit that lands on the branch in
+ * between is never dropped with it.
  */
 async function deleteWorktreeBranch(
   repoPath: string,
@@ -184,6 +206,13 @@ async function deleteWorktreeBranch(
   const { branch } = wt;
   if (decision.deleteBranch === "none") {
     return `branch ${branch} kept`;
+  }
+  if (decision.deleteBranch === "force-delete") {
+    // Another session can check the branch out once this worktree is gone.
+    const problem = await checkedOutProblem(repoPath, branch, runner);
+    if (problem !== null) {
+      return `branch ${branch} kept (${problem})`;
+    }
   }
   const argv =
     decision.deleteBranch === "force-delete"

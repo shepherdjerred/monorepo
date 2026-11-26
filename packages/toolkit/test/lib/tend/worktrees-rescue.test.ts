@@ -663,6 +663,53 @@ describe("sweepWorktrees branch deletion with real git", () => {
   );
 
   it(
+    "keeps a merged branch another worktree checked out before the delete",
+    async () => {
+      const fx = await sweepFixture();
+      const tip = await squashedWorktree(fx);
+      const elsewhere = path.join(fx.root, "elsewhere");
+      let checkedOut = false;
+      // Another session checks the branch out the moment its worktree is
+      // gone. Its tip is still the judged commit, so only git's own
+      // checked-out rule stands between the delete and that session.
+      const checkingOut = runnerWith(async (argv) => {
+        if (!checkedOut && argv.includes("remove")) {
+          checkedOut = true;
+          await git(
+            fx.repo,
+            "worktree",
+            "add",
+            "-q",
+            elsewhere,
+            "feat/squashed",
+          );
+        }
+      });
+
+      const result = await fx.sweep(
+        withMergedPr("feat/squashed", tip, checkingOut),
+        true,
+      );
+
+      expect(checkedOut).toBe(true);
+      expect(result.actions[0]?.status).toBe("removed");
+      expect(result.actions[0]?.detail).toBe(
+        `branch feat/squashed kept (checked out in ${elsewhere})`,
+      );
+      expect(await git(fx.repo, "rev-parse", "feat/squashed")).toBe(tip);
+      // The other checkout is still on a branch that exists.
+      expect(await git(elsewhere, "rev-parse", "--abbrev-ref", "HEAD")).toBe(
+        "feat/squashed",
+      );
+      expect(await git(elsewhere, "status", "--porcelain")).toBe("");
+      expect(
+        await git(fx.repo, "config", "--get", "branch.feat/squashed.remote"),
+      ).toBe("origin");
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
     "keeps a merged branch that moved to another commit before the delete",
     async () => {
       const fx = await sweepFixture();

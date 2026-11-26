@@ -1858,7 +1858,8 @@ Removal never discards work:
   a rescue ref at `HEAD`.
 - **A branch that is fully merged** (no commits ahead of the default branch,
   or a merged pull request at that head) is deleted with the worktree, and
-  only if it still points at the commit that was judged.
+  only if it still points at the commit that was judged and no other
+  worktree has checked it out in the meantime.
 
 The decision is made at the start of a sweep and checked again when the
 worktree's turn comes. A worktree whose `HEAD` moved or whose lock changed in
