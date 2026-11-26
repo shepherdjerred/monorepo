@@ -144,12 +144,11 @@ Do not infer sync completeness merely because a client process is running.
 
 ## Before the automated installer
 
-Download the licensed Berkeley Mono static TTF package and leave its extracted
+Download the Berkeley Mono static TTF package and leave its extracted
 directory under `~/Downloads`. The installer locates the directory through its
 single `BerkeleyMono-Regular.ttf`, downloads the pinned Nerd Fonts patcher,
 patches every TTF in that directory, and installs the results in
-`~/Library/Fonts`. The licensed source fonts and generated fonts remain outside
-the repository.
+`~/Library/Fonts`.
 
 If the extracted fonts live elsewhere, set `BERKELEY_MONO_SOURCE_DIR` to that
 directory when invoking `install_macos.sh`. The source directory must contain

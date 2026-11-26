@@ -560,8 +560,8 @@ own sheets (`src/styles/`, and `src/client/promotion/promotion.css`) use the
 shared `--ui-*` custom properties directly, and `src/client/theme.ts` is
 console-ui's theme store under the `ops-theme` key.
 Charts take their axis, grid and threshold colours from the same tokens.
-Berkeley Mono is licensed and stays in `public/fonts`, declared by Hub's own
-`@font-face`.
+Berkeley Mono comes with console-ui's stylesheet, bundled as a hashed
+`/assets/` file like every other client asset; Hub serves no `/fonts/` path.
 
 The sidebar is grouped. Each `nav` entry is
 listed under its `group`, which defaults to the module's `title`; entries from
