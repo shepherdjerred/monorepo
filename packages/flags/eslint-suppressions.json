@@ -1,0 +1,42 @@
+{
+  "src/client/app.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 5
+    }
+  },
+  "src/client/deployment-heading.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 2
+    }
+  },
+  "src/client/flag-table.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "src/client/sidebar.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "src/client/views/compare-page.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 12
+    }
+  },
+  "src/client/views/drift-chip.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "src/client/views/drift-page.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 10
+    }
+  },
+  "src/client/views/home-page.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 4
+    }
+  }
+}
