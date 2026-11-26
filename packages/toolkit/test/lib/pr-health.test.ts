@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import type { GitHubCheck, PullRequest } from "#lib/github/types.ts";
 import { buildPrHealthReport, ciHealth } from "#lib/ci/health.ts";
+import { formatHealthReport } from "#lib/output/formatter.ts";
 
 const HEAD_SHA = "0123456789abcdef0123456789abcdef01234567";
 
@@ -242,5 +243,39 @@ describe("PR health report", () => {
     expect(report.checks[0]?.details).toContain(
       "Conflicting file: src/conflict.ts",
     );
+  });
+
+  test("surfaces staleBase informationally without turning overallStatus or CI Status unhealthy", () => {
+    const report = buildPrHealthReport({
+      pr: PR,
+      merge: {
+        hasConflicts: false,
+        conflictingFiles: [],
+        upToDate: false,
+        baseBranch: "main",
+        headSha: HEAD_SHA,
+      },
+      githubChecks: [githubCheck("pass")],
+      ciPipeline: pipeline("success"),
+      reviews: [{ author: "reviewer", state: "APPROVED" }],
+      staleBase: {
+        stale: true,
+        headSha: HEAD_SHA,
+        mergeBaseSha: "a".repeat(40),
+        mainHeadSha: "b".repeat(40),
+        behindBy: 4,
+        verdict: "stale_overlap",
+        reasons: ["main modified global verification input(s): bun.lock"],
+      },
+    });
+    expect(report.overallStatus).toBe("HEALTHY");
+    expect(
+      report.checks.find((check) => check.name === "CI Status")?.status,
+    ).toBe("HEALTHY");
+    expect(report.staleBase?.stale).toBe(true);
+    const rendered = formatHealthReport(report);
+    expect(rendered).toContain("**Base Freshness:**");
+    expect(rendered).toContain("stale overlap");
+    expect(rendered).toContain("enforced at merge time");
   });
 });

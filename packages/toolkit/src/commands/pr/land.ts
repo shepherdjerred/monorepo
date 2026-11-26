@@ -14,6 +14,11 @@ import {
   resultReport,
 } from "#lib/ci/output.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
+import {
+  evaluateStaleBase,
+  type StaleBaseReport,
+} from "#lib/ci/stale-base/evaluate.ts";
+import { recordAndGateStaleBase } from "#lib/ci/stale-base/receipts.ts";
 import { waitForPr, withCancellation } from "#commands/ci.ts";
 import {
   formatMergeStderr,
@@ -29,6 +34,7 @@ export type LandOptions = {
   head?: string | undefined;
   timeoutMs?: number | undefined;
   allowRedMain: boolean;
+  allowStaleBase?: boolean | undefined;
 };
 
 export type MergeResult =
@@ -101,17 +107,20 @@ export type LandDependencies = {
   prepareMerge?:
     | ((target: MergeTarget, signal: AbortSignal) => Promise<MergePreparation>)
     | undefined;
-  /**
-   * Epoch ms to wait until before merging when the GraphQL bucket cannot
-   * cover a merge, or null when it can. `fresh` skips recent observations.
-   */
   quota?: (signal: AbortSignal, fresh: boolean) => Promise<number | null>;
-  /** Waits until `resumeAt`; reports why on stderr. */
   pause?: (
     resumeAt: number,
     signal: AbortSignal,
     deadline: number | null,
   ) => Promise<void>;
+  staleBase?: (
+    headSha: string,
+    baseRef: string,
+    mainHeadSha: string | undefined,
+    signal: AbortSignal,
+  ) => Promise<StaleBaseReport>;
+  stateDir?: string | undefined;
+  secrets?: readonly string[] | undefined;
 };
 
 export type LandRequest = {
@@ -151,17 +160,10 @@ async function pauseForQuota(
 
 const GIT_SPICE_TRANSPORT_ERROR =
   /connection reset by peer|ECONNRESET|ETIMEDOUT|TLS handshake timeout|unexpected EOF/iu;
-
 const MAX_MERGE_TRANSPORT_RETRIES = 2;
 
 type LandOutcome = { result: WaitResult; mergeCommitSha: string | null };
 
-/**
- * One merge attempt's result, or when to prove readiness again and retry:
- * `budget` before merging, `refused` after a merge failed on quota, or
- * `transport` after an unmerged connection drop. `otherwise` is reported when
- * the retry would pass the deadline.
- */
 type Attempt =
   | { done: LandOutcome }
   | { retryAt: number; kind: "budget" | "refused"; otherwise: LandOutcome }
@@ -178,6 +180,8 @@ type LandContext = {
   signal: AbortSignal;
   dependencies: LandDependencies;
   quota: NonNullable<LandDependencies["quota"]>;
+  staleBase: NonNullable<LandDependencies["staleBase"]>;
+  allowStaleBase: boolean;
   deadline: number | null;
   started: number;
 };
@@ -206,9 +210,7 @@ function mergedOutcome(
     exitCode === 0
       ? null
       : `git-spice branch merge exited ${String(exitCode)} during post-merge local trunk sync after GitHub merged PR #${String(number)}.`;
-  if (postMergeWarning !== null) {
-    console.error(postMergeWarning);
-  }
+  if (postMergeWarning !== null) console.error(postMergeWarning);
   return {
     result: landed(result, {
       outcome: "merged",
@@ -266,19 +268,13 @@ function canRetryTransportFailure(options: {
   );
 }
 
-/** Merge a PR proven ready, unless its head moved or the bucket is too low. */
-async function attemptMerge(
+async function evaluatePreMergeBlocker(
   context: LandContext,
   result: WaitResult,
   ready: Snapshot,
-  retryState: RetryState,
-): Promise<Attempt> {
-  const { number, observer, signal, started } = context;
-  const current = await observer.github.read(
-    `/repos/${observer.github.repo}/pulls/${String(number)}`,
-    HeadSchema,
-    signal,
-  );
+  current: z.infer<typeof HeadSchema>,
+): Promise<Attempt | null> {
+  const { number, signal, started } = context;
   if (current.head.sha !== ready.pr.head.sha) {
     return {
       done: {
@@ -291,6 +287,24 @@ async function attemptMerge(
         }),
         mergeCommitSha: null,
       },
+    };
+  }
+  const staleVerdict = await recordAndGateStaleBase({
+    pr: number,
+    baseRef: ready.pr.base.ref,
+    report: await context.staleBase(
+      ready.pr.head.sha,
+      ready.pr.base.ref,
+      ready.main.headSha,
+      signal,
+    ),
+    allowStaleBase: context.allowStaleBase,
+    secrets: context.dependencies.secrets,
+    stateDir: context.dependencies.stateDir,
+  });
+  if (staleVerdict !== null) {
+    return {
+      done: { result: landed(result, staleVerdict), mergeCommitSha: null },
     };
   }
   const before = await context.quota(signal, false);
@@ -327,14 +341,35 @@ async function attemptMerge(
       };
     }
   }
+  return null;
+}
+
+/** Merge a PR proven ready, unless its head moved, its base is stale, or the bucket is too low. */
+async function attemptMerge(
+  context: LandContext,
+  result: WaitResult,
+  ready: Snapshot,
+  retryState: RetryState,
+): Promise<Attempt> {
+  const { number, observer, signal } = context;
+  const current = await observer.github.read(
+    `/repos/${observer.github.repo}/pulls/${String(number)}`,
+    HeadSchema,
+    signal,
+  );
+  const preMerge = await evaluatePreMergeBlocker(
+    context,
+    result,
+    ready,
+    current,
+  );
+  if (preMerge !== null) return preMerge;
   console.error(
     `PR #${String(number)} is ready; merging ${current.head.ref} with git-spice.`,
   );
   const { code, stderr } = normalizeMergeResult(
     await context.dependencies.merge(current.head.ref, signal),
   );
-  // A cancelled merge may or may not have landed; report the cancellation,
-  // not a merge result read after it.
   signal.throwIfAborted();
   const after = await observer.github.pr(number, signal);
   if (after.merged) {
@@ -379,9 +414,7 @@ async function pauseBeforeRetry(
   const { number, deadline, signal } = context;
   if (attempt.kind === "transport") {
     retryState.transportRetries = attempt.attemptNumber;
-    if (deadline !== null && Date.now() >= deadline) {
-      return false;
-    }
+    if (deadline !== null && Date.now() >= deadline) return false;
     console.error(
       `git-spice branch merge hit a transient GitHub transport error on PR #${String(number)} (retry ${String(attempt.attemptNumber)}/${String(MAX_MERGE_TRANSPORT_RETRIES)}); re-checking readiness before retrying.`,
     );
@@ -392,18 +425,10 @@ async function pauseBeforeRetry(
     await sleep(waitMs, signal);
     return deadline === null || Date.now() < deadline;
   }
-  if (attempt.kind === "refused") {
-    retryState.quotaRetried = true;
-  }
+  if (attempt.kind === "refused") retryState.quotaRetried = true;
   return pauseWithin(attempt.retryAt, deadline, signal, pause);
 }
 
-/**
- * Wait for exact-head readiness, then merge; any other outcome is reported.
- * The merge runs only when the shared GraphQL bucket can cover it, and a
- * merge that fails while the bucket is exhausted is retried once after the
- * reset. Every retry proves readiness of the same head again first.
- */
 export async function landPr(
   { number, observer, signal }: LandRequest,
   options: LandOptions,
@@ -415,12 +440,25 @@ export async function landPr(
   const quota =
     dependencies.quota ??
     ((read, fresh) => mergeQuota(observer.github, read, fresh));
+  const staleBase =
+    dependencies.staleBase ??
+    ((headSha, baseRef, mainHeadSha, read) =>
+      evaluateStaleBase({
+        github: observer.github,
+        prNumber: number,
+        headSha,
+        baseRef,
+        mainHeadSha,
+        signal: read,
+      }));
   const context: LandContext = {
     number,
     observer,
     signal,
     dependencies,
     quota,
+    staleBase,
+    allowStaleBase: options.allowStaleBase === true,
     deadline,
     started,
   };
@@ -444,20 +482,13 @@ export async function landPr(
     }
     head = ready.pr.head.sha;
     const attempt = await attemptMerge(context, result, ready, retryState);
-    if ("done" in attempt) {
-      return attempt.done;
-    }
+    if ("done" in attempt) return attempt.done;
     if (!(await pauseBeforeRetry(context, attempt, retryState, pause))) {
       return attempt.otherwise;
     }
   }
 }
 
-/**
- * Pause for a retry. False when the retry cannot start before the deadline,
- * either because the reset is later or because the deadline passed while
- * paused.
- */
 async function pauseWithin(
   retryAt: number,
   deadline: number | null,
@@ -496,6 +527,7 @@ export async function landCommand(
         {
           wait: waitForPr,
           merge: merger,
+          secrets,
           ...(merge === undefined
             ? {
                 preflight: (read) =>
