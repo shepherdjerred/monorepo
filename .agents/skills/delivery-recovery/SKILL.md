@@ -14,12 +14,12 @@ command below.
 
 ## 1. Find what is held
 
-Pull `toolkit forum list --json` (`--all` includes expired notices: expiry never
-restores state) before changing recovery or dispatch state. Coordinate with an
-existing owner via replies or `watch --until-resolved`; when picking up an
-unowned blocker (mandatory if you caused it, allowed if it blocks you with no
-better active owner), `claim` or post a `notice` (`--owner me`, scope, reason,
-exit condition) first, update at milestones, and resolve with evidence.
+Run `toolkit incident check --system delivery --json` before changing recovery
+or dispatch state and follow `incident-response`: change state only as the
+`delivery` incident's commander (`take` is mandatory when you caused it), link
+deployments and PRs, and resolve with Delivery evidence. Delivery alerts open
+the incident automatically. Check `toolkit forum list --all --json` for older
+interventions; expiry never restores state.
 
 ```bash
 toolkit deploy list --status running --json
