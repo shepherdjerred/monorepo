@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import {
   mkdtemp,
@@ -38,6 +39,7 @@ import {
   type ChartInput,
 } from "./helm-release-core.ts";
 import { runCommand, stageChart } from "./helm-push.ts";
+import { ensureOciBootstrapChart } from "./helm-oci-bootstrap.ts";
 import { validateHelmTemplate } from "./helm-template-validation.ts";
 import { z } from "zod";
 
@@ -425,7 +427,7 @@ test("an unchanged chart is retained against Delivery's qualified artifact inste
     })),
   );
   const publication = receipt();
-  retainCurrentProducerArchives(publication, bases, result, version);
+  await retainCurrentProducerArchives(publication, bases, result, version);
   retainDeliveryChartBases(publication, bases, result, version);
   expect(publication.charts).toEqual([]);
   expect(publication.retained).toEqual(
@@ -560,7 +562,7 @@ test("a retry compares against this producer's own ChartMuseum archive and recor
   expect(client.queries).toHaveLength(1);
   expect(result.publishOrder).toEqual([]);
   const publication = receipt();
-  retainCurrentProducerArchives(publication, bases, result, version);
+  await retainCurrentProducerArchives(publication, bases, result, version);
   retainDeliveryChartBases(publication, bases, result, version);
   expect(publication.charts).toEqual([
     {
@@ -578,6 +580,159 @@ test("a retry compares against this producer's own ChartMuseum archive and recor
   expect(() => validateChartProducerVersion(publication, "1000043")).toThrow(
     "exact CI producer",
   );
+});
+
+test("a charts-bootstrap retry completes missing OCI publication and records the OCI manifest digest", async () => {
+  const bootstrapFingerprint = `sha256:${"4".repeat(64)}`;
+  const archiveBytes = new TextEncoder().encode("charts-bootstrap-tgz-bytes");
+  const archiveDigest = `sha256:${createHash("sha256").update(archiveBytes).digest("hex")}`;
+  const ociManifest = JSON.stringify({
+    schemaVersion: 2,
+    mediaType: "application/vnd.oci.image.manifest.v1+json",
+    config: {
+      mediaType: "application/vnd.cncf.helm.config.v1+json",
+      digest: `sha256:${"5".repeat(64)}`,
+      size: 2,
+    },
+    layers: [
+      {
+        mediaType: "application/vnd.cncf.helm.chart.content.v1.tar+gzip",
+        digest: archiveDigest,
+        size: archiveBytes.byteLength,
+      },
+    ],
+  });
+  const ociManifestDigest = `sha256:${createHash("sha256").update(ociManifest).digest("hex")}`;
+
+  const bootstrapInputs: ChartInput[] = [
+    {
+      name: "charts-bootstrap",
+      fingerprint: bootstrapFingerprint,
+      chartDirectory: "/unused",
+      manifestPath: "/unused",
+    },
+    {
+      name: "apps",
+      fingerprint: fingerprints.apps,
+      chartDirectory: "/unused",
+      manifestPath: "/unused",
+    },
+  ];
+  const bases = new Map<string, ChartPlanningBase>([
+    [
+      "charts-bootstrap",
+      {
+        version,
+        fingerprint: bootstrapFingerprint,
+        digest: archiveDigest,
+        archivePath: "/tmp/charts-bootstrap-2.0.0-1000042.tgz",
+      },
+    ],
+    [
+      "apps",
+      {
+        version: qualifiedVersion,
+        fingerprint: fingerprints.apps,
+        digest,
+        artifactId: "ci/1/30/chart/apps",
+      },
+    ],
+  ]);
+  const result = planCharts(bootstrapInputs, bases);
+  expect(result.publishOrder).toEqual([]);
+
+  // First retry case: Attempt 1 uploaded HTTP archive, failed before OCI push (404 -> push -> 200).
+  let pushedToOci = false;
+  const commands: (readonly string[])[] = [];
+  const firstRetryReceipt = receipt();
+  await retainCurrentProducerArchives(firstRetryReceipt, bases, result, {
+    version,
+    ensureOciBootstrap: ({ archivePath, archiveDigest: expectedDigest }) =>
+      ensureOciBootstrapChart({
+        archivePath,
+        archiveDigest: expectedDigest,
+        version,
+        runCommand: async (command) => {
+          commands.push(command);
+          pushedToOci = true;
+        },
+        transport: async () =>
+          pushedToOci
+            ? new Response(ociManifest, {
+                status: 200,
+                headers: { "docker-content-digest": ociManifestDigest },
+              })
+            : new Response("not found", { status: 404 }),
+      }),
+  });
+  expect(commands).toEqual([
+    [
+      "helm",
+      "push",
+      "/tmp/charts-bootstrap-2.0.0-1000042.tgz",
+      "oci://registry-1.docker.io/shepherdjerred",
+    ],
+  ]);
+  expect(firstRetryReceipt.charts).toEqual([
+    {
+      name: "charts-bootstrap",
+      revision: version,
+      digest: ociManifestDigest,
+      contentFingerprint: bootstrapFingerprint,
+    },
+  ]);
+
+  // Second retry case: OCI tag already exists with matching layer digest (200 -> no re-push).
+  const secondCommands: (readonly string[])[] = [];
+  const secondRetryReceipt = receipt();
+  await retainCurrentProducerArchives(secondRetryReceipt, bases, result, {
+    version,
+    ensureOciBootstrap: ({ archivePath, archiveDigest: expectedDigest }) =>
+      ensureOciBootstrapChart({
+        archivePath,
+        archiveDigest: expectedDigest,
+        version,
+        runCommand: async (command) => {
+          secondCommands.push(command);
+        },
+        transport: async () =>
+          new Response(ociManifest, {
+            status: 200,
+            headers: { "docker-content-digest": ociManifestDigest },
+          }),
+      }),
+  });
+  expect(secondCommands).toEqual([]);
+  expect(secondRetryReceipt.charts).toEqual([
+    {
+      name: "charts-bootstrap",
+      revision: version,
+      digest: ociManifestDigest,
+      contentFingerprint: bootstrapFingerprint,
+    },
+  ]);
+
+  // Tampered/mismatched OCI layer digest fails closed instead of recording a mismatched receipt.
+  await expect(
+    retainCurrentProducerArchives(receipt(), bases, result, {
+      version,
+      ensureOciBootstrap: ({ archivePath, archiveDigest: expectedDigest }) =>
+        ensureOciBootstrapChart({
+          archivePath,
+          archiveDigest: expectedDigest,
+          version,
+          runCommand: unexpected,
+          transport: async () =>
+            Response.json({
+              schemaVersion: 2,
+              config: {
+                mediaType: "application/vnd.cncf.helm.config.v1+json",
+              },
+              layers: [{ digest: `sha256:${"9".repeat(64)}` }],
+            }),
+        }),
+    }),
+  ).rejects.toThrow("expected producer archive digest");
 });
 
 test("a skipped chart whose base is not a qualified Delivery artifact cannot be retained", () => {

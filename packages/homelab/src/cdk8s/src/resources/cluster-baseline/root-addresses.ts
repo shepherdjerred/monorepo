@@ -31,17 +31,17 @@ function addressLabels(
 
 /**
  * cdk8s-plus derives each workload's `cdk8s.io/metadata.addr` selector from
- * the construct path, which starts with the chart id. A baseline chart
- * re-renders the root's constructs under its own id, so it adopts the values
- * the same constructs produce under the root chart: the selector is immutable
- * on the running workloads and must stay identical across the cutover.
+ * the construct path, which starts with the chart id. A chart that re-renders
+ * another chart's constructs under a new chart id adopts the values the same
+ * constructs produce under `sourceChartId`: the selector is immutable on the
+ * running workloads and must stay identical across the cutover.
  */
-export function adoptRootChartAddresses(chart: Chart): void {
-  const rootMirror = new Chart(new App(), ROOT_CHART);
+export function adoptChartAddresses(chart: Chart, sourceChartId: string): void {
+  const sourceMirror = new Chart(new App(), sourceChartId);
   const addresses = new Map<string, string>();
   for (const construct of chart.node.findAll()) {
     if (construct === chart) continue;
-    let mirror: Construct = rootMirror;
+    let mirror: Construct = sourceMirror;
     for (const id of construct.node.path
       .slice(chart.node.path.length + 1)
       .split("/"))
@@ -51,28 +51,33 @@ export function adoptRootChartAddresses(chart: Chart): void {
   for (const construct of chart.node.findAll()) {
     if (!ApiObject.isApiObject(construct)) continue;
     for (const [pointer, address] of addressLabels(construct.toJson(), [])) {
-      const rootAddress = addresses.get(address);
-      if (rootAddress === undefined)
+      const sourceAddress = addresses.get(address);
+      if (sourceAddress === undefined)
         throw new Error(
           `${construct.node.path} carries workload address ${address} from outside ${chart.node.id}`,
         );
-      construct.addJsonPatch(JsonPatch.replace(pointer, rootAddress));
+      construct.addJsonPatch(JsonPatch.replace(pointer, sourceAddress));
     }
   }
+}
+
+export function adoptRootChartAddresses(chart: Chart): void {
+  adoptChartAddresses(chart, ROOT_CHART);
 }
 
 /**
  * An object whose name cdk8s generated from its construct path carries the
  * chart id, so the same construct renders `apps-argocd-ingress` under the root
  * and `argocd-companion-argocd-ingress` under a companion. A chart that takes
- * over root objects adopts the root's generated names; explicit names stay.
+ * over objects from `sourceChartId` adopts its generated names; explicit names
+ * stay.
  */
-export function adoptRootChartNames(chart: Chart): void {
-  const rootMirror = new Chart(new App(), ROOT_CHART);
+export function adoptChartNames(chart: Chart, sourceChartId: string): void {
+  const sourceMirror = new Chart(new App(), sourceChartId);
   for (const construct of chart.node.findAll()) {
     if (!ApiObject.isApiObject(construct)) continue;
     if (construct.name !== chart.generateObjectName(construct)) continue;
-    let mirror: Construct = rootMirror;
+    let mirror: Construct = sourceMirror;
     for (const id of construct.node.path
       .slice(chart.node.path.length + 1)
       .split("/"))
@@ -84,4 +89,8 @@ export function adoptRootChartNames(chart: Chart): void {
       ),
     );
   }
+}
+
+export function adoptRootChartNames(chart: Chart): void {
+  adoptChartNames(chart, ROOT_CHART);
 }

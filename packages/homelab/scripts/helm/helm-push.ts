@@ -14,7 +14,10 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { createDeliveryClient } from "@shepherdjerred/delivery/client";
-import { publishOciBootstrapChart } from "./helm-oci-bootstrap.ts";
+import {
+  ensureOciBootstrapChart,
+  publishOciBootstrapChart,
+} from "./helm-oci-bootstrap.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
   CHARTMUSEUM_API,
@@ -320,12 +323,19 @@ async function publishPlannedCharts(
       throw new Error(`No staged archive for ${name}`);
     }
     await pushChart(name, chart.archive, username, password);
+    const archiveDigest = `sha256:${createHash("sha256")
+      .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
+      .digest("hex")}`;
     const digest =
       name === "charts-bootstrap"
-        ? await publishOciBootstrapChart(chart.archive, version, runCommand)
-        : `sha256:${createHash("sha256")
-            .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
-            .digest("hex")}`;
+        ? await publishOciBootstrapChart(
+            chart.archive,
+            version,
+            runCommand,
+            fetch,
+            archiveDigest,
+          )
+        : archiveDigest;
     publication.charts.push({
       name,
       revision: version,
@@ -457,7 +467,6 @@ async function main(): Promise<void> {
         ? releaseInputs
         : releaseInputs.filter((input) => requested.has(input.name));
     const plan = planCharts(releaseInputs, planningBase);
-    retainCurrentProducerArchives(publication, planningBase, plan, version);
     if (deliveryCatalog) {
       retainDeliveryChartBases(publication, planningBase, plan, version);
     }
@@ -475,6 +484,16 @@ async function main(): Promise<void> {
         "Actual chart publication requires its original CI identity",
       );
     }
+    await retainCurrentProducerArchives(publication, planningBase, plan, {
+      version,
+      ensureOciBootstrap: ({ archivePath, archiveDigest }) =>
+        ensureOciBootstrapChart({
+          archivePath,
+          archiveDigest,
+          version,
+          runCommand,
+        }),
+    });
     if (plan.publishOrder.length === 0) {
       console.log("No chart content changed; publishing zero charts");
     } else {
