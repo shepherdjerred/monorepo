@@ -1,5 +1,4 @@
 import { isDeepStrictEqual } from "node:util";
-import { z } from "zod";
 import { parseFlagsDeployment, validateFlagsUrl } from "./config/schema.ts";
 import { flagDeployments, type FlagDeployment } from "./deployments.ts";
 import type { FlagValue } from "./evaluate.ts";
@@ -10,81 +9,17 @@ import {
   type ManagedFlagInventory,
 } from "./managed-flag-inventory.ts";
 import { projectDeploymentFlags } from "./project-deployment.ts";
+import * as wire from "./flags-wire.ts";
 
-const SegmentConstraintSchema = z.strictObject({
-  property: z.string().min(1),
-  value: z.string().min(1),
-});
-
-const SegmentRolloutSchema = z.strictObject({
-  constraints: z.array(SegmentConstraintSchema).min(1),
-  result: z.boolean(),
-});
-
-export const FlagsValueSchema = z.discriminatedUnion("type", [
-  z.strictObject({
-    type: z.literal("boolean"),
-    key: z.string().min(1),
-    default: z.boolean(),
-    rollouts: z.array(SegmentRolloutSchema),
-  }),
-  z.strictObject({
-    type: z.literal("variant"),
-    key: z.string().min(1),
-    value: z.string(),
-  }),
-]);
-
-export const FlagsDeploymentDocumentSchema = z.strictObject({
-  id: z.string().min(1),
-  revision: z.number().int().nonnegative(),
-  flags: z.array(FlagsValueSchema),
-});
-
-export const FlagsDeploymentSnapshotSchema = z.strictObject({
-  deployment: z.string().min(1),
-  revision: z.number().int().nonnegative(),
-  flags: z.array(FlagsValueSchema),
-});
-
-export const FlagsDiffResponseSchema = z.strictObject({
-  deployments: z.array(
-    z.strictObject({
-      id: z.string().min(1),
-      revision: z.number().int().nonnegative(),
-      missing: z.array(FlagsValueSchema),
-      extra: z.array(z.string().min(1)),
-      drift: z.array(
-        z.strictObject({
-          key: z.string().min(1),
-          live: FlagsValueSchema,
-          declared: FlagsValueSchema,
-        }),
-      ),
-      // A Flags server older than the value registry omits `invalid`; until
-      // every server reports it, absence means nothing was found invalid.
-      invalid: z
-        .array(
-          z.strictObject({
-            key: z.string().min(1),
-            value: z.string(),
-            issues: z.array(
-              z.strictObject({ path: z.string(), message: z.string().min(1) }),
-            ),
-          }),
-        )
-        .default([]),
-    }),
-  ),
-});
-
-export type FlagsDeploymentDocument = z.infer<
-  typeof FlagsDeploymentDocumentSchema
->;
-export type FlagsDeploymentSnapshot = z.infer<
-  typeof FlagsDeploymentSnapshotSchema
->;
-export type FlagsDiffResponse = z.infer<typeof FlagsDiffResponseSchema>;
+// The wire schemas live in the Zod-only `flags-wire.ts` so the Flags browser
+// client can share them; existing server-side importers keep these names.
+export const FlagsValueSchema = wire.FlagsValueSchema;
+export const FlagsDeploymentDocumentSchema = wire.FlagsDeploymentDocumentSchema;
+export const FlagsDeploymentSnapshotSchema = wire.FlagsDeploymentSnapshotSchema;
+export const FlagsDiffResponseSchema = wire.FlagsDiffResponseSchema;
+export type FlagsDeploymentDocument = wire.FlagsDeploymentDocument;
+export type FlagsDeploymentSnapshot = wire.FlagsDeploymentSnapshot;
+export type FlagsDiffResponse = wire.FlagsDiffResponse;
 
 export type FlagsHttpFetcher = (
   input: string | Request | URL,

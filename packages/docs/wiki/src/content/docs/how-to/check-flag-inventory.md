@@ -31,6 +31,19 @@ authenticates your Tailscale identity through the verified ingress proxy.
    writes nothing. Compare **Their flag** with **Your draft**, click **Load
    their version**, and re-apply your intended edit.
 
+To compare two deployments, open **Compare** in the sidebar (or **Compare with
+Beta** / **Compare with Prod** in a deployment's heading). Choose the **Left**
+and **Right** deployments; the table lists keys that differ or exist on one
+side only, **All** adds the identical ones, and selecting a key shows both
+JSON payloads side by side with links to each editor.
+
+To review inventory drift, open **Drift** (its sidebar count is the total of
+drifted items). Each drifted deployment lists invalid live values with their
+schema issues, declared-versus-live diffs, and missing and extra keys, with the
+command that fixes each category. A deployment heading's drift badge links to
+its section. Press <kbd>⌘K</kbd> to search deployments and flags across every
+deployment.
+
 Changing a managed flag in the UI without updating
 [`managed-flag-inventory.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/managed-flag-inventory.json)
 raises drift on the next reconciliation run.
