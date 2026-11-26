@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "326657",
+  "name": "Rod of Ages",
+  "description": "Timeless: This item gains 10 Health, 30 Mana and 3 Ability Power every 60 seconds up to 10 times. Eternity: Taking damage from champions restores 10% of the damage as Mana.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "45"
+    },
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Mana",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1026",
+      "name": "Blasting Wand",
+      "icon": "img/item/1026.png"
+    },
+    {
+      "kind": "item",
+      "key": "3803",
+      "name": "Catalyst of Aeons",
+      "icon": "img/item/3803.png"
+    }
+  ],
+  "icon": "img/item/326657.png",
+  "goldTotal": 2600,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

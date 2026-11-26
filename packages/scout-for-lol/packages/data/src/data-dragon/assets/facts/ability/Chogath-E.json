@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Chogath-E",
+  "name": "Vorpal Spikes",
+  "description": "Cho'Gath's attacks release deadly spikes, dealing damage and slowing all enemy units in front of him.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Chogath-E.png",
+  "slot": "E",
+  "championKey": "Chogath",
+  "championName": "Cho'Gath",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7,
+    6,
+    5,
+    4
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7/6/5/4 s"
+  }
+}

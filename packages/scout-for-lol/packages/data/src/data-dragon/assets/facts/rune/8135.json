@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8135",
+  "name": "Treasure Hunter",
+  "description": "Unique takedowns grant additional gold the first time they are collected.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/TreasureHunter.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

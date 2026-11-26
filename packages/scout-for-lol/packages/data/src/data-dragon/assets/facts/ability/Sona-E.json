@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sona-E",
+  "name": "Song of Celerity",
+  "description": "Sona plays the Song of Celerity, granting nearby allies bonus Move Speed. Sona gains a temporary aura that grants allied champions tagged by the zone bonus Move Speed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "430"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sona-E.png",
+  "slot": "E",
+  "championKey": "Sona",
+  "championName": "Sona",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    14,
+    14,
+    14,
+    14
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    430,
+    430,
+    430,
+    430,
+    430
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14 s"
+  }
+}

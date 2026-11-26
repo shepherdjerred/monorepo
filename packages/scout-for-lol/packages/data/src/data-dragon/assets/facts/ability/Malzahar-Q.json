@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Malzahar-Q",
+  "name": "Call of the Void",
+  "description": "Malzahar opens two portals to the Void that fire projectiles inward, dealing 70/105/140/175/210 (+55% AP) magic damage and Silencing for 1/1.25/1.5/1.75/2 second(s).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Malzahar-Q.png",
+  "slot": "Q",
+  "championKey": "Malzahar",
+  "championName": "Malzahar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

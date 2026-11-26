@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiora-passive",
+  "name": "Duelist's Dance",
+  "description": "Fiora has revealed a Vital on this Champion. If she hits the Vital, she restores Health and gains Move Speed.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Fiora-passive.png",
+  "slot": "passive",
+  "championKey": "Fiora",
+  "championName": "Fiora",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "713",
+  "name": "Clarity",
+  "description": "Restores your and ally champions' Mana. Summoner's Insight: Restores more mana.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerMana_Jade.png",
+  "cooldownSeconds": 135,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "135 s"
+  }
+}

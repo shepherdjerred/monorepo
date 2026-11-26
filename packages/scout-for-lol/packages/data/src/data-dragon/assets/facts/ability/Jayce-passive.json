@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jayce-passive",
+  "name": "Hextech Capacitor",
+  "description": "When Jayce swaps weapons he gains Move Speed for a short duration.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Jayce-passive.png",
+  "slot": "passive",
+  "championKey": "Jayce",
+  "championName": "Jayce",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

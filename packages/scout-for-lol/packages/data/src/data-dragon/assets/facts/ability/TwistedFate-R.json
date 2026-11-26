@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TwistedFate-R",
+  "name": "Destiny",
+  "description": "Twisted Fate focuses on his cards, granting True Sight of all enemy champions on the map for 6/8/10 seconds and allowing him to Recast. Recast: Twisted Fate teleports up to 5500 units away.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "5500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TwistedFate-R.png",
+  "slot": "R",
+  "championKey": "TwistedFate",
+  "championName": "Twisted Fate",
+  "maxRank": 3,
+  "cooldownByRank": [
+    170,
+    140,
+    110
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    5500,
+    5500,
+    5500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "170/140/110 s"
+  }
+}

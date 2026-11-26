@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Anivia-E",
+  "name": "Frostbite",
+  "description": "Anivia blasts an enemy with a freezing wind, dealing 55/80/105/130/155 (+55% AP) magic damage. Against Chilled enemies, Anivia deals 110/160/210/260/310 (+110% AP) magic damage instead.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Anivia-E.png",
+  "slot": "E",
+  "championKey": "Anivia",
+  "championName": "Anivia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226333",
+  "name": "Death's Dance",
+  "description": "Ignore Pain: Damage taken is dealt to you over time instead. Defy: Champion takedowns cleanse",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "60"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    },
+    {
+      "label": "Armor",
+      "value": "45"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226333.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

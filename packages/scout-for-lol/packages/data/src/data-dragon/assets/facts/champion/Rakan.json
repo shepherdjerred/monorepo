@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Rakan",
+  "name": "Rakan",
+  "description": "As mercurial as he is charming, Rakan is an infamous vastayan troublemaker and the greatest battle-dancer in Lhotlan tribal history.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "300"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Rakan-passive",
+      "name": "Fey Feathers",
+      "icon": "img/ability/Rakan-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rakan-Q",
+      "name": "Gleaming Quill",
+      "icon": "img/ability/Rakan-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rakan-W",
+      "name": "Grand Entrance",
+      "icon": "img/ability/Rakan-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rakan-E",
+      "name": "Battle Dance",
+      "icon": "img/ability/Rakan-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rakan-R",
+      "name": "The Quickness",
+      "icon": "img/ability/Rakan-R.png"
+    }
+  ],
+  "icon": "img/champion/Rakan.png",
+  "art": "img/champion-splash/Rakan_0.jpg",
+  "title": "The Charmer",
+  "roles": [
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support"
+  }
+}

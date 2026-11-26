@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Velkoz",
+  "name": "Vel'Koz",
+  "description": "It is unclear if Vel'Koz was the first Void-spawn to emerge on Runeterra, but there has certainly never been another to match his level of cruel, calculating sentience.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Velkoz-passive",
+      "name": "Organic Deconstruction",
+      "icon": "img/ability/Velkoz-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Velkoz-Q",
+      "name": "Plasma Fission",
+      "icon": "img/ability/Velkoz-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Velkoz-W",
+      "name": "Void Rift",
+      "icon": "img/ability/Velkoz-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Velkoz-E",
+      "name": "Tectonic Disruption",
+      "icon": "img/ability/Velkoz-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Velkoz-R",
+      "name": "Life Form Disintegration Ray",
+      "icon": "img/ability/Velkoz-R.png"
+    }
+  ],
+  "icon": "img/champion/Velkoz.png",
+  "art": "img/champion-splash/Velkoz_0.jpg",
+  "title": "the Eye of the Void",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

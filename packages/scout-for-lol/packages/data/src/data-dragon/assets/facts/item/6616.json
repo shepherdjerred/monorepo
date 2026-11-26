@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6616",
+  "name": "Staff of Flowing Water",
+  "description": "Rapids: Healing or Shielding an ally grants you both 40 Ability Power and 15 Ability Haste for 6 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "35"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "125%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/3108.png"
+    },
+    {
+      "kind": "item",
+      "key": "3114",
+      "name": "Forbidden Idol",
+      "icon": "img/item/3114.png"
+    }
+  ],
+  "icon": "img/item/6616.png",
+  "goldTotal": 2250,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

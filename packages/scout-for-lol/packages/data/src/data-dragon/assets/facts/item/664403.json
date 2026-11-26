@@ -1,0 +1,65 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "664403",
+  "name": "The Golden Spatula",
+  "description": "Grants 90 Attack Damage, 125 Ability Power, 30% Attack Speed, 25% Critical Strike Chance, 250 Health, 10 Armor, 10 Magic Resist, 250 Mana, 20 Ability Haste, 10% Life Steal, 100% Base Health Regen, 100% Base Mana Regen.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "90"
+    },
+    {
+      "label": "Ability Power",
+      "value": "125"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    },
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Armor",
+      "value": "10"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "10"
+    },
+    {
+      "label": "Mana",
+      "value": "250"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Life Steal",
+      "value": "10%"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "100%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/664403.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

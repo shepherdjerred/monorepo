@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Azir-Q",
+  "name": "Conquering Sands",
+  "description": "Azir orders all Sand Soldiers to an area, dealing 75/95/115/135/155 (+35/40/45/50/55% AP) magic damage to enemies they pass through and Slowing them by 25% for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/80/90/100/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "740"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Azir-Q.png",
+  "slot": "Q",
+  "championKey": "Azir",
+  "championName": "Azir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    12,
+    10,
+    8,
+    6
+  ],
+  "costByRank": [
+    70,
+    80,
+    90,
+    100,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    740,
+    740,
+    740,
+    740,
+    740
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/12/10/8/6 s"
+  }
+}

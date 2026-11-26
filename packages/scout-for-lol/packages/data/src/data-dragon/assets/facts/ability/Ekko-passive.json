@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ekko-passive",
+  "name": "Z-Drive Resonance",
+  "description": "Every third attack or damaging spell on the same target deals bonus magic damage, and grants Ekko a burst of speed if the target is a champion.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ekko-passive.png",
+  "slot": "passive",
+  "championKey": "Ekko",
+  "championName": "Ekko",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

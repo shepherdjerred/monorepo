@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Caitlyn-W",
+  "name": "Yordle Snap Trap",
+  "description": "Caitlyn sets a trap that Roots the first champion that steps on it for 1.5 seconds and granting True Sight of them for 3 seconds. Traps last for 30/35/40/45/50 seconds, and 3/3/4/4/5 traps may be active at once.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Caitlyn-W.png",
+  "slot": "W",
+  "championKey": "Caitlyn",
+  "championName": "Caitlyn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.5 s"
+  }
+}

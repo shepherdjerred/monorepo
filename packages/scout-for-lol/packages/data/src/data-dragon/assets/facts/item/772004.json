@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772004",
+  "name": "Mana Potion",
+  "description": "Click to Consume: Restores 100 Mana over 15 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772004.png",
+  "goldTotal": 35,
+  "goldCombine": 35,
+  "keyFact": {
+    "label": "Cost",
+    "value": "35 gold"
+  }
+}

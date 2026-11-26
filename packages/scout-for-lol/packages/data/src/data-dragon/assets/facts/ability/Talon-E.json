@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Talon-E",
+  "name": "Assassin's Path",
+  "description": "Talon vaults over the nearest terrain or structure. Talon cannot dash over the same terrain more than once every 160/135/110/85/60 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "725"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Talon-E.png",
+  "slot": "E",
+  "championKey": "Talon",
+  "championName": "Talon",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    725,
+    725,
+    725,
+    725,
+    725
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

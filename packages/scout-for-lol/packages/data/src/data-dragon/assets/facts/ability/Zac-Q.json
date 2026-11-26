@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zac-Q",
+  "name": "Stretching Strikes",
+  "description": "Zac stretches his arm out, attaching it to the first enemy hit to deal 60/90/120/150/180 (+30% AP) (+3% bonus Health) magic damage and briefly Slow them. Zac's next Attack gains increased range and applies the same damage and Slow.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zac-Q.png",
+  "slot": "Q",
+  "championKey": "Zac",
+  "championName": "Zac",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    12.5,
+    11,
+    9.5,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/12.5/11/9.5/8 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shaco-E",
+  "name": "Two-Shiv Poison",
+  "description": "Passive: While this Ability is off Cooldown, Shaco's Attacks Slow the target by 20/22.5/25/27.5/30% for 2 seconds. Active: Shaco throws a shiv, dealing 70/95/120/145/170 (+80% bonus AD) (+60% AP) magic damage and Slowing by 20/22.5/25/27.5/30% for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shaco-E.png",
+  "slot": "E",
+  "championKey": "Shaco",
+  "championName": "Shaco",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    75,
+    75,
+    75,
+    75,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    625,
+    625,
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Fiddlesticks",
+  "name": "Fiddlesticks",
+  "description": "Something has awoken in Runeterra. Something ancient.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "480"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Fiddlesticks-passive",
+      "name": "A Harmless Scarecrow",
+      "icon": "img/ability/Fiddlesticks-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiddlesticks-Q",
+      "name": "Terrify",
+      "icon": "img/ability/Fiddlesticks-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiddlesticks-W",
+      "name": "Bountiful Harvest",
+      "icon": "img/ability/Fiddlesticks-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiddlesticks-E",
+      "name": "Reap",
+      "icon": "img/ability/Fiddlesticks-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiddlesticks-R",
+      "name": "Crowstorm",
+      "icon": "img/ability/Fiddlesticks-R.png"
+    }
+  ],
+  "icon": "img/champion/Fiddlesticks.png",
+  "art": "img/champion-splash/Fiddlesticks_0.jpg",
+  "title": "the Ancient Fear",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

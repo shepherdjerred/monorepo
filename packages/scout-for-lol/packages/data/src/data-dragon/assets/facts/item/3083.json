@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3083",
+  "name": "Warmog's Armor",
+  "description": "Warmog's Heart: If you have 2000 bonus Health and have not taken damage within 8 seconds, restore Health per second. Warmog's Vitality: Gain bonus Health equal to 12% of your Item Health (0).",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "1000"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "100%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1011",
+      "name": "Giant's Belt",
+      "icon": "img/item/1011.png"
+    },
+    {
+      "kind": "item",
+      "key": "1011",
+      "name": "Giant's Belt",
+      "icon": "img/item/1011.png"
+    },
+    {
+      "kind": "item",
+      "key": "3801",
+      "name": "Crystalline Bracer",
+      "icon": "img/item/3801.png"
+    }
+  ],
+  "icon": "img/item/3083.png",
+  "goldTotal": 3100,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3100 gold"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773207",
+  "name": "Spirit of the Ancient Golem",
+  "description": "Butcher: Damage dealt to monsters increased by 30%.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "14"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "7"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771080",
+      "name": "Spirit Stone",
+      "icon": "img/item/771080.png"
+    },
+    {
+      "kind": "item",
+      "key": "773067",
+      "name": "Kindlegem",
+      "icon": "img/item/773067.png"
+    }
+  ],
+  "icon": "img/item/773207.png",
+  "goldTotal": 2000,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2000 gold"
+  }
+}

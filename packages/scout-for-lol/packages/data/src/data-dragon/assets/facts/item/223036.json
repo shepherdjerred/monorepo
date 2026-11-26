@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223036",
+  "name": "Lord Dominik's Regards",
+  "description": "Grants 45 Attack Damage, 40% Armor Penetration, 25% Critical Strike Chance.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Armor Penetration",
+      "value": "40%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223036.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

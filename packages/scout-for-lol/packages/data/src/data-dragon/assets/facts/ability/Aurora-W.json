@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aurora-W",
+  "name": "Across the Veil",
+  "description": "Hop in a direction. Upon landing, enter the spirit realm, becoming Invisible for 1/1.15/1.3/1.45/1.6 seconds and entering Realm Hopper, gaining 20/25/30/35/40% Move Speed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aurora-W.png",
+  "slot": "W",
+  "championKey": "Aurora",
+  "championName": "Aurora",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    21,
+    20,
+    19,
+    18
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/21/20/19/18 s"
+  }
+}

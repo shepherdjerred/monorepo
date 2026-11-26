@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karthus-Q",
+  "name": "Lay Waste",
+  "description": "Karthus creates a blast of magic, dealing 40/59/78/97/116 (+35% AP) magic damage. If the blast hits only one enemy, it instead deals 80/118/156/194/232 (+70% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20/25/30/35/40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "875"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karthus-Q.png",
+  "slot": "Q",
+  "championKey": "Karthus",
+  "championName": "Karthus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    20,
+    25,
+    30,
+    35,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    875,
+    875,
+    875,
+    875,
+    875
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

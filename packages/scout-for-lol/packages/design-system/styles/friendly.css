@@ -1,0 +1,51 @@
+/* The soft surface language: derived surface variables.
+
+   Everything here derives from the existing Scout tokens, so it follows the
+   active skin and mode. The variables are declared on the same selectors that
+   declare the tokens (not only on :root), so a nested element carrying its own
+   data-scout-skin / data-scout-mode resolves them against its own palette.
+   The classic skin squares these corners through its smaller radius tokens;
+   nothing below names a skin. */
+
+:root,
+[data-scout-skin][data-scout-mode] {
+  /* Radii: large panels and fully rounded pills are multiples of the large
+     token. The large radius itself stays --scout-radius-large. */
+  --scout-radius-panel: calc(var(--scout-radius-large) * 2);
+  --scout-radius-pill: calc(var(--scout-radius-large) * 4);
+
+  /* A recessed surface between the canvas and a panel, and a stronger step of
+     it for hover and track fills. */
+  --scout-surface-inset: color-mix(
+    in srgb,
+    var(--scout-color-canvas) 62%,
+    var(--scout-color-surface)
+  );
+  --scout-surface-inset-strong: color-mix(
+    in srgb,
+    var(--scout-color-text) 11%,
+    var(--scout-surface-inset)
+  );
+
+  /* Soft tints on a panel: the brand for "you", success for a winning streak. */
+  --scout-brand-soft: color-mix(
+    in srgb,
+    var(--scout-color-primary) 12%,
+    var(--scout-color-surface)
+  );
+  --scout-win-soft: color-mix(
+    in srgb,
+    var(--scout-color-success-on-surface) 17%,
+    var(--scout-color-surface)
+  );
+
+  /* A hairline ring that lifts an inset pill off its panel, and the floating
+     shadow for panels and raised chips. */
+  --scout-ring: inset 0 0 0 1px
+    color-mix(in srgb, var(--scout-color-text) 6%, transparent);
+  --scout-shadow-float:
+    0 0 0 1px color-mix(in srgb, var(--scout-color-text) 4%, transparent),
+    0 1px 2px color-mix(in srgb, var(--scout-color-overlay) 7%, transparent),
+    0 22px 44px -30px
+      color-mix(in srgb, var(--scout-color-overlay) 38%, transparent);
+}

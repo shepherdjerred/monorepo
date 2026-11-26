@@ -102,20 +102,38 @@ export function useDeployments() {
 }
 
 /**
+ * `useDocument`'s key and fetch, for views that read several deployments at
+ * once (`useQueries`) and share its cache.
+ */
+export function documentQuery(catalog: string, stage: string) {
+  return {
+    queryKey: ["document", catalog, stage],
+    queryFn: () =>
+      getJson(
+        `/v1/deployments/${encodeURIComponent(catalog)}/${encodeURIComponent(stage)}`,
+        DocumentSchema,
+      ),
+  };
+}
+
+/**
  * One deployment's document. While another deployment loads, `data` stays the
  * previous document and `isPlaceholderData` is true, so the table does not
  * blank out between deployments.
  */
 export function useDocument(catalog: string, stage: string) {
   return useQuery({
-    queryKey: ["document", catalog, stage],
+    ...documentQuery(catalog, stage),
     placeholderData: keepPreviousData,
-    queryFn: () =>
-      getJson(
-        `/v1/deployments/${encodeURIComponent(catalog)}/${encodeURIComponent(stage)}`,
-        DocumentSchema,
-      ),
   });
+}
+
+/** Reads one management endpoint and parses it with `schema`. */
+export function readEndpoint<T>(
+  path: string,
+  schema: z.ZodType<T>,
+): Promise<T> {
+  return getJson(path, schema);
 }
 
 export function useApplyFlag(catalog: string, stage: string) {

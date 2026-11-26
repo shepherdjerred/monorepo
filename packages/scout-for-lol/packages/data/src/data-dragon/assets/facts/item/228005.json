@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228005",
+  "name": "Obsidian Cleaver",
+  "description": "Carve: Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. Fervor: Dealing physical damage grants Move Speed for 2 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "70"
+    },
+    {
+      "label": "Health",
+      "value": "700"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/228005.png",
+  "goldTotal": 3000,
+  "goldCombine": 3000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

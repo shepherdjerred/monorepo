@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hecarim-passive",
+  "name": "Warpath",
+  "description": "Hecarim gains Attack Damage equal to a percentage of his bonus Move Speed.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Hecarim-passive.png",
+  "slot": "passive",
+  "championKey": "Hecarim",
+  "championName": "Hecarim",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2003",
+  "name": "Health Potion",
+  "description": "Consume: Restores 120 Health over 15 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2003.png",
+  "goldTotal": 50,
+  "goldCombine": 50,
+  "keyFact": {
+    "label": "Cost",
+    "value": "50 gold"
+  }
+}

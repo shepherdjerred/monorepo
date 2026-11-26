@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3854",
+  "name": "Steel Shoulderguards",
+  "description": "Grants 4 Attack Damage, 50 Health, 50% Base Health Regen, 2 Gold Per 10 Seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "4"
+    },
+    {
+      "label": "Health",
+      "value": "50"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "50%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "2"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3854.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

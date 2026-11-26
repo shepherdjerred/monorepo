@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8230",
+  "name": "Stormraider's Surge",
+  "description": "Dealing 25% of a champion's maximum health grants a burst of MS and Slow Resist.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20s - 10s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/StormraidersSurgeRuneIcon2.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

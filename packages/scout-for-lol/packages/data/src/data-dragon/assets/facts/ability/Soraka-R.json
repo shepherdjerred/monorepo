@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Soraka-R",
+  "name": "Wish",
+  "description": "Soraka calls upon divine powers, restoring 150/250/350 (+50% AP) Health to all allied champions, regardless of distance.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Soraka-R.png",
+  "slot": "R",
+  "championKey": "Soraka",
+  "championName": "Soraka",
+  "maxRank": 3,
+  "cooldownByRank": [
+    150,
+    135,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "150/135/120 s"
+  }
+}

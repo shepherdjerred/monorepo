@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akshan-E",
+  "name": "Heroic Swing",
+  "description": "First Cast: Akshan fires a grappling hook, attaching to the first terrain hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Akshan-E.png",
+  "slot": "E",
+  "championKey": "Akshan",
+  "championName": "Akshan",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    16.5,
+    15,
+    13.5,
+    12
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/16.5/15/13.5/12 s"
+  }
+}

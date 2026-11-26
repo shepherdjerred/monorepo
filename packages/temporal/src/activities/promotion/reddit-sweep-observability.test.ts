@@ -19,6 +19,10 @@ import type {
 import { draftRedditInvite } from "./reddit-discovery/relevance.ts";
 import { screenRedditBatch } from "./reddit-discovery/screening.ts";
 import { createRedditOutreachBrowser } from "./reddit-outreach/browser-session.ts";
+import {
+  REDDIT_DATASET_PREFIX,
+  RedditDatasetObservationSchema,
+} from "./reddit-outreach/dataset.ts";
 import { executeRedditOutreachReply } from "./reddit-outreach/index.ts";
 import { claimRedditReply } from "./reddit-outreach/ledger.ts";
 import {
@@ -87,11 +91,14 @@ function thread(post: RedditListingPost): RedditRequestPost {
   };
 }
 
-function runSweep(preview = false) {
+function runSweep(preview = false, subreddits?: string[]) {
   return new MockActivityEnvironment({
     namespace: "prod",
     workflowExecution: { workflowId, runId },
-  }).run(sweepRedditOutreach, { preview });
+  }).run(sweepRedditOutreach, {
+    preview,
+    ...(subreddits === undefined ? {} : { subreddits }),
+  });
 }
 
 function browserFixture(
@@ -109,7 +116,19 @@ function browserFixture(
     readRules: vi.fn<() => Promise<string>>().mockResolvedValue(rules),
     readThread: vi.fn(async (post: RedditListingPost) => thread(post)),
   };
-  vi.mocked(createRedditOutreachBrowser).mockReturnValue(browser);
+  vi.mocked(createRedditOutreachBrowser).mockImplementation(({ dataset }) => ({
+    ...browser,
+    readListing: async ({ subreddit: community }) => {
+      const page = await browser.readListing();
+      await dataset.listing(community, page.posts);
+      return page;
+    },
+    readThread: async (post) => {
+      const observed = await browser.readThread(post);
+      await dataset.thread({ post: observed, comments: [] });
+      return observed;
+    },
+  }));
   return browser;
 }
 
@@ -306,6 +325,97 @@ describe("Reddit outreach sweep observability", () => {
       },
     ]);
     expect(browser.readThread).not.toHaveBeenCalled();
+    expect(executeRedditOutreachReply).not.toHaveBeenCalled();
+  });
+});
+
+const archiveRun = (mode: "live" | "preview") =>
+  `${REDDIT_DATASET_PREFIX}/day=${promotionSpendDay(now)}/mode=${mode}/run=${encodeURIComponent(`${workflowId}/${runId}`)}`;
+
+describe("Reddit outreach dataset persistence", () => {
+  it("archives every fetched listing row before window and eligibility checks", async () => {
+    const older = {
+      ...listing("older"),
+      createdAt: "2026-11-19T02:00:00.000Z",
+      sticky: true,
+    };
+    const future = {
+      ...listing("future"),
+      createdAt: "2026-11-20T04:00:00.000Z",
+    };
+    const locked = { ...listing("locked"), locked: true };
+    const eligible = listing("eligible");
+    browserFixture([older, future, locked, eligible, eligible]);
+    const summary = await runSweep(true);
+    const store = promotionStore();
+    const root = archiveRun("preview");
+    const page = await store.read(
+      `${root}/listings/000001.json`,
+      RedditDatasetObservationSchema,
+    );
+    expect(page?.value).toMatchObject({
+      schemaVersion: 1,
+      kind: "listing",
+      posts: ["older", "future", "locked", "eligible", "eligible"].map(
+        (id) => ({
+          id,
+        }),
+      ),
+    });
+    expect(summary.assessed).toBe(1);
+    expect(
+      await store.read(
+        `${root}/threads/000001.json`,
+        RedditDatasetObservationSchema,
+      ),
+    ).toMatchObject({
+      value: {
+        kind: "thread",
+        post: { id: "eligible", body: "Private request body" },
+      },
+    });
+  });
+
+  it("keeps the page pending if all archive writes fail", async () => {
+    const store = promotionStore();
+    const original = store.put;
+    const put = vi.spyOn(store, "put");
+    let failedWrites = 0;
+    put.mockImplementation((key, value, etag) => {
+      if (!key.startsWith(REDDIT_DATASET_PREFIX))
+        return original(key, value, etag);
+      failedWrites++;
+      return Promise.reject(new Error("Archive unavailable"));
+    });
+    const browser = browserFixture([listing("eligible")]);
+    const summary = await runSweep();
+    expect(summary).toMatchObject({
+      stopReason: "blocked",
+      failureCategory: "storage",
+      coverage: [{ complete: false }],
+      assessed: 0,
+    });
+    expect(browser.readThread).not.toHaveBeenCalled();
+    expect(failedWrites).toBe(3);
+    put.mockRestore();
+    const retry = await new MockActivityEnvironment({
+      namespace: "prod",
+      workflowExecution: { workflowId, runId: "next-fixture-run" },
+    }).run(sweepRedditOutreach, {});
+    expect(retry.assessed).toBe(1);
+  });
+
+  it("allows validated community overrides only during a preview", async () => {
+    await expect(runSweep(false, ["AnotherSubreddit"])).rejects.toThrow(
+      "Reddit subreddit overrides require a preview",
+    );
+    await expect(
+      runSweep(true, ["AnotherSubreddit", "anothersubreddit"]),
+    ).rejects.toThrow("Subreddit names must be unique");
+    await expect(runSweep(true, ["AnotherSubreddit"])).resolves.toMatchObject({
+      preview: true,
+      coverage: [{ subreddit: "AnotherSubreddit" }],
+    });
     expect(executeRedditOutreachReply).not.toHaveBeenCalled();
   });
 });

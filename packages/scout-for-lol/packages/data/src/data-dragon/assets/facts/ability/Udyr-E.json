@@ -1,0 +1,52 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Udyr-E",
+  "name": "Blazing Stampede",
+  "description": "Udyr gains movement speed and his first attack against each target will Stun them. Recast: Gain even more movement speed and immunity to immobilizing effects for a couple seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Udyr-E.png",
+  "slot": "E",
+  "championKey": "Udyr",
+  "championName": "Udyr",
+  "maxRank": 6,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

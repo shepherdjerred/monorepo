@@ -31,6 +31,7 @@ export const layers = [
   "customs",
   "data-dragon",
   "example",
+  "game-facts",
   "lane-priors",
   "league",
   "meta",

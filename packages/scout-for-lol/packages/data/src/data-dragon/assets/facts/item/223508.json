@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223508",
+  "name": "Essence Reaver",
+  "description": "Spellblade: After using an Ability, your next Attack deals bonus physical damage and grants Mana On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223508.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

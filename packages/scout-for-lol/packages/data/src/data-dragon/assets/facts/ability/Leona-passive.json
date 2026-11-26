@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leona-passive",
+  "name": "Sunlight",
+  "description": "Damaging spells afflict enemies with Sunlight for 1.5 seconds. When allied Champions deal damage to those targets, they consume the Sunlight to deal additional magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Leona-passive.png",
+  "slot": "passive",
+  "championKey": "Leona",
+  "championName": "Leona",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -178,8 +178,16 @@ function shellWord(value: string): string {
 }
 
 /** The line typed into the interactive shell, so its `codex` wrapper policy still applies. */
-export function launchCommand(argv: readonly string[], thread: string): string {
-  return ["codex", ...resumeArguments(argv, thread)]
+export function launchCommand(
+  argv: readonly string[],
+  thread: string,
+  cwd?: string,
+): string {
+  return [
+    "codex",
+    ...resumeArguments(argv, thread),
+    ...(cwd === undefined ? [] : ["--cd", cwd]),
+  ]
     .map((word) => shellWord(word))
     .join(" ");
 }
@@ -187,7 +195,7 @@ export function launchCommand(argv: readonly string[], thread: string): string {
 /**
  * Type the launch line into the terminal's shell. Never retry this write: an
  * uncertain acknowledgement is resolved by verifying the exact process and
- * native conversation UUID.
+ * conversation recorded by Codex's hook.
  */
 export async function launchReplacement(
   runtime: Runtime,

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aurora-E",
+  "name": "The Weirding",
+  "description": "Converge the realms, sending out a blast of spirit magic dealing 80/120/160/200/240 (+70% AP) magic damage to enemies in the area and Slowing them by 80% decaying over 1 second. Aurora hops backwards a short distance after casting.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aurora-E.png",
+  "slot": "E",
+  "championKey": "Aurora",
+  "championName": "Aurora",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

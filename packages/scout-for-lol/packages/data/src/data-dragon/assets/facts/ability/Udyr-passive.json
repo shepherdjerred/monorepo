@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Udyr-passive",
+  "name": "Bridge Between",
+  "description": "Udyr has four basic Abilities that swap between Stances and can Recast an Ability to renew it with Ultimate benefits. Additionally, after using an Ability, Udyr's next two Attacks gain Attack Speed.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Udyr-passive.png",
+  "slot": "passive",
+  "championKey": "Udyr",
+  "championName": "Udyr",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

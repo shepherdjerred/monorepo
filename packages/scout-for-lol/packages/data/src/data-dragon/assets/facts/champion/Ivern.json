@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ivern",
+  "name": "Ivern",
+  "description": "Ivern Bramblefoot, known to many as the Green Father, is a peculiar half man, half tree who roams Runeterra's forests, cultivating life everywhere he goes.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "475"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ivern-passive",
+      "name": "Friend of the Forest",
+      "icon": "img/ability/Ivern-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ivern-Q",
+      "name": "Rootcaller",
+      "icon": "img/ability/Ivern-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ivern-W",
+      "name": "Brushmaker",
+      "icon": "img/ability/Ivern-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ivern-E",
+      "name": "Triggerseed",
+      "icon": "img/ability/Ivern-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ivern-R",
+      "name": "Daisy!",
+      "icon": "img/ability/Ivern-R.png"
+    }
+  ],
+  "icon": "img/champion/Ivern.png",
+  "art": "img/champion-splash/Ivern_0.jpg",
+  "title": "the Green Father",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

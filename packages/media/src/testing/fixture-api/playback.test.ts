@@ -9,6 +9,8 @@ import {
   NowPlayingSchema,
   PlaybackHistorySchema,
   PlaybackStatisticsSchema,
+  PlaybackTimelineSchema,
+  type PlaybackTimelineItem,
 } from "#shared/household/playback.ts";
 import type { Persona } from "./personas.ts";
 import { MEMBER } from "./personas.ts";
@@ -34,7 +36,11 @@ function read(
 }
 
 function history(path: string, persona: Persona, scenario?: FixtureScenario) {
-  return PlaybackHistorySchema.parse(read(path, persona, scenario));
+  return PlaybackTimelineSchema.parse(read(path, persona, scenario));
+}
+
+function timedSessions(items: readonly PlaybackTimelineItem[]) {
+  return items.flatMap((row) => (row.kind === "session" ? [row.session] : []));
 }
 
 describe("the playback fixture", () => {
@@ -50,33 +56,46 @@ describe("the playback fixture", () => {
       );
     });
     expect(reads).toBeGreaterThan(2);
-    expect(new Set(whole.items.map((play) => play.id)).size).toBe(
-      whole.items.length,
+    const keys = whole.items.map((row) =>
+      row.kind === "session" ? row.session.id : row.id,
     );
-    // Newest first.
-    const started = whole.items.map((play) => play.startedAt);
+    expect(new Set(keys).size).toBe(whole.items.length);
+    expect(whole.items.some((row) => row.kind === "plex_view")).toBe(true);
+    const started = whole.items.map((row) =>
+      row.kind === "session" ? row.session.startedAt : row.viewedAt,
+    );
     expect(started).toEqual([...started].sort().reverse());
+    const legacy = PlaybackHistorySchema.parse(
+      read("/playback/history?limit=25", "owner"),
+    );
+    expect(legacy.items).toEqual(timedSessions(whole.items).slice(0, 25));
   });
 
   it("has plays that link to a title and, among the older ones, plays that do not", async () => {
     const { items } = await readEveryPage((cursor) =>
       Promise.resolve(history(historyReadPath(EVERYTHING, cursor), "owner")),
     );
-    expect(items.some((play) => play.media !== null)).toBe(true);
-    expect(items.some((play) => play.media === null)).toBe(true);
-    expect(new Set(items.flatMap((play) => play.media?.kind ?? []))).toEqual(
+    const sessions = timedSessions(items);
+    expect(sessions.some((play) => play.media !== null)).toBe(true);
+    expect(sessions.some((play) => play.media === null)).toBe(true);
+    expect(new Set(sessions.flatMap((play) => play.media?.kind ?? []))).toEqual(
       new Set(["movie", "episode"]),
     );
   });
 
   it("shows a member only their own plays, and the owner everyone's", () => {
     const mine = history(historyReadPath(EVERYTHING, null), "member");
-    expect(new Set(mine.items.map((play) => play.userId))).toEqual(
-      new Set([MEMBER.id]),
-    );
+    expect(
+      new Set(timedSessions(mine.items).map((play) => play.userId)),
+    ).toEqual(new Set([MEMBER.id]));
+    expect(
+      mine.items.every(
+        (row) => row.kind === "session" || row.userName === MEMBER.displayName,
+      ),
+    ).toBe(true);
     const household = history(historyReadPath(EVERYTHING, null), "owner");
     expect(
-      new Set(household.items.map((play) => play.userId)).size,
+      new Set(timedSessions(household.items).map((play) => play.userId)).size,
     ).toBeGreaterThan(2);
     // The owner's person filter narrows to one of them.
     const narrowed = history(
@@ -84,9 +103,13 @@ describe("the playback fixture", () => {
       "owner",
     );
     expect(narrowed.items.length).toBeGreaterThan(0);
-    expect(narrowed.items.every((play) => play.userId === MEMBER.id)).toBe(
-      true,
-    );
+    expect(
+      narrowed.items.every((row) =>
+        row.kind === "session"
+          ? row.session.userId === MEMBER.id
+          : row.userName === MEMBER.displayName,
+      ),
+    ).toBe(true);
   });
 
   it("counts the plays the filters leave", () => {

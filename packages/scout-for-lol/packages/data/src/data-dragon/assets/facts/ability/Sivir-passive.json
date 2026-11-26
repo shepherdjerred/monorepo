@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sivir-passive",
+  "name": "Fleet of Foot",
+  "description": "Sivir gains a short burst of Move Speed when she attacks an enemy champion.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Sivir-passive.png",
+  "slot": "passive",
+  "championKey": "Sivir",
+  "championName": "Sivir",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

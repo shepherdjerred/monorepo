@@ -1,5 +1,8 @@
 import { afterAll, expect, test } from "vitest";
-import { PlaybackQuerySchema } from "#shared/household/playback.ts";
+import {
+  PlaybackQuerySchema,
+  PlaybackTimelineQuerySchema,
+} from "#shared/household/playback.ts";
 import {
   dayStart,
   EVERYTHING,
@@ -34,16 +37,19 @@ test("an address with nothing in it narrows nothing", () => {
   expect(filterKey(EVERYTHING)).toBe("");
   expect(isFiltered(EVERYTHING)).toBe(false);
   expect(statisticsReadPath(EVERYTHING)).toBe("/playback/statistics");
-  expect(historyReadPath(EVERYTHING, null)).toBe("/playback/history?limit=25");
+  expect(historyReadPath(EVERYTHING, null)).toBe(
+    "/playback/history?view=timeline&limit=25",
+  );
 });
 
 test("the search, the person and the days round-trip through the address", () => {
   const search =
-    "?search=the+bear&userId=person-1&from=2026-11-01T07%3A00%3A00.000Z&to=2026-11-15T08%3A00%3A00.000Z";
+    "?search=the+bear&userId=person-1&source=plex&from=2026-11-01T07%3A00%3A00.000Z&to=2026-11-15T08%3A00%3A00.000Z";
   const view = read(search);
   expect(view).toEqual({
     search: "the bear",
     person: "person-1",
+    source: "plex",
     from: "2026-11-01T07:00:00.000Z",
     to: "2026-11-15T08:00:00.000Z",
   });
@@ -52,9 +58,9 @@ test("the search, the person and the days round-trip through the address", () =>
 });
 
 test("what the page cannot read is left out, not sent to the API", () => {
-  expect(read("?from=yesterday&to=2026-11-15&userId=&cursor=abc")).toEqual(
-    EVERYTHING,
-  );
+  expect(
+    read("?from=yesterday&to=2026-11-15&userId=&cursor=abc&source=invalid"),
+  ).toEqual(EVERYTHING);
   expect(read(`?search=${"a".repeat(250)}`).search).toHaveLength(200);
   // A search of only spaces narrows nothing.
   expect(isFiltered({ ...EVERYTHING, search: "   " })).toBe(false);
@@ -64,24 +70,33 @@ test("every read the page makes is one the API accepts", () => {
   const view: HistoryView = {
     search: "  dune ",
     person: "person-1",
+    source: "tautulli",
     from: "2026-11-01T07:00:00.000Z",
     to: "2026-11-15T08:00:00.000Z",
   };
-  const cursor = "0000000a-0000-4000-8000-000000000019";
+  const cursor = "session:0000000a-0000-4000-8000-000000000019";
   for (const path of [
     historyReadPath(EVERYTHING, null),
     historyReadPath(view, null),
     historyReadPath(view, cursor),
-    statisticsReadPath(view),
+    historyReadPath(view, "last_watched:71"),
   ]) {
-    expect(PlaybackQuerySchema.safeParse(query(path)).success, path).toBe(true);
+    expect(
+      PlaybackTimelineQuerySchema.safeParse(query(path)).success,
+      path,
+    ).toBe(true);
   }
+  expect(
+    PlaybackQuerySchema.safeParse(query(statisticsReadPath(view))).success,
+  ).toBe(true);
   expect(query(historyReadPath(view, cursor))).toEqual({
     search: "dune",
     userId: "person-1",
+    source: "tautulli",
     from: "2026-11-01T07:00:00.000Z",
     to: "2026-11-15T08:00:00.000Z",
     limit: "25",
+    view: "timeline",
     cursor,
   });
   // The statistics follow the same filters as the list.

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4016",
+  "name": "Wordless Promise",
+  "description": "Promise: Gain 10% of your Promised ally's Ability Power, and grant your Promised ally 10% of your Ability Haste. ACTIVE: (0s)",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "50"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "15%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/4016.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

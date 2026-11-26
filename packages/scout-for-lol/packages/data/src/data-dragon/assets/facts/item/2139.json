@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2139",
+  "name": "Elixir of Sorcery",
+  "description": "Consume: Grants 50 Ability Power and 15% Mana Regen for 3 minutes.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2139.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

@@ -49,16 +49,16 @@ and seven days of recoverable quarantine before purge.
 The authenticated read APIs are bounded and do not create acquisition or
 removal authority:
 
-| Route                              | Purpose                                                                 |
-| ---------------------------------- | ----------------------------------------------------------------------- |
-| `GET /api/v1/library`              | Current visible library, keeping policy and personal interest.          |
-| `GET /api/v1/calendar`             | TV air dates and US theatrical, digital and physical movie dates.       |
-| `GET /api/v1/removals`             | Titles that are leaving soon, and quarantined titles still recoverable. |
-| `GET /api/v1/removal-history`      | Committed quarantine/removal history, retained after purge.             |
-| `GET /api/v1/playback/now-playing` | Separate whole-library playback observations, with explicit freshness.  |
-| `GET /api/v1/playback/history`     | Searchable session history, separate from current Plex watched truth.   |
-| `GET /api/v1/playback/statistics`  | Plays, watch time, rankings and playback decisions.                     |
-| `GET /api/v1/request-interests`    | Personal interest state, notice and revision context.                   |
+| Route                              | Purpose                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| `GET /api/v1/library`              | Current visible library, keeping policy and personal interest.                  |
+| `GET /api/v1/calendar`             | TV air dates and US theatrical, digital and physical movie dates.               |
+| `GET /api/v1/removals`             | Titles that are leaving soon, and quarantined titles still recoverable.         |
+| `GET /api/v1/removal-history`      | Committed quarantine/removal history, retained after purge.                     |
+| `GET /api/v1/playback/now-playing` | Separate whole-library playback observations, with explicit freshness.          |
+| `GET /api/v1/playback/history`     | Searchable session history. Add `view=timeline` to include archived Plex views. |
+| `GET /api/v1/playback/statistics`  | Plays, watch time, rankings and playback decisions.                             |
+| `GET /api/v1/request-interests`    | Personal interest state, notice and revision context.                           |
 
 `POST /api/v1/request-interests/:id/commands` applies revision-checked,
 idempotent interest actions. `POST /api/v1/library/:id/keeping-policy` changes
@@ -1325,23 +1325,24 @@ square shows the release count as a link to the agenda.
 ### History
 
 `/history` (`src/client/history/`) shows what is playing now and what has been
-watched. An owner reads the household's plays and can narrow them to one
-person; a member reads only their own, which the playback API decides and the
-page does not.
+watched. Owners can see the household's history or filter it by person.
+Members see only their own history. Media uses verified Plex account
+bindings to include archived views in each person's history.
 
-| Part        | Read                               | Notes                                                                            |
-| ----------- | ---------------------------------- | -------------------------------------------------------------------------------- |
-| Now playing | `GET /api/v1/playback/now-playing` | Asked again every minute. A stale answer says so instead of listing old streams. |
-| Statistics  | `GET /api/v1/playback/statistics`  | Three totals, then ranked bars. Hidden when there are no plays to count.         |
-| Plays       | `GET /api/v1/playback/history`     | Newest first, 25 at a time through `useCursorList`.                              |
+| Part        | Read                                         | Notes                                                                            |
+| ----------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
+| Now playing | `GET /api/v1/playback/now-playing`           | Asked again every minute. A stale answer says so instead of listing old streams. |
+| Statistics  | `GET /api/v1/playback/statistics`            | Three totals, then ranked bars. Hidden when there are no plays to count.         |
+| Plays       | `GET /api/v1/playback/history?view=timeline` | Timed sessions and archived Plex views, newest first, 25 at a time.              |
 
-The title search, the person and the two days are query parameters (`search`,
-`userId`, `from`, `to`) that narrow the statistics and the list together.
-`from` and `to` are moments, the midnight that starts a day where the reader
-is: a play happened at a moment, unlike a release date.
+The title search, person, source, and dates (`search`, `userId`, `source`,
+`from`, `to`) narrow the statistics and the list together. The date controls
+use midnight in the reader's time zone. Statistics use measured playback
+sessions. Plex views and last-watched records carry their original timestamps
+and can include titles that have left the library.
 
-A play, or a stream, links to its title page when its `media` is present and is
-named without a link when it is null.
+A timed session links to its title page when its `media` is present. API
+clients can continue reading session records by omitting `view`.
 
 A ranked bar is a `<progress>` whose `value` and `max` are the row's plays and
 the busiest row's, styled in `history.module.css`. Its length therefore comes
@@ -3356,6 +3357,12 @@ see their own verified history. The owner can also see records whose requester
 has yet to be matched. Archived requests carry no acquisition or retention
 authority.
 
+While Seerr still accepts requests, set `recordHistoryOnly: true` in both
+preview and apply. Select the exact requests and include every selected
+provenance key in `historyOnly`, with an empty `movieEditions` list. The
+entries appear in **My requests** with the captured date and status. This mode
+leaves active requests, Keep policies, approvals, and recovery holds untouched.
+
 The immutable `personal_state_imported` receipt accounts only its exact captured
 record digest, reviewed requester binding, and real native request identities.
 Once all relevant approved claims reconcile and library Keep defaults are
@@ -3449,6 +3456,32 @@ at import. Replay the same batches after an account is verified to attach
 previously unbound records. Changing account mappings never transfers prior
 history to a different person. Plex history does not affect downloads,
 library retention, or the play counts and watch time supplied by timed sessions.
+
+### Historical download and subtitle activity
+
+**Manage → Activity** shows Media operations and archived Sonarr, Radarr, and
+Bazarr activity in timestamp order for the owner. Use the source filter to
+browse Media activity, all imports, or a single source. Events retain their
+source instance, original row ID, time, and available file, provider, and
+subtitle facts. Sonarr events can link to a Media episode when a stored
+capture confirms the exact series identity and episode numbering. The
+original source IDs remain visible on every event that has them.
+
+Prepare the verified private activity archive with the
+[activity adapter](scripts/migration-legacy-activity.ts). It checks source
+digests and the exact row identities of provider and language supplements,
+then emits bounded JSON request bodies on stdout. Keep that output private.
+
+```sh
+bun scripts/migration-legacy-activity.ts --directory "$activity_archive"
+```
+
+Send each JSON line to the existing `POST /api/v1/admin/migration` endpoint
+with the Media owner session and CSRF token. Verify that `imported + unchanged`
+equals the batch size. Repeating a batch leaves the original events unchanged.
+A conflict in a source event's facts rejects the batch. The import writes
+application history only and creates no downloads, notifications, or
+ownership changes.
 
 ### Legacy subtitle adoption and policy
 

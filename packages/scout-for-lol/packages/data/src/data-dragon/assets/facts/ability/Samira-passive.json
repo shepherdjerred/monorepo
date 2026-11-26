@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Samira-passive",
+  "name": "Daredevil Impulse",
+  "description": "Samira builds a combo by hitting attacks or abilities unique from the previous hit. Samira's attacks in melee range deal additional magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Samira-passive.png",
+  "slot": "passive",
+  "championKey": "Samira",
+  "championName": "Samira",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

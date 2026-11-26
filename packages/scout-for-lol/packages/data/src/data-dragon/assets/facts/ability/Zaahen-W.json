@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zaahen-W",
+  "name": "Dreaded Return",
+  "description": "Zaahen stabs in a direction, dealing 40/60/80/100/120 (+50% bonus AD) physical damage to enemies hit, then Pulls them toward him, dealing 30/50/70/90/110 (+30% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zaahen-W.png",
+  "slot": "W",
+  "championKey": "Zaahen",
+  "championName": "Zaahen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13.5,
+    13,
+    12.5,
+    12
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13.5/13/12.5/12 s"
+  }
+}

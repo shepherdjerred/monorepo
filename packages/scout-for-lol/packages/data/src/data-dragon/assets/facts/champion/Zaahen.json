@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zaahen",
+  "name": "Zaahen",
+  "description": "A fallen god wielding both divine and profane power, Zaahen hunts his fellow Darkin while defying the corruption that threatens to consume him.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zaahen-passive",
+      "name": "Cultivation of War",
+      "icon": "img/ability/Zaahen-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zaahen-Q",
+      "name": "The Darkin Glaive",
+      "icon": "img/ability/Zaahen-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zaahen-W",
+      "name": "Dreaded Return",
+      "icon": "img/ability/Zaahen-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zaahen-E",
+      "name": "Aureate Rush",
+      "icon": "img/ability/Zaahen-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zaahen-R",
+      "name": "Grim Deliverance",
+      "icon": "img/ability/Zaahen-R.png"
+    }
+  ],
+  "icon": "img/champion/Zaahen.png",
+  "art": "img/champion-splash/Zaahen_0.jpg",
+  "title": "The Unsundered",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

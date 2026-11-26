@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ziggs-E",
+  "name": "Hexplosive Minefield",
+  "description": "Ziggs scatters proximity mines that detonate on enemy contact, dealing 30/70/110/150/190 (+25/30/35/40/45% AP) magic damage and Slows by 10/20/30/40/50% for 1.5 seconds. Mines last 10 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/80/90/100/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ziggs-E.png",
+  "slot": "E",
+  "championKey": "Ziggs",
+  "championName": "Ziggs",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "costByRank": [
+    70,
+    80,
+    90,
+    100,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16 s"
+  }
+}

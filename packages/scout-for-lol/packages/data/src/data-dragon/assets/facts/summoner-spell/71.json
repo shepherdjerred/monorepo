@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "71",
+  "name": "Cleanse",
+  "description": "Removes all disables and summoner spell debuffs affecting your champion and temporarily lowers the duration of incoming disables. Summoner's Resolve: Extends the Tenacity buff duration.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "200"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerBoost_Jade.png",
+  "cooldownSeconds": 210,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "210 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KSante-Q",
+  "name": "Ntofo Strikes",
+  "description": "K'Sante slams his weapon, dealing 70/100/130/160/190 (+40% bonus Armor) (+40% bonus Magic Resist) physical damage and Slowing enemies by 80% for 0.5s. If he hits, he gains a stack of Ntofo Strikes for 6 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KSante-Q.png",
+  "slot": "Q",
+  "championKey": "KSante",
+  "championName": "K'Sante",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3.5 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taric-Q",
+  "name": "Starlight's Touch",
+  "description": "Passive: Gain a stack (max 1/2/3/4/5) every 15 seconds and when hitting a Bravado Attack.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana, all Charges"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Taric-Q.png",
+  "slot": "Q",
+  "championKey": "Taric",
+  "championName": "Taric",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana, all Charges",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3 s"
+  }
+}

@@ -19,8 +19,12 @@ import { assertRedditPostIdentity, RedditListingPostSchema } from "./model.ts";
 export const REDDIT_DECISIONS_MODEL = "gpt-6-luna";
 export const DECISIONS_MODEL = REDDIT_DECISIONS_MODEL;
 export const REDDIT_MATCH_THRESHOLD = 0.6;
-const SEEKER_INTENT_CONFIDENCE = 0.8;
-const HARD_CONSTRAINT_CONFIDENCE = 0.7;
+export const REDDIT_DECISION_POLICY = {
+  fitThreshold: REDDIT_MATCH_THRESHOLD,
+  seekerConfidence: 0.8,
+  hardConstraintConfidence: 0.7,
+};
+type RedditDecisionPolicy = Readonly<typeof REDDIT_DECISION_POLICY>;
 const Probability = z.number().min(0).max(1);
 
 export const RedditQualificationSchema = z.strictObject({
@@ -272,17 +276,11 @@ function allowedChoice(
   );
 }
 
-export function qualifyRedditDecision(
-  result: Pick<DecisionResult, "model" | "answers" | "usage">,
-) {
-  const { model, answers } = result;
-  const usage = decisionUsage(result.usage);
-  if (model !== REDDIT_DECISIONS_MODEL)
-    throw new StructuredOutputUsageError(
-      "Decisions returned an invalid classification response",
-      [],
-      usage,
-    );
+/** Replay and production use the same answer validation and qualification gates. */
+export function qualifyRedditAnswers(
+  answers: readonly DecisionAnswer[],
+  policy: RedditDecisionPolicy = REDDIT_DECISION_POLICY,
+): RedditQualification {
   const names = answers.map((answer) => answer.name);
   const complete =
     names.length === REDDIT_DECISION_QUESTIONS.length &&
@@ -295,12 +293,12 @@ export function qualifyRedditDecision(
     );
   const seeker =
     namedPredicate(answers, "explicit_server_seeker") >
-      SEEKER_INTENT_CONFIDENCE &&
+      policy.seekerConfidence &&
     allowedChoice(
       answers,
       "post_intent",
       "find_server",
-      SEEKER_INTENT_CONFIDENCE,
+      policy.seekerConfidence,
     );
   const ruleAssessment = validatedChoice(
     answers,
@@ -311,7 +309,7 @@ export function qualifyRedditDecision(
     answers,
     "hard_constraints",
     "satisfied",
-    HARD_CONSTRAINT_CONFIDENCE,
+    policy.hardConstraintConfidence,
   );
   const score = namedPredicate(answers, "strong_main_match");
   const match =
@@ -319,8 +317,8 @@ export function qualifyRedditDecision(
     seeker &&
     permitted &&
     requirements &&
-    score >= REDDIT_MATCH_THRESHOLD;
-  const qualification: RedditQualification = {
+    score >= policy.fitThreshold;
+  return {
     decision: match ? "match" : "no-match",
     judgeScore: score,
     explicitlySeekingServer: seeker,
@@ -328,8 +326,22 @@ export function qualifyRedditDecision(
     hardConstraintsSatisfied: requirements,
     reason: match
       ? "Decisions confirms an explicit server seeker, a useful main-request fit, and supported hard requirements. No applicable community restriction was identified."
-      : `Decisions declined: ${[!complete && "incomplete, duplicate or refused answers", !seeker && "server-seeking intent unconfirmed", !permitted && (ruleAssessment?.choice === "restricted" ? "community rules restrict this reply" : "invalid community rules assessment"), !requirements && "unmet or unknown hard requirements", score < REDDIT_MATCH_THRESHOLD && `main-request fit is below ${REDDIT_MATCH_THRESHOLD.toFixed(2)}`].filter(Boolean).join("; ")}.`,
+      : `Decisions declined: ${[!complete && "incomplete, duplicate or refused answers", !seeker && "server-seeking intent unconfirmed", !permitted && (ruleAssessment?.choice === "restricted" ? "community rules restrict this reply" : "invalid community rules assessment"), !requirements && "unmet or unknown hard requirements", score < policy.fitThreshold && `main-request fit is below ${policy.fitThreshold.toFixed(2)}`].filter(Boolean).join("; ")}.`,
   };
+}
+
+export function qualifyRedditDecision(
+  result: Pick<DecisionResult, "model" | "answers" | "usage">,
+) {
+  const { model, answers } = result;
+  const usage = decisionUsage(result.usage);
+  if (model !== REDDIT_DECISIONS_MODEL)
+    throw new StructuredOutputUsageError(
+      "Decisions returned an invalid classification response",
+      [],
+      usage,
+    );
+  const qualification = qualifyRedditAnswers(answers);
   return { qualification, usage, answers };
 }
 

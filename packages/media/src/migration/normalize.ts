@@ -25,7 +25,7 @@ type Options = {
   targets: readonly Target[];
   requesters?: readonly { plexAccountId: string; userId: string }[];
 };
-function sharesIds(
+export function sharesCatalogIdentity(
   ids: Target["externalIds"],
   target: Target["externalIds"],
 ): boolean {
@@ -73,7 +73,7 @@ function identity(
       target.kind === "episode" || target.kind === "season"
         ? (target.seriesExternalIds ?? target.externalIds)
         : target.externalIds;
-    if (sharesIds(ids, targetIds)) matched.push(target);
+    if (sharesCatalogIdentity(ids, targetIds)) matched.push(target);
     if (matched.length === 2) break;
   }
   return {

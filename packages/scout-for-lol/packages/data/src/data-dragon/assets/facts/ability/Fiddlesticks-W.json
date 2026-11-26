@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiddlesticks-W",
+  "name": "Bountiful Harvest",
+  "description": "Fiddlesticks channels and drains the souls of nearby enemies, dealing 60/90/120/150/180 (+45% AP) magic damage per second for 2 seconds, plus 12/14.5/17/19.5/22% missing Health magic damage at the end.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiddlesticks-W.png",
+  "slot": "W",
+  "championKey": "Fiddlesticks",
+  "championName": "Fiddlesticks",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

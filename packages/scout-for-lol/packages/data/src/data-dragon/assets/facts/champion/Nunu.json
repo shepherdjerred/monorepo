@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nunu",
+  "name": "Nunu & Willump",
+  "description": "Once upon a time, there was a boy who wanted to prove he was a hero by slaying a fearsome monster—only to discover that the beast, a lonely and magical yeti, merely needed a friend.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nunu-passive",
+      "name": "Call of the Freljord",
+      "icon": "img/ability/Nunu-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nunu-Q",
+      "name": "Consume",
+      "icon": "img/ability/Nunu-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nunu-W",
+      "name": "Biggest Snowball Ever!",
+      "icon": "img/ability/Nunu-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nunu-E",
+      "name": "Snowball Barrage",
+      "icon": "img/ability/Nunu-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nunu-R",
+      "name": "Absolute Zero",
+      "icon": "img/ability/Nunu-R.png"
+    }
+  ],
+  "icon": "img/champion/Nunu.png",
+  "art": "img/champion-splash/Nunu_0.jpg",
+  "title": "the Boy and His Yeti",
+  "roles": [
+    "Tank",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Mage"
+  }
+}

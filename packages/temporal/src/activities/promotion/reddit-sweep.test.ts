@@ -77,6 +77,39 @@ describe("Reddit Decisions assessment caching", () => {
     expect(input.judge).toHaveBeenCalledTimes(1);
   });
 
+  it("reports the original decision answers when the same post is cached", async () => {
+    const input = fixture();
+    const answers = [
+      {
+        name: "strong_main_match",
+        type: "predicate" as const,
+        probability: 0.9,
+      },
+    ];
+    const judge = vi.fn(async () => ({ qualification, usage, answers }));
+    const onAssessment = vi.fn(() => Promise.resolve());
+    const request = {
+      ...input,
+      items: [{ post, rules: "Server recommendations are welcome." }],
+      judge,
+      onAssessment,
+    };
+
+    await screenRedditBatch({ ...request, reservationId: "first" });
+    await screenRedditBatch({ ...request, reservationId: "second" });
+
+    expect(judge).toHaveBeenCalledTimes(1);
+    expect(onAssessment).toHaveBeenCalledTimes(2);
+    expect(onAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        post,
+        answers,
+        capturedAt: expect.any(String),
+      }),
+    );
+    expect(onAssessment.mock.calls[0]).toEqual(onAssessment.mock.calls[1]);
+  });
+
   it("judges only new items in a mixed cached and uncached batch", async () => {
     const input = fixture();
     const item = { post, rules: "Recommendations are welcome." };

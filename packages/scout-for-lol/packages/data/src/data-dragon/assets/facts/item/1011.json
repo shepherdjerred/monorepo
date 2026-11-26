@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1011",
+  "name": "Giant's Belt",
+  "description": "Grants 350 Health.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    }
+  ],
+  "icon": "img/item/1011.png",
+  "goldTotal": 900,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gnar-W",
+  "name": "Hyper / Wallop",
+  "description": "Mini Gnar Passive: Every third Attack or Ability on the same enemy deals an additional 0/10/20/30/40 (+100% AP) plus 6/8/10/12/14% max Health magic damage and grants 40/60/80% Move Speed decaying over 3 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Gnar-W.png",
+  "slot": "W",
+  "championKey": "Gnar",
+  "championName": "Gnar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

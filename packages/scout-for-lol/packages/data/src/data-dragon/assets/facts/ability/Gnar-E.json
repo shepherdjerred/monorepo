@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gnar-E",
+  "name": "Hop / Crunch",
+  "description": "Mini Gnar: Gnar leaps, gaining 40/45/50/55/60% Attack Speed for 6 seconds. If Gnar lands on a unit he will bounce off it, traveling further.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gnar-E.png",
+  "slot": "E",
+  "championKey": "Gnar",
+  "championName": "Gnar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    19.5,
+    17,
+    14.5,
+    12
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/19.5/17/14.5/12 s"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ambessa",
+  "name": "Ambessa",
+  "description": "All who know the name Medarda respect and fear the family's leader, Ambessa. As a Noxian general, she embodies a deadly combination of ruthless strength and fearless resolve in battle.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ambessa-passive",
+      "name": "Drakehound's Step",
+      "icon": "img/ability/Ambessa-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ambessa-Q",
+      "name": "Cunning Sweep / Sundering Slam",
+      "icon": "img/ability/Ambessa-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ambessa-W",
+      "name": "Repudiation",
+      "icon": "img/ability/Ambessa-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ambessa-E",
+      "name": "Lacerate",
+      "icon": "img/ability/Ambessa-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ambessa-R",
+      "name": "Public Execution",
+      "icon": "img/ability/Ambessa-R.png"
+    }
+  ],
+  "icon": "img/champion/Ambessa.png",
+  "art": "img/champion-splash/Ambessa_0.jpg",
+  "title": "Matriarch of War",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

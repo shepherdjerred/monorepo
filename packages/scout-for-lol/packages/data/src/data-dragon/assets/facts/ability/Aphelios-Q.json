@@ -1,0 +1,52 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aphelios-Q",
+  "name": "Weapon Abilites",
+  "description": "Aphelios has 5 different activated abilities, based on his main-hand weapon: Calibrum (Rifle): Long range shot that marks its target for a long-range follow-up attack. Severum (Scythe Pistol): Run fast while attacking nearby enemies with both weapons.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aphelios-Q.png",
+  "slot": "Q",
+  "championKey": "Aphelios",
+  "championName": "Aphelios",
+  "maxRank": 6,
+  "cooldownByRank": [
+    9,
+    9,
+    9,
+    9,
+    9,
+    9
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1450,
+    1450,
+    1450,
+    1450,
+    1450,
+    1450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9 s"
+  }
+}

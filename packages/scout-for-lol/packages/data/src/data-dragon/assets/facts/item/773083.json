@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773083",
+  "name": "Warmog's Armor",
+  "description": "Passive: Permanently gain 3.5 Health and 0.1 Health Regen per 5 sec. per stack. 1 stack is gained per minion or monster kill and 10 stacks are gained per Takedown.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "920"
+    },
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "30"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771011",
+      "name": "Giant's Belt",
+      "icon": "img/item/771011.png"
+    },
+    {
+      "kind": "item",
+      "key": "773132",
+      "name": "Heart of Gold",
+      "icon": "img/item/773132.png"
+    },
+    {
+      "kind": "item",
+      "key": "771006",
+      "name": "Rejuvenation Bead",
+      "icon": "img/item/771006.png"
+    }
+  ],
+  "icon": "img/item/773083.png",
+  "goldTotal": 3000,
+  "goldCombine": 995,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

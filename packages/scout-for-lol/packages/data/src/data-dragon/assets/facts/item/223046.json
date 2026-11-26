@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223046",
+  "name": "Phantom Dancer",
+  "description": "Spectral Waltz: Become Ghosted.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "65%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "10%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223046.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Singed-E",
+  "name": "Fling",
+  "description": "Singed flings an enemy over his shoulder, dealing 50/60/70/80/90 (+55% AP) plus 6/6.5/7/7.5/8% max Health magic damage. If Singed flings a target into his Mega Adhesive, they are Rooted for 1/1.25/1.5/1.75/2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "125"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Singed-E.png",
+  "slot": "E",
+  "championKey": "Singed",
+  "championName": "Singed",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    125,
+    125,
+    125,
+    125,
+    125
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

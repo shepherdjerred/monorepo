@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Darius-R",
+  "name": "Noxian Guillotine",
+  "description": "Darius leaps to an enemy and strikes a lethal blow, dealing 125/250/375 (+75% bonus AD) true damage. For each Hemorrhage on the target, this Ability deals an additional 20% damage, up to a max of 250/500/750 (+150% bonus AD) damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100/100/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "460"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Darius-R.png",
+  "slot": "R",
+  "championKey": "Darius",
+  "championName": "Darius",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    460,
+    460,
+    460
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "76",
+  "name": "Ghost",
+  "description": "Gain Move Speed and ignore unit collision for the duration. Summoner's Wrath: Bonus Move Speed granted by Ghost is increased.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "200"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerHaste_Jade.png",
+  "cooldownSeconds": 240,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "240 s"
+  }
+}

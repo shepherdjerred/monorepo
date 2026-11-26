@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Milio-W",
+  "name": "Cozy Campfire",
+  "description": "Milio creates a hearth that follows ally champions for 6 seconds. Ally champions nearby gain 10/12.5/15/17.5/20% Attack Range and restore 70/90/110/130/150 (+15% AP) Health over the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90/100/110/120/130 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Milio-W.png",
+  "slot": "W",
+  "championKey": "Milio",
+  "championName": "Milio",
+  "maxRank": 5,
+  "cooldownByRank": [
+    29,
+    27,
+    25,
+    23,
+    21
+  ],
+  "costByRank": [
+    90,
+    100,
+    110,
+    120,
+    130
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "29/27/25/23/21 s"
+  }
+}

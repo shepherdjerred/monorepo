@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zoe-E",
+  "name": "Sleepy Trouble Bubble",
+  "description": "Zoe dropkicks a bubble that deals 70/110/150/190/230 (+45% AP) magic damage, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zoe-E.png",
+  "slot": "E",
+  "championKey": "Zoe",
+  "championName": "Zoe",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

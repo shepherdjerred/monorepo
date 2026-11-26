@@ -1,5 +1,8 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { RedditOutreachActivities } from "#activities/promotion/reddit-sweep.ts";
+import type {
+  RedditOutreachActivities,
+  RedditOutreachSweepOptions,
+} from "#activities/promotion/reddit-sweep.ts";
 import type { reconcileRedditOutreachReply } from "#activities/promotion/reddit-outreach/reconcile.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -12,7 +15,7 @@ const outreach = proxyActivities<RedditOutreachActivities>({
 
 /** The durable effect journal handles ambiguity; a failed write is never retried. */
 export async function runStormRedditOutreach(
-  input: { preview?: boolean } = {},
+  input: RedditOutreachSweepOptions = {},
 ) {
   return await outreach.sweepRedditOutreach(input);
 }

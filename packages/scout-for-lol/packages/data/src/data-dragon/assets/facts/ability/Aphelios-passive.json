@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aphelios-passive",
+  "name": "The Hitman and the Seer",
+  "description": "Aphelios wields 5 Lunari Weapons made by his sister Alune. He has access to two at a time: one main-hand and one off-hand.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Aphelios-passive.png",
+  "slot": "passive",
+  "championKey": "Aphelios",
+  "championName": "Aphelios",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

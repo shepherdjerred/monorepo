@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayle-W",
+  "name": "Celestial Blessing",
+  "description": "Blessed by the divine, Kayle heals and grants Move Speed to herself and the nearest ally.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayle-W.png",
+  "slot": "W",
+  "championKey": "Kayle",
+  "championName": "Kayle",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15 s"
+  }
+}

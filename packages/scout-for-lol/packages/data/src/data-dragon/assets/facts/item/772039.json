@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772039",
+  "name": "Elixir of Brilliance",
+  "description": "Click to Consume: Grants Ability Power and 10% Cooldown Reduction for 180 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772039.png",
+  "goldTotal": 250,
+  "goldCombine": 250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "250 gold"
+  }
+}

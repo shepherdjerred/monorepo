@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ezreal-W",
+  "name": "Essence Flux",
+  "description": "Ezreal fires a magical orb that sticks to the first champion, structure, or epic jungle monster hit for 4 seconds. If Ezreal hits that target with an Attack or Ability, it detonates, dealing 80/135/190/245/300 (+115% bonus AD) (+100% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ezreal-W.png",
+  "slot": "W",
+  "championKey": "Ezreal",
+  "championName": "Ezreal",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1150,
+    1150,
+    1150,
+    1150,
+    1150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

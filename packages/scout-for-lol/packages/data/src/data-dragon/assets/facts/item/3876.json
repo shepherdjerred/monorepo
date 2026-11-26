@@ -1,0 +1,40 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3876",
+  "name": "Solstice Sleigh",
+  "description": "Going Sledding: Slowing or Immobilizing an enemy champion near allies restores Health and grants 20% decaying Move Speed for 2.5 seconds to you and a nearby ally. Active: (4 charges) Places an Invisible Stealth Ward that grants vision.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "9"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3867",
+      "name": "Bounty of Worlds",
+      "icon": "img/item/3867.png"
+    }
+  ],
+  "icon": "img/item/3876.png",
+  "goldTotal": 400,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

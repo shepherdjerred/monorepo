@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gnar-Q",
+  "name": "Boomerang Throw / Boulder Toss",
+  "description": "Mini Gnar: Gnar throws a boomerang that deals 5/45/85/125/165 (+135% AD) physical damage and Slows by 15/20/25/30/35% for 2 seconds. The boomerang returns after hitting an enemy, dealing reduced damage to subsequent targets.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gnar-Q.png",
+  "slot": "Q",
+  "championKey": "Gnar",
+  "championName": "Gnar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14.5,
+    13,
+    11.5,
+    10
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14.5/13/11.5/10 s"
+  }
+}

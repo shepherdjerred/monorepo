@@ -11,13 +11,12 @@ import {
 } from "./report-object-store.ts";
 
 /**
- * Exclusive ownership of a report's Postal send.
+ * Exclusive ownership of a report's outbound mail send.
  *
- * Postal has no idempotency key, so "did the previous attempt already send
- * this?" cannot be answered from the provider. A stored `pending` delivery
- * state cannot answer it either: Temporal starts a new attempt once
+ * A stored `pending` delivery state alone cannot prove whether an in-flight
+ * send already completed: Temporal starts a new attempt once
  * start-to-close elapses, which can be while the previous attempt sits between
- * its Postal call and its state write. Reading pending as "not sent"
+ * its Mail API call and its state write. Reading pending as "not sent"
  * duplicates the email; reading it as "sent" drops a report whose owner died
  * first. So ownership is taken explicitly instead, and every timestamp here is
  * on ONE clock — the start of the activity attempt that holds the lease.
@@ -71,7 +70,7 @@ export function s3ReportSendClaimBackend(
 }
 
 /**
- * Milliseconds this attempt may still spend talking to Postal before its lease
+ * Milliseconds this attempt may still spend talking to the Mail API before its lease
  * becomes takeable. Non-positive means the attempt must not send at all.
  *
  * Measured from attempt start rather than from the call, because slow
@@ -112,7 +111,7 @@ export async function assertReportSendStillOwned(input: {
 }
 
 /**
- * Arms the abort for one Postal request, measured from attempt start.
+ * Arms the abort for one Mail API request, measured from attempt start.
  *
  * Deliberately computes the remaining budget and constructs the signal
  * together: a timeout only starts counting when it is constructed, so

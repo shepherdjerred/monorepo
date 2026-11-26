@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Khazix-Q",
+  "name": "Taste Their Fear",
+  "description": "Kha'Zix slashes a nearby enemy, dealing 80/105/130/155/180 (+105% bonus AD) physical damage. This deals 168/220.5/273/325.5/378 (+220.5% bonus AD) damage instead to enemies Isolated from their allies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Khazix-Q.png",
+  "slot": "Q",
+  "championKey": "Khazix",
+  "championName": "Kha'Zix",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

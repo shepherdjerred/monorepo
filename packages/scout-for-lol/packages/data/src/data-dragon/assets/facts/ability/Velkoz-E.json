@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Velkoz-E",
+  "name": "Tectonic Disruption",
+  "description": "Vel'Koz disrupts a nearby area, causing it to explode, Knocking Up for 0.75 seconds and dealing 70/100/130/160/190 (+30% AP) magic damage. Enemies close to Vel'Koz will be Knocked Back instead of Knocked Up.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "810"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Velkoz-E.png",
+  "slot": "E",
+  "championKey": "Velkoz",
+  "championName": "Vel'Koz",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    810,
+    810,
+    810,
+    810,
+    810
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

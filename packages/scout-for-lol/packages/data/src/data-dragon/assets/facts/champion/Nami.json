@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nami",
+  "name": "Nami",
+  "description": "A headstrong young vastaya of the seas, Nami was the first of the Marai tribe to leave the waves and venture onto dry land, when their ancient accord with the Targonians was broken.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "560"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nami-passive",
+      "name": "Surging Tides",
+      "icon": "img/ability/Nami-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nami-Q",
+      "name": "Aqua Prison",
+      "icon": "img/ability/Nami-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nami-W",
+      "name": "Ebb and Flow",
+      "icon": "img/ability/Nami-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nami-E",
+      "name": "Tidecaller's Blessing",
+      "icon": "img/ability/Nami-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nami-R",
+      "name": "Tidal Wave",
+      "icon": "img/ability/Nami-R.png"
+    }
+  ],
+  "icon": "img/champion/Nami.png",
+  "art": "img/champion-splash/Nami_0.jpg",
+  "title": "the Tidecaller",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

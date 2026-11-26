@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Katarina-R",
+  "name": "Death Lotus",
+  "description": "Katarina becomes a flurry of blades, rapidly attacking the three nearest enemy champions with a flurry of knives.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Katarina-R.png",
+  "slot": "R",
+  "championKey": "Katarina",
+  "championName": "Katarina",
+  "maxRank": 3,
+  "cooldownByRank": [
+    75,
+    60,
+    45
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "75/60/45 s"
+  }
+}

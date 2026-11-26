@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "444644",
+  "name": "Crown of the Shattered Queen",
+  "description": "Safeguard: You are Safeguarded, reducing incoming champion damage by 90%.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "85"
+    },
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/444644.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

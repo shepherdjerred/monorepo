@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nunu-passive",
+  "name": "Call of the Freljord",
+  "description": "Nunu increases the attack speed and Move Speed of Willump and a nearby ally, and causes Willump's basic attacks to damage enemies around the target.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nunu-passive.png",
+  "slot": "passive",
+  "championKey": "Nunu",
+  "championName": "Nunu & Willump",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tristana-passive",
+  "name": "Draw a Bead",
+  "description": "Increases Tristana's Attack Range as she levels.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Tristana-passive.png",
+  "slot": "passive",
+  "championKey": "Tristana",
+  "championName": "Tristana",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

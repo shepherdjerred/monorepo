@@ -63,8 +63,8 @@ An agent host keeps no credential files. Do not run `talosctl kubeconfig`,
   apply time through the service account), and the `admin@torvalds` context;
   kubectl obtains a client credential from `toolkit kube credential`.
 - `~/.aws/config` gives the bucket-scoped `b2-velero`, `b2-postgres-wal`, and
-  `b2-seaweedfs-backups` profiles, plus `seaweedfs` and `brim-sync`, a
-  `credential_process` of `toolkit aws credential <profile>`.
+  `b2-seaweedfs-backups` profiles, plus `seaweedfs`, `brim-sync`, and
+  `agent-share`, a `credential_process` of `toolkit aws credential <profile>`.
 - `~/.local/share/toolkit/shims` holds `talosctl`, `argocd`, `gcx`,
   `woodpecker-cli`, `temporal`, and `posthog-cli` shims that run the matching
   `toolkit` passthrough. Fish, bash, and zsh put that directory ahead of the

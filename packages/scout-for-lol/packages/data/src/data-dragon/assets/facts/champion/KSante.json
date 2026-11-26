@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "KSante",
+  "name": "K'Sante",
+  "description": "Defiant and courageous, K'Sante battles colossal beasts and ruthless Ascended to protect his home of Nazumah, a coveted oasis amid the sands of Shurima.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "625"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "KSante-passive",
+      "name": "Dauntless Instinct",
+      "icon": "img/ability/KSante-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KSante-Q",
+      "name": "Ntofo Strikes",
+      "icon": "img/ability/KSante-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KSante-W",
+      "name": "Path Maker",
+      "icon": "img/ability/KSante-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KSante-E",
+      "name": "Footwork",
+      "icon": "img/ability/KSante-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KSante-R",
+      "name": "All Out",
+      "icon": "img/ability/KSante-R.png"
+    }
+  ],
+  "icon": "img/champion/KSante.png",
+  "art": "img/champion-splash/KSante_0.jpg",
+  "title": "the Pride of Nazumah",
+  "roles": [
+    "Tank",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Fighter"
+  }
+}

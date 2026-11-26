@@ -21,6 +21,11 @@ const cx = classNames(styles);
 
 /** The option that narrows to nobody: every person the reader may see. */
 const EVERYONE = "";
+const SOURCE_LABELS = {
+  all: "All sources",
+  plex: "Plex",
+  tautulli: "Tautulli",
+} satisfies Record<HistoryView["source"], string>;
 
 /**
  * The owner's choice of whose plays to show. The people come from their own
@@ -67,7 +72,7 @@ function PersonChoice({
 
 /**
  * What narrows the statistics and the list: a title search, for the owner
- * one person, and a span of days. Each change takes effect at once and
+ * one person, a source, and a span of days. Each change takes effect at once and
  * rewrites the address, so a narrowed history can be linked and reloaded.
  */
 export function HistoryFilters({
@@ -101,6 +106,16 @@ export function HistoryFilters({
           }}
         />
       )}
+      <Choice
+        label="History source"
+        value={view.source}
+        values={["all", "plex", "tautulli"]}
+        labels={SOURCE_LABELS}
+        resting="all"
+        onChange={(source) => {
+          onChange({ source });
+        }}
+      />
       <DateField
         label="From"
         name="From this day"

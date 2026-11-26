@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Amumu-Q",
+  "name": "Bandage Toss",
+  "description": "Amumu launches a bandage, pulling himself to the first enemy hit, Stunning them for 1 second, and dealing 70/95/120/145/170 (+85% AP) magic damage. This Ability has 2 charges.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Amumu-Q.png",
+  "slot": "Q",
+  "championKey": "Amumu",
+  "championName": "Amumu",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3 s"
+  }
+}

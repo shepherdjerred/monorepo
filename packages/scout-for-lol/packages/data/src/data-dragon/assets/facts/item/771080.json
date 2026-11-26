@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771080",
+  "name": "Spirit Stone",
+  "description": "Passive: Basic Attacks deal 10 magic damage to monsters On-Hit.",
+  "facts": [
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "14"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "7"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771039",
+      "name": "Hunter's Machete",
+      "icon": "img/item/771039.png"
+    },
+    {
+      "kind": "item",
+      "key": "771006",
+      "name": "Rejuvenation Bead",
+      "icon": "img/item/771006.png"
+    },
+    {
+      "kind": "item",
+      "key": "771004",
+      "name": "Faerie Charm",
+      "icon": "img/item/771004.png"
+    }
+  ],
+  "icon": "img/item/771080.png",
+  "goldTotal": 700,
+  "goldCombine": 40,
+  "keyFact": {
+    "label": "Cost",
+    "value": "700 gold"
+  }
+}

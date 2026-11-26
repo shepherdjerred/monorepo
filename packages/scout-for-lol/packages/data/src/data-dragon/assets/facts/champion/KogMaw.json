@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "KogMaw",
+  "name": "Kog'Maw",
+  "description": "Belched forth from a rotting Void incursion deep in the wastelands of Icathia, Kog'Maw is an inquisitive yet putrid creature with a caustic, gaping mouth.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "635"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "KogMaw-passive",
+      "name": "Icathian Surprise",
+      "icon": "img/ability/KogMaw-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KogMaw-Q",
+      "name": "Caustic Spittle",
+      "icon": "img/ability/KogMaw-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KogMaw-W",
+      "name": "Bio-Arcane Barrage",
+      "icon": "img/ability/KogMaw-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KogMaw-E",
+      "name": "Void Ooze",
+      "icon": "img/ability/KogMaw-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "KogMaw-R",
+      "name": "Living Artillery",
+      "icon": "img/ability/KogMaw-R.png"
+    }
+  ],
+  "icon": "img/champion/KogMaw.png",
+  "art": "img/champion-splash/KogMaw_0.jpg",
+  "title": "the Mouth of the Abyss",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228002",
+  "name": "Wooglet's Witchcap",
+  "description": "Magical Opus: Increases your total Ability Power by 50% (0). Time Stop: Enter Stasis for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/228002.png",
+  "goldTotal": 6000,
+  "goldCombine": 6000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "6000 gold"
+  }
+}

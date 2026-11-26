@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gnar-passive",
+  "name": "Rage Gene",
+  "description": "While in combat Gnar generates Rage. At maximum Rage his next ability will transform him into Mega Gnar, granting increased survivability and access to new spells.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Gnar-passive.png",
+  "slot": "passive",
+  "championKey": "Gnar",
+  "championName": "Gnar",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8347",
+  "name": "Cosmic Insight",
+  "description": "+18 Summoner Spell Haste +10 Item Haste",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/CosmicInsight.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "LeeSin-R",
+  "name": "Dragon's Rage",
+  "description": "Lee Sin performs a powerful roundhouse kick Knocking Back an enemy champion and dealing 150/350/550 (+200% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "375"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/LeeSin-R.png",
+  "slot": "R",
+  "championKey": "LeeSin",
+  "championName": "Lee Sin",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    85,
+    60
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    375,
+    375,
+    375
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/85/60 s"
+  }
+}

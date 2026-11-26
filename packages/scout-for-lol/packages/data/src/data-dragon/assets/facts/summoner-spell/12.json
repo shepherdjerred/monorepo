@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "12",
+  "name": "Teleport",
+  "description": "After a brief channel, become untargetable and travel to an allied unit. Upgrades into Unleashed Teleport, which significantly increases travel speed.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 7"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerTeleport.png",
+  "cooldownSeconds": 300,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "300 s"
+  }
+}

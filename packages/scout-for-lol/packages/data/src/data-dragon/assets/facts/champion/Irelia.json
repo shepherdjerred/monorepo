@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Irelia",
+  "name": "Irelia",
+  "description": "The Noxian occupation of Ionia produced many heroes, none more unlikely than young Irelia of Navori.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "200"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Irelia-passive",
+      "name": "Ionian Fervor",
+      "icon": "img/ability/Irelia-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Irelia-Q",
+      "name": "Bladesurge",
+      "icon": "img/ability/Irelia-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Irelia-W",
+      "name": "Defiant Dance",
+      "icon": "img/ability/Irelia-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Irelia-E",
+      "name": "Flawless Duet",
+      "icon": "img/ability/Irelia-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Irelia-R",
+      "name": "Vanguard's Edge",
+      "icon": "img/ability/Irelia-R.png"
+    }
+  ],
+  "icon": "img/champion/Irelia.png",
+  "art": "img/champion-splash/Irelia_0.jpg",
+  "title": "the Blade Dancer",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

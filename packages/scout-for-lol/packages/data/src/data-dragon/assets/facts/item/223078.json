@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223078",
+  "name": "Trinity Force",
+  "description": "Spellblade: After using an Ability, your next Attack is enhanced with additional physical damage. Quicken: Basic attacks grant Move Speed.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "25%"
+    },
+    {
+      "label": "Health",
+      "value": "375"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223078.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

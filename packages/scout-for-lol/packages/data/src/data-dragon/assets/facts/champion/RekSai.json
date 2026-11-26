@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "RekSai",
+  "name": "Rek'Sai",
+  "description": "An apex predator, Rek'Sai is a merciless Void-spawn that tunnels beneath the ground to ambush and devour unsuspecting prey.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "RekSai-passive",
+      "name": "Fury of the Xer'Sai",
+      "icon": "img/ability/RekSai-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "RekSai-Q",
+      "name": "Queen's Wrath / Prey Seeker",
+      "icon": "img/ability/RekSai-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "RekSai-W",
+      "name": "Burrow / Un-burrow",
+      "icon": "img/ability/RekSai-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "RekSai-E",
+      "name": "Furious Bite / Tunnel",
+      "icon": "img/ability/RekSai-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "RekSai-R",
+      "name": "Void Rush",
+      "icon": "img/ability/RekSai-R.png"
+    }
+  ],
+  "icon": "img/champion/RekSai.png",
+  "art": "img/champion-splash/RekSai_0.jpg",
+  "title": "the Void Burrower",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

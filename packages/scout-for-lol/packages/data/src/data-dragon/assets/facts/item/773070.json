@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773070",
+  "name": "Tear of the Goddess",
+  "description": "Mana Charge: Grants 4 maximum Mana (max 750 Mana) for each spell cast and Mana expenditure (occurs up to 2 times every 4 seconds).",
+  "facts": [
+    {
+      "label": "Mana",
+      "value": "250"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "7"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771027",
+      "name": "Sapphire Crystal",
+      "icon": "img/item/771027.png"
+    },
+    {
+      "kind": "item",
+      "key": "771004",
+      "name": "Faerie Charm",
+      "icon": "img/item/771004.png"
+    }
+  ],
+  "icon": "img/item/773070.png",
+  "goldTotal": 700,
+  "goldCombine": 120,
+  "keyFact": {
+    "label": "Cost",
+    "value": "700 gold"
+  }
+}

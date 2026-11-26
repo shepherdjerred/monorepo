@@ -1,0 +1,34 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3077",
+  "name": "Tiamat",
+  "description": "Cleave: Attacks deal physical damage to nearby enemies. Crescent: Deal physical damage to enemies around you.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    },
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/3077.png",
+  "goldTotal": 1200,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1200 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Trundle-W",
+  "name": "Frozen Domain",
+  "description": "Trundle freezes an area for 8 seconds. While inside he gains 20/28/36/44/52% Move Speed, 30/50/70/90/110% Attack Speed, and 25% increased healing.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Trundle-W.png",
+  "slot": "W",
+  "championKey": "Trundle",
+  "championName": "Trundle",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    750,
+    750,
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

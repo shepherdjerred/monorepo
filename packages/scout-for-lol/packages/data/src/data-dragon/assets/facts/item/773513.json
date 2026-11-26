@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773513",
+  "name": "Prototype Hex Core",
+  "description": "",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/773513.png",
+  "goldTotal": 750,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "750 gold"
+  }
+}

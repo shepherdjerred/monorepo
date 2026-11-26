@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kaisa-E",
+  "name": "Supercharge",
+  "description": "Kai'Sa briefly increases her Move Speed, then increases her Attack Speed. Living Weapon: Supercharge is upgraded to briefly grant Invisibility.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kaisa-E.png",
+  "slot": "E",
+  "championKey": "Kaisa",
+  "championName": "Kai'Sa",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14.5,
+    13,
+    11.5,
+    10
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14.5/13/11.5/10 s"
+  }
+}

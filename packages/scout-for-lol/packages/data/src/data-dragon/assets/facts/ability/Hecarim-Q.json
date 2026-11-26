@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hecarim-Q",
+  "name": "Rampage",
+  "description": "Hecarim cleaves nearby enemies for 60/90/120/150/180 (+90% bonus AD) physical damage. If this Ability hits, he gains a stack that decreases its Cooldown by 0.75 seconds and increases its damage by 3% (+3% bonus AD) for 8 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "28/26/24/22/20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hecarim-Q.png",
+  "slot": "Q",
+  "championKey": "Hecarim",
+  "championName": "Hecarim",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    28,
+    26,
+    24,
+    22,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

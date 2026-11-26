@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sett-R",
+  "name": "The Show Stopper",
+  "description": "Sett grabs an enemy champion and Suppresses them as he carries them forward, then slams them into the ground, dealing 200/300/400 (+120% bonus AD) plus 40/50/60% of the grabbed enemy's bonus Health physical damage to surrounding enemies and Slowing them by 99% for 1 second.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sett-R.png",
+  "slot": "R",
+  "championKey": "Sett",
+  "championName": "Sett",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

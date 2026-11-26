@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Shen",
+  "name": "Shen",
+  "description": "Among the secretive, Ionian warriors known as the Kinkou, Shen serves as their leader, the Eye of Twilight.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Shen-passive",
+      "name": "Ki Barrier",
+      "icon": "img/ability/Shen-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shen-Q",
+      "name": "Twilight Assault",
+      "icon": "img/ability/Shen-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shen-W",
+      "name": "Spirit's Refuge",
+      "icon": "img/ability/Shen-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shen-E",
+      "name": "Shadow Dash",
+      "icon": "img/ability/Shen-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shen-R",
+      "name": "Stand United",
+      "icon": "img/ability/Shen-R.png"
+    }
+  ],
+  "icon": "img/champion/Shen.png",
+  "art": "img/champion-splash/Shen_0.jpg",
+  "title": "the Eye of Twilight",
+  "roles": [
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank"
+  }
+}

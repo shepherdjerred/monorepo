@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8214",
+  "name": "Summon Aery",
+  "description": "Your attacks and abilities send Aery to a target, damaging enemies or shielding allies.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/SummonAery.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

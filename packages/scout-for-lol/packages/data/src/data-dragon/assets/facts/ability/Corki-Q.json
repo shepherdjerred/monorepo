@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Corki-Q",
+  "name": "Phosphorus Bomb",
+  "description": "Corki lobs a bomb, dealing 60/105/150/195/240 (+125% bonus AD) (+100% AP) magic damage. The area and champions hit are revealed for 6 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Corki-Q.png",
+  "slot": "Q",
+  "championKey": "Corki",
+  "championName": "Corki",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8.5,
+    8,
+    7.5,
+    7
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8.5/8/7.5/7 s"
+  }
+}

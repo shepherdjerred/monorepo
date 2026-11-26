@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yunara-R",
+  "name": "Transcend One's Self",
+  "description": "Yunara enters a Transcendent State for 15 seconds upgrading her basic Abilities for the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yunara-R.png",
+  "slot": "R",
+  "championKey": "Yunara",
+  "championName": "Yunara",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    90,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/90/80 s"
+  }
+}

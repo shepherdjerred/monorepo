@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Sylas",
+  "name": "Sylas",
+  "description": "Raised in one of Demacia's lesser quarters, Sylas of Dregbourne has come to symbolize the darker side of the Great City.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Sylas-passive",
+      "name": "Petricite Burst",
+      "icon": "img/ability/Sylas-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sylas-Q",
+      "name": "Chain Lash",
+      "icon": "img/ability/Sylas-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sylas-W",
+      "name": "Kingslayer",
+      "icon": "img/ability/Sylas-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sylas-E",
+      "name": "Abscond / Abduct",
+      "icon": "img/ability/Sylas-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sylas-R",
+      "name": "Hijack",
+      "icon": "img/ability/Sylas-R.png"
+    }
+  ],
+  "icon": "img/champion/Sylas.png",
+  "art": "img/champion-splash/Sylas_0.jpg",
+  "title": "the Unshackled",
+  "roles": [
+    "Mage",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Assassin"
+  }
+}

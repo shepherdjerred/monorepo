@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rengar-passive",
+  "name": "Unseen Predator",
+  "description": "While in Brush, Rengar leaps at his target with his basic attack. Rengar generates Ferocity whenever he casts an ability.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Rengar-passive.png",
+  "slot": "passive",
+  "championKey": "Rengar",
+  "championName": "Rengar",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

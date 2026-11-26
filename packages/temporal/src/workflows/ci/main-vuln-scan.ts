@@ -50,7 +50,7 @@ const { remediateMainVulnerabilities } =
     },
   });
 
-// Delivery and alert publication run on the reports worker: Postal,
+// Delivery and alert publication run on the reports worker: Mail API,
 // report-state S3, and ALERTMANAGER_URL deliberately never reach the
 // maintenance pod.
 const deliveryActivities = proxyActivities<ReportDeliveryActivities>({

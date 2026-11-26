@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Thresh-W",
+  "name": "Dark Passage",
+  "description": "Thresh throws his lantern, allowing an ally to click on it to dash to Thresh.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Thresh-W.png",
+  "slot": "W",
+  "championKey": "Thresh",
+  "championName": "Thresh",
+  "maxRank": 5,
+  "cooldownByRank": [
+    21,
+    20,
+    19,
+    18,
+    17
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "21/20/19/18/17 s"
+  }
+}

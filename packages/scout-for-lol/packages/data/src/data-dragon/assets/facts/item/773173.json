@@ -1,0 +1,32 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773173",
+  "name": "Eleisa's Miracle",
+  "description": "Aid: Heal, Clairvoyance and Clarity summoner spell cooldowns are reduced by 30%.",
+  "facts": [
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "10"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773096",
+      "name": "Philosopher's Stone",
+      "icon": "img/item/773096.png"
+    }
+  ],
+  "icon": "img/item/773173.png",
+  "goldTotal": 1100,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

@@ -85,23 +85,53 @@ reported and not seeded.
 The browser UI is served by this process and uses the shared console look from
 `@shepherdjerred/console-ui`. The workspace button at the top of the sidebar is
 the app switcher: it lists the other consoles and tools from `ops-model`'s
-`CONSOLE_LINKS` and opens them in the same tab. Below it the sidebar lists real
-deployments with their flag counts: prod-only catalogs are one row, and Scout
-and Karma are grouped with Beta and Prod rows. Below 900px the sidebar is
-replaced by a header row with the app switcher and a deployment select.
+`CONSOLE_LINKS` and opens them in the same tab; the search button beside it
+opens the ⌘K palette. Below them a Views group links Overview, Compare and Drift
+(with the total drifted-item count), then the sidebar lists real deployments
+with their flag counts: prod-only catalogs are one row, and Scout and Karma are
+grouped with Beta and Prod rows. Below 900px the sidebar is replaced by the
+shared top bar: the app switcher, a search button and a menu whose drawer lists
+the same views and deployments.
 
-A deployment's header shows its revision. The flag table lists each flag's key,
-its state (On, Off or Targeted with a glyph, or the variant string) and its
+Every page is built from the console-ui page kit, the way Hub's and Go link's
+pages are: a `PageBody` with a `PageHeading`, then `SummaryGrid` and `Card`s. A
+deployment's heading names the catalog and stage and shows its revision, a drift
+badge linking to its section of the drift page, and "Compare with Beta/Prod"
+when the catalog has both stages. The flag table lists each flag's key, its
+state (an On, Off or Targeted `SeverityBadge`, or the variant string) and its
 type. The search field filters flags by key and keeps the filter in the `?q=`
 query, so it survives choosing a flag. Choosing a flag opens its editor beside
 the table.
 
-Navigation is client-side (`react-router`): the sidebar, flag rows, the "All
-flags" link and the deployment select change the URL without reloading the
-page, and choosing another flag in the same deployment reuses the loaded
+Navigation is client-side (`react-router`): the sidebar, the drawer, flag rows
+and the "All flags" link change the URL without reloading the page, and choosing another flag in the same deployment reuses the loaded
 document. While another deployment loads, the previous table stays on screen,
 dimmed and `aria-busy`, under the new deployment's header. The tab title names
 the open flag and deployment, e.g. `dares_enabled · scout/prod · Flags`.
+
+The views:
+
+- **Overview** (`/`): totals and one card per catalog with each stage's flag
+  count, revision and drift.
+- **Compare** (`/compare?left=<catalog/stage>&right=<catalog/stage>`): two
+  deployments' documents, every key classified as differs, only-left,
+  only-right or identical (`sameFlag`). The Show toggle adds identical rows
+  (`?same=1`), `?q=` filters keys, and `?key=` opens a side-by-side JSON diff
+  with links to the flag's editor on either side. With only `left`, its
+  catalog's other stage is the default partner.
+- **Drift** (`/drift`): `GET /v1/diff` (parsed with `FlagsDiffResponseSchema`
+  from `@shepherdjerred/feature-flags/flags-wire.ts`) as totals and one
+  section per drifted deployment, worst first: invalid values with their schema
+  issues, declared-versus-live diffs, missing and extra keys, each with the
+  documented remediation command. `/drift#<catalog/stage>` scrolls to one
+  deployment. A deployment missing from the report fails the request, so the
+  page shows the error rather than a partial result.
+- **⌘K palette** (console-ui's `CommandPalette`): views, deployments, and flags
+  across every deployment. It loads each document under `useDocument`'s query
+  key, so documents are shared with the pages.
+
+The deployment list and the drift report refresh when a document arrives at a
+revision the list does not show, e.g. after a save.
 
 ### Editing modes
 

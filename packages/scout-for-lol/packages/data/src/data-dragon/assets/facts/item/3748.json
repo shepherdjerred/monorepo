@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3748",
+  "name": "Titanic Hydra",
+  "description": "Cleave: Attacks deal physical damage on-hit and to enemies behind the target. Titanic Crescent: Empower your next",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Health",
+      "value": "600"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3077",
+      "name": "Tiamat",
+      "icon": "img/item/3077.png"
+    },
+    {
+      "kind": "item",
+      "key": "2021",
+      "name": "Tunneler",
+      "icon": "img/item/2021.png"
+    },
+    {
+      "kind": "item",
+      "key": "1011",
+      "name": "Giant's Belt",
+      "icon": "img/item/1011.png"
+    }
+  ],
+  "icon": "img/item/3748.png",
+  "goldTotal": 3300,
+  "goldCombine": 50,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3300 gold"
+  }
+}

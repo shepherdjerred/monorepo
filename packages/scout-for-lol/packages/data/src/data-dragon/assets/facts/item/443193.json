@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443193",
+  "name": "Gargoyle Stoneplate",
+  "description": "Active -. Unbreakable: Gain a Shield that decays and grow in size.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "65"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "65"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Move Speed",
+      "value": "10%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443193.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

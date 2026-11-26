@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447108",
+  "name": "Runecarver",
+  "description": "Helix: Moving, attacking, and dealing damage with an ability grants 30 Energized stacks and triggers Energized Actions if it is ready. Spiral Out: On Energized Action, gain a Rune stack for the rest of the round.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "80"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447108.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

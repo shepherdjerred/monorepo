@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Lissandra",
+  "name": "Lissandra",
+  "description": "Lissandra's magic twists the pure power of ice into something dark and terrible. With the force of her black ice, she does more than freeze—she impales and crushes those who oppose her.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Lissandra-passive",
+      "name": "Iceborn Subjugation",
+      "icon": "img/ability/Lissandra-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lissandra-Q",
+      "name": "Ice Shard",
+      "icon": "img/ability/Lissandra-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lissandra-W",
+      "name": "Ring of Frost",
+      "icon": "img/ability/Lissandra-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lissandra-E",
+      "name": "Glacial Path",
+      "icon": "img/ability/Lissandra-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lissandra-R",
+      "name": "Frozen Tomb",
+      "icon": "img/ability/Lissandra-R.png"
+    }
+  ],
+  "icon": "img/champion/Lissandra.png",
+  "art": "img/champion-splash/Lissandra_0.jpg",
+  "title": "the Ice Witch",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

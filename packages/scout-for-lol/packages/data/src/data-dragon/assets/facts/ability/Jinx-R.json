@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jinx-R",
+  "name": "Super Mega Death Rocket!",
+  "description": "Jinx fires a rocket that explodes on the first enemy champion hit, dealing 20/35/50 (+12% bonus AD) to 200/350/500 (+120% bonus AD) + 25/30/35% missing Health physical damage, gaining damage over the first second of travel time. Nearby enemies take 80% Damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jinx-R.png",
+  "slot": "R",
+  "championKey": "Jinx",
+  "championName": "Jinx",
+  "maxRank": 3,
+  "cooldownByRank": [
+    85,
+    65,
+    45
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "85/65/45 s"
+  }
+}

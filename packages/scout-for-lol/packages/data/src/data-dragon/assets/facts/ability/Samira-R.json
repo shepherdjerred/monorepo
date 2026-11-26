@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Samira-R",
+  "name": "Inferno Trigger",
+  "description": "Samira can only use this Ability if her current Style rating is S. Using this Ability consumes all Style rating.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Samira-R.png",
+  "slot": "R",
+  "championKey": "Samira",
+  "championName": "Samira",
+  "maxRank": 3,
+  "cooldownByRank": [
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

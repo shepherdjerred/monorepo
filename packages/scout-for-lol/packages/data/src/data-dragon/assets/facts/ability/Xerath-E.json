@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xerath-E",
+  "name": "Shocking Orb",
+  "description": "Xerath fires an orb of raw magic, Stunning the first enemy hit for up to 2.25 seconds based on distance travelled, and dealing 70/100/130/160/190 (+45% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1050"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Xerath-E.png",
+  "slot": "E",
+  "championKey": "Xerath",
+  "championName": "Xerath",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12.5,
+    12,
+    11.5,
+    11
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1050,
+    1050,
+    1050,
+    1050,
+    1050
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12.5/12/11.5/11 s"
+  }
+}

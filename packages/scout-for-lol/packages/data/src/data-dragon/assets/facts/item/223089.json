@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223089",
+  "name": "Rabadon's Deathcap",
+  "description": "Magical Opus: Increases your total Ability Power by 30%.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223089.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

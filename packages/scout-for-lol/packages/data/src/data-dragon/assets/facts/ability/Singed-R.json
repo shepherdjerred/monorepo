@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Singed-R",
+  "name": "Insanity Potion",
+  "description": "Singed drinks a potent brew of chemicals, granting him 25/55/85 Ability Power, Armor, Magic Resist, Move Speed, Health Regen, and Mana Regen for 25 seconds. During this effect, Singed's Poison Trail also applies 40% Grievous Wounds for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Singed-R.png",
+  "slot": "R",
+  "championKey": "Singed",
+  "championName": "Singed",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    100,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100 s"
+  }
+}
