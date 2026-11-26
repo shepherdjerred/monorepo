@@ -1,0 +1,25 @@
+/*
+ * FilterBar: the `.ui-toolbar` row above a list. Search, view filters, the
+ * muted "N of M" count, "Clear filters" and end controls, wrapping on a
+ * phone.
+ */
+@layer ui.components {
+  .ui-filterbar-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2) var(--ui-space-4);
+  }
+  .ui-filterbar-count {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ui-filterbar-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2);
+  }
+}

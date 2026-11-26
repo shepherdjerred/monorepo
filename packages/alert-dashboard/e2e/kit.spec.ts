@@ -138,3 +138,71 @@ test("the email preview is sandboxed and toggles dark and plain text", async ({
     "Weekly digest",
   );
 });
+
+test.describe("the data section", () => {
+  test("a data table sorts from the keyboard and announces it", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await gotoLoadedPage(page, "/kit");
+    const section = page.locator("#data-table");
+    const header = section.locator("thead th", { hasText: "Count" });
+    await expect(header).toHaveAttribute("aria-sort", "none");
+    await header.getByRole("button", { name: "Count" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(header).toHaveAttribute("aria-sort", "ascending");
+    await expect(section.getByRole("status").first()).toHaveText(
+      "Sorted by Count, ascending, 300 rows",
+    );
+    await page.keyboard.press("Space");
+    await expect(header).toHaveAttribute("aria-sort", "descending");
+  });
+
+  test("300 rows render only those in view and follow j and k", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await gotoLoadedPage(page, "/kit");
+    const section = page.locator("#data-table");
+    const rows = section.locator("tbody tr[data-key]");
+    await expect(section.locator(".ui-filterbar-count")).toHaveText(
+      "300 signals",
+    );
+    await expect(rows.first()).toBeVisible();
+    expect(await rows.count()).toBeLessThan(100);
+    const firstKey = await rows.first().getAttribute("data-key");
+    const secondKey = await rows.nth(1).getAttribute("data-key");
+
+    await page.locator("body").press("j");
+    await page.locator("body").press("j");
+    const current = section.locator("tr[data-current]");
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveAttribute("data-key", secondKey ?? "");
+
+    await section.evaluate((element) => {
+      element.scrollIntoView({ block: "end" });
+    });
+    await expect(rows.first()).not.toHaveAttribute("data-key", firstKey ?? "");
+    expect(await rows.count()).toBeLessThan(100);
+    // The head stays stuck to the top of the viewport.
+    const head = section.locator("thead th").first();
+    const box = await head.boundingBox();
+    expect(box?.y).toBeLessThan(2);
+  });
+
+  test("selecting rows shows the bulk bar until the selection clears", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await gotoLoadedPage(page, "/kit");
+    const section = page.locator("#data-table");
+    const bar = section.getByRole("region", { name: "Bulk actions" });
+    const all = section.getByRole("checkbox", { name: "Select all rows" });
+    await expect(bar).toHaveCount(0);
+    await all.check();
+    await expect(bar).toContainText("300 selected");
+    await bar.getByRole("button", { name: "Clear selection" }).click();
+    await expect(bar).toHaveCount(0);
+    await expect(all).not.toBeChecked();
+  });
+});

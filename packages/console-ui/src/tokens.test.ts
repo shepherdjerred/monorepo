@@ -15,7 +15,9 @@ async function stylesheet(name: string): Promise<string> {
 }
 
 const componentSheets = [
-  ...new Bun.Glob("*.css").scanSync({ cwd: path.join(styles, "components") }),
+  ...new Bun.Glob("**/*.css").scanSync({
+    cwd: path.join(styles, "components"),
+  }),
 ].map((name) => `components/${name}`);
 const classSheets = [...componentSheets, "page.css"];
 

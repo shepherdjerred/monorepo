@@ -18,6 +18,7 @@ import { Link } from "react-router";
 
 import { KitDetailForms } from "./kit-detail-forms.tsx";
 import { KitControls } from "./kit-controls.tsx";
+import { KitData } from "./kit-data.tsx";
 import { KIT_GROUPS, KitTabs, type KitAlert } from "./kit-parts.tsx";
 import "./kit.css";
 
@@ -290,6 +291,7 @@ export function KitPage(): React.JSX.Element {
       </div>
       <KitControls />
       <KitDetailForms />
+      <KitData />
     </main>
   );
 }

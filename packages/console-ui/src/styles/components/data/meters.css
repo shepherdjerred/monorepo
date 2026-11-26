@@ -1,0 +1,126 @@
+/*
+ * The meter's projection tick, the full-width `block` meter (label and
+ * figure above the 4px track, a muted detail under it) and StackedMeter's
+ * segments and legend. Segment colours come from tones, never the caller.
+ */
+@layer ui.components {
+  .ui-meter-track {
+    position: relative;
+  }
+  .ui-meter-projection {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-ink);
+  }
+  /* The tick overflows the 4px track, so the track shows it unclipped. */
+  .ui-meter-track:has(.ui-meter-projection) {
+    overflow: visible;
+  }
+
+  .ui-meter-block {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  .ui-meter-block .ui-meter {
+    display: block;
+  }
+  .ui-meter-block .ui-meter-track {
+    display: block;
+    width: 100%;
+  }
+  .ui-meter-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--ui-space-1) var(--ui-space-3);
+  }
+  .ui-meter-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-space-2);
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-meter-reading {
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .ui-meter-max {
+    color: var(--ui-muted);
+  }
+  .ui-meter-detail {
+    margin: 0;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+
+  .ui-meter-track.ui-stacked-track,
+  .ui-meter-block .ui-meter-track.ui-stacked-track {
+    display: flex;
+    gap: 1px;
+  }
+  .ui-stacked-segment {
+    display: block;
+    height: 100%;
+  }
+  [data-tone="accent"] {
+    --ui-tone: var(--ui-accent);
+  }
+  [data-tone="ok"] {
+    --ui-tone: var(--ui-sev-ok);
+  }
+  [data-tone="info"] {
+    --ui-tone: var(--ui-sev-info);
+  }
+  [data-tone="unknown"] {
+    --ui-tone: var(--ui-sev-unknown);
+  }
+  [data-tone="warning"] {
+    --ui-tone: var(--ui-sev-warning);
+  }
+  [data-tone="error"] {
+    --ui-tone: var(--ui-sev-error);
+  }
+  .ui-stacked-segment,
+  .ui-stacked-swatch {
+    background: var(--ui-tone);
+  }
+  .ui-stacked-legend {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ui-stacked-item {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto 5ch;
+    align-items: center;
+    gap: var(--ui-space-2);
+    color: var(--ui-ink-2);
+  }
+  .ui-stacked-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--ui-radius-xs);
+  }
+  .ui-stacked-value,
+  .ui-stacked-share {
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    text-align: right;
+  }
+  .ui-stacked-share {
+    color: var(--ui-muted);
+  }
+}

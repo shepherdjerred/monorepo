@@ -143,6 +143,13 @@ One shared piece per job:
 | Dialog                | `Dialog`, `ui-dialog*` classes            |
 | Buttons               | `Button` (`default`, `primary`, `danger`) |
 | Command palette       | `CommandPalette`                          |
+| Data table            | `DataTable`                               |
+| List toolbar          | `FilterBar`                               |
+| Selection actions     | `BulkBar`                                 |
+| Activity, steps       | `Timeline`                                |
+| Trend in a row        | `Sparkline`                               |
+| Status grid           | `StatusMatrix`                            |
+| Budget, breakdown     | `Meter`, `StackedMeter`                   |
 | Theme                 | `createThemeStore()`                      |
 | Icons                 | `ICONS`                                   |
 
@@ -244,3 +251,24 @@ on the document. `CommandPalette` draws the modal dialog and
 `sections` of `{ id, label, detail?, icon }` items and an `onSelect` that runs
 after the dialog has closed and returned focus. `ConsoleShell` adds the
 search button to the sidebar and the top bar when given the store.
+
+## Data table contract
+
+`DataTable` is built on TanStack Table 9 and TanStack Virtual 3.
+
+| Behaviour    | Contract                                                                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sorting      | One column at a time; a header button cycles ascending, descending. Numbers by value, text numeric-aware and case-blind; null, undefined and NaN last both ways. `aria-sort` on the header; each sort is announced. |
+| Search       | Case-blind substring of `searchText(row)`, through TanStack's global filter.                                                                                                                                        |
+| Filters      | `Tabs` drawn by the table and applied by the app to `rows`. "Clear filters" empties the search and returns each filter to its `defaultValue` (the first option by default).                                         |
+| Count        | "N of M" with `totalCount` as M when given; a polite status.                                                                                                                                                        |
+| Groups       | `groupBy` buckets rows worst first by `rank`; rows keep their sorted order inside a group. Heading rows are 32px: twist, `StatusGlyph`, word, count.                                                                |
+| Cap          | 25 rows by default, then "Showing N of M" and "Show all". No cap while virtualized.                                                                                                                                 |
+| Virtualizing | `virtualize` renders only rows in view once more than 200 match: against the page (head stuck to the page) or in a `{ maxHeight }` box.                                                                             |
+| Selection    | Checkbox column with select-all (indeterminate when partial) and Shift ranges; `onSelectionChange(keys, rows)`; `bulkActions` shows `BulkBar`.                                                                      |
+| Export       | Copy CSV (RFC 4180) or JSON of the filtered, sorted rows; `exportValue`, else `sortValue`, else plain rendered text.                                                                                                |
+| Keys         | With `keyboardNavigation`, j and k move the current row (`data-current`, `aria-current`) and Enter or `o` calls `onRowOpen`, except while typing.                                                                   |
+| Phone        | The table scrolls sideways; `stack` turns rows into label/value lines.                                                                                                                                              |
+
+`Timeline` shows times in Pacific (`America/Los_Angeles`) as a mono 24-hour
+clock, with the exact time and zone on hover.

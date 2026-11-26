@@ -1,0 +1,125 @@
+/*
+ * Timeline: a mono time column, a marker on a hairline rail, then the
+ * title, detail and meta. Day headings split a long feed; `compact`
+ * density puts the detail on the title line.
+ */
+@layer ui.components {
+  /* One grid per list, so every item's time column is the widest time. */
+  .ui-timeline {
+    display: grid;
+    grid-template-columns: max-content 20px minmax(0, 1fr);
+    gap: 0 var(--ui-space-2);
+    margin: 0;
+    padding: 0 var(--ui-gutter) var(--ui-space-2);
+    list-style: none;
+  }
+  .ui-timeline-item {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .ui-timeline-time {
+    padding-top: 9px;
+    color: var(--ui-muted);
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .ui-timeline-marker {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding-top: 9px;
+  }
+  .ui-timeline-marker::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--ui-line);
+    content: "";
+  }
+  .ui-timeline-item:first-child .ui-timeline-marker::before {
+    top: 12px;
+  }
+  .ui-timeline-item:last-child .ui-timeline-marker::before {
+    bottom: calc(100% - 12px);
+  }
+  .ui-timeline-marker > * {
+    position: relative;
+    height: 16px;
+    background: var(--ui-panel);
+  }
+  .ui-timeline-icon {
+    display: inline-grid;
+    place-items: center;
+    color: var(--ui-muted);
+  }
+  .ui-timeline-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .ui-timeline-dot {
+    width: 7px;
+    height: 7px;
+    margin-top: 5px;
+    border: 1px solid var(--ui-faint);
+    border-radius: var(--ui-radius-round);
+  }
+  .ui-timeline-body {
+    min-width: 0;
+    padding-block: 8px;
+  }
+  .ui-timeline-title {
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-timeline-detail {
+    margin-top: 2px;
+    color: var(--ui-ink-2);
+  }
+  .ui-timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-space-1) var(--ui-space-2);
+    margin-top: 2px;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+  .ui-timeline-actor {
+    color: var(--ui-ink-2);
+  }
+
+  .ui-timeline[data-density="compact"] .ui-timeline-time,
+  .ui-timeline[data-density="compact"] .ui-timeline-marker {
+    padding-top: 6px;
+  }
+  .ui-timeline[data-density="compact"] .ui-timeline-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--ui-space-2);
+    padding-block: 5px;
+  }
+  .ui-timeline[data-density="compact"]
+    :is(.ui-timeline-detail, .ui-timeline-meta) {
+    margin-top: 0;
+  }
+
+  .ui-timeline-day {
+    margin: 0;
+    padding: var(--ui-space-3) var(--ui-gutter) var(--ui-space-1);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-timeline-empty {
+    margin: 0;
+    padding: var(--ui-space-6) var(--ui-gutter);
+    color: var(--ui-muted);
+  }
+}

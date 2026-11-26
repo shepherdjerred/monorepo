@@ -300,3 +300,87 @@ export {
   EmailPreview,
   type EmailPreviewProps,
 } from "@shepherdjerred/console-ui/components/feedback/email-preview.tsx";
+export {
+  DataTable,
+  type DataTableProps,
+} from "@shepherdjerred/console-ui/components/data/data-table.tsx";
+export { VIRTUALIZE_THRESHOLD } from "@shepherdjerred/console-ui/components/data/data-table-state.ts";
+export {
+  buildDisplayModel,
+  compareSortScalars,
+  fallbackExportColumns,
+  formatDataTableCsv,
+  formatDataTableJson,
+  normalizeSortScalar,
+  sortDataTableRows,
+  type DataTableColumn,
+  type DataTableExportColumn,
+  type DataTableFilter,
+  type DataTableFilterOption,
+  type DataTableSortState,
+  type DisplayItem,
+  type DisplayModel,
+  type SortDirection,
+} from "@shepherdjerred/console-ui/components/data/data-table-model.ts";
+export {
+  SEVERITY_RANK,
+  bucketBySeverity,
+  groupBySeverity,
+  parseSeverity,
+  severityRank,
+  type DataTableGroupBy,
+} from "@shepherdjerred/console-ui/components/data/severity-buckets.ts";
+export {
+  isTypingTarget,
+  nextRowKey,
+  useRowNavigation,
+  type RowNavigationOptions,
+} from "@shepherdjerred/console-ui/components/data/row-navigation.ts";
+export {
+  FilterBar,
+  describeCount,
+  filtersActive,
+  type CountNoun,
+  type FilterBarProps,
+  type FilterBarSearch,
+  type FilterState,
+} from "@shepherdjerred/console-ui/components/data/filter-bar.tsx";
+export {
+  BulkBar,
+  type BulkBarProps,
+} from "@shepherdjerred/console-ui/components/data/bulk-bar.tsx";
+export {
+  DEFAULT_TIME_ZONE,
+  Timeline,
+  dayLabel,
+  exactText,
+  timeText,
+  type TimelineItem,
+  type TimelineProps,
+} from "@shepherdjerred/console-ui/components/data/timeline.tsx";
+export {
+  Sparkline,
+  computeSparklineGeometry,
+  type SparklineGeometry,
+  type SparklinePoint,
+  type SparklineProps,
+} from "@shepherdjerred/console-ui/components/data/sparkline.tsx";
+export {
+  MATRIX_STATUS_LABEL,
+  StatusMatrix,
+  type MatrixStatus,
+  type StatusMatrixCell,
+  type StatusMatrixColumn,
+  type StatusMatrixProps,
+  type StatusMatrixRow,
+} from "@shepherdjerred/console-ui/components/data/status-matrix.tsx";
+export {
+  StackedMeter,
+  normalizeSegments,
+  type StackedMeterProps,
+  type StackedMeterSegment,
+} from "@shepherdjerred/console-ui/components/data/stacked-meter.tsx";
+export {
+  inferMeterSeverity,
+  meterValueText,
+} from "@shepherdjerred/console-ui/components/meter.tsx";
