@@ -1,13 +1,9 @@
 import configuration from "#src/configuration.ts";
 import {
   DEFAULT_EXPLORE_QUOTA_LIMITS,
-  ExploreQuotaLimitsInputSchema,
   type ExploreQuotaLimits,
 } from "#src/configuration/explore-quota.ts";
-import {
-  DEFAULT_EXPLORE_SPEND_POLICY,
-  ExploreSpendPolicySchema,
-} from "#src/configuration/explore-spend.ts";
+import { DEFAULT_EXPLORE_SPEND_POLICY } from "#src/configuration/explore-spend.ts";
 import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import { defineConfig } from "@shepherdjerred/config";
@@ -20,6 +16,10 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { parseFlagsDeployment } from "@shepherdjerred/feature-flags/config/schema.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
@@ -112,12 +112,7 @@ export const SemanticVersionSchema = z
  */
 const DEFINITION = {
   exploreSpendPolicy: {
-    schema: z.union([
-      ExploreSpendPolicySchema,
-      z
-        .string()
-        .transform((raw) => ExploreSpendPolicySchema.parse(JSON.parse(raw))),
-    ]),
+    schema: flagValueSchema("scout-explore-spend-policy"),
     sources: ["flag", "default"],
     default: DEFAULT_EXPLORE_SPEND_POLICY,
     names: { flag: "scout-explore-spend-policy" },
@@ -142,18 +137,15 @@ const DEFINITION = {
    * shares a live connected guild with the production bot.
    */
   exploreGuildAllowlist: {
-    schema: z.union([
-      z.array(z.string()),
-      // Env supplies a comma-separated string.
-      z.string().transform((raw) =>
-        raw
-          .split(",")
-          .map((entry) => entry.trim())
-          .filter((entry) => entry.length > 0),
-      ),
-    ]),
+    // Flags and env supply comma-separated guild ids; "" denies every guild.
+    schema: flagValueSchema("explore-guild-allowlist").transform((raw) =>
+      raw
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0),
+    ),
     sources: ["flag", "env", "default"],
-    default: [],
+    default: "",
     names: { env: "EXPLORE_GUILD_ALLOWLIST" },
   },
   /**
@@ -166,7 +158,7 @@ const DEFINITION = {
    * not actually reached.
    */
   exploreQuotaLimits: {
-    schema: ExploreQuotaLimitsInputSchema,
+    schema: flagValueSchema("scout-explore-quota-limits"),
     sources: ["flag", "env", "default"],
     default: DEFAULT_EXPLORE_QUOTA_LIMITS,
     names: {
@@ -175,23 +167,23 @@ const DEFINITION = {
     },
   },
   llmHourlyTokenBudget: {
-    schema: z.coerce.number().int().positive(),
+    schema: flagValueSchema("llm-hourly-token-budget"),
     sources: ["flag", "env", "default"],
     default: 2_000_000,
   },
   llmDailyTokenBudget: {
-    schema: z.coerce.number().int().positive(),
+    schema: flagValueSchema("llm-daily-token-budget"),
     sources: ["flag", "env", "default"],
     default: 20_000_000,
   },
   reportAiModel: {
-    schema: z.string().trim().min(1),
+    schema: flagValueSchema("scout-report-ai-model"),
     sources: ["flag", "env", "default"],
     default: "gpt-6.1-sol",
     names: { flag: "scout-report-ai-model", env: "REPORT_AI_MODEL" },
   },
   exploreModel: {
-    schema: z.string().trim().min(1),
+    schema: flagValueSchema("scout-explore-model"),
     sources: ["flag", "env", "default"],
     default: "gpt-6-luna",
     names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
@@ -202,7 +194,7 @@ const DEFINITION = {
    * tip exists, so this bounds noise within that set rather than overall.
    */
   featureTipPercent: {
-    schema: z.coerce.number().int().min(0).max(100),
+    schema: flagValueSchema("scout-feature-tip-percent"),
     sources: ["flag", "env", "default"],
     default: 10,
     names: {
@@ -215,7 +207,7 @@ const DEFINITION = {
    * not out-earn a quiet one on tips, so pacing is time-based, not volume-based.
    */
   featureTipCooldownHours: {
-    schema: z.coerce.number().int().positive(),
+    schema: flagValueSchema("scout-feature-tip-cooldown-hours"),
     sources: ["flag", "env", "default"],
     default: 72,
     names: {
@@ -253,7 +245,7 @@ const DEFINITION = {
    * 50k realtime requests.
    */
   riotBudgetMode: {
-    schema: z.enum(["observe", "enforce"]),
+    schema: flagValueSchema("scout-riot-budget-mode"),
     sources: ["flag", "default"],
     default: "observe",
     names: { flag: "scout-riot-budget-mode" },
@@ -271,21 +263,21 @@ const DEFINITION = {
   },
   /** Matches the participant crawl may store per UTC day. */
   participantCrawlDailyMatchBudget: {
-    schema: z.coerce.number().int().nonnegative().max(1_000_000),
+    schema: flagValueSchema("scout-participant-crawl-daily-match-budget"),
     sources: ["flag", "default"],
     default: DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET,
     names: { flag: "scout-participant-crawl-daily-match-budget" },
   },
   /** See {@link DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS}. */
   scoutClientEndOfGameDeadlineSeconds: {
-    schema: z.coerce.number().int().positive().max(3600),
+    schema: flagValueSchema("scout-client-end-of-game-deadline-seconds"),
     sources: ["flag", "default"],
     default: DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
     names: { flag: "scout-client-end-of-game-deadline-seconds" },
   },
   /** See {@link DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION}. */
   scoutClientMinimumVersion: {
-    schema: SemanticVersionSchema,
+    schema: flagValueSchema("scout-client-minimum-version"),
     sources: ["flag", "default"],
     default: DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION,
     names: { flag: "scout-client-minimum-version" },
@@ -342,25 +334,32 @@ function buildSnapshot(
             flag: createFlagConfigSource({
               targetingKey: "scout-backend",
               kinds: {
-                exploreGuildAllowlist: "string",
-                // A JSON object arrives as a string, like the allowlist.
-                exploreQuotaLimits: "string",
-                exploreSpendPolicy: "string",
-                llmHourlyTokenBudget: "number",
-                llmDailyTokenBudget: "number",
-                reportAiModel: "string",
-                exploreModel: "string",
-                featureTipPercent: "number",
-                featureTipCooldownHours: "number",
+                exploreGuildAllowlist: flagValueKind("explore-guild-allowlist"),
+                exploreQuotaLimits: flagValueKind("scout-explore-quota-limits"),
+                exploreSpendPolicy: flagValueKind("scout-explore-spend-policy"),
+                llmHourlyTokenBudget: flagValueKind("llm-hourly-token-budget"),
+                llmDailyTokenBudget: flagValueKind("llm-daily-token-budget"),
+                reportAiModel: flagValueKind("scout-report-ai-model"),
+                exploreModel: flagValueKind("scout-explore-model"),
+                featureTipPercent: flagValueKind("scout-feature-tip-percent"),
+                featureTipCooldownHours: flagValueKind(
+                  "scout-feature-tip-cooldown-hours",
+                ),
                 temporalCallGraphTracing: "boolean",
                 exploreAnalysisEnabled: "boolean",
                 exploreModelPickerEnabled: "boolean",
                 evidenceRecoveryEnabled: "boolean",
-                riotBudgetMode: "string",
+                riotBudgetMode: flagValueKind("scout-riot-budget-mode"),
                 participantCrawlEnabled: "boolean",
-                participantCrawlDailyMatchBudget: "number",
-                scoutClientEndOfGameDeadlineSeconds: "number",
-                scoutClientMinimumVersion: "string",
+                participantCrawlDailyMatchBudget: flagValueKind(
+                  "scout-participant-crawl-daily-match-budget",
+                ),
+                scoutClientEndOfGameDeadlineSeconds: flagValueKind(
+                  "scout-client-end-of-game-deadline-seconds",
+                ),
+                scoutClientMinimumVersion: flagValueKind(
+                  "scout-client-minimum-version",
+                ),
               },
             }),
           }

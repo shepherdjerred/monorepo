@@ -1,6 +1,7 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { flagValueKind } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod/v4";
 import { ImessageOwnersSchema } from "./imessage.ts";
 
@@ -27,7 +28,10 @@ export async function photonIngressConfig() {
     sources: {
       flag: createFlagConfigSource({
         targetingKey: "temporal-agent-chat-photon",
-        kinds: { enabled: "boolean", owners: "string" },
+        kinds: {
+          enabled: "boolean",
+          owners: flagValueKind("temporal-agent-chat-photon-owners"),
+        },
         onUnavailable: unavailable,
       }),
     },
