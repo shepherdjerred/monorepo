@@ -422,6 +422,8 @@ export const CreateUploadRequestSchema = z
     kind: ArtifactKindSchema.optional(),
     entryPath: ArtifactPathSchema,
     note: z.string().max(10_000).optional(),
+    /** Titles a board created by this upload; defaults to the slug. */
+    boardTitle: z.string().trim().min(1).max(200).optional(),
     viewport: ViewportSchema.optional(),
     placement: z
       .strictObject({ w: Size, h: Size, rightOf: z.uuid().optional() })
@@ -455,6 +457,8 @@ export const CreateUploadResponseSchema = z.strictObject({
   /** Digests the service does not hold yet; only these need a `PUT`. */
   missing: z.array(Sha256Schema),
   expiresAt: Timestamp,
+  /** True when the key already committed: nothing to upload; commit returns it. */
+  deduplicated: z.boolean(),
 });
 export type CreateUploadResponse = z.infer<typeof CreateUploadResponseSchema>;
 
@@ -464,6 +468,8 @@ export const CommitUploadResponseSchema = z.strictObject({
   number: z.number().int().min(1),
   reviewUrl: z.url(),
   boardUrl: z.url(),
+  /** True when this returns an earlier committed result for the same key. */
+  deduplicated: z.boolean(),
 });
 export type CommitUploadResponse = z.infer<typeof CommitUploadResponseSchema>;
 

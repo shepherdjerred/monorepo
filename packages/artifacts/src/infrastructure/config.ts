@@ -134,7 +134,7 @@ export function behaviorConfig(stage: string, options: BehaviorOptions = {}) {
       feedbackSettleSeconds: flag(
         "artifacts-feedback-settle-seconds",
         LIMIT_DEFAULTS.feedbackSettleSeconds,
-        z.coerce.number().int().min(0).max(600),
+        z.coerce.number().min(0).max(600),
       ),
       deliveryOrphanMinutes: flag(
         "artifacts-delivery-orphan-minutes",

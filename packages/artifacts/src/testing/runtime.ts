@@ -3,7 +3,7 @@ import type {
   CatalogVersion,
   ContentCatalog,
 } from "#application/content-catalog.ts";
-import { createChangeHub } from "#infrastructure/change-hub.ts";
+import { createChangeHub, type ChangeHub } from "#infrastructure/change-hub.ts";
 import { behaviorConfig } from "#infrastructure/config.ts";
 import { createDatabase, type Database } from "#infrastructure/database.ts";
 import { createRuntime, type Runtime } from "#server/runtime.ts";
@@ -39,6 +39,7 @@ export type CallInit = {
 };
 
 export type TestRuntime = Runtime & {
+  hub: ChangeHub;
   store: MemoryObjectStore;
   catalog: MemoryCatalog;
   call: (host: HostName, path: string, init?: CallInit) => Promise<Response>;
@@ -90,11 +91,12 @@ export async function createTestRuntime(
     flagValues: options.flagValues ?? {},
     environment: { ARTIFACTS_OPERATOR_LOGINS: options.logins ?? LOGIN },
   });
+  const hub = createChangeHub(options.databaseUrl ?? UNREACHABLE_DATABASE);
   const runtime = await createRuntime({
     db,
     store,
     settings,
-    hub: createChangeHub(options.databaseUrl ?? UNREACHABLE_DATABASE),
+    hub,
     appOrigin: APP_ORIGIN,
     contentOrigin: CONTENT_ORIGIN,
     ...(options.databaseUrl === undefined ? { catalog: memory } : {}),
@@ -119,5 +121,5 @@ export async function createTestRuntime(
       }),
     );
   };
-  return { ...runtime, store, catalog: memory, call };
+  return { ...runtime, hub, store, catalog: memory, call };
 }
