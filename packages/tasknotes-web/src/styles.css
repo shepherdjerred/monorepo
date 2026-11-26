@@ -12,7 +12,12 @@
   --radius-medium: 0.625rem;
   --radius-large: 0.875rem;
   --sidebar-width: 15rem;
-  --hit-target: 2.75rem;
+  --font-body: 0.8125rem;
+  --font-title: 1.0625rem;
+  --font-secondary: 0.6875rem;
+  --font-icon: 1rem;
+  --hit-target: 1.5rem;
+  --control-size: 1.75rem;
   --color-brand-light: #c43026;
   --color-background-light: #ffffff;
   --color-surface-light: #f2f2f7;
@@ -153,7 +158,7 @@ body {
   background: var(--color-background);
   color: var(--color-text);
   font-family: system-ui, sans-serif;
-  font-size: 1.0625rem;
+  font-size: var(--font-body);
   font-weight: 400;
   line-height: 1.3;
   text-align: start;
@@ -192,7 +197,7 @@ button,
 
 h1 {
   margin: 0;
-  font-size: 1.375rem;
+  font-size: var(--font-title);
   font-weight: 700;
   line-height: 1.27;
   text-wrap: balance;
@@ -221,8 +226,8 @@ h1 {
 }
 
 .icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: var(--font-icon);
+  height: var(--font-icon);
   flex: none;
 }
 
@@ -285,17 +290,17 @@ h1 {
   align-items: center;
   gap: var(--space-sm);
   width: 100%;
-  margin-top: var(--space-sm);
-  padding: 0.3rem 0.75rem;
+  margin-top: var(--space-xs);
+  padding: 0.15rem 0.5rem;
   color: var(--color-brand);
   font-weight: 600;
   text-align: start;
 }
 
 .nav-label {
-  margin: 0.85rem 0.7rem 0.15rem;
+  margin: 0.65rem 0.5rem 0.1rem;
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-secondary);
   font-weight: 600;
   line-height: 1.33;
 }
@@ -313,7 +318,7 @@ h1 {
   justify-content: space-between;
   gap: var(--space-sm);
   width: 100%;
-  padding: 0.3rem 0.5rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 7px;
   text-align: start;
 }
@@ -343,7 +348,7 @@ h1 {
 
 .count {
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-secondary);
   font-weight: 500;
 }
 
@@ -359,11 +364,11 @@ h1 {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  min-height: var(--hit-target);
-  padding: var(--space-sm) 0.75rem;
+  min-height: var(--control-size);
+  padding: 0.35rem 0.6rem;
   border-top: 1px solid var(--color-separator);
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-secondary);
 }
 
 .sync-dot {
@@ -420,7 +425,7 @@ h1 {
 .task-count {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.9375rem;
+  font-size: var(--font-secondary);
 }
 
 .search.header-search {
@@ -440,6 +445,7 @@ h1 {
 .search {
   display: flex;
   align-items: center;
+  min-height: var(--control-size);
   gap: var(--space-xs);
   margin: var(--space-xs) var(--space-xs) var(--space-sm);
   padding-inline: 0.6rem;
@@ -458,7 +464,7 @@ h1 {
 
 .group h2 {
   margin: var(--space-lg) 0 var(--space-xs);
-  font-size: 1.0625rem;
+  font-size: var(--font-body);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -566,7 +572,7 @@ h1 {
   flex: 1;
   min-width: 0;
   min-height: var(--hit-target);
-  padding: 0.35rem 0.15rem;
+  padding: 0.1rem 0.15rem;
   border: 0;
   background: transparent;
   text-align: start;
@@ -580,7 +586,7 @@ h1 {
 }
 
 .task-title {
-  font-size: 1.0625rem;
+  font-size: var(--font-body);
   line-height: 1.3;
 }
 
@@ -594,7 +600,7 @@ h1 {
   border-radius: 999px;
   background: color-mix(in oklab, var(--priority) 15%, transparent);
   color: var(--priority);
-  font-size: 0.6875rem;
+  font-size: var(--font-secondary);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -603,7 +609,7 @@ h1 {
 .task-meta,
 .due {
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-secondary);
   font-weight: 500;
   line-height: 1.33;
 }
@@ -639,6 +645,7 @@ h1 {
 .quick-add {
   display: flex;
   align-items: center;
+  min-height: var(--control-size);
   gap: var(--space-sm);
   margin-top: var(--space-md);
   padding: var(--space-xs) 0.4rem;
@@ -668,7 +675,7 @@ h1 {
 
 .week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(2.75rem, 1fr));
+  grid-template-columns: repeat(7, minmax(var(--hit-target), 1fr));
   gap: var(--space-xs);
   align-items: stretch;
   margin-bottom: var(--space-md);
@@ -681,7 +688,8 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 0.1rem;
-  padding: var(--space-xs);
+  padding: var(--space-xxs) var(--space-xs);
+  font-size: var(--font-secondary);
   border-radius: var(--radius-medium);
   background: color-mix(in oklab, var(--color-text) 8%, transparent);
   color: inherit;
@@ -689,7 +697,7 @@ h1 {
 }
 
 .day-number {
-  font-size: 1.0625rem;
+  font-size: var(--font-body);
   font-weight: 600;
 }
 
@@ -727,12 +735,12 @@ textarea {
   border: 1px solid var(--color-control);
   border-radius: var(--radius-medium);
   background: var(--color-background);
-  padding: 0.5rem 0.75rem;
-  min-height: var(--hit-target);
+  padding: 0.3rem 0.55rem;
+  min-height: var(--control-size);
 }
 
 textarea {
-  min-height: 6.5rem;
+  min-height: 4.5rem;
   resize: vertical;
   field-sizing: content;
 }
@@ -811,7 +819,7 @@ legend,
 .hint {
   margin: var(--space-xs) 0 0;
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-secondary);
   font-weight: 500;
   line-height: 1.33;
 }
@@ -828,8 +836,8 @@ legend,
 .gate-card {
   display: grid;
   gap: var(--space-md);
-  width: min(26rem, 100%);
-  padding: var(--space-xl);
+  width: min(22rem, 100%);
+  padding: var(--space-lg);
   border-radius: var(--radius-large);
   background: var(--color-background);
 }
@@ -837,12 +845,12 @@ legend,
 .gate .brand {
   margin: 0;
   color: var(--color-brand);
-  font-size: 1.0625rem;
+  font-size: var(--font-body);
   font-weight: 700;
 }
 
 .gate h1 {
-  font-size: 1.75rem;
+  font-size: var(--font-title);
   line-height: 1.2;
 }
 
@@ -908,8 +916,8 @@ dialog::backdrop {
   min-width: 0;
   border: 0;
   background: transparent;
-  padding: 0.4rem 0;
-  font-size: 1.375rem;
+  padding: 0.15rem 0;
+  font-size: var(--font-title);
   font-weight: 700;
   line-height: 1.27;
 }
@@ -958,6 +966,7 @@ dialog::backdrop {
 .quick-add input,
 input.title-field {
   width: auto;
+  min-height: 0;
   border: 0;
   background: transparent;
   padding-inline: 0;
@@ -978,6 +987,15 @@ input.title-field {
 }
 
 @media (width < 48em) {
+  :root {
+    --font-body: 1.0625rem;
+    --font-title: 1.375rem;
+    --font-secondary: 0.75rem;
+    --font-icon: 1.25rem;
+    --hit-target: 2.75rem;
+    --control-size: 2.75rem;
+  }
+
   .shell {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1060,6 +1078,12 @@ input.title-field {
     margin: 0;
     border: 0;
     border-radius: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  :root {
+    --hit-target: 2.75rem;
   }
 }
 
