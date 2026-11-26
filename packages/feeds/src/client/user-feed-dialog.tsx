@@ -1,5 +1,5 @@
 import {
-  useEffect,
+  useCallback,
   useId,
   useRef,
   useState,
@@ -60,45 +60,48 @@ function withoutFieldError(
   );
 }
 
-/** Safari light-dismiss fallback when `<dialog closedby="any">` is unsupported. */
-export function useDialogLightDismiss(
+/**
+ * The ref callback for a modal `<dialog>`: it keeps the element's open state
+ * equal to `isOpen`, and adds the Safari light-dismiss fallback when
+ * `<dialog closedby="any">` is unsupported. It also stores the element in
+ * `dialogRef`, which the dialog's own handlers read.
+ */
+export function useModalDialogRef(
   dialogRef: RefObject<HTMLDialogElement | null>,
   isOpen: boolean,
-): void {
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) return;
-    if (!isOpen) {
-      if (dialog.open) dialog.close();
-      return;
-    }
-    if (!dialog.open) dialog.showModal();
-  }, [dialogRef, isOpen]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (
-      dialog === null ||
-      typeof HTMLDialogElement === "undefined" ||
-      "closedBy" in HTMLDialogElement.prototype
-    ) {
-      return;
-    }
-    const onClick = (event: MouseEvent): void => {
-      if (event.target !== dialog) return;
-      const r = dialog.getBoundingClientRect();
-      const inside =
-        r.top <= event.clientY &&
-        event.clientY <= r.bottom &&
-        r.left <= event.clientX &&
-        event.clientX <= r.right;
-      if (!inside) dialog.close();
-    };
-    dialog.addEventListener("click", onClick);
-    return () => {
-      dialog.removeEventListener("click", onClick);
-    };
-  }, [dialogRef]);
+): (dialog: HTMLDialogElement | null) => (() => void) | undefined {
+  return useCallback(
+    (dialog: HTMLDialogElement | null) => {
+      dialogRef.current = dialog;
+      if (dialog === null) return;
+      if (!isOpen) {
+        if (dialog.open) dialog.close();
+      } else if (!dialog.open) {
+        dialog.showModal();
+      }
+      const lightDismissUnsupported =
+        typeof HTMLDialogElement !== "undefined" &&
+        !("closedBy" in HTMLDialogElement.prototype);
+      const onClick = (event: MouseEvent): void => {
+        if (event.target !== dialog) return;
+        const r = dialog.getBoundingClientRect();
+        const inside =
+          r.top <= event.clientY &&
+          event.clientY <= r.bottom &&
+          r.left <= event.clientX &&
+          event.clientX <= r.right;
+        if (!inside) dialog.close();
+      };
+      if (lightDismissUnsupported) dialog.addEventListener("click", onClick);
+      return () => {
+        if (lightDismissUnsupported) {
+          dialog.removeEventListener("click", onClick);
+        }
+        dialogRef.current = null;
+      };
+    },
+    [dialogRef, isOpen],
+  );
 }
 
 function focusFirstInvalid(
@@ -356,7 +359,10 @@ export function UserFeedDialog({
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
+  // A new dialog state starts a fresh form: adjust during render, not in an effect.
+  const [formState, setFormState] = useState(state);
+  if (formState !== state) {
+    setFormState(state);
     setDraft(
       state.kind === "edit" ? draftFromFeed(state.feed) : emptyUserFeedDraft(),
     );
@@ -364,9 +370,12 @@ export function UserFeedDialog({
     setErrors({});
     setSubmitError(undefined);
     setIsSaving(false);
-  }, [state]);
+  }
 
-  useDialogLightDismiss(dialogRef, state.kind !== "closed");
+  const dialogRefCallback = useModalDialogRef(
+    dialogRef,
+    state.kind !== "closed",
+  );
 
   function handleFieldBlur(field: UserFeedField): void {
     if (touched[field] !== true) return;
@@ -442,7 +451,7 @@ export function UserFeedDialog({
   return (
     <dialog
       {...DIALOG_LIGHT_DISMISS_PROPS}
-      ref={dialogRef}
+      ref={dialogRefCallback}
       className="fd-dialog"
       aria-labelledby={titleId}
       onClose={() => {

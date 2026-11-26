@@ -10,7 +10,7 @@ import {
 } from "./model.ts";
 import {
   DIALOG_LIGHT_DISMISS_PROPS,
-  useDialogLightDismiss,
+  useModalDialogRef,
 } from "./user-feed-dialog.tsx";
 
 function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
@@ -246,12 +246,12 @@ export function DeleteFeedDialog({
 }): React.JSX.Element {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  useDialogLightDismiss(dialogRef, target !== undefined);
+  const dialogRefCallback = useModalDialogRef(dialogRef, target !== undefined);
 
   return (
     <dialog
       {...DIALOG_LIGHT_DISMISS_PROPS}
-      ref={dialogRef}
+      ref={dialogRefCallback}
       className="fd-dialog"
       aria-labelledby={titleId}
       onClose={() => {

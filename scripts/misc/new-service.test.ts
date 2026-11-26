@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import prettier from "prettier";
 import { z } from "zod";
 import {
   formatChecklist,
@@ -9,6 +10,7 @@ import {
   parseBakeTargets,
   registrationFindings,
 } from "../checks/service-registration.ts";
+import { deviationsFor } from "../checks/check-console-stack.ts";
 import {
   cliWrittenFiles,
   DOCKERHUB_SYNTH_OUTPUT,
@@ -44,6 +46,15 @@ const WORKER: ServiceOptions = {
   kind: "worker",
   port: 7401,
   title: "Fixture worker",
+};
+
+const CONSOLE: ServiceOptions = {
+  name: "fixture-console",
+  kind: "web",
+  port: 7410,
+  host: "fixture-console",
+  title: "Fixture console",
+  console: true,
 };
 
 const temporaryDirectories: string[] = [];
@@ -344,6 +355,118 @@ describe("scaffoldService collisions and pre-provisioned images", () => {
   });
 });
 
+describe("scaffoldService with --console", () => {
+  test("a --console service is registered and carries the console stack", async () => {
+    const root = await fixtureTree();
+    const files = await scaffoldService(root, CONSOLE);
+    const inputs = await loadRegistrationInputs(root);
+    expect(formatChecklist(registrationFindings(inputs))).toBe("");
+
+    const base = "packages/fixture-console";
+    expect(files).toEqual(
+      expect.arrayContaining([
+        `${base}/package.json`,
+        `${base}/prisma/schema.prisma`,
+        `${base}/prisma.config.ts`,
+        `${base}/index.html`,
+        `${base}/vite.config.ts`,
+        `${base}/src/router.ts`,
+        `${base}/src/db.ts`,
+        `${base}/src/server.ts`,
+        `${base}/src/server.test.ts`,
+        `${base}/src/client/main.tsx`,
+        `${base}/src/client/routes.tsx`,
+        `${base}/src/client/routes.test.tsx`,
+        `${base}/src/client/trpc.ts`,
+      ]),
+    );
+    const read = async (file: string) =>
+      Bun.file(path.join(root, base, file)).text();
+
+    const server = await read("src/server.ts");
+    expect(server).toContain("new Hono()");
+    expect(server).toContain('"/healthz"');
+    expect(server).toContain("fetchRequestHandler");
+    expect(await read("src/router.ts")).toContain("initTRPC.create()");
+    expect(await read("prisma/schema.prisma")).toContain(
+      'provider = "postgresql"',
+    );
+    const routes = await read("src/client/routes.tsx");
+    expect(routes).toContain("createRootRoute");
+    expect(routes).toContain("validateSearch");
+    expect(routes).toContain("ShellFrame");
+    expect(routes).toContain("HeaderBar");
+    expect(routes).toContain("eslint-disable-next-line");
+    expect(routes).toContain("interface Register");
+    expect(await read("src/client/trpc.ts")).toContain(
+      "createTRPCContext<AppRouter>()",
+    );
+    // The console's image builds the client, which imports console-ui.
+    expect(await read("Dockerfile")).toContain("packages/console-ui");
+  });
+
+  test("every generated source file is prettier-formatted", async () => {
+    const root = await fixtureTree();
+    const files = await scaffoldService(root, CONSOLE);
+    const sources = files.filter(
+      (file) =>
+        file.startsWith("packages/fixture-console/") &&
+        /\.(?:tsx?|json|html)$/u.test(file),
+    );
+    expect(sources.length).toBeGreaterThan(10);
+    for (const file of sources) {
+      const configured = path.join(REPOSITORY_ROOT, file);
+      const text = await Bun.file(path.join(root, file)).text();
+      expect(
+        await prettier.check(text, {
+          ...(await prettier.resolveConfig(configured)),
+          filepath: configured,
+        }),
+        file,
+      ).toBe(true);
+    }
+  });
+
+  test("a --console service's package.json meets the stack check", async () => {
+    const root = await fixtureTree();
+    await scaffoldService(root, CONSOLE);
+    const manifest = z
+      .object({
+        name: z.string(),
+        dependencies: z.record(z.string(), z.string()),
+        devDependencies: z.record(z.string(), z.string()),
+      })
+      .parse(
+        await Bun.file(
+          path.join(root, "packages/fixture-console/package.json"),
+        ).json(),
+      );
+    const rootManifest = z
+      .object({ catalog: z.record(z.string(), z.string()) })
+      .parse(await Bun.file(path.join(REPOSITORY_ROOT, "package.json")).json());
+    const deviations = deviationsFor(
+      { id: "fixture", label: "Fixture", directory: "x", kind: "typescript" },
+      manifest,
+      new Map(Object.entries(rootManifest.catalog)),
+    );
+    expect(deviations).toEqual([]);
+  });
+
+  test("a plain web service stays a health-only server", async () => {
+    const root = await fixtureTree();
+    await scaffoldService(root, WEB);
+    const server = await Bun.file(
+      path.join(root, "packages/fixture-notes/src/server.ts"),
+    ).text();
+    expect(server).toContain("Bun.serve({ port, hostname, fetch: handle })");
+    expect(
+      await Bun.file(
+        path.join(root, "packages/fixture-notes/src/router.ts"),
+      ).exists(),
+    ).toBe(false);
+  });
+});
+
 describe("parseServiceOptions", () => {
   test("reads a web service and a worker", () => {
     expect(
@@ -358,7 +481,21 @@ describe("parseServiceOptions", () => {
     ).toEqual(WORKER);
   });
 
+  test("reads --console for a web service", () => {
+    expect(
+      parseServiceOptions([
+        "--name=fixture-console",
+        "--kind=web",
+        "--port=7410",
+        "--host=fixture-console",
+        "--title=Fixture console",
+        "--console",
+      ]),
+    ).toEqual(CONSOLE);
+  });
+
   test.each([
+    ["--name notes --kind worker --port 7400 --console", "--console applies"],
     ["--kind web --port 7400 --host notes", "--name is required"],
     ["--name Bad_Name --kind web --port 7400 --host notes", "kebab-name"],
     ["--name notes --kind job --port 7400", "--kind must be web or worker"],

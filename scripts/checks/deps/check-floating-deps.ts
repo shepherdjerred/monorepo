@@ -36,6 +36,13 @@ const dependencyFields = [
  */
 const pinnedProtocols = ["workspace:", "file:", "link:"];
 
+/**
+ * `catalog:` and `catalog:<name>` defer to the root manifest's `catalog` and
+ * `catalogs` entries, which are checked here like any other dependency field,
+ * so a catalogued spec is pinnable exactly when its catalog entry is.
+ */
+const catalogProtocol = "catalog:";
+
 export type SpecVerdict = { ok: true } | { ok: false; reason: string };
 
 /**
@@ -54,7 +61,7 @@ export function classifySpec(rawSpec: string): SpecVerdict {
     };
   }
 
-  for (const protocol of pinnedProtocols) {
+  for (const protocol of [...pinnedProtocols, catalogProtocol]) {
     if (spec.startsWith(protocol)) return { ok: true };
   }
 
@@ -125,6 +132,36 @@ export function manifestErrors(
       if (!verdict.ok) {
         errors.push(`${relativePath} ${field}.${name}: ${verdict.reason}`);
       }
+    }
+  }
+  errors.push(...catalogErrors(relativePath, manifestRaw));
+  return errors;
+}
+
+/** Check the root manifest's `catalog` and `catalogs` entries as dependency specs. */
+function catalogErrors(relativePath: string, manifest: object): string[] {
+  const errors: string[] = [];
+  const check = (label: string, entries: unknown): void => {
+    if (typeof entries !== "object" || entries === null) return;
+    for (const [name, specRaw] of Object.entries(entries)) {
+      if (typeof specRaw !== "string") {
+        throw new TypeError(
+          `${relativePath} ${label}.${name} must be a string`,
+        );
+      }
+      const verdict = classifySpec(specRaw);
+      if (!verdict.ok || specRaw.startsWith(catalogProtocol)) {
+        errors.push(
+          `${relativePath} ${label}.${name}: ${verdict.ok ? "a catalog entry cannot reference another catalog" : verdict.reason}`,
+        );
+      }
+    }
+  };
+  check("catalog", Reflect.get(manifest, "catalog"));
+  const named: unknown = Reflect.get(manifest, "catalogs");
+  if (typeof named === "object" && named !== null) {
+    for (const [group, entries] of Object.entries(named)) {
+      check(`catalogs.${group}`, entries);
     }
   }
   return errors;

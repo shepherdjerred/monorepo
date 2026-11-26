@@ -25,7 +25,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
+    "@base-ui/react": "catalog:",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/context-async-hooks": "^2.12.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
@@ -33,20 +33,20 @@
     "@opentelemetry/sdk-node": "^0.223.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@prisma/adapter-pg": "7.10.1",
-    "@prisma/client": "^7.10.1",
+    "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
     "@prisma/client-runtime-utils": "7.10.1",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
-    "@tanstack/react-query": "^5.101.2",
-    "hono": "^4.12.18",
-    "lucide-react": "^1.14.0",
-    "prisma": "^7.10.1",
+    "@tanstack/react-query": "catalog:",
+    "hono": "catalog:",
+    "lucide-react": "catalog:",
+    "prisma": "catalog:",
     "prom-client": "^15.1.3",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "8.4.0",
-    "zod": "^4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@sentry/bun": "11.18.0",
@@ -57,15 +57,15 @@
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/test-postgres": "workspace:*",
     "@types/bun": "1.4.5",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-istanbul": "5.1.2",
+    "@vitejs/plugin-react": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.11",
-    "vitest": "5.1.2"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

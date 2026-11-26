@@ -28,18 +28,28 @@ and clears `pendingPrivateImages`.
    bun scripts/misc/new-service.ts --name notes --kind web --port 7400 --host notes
    ```
 
-   | Flag      | Value                                                               |
-   | --------- | ------------------------------------------------------------------- |
-   | `--name`  | Kebab-case. Names the package, image, chart, namespace, Application |
-   | `--kind`  | `web` for an HTTP service, `worker` for a workload with no ingress  |
-   | `--port`  | The listening port, or a worker's health port. 1024 to 55535        |
-   | `--host`  | The tailnet hostname. Required for `web`, refused for `worker`      |
-   | `--title` | The catalog title. Defaults to the name in sentence case            |
+   | Flag        | Value                                                                 |
+   | ----------- | --------------------------------------------------------------------- |
+   | `--name`    | Kebab-case. Names the package, image, chart, namespace, Application   |
+   | `--kind`    | `web` for an HTTP service, `worker` for a workload with no ingress    |
+   | `--port`    | The listening port, or a worker's health port. 1024 to 55535          |
+   | `--host`    | The tailnet hostname. Required for `web`, refused for `worker`        |
+   | `--title`   | The catalog title. Defaults to the name in sentence case              |
+   | `--console` | Web only. Writes the console stack in place of the bare health server |
 
    The command writes the package, the chart, the Argo Application and every
    registration. It then installs, synthesizes `@homelab/cdktn` (updating
    `packages/homelab/src/tofu/dockerhub/main.tf.json`), runs `generate:catalog`
    and runs the completeness check. It prints each file it wrote.
+
+   For an ops console, add `--console`. The package then holds the
+   [console stack](/reference/console-stack/): a Hono server on Bun with
+   `/healthz` and `/trpc`, a tRPC router with one example procedure, a Prisma
+   schema for PostgreSQL, and a Vite and React client with TanStack Router, the
+   `@trpc/tanstack-react-query` provider and console-ui's shell. Its
+   dependencies use `catalog:`. Add the console to `CONSOLES` in
+   `scripts/checks/console-stack-rules.ts` so `bun run check-console-stack`
+   holds it to the standard.
 
 2. Bump the three inventory counts that a new image and chart change. Run the
    suite and edit the literal each failure names:
@@ -162,5 +172,6 @@ Application that the catalog does not name.
 ## Related
 
 - [Why a hosted service is a construct, a policy test and a checklist](/explanation/homelab/hosted-service-model/)
+- [Console stack reference](/reference/console-stack/)
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
 - [Delivery model reference](/reference/delivery-model/)

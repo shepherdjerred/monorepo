@@ -18,8 +18,8 @@ import { readEndpoint } from "@shepherdjerred/flags/client/api.ts";
 /*
  * The management-only views (`README.md`, Audit and Usage): a flag's history,
  * a deployment's inventory metadata, the archive of retired flags and where
- * flags are read. Their query keys start with `flags-` so they never match `["document", …]`,
- * which `useSummaryRefresh` watches.
+ * flags are read. Their query keys start with `flags-` so they never match
+ * `["document", …]`, which `keepSummariesFresh` (client/api.ts) watches.
  */
 
 export type HistoryEntry = FlagsHistoryResponse["entries"][number];

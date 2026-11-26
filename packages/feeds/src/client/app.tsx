@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useRef, useState, type RefObject } from "react";
 import { z } from "zod";
 import {
   FigureStrip,
@@ -31,121 +31,12 @@ import {
   searchSuffix,
   type Route,
 } from "./model.ts";
+import { useWorkspaceShortcuts } from "./shortcuts.ts";
 import { FeedsHeader, FeedsPicker, FeedsSidebar } from "./sidebar.tsx";
 import {
   UserFeedDialog,
   type UserFeedDialogState,
 } from "./user-feed-dialog.tsx";
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof HTMLElement &&
-    target.closest(
-      "input, select, textarea, dialog, [contenteditable='true']",
-    ) !== null
-  );
-}
-
-function shouldIgnoreGlobalKey(event: KeyboardEvent): boolean {
-  return (
-    event.defaultPrevented ||
-    event.isComposing ||
-    event.metaKey ||
-    event.ctrlKey ||
-    event.altKey ||
-    isEditableTarget(event.target) ||
-    document.querySelector("dialog[open]") !== null
-  );
-}
-
-type EntryShortcutContext = {
-  readonly entries: readonly EntryListItem[];
-  readonly activeIndex: number | undefined;
-  readonly setActiveIndex: React.Dispatch<
-    React.SetStateAction<number | undefined>
-  >;
-  readonly onToggleRead: (entry: EntryListItem) => void;
-  readonly onToggleStar: (entry: EntryListItem) => void;
-  readonly onFocusSearch: () => void;
-};
-
-function handleEntryShortcut(
-  key: string,
-  context: EntryShortcutContext,
-): boolean {
-  if (key === "/") {
-    context.onFocusSearch();
-    return true;
-  }
-  const { entries, activeIndex, setActiveIndex } = context;
-  if (entries.length === 0) return false;
-  if (key === "j") {
-    setActiveIndex((prev) =>
-      prev === undefined ? 0 : Math.min(entries.length - 1, prev + 1),
-    );
-    return true;
-  }
-  if (key === "k") {
-    setActiveIndex((prev) => (prev === undefined ? 0 : Math.max(0, prev - 1)));
-    return true;
-  }
-  const active = activeIndex === undefined ? undefined : entries[activeIndex];
-  if (active === undefined) return false;
-  if (key === "o") {
-    globalThis.open(active.url, "_blank", "noopener,noreferrer");
-    return true;
-  }
-  if (key === "m") {
-    context.onToggleRead(active);
-    return true;
-  }
-  if (key === "s") {
-    context.onToggleStar(active);
-    return true;
-  }
-  return false;
-}
-
-function useWorkspaceShortcuts(options: {
-  readonly isEntriesRoute: boolean;
-  readonly entries: readonly EntryListItem[];
-  readonly activeIndex: number | undefined;
-  readonly setActiveIndex: React.Dispatch<
-    React.SetStateAction<number | undefined>
-  >;
-  readonly searchInputRef: RefObject<HTMLInputElement | null>;
-  readonly onToggleRead: (entry: EntryListItem) => void;
-  readonly onToggleStar: (entry: EntryListItem) => void;
-  readonly onRefresh: () => void;
-}): void {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (shouldIgnoreGlobalKey(event)) return;
-      if (event.key === "r") {
-        event.preventDefault();
-        options.onRefresh();
-        return;
-      }
-      if (!options.isEntriesRoute) return;
-      const handled = handleEntryShortcut(event.key, {
-        entries: options.entries,
-        activeIndex: options.activeIndex,
-        setActiveIndex: options.setActiveIndex,
-        onToggleRead: options.onToggleRead,
-        onToggleStar: options.onToggleStar,
-        onFocusSearch: () => {
-          options.searchInputRef.current?.focus();
-          options.searchInputRef.current?.select();
-        },
-      });
-      if (handled) event.preventDefault();
-    };
-    globalThis.addEventListener("keydown", onKeyDown);
-    return () => {
-      globalThis.removeEventListener("keydown", onKeyDown);
-    };
-  });
-}
 
 function activeFeedTitleFor(
   route: Route | undefined,
@@ -297,7 +188,10 @@ export function App({
     setBannerError(error.message);
   };
 
-  useEffect(() => {
+  // Back and forward move the URL without a click, so the history entry the
+  // browser lands on is read back into state; attached to the workspace element.
+  const trackPopState = useCallback((element: HTMLElement | null) => {
+    if (element === null) return;
     const onPopState = (): void => {
       const nextSearch = globalThis.location.search;
       setPathname(globalThis.location.pathname);
@@ -371,7 +265,7 @@ export function App({
     );
   }
 
-  useWorkspaceShortcuts({
+  const bindShortcuts = useWorkspaceShortcuts({
     isEntriesRoute,
     entries,
     activeIndex,
@@ -381,6 +275,18 @@ export function App({
     onToggleStar: toggleStar,
     onRefresh: triggerRefresh,
   });
+
+  const bindWindowEvents = useCallback(
+    (element: HTMLElement | null) => {
+      const releaseShortcuts = bindShortcuts(element);
+      const releasePopState = trackPopState(element);
+      return () => {
+        releaseShortcuts?.();
+        releasePopState?.();
+      };
+    },
+    [bindShortcuts, trackPopState],
+  );
 
   async function confirmDeleteFeed(): Promise<void> {
     if (confirmDelete === undefined || deleteFeedMutation.isPending) return;
@@ -411,7 +317,7 @@ export function App({
         />
       }
     >
-      <main className="fd-workspace">
+      <main className="fd-workspace" ref={bindWindowEvents}>
         <FeedsPicker
           summary={summary.data}
           route={route}

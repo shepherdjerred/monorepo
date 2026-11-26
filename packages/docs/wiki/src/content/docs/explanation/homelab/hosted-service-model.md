@@ -126,6 +126,31 @@ definition that merges should change nothing that runs. Activation adds the
 environment, the Delivery delegation and the secrets, and those deserve their
 own diff.
 
+## One stack for the consoles
+
+The ten ops consoles are first-party hosted services that people use every day:
+Hub, Delivery, Tracker, Errors, Mail, Flags, Feeds, Go link, Charts and CI
+cache. They already shared React, Vite, TypeScript, Vitest, Zod and the
+console-ui look at the same versions. Below that they diverged: React Router, TanStack Router
+and hand-rolled routing, REST beside tRPC, raw SQLite beside Prisma, native
+dialogs beside Base UI. Each choice was reasonable alone. Together they meant a
+fix for one console did not carry to another, and every new console started from
+a bare server.
+
+The consoles therefore share one stack, written down in the
+[console stack reference](/reference/console-stack/). The reasoning is the same
+as for the construct and the policy test: make the standard the easy path, then
+check what went around it. The scaffolder's `--console` flag writes the standard
+stack, a Bun workspace catalog holds one version of each library, and a stack
+check reads each console's `package.json`. The check starts with an allowlist of
+today's deviations, each with a reason. A deviation with no entry fails, and an
+entry whose deviation is gone fails, so the list only shrinks and a migration
+pull request removes its own entries.
+
+Two consoles are Rust, and fixed outside protocols such as SMTP and the Sentry
+envelope keep their wire format. Those are named exceptions, not allowlist
+entries, because the standard cannot apply to them.
+
 ## What stays manual, and why
 
 A few inventory tests assert a literal count of images or charts. They guard
@@ -139,6 +164,8 @@ guessed them would be a default nobody chose.
 ## Related
 
 - [Add a hosted service](/how-to/add-a-hosted-service/) is the procedure.
+- [Console stack reference](/reference/console-stack/) lists the standard and
+  its exceptions.
 - [About the homelab](/explanation/homelab/overview/) covers the topology these
   workloads run on.
 - [Why releases are shaped this way](/explanation/homelab/release-safety/)

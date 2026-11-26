@@ -1,3 +1,4 @@
+import { consoleFiles } from "./new-service-console.ts";
 import type { ServiceOptions } from "./new-service-options.ts";
 
 /**
@@ -80,7 +81,7 @@ test("answers 404 elsewhere", () => {
  * the new image starts on the digests the fleet already runs.
  */
 function dockerfile(
-  { name, port }: ServiceOptions,
+  { name, port, console: isConsole }: ServiceOptions,
   pins: { syntax: string; base: string },
 ): string {
   const workspace = `@shepherdjerred/${name}`;
@@ -115,7 +116,7 @@ RUN bun install --frozen-lockfile --filter '${workspace}'
 # Add each workspace dependency's directory to this COPY and to the runtime
 # stage's as the service gains them.
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/${name} packages/eslint-config ./
+COPY --parents tsconfig.base.json packages/${name} packages/eslint-config${isConsole === true ? " packages/console-ui" : ""} ./
 RUN cd packages/${name} && bun run build
 
 FROM base AS prod-deps
@@ -410,5 +411,7 @@ export function serviceFiles(
     [`${source}/resources/argo-applications/apps/${name}.ts`]:
       applicationSource(options),
     [`${CDK8S_ROOT}/helm/${name}/Chart.yaml`]: helmChart(options),
+    // The console template replaces the health-only server and its test.
+    ...(options.console === true ? consoleFiles(options) : {}),
   };
 }
