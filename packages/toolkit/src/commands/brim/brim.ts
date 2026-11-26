@@ -2,9 +2,11 @@ import { parseArgs } from "node:util";
 import { runPicker } from "#commands/brim/run-picker.tsx";
 import {
   defaultSnapshotsPath,
+  loadCollectionStatus,
   loadSnapshots,
   SnapshotCacheMissingError,
 } from "#lib/brim/cache.ts";
+import { withCollectionStatus } from "#lib/brim/collection-ranking.ts";
 import {
   formatLaunch,
   LaunchError,
@@ -232,13 +234,28 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
     return;
   }
   let result: RankResult;
+  const snapshotsPath = options.snapshotsPath ?? defaultSnapshotsPath();
   try {
-    result = withKnownProviders(
-      rankSnapshots(
-        await loadSnapshots(options.snapshotsPath ?? defaultSnapshotsPath()),
-        { minFiveHourRemaining: options.minRemaining },
-      ),
+    const snapshots = await loadSnapshots(snapshotsPath).catch(
+      (error: unknown) => {
+        if (
+          error instanceof SnapshotCacheMissingError &&
+          options.snapshotsPath === undefined
+        ) {
+          return [];
+        }
+        throw error;
+      },
     );
+    result = withKnownProviders(
+      rankSnapshots(snapshots, { minFiveHourRemaining: options.minRemaining }),
+    );
+    if (options.snapshotsPath === undefined) {
+      result = withCollectionStatus(
+        result,
+        await loadCollectionStatus(snapshotsPath),
+      );
+    }
   } catch (error: unknown) {
     // An explicit pick needs no ranking, so a machine that never ran the Brim
     // app (a remote Herdr machine) still starts it. A corrupt cache still fails.

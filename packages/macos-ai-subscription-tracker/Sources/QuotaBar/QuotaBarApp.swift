@@ -35,17 +35,25 @@ struct QuotaBarApp: App {
     let apiCredentials = APIPlatformCredentialStore()
     self.apiCredentials = apiCredentials
     self.startupError = startupError
+    let store = JSONSnapshotStore()
     let model = QuotaBarModel(
       providers: providers,
       settings: settings,
-      store: JSONSnapshotStore(),
+      store: store,
       historyStore: JSONUsageHistoryStore(),
-      providerFactory: providerFactory
+      providerFactory: providerFactory,
+      refresh: QuotaBarRefresh(collectionStatus: CollectionStatusStore(snapshotURL: store.url))
     )
     let apiModel = APIPlatformModel(settings: settings, credentials: apiCredentials)
     _model = State(initialValue: model)
     _apiModel = State(initialValue: apiModel)
-    _launchAtLogin = State(initialValue: LaunchAtLoginController())
+    let login = LaunchAtLoginController()
+    if ProcessInfo.processInfo.arguments.contains("--enable-launch-at-login"),
+      login.status == .disabled
+    {
+      login.setEnabled(true)
+    }
+    _launchAtLogin = State(initialValue: login)
     model.startPolling()
     apiModel.startPolling()
   }

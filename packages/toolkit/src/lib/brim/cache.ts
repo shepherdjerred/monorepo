@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
@@ -63,6 +63,44 @@ export class SnapshotCacheMissingError extends Error {
 
 export function defaultSnapshotsPath(home: string = os.homedir()): string {
   return path.join(home, "Library/Application Support/QuotaBar/snapshots.json");
+}
+
+const CollectionStatusSchema = z.object({
+  expiresAt: z.number(),
+  failures: z.record(z.string(), z.string().min(1).max(500)),
+});
+
+export type CollectionStatus =
+  | { readonly active: false }
+  | {
+      readonly active: true;
+      readonly failures: Readonly<Record<string, string>>;
+    };
+
+export async function loadCollectionStatus(
+  snapshotsPath: string,
+  now = Date.now(),
+): Promise<CollectionStatus> {
+  const file = path.join(path.dirname(snapshotsPath), "collection-status.json");
+  try {
+    const raw: unknown = JSON.parse(await readFile(file, "utf8"));
+    const status = CollectionStatusSchema.parse(raw);
+    return cocoaToMs(status.expiresAt) < now
+      ? { active: false }
+      : { active: true, failures: status.failures };
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === "ENOENT"))
+      throw error;
+  }
+  // Previous Brim releases only wrote snapshots. Their longest poll is 30 min.
+  const legacy = await stat(snapshotsPath).catch((error: unknown) => {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return null;
+    throw error;
+  });
+  return legacy === null || now - legacy.mtimeMs > 3_660_000
+    ? { active: false }
+    : { active: true, failures: {} };
 }
 
 /**

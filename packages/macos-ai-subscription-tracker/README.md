@@ -147,6 +147,10 @@ the legacy `/Applications/QuotaBar.app` installation during migration. Launch
 at login requires this real app bundle; it does not claim success for a
 `swift run` executable.
 
+For an unattended coding Mac, pass `--enable-launch-at-login` to the installer
+to request registration on first launch. If macOS requires approval, approve
+Brim in System Settings → General → Login Items.
+
 ## App icon
 
 `Resources/Brim.icon` is the app icon source of truth. It contains separate
@@ -275,6 +279,18 @@ signed-out CLI — or an API-key login, which bills the Model API instead of
 carrying a subscription — returns no allowance, so Brim reports Muse as
 signed out. Over-quota percentages above 100 are shown as fully used with a
 note.
+
+Enable **Settings → Login → Launch Brim at login** on each coding Mac where
+Herdr uses Brim's quotas. Karpathy's dotfiles manage a login agent so the
+collector stays attached to its macOS login session when an SSH command ends.
+Each completed poll writes
+`collection-status.json` beside `snapshots.json` with an expiry and sanitized
+provider failure messages. It contains no credentials or raw CLI output.
+
+**Settings → Refresh → Refresh Muse sign-in** first tries the normal allowance
+read. If the CLI identifies an authentication failure, the confirmed action can
+run a single short model turn with tools disabled and retry the allowance read.
+Automatic refresh uses the allowance command alone.
 
 Cursor reads only `cursorAuth/accessToken` from Cursor's local `state.vscdb`
 and sends an empty Connect JSON request to Cursor's current-period usage

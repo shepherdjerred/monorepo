@@ -21,11 +21,11 @@ final class MuseProviderTests: XCTestCase {
         "Uses the signed-in Muse CLI without reading or storing its token."))
   }
 
-  func testMuseMissingAllowanceIsCredentialsMissing() {
+  func testMuseExplicitSignInFailure() {
     let signedOut = Data(
       #"{"schemaVersion":1,"allowance":null,"reason":"not_signed_in","hint":null}"#.utf8)
     XCTAssertThrowsError(try MuseProvider.parse(data: signedOut)) { error in
-      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.muse))
+      XCTAssertEqual(error as? QuotaError, .credentialsExpired(.muse))
     }
     XCTAssertThrowsError(try MuseProvider.parse(data: Data("not-json".utf8))) { error in
       XCTAssertEqual(error as? QuotaError, .malformedResponse(.muse))
@@ -118,17 +118,38 @@ final class MuseProviderTests: XCTestCase {
     XCTAssertEqual(calls.map(\.arguments), [["usage", "--json"]])
   }
 
-  func testMuseFetchNonZeroExitIsCredentialsMissing() async {
+  func testMuseFetchNonZeroExitWithoutReasonIsCommandFailure() async {
     let runner = StubCommandRunner(
       result: .success(CommandResult(stdout: Data(), terminationStatus: 1)))
     let provider = MuseProvider(
       commandRunner: runner, executableURL: URL(fileURLWithPath: "/opt/homebrew/bin/muse"))
     do {
       _ = try await provider.fetch()
-      XCTFail("Expected credentialsMissing")
+      XCTFail("Expected providerCommandFailed")
     } catch {
-      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.muse))
+      XCTAssertEqual(error as? QuotaError, .providerCommandFailed(.muse))
     }
+  }
+
+  func testMuseRecoveryOnlyUsesModelAfterExplicitAuthFailure() async throws {
+    let allowance = fixture("muse-usage-success")
+    let healthy = CommandResult(stdout: allowance, terminationStatus: 0)
+    let authFailure = CommandResult(
+      stdout: Data(#"{"allowance":null,"reason":"not_signed_in"}"#.utf8), terminationStatus: 1)
+    let recovery = CommandResult(stdout: Data(), terminationStatus: 0)
+    let runner = StubCommandRunner(results: [authFailure, recovery, healthy, healthy])
+    let provider = MuseProvider(
+      commandRunner: runner, executableURL: URL(fileURLWithPath: "/opt/homebrew/bin/muse"))
+
+    _ = try await provider.recoverSignIn()
+    _ = try await provider.recoverSignIn()
+    let calls = await runner.calls
+    XCTAssertEqual(calls.map { $0.arguments.first }, ["usage", "exec", "usage", "usage"])
+    let turn = try XCTUnwrap(calls.first { $0.arguments.first == "exec" })
+    let directory = try XCTUnwrap(turn.workingDirectory)
+    XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+    XCTAssertTrue(turn.arguments.contains("--max-model-steps"))
+    XCTAssertTrue(turn.arguments.contains("--disable-shell"))
   }
 
   func testMuseExecutableDiscoveryUsesPathWithoutShell() throws {
@@ -166,17 +187,25 @@ private actor StubCommandRunner: CommandRunning {
   struct Call: Sendable {
     let executableURL: URL
     let arguments: [String]
+    let workingDirectory: URL?
   }
 
-  let result: Result<CommandResult, QuotaError>
+  private var results: [Result<CommandResult, QuotaError>]
   private(set) var calls: [Call] = []
 
   init(result: Result<CommandResult, QuotaError>) {
-    self.result = result
+    results = [result]
   }
 
-  func run(executableURL: URL, arguments: [String]) throws -> CommandResult {
-    calls.append(Call(executableURL: executableURL, arguments: arguments))
-    return try result.get()
+  init(results: [CommandResult]) {
+    self.results = results.map { .success($0) }
+  }
+
+  func run(executableURL: URL, arguments: [String], workingDirectory: URL?) throws -> CommandResult
+  {
+    calls.append(
+      Call(executableURL: executableURL, arguments: arguments, workingDirectory: workingDirectory))
+    guard !results.isEmpty else { throw QuotaError.providerCommandFailed(.muse) }
+    return try results.removeFirst().get()
   }
 }

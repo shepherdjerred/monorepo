@@ -13,6 +13,7 @@ private struct ActiveRefresh {
 
 public struct QuotaBarRefresh: Sendable {
   public var timeout: Duration
+  public var collectionStatus: CollectionStatusStore?
   /// Reads today's usage and the active 5-hour blocks on each refresh.
   public var history: HistoryClient
   /// Defines "today" for the daily usage caption.
@@ -21,11 +22,13 @@ public struct QuotaBarRefresh: Sendable {
   public init(
     timeout: Duration = .seconds(25),
     history: HistoryClient = HistoryClient(),
-    calendar: Calendar = .autoupdatingCurrent
+    calendar: Calendar = .autoupdatingCurrent,
+    collectionStatus: CollectionStatusStore? = nil
   ) {
     self.timeout = timeout
     self.history = history
     self.calendar = calendar
+    self.collectionStatus = collectionStatus
   }
 }
 
@@ -35,6 +38,7 @@ public final class QuotaBarModel {
   public let settings: AppSettings
   public private(set) var states: [ProviderID: ProviderDisplayState] = [:]
   public private(set) var isRefreshing = false
+  public private(set) var isRecoveringMuse = false
   public private(set) var cacheErrorMessage: String?
   public private(set) var history: [UsageHistorySample] = []
   public private(set) var historyErrorMessage: String?
@@ -48,6 +52,8 @@ public final class QuotaBarModel {
   private let providerTimeout: Duration
   private let historyClient: HistoryClient
   private let calendar: Calendar
+  private let collectionStatus: CollectionStatusStore?
+  private var collectionFailures: [String: String] = [:]
   private var lastSuccessful: [ProviderID: UsageSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
   private var activeRefresh: ActiveRefresh?
@@ -70,6 +76,7 @@ public final class QuotaBarModel {
     providerTimeout = refresh.timeout
     historyClient = refresh.history
     calendar = refresh.calendar
+    collectionStatus = refresh.collectionStatus
     do {
       lastSuccessful = try store.load().mapValues(Self.migrateCachedSnapshot)
       for (provider, snapshot) in lastSuccessful {
@@ -219,7 +226,9 @@ public final class QuotaBarModel {
   private func performRefresh() async {
     isRefreshing = true
     defer { isRefreshing = false }
-    let enabled = providers.filter { settings.enabledProviders.contains($0.id) }
+    let enabled = providers.filter {
+      settings.enabledProviders.contains($0.id) && ($0.id != .muse || !isRecoveringMuse)
+    }
     for provider in enabled {
       providerRefreshAttempts[provider.id, default: 0] += 1
     }
@@ -229,7 +238,9 @@ public final class QuotaBarModel {
     await withTaskGroup(of: ProviderFetchResult.self) { group in
       for provider in enabled {
         group.addTask { [providerTimeout] in
-          await Self.fetch(provider: provider, timeout: providerTimeout)
+          await Self.fetch(provider: provider.id, timeout: providerTimeout) {
+            try await provider.fetch()
+          }
         }
       }
       for await result in group {
@@ -251,6 +262,18 @@ public final class QuotaBarModel {
   private func persistLastSuccessful() {
     do {
       try store.save(lastSuccessful)
+      let failures = Dictionary(
+        uniqueKeysWithValues: ProviderID.allCases.compactMap { provider in
+          let reason: String?
+          switch state(for: provider) {
+          case .disabled: reason = "Provider is disabled in Brim."
+          case .loading: reason = "Brim has not collected this provider yet."
+          default: reason = collectionFailures[provider.rawValue]
+          }
+          return reason.map { (provider.rawValue, $0) }
+        }
+      )
+      try collectionStatus?.save(failures: failures, pollingInterval: settings.pollingInterval)
       cacheErrorMessage = nil
     } catch {
       cacheErrorMessage = QuotaError.cacheWriteFailed.localizedDescription
@@ -287,11 +310,13 @@ public final class QuotaBarModel {
   private func apply(_ result: ProviderFetchResult) -> Bool {
     switch result {
     case let .success(provider, snapshot):
+      collectionFailures[provider.rawValue] = nil
       lastSuccessful[provider] = snapshot
       states[provider] = .available(snapshot)
       recordHistory(snapshot)
       return true
     case let .failure(provider, error):
+      collectionFailures[provider.rawValue] = error.localizedDescription
       if let snapshot = lastSuccessful[provider] {
         // Publish the stale marker alongside the retained windows so the
         // persisted cache stops presenting this provider's frozen numbers
@@ -362,26 +387,27 @@ public final class QuotaBarModel {
   }
 
   nonisolated private static func fetch(
-    provider: any UsageProvider,
-    timeout: Duration
+    provider: ProviderID,
+    timeout: Duration,
+    operation: @Sendable @escaping () async throws -> UsageSnapshot
   ) async -> ProviderFetchResult {
     await withTaskGroup(of: ProviderFetchResult.self) { group in
       group.addTask {
         do {
-          return .success(provider.id, try await provider.fetch())
+          return .success(provider, try await operation())
         } catch {
-          return .failure(provider.id, classify(error: error, provider: provider.id))
+          return .failure(provider, classify(error: error, provider: provider))
         }
       }
       group.addTask {
         do {
           try await Task.sleep(for: timeout)
         } catch {
-          return .failure(provider.id, .requestTimedOut(provider.id))
+          return .failure(provider, .requestTimedOut(provider))
         }
-        return .failure(provider.id, .requestTimedOut(provider.id))
+        return .failure(provider, .requestTimedOut(provider))
       }
-      let result = await group.next() ?? .failure(provider.id, .requestTimedOut(provider.id))
+      let result = await group.next() ?? .failure(provider, .requestTimedOut(provider))
       group.cancelAll()
       return result
     }
@@ -391,5 +417,27 @@ public final class QuotaBarModel {
     if let quotaError = error as? QuotaError { return quotaError }
     if error is QuotaValidationError { return .malformedResponse(provider) }
     return .network(provider)
+  }
+}
+
+extension QuotaBarModel {
+  /// Called only by the confirmed Settings action.
+  public func recoverMuseSignIn() async -> String? {
+    guard !isRecoveringMuse, settings.enabledProviders.contains(.muse),
+      let muse = providers.first(where: { $0.id == .muse }) as? MuseProvider
+    else { return "Enable Muse in Brim before refreshing its sign-in." }
+    isRecoveringMuse = true
+    defer { isRecoveringMuse = false }
+    if let activeRefresh {
+      await activeRefresh.task.value
+      clearRefresh(id: activeRefresh.id)
+    }
+    let result = await Self.fetch(provider: .muse, timeout: .seconds(80)) {
+      try await muse.recoverSignIn()
+    }
+    apply(result)
+    persistLastSuccessful()
+    if case let .failure(_, error) = result { return error.localizedDescription }
+    return nil
   }
 }

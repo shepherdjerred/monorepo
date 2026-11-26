@@ -5,6 +5,27 @@ public protocol SnapshotPersisting: Sendable {
   func save(_ snapshots: [ProviderID: UsageSnapshot]) throws
 }
 
+/// A separate feed keeps failure details available before the first usable quota sample.
+public struct CollectionStatusStore: Sendable {
+  private let url: URL
+
+  public init(snapshotURL: URL) {
+    url = snapshotURL.deletingLastPathComponent().appendingPathComponent("collection-status.json")
+  }
+
+  func save(failures: [String: String], pollingInterval: TimeInterval) throws {
+    struct Status: Encodable {
+      let expiresAt: Date
+      let failures: [String: String]
+    }
+    let status = Status(
+      expiresAt: Date().addingTimeInterval(2 * pollingInterval + 60),
+      failures: failures
+    )
+    try JSONEncoder().encode(status).write(to: url, options: .atomic)
+  }
+}
+
 public final class JSONSnapshotStore: SnapshotPersisting, @unchecked Sendable {
   public let url: URL
   private let fileManager: FileManager

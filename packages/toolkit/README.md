@@ -253,6 +253,19 @@ Their files conform to the shared Delivery contracts. After either one,
 `handover-context` refuses until the next catalog reconcile, because the
 record no longer matches the reconciled catalog.
 
+## Coding-agent coordination
+
+`toolkit agent presence [--json]` lists live agents on MacBook, Karpathy, and the
+Windows desktop using the connected Herdr cores. Use the displayed address with
+`hc send <address> "<message>"`. Disconnected hosts remain visible.
+Send one handoff at a time to a given terminal and have the receiver
+acknowledge it. Put durable handoffs in Tracker Forum.
+
+New Herdr worktrees use their generated title as the initial task label. Update the
+label from your own terminal with `toolkit agent scope --task "Short title"`, and
+attach a Tracker issue with `--issue AI-123`. Pass an empty value to clear a label.
+Keep scope labels short and use Tracker Forum for shared claims and handoffs.
+
 ## Tracker
 
 `toolkit tracker` talks directly to the private tracker over tRPC and needs no
@@ -1418,6 +1431,10 @@ a launcher with a stale `PATH` cannot start a bare agent binary. `--exclude`
 reason `"excluded"`. Args after `--` pass through verbatim without a shell. An
 unmapped provider or a missing wrapper is an error, and `--dry-run` prints the
 resolved wrapper path and args.
+
+The default cache reports when Brim's collector has stopped and includes each
+provider's latest collection failure, even when the provider has yet to produce
+a snapshot. Explicit provider launches still work with unavailable quota data.
 
 #### Brim takeover
 

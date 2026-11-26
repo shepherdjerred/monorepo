@@ -2,27 +2,40 @@ public import Foundation
 
 public struct CommandResult: Equatable, Sendable {
   public let stdout: Data
+  public let stderr: Data
   public let terminationStatus: Int32
 
-  public init(stdout: Data, terminationStatus: Int32) {
+  public init(stdout: Data, terminationStatus: Int32, stderr: Data = Data()) {
     self.stdout = stdout
     self.terminationStatus = terminationStatus
+    self.stderr = stderr
   }
 }
 
 public protocol CommandRunning: Sendable {
-  func run(executableURL: URL, arguments: [String]) async throws -> CommandResult
+  func run(executableURL: URL, arguments: [String], workingDirectory: URL?) async throws
+    -> CommandResult
+}
+
+extension CommandRunning {
+  func run(executableURL: URL, arguments: [String]) async throws -> CommandResult {
+    try await run(executableURL: executableURL, arguments: arguments, workingDirectory: nil)
+  }
 }
 
 public struct FoundationCommandRunner: CommandRunning, Sendable {
   public init() {}
 
-  public func run(executableURL: URL, arguments: [String]) async throws -> CommandResult {
+  public func run(executableURL: URL, arguments: [String], workingDirectory: URL?) async throws
+    -> CommandResult
+  {
     let control = ProcessControl()
     control.process.executableURL = executableURL
     control.process.arguments = arguments
+    control.process.currentDirectoryURL = workingDirectory
     control.process.standardOutput = control.output
-    control.process.standardError = FileHandle.nullDevice
+    control.process.standardError = control.diagnostics
+    control.process.standardInput = FileHandle.nullDevice
 
     return try await withTaskCancellationHandler {
       try await Task.detached {
@@ -30,17 +43,20 @@ public struct FoundationCommandRunner: CommandRunning, Sendable {
         do {
           try control.process.run()
           if control.isCancelled { control.process.terminate() }
+          let diagnostics = Task.detached {
+            control.diagnostics.fileHandleForReading.readDataToEndOfFile()
+          }
+          let stdout = control.output.fileHandleForReading.readDataToEndOfFile()
           control.process.waitUntilExit()
+          let stderr = await diagnostics.value
+          if control.isCancelled { throw CancellationError() }
+          return CommandResult(
+            stdout: stdout, terminationStatus: control.process.terminationStatus, stderr: stderr)
         } catch is CancellationError {
           throw CancellationError()
         } catch {
           throw QuotaError.commandFailed(executableURL.lastPathComponent)
         }
-        if control.isCancelled { throw CancellationError() }
-        return CommandResult(
-          stdout: control.output.fileHandleForReading.readDataToEndOfFile(),
-          terminationStatus: control.process.terminationStatus
-        )
       }.value
     } onCancel: {
       control.cancel()
@@ -84,6 +100,7 @@ public struct FoundationSynchronousCommandRunner: SynchronousCommandRunning, Sen
 private final class ProcessControl: @unchecked Sendable {
   let process = Process()
   let output = Pipe()
+  let diagnostics = Pipe()
   private let lock = NSLock()
   private var cancelled = false
 

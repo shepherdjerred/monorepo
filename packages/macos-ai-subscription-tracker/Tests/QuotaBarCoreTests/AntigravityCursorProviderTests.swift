@@ -318,7 +318,8 @@ private actor StubCommandRunner: CommandRunning {
     self.result = result
   }
 
-  func run(executableURL: URL, arguments: [String]) throws -> CommandResult {
+  func run(executableURL: URL, arguments: [String], workingDirectory: URL?) throws -> CommandResult
+  {
     calls.append(Call(executableURL: executableURL, arguments: arguments))
     return try result.get()
   }

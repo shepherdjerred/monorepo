@@ -6,6 +6,7 @@ import {
   cocoaToMs,
   COCOA_EPOCH_OFFSET_SECONDS,
   defaultSnapshotsPath,
+  loadCollectionStatus,
   loadSnapshots,
   SnapshotCacheMissingError,
 } from "#lib/brim/cache.ts";
@@ -83,5 +84,24 @@ describe("loadSnapshots", () => {
     const file = path.join(dir, "shape.json");
     await writeFile(file, JSON.stringify([{ provider: 42 }]));
     await expect(loadSnapshots(file)).rejects.toThrow("unexpected shape");
+  });
+});
+
+it("reports first-fetch failure until the collector heartbeat expires", async () => {
+  const now = cocoaToMs(100);
+  const failures = { antigravity: "Sign in to agy." };
+  await writeFile(
+    path.join(dir, "collection-status.json"),
+    JSON.stringify({ expiresAt: 110, failures }),
+  );
+  const snapshots = path.join(dir, "missing.json");
+  await expect(loadCollectionStatus(snapshots, now)).resolves.toEqual({
+    active: true,
+    failures,
+  });
+  await expect(
+    loadCollectionStatus(snapshots, cocoaToMs(111)),
+  ).resolves.toEqual({
+    active: false,
   });
 });

@@ -17,6 +17,7 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
   case historyCorrupt
   case historyWriteFailed
   case commandFailed(String)
+  case providerCommandFailed(ProviderID)
   case settingsCorrupt
 
   public var errorDescription: String? {
@@ -81,6 +82,8 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
       "Brim could not save usage history."
     case let .commandFailed(command):
       "Brim could not read local credentials with \(command)."
+    case let .providerCommandFailed(provider):
+      "\(provider.displayName)'s quota command failed. Check its CLI and connection."
     case .settingsCorrupt:
       "Brim settings contain an unsupported provider identifier."
     }

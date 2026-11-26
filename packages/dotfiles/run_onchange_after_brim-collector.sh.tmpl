@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+{{ if and (eq .chezmoi.os "darwin") (eq .chezmoi.hostname "karpathy") -}}
+{{ include ".chezmoitemplates/launchagent-reload.sh" }}
+# {{ include "Library/LaunchAgents/com.jerred.brim-collector.plist" | sha256sum }}
+reload_agent com.jerred.brim-collector /Applications/Brim.app/Contents/MacOS/QuotaBar
+{{ end -}}

@@ -158,3 +158,6 @@ install-pinchtab-daemon.sh
 Library/LaunchAgents/com.jerred.chatgpt.plist
 clone-6035-workspace.sh
 {{- end }}
+{{- if ne .chezmoi.hostname "karpathy" }}
+Library/LaunchAgents/com.jerred.brim-collector.plist
+{{- end }}

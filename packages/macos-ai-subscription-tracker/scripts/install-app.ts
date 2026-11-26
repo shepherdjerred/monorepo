@@ -2,11 +2,14 @@ import { cp, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const packageRoot = resolve(import.meta.dir, "..");
-const mode = process.argv[2];
-if (mode !== undefined && mode !== "--notarized") {
-  throw new Error(`Unknown install mode: ${mode}`);
+const options = process.argv.slice(2);
+const unknown = options.find(
+  (option) => option !== "--notarized" && option !== "--enable-launch-at-login",
+);
+if (unknown !== undefined) {
+  throw new Error(`Unknown install option: ${unknown}`);
 }
-const notarized = mode === "--notarized";
+const notarized = options.includes("--notarized");
 const source = notarized
   ? resolve(packageRoot, "dist", "notarized", "QuotaBar.app")
   : resolve(packageRoot, "dist", "QuotaBar.app");
@@ -66,10 +69,17 @@ const signature = Bun.spawnSync(
   },
 );
 if (signature.exitCode !== 0) process.exit(signature.exitCode);
-const launched = Bun.spawnSync(["open", target], {
-  stdout: "inherit",
-  stderr: "inherit",
-});
+const launched = Bun.spawnSync(
+  [
+    "open",
+    "-g",
+    target,
+    ...(options.includes("--enable-launch-at-login")
+      ? ["--args", "--enable-launch-at-login"]
+      : []),
+  ],
+  { stdout: "inherit", stderr: "inherit" },
+);
 process.exit(launched.exitCode);
 
 function installedProcessIDs(executable: string): number[] {
