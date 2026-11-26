@@ -1,3 +1,4 @@
+import { Chip } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import type {
   GitHubFacet,
@@ -26,6 +27,7 @@ import {
   type StackReviewDecision,
 } from "#client/visuals/index.ts";
 import "#styles/engineering.css";
+import { Identifier } from "#client/visuals/identifier.tsx";
 
 const FLOW_CAP = 8;
 
@@ -112,17 +114,19 @@ const NOTICE_COLUMNS: readonly DataTableColumn<TrackerNotice>[] = [
   },
   {
     key: "title",
-    header: "Coordination Notice",
+    header: "Coordination notice",
     sortValue: (notice) => notice.title,
     render: (notice) => (
       <div className="eng-pkg-cell">
         <span>{notice.title}</span>
         <span className="eng-pkg-sub">
-          <span className="visual-pill visual-pill-info">{notice.kind}</span>
+          <span className="visual-pill" data-sev="info">
+            {notice.kind}
+          </span>
           {notice.owner === null ? null : <span>{`@${notice.owner}`}</span>}
           {notice.scopes.slice(0, 3).map((scope) => (
             <code key={scope} className="visual-branch-chip">
-              {scope}
+              <Identifier value={scope} />
             </code>
           ))}
         </span>
@@ -151,9 +155,7 @@ const PROJECT_COLUMNS: readonly DataTableColumn<TrackerProjectSummary>[] = [
     key: "team",
     header: "Team",
     sortValue: (proj) => proj.team,
-    render: (proj) => (
-      <span className="visual-pill visual-pill-neutral">{proj.team}</span>
-    ),
+    render: (proj) => <span className="visual-pill">{proj.team}</span>,
   },
   {
     key: "openCount",
@@ -206,11 +208,11 @@ function GitHubStacksPanel({
 
   return (
     <section className="eng-flow-panel" aria-labelledby="flow-stacks-heading">
-      <header className="eng-flow-head">
-        <h3 id="flow-stacks-heading">
-          git-spice PR stacks{" "}
-          <span className="count">{nonRenovatePrs.length}</span>
+      <header className="ui-section-head">
+        <h3 id="flow-stacks-heading" className="ui-section-title">
+          git-spice PR stacks
         </h3>
+        <span className="ui-count">{nonRenovatePrs.length}</span>
       </header>
       <div id={stackContainerId}>
         <StackTree
@@ -245,26 +247,17 @@ function TrackerCoordinationPanel({
 
   return (
     <section className="eng-flow-panel" aria-labelledby="flow-forum-heading">
-      <header className="eng-flow-head">
-        <h3 id="flow-forum-heading">
-          Forum coordination & throughput{" "}
-          <span className="count">{tracker.activeNotices.length}</span>
+      <header className="ui-section-head">
+        <h3 id="flow-forum-heading" className="ui-section-title">
+          Forum coordination and throughput
         </h3>
+        <span className="ui-count">{tracker.activeNotices.length}</span>
       </header>
       <div className="eng-throughput-strip">
-        <span className="eng-mini-stat">
-          <span>Completed 7d</span>
-          <strong>{tracker.completed7dCount}</strong>
-        </span>
-        <span className="eng-mini-stat">
-          <span>Triage</span>
-          <strong>{tracker.triageCount}</strong>
-        </span>
+        <Chip label="Completed 7d" value={tracker.completed7dCount} />
+        <Chip label="Triage" value={tracker.triageCount} />
         {teamEntries.map(([team, openCount]) => (
-          <span key={team} className="eng-mini-stat">
-            <span>{`${team} open`}</span>
-            <strong>{openCount}</strong>
-          </span>
+          <Chip key={team} label={`${team} open`} value={openCount} />
         ))}
       </div>
       <DataTable

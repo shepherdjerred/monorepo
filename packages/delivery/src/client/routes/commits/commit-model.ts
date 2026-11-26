@@ -147,8 +147,7 @@ export function rowNotes(commit: CommitSummary): string[] {
   const failing = commit.failedBuildCount - carried.length;
   const notes: string[] = [];
   if (failing > 0) notes.push(failedNote(commit.failedServices ?? [], failing));
-  if (carried.length > 0)
-    notes.push(includedNote(carried, commit.builtCount ?? 0));
+  if (carried.length > 0) notes.push(includedNote(carried, commit.built));
   const releases = releasesNote(commit.carriedReleases);
   if (releases !== null) notes.push(releases);
   notes.push(
@@ -217,9 +216,7 @@ function ciSentences(status: CommitStatus, carried: readonly CarriedFailure[]) {
             `${failedNote(failed, failed.length)}, so Delivery published nothing for ${failed.length === 1 ? "it" : "them"}.`,
           ],
     included:
-      carried.length === 0
-        ? []
-        : [`${includedNote(carried, status.builtCount ?? 0)}.`],
+      carried.length === 0 ? [] : [`${includedNote(carried, status.built)}.`],
   };
 }
 

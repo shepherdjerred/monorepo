@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
@@ -5,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router";
 
-import { PageHeading, SeverityIcon } from "#client/ops/ops-ui.tsx";
+import { PageHeading } from "#client/ops/ops-ui.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import type {
   ReportsFeedQueryInput,
@@ -36,7 +37,7 @@ export function buildReportsKpis(kpis: ReportsKpis): readonly {
         : "ok";
   return [
     {
-      label: "Needs Review",
+      label: "Needs review",
       val: String(kpis.needsReviewCount),
       hint:
         kpis.needsReviewCount === 0
@@ -51,13 +52,13 @@ export function buildReportsKpis(kpis: ReportsKpis): readonly {
       sev: kpis.autoPrCount7d > 0 ? "info" : "ok",
     },
     {
-      label: "Quiet Heartbeats (7d)",
+      label: "Quiet heartbeats (7d)",
       val: String(kpis.quietSkips7d),
       hint: "Unchanged clear daily emails absorbed by Hub",
       sev: "ok",
     },
     {
-      label: "Schedule Freshness",
+      label: "Schedule freshness",
       val: `${String(kpis.freshSchedules)} / ${String(kpis.totalSchedules)}`,
       hint: allFresh
         ? "All recurring streams within cadence + grace"
@@ -65,7 +66,7 @@ export function buildReportsKpis(kpis: ReportsKpis): readonly {
       sev: allFresh ? "ok" : "warning",
     },
     {
-      label: "Incident Outbox",
+      label: "Incident outbox",
       val: String(kpis.pendingIncidentEmails + kpis.failedIncidentEmails),
       hint: `${String(kpis.pendingIncidentEmails)} pending · ${String(kpis.failedIncidentEmails)} failed`,
       sev: outboxSev,
@@ -89,7 +90,7 @@ export type EngKpiStripItem = {
   readonly label: string;
   readonly val: string;
   readonly hint: string;
-  readonly sev: Parameters<typeof SeverityIcon>[0]["severity"];
+  readonly sev: Severity;
 };
 
 export function EngKpiStrip({
@@ -104,11 +105,11 @@ export function EngKpiStrip({
       className={`eng-kpi-grid${className === undefined ? "" : ` ${className}`}`}
     >
       {items.map((kpi) => (
-        <div key={kpi.label} className={`eng-kpi-card eng-kpi-${kpi.sev}`}>
+        <div key={kpi.label} className="eng-kpi-card" data-sev={kpi.sev}>
           <div className="eng-kpi-top">
             <span className="eng-kpi-label">{kpi.label}</span>
             {kpi.sev === "ok" || kpi.sev === "info" ? null : (
-              <SeverityIcon severity={kpi.sev} className="visual-meter-flag" />
+              <StatusGlyph severity={kpi.sev} />
             )}
           </div>
           <strong className="eng-kpi-value">{kpi.val}</strong>
@@ -168,7 +169,7 @@ export function ReportsPage(): React.JSX.Element {
     <main className="eng-page rep-page">
       <title>Reports · Hub</title>
       <PageHeading
-        eyebrow="Scheduled reports, digests &amp; outbound mail"
+        meta="Scheduled reports, digests &amp; outbound mail"
         title="Reports"
       />
       <LoadingBlock

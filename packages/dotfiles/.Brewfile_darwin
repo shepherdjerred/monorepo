@@ -51,6 +51,8 @@ brew "difftastic"
 brew "duckdb"
 # Static file server
 brew "dufs"
+# More intuitive version of du in rust
+brew "dust"
 # Select default apps for documents and URL schemes on macOS
 brew "duti"
 # Speech synthesizer that supports more than hundred languages and accents

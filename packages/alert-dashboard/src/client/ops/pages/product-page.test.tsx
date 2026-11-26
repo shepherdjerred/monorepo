@@ -64,7 +64,7 @@ function renderWithQueryClient(
 }
 
 describe("ProductPage helpers", () => {
-  it("classifies Core Web Vitals p75 LCP into non-color Good / Needs Improvement / Poor badges", () => {
+  it("classifies Core Web Vitals p75 LCP into non-color Good / Needs improvement / Poor badges", () => {
     expect(classifyLcpMs(null)).toEqual({
       label: "No data",
       glyph: "—",
@@ -81,7 +81,7 @@ describe("ProductPage helpers", () => {
       tone: "ok",
     });
     expect(classifyLcpMs(3200)).toEqual({
-      label: "Needs Improvement",
+      label: "Needs improvement",
       glyph: "!",
       tone: "warning",
     });
@@ -128,10 +128,10 @@ describe("ProductPage", () => {
     expect(html).toContain("<title>Product · Hub</title>");
     expect(html).toContain("Sites &amp; product");
     expect(html).toContain("Probes down");
-    expect(html).toContain("24h Pageviews");
-    expect(html).toContain("24h Active Users (DAU)");
-    expect(html).toContain("7d Weekly Active Users (WAU)");
-    expect(html).toContain("24h Client Exceptions");
+    expect(html).toContain("24h pageviews");
+    expect(html).toContain("24h active users (DAU)");
+    expect(html).toContain("7d weekly active users (WAU)");
+    expect(html).toContain("24h client exceptions");
 
     // Required 4 SeriesChart titles
     expect(html).toContain("Pageviews by site (24h rolling)");
@@ -152,7 +152,7 @@ describe("ProductPage", () => {
     expect(html).toContain("ts-mc.net");
     expect(html).toContain("glitterboys.org");
     expect(html).toContain("visual-sparkline");
-    expect(html).toContain("Needs Improvement");
+    expect(html).toContain("Needs improvement");
     expect(html).toContain("Poor");
     expect(html).toContain("Good");
     expect(html).toContain("Copy CSV");
@@ -219,11 +219,11 @@ describe("renderProductServiceView (Flags, Bugsink, Golink, Scout)", () => {
       );
     });
 
-    expect(html).toContain("Total Flags");
-    expect(html).toContain("Prod Enabled");
-    expect(html).toContain("Beta Enabled");
-    expect(html).toContain("Default-Off Exceptions");
-    expect(html).toContain("Overdue Exceptions");
+    expect(html).toContain("Total flags");
+    expect(html).toContain("Prod enabled");
+    expect(html).toContain("Beta enabled");
+    expect(html).toContain("Default-off exceptions");
+    expect(html).toContain("Overdue exceptions");
     expect(html).toContain("Rollout mix across managed flags");
     expect(html).toContain("Drift");
     expect(html).toContain("Missing");
@@ -243,8 +243,8 @@ describe("renderProductServiceView (Flags, Bugsink, Golink, Scout)", () => {
       );
     });
 
-    expect(html).toContain("Total Unresolved Issues");
-    expect(html).toContain("Total Digested Events");
+    expect(html).toContain("Total unresolved issues");
+    expect(html).toContain("Total digested events");
     expect(html).toContain("Scout for LoL");
     expect(html).toContain("RiotUpstreamTimeoutError");
     expect(html).toContain("pollPostmatchHistory");
@@ -285,7 +285,7 @@ describe("renderProductServiceView (Flags, Bugsink, Golink, Scout)", () => {
       );
     });
 
-    expect(html).toContain("Scout Discord guilds (Prod vs Beta)");
+    expect(html).toContain("Scout Discord guilds (prod vs beta)");
     expect(html).toContain('data-target="scout-for-lol"');
     expect(html).toContain("scout.sjer.red");
     expect(html).toContain("beta.scout.sjer.red");

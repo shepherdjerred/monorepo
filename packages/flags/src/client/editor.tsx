@@ -1,5 +1,6 @@
 import { useRef, useState, type SubmitEvent } from "react";
 import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { Link } from "react-router";
 import { z } from "zod";
 import { Button, Chip, Field, IconButton } from "@shepherdjerred/console-ui";
 import type {
@@ -28,13 +29,14 @@ export function Editor({
   stage,
   flagKey,
   document,
-  backHref,
+  backTo,
 }: {
   catalog: string;
   stage: string;
   flagKey: string;
   document: DeploymentDocument;
-  backHref: string;
+  /** The deployment's list, with the active search, for the "All flags" link. */
+  backTo: string;
 }) {
   const stored = document.flags.find((flag) => flag.key === flagKey);
   const [draft, setDraft] = useState<FlagValue | undefined>(stored);
@@ -124,10 +126,10 @@ export function Editor({
   return (
     <section className="fl-detail" aria-labelledby="flag-heading">
       <div className="fl-detail-head">
-        <a className="fl-back" href={backHref}>
+        <Link className="fl-back" to={backTo}>
           <ArrowLeftIcon aria-hidden="true" />
           All flags
-        </a>
+        </Link>
         <h2 id="flag-heading" className="ui-mono fl-detail-title">
           {flagKey}
         </h2>

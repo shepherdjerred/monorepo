@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import {
   findMetric,
   findSection,
@@ -21,7 +22,6 @@ import {
   firingAlertsSeverity,
   waitingSeverity,
 } from "./home-signals.ts";
-import { SeverityBadge } from "./ops-ui.tsx";
 import { formatValue } from "#shared/ops-format";
 
 type Reading = { readonly text: string; readonly severity: Severity };
@@ -59,19 +59,21 @@ function Stat({
   const external = "href" in target;
   const content = (
     <>
-      <span className="stat-label">
+      <span className="ui-strip-label">
         {label}
         {external ? (
-          <ExternalLinkIcon className="stat-external" aria-hidden="true" />
+          <ExternalLinkIcon className="glance-external" aria-hidden="true" />
         ) : null}
       </span>
-      <SeverityBadge severity={severity} />
-      <strong>{value}</strong>
-      <span className="stat-hint">{hint}</span>
+      <span className="ui-strip-value">
+        <span className="ui-strip-figure">{value}</span>
+        <StatusGlyph severity={severity} />
+      </span>
+      <span className="ui-strip-hint">{hint}</span>
     </>
   );
   return (
-    <li className={`stat-card stat-${severity}`}>
+    <li className="glance-cell" data-sev={severity}>
       {external ? (
         <a href={target.href} target="_blank" rel="noreferrer">
           {content}
@@ -86,8 +88,9 @@ function Stat({
 }
 
 /**
- * The headline numbers Home leads with. Each tile states its severity as a
- * badge as well as a border colour, and links to where the number is acted on.
+ * The headline numbers Home leads with, as one strip of figure cells. Each
+ * cell states its severity as a glyph and word, and links to where the number
+ * is acted on.
  */
 export function GlanceTiles({
   snapshot,
@@ -104,7 +107,7 @@ export function GlanceTiles({
     METRIC_IDS.trackerTriage,
   );
   return (
-    <ul className="stat-grid" aria-label="At a glance">
+    <ul className="glance-strip" aria-label="At a glance">
       <Stat
         label="Firing alerts"
         value={firing.text}

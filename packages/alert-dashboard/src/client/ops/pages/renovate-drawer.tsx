@@ -120,7 +120,7 @@ function VersionDeltaDrawer({
       </div>
       {d === undefined ? (
         <div className="eng-delta-box">
-          <h4>LLM Version Delta</h4>
+          <h4>LLM version delta</h4>
           <p>
             Pending enrichment — upstream release notes have not been summarized
             yet.

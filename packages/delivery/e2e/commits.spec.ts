@@ -284,6 +284,10 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
     name: "Included in a newer commit",
   });
   await expect(included).toContainText("Birmel");
+  // Nothing else was built on this commit: the whole commit was carried.
+  await expect(included).toContainText(
+    "CI failed for Birmel on this commit, so it was not built on its own.",
+  );
   await included.getByRole("link", { name: carrier }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: `Commit ${carrier}` }),
@@ -302,8 +306,17 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
   );
   // The real blocker leads; the carried failure follows.
   await expect(header).toContainText(
-    `The changed service needs a manual release: Birmel prod. Built on its own for 2 services; 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed).`,
+    `The changed service needs a manual release: Birmel prod. Built on its own for 2 services (1 changed); 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed).`,
   );
+  // The detail section names only the service CI failed for and agrees with
+  // the header: the commit built Birmel itself.
+  const included = page.getByRole("region", {
+    name: "Included in a newer commit",
+  });
+  await expect(included).toContainText(
+    "CI failed for Golink on this commit, so it was built by a later commit.",
+  );
+  await expect(included).not.toContainText("not built on its own");
   // Golink has no environment, so its carried failure adds no row.
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(service).not.toContainText("Golink");
@@ -314,7 +327,7 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
   await expect(row).toContainText("Birmel / prod: needs manual release");
   // Only Golink went through the carrier; the row says what the commit built itself.
   await expect(row).toContainText(
-    `Built on its own for 2 services; 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed)`,
+    `Built on its own for 2 services (1 changed); 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed)`,
   );
   await expect(row).not.toContainText("Not built on its own");
 });

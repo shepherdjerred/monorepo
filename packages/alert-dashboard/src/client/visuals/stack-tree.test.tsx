@@ -68,7 +68,10 @@ describe("buildStackForest & StackTree", () => {
     expect(html).toContain("Checks failing");
     expect(html).toContain("Stale approval");
     expect(html).toContain("Conflict");
-    expect(html).toContain("hotfix/tls → release/1.2");
+    // The branch renders as no-wrap segments with `<wbr>` after each "/".
+    expect(html.replaceAll(/<[^>]+>/gu, "")).toContain(
+      "hotfix/tls → release/1.2",
+    );
     expect(html).toContain("@jerred");
     expect(html).toContain("3.0d");
     expect(html).toContain("30m");

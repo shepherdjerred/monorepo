@@ -48,12 +48,16 @@ export type LinuxServerSharedMount = {
 };
 
 /**
- * A NetworkPolicy selecting every pod of the app's namespace. `name` is both
- * the construct id and the resource name. The policy types are the directions
- * it gives rules for.
+ * A NetworkPolicy of the app. `name` is both the construct id and the resource
+ * name. The policy types are the directions it gives rules for.
  */
 export type LinuxServerNetworkPolicy = {
   name: string;
+  /**
+   * `app` selects the app's own pods, for an app that shares its namespace;
+   * `namespace` selects every pod of the namespace.
+   */
+  selects: "app" | "namespace";
   ingress?: NetworkPolicyIngressRule[];
   egress?: NetworkPolicyEgressRule[];
 };
@@ -200,7 +204,10 @@ export class LinuxServerApp extends Construct {
         new KubeNetworkPolicy(scope, policy.name, {
           metadata: { name: policy.name },
           spec: {
-            podSelector: {},
+            podSelector:
+              policy.selects === "app"
+                ? { matchLabels: this.deployment.matchLabels }
+                : {},
             policyTypes: [
               ...(policy.ingress === undefined ? [] : ["Ingress"]),
               ...(policy.egress === undefined ? [] : ["Egress"]),

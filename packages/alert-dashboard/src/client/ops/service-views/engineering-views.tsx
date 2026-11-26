@@ -42,7 +42,9 @@ const TRACKER_NOTICE_COLUMNS: readonly DataTableColumn<TrackerNotice>[] = [
     header: "Kind",
     sortValue: (row) => row.kind,
     render: (row) => (
-      <span className="visual-pill visual-pill-info">{row.kind}</span>
+      <span className="visual-pill" data-sev="info">
+        {row.kind}
+      </span>
     ),
   },
   {
@@ -78,9 +80,7 @@ const TRACKER_PROJECT_COLUMNS: readonly DataTableColumn<TrackerProjectSummary>[]
       key: "team",
       header: "Team",
       sortValue: (row) => row.team,
-      render: (row) => (
-        <span className="visual-pill visual-pill-neutral">{row.team}</span>
-      ),
+      render: (row) => <span className="visual-pill">{row.team}</span>,
     },
     {
       key: "openCount",
@@ -129,10 +129,10 @@ const TRACKER_URGENT_COLUMNS: readonly DataTableColumn<TrackerUrgentIssue>[] = [
   },
   {
     key: "urgency",
-    header: "Urgency / Impact",
+    header: "Urgency / impact",
     sortValue: (row) => row.urgency,
     render: (row) => (
-      <span className="visual-pill visual-pill-warning">
+      <span className="visual-pill" data-sev="warning">
         <span aria-hidden="true">!</span>
         {`${row.urgency} / ${row.impact}`}
       </span>
@@ -174,7 +174,7 @@ function TrackerServiceView({
       {tracker === null ? null : (
         <>
           <DataTable
-            caption="Active Forum Notices"
+            caption="Active Forum notices"
             rows={tracker.activeNotices}
             rowKey={(row) => row.identifier}
             columns={TRACKER_NOTICE_COLUMNS}
@@ -190,7 +190,7 @@ function TrackerServiceView({
             emptyMessage="No Tracker projects."
           />
           <DataTable
-            caption="Urgent Issues"
+            caption="Urgent issues"
             rows={tracker.urgentIssues}
             rowKey={(row) => row.identifier}
             columns={TRACKER_URGENT_COLUMNS}

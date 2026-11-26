@@ -59,7 +59,9 @@ test("bookmarked history leads to delivery evidence and independent preview stat
   await page.goto(
     "/history?type=opened&severity=warning&from=2026-08-08T00%3A00%3A00Z",
   );
-  await expect(page.getByLabel("Event")).toHaveValue("opened");
+  await expect(
+    page.getByRole("combobox", { name: "Event", exact: true }),
+  ).toHaveValue("opened");
   await expect(page.getByLabel("From")).toHaveValue("2026-08-08T00:00:00Z");
   await page.getByRole("link", { name: "DiskFull" }).click();
   await expect(page).toHaveTitle("DiskFull · Hub");
@@ -68,10 +70,8 @@ test("bookmarked history leads to delivery evidence and independent preview stat
   ).toBeVisible();
   await expect(page.getByText(/raw retained/u)).toBeVisible();
   await page.getByRole("button", { name: "Load more evidence" }).click();
-  const evidence = page.locator("section.panel").filter({
-    has: page.getByRole("heading", { name: "Webhook evidence" }),
-  });
-  await expect(evidence.locator(".timeline article")).toHaveCount(2);
+  const evidence = page.getByRole("region", { name: "Webhook evidence" });
+  await expect(evidence.locator("tbody tr")).toHaveCount(2);
   await expect(
     page.getByRole("button", { name: "Load more evidence" }),
   ).not.toBeVisible();
@@ -121,11 +121,14 @@ test("history date filters retain partial input until blur", async ({
 
 test("history exposes every cursor page", async ({ page }) => {
   await page.goto("/history?alertname=PaginationFixture");
-  await expect(page.locator(".timeline article")).toHaveCount(100);
+  const events = page
+    .getByRole("table", { name: "Events" })
+    .locator("tbody tr");
+  await expect(events).toHaveCount(100);
 
   await page.getByRole("button", { name: "Load older events" }).click();
 
-  await expect(page.locator(".timeline article")).toHaveCount(101);
+  await expect(events).toHaveCount(101);
   await expect(
     page.getByRole("button", { name: "Load older events" }),
   ).not.toBeVisible();
@@ -133,11 +136,13 @@ test("history exposes every cursor page", async ({ page }) => {
 
 test("dashboard exposes every cursor page", async ({ page }) => {
   await page.goto("/alerts?q=PaginationFixture");
-  await expect(page.locator("table tbody tr")).toHaveCount(100);
+  // Each alert is one row; the severity and same-name group rows are not.
+  const alertRows = page.locator("table tbody tr[data-alert-id]");
+  await expect(alertRows).toHaveCount(100);
 
   await page.getByRole("button", { name: "Load more alerts" }).click();
 
-  await expect(page.locator("table tbody tr")).toHaveCount(101);
+  await expect(alertRows).toHaveCount(101);
   await expect(
     page.getByRole("button", { name: "Load more alerts" }),
   ).not.toBeVisible();
@@ -173,7 +178,7 @@ test("semantic navigation is keyboard reachable and responsive", async ({
   await drawer.getByRole("link", { name: "System" }).click();
   await expect(drawer).toBeHidden();
   await expect(page).toHaveTitle("System · Hub");
-  await expect(page.getByRole("heading", { name: "Database" })).toBeVisible();
+  await expect(page.getByRole("rowheader", { name: "Database" })).toBeVisible();
   await expect(
     page.getByRole("definition").filter({ hasText: "disabled" }),
   ).toBeVisible();
@@ -225,7 +230,7 @@ test("separates Ops alerts (/alerts) from House chores (/house) and scopes Histo
   await expect(page.getByText("Home & pet care")).toBeVisible();
 
   const houseSummary = page.getByRole("region", { name: "House summary" });
-  await expect(houseSummary.locator(".summary-card")).toHaveText([
+  await expect(houseSummary.locator(".ui-strip-cell")).toHaveText([
     "Open chores3",
     "Urgent1",
     "Routine2",
@@ -235,8 +240,8 @@ test("separates Ops alerts (/alerts) from House chores (/house) and scopes Histo
   const houseTable = page.getByRole("table");
   await expect(houseTable.getByRole("columnheader")).toHaveText([
     "Priority",
-    "Chore / Item",
-    "Device / Area",
+    "Chore / item",
+    "Device / area",
     "State",
     "Opened",
   ]);
@@ -271,7 +276,10 @@ test("separates Ops alerts (/alerts) from House chores (/house) and scopes Histo
   await expect(scopeNav.getByRole("link", { name: "Ops" })).not.toHaveAttribute(
     "aria-current",
   );
-  await expect(page.locator(".timeline article")).toHaveCount(3);
+  const historyEvents = page
+    .getByRole("table", { name: "Events" })
+    .locator("tbody tr");
+  await expect(historyEvents).toHaveCount(3);
   await expect(
     page.getByRole("link", { name: "RoborockConsumableDue" }),
   ).toBeVisible();
@@ -283,7 +291,7 @@ test("separates Ops alerts (/alerts) from House chores (/house) and scopes Histo
     "aria-current",
     "page",
   );
-  await expect(page.locator(".timeline article")).toHaveCount(4);
+  await expect(historyEvents).toHaveCount(4);
 
   await scopeNav.getByRole("link", { name: "Ops" }).click();
   await expect(page).toHaveURL(/\/history\?scope=ops$/u);
@@ -291,5 +299,5 @@ test("separates Ops alerts (/alerts) from House chores (/house) and scopes Histo
     "aria-current",
     "page",
   );
-  await expect(page.locator(".timeline article")).toHaveCount(1);
+  await expect(historyEvents).toHaveCount(1);
 });

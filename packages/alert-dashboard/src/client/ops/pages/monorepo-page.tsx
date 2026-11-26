@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import type {
@@ -11,12 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { facetQuery, isSnapshotUnavailable } from "#client/ops/ops-api.ts";
-import {
-  PageHeading,
-  RangePicker,
-  ServiceLink,
-  SeverityBadge,
-} from "#client/ops/ops-ui.tsx";
+import { PageHeading, RangePicker, ServiceLink } from "#client/ops/ops-ui.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { useRange } from "#client/charts/use-range.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -29,6 +25,7 @@ import {
 import { formatValue } from "#shared/ops-format";
 import type { SeriesRange } from "#shared/ops-schema";
 import "#styles/engineering.css";
+import { Identifier } from "#client/visuals/identifier.tsx";
 
 function hitRatioSeverity(ratio: number | null): Severity {
   if (ratio === null || !Number.isFinite(ratio)) {
@@ -71,15 +68,19 @@ export function buildExpensiveTaskColumns(options?: {
       sortValue: (row) => row.taskId,
       render: (row) =>
         compact ? (
-          <code className="eng-pkg-name">{row.taskId}</code>
+          <code className="eng-pkg-name">
+            <Identifier value={row.taskId} />
+          </code>
         ) : (
           <div className="eng-pkg-cell">
-            <span className="eng-pkg-name">{row.taskId}</span>
+            <span className="eng-pkg-name">
+              <Identifier value={row.taskId} />
+            </span>
             <span className="eng-pkg-sub">
-              <span>{row.packageName}</span>
-              <span className="visual-pill visual-pill-neutral">
-                {row.task}
+              <span>
+                <Identifier value={row.packageName} />
               </span>
+              <span className="visual-pill">{row.task}</span>
             </span>
           </div>
         ),
@@ -100,7 +101,7 @@ export function buildExpensiveTaskColumns(options?: {
     },
     {
       key: "hitRatio",
-      header: "Hit Ratio",
+      header: "Hit ratio",
       align: "right",
       sortValue: (row) => row.hitRatio,
       ...(compact
@@ -118,14 +119,14 @@ export function buildExpensiveTaskColumns(options?: {
     },
     {
       key: "medianMissMs",
-      header: "Median Miss",
+      header: "Median miss",
       align: "right",
       sortValue: (row) => row.medianMissMs,
       render: (row) => formatValue(row.medianMissMs, "ms"),
     },
     {
       key: "totalMissMinutes",
-      header: "Total Miss Time",
+      header: "Total miss time",
       align: "right",
       sortValue: (row) => row.totalMissMinutes,
       render: (row) => `${row.totalMissMinutes.toFixed(1)} min`,
@@ -142,9 +143,13 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
     sortValue: (pkg) => pkg.name,
     render: (pkg) => (
       <div className="eng-pkg-cell">
-        <span className="eng-pkg-name">{pkg.name}</span>
+        <span className="eng-pkg-name">
+          <Identifier value={pkg.name} />
+        </span>
         <span className="eng-pkg-sub">
-          <code>{pkg.path}</code>
+          <code>
+            <Identifier value={pkg.path} />
+          </code>
         </span>
       </div>
     ),
@@ -153,13 +158,11 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
     key: "category",
     header: "Category",
     sortValue: (pkg) => pkg.category,
-    render: (pkg) => (
-      <span className="visual-pill visual-pill-neutral">{pkg.category}</span>
-    ),
+    render: (pkg) => <span className="visual-pill">{pkg.category}</span>,
   },
   {
     key: "serviceId",
-    header: "Hosted Service",
+    header: "Hosted service",
     sortValue: (pkg) => pkg.serviceId,
     render: (pkg) =>
       pkg.serviceId === null ? (
@@ -170,12 +173,12 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
   },
   {
     key: "extended",
-    header: "Extended Tier",
+    header: "Extended tier",
     sortValue: (pkg) => (pkg.hasExtendedTests ? 1 : 0),
     exportValue: (pkg) => pkg.hasExtendedTests,
     render: (pkg) =>
       pkg.hasExtendedTests ? (
-        <span className="visual-pill visual-pill-info">
+        <span className="visual-pill" data-sev="info">
           <span aria-hidden="true">✓</span>Extended
         </span>
       ) : (
@@ -184,14 +187,14 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
   },
   {
     key: "cacheHitRatio",
-    header: "Cache Hit %",
+    header: "Cache hit %",
     align: "right",
     sortValue: (pkg) => pkg.cacheHitRatio,
     render: (pkg) => formatValue(pkg.cacheHitRatio, "ratio"),
   },
   {
     key: "medianDurationMs",
-    header: "Median Task",
+    header: "Median task",
     align: "right",
     sortValue: (pkg) => pkg.medianDurationMs,
     render: (pkg) => formatValue(pkg.medianDurationMs, "ms"),
@@ -212,12 +215,12 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
   },
   {
     key: "bugsinkOpenCount",
-    header: "Bugsink Open",
+    header: "Bugsink open",
     align: "right",
     sortValue: (pkg) => pkg.bugsinkOpenCount,
     render: (pkg) =>
       pkg.bugsinkOpenCount > 0 ? (
-        <span className="visual-pill visual-pill-warning">
+        <span className="visual-pill" data-sev="warning">
           <span aria-hidden="true">!</span>
           {String(pkg.bugsinkOpenCount)}
         </span>
@@ -252,7 +255,7 @@ function AuditsStrip({
             <article key={audit.id} className="eng-audit-card">
               <div className="eng-audit-head">
                 <span className="eng-audit-title">{audit.label}</span>
-                <SeverityBadge severity={audit.status} />
+                <StatusGlyph severity={audit.status} />
               </div>
               <div className="eng-audit-meta">
                 <code className="visual-branch-chip">{audit.id}</code>
@@ -315,7 +318,7 @@ function MonorepoBody({
       <div className="eng-meters-grid">
         <div className="eng-meter-card">
           <BudgetMeter
-            label="7d Turbo Cache Hit Ratio"
+            label="7d Turbo cache hit ratio"
             value={monorepo.turboHitRatio7d}
             max={1}
             unit="ratio"
@@ -331,28 +334,28 @@ function MonorepoBody({
           }}
         >
           <div className="eng-kpi-card">
-            <span className="eng-kpi-label">Workspace Packages</span>
+            <span className="eng-kpi-label">Workspace packages</span>
             <strong className="eng-kpi-value">
               {formatValue(monorepo.packageCount, "count")}
             </strong>
             <span className="eng-kpi-hint">Isolated Bun workspace</span>
           </div>
           <div className="eng-kpi-card">
-            <span className="eng-kpi-label">Saved CI Hours (7d)</span>
+            <span className="eng-kpi-label">Saved CI hours (7d)</span>
             <strong className="eng-kpi-value">
               {formatValue(monorepo.turboSavedHours7d, "hours")}
             </strong>
             <span className="eng-kpi-hint">Remote Turborepo cache</span>
           </div>
           <div className="eng-kpi-card">
-            <span className="eng-kpi-label">Verify Runs Analyzed</span>
+            <span className="eng-kpi-label">Verify runs analyzed</span>
             <strong className="eng-kpi-value">
               {formatValue(monorepo.verifyRunsAnalyzed, "count")}
             </strong>
             <span className="eng-kpi-hint">7-day CI sample window</span>
           </div>
           <div className="eng-kpi-card">
-            <span className="eng-kpi-label">Catalog Pins</span>
+            <span className="eng-kpi-label">Catalog pins</span>
             <strong className="eng-kpi-value">
               {formatValue(monorepo.catalogPinsCount, "count")}
             </strong>
@@ -447,7 +450,7 @@ export function MonorepoPage(): React.JSX.Element {
   return (
     <main className="eng-page">
       <title>Monorepo · Hub</title>
-      <PageHeading eyebrow="Workspace & Turborepo" title="Monorepo" />
+      <PageHeading title="Monorepo" meta="Workspace & Turborepo" />
       <LoadingBlock
         values={{ facet }}
         fallback={<div className="loading-state">Loading Monorepo…</div>}

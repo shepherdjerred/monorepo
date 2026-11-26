@@ -1,3 +1,4 @@
+import { Tabs } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +21,11 @@ import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { formatInstant } from "#client/time.ts";
 import type { DigestReport } from "#shared/ops-schema";
+
+const PERIOD_OPTIONS = DigestKindSchema.options.map((option) => ({
+  value: option,
+  label: option === "weekly" ? "Week" : "Day",
+}));
 
 /** The verdict for the period, then its numbers. */
 function ReviewLead({
@@ -63,7 +69,15 @@ function ReviewLists({
             <span className="count">{report.newSinceLast.length}</span>
           </h2>
         </header>
-        <SignalList signals={report.newSinceLast} empty="Nothing new." />
+        <SignalList
+          signals={report.newSinceLast}
+          empty="Nothing new."
+          label={
+            report.kind === "daily"
+              ? "New since the last digest"
+              : "New this period"
+          }
+        />
       </section>
       <section className="panel list-panel" aria-labelledby="review-changes">
         <header className="panel-heading">
@@ -89,22 +103,15 @@ export function ReviewPage(): React.JSX.Element {
   return (
     <main>
       <title>Review · Hub</title>
-      <PageHeading eyebrow="How did it go" title="Review">
-        <div className="segmented" role="radiogroup" aria-label="Period">
-          {DigestKindSchema.options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={option === kind}
-              onClick={() => {
-                setParams({ kind: option }, { replace: true });
-              }}
-            >
-              {option === "weekly" ? "Week" : "Day"}
-            </button>
-          ))}
-        </div>
+      <PageHeading title="Review">
+        <Tabs
+          label="Period"
+          options={PERIOD_OPTIONS}
+          value={kind}
+          onChange={(option) => {
+            setParams({ kind: option }, { replace: true });
+          }}
+        />
       </PageHeading>
       <div
         className={`review-lead review-lead-${kind}`}
