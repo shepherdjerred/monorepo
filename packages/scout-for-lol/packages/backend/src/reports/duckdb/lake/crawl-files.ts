@@ -33,6 +33,7 @@ export type CrawlLakeFiles = {
   matchTeamBans: CrawlFile[];
   timelineEvents: CrawlFile[];
   timelineEventParticipants: CrawlFile[];
+  timelineCheckpoints: CrawlFile[];
 };
 
 export const NO_CRAWL_LAKE_FILES: CrawlLakeFiles = {
@@ -41,6 +42,7 @@ export const NO_CRAWL_LAKE_FILES: CrawlLakeFiles = {
   matchTeamBans: [],
   timelineEvents: [],
   timelineEventParticipants: [],
+  timelineCheckpoints: [],
 };
 
 function ingestDayOf(file: string): string {
@@ -77,12 +79,14 @@ export async function resolveCrawlLakeFiles(
     matchTeamBans,
     timelineEvents,
     timelineEventParticipants,
+    timelineCheckpoints,
   ] = await Promise.all([
     globTable(buildDir, "matches_crawl"),
     globTable(buildDir, "match_teams_crawl"),
     globTable(buildDir, "match_team_bans_crawl"),
     globTable(buildDir, "timeline_events_crawl"),
     globTable(buildDir, "timeline_event_participants_crawl"),
+    globTable(buildDir, "timeline_checkpoints_crawl"),
   ]);
   return {
     matches,
@@ -90,6 +94,7 @@ export async function resolveCrawlLakeFiles(
     matchTeamBans,
     timelineEvents,
     timelineEventParticipants,
+    timelineCheckpoints,
   };
 }
 
@@ -125,5 +130,6 @@ export function pruneCrawlFilesToRange(
     matchTeamBans: keep(crawl.matchTeamBans),
     timelineEvents: keep(crawl.timelineEvents),
     timelineEventParticipants: keep(crawl.timelineEventParticipants),
+    timelineCheckpoints: keep(crawl.timelineCheckpoints),
   };
 }
