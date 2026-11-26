@@ -156,6 +156,23 @@ waiting work inside Kueue.
 They leave every CI pod at the existing Kubernetes `batch-low` priority.
 Preemption remains disabled, so priority never cancels an admitted CI pod.
 
+## Coalescing main bursts without starving releases
+
+Priority orders the queue, but rapid merges can still stack dozens of `main`
+pushes behind the pool cap. Unconditional push auto-cancellation is worse.
+Canceling every older `main` run discards near-complete verification and aborts
+active image or chart publication. Continuous merges would leave `main` without
+a finished verdict.
+
+The [configuration extension](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/app.ts)
+coalesces only pre-publication `main` pushes instead. Once any default-branch
+publication step in the [pipeline graph](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/steps.ts)
+starts, that pipeline runs to completion untouched. When no active `main` run
+has reached publication yet, the oldest running pipeline is also preserved so
+the verification clock never resets. Older queued pushes cancel only after
+GitHub commit ancestry proves the newer commit is strictly ahead, keeping at
+most three active `main` runs at once.
+
 ## Why CI has its own namespace
 
 Woodpecker creates bare pods, not Jobs, so admission uses Kueue's pod
@@ -295,6 +312,8 @@ kubelet eviction, whatever the queue says.
   `packages/temporal/src/activities/maintenance/ci-workspace-golden.ts`
 - Per-step resource tiers:
   `packages/woodpecker-config-extension/src/pipeline/tiers.ts`
+- Main burst coalescing:
+  `packages/woodpecker-config-extension/src/supersede/superseded-main.ts`
 - Budget proof: `scripts/checks/ci/check-ci-admission-budget.ts`
 - Queue, workspace, and liskov memory alerts:
   `resources/monitoring/monitoring/rules/woodpecker.ts` and

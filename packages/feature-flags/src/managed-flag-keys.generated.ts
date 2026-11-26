@@ -129,6 +129,7 @@ export type TrackerFlagKey = (typeof TRACKER_FLAG_KEYS)[number];
 export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
   "woodpecker-delivery-publication-enabled",
   "woodpecker-delivery-catalog-v2-enabled",
+  "woodpecker-supersede-main-enabled",
   "woodpecker-maintenance-lanes-enabled",
   "woodpecker-source-incremental-enabled",
   "woodpecker-prepared-workspace-enabled",

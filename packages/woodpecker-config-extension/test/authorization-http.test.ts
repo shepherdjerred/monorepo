@@ -27,6 +27,7 @@ const ConfigResponseSchema = z.object({
 type HarnessLanes = {
   readonly maintenance?: boolean;
   readonly extended?: boolean;
+  readonly supersedeMain?: boolean;
   readonly performance?: Partial<PerformanceOptions>;
 };
 
@@ -46,6 +47,7 @@ function harness(
     Promise.resolve(undefined),
   );
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
+  const cancelSupersededMain = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
   const automationHeadApproved = vi.fn(() =>
     typeof approved === "boolean"
@@ -58,6 +60,7 @@ function harness(
     deliveryCatalogV2Enabled: () => Promise.resolve(true),
     maintenanceEnabled: () => Promise.resolve(lanes.maintenance === true),
     extendedVerifyEnabled: () => Promise.resolve(lanes.extended === true),
+    supersedeMainEnabled: () => Promise.resolve(lanes.supersedeMain === true),
     sourceCacheEnabled,
     ...(performance === undefined
       ? {}
@@ -72,6 +75,7 @@ function harness(
     verifyBase: base,
     imageReleaseBase: base,
     cancelSupersededPr,
+    cancelSupersededMain,
     automationHeadApproved,
   });
   return {
@@ -80,6 +84,7 @@ function harness(
     base,
     changedBase,
     cancelSupersededPr,
+    cancelSupersededMain,
     sourceCacheEnabled,
     automationHeadApproved,
   };
@@ -1103,4 +1108,25 @@ describe("repository bot dependency proposal authorization", () => {
       expect(automationHeadApproved).not.toHaveBeenCalled();
     },
   );
+});
+
+test("push main supersession runs best-effort only when enabled", async () => {
+  const gate = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"b".repeat(64)}`;
+  const pushOverride = {
+    event: "push",
+    branch: "main",
+    ref: "refs/heads/main",
+    author: "shepherdjerred",
+    sender: "shepherdjerred",
+  };
+  const disabled = harness(true, gate, false, { supersedeMain: false });
+  const disabledRes = await disabled.app.request(await request(pushOverride));
+  expect(disabledRes.status).toBe(200);
+  expect(disabled.cancelSupersededMain).not.toHaveBeenCalled();
+
+  const enabled = harness(true, gate, false, { supersedeMain: true });
+  enabled.cancelSupersededMain.mockRejectedValue(new Error("wp timeout"));
+  const enabledRes = await enabled.app.request(await request(pushOverride));
+  expect(enabledRes.status).toBe(200);
+  expect(enabled.cancelSupersededMain).toHaveBeenCalledTimes(1);
 });
