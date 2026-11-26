@@ -162,10 +162,115 @@ describe("monorepo facet", () => {
       "@shepherdjerred/temporal",
     );
 
-    const facet = await collectMonorepoFacet({ services, now });
+    const facet = await collectMonorepoFacet({
+      services,
+      now,
+      prometheus: createMockPrometheus((q) => {
+        if (q.includes("pr_code_review_assignments_total")) {
+          return [
+            { metric: { provider: "coderabbit" }, value: [1, "15"] },
+            { metric: { provider: "codex" }, value: [1, "33"] },
+          ];
+        }
+        if (q.includes("pr_code_review_provider_outcomes_total")) {
+          return [
+            {
+              metric: { provider: "coderabbit", outcome: "completed" },
+              value: [1, "10"],
+            },
+            {
+              metric: { provider: "coderabbit", outcome: "usage-limited" },
+              value: [1, "5"],
+            },
+            {
+              metric: { provider: "codex", outcome: "completed" },
+              value: [1, "26"],
+            },
+            {
+              metric: { provider: "codex", outcome: "timed-out" },
+              value: [1, "7"],
+            },
+          ];
+        }
+        if (q.includes("pr_code_review_provider_cooldowns_total")) {
+          return [{ metric: { provider: "coderabbit" }, value: [1, "5"] }];
+        }
+        if (q.includes("pr_code_review_outcomes_total")) {
+          return [
+            { metric: { reason: "clean" }, value: [1, "36"] },
+            { metric: { reason: "prior-round" }, value: [1, "31"] },
+            { metric: { reason: "quota-exempt" }, value: [1, "5"] },
+          ];
+        }
+        if (q.includes("histogram_quantile(0.5")) {
+          return [{ metric: {}, value: [1, "13.66"] }];
+        }
+        return q.includes("histogram_quantile(0.95")
+          ? [{ metric: {}, value: [1, "NaN"] }]
+          : [];
+      }),
+      codeReviewOptions: {
+        loadRuntimeConfig: () =>
+          Promise.resolve({
+            enabled: true,
+            settings: {
+              weights: { coderabbit: 3, codex: 1, cubic: 0 },
+              quotaCooldownSeconds: 3600,
+              timeoutCooldownSeconds: 900,
+              requestRetrySeconds: 720,
+              providerTimeoutSeconds: 1500,
+            },
+          }),
+        readCoordinator: () =>
+          Promise.resolve({
+            running: true,
+            processedCount: 195,
+            currentWeights: { coderabbit: 2, codex: -2 },
+            cooldownUntilMs: {
+              coderabbit: now.getTime() + 1_800_000,
+            },
+          }),
+      },
+    });
     expect(() => MonorepoFacetSchema.parse(facet)).not.toThrow();
     expect(facet.packageCount).toBeGreaterThan(20);
     expect(facet.catalogPinsCount).toBeGreaterThan(0);
+    expect(facet.codeReview?.coordinatorProcessedCount).toBe(195);
+    expect(facet.codeReview?.activeProvidersCount).toBe(2);
+    expect(facet.codeReview?.readyProvidersCount).toBe(1);
+    expect(facet.codeReview?.coolingDownProvidersCount).toBe(1);
+    expect(facet.codeReview?.medianDurationSeconds7d).toBe(13.7);
+    expect(facet.codeReview?.p95DurationSeconds7d).toBeNull();
+    expect(facet.codeReview?.outcomes7d.priorRound).toBe(31);
+    const rabbit = facet.codeReview?.providers.find(
+      (p) => p.id === "coderabbit",
+    );
+    expect(rabbit).toMatchObject({
+      tier: "free",
+      configuredWeight: 3,
+      targetShareRatio: 0.75,
+      status: "cooldown",
+      assignments7d: 15,
+      completed7d: 10,
+      usageLimited7d: 5,
+      cooldowns7d: 5,
+    });
+    const codex = facet.codeReview?.providers.find((p) => p.id === "codex");
+    expect(codex).toMatchObject({
+      tier: "paid",
+      configuredWeight: 1,
+      targetShareRatio: 0.25,
+      status: "ready",
+      assignments7d: 33,
+      completed7d: 26,
+      timedOut7d: 7,
+    });
+    expect(facet.audits.find((a) => a.id === "code-review-pool")).toMatchObject(
+      {
+        status: "ok",
+        detail: "1/2 active providers ready",
+      },
+    );
   });
 });
 

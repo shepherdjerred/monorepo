@@ -7,6 +7,54 @@ const MonorepoAuditStatusInternalSchema = z.enum([
   "unknown",
 ]);
 
+const CodeReviewProviderTierInternalSchema = z.enum(["free", "paid"]);
+const CodeReviewProviderPoolStatusInternalSchema = z.enum([
+  "ready",
+  "cooldown",
+  "standby",
+  "disabled",
+]);
+
+export const monorepoCodeReviewProviderShape = {
+  id: z.string(),
+  displayName: z.string(),
+  tier: CodeReviewProviderTierInternalSchema,
+  configuredWeight: z.number().int().nonnegative(),
+  targetShareRatio: z.number().nullable(),
+  currentSmoothWeight: z.number(),
+  status: CodeReviewProviderPoolStatusInternalSchema,
+  cooldownUntil: z.iso.datetime().nullable(),
+  assignments7d: z.number().nonnegative(),
+  completed7d: z.number().nonnegative(),
+  usageLimited7d: z.number().nonnegative(),
+  timedOut7d: z.number().nonnegative(),
+  skipped7d: z.number().nonnegative(),
+  cooldowns7d: z.number().nonnegative(),
+};
+
+export const monorepoCodeReviewShape = {
+  enabled: z.boolean(),
+  coordinatorRunning: z.boolean(),
+  coordinatorProcessedCount: z.number().int().nonnegative(),
+  activeProvidersCount: z.number().int().nonnegative(),
+  readyProvidersCount: z.number().int().nonnegative(),
+  coolingDownProvidersCount: z.number().int().nonnegative(),
+  outcomes7d: z.object({
+    clean: z.number().nonnegative(),
+    priorRound: z.number().nonnegative(),
+    threadsResolved: z.number().nonnegative(),
+    quotaExempt: z.number().nonnegative(),
+    providerTimeout: z.number().nonnegative(),
+    allSkipped: z.number().nonnegative(),
+    blockingFindings: z.number().nonnegative(),
+    p0Veto: z.number().nonnegative(),
+    reviewWithdrawn: z.number().nonnegative(),
+  }),
+  medianDurationSeconds7d: z.number().nullable(),
+  p95DurationSeconds7d: z.number().nullable(),
+  providers: z.array(z.object(monorepoCodeReviewProviderShape)),
+};
+
 export const monorepoFacetShape = {
   packageCount: z.number(),
   turboHitRatio7d: z.number().nullable(),
@@ -49,6 +97,7 @@ export const monorepoFacetShape = {
       detail: z.string().optional(),
     }),
   ),
+  codeReview: z.object(monorepoCodeReviewShape).optional(),
 };
 
 const ClusterDatabaseEngineInternalSchema = z.enum(["postgres", "mariadb"]);
