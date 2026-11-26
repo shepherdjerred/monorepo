@@ -35,8 +35,8 @@ const INCIDENTS_LAYER_SPECS: readonly LayerSpec[] = [
   [
     "client-imports-contract-only",
     "client",
-    ["domain", "infrastructure", "server"],
-    "Browser pages talk to /api/incidents using the shared contract only.",
+    ["domain", "infrastructure", "server", "testing"],
+    "Hub's incident pages are bundled into the browser and talk to /api/incidents over the wire, so they may import only the shared contract and lifecycle, never the domain, persistence, server, or the server-backed test harness.",
   ],
 ];
 

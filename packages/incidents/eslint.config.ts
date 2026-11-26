@@ -1,7 +1,7 @@
 import { recommended } from "@shepherdjerred/eslint-config";
 
 export default [
-  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...recommended({ tsconfigRootDir: import.meta.dirname, react: true }),
   {
     files: ["prisma.config.ts"],
     rules: { "custom-rules/prefer-bun-apis": "off" },

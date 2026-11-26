@@ -3,6 +3,9 @@
  * themselves (an investigation can regress); terminal statuses are reached
  * only through `resolve` (or `canceled` for maintenance) and left only through
  * `reopen`.
+ *
+ * It lives in `shared` because the domain enforces it and the Hub pages offer
+ * exactly the same moves, so the two cannot drift.
  */
 import {
   INCIDENT_STATUSES,

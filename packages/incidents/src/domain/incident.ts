@@ -32,7 +32,7 @@ import {
   marksMitigation,
   reopenTarget,
   resolveTarget,
-} from "#domain/lifecycle.ts";
+} from "#shared/lifecycle.ts";
 import { isCommander } from "#domain/command.ts";
 
 export type DeclareFields = Omit<

@@ -18,6 +18,7 @@ another shared service.
 | `./router`      | `IncidentsRouter`, the tRPC router type (type-only)                                                    | typed tRPC clients                     |
 | `./alert-rules` | `INCIDENT_ALERTNAMES`, `INCIDENT_ALERT_RULES`, `INCIDENT_ALERT_RECEIVER`, `INCIDENT_ALERTMANAGER_PATH` | the homelab Alertmanager route         |
 | `./hub-server`  | `createIncidentsHubServer(options)` and `createIncidentsFixtureHubServer(options?)`                    | Hub's `src/modules/incidents/` adapter |
+| `./hub-client`  | `incidentsHubClient`, structurally a Hub `ClientModule`                                                | Hub's `src/modules/incidents/` adapter |
 
 `IncidentsRouter` lives in its own subpath because `./contract` is the
 `shared` layer, which may not import the server layer, even for types.
@@ -277,6 +278,33 @@ The package reads no environment itself; Hub passes the values in.
 | `WEBHOOK_TOKEN`          | Alertmanager receiver bearer                                                                         |
 | `OPS_INGEST_TOKEN`       | Temporal signal bearer                                                                               |
 
+## Hub pages
+
+`incidentsHubClient` mounts these under `/incidents`:
+
+| Route          | Page                                                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/incidents`   | Open incidents, most severe then newest, with command state; `kind`, `state`, `system` search params filter          |
+| `/maintenance` | Open maintenance windows (same list, `kind=maintenance`)                                                             |
+| `/history`     | Resolved, completed, and canceled records                                                                            |
+| `/new`         | Declare; a duplicate CONFLICT shows the incident holding the system and a **Join it instead** action                 |
+| `/:ref`        | Record, command panel (Take, Force take, Hand off, Release), status, updates, links, signals, affected, and timeline |
+
+Paths after the first row are relative to `/incidents`. The module adds one
+sidebar row, **Incidents** in Hub's Alerts group: Hub keeps every sidebar link
+on screen at 1280×720, and core already owns "Maintenance" and "History". The
+list pages link their Open, Maintenance, and History views instead. Home shows
+open incidents and maintenance windows; the palette jumps to `INC-N`, searches
+titles, and has commands for **Declare incident**, **Maintenance windows**,
+and **Incident history**.
+
+Pages subscribe to `/events/stream` (the list and Home to the whole module,
+a detail page to its `?incident=`) and refetch on every frame and after a
+reconnect; a polite live region names the change. Commands send the loaded
+`revision` where the contract takes one; a stale-revision CONFLICT refetches
+and says so, keeping any draft text. `take` and `addLink` carry no revision by
+contract.
+
 ## Development
 
 ```bash
@@ -285,9 +313,13 @@ bunx turbo run typecheck test lint --filter=@shepherdjerred/incidents
 bun run --cwd packages/incidents test:extended   # PostgreSQL tier (shared test server on 5471)
 ```
 
-Layers are `shared` → `domain` → `infrastructure` → `server`, with `client`
-reserved for the Hub pages; `check-architecture` enforces them with negative
-fixtures in `architecture-fixtures/`. Unit tests use the in-memory repository,
+Layers are `shared` → `domain` → `infrastructure` → `server`, plus `client`
+for the Hub pages; `check-architecture` enforces them with negative fixtures
+in `architecture-fixtures/`. The status machine (`src/shared/lifecycle.ts`)
+sits in `shared` so the domain enforces it and the pages offer exactly the
+same moves. `client` may import only `shared`: it never sees the router type,
+and speaks tRPC's HTTP format over `fetch`, parsing every response with the
+contract. Unit tests use the in-memory repository,
 which gives the same compare-and-set and dedupe guarantees. The extended tier
 (`src/server/postgres.integration.test.ts`) migrates a disposable database
 and proves single-winner claims and declarations under concurrency.

@@ -7,7 +7,8 @@
     "./contract": "./src/shared/contract.ts",
     "./alert-rules": "./src/shared/alert-rules.ts",
     "./router": "./src/router.ts",
-    "./hub-server": "./src/server/hub-server.ts"
+    "./hub-server": "./src/server/hub-server.ts",
+    "./hub-client": "./src/client/hub-client.tsx"
   },
   "imports": {
     "#generated/*": "./generated/*",
@@ -30,20 +31,29 @@
     "@prisma/client-runtime-utils": "7.10.1",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
     "@trpc/server": "^11.18.0",
     "hono": "^4.12.18",
+    "lucide-react": "^1.14.0",
     "prisma": "^7.10.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "8.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
+    "@shepherdjerred/console-ui": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@shepherdjerred/test-postgres": "workspace:*",
     "@types/bun": "1.4.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "@vitest/coverage-istanbul": "5.0.5",
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
+    "vite": "^8.0.11",
     "vitest": "5.0.5"
   }
 }
