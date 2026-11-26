@@ -2,12 +2,7 @@ import { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  PLATFORM_LOCK,
-  audit,
-  fingerprint,
-  lock,
-} from "#infrastructure/delivery-records.ts";
+import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
 import type { Principal } from "#shared/contract.ts";
 import {
   CompletePlatformRecoverySchema,
@@ -19,7 +14,13 @@ import {
 import { pendingRecovery } from "./ownership.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.ts";
-import { findIntent } from "#infrastructure/recovery-intents.ts";
+import { requireNoSelfHostedBarrierHolder } from "#infrastructure/execution/admission.ts";
+import { holdPlatformLock } from "#infrastructure/platform/lifecycle.ts";
+import {
+  findIntent,
+  intentDetail,
+  updateIntentDetail,
+} from "#infrastructure/recovery-intents.ts";
 import {
   platformIntentView,
   platformRecoveryKinds,
@@ -120,18 +121,8 @@ export async function admitPlatformRecoveryApply(
   const input = AdmitPlatformRecoveryApplySchema.parse(raw);
   const context = await freshOwnershipProof(this, input, id, true);
   return this.database.$transaction(async (tx) => {
-    const { intent, row, global } = await pendingRecovery(tx, id);
+    const { intent, stored, row, global } = await pendingRecovery(tx, id);
     requireRecoveryEffectOwner(this, row.kind);
-    if (global === null) {
-      const heldLock = await tx.platformLock.findUnique({
-        where: { id: PLATFORM_LOCK },
-      });
-      if (heldLock !== null && heldLock.deploymentId !== row.id)
-        throw new DeliveryError(
-          "BUSY",
-          "Shared platform resources are owned by another state apply or shared-lock operation",
-        );
-    }
     if (
       fingerprint(intent.nativeReceipts) !==
       fingerprint(context.intent.nativeReceipts)
@@ -167,6 +158,18 @@ export async function admitPlatformRecoveryApply(
           "Recovery apply requires human approval of the exact saved plan",
         );
     }
+    const alreadyAdmitted = intentDetail(stored)["applyAdmittedAt"] != null;
+    if (global === null) {
+      await requireNoSelfHostedBarrierHolder(tx, row.id);
+    }
+    await holdPlatformLock(tx, row.id, alreadyAdmitted);
+    const admitted = alreadyAdmitted
+      ? intent
+      : platformIntentView(
+          await updateIntentDetail(tx, id, {
+            applyAdmittedAt: input.observedAt,
+          }),
+        );
     await audit(tx, actor, {
       action: "platform.recovery_apply_admitted",
       entityId: id,
@@ -176,7 +179,7 @@ export async function admitPlatformRecoveryApply(
         planFingerprint: input.planFingerprint ?? null,
       },
     });
-    return intent;
+    return admitted;
   });
 }
 

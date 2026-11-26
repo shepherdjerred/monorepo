@@ -126,10 +126,21 @@ export async function heldPlatformRecovery(
   const global = await tx.platformLock.findUnique({
     where: { deploymentId: row.id },
   });
-  const requiresGlobal =
+  const startedWithGlobal =
     model === null
       ? row.kind !== "tofu-plan"
       : row.stages.some((stage) => stage.key === stepStageKey("step", "apply"));
+  const recoveryIntents = startedWithGlobal
+    ? []
+    : await tx.recoveryIntent.findMany({
+        where: { deploymentId: row.id, kind: "platform" },
+        select: { detail: true },
+      });
+  const requiresGlobal =
+    startedWithGlobal ||
+    recoveryIntents.some(
+      (entry) => intentDetail(entry)["applyAdmittedAt"] != null,
+    );
   if (
     target === null ||
     env.activeDeploymentId !== row.id ||
@@ -155,7 +166,7 @@ export async function heldPlatformRecovery(
         : { versionSetRevisionId: row.versionSetRevisionId, source: model }),
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
       target: target.instance,
-      global: global?.id ?? null,
+      global: startedWithGlobal ? (global?.id ?? null) : null,
       acceptedDeploymentId: env.acceptedDeploymentId,
     }),
   );

@@ -35,6 +35,9 @@ an environment is running it.
 ```bash
 toolkit deploy whoami
 toolkit deploy status --json
+toolkit deploy selected <ENVIRONMENT_ID> --json
+toolkit deploy approvals --json
+toolkit deploy list [ENVIRONMENT_ID] --service <SERVICE_ID> --status <STATUS> --cursor <CURSOR> --json
 toolkit deploy versions arcade
 toolkit deploy inventory --json
 toolkit deploy diff none <VERSION_SET_ID>
@@ -64,6 +67,14 @@ toolkit deploy platform recover <DEPLOYMENT_ID> --machine --expected-generation 
 toolkit deploy platform recovery <INTENT_ID> --json
 toolkit deploy platform recovery-approve <INTENT_ID> --plan-fingerprint <HASH> --decision approved --reason "Reviewed exact saved recovery plan and state"
 ```
+
+`selected <ENVIRONMENT_ID>` reads the environment's desired, observed, and accepted
+selection pointers along with the accepted `VersionSet` component revisions (`null`
+before the first accepted release). `approvals` lists pending and recent deployment
+and saved-plan approvals. `list [ENVIRONMENT_ID]` lists deployments across all
+environments or one target environment (`<ENVIRONMENT_ID>` or `--environment <ID>`,
+not both), with optional `--service <ID>`, `--status <STATUS>`, and `--cursor <CURSOR>`
+pagination flags.
 
 The default endpoint is `https://delivery.tailnet-1a49.ts.net`; override bootstrap
 with `--url`, `DELIVERY_URL`, or `[delivery].url` in the toolkit config. Requests

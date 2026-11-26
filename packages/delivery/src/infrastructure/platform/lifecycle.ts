@@ -23,6 +23,7 @@ import {
 } from "./policy.ts";
 import { requirePlatformPrerequisites } from "./prerequisites.ts";
 import { stageEvidenceScopeId } from "#shared/evidence/scope.ts";
+import { intentDetail } from "#infrastructure/recovery-intents.ts";
 
 type PlatformDeployment = {
   id: string;
@@ -52,14 +53,29 @@ export async function holdPlatformLock(
     // AI-598: a self-hosted release that already holds the dispatch barrier
     // (no running deployments) may update its own Application while a
     // non-self-hosted stack holds PlatformLock in quarantine, so a worker
-    // bootstrap fix can ship without disturbing the stack's quarantine locks.
+    // bootstrap fix can ship without disturbing the stack's quarantine locks,
+    // unless a pending platform recovery intent has already admitted apply.
     if (
       options.selfHosted === true &&
       held.deployment.status !== "running" &&
       !held.deployment.service.selfHosted &&
       held.deployment.kind !== "upgrade-control-plane"
-    )
-      return;
+    ) {
+      const pendingIntents = await tx.recoveryIntent.findMany({
+        where: {
+          deploymentId: held.deploymentId,
+          kind: "platform",
+          status: "pending",
+        },
+        select: { detail: true },
+      });
+      if (
+        !pendingIntents.some(
+          (entry) => intentDetail(entry)["applyAdmittedAt"] != null,
+        )
+      )
+        return;
+    }
     throw new DeliveryError(
       "BUSY",
       "Shared platform resources are owned by another state apply or shared-lock operation",

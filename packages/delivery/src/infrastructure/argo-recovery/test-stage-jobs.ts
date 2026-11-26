@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-readers.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { KUBERNETES_OBJECT_BOUND } from "#infrastructure/kubernetes/projected-identity.ts";
@@ -13,14 +14,9 @@ export const TEST_STAGE_KEY_PATTERN = /^(?:sub\d+-)?test-[a-z0-9-]{1,63}$/u;
 
 /** The projected `delivery-worker-jobs-reader` settlement identity for `test-*` stages. */
 export function createWorkerJobsReader(read?: KubernetesRead): KubernetesRead {
-  return projectedReader(
-    {
-      name: "delivery-worker-jobs-reader",
-      directory: "/var/run/delivery-worker-jobs-reader",
-    },
-    read,
-    { bound: KUBERNETES_OBJECT_BOUND },
-  );
+  return projectedReader(DELIVERY_KUBERNETES_READERS.workerJobs, read, {
+    bound: KUBERNETES_OBJECT_BOUND,
+  });
 }
 
 const RecordedTestReceiptSchema = z.object({
