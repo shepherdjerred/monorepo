@@ -7,6 +7,8 @@
  * `AppRouter` is a type-only import, erased at build time.
  */
 import { z } from "zod";
+import { Coordinate, PageIndex, Size, Unit } from "./board-primitives.ts";
+import { NoteSchema } from "./notes.ts";
 import type { AppRouter as ServerRouter } from "#server/router.ts";
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -184,11 +186,6 @@ export const ArtifactPathSchema = z.string().superRefine((value, context) => {
 
 // ── Board index ─────────────────────────────────────────────────────────────
 
-const Coordinate = z.number();
-const Size = z.number().positive();
-const Unit = z.number().min(0).max(1);
-const PageIndex = z.number().int().min(0);
-
 export const FrameSchema = z.strictObject({
   page: PageIndex,
   x: Coordinate,
@@ -197,57 +194,6 @@ export const FrameSchema = z.strictObject({
   h: Size,
 });
 export type Frame = z.infer<typeof FrameSchema>;
-
-const NoteColor = z.string().min(1).max(32);
-
-export const NoteSchema = z.discriminatedUnion("type", [
-  z.strictObject({
-    type: z.literal("sticky"),
-    page: PageIndex,
-    x: Coordinate,
-    y: Coordinate,
-    w: Size,
-    h: Size,
-    text: z.string().max(2000),
-    color: NoteColor.optional(),
-  }),
-  z.strictObject({
-    type: z.literal("title"),
-    page: PageIndex,
-    x: Coordinate,
-    y: Coordinate,
-    text: z.string().max(500),
-    size: z.enum(["s", "m", "l"]).default("m"),
-  }),
-  z.strictObject({
-    type: z.literal("box"),
-    page: PageIndex,
-    x: Coordinate,
-    y: Coordinate,
-    w: Size,
-    h: Size,
-    color: NoteColor.optional(),
-  }),
-  z.strictObject({
-    type: z.literal("line"),
-    page: PageIndex,
-    x: Coordinate,
-    y: Coordinate,
-    x2: Coordinate,
-    y2: Coordinate,
-    color: NoteColor.optional(),
-  }),
-  z.strictObject({
-    type: z.literal("arrow"),
-    page: PageIndex,
-    x: Coordinate,
-    y: Coordinate,
-    x2: Coordinate,
-    y2: Coordinate,
-    color: NoteColor.optional(),
-  }),
-]);
-export type Note = z.infer<typeof NoteSchema>;
 
 export const LaunchSchema = z.strictObject({
   view: z.enum(["canvas", "focused"]),
