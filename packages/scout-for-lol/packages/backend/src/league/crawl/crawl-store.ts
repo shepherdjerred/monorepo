@@ -10,6 +10,7 @@ export type NewFrontierPlayer = {
   puuid: LeaguePuuid;
   platformRoute: string;
   depth: number;
+  /** The match that surfaced the player. Not persisted: the frontier keeps only what scheduling reads. */
   seedMatchId: RiotMatchId;
 };
 
