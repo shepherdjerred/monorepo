@@ -221,7 +221,9 @@ describe("workspace destinations", () => {
   });
 
   test("accepts only policy colors for swatches", () => {
-    expect(swatchColor(" Blue ")).toBe("#0000ff");
+    expect(swatchColor(" Blue ")).toBe("#2973e0");
+    expect(swatchColor("berry_red")).toBe("#b8245e");
+    expect(swatchColor("gray")).toBe("#808080");
     expect(swatchColor("#9a3412")).toBe("#9a3412");
     expect(
       swatchColor("red; background: url(https://example.test)"),

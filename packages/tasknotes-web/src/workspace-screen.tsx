@@ -1,9 +1,10 @@
 import type { Task } from "@shepherdjerred/facet-protocol";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CivilDay } from "./civil-day.ts";
+import { Icon } from "./icons.tsx";
 import { InspectorForm, type TaskDraft } from "./inspector.tsx";
 import { bindLightDismiss } from "./light-dismiss.ts";
-import { SidebarNav } from "./sidebar.tsx";
+import { MobileTabBar, SearchForm, SidebarFrame } from "./sidebar.tsx";
 import type { WorkspaceData } from "./sync.ts";
 import { QuickAdd, TaskList } from "./task-list.tsx";
 import {
@@ -14,6 +15,15 @@ import {
   type Destination,
   type WorkspaceView,
 } from "./workspace.ts";
+
+function focusCompose(): void {
+  const field = document.querySelector("#quick-add-field");
+  if (!(field instanceof HTMLInputElement)) {
+    return;
+  }
+  field.scrollIntoView({ block: "nearest" });
+  field.focus();
+}
 
 export function WorkspaceScreen(props: {
   data: WorkspaceData;
@@ -38,7 +48,6 @@ export function WorkspaceScreen(props: {
   onRefresh: () => void;
   onSignOut: () => void;
 }) {
-  const searchId = useId();
   const menuRef = useRef<HTMLDialogElement>(null);
   const inspectorRef = useRef<HTMLDialogElement>(null);
   const confirmRef = useRef<HTMLDialogElement>(null);
@@ -73,12 +82,31 @@ export function WorkspaceScreen(props: {
 
   const projects = activeProjects(props.data.projects);
   const labels = activeLabels(props.data.labels);
+  const taskCount = props.view.groups.reduce(
+    (sum, group) => sum + group.tasks.length,
+    0,
+  );
+  const openBrowse = () => {
+    setMenuOpen(true);
+    menuRef.current?.showModal();
+  };
   const sidebar = (
-    <SidebarNav
+    <SidebarFrame
       data={props.data}
       destination={props.destination}
       inboxCount={inboxCount}
       todayCount={todayCount}
+      search={props.search}
+      status={props.status}
+      error={props.error}
+      onSearch={props.onSearch}
+      onCompose={() => {
+        if (menuRef.current?.open === true) {
+          menuRef.current.close();
+        }
+        focusCompose();
+      }}
+      onSignOut={props.onSignOut}
       onDestination={(destination) => {
         props.onDestination(destination);
         menuRef.current?.close();
@@ -91,115 +119,126 @@ export function WorkspaceScreen(props: {
       <a className="skip visually-hidden" href="#tasks">
         Skip to tasks
       </a>
-      <aside className="sidebar">
-        <p className="brand">TaskNotes</p>
-        {sidebar}
-      </aside>
+      <p className="visually-hidden" role="status">
+        {props.status ?? ""}
+      </p>
+      <aside className="sidebar">{sidebar}</aside>
       <div className="workspace">
-        <header className="topbar">
-          <button
-            type="button"
-            className="menu-button"
-            aria-expanded={menuOpen}
-            aria-controls="workspace-menu"
-            onClick={() => {
-              setMenuOpen(true);
-              menuRef.current?.showModal();
-            }}
-          >
-            Menu
-          </button>
-          <h1>{props.view.title}</h1>
-          <form
-            className="search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
-          >
-            <label htmlFor={searchId}>Search</label>
-            <input
-              id={searchId}
-              type="search"
-              value={props.search}
-              onChange={(event) => {
-                props.onSearch(event.target.value);
-              }}
-            />
-          </form>
-          <button type="button" className="secondary" onClick={props.onRefresh}>
-            Sync
-          </button>
-          <button type="button" className="secondary" onClick={props.onSignOut}>
-            Sign out
-          </button>
-        </header>
         <main className="list-panel">
-          <p className="status" role="status">
-            {props.status ?? ""}
-          </p>
-          {props.error === null ? null : (
-            <p className="alert" role="alert">
-              {props.error}
-            </p>
-          )}
-          <QuickAdd onAdd={props.onAdd} />
-          {props.view.week.length === 0 ? null : (
-            <nav className="week" aria-label="Upcoming days">
+          <div className="list-column">
+            <header className="list-heading">
+              <h1>{props.view.title}</h1>
+              <p className="task-count">
+                {taskCount === 1 ? "1 task" : `${taskCount.toString()} tasks`}
+              </p>
               <button
                 type="button"
-                disabled={props.upcomingOffset === 0}
-                onClick={() => {
-                  props.onUpcomingOffset(Math.max(0, props.upcomingOffset - 7));
-                }}
+                className="sync-button"
+                onClick={props.onRefresh}
               >
-                Previous week
+                <Icon name="sync" />
+                Sync
               </button>
-              {props.view.week.map((day) => (
-                <a key={day.civilDate} href={`#day-${day.civilDate}`}>
-                  <span>{day.weekdayShort}</span>
-                  <span className="day-number">{day.dayNumber}</span>
-                  <span className="visually-hidden">
-                    {day.taskCount.toString()} tasks
-                  </span>
-                </a>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  props.onUpcomingOffset(props.upcomingOffset + 7);
-                }}
-              >
-                Next week
-              </button>
-            </nav>
-          )}
-          <TaskList
-            view={props.view}
-            tasks={props.data.tasks}
-            timeZone={props.timeZone}
-            today={props.today}
-            onToggle={props.onToggle}
-            onOpen={props.onOpen}
-          />
+              <SearchForm
+                className="header-search"
+                value={props.search}
+                onSearch={props.onSearch}
+              />
+            </header>
+            {props.error === null ? null : (
+              <p className="alert" role="alert">
+                {props.error}
+              </p>
+            )}
+            {props.view.week.length === 0 ? null : (
+              <>
+                <div className="week-nav">
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={props.upcomingOffset === 0}
+                    onClick={() => {
+                      props.onUpcomingOffset(
+                        Math.max(0, props.upcomingOffset - 7),
+                      );
+                    }}
+                  >
+                    Previous week
+                  </button>
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => {
+                      props.onUpcomingOffset(props.upcomingOffset + 7);
+                    }}
+                  >
+                    Next week
+                  </button>
+                </div>
+                <nav className="week" aria-label="Upcoming days">
+                  {props.view.week.map((day) => (
+                    <a
+                      key={day.civilDate}
+                      href={`#day-${day.civilDate}`}
+                      className={day.taskCount > 0 ? "has-tasks" : undefined}
+                    >
+                      <span>{day.weekdayShort}</span>
+                      <span className="day-number">{day.dayNumber}</span>
+                      <span className="day-dot" />
+                      <span className="visually-hidden">
+                        {day.taskCount.toString()} tasks
+                      </span>
+                    </a>
+                  ))}
+                </nav>
+              </>
+            )}
+            <TaskList
+              view={props.view}
+              tasks={props.data.tasks}
+              projects={projects}
+              labels={labels}
+              {...(props.selected === null
+                ? {}
+                : { selectedId: props.selected.id })}
+              timeZone={props.timeZone}
+              today={props.today}
+              onToggle={props.onToggle}
+              onOpen={props.onOpen}
+            />
+            <QuickAdd onAdd={props.onAdd} />
+          </div>
         </main>
       </div>
+      <button type="button" className="capture" onClick={focusCompose}>
+        <Icon name="plus" />
+        <span className="visually-hidden">Quick Add Task</span>
+      </button>
+      <MobileTabBar
+        destination={props.destination}
+        menuOpen={menuOpen}
+        onDestination={props.onDestination}
+        onBrowse={openBrowse}
+      />
       <dialog
         id="workspace-menu"
-        aria-label="Workspace"
+        aria-labelledby="browse-title"
         ref={menuRef}
         onClose={() => {
           setMenuOpen(false);
         }}
       >
-        <div className="sheet">
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => menuRef.current?.close()}
-          >
-            Close
-          </button>
+        <div className="sheet browse-sheet">
+          <div className="inspector-toolbar">
+            <h1 id="browse-title">Browse</h1>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => menuRef.current?.close()}
+            >
+              Close
+            </button>
+          </div>
           {sidebar}
         </div>
       </dialog>
@@ -222,6 +261,11 @@ export function WorkspaceScreen(props: {
             today={props.today}
             onSave={props.onSave}
             onClose={() => inspectorRef.current?.close()}
+            onToggle={() => {
+              if (props.selected !== null) {
+                props.onToggle(props.selected);
+              }
+            }}
             onAskDelete={() => confirmRef.current?.showModal()}
           />
         )}

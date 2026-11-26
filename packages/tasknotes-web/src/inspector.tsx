@@ -32,6 +32,7 @@ export function InspectorForm(props: {
   today: CivilDay;
   onSave: (draft: TaskDraft) => void;
   onClose: () => void;
+  onToggle: () => void;
   onAskDelete: () => void;
 }) {
   const due = effectiveCivilDay(props.task, props.timeZone) ?? "";
@@ -49,8 +50,7 @@ export function InspectorForm(props: {
   const labelPrefix = useId();
 
   return (
-    <div className="sheet">
-      <h1 id="inspector-title">{title.trim() === "" ? "Task" : title}</h1>
+    <div className="sheet inspector">
       <form
         aria-labelledby="inspector-title"
         onSubmit={(event) => {
@@ -67,134 +67,156 @@ export function InspectorForm(props: {
           });
         }}
       >
-        <div className="field">
-          <label htmlFor={titleId}>Title</label>
+        <div className="inspector-header">
+          <button
+            type="button"
+            className="complete-toggle"
+            data-priority={props.task.priority}
+            data-completed={props.task.completed ? "true" : "false"}
+            aria-label={props.task.completed ? "Reopen task" : "Complete task"}
+            onClick={props.onToggle}
+          >
+            <span />
+          </button>
+          <h1 id="inspector-title" className="visually-hidden">
+            {title.trim() === "" ? "Task" : title}
+          </h1>
           <input
             id={titleId}
+            className="title-field"
             name="title"
             type="text"
             required
             autoFocus
+            aria-label="Task title"
+            placeholder="Task title"
             value={title}
             onChange={(event) => {
               setTitle(event.target.value);
             }}
           />
+          <button type="button" className="text-button" onClick={props.onClose}>
+            Done
+          </button>
         </div>
-        <div className="field">
-          <label htmlFor={descriptionId}>Description</label>
-          <textarea
-            id={descriptionId}
-            name="description"
-            value={description}
-            onChange={(event) => {
-              setDescription(event.target.value);
-            }}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor={priorityId}>Priority</label>
-          <select
-            id={priorityId}
-            name="priority"
-            value={priority}
-            onChange={(event) => {
-              setPriority(parsePriority(event.target.value));
-            }}
-          >
-            <option value={Priority.P1}>P1</option>
-            <option value={Priority.P2}>P2</option>
-            <option value={Priority.P3}>P3</option>
-            <option value={Priority.P4}>P4</option>
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor={dueId}>Due date</label>
-          <input
-            id={dueId}
-            name="due"
-            type="date"
-            value={dueDate}
-            onChange={(event) => {
-              setDueDate(event.target.value);
-            }}
-          />
-          <div className="choice-row">
-            <button
-              type="button"
-              onClick={() => {
-                setDueDate(props.today);
-              }}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setDueDate(addDays(props.today, 1));
-              }}
-            >
-              Tomorrow
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setDueDate("");
-              }}
-            >
-              Clear
-            </button>
+        <div className="inspector-columns">
+          <div className="inspector-main">
+            <div className="field">
+              <label htmlFor={descriptionId}>Description</label>
+              <textarea
+                id={descriptionId}
+                name="description"
+                value={description}
+                placeholder="Add description"
+                onChange={(event) => {
+                  setDescription(event.target.value);
+                }}
+              />
+            </div>
+          </div>
+          <div className="inspector-properties">
+            <div className="field">
+              <label htmlFor={priorityId}>Priority</label>
+              <select
+                id={priorityId}
+                name="priority"
+                value={priority}
+                onChange={(event) => {
+                  setPriority(parsePriority(event.target.value));
+                }}
+              >
+                <option value={Priority.P1}>Priority 1</option>
+                <option value={Priority.P2}>Priority 2</option>
+                <option value={Priority.P3}>Priority 3</option>
+                <option value={Priority.P4}>Priority 4</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor={dueId}>Due date</label>
+              <input
+                id={dueId}
+                name="due"
+                type="date"
+                value={dueDate}
+                onChange={(event) => {
+                  setDueDate(event.target.value);
+                }}
+              />
+              <div className="choice-row">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDueDate(props.today);
+                  }}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDueDate(addDays(props.today, 1));
+                  }}
+                >
+                  Tomorrow
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDueDate("");
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor={projectIdField}>Project</label>
+              <select
+                id={projectIdField}
+                name="project"
+                value={projectId}
+                onChange={(event) => {
+                  setProjectId(event.target.value);
+                }}
+              >
+                {props.projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <fieldset>
+              <legend>Labels</legend>
+              <div className="labels">
+                {props.labels.map((label) => {
+                  const fieldId = `${labelPrefix}-${label.id}`;
+                  const checked = labelIds.includes(label.id);
+                  return (
+                    <label key={label.id} htmlFor={fieldId}>
+                      <input
+                        id={fieldId}
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setLabelIds((current) =>
+                            checked
+                              ? current.filter((id) => id !== label.id)
+                              : [...current, label.id],
+                          );
+                        }}
+                      />
+                      <span>@{label.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
           </div>
         </div>
-        <div className="field">
-          <label htmlFor={projectIdField}>Project</label>
-          <select
-            id={projectIdField}
-            name="project"
-            value={projectId}
-            onChange={(event) => {
-              setProjectId(event.target.value);
-            }}
-          >
-            {props.projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <fieldset>
-          <legend>Labels</legend>
-          <div className="labels">
-            {props.labels.map((label) => {
-              const fieldId = `${labelPrefix}-${label.id}`;
-              const checked = labelIds.includes(label.id);
-              return (
-                <label key={label.id} htmlFor={fieldId}>
-                  <input
-                    id={fieldId}
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => {
-                      setLabelIds((current) =>
-                        checked
-                          ? current.filter((id) => id !== label.id)
-                          : [...current, label.id],
-                      );
-                    }}
-                  />
-                  {label.name}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
         <div className="actions">
           <button className="primary" type="submit">
             Save
-          </button>
-          <button className="secondary" type="button" onClick={props.onClose}>
-            Close
           </button>
           <button className="danger" type="button" onClick={props.onAskDelete}>
             Delete

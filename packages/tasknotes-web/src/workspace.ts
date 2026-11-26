@@ -451,6 +451,21 @@ export function projectDepth(
   return depth;
 }
 
+const NATIVE_SWATCHES: Record<string, string> = {
+  charcoal: "#808085",
+  berry_red: "#b8245e",
+  red: "#db4036",
+  orange: "#f28526",
+  yellow: "#ebba14",
+  green: "#29a654",
+  teal: "#149ea3",
+  blue: "#2973e0",
+  grape: "#874dd9",
+  magenta: "#e05299",
+  salmon: "#f5827a",
+  grey: "#9499a1",
+};
+
 const NAMED_COLORS: Record<string, string> = {
   black: "#000000",
   silver: "#c0c0c0",
@@ -472,5 +487,7 @@ const NAMED_COLORS: Record<string, string> = {
 
 export function swatchColor(raw: string): string | undefined {
   const value = raw.trim().toLowerCase();
+  const swatch = NATIVE_SWATCHES[value];
+  if (swatch !== undefined) return swatch;
   return /^#[0-9a-f]{3,8}$/.test(value) ? value : NAMED_COLORS[value];
 }

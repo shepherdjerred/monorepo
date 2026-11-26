@@ -1,4 +1,6 @@
 import type { Label, Project } from "@shepherdjerred/facet-protocol";
+import { useId } from "react";
+import { Icon, type IconName } from "./icons.tsx";
 import type { WorkspaceData } from "./sync.ts";
 import {
   activeLabels,
@@ -18,14 +20,35 @@ function sameDestination(left: Destination, right: Destination): boolean {
     : left.kind === "label" && right.kind === "label" && left.id === right.id;
 }
 
+function NavMark(props: {
+  icon: IconName | undefined;
+  swatch: string | undefined;
+}) {
+  if (props.icon === "tag" && props.swatch !== undefined) {
+    return (
+      <span className="tag-icon" style={{ color: props.swatch }}>
+        <Icon name="tag" />
+      </span>
+    );
+  }
+  if (props.icon !== undefined) {
+    return <Icon name={props.icon} />;
+  }
+  return props.swatch === undefined ? null : (
+    <span className="swatch" style={{ background: props.swatch }} />
+  );
+}
+
 function NavButton(props: {
   current: boolean;
   label: string;
   count?: number;
   depth?: number;
   swatch?: string | undefined;
+  icon?: IconName;
   onClick: () => void;
 }) {
+  const depth = props.depth ?? 0;
   return (
     <li>
       <button
@@ -33,25 +56,153 @@ function NavButton(props: {
         className="nav-button"
         aria-current={props.current ? "page" : undefined}
         style={
-          props.depth === undefined
+          depth === 0
             ? undefined
             : {
-                paddingInlineStart: `calc(var(--space-sm) + ${props.depth.toString()} * 12px)`,
+                paddingInlineStart: `calc(0.5rem + ${depth.toString()} * 0.75rem)`,
               }
         }
         onClick={props.onClick}
       >
         <span className="nav-name">
-          {props.swatch === undefined ? null : (
-            <span className="swatch" style={{ background: props.swatch }} />
-          )}
+          <NavMark icon={props.icon} swatch={props.swatch} />
           {props.label}
         </span>
-        {props.count === undefined ? null : (
+        {props.count === undefined || props.count < 1 ? null : (
           <span className="count">{props.count}</span>
         )}
       </button>
     </li>
+  );
+}
+
+export function SearchForm(props: {
+  className: string;
+  value: string;
+  onSearch: (value: string) => void;
+}) {
+  const id = useId();
+  return (
+    <form
+      className={`search ${props.className}`}
+      role="search"
+      onSubmit={(event) => {
+        event.preventDefault();
+      }}
+    >
+      <label className="visually-hidden" htmlFor={id}>
+        Search
+      </label>
+      <Icon name="search" />
+      <input
+        id={id}
+        type="search"
+        placeholder="Search"
+        enterKeyHint="search"
+        value={props.value}
+        onChange={(event) => {
+          props.onSearch(event.target.value);
+        }}
+      />
+    </form>
+  );
+}
+
+export function SidebarFrame(props: {
+  data: WorkspaceData;
+  destination: Destination;
+  inboxCount: number;
+  todayCount: number;
+  search: string;
+  status: string | null;
+  error: string | null;
+  onDestination: (destination: Destination) => void;
+  onSearch: (value: string) => void;
+  onCompose: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <div className="sidebar-frame">
+      <button type="button" className="add-task" onClick={props.onCompose}>
+        <Icon name="plus-circle" />
+        Add task
+      </button>
+      <SearchForm
+        className="sidebar-search"
+        value={props.search}
+        onSearch={props.onSearch}
+      />
+      <SidebarNav
+        data={props.data}
+        destination={props.destination}
+        inboxCount={props.inboxCount}
+        todayCount={props.todayCount}
+        onDestination={props.onDestination}
+      />
+      <footer className="sidebar-footer">
+        <span
+          className="sync-dot"
+          data-state={props.error === null ? "ok" : "error"}
+        />
+        <span className="sync-label">{props.status ?? "Synced"}</span>
+        <button type="button" className="text-button" onClick={props.onSignOut}>
+          Sign out
+        </button>
+      </footer>
+    </div>
+  );
+}
+
+function primarySection(
+  destination: Destination,
+): "inbox" | "today" | "upcoming" | undefined {
+  return destination.kind === "section" && destination.section !== "completed"
+    ? destination.section
+    : undefined;
+}
+
+export function MobileTabBar(props: {
+  destination: Destination;
+  menuOpen: boolean;
+  onDestination: (destination: Destination) => void;
+  onBrowse: () => void;
+}) {
+  const current = primarySection(props.destination);
+  const tabs: {
+    section: "inbox" | "today" | "upcoming";
+    label: string;
+    icon: IconName;
+  }[] = [
+    { section: "inbox", label: "Inbox", icon: "tray" },
+    { section: "today", label: "Today", icon: "star" },
+    { section: "upcoming", label: "Upcoming", icon: "calendar" },
+  ];
+  return (
+    <nav className="tabbar" aria-label="Sections">
+      {tabs.map((tab) => (
+        <button
+          key={tab.section}
+          type="button"
+          aria-current={current === tab.section ? "page" : undefined}
+          onClick={() => {
+            props.onDestination({ kind: "section", section: tab.section });
+          }}
+        >
+          <Icon name={tab.icon} />
+          {tab.label}
+        </button>
+      ))}
+      <button
+        type="button"
+        aria-current={current === undefined ? "page" : undefined}
+        aria-expanded={props.menuOpen}
+        aria-controls="workspace-menu"
+        onClick={props.onBrowse}
+      >
+        <Icon name="grid" />
+        Browse
+      </button>
+    </nav>
   );
 }
 
@@ -81,6 +232,7 @@ export function SidebarNav(props: {
             kind: "section",
             section: "inbox",
           })}
+          icon="tray"
           label="Inbox"
           count={props.inboxCount}
           onClick={() => {
@@ -92,6 +244,7 @@ export function SidebarNav(props: {
             kind: "section",
             section: "today",
           })}
+          icon="star"
           label="Today"
           count={props.todayCount}
           onClick={() => {
@@ -103,6 +256,7 @@ export function SidebarNav(props: {
             kind: "section",
             section: "upcoming",
           })}
+          icon="calendar"
           label="Upcoming"
           onClick={() => {
             choose({ kind: "section", section: "upcoming" });
@@ -167,6 +321,7 @@ export function SidebarNav(props: {
             kind: "section",
             section: "completed",
           })}
+          icon="check"
           label="Completed"
           onClick={() => {
             choose({ kind: "section", section: "completed" });
@@ -218,6 +373,7 @@ function LabelButton(props: {
         kind: "label",
         id: props.label.id,
       })}
+      icon="tag"
       label={`@${props.label.name}`}
       swatch={swatchColor(props.label.color)}
       onClick={() => {

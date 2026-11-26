@@ -42,6 +42,15 @@ describe("palette contrast", () => {
       ["color-text-light", "color-brand-dark", 4.5],
       ["color-error-dark", "color-surface-dark", 4.5],
       ["color-brand-light", "color-background-light", 3],
+      ["priority-p1-light", "color-background-light", 4.5],
+      ["priority-p2-light", "color-background-light", 4.5],
+      ["priority-p3-light", "color-background-light", 4.5],
+      ["priority-p1-dark", "color-surface-dark", 4.5],
+      ["priority-p2-dark", "color-surface-dark", 4.5],
+      ["priority-p3-dark", "color-surface-dark", 4.5],
+      ["color-success-light", "color-background-light", 4.5],
+      ["color-success-dark", "color-background-dark", 3],
+      ["color-check-light", "color-action", 4.5],
     ] as const;
     for (const [foreground, background, minimum] of pairs) {
       expect(
