@@ -332,7 +332,6 @@ const commands: Record<
       `bun -e 'const recipe = await import("./scripts/jobs/control-plane.ts"); if (typeof recipe.run !== "function") throw new Error("Control-plane recipe runtime closure is incomplete");'`,
       `bun -e 'const guard = await import("./src/lib/delivery/credential-prune.ts"); if (typeof guard.credentialSyncPrunes !== "function") throw new Error("Credential retirement runtime closure is incomplete");'`,
       "kubectl version --client",
-      "github-mcp-server --version",
       "talosctl version --client",
       "tofu version",
       "argocd version --client",

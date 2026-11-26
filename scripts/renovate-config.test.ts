@@ -577,12 +577,6 @@ const HINTED_PINS: [
     "kubernetes/kubernetes",
     "v",
   ],
-  [
-    "packages/temporal/Dockerfile",
-    "github-releases",
-    "github/github-mcp-server",
-    "plain",
-  ],
   ["packages/temporal/Dockerfile", "github-releases", "siderolabs/talos", "v"],
   [
     "packages/temporal/Dockerfile",
