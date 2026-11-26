@@ -1,5 +1,6 @@
 import path from "node:path";
 import {
+  directoryGroup,
   type FileIdentity,
   lstatRegularFile,
   prepareTemporaryCloneDir,
@@ -24,6 +25,7 @@ import type {
   TemporaryPlace,
 } from "./types.ts";
 import { statusTrustProblem } from "./metadata.ts";
+import { noneLeftAlone } from "./reasons.ts";
 import {
   confirmTargets,
   parseIndexLine,
@@ -60,8 +62,9 @@ function cleanCheck(
 }
 
 /**
- * The worktree's staging directory, made ready on first use. A dry run only
- * asks which volume the git directory is on and creates nothing.
+ * The worktree's staging directory, made ready on first use. A dry run
+ * creates nothing: it asks which volume the git directory is on, and takes
+ * the directory to be in the worktree's group, as an applied run makes it.
  */
 function temporaryPlace(
   wt: DedupeWorktree,
@@ -69,15 +72,20 @@ function temporaryPlace(
 ): Promise<TemporaryPlace> {
   wt.temporary ??= (async (): Promise<TemporaryPlace> => {
     const dir = temporaryCloneDir(wt.gitDir);
-    if (!ctx.apply) {
-      return { dir, dev: await ctx.deviceOf(wt.gitDir) };
-    }
     try {
-      await prepareTemporaryCloneDir(dir, ctx.isPidAlive);
+      if (!ctx.apply) {
+        const gid = await directoryGroup(wt.path);
+        return { dir, dev: await ctx.deviceOf(wt.gitDir), gid };
+      }
+      const gid = await prepareTemporaryCloneDir({
+        directory: dir,
+        worktreePath: wt.path,
+        isPidAlive: ctx.isPidAlive,
+      });
+      return { dir, dev: await ctx.deviceOf(dir), gid };
     } catch {
-      return { dir, dev: null };
+      return { dir, dev: null, gid: null };
     }
-    return { dir, dev: await ctx.deviceOf(dir) };
   })();
   return wt.temporary;
 }
@@ -183,7 +191,7 @@ async function judgeTarget(
           sourcePath,
           targetPath,
           target,
-          temporaryDir: place.dir,
+          staging: place,
         },
       }
     : { kind: "skip" };
@@ -199,7 +207,7 @@ async function applyReplacement(
     targetPath: verdict.targetPath,
     source: verdict.source,
     target: verdict.target,
-    temporaryDir: verdict.temporaryDir,
+    temporaryDir: verdict.staging.dir,
     cloneFile: ctx.cloneFile,
   });
   switch (outcome.kind) {
@@ -212,9 +220,9 @@ async function applyReplacement(
         ctimeMs: outcome.ctimeMs,
       };
     case "unfit":
-      result.protectedFiles += 1;
-      result.plannedFiles -= 1;
-      result.plannedBytes -= verdict.target.size;
+      // Every check foresaw an equal clone, so this stays in the plan and
+      // shows as a file that was planned and not shared.
+      result.leftAlone.cloneMismatch += 1;
       return null;
     case "changed":
       result.changedFiles += 1;
@@ -354,7 +362,7 @@ function countUnusableSource(
   } else if (state === "unproven") {
     result.normalizedOrFilteredFiles += 1;
   } else {
-    result.protectedFiles += 1;
+    result.leftAlone.sourceMarked += 1;
   }
 }
 
@@ -420,7 +428,7 @@ export async function dedupeWorktreePass(
     changedFiles: 0,
     failedFiles: 0,
     normalizedOrFilteredFiles: 0,
-    protectedFiles: 0,
+    leftAlone: noneLeftAlone(),
     staleSourceFiles: 0,
     refresh: "not-needed",
     warnings: [],

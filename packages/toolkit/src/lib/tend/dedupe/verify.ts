@@ -1,5 +1,6 @@
 import { type FileIdentity, isSameFile, lstatRegularFile } from "./clone.ts";
 import { overPaths } from "./metadata.ts";
+import type { LeftAloneReason } from "./reasons.ts";
 import type {
   DedupeContext,
   DedupePassResult,
@@ -201,14 +202,46 @@ function openFilesNow(ctx: DedupeContext): Promise<Set<string> | null> {
 }
 
 /**
+ * Why the file is not this pass's to replace, if it is not. Everything an
+ * applied run would trip over is looked for here, in a dry run as well: the
+ * clone that takes the file's place is made by this user, in the staging
+ * directory's group, so a file of another user or group has no equal.
+ */
+function targetObstacle(
+  item: PendingReplacement,
+  facts: PathFacts,
+  open: ReadonlySet<string>,
+  ctx: DedupeContext,
+): LeftAloneReason | null {
+  const { target } = item;
+  if (target.nlink !== 1) {
+    return "hardLinked";
+  }
+  if (target.uid !== ctx.currentUid) {
+    return "otherUser";
+  }
+  if (target.gid !== item.staging.gid) {
+    return "otherGroup";
+  }
+  if (facts.flagged.has(item.entry.path)) {
+    return "flagged";
+  }
+  if (facts.attributed.has(item.entry.path)) {
+    return "xattr";
+  }
+  return open.has(item.targetPath) ? "open" : null;
+}
+
+/**
  * Checks that can only be made once a target worktree's candidates are
  * known, in a handful of commands for all of them:
  *
  * - the index must still list each path as it did when the pass began;
  * - the path must not be filtered, and the file must be as long as its blob;
  * - the file must be nobody's but this pass's to replace: not hard-linked
- *   elsewhere, not another user's, without file flags or extended
- *   attributes of its own, and not open in any process.
+ *   elsewhere, not another user's or in a group a clone would not be in,
+ *   without file flags or extended attributes of its own, and not open in
+ *   any process.
  */
 export async function confirmTargets(
   wt: DedupeWorktree,
@@ -237,16 +270,13 @@ export async function confirmTargets(
     }
     if (facts.filtered.has(filePath) || !isBlobLength(item.target, sha, ctx)) {
       result.normalizedOrFilteredFiles += 1;
-    } else if (
-      item.target.nlink !== 1 ||
-      item.target.uid !== ctx.currentUid ||
-      facts.flagged.has(filePath) ||
-      facts.attributed.has(filePath) ||
-      open.has(item.targetPath)
-    ) {
-      result.protectedFiles += 1;
-    } else {
+      continue;
+    }
+    const obstacle = targetObstacle(item, facts, open, ctx);
+    if (obstacle === null) {
       confirmed.push(item);
+    } else {
+      result.leftAlone[obstacle] += 1;
     }
   }
   return confirmed;

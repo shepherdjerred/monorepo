@@ -62,6 +62,15 @@ export async function physicalOffsets(
   return res.stdout.trim().split("\n");
 }
 
+/** Run a system tool a test needs for setup; fail loudly if it fails. */
+export function system(...argv: string[]): string {
+  const res = Bun.spawnSync(argv);
+  if (res.exitCode !== 0) {
+    throw new Error(`${argv.join(" ")} failed: ${res.stderr.toString()}`);
+  }
+  return res.stdout.toString().trim();
+}
+
 const tempDirs: string[] = [];
 
 /** Remove every fixture built so far; call from `afterEach`. */
@@ -92,13 +101,15 @@ export type Fixture = {
 /**
  * `<root>/git/proj` with worktrees `a` and `b` on the same commit. Worktree
  * `a` then gets one file rewritten at the same size, one grown, and one
- * untracked file; `b` stays clean.
+ * untracked file; `b` stays clean. Everything is under one new directory in
+ * `tempBase`, and so in one group.
  */
 export async function buildFixture(
   beforeFirstCommit?: (main: string) => Promise<void>,
+  tempBase: string = os.tmpdir(),
 ): Promise<Fixture> {
   const root = await realpath(
-    await mkdtemp(path.join(os.tmpdir(), "tend-dedupe-test-")),
+    await mkdtemp(path.join(tempBase, "tend-dedupe-test-")),
   );
   tempDirs.push(root);
   const gitRoot = path.join(root, "git");
@@ -150,6 +161,32 @@ export async function buildFixture(
         ...overrides,
       }),
   };
+}
+
+/**
+ * The user's own temp directory, whatever `TMPDIR` says. It is in the
+ * user's group, as a repository under the home directory is.
+ */
+export function userTempDir(): string {
+  return system("/usr/bin/getconf", "DARWIN_USER_TEMP_DIR");
+}
+
+/**
+ * One more worktree of the fixture's repository, checked out by git itself
+ * under `/private/tmp`, on commit `main`. Directories there are in group
+ * `wheel`, and so is every file git writes into them. With the repository
+ * in `userTempDir()`, the worktree's files and its git directory are in
+ * different groups, as they are for a worktree made in a scratch directory
+ * of a repository under the home directory.
+ */
+export async function addWorktreeUnderSystemTmp(fx: Fixture): Promise<string> {
+  const outside = await realpath(
+    await mkdtemp("/private/tmp/tend-dedupe-test-"),
+  );
+  tempDirs.push(outside);
+  const worktree = path.join(outside, "wt");
+  await git(fx.main, "worktree", "add", "-q", "--detach", worktree);
+  return worktree;
 }
 
 /** The reaper's newest activity signal for a worktree. */

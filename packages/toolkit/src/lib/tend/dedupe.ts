@@ -7,6 +7,14 @@ import {
 } from "./dedupe/clone.ts";
 import { SYSTEM_FILE_PROBES } from "./dedupe/metadata.ts";
 import { dedupeWorktreePass } from "./dedupe/plan.ts";
+import {
+  addLeftAlone,
+  describeLeftAlone,
+  type LeftAloneCounts,
+  leftAloneMetadata,
+  leftAloneTotal,
+  noneLeftAlone,
+} from "./dedupe/reasons.ts";
 import type {
   DedupeContext,
   DedupePassResult,
@@ -195,11 +203,9 @@ function describeOutcome(
   if (pass.replacedFiles === pass.plannedFiles) {
     return notes[0];
   }
-  if (pass.replacedFiles > 0) {
-    notes.push(
-      `${String(pass.replacedFiles)} file(s), ${formatByteSize(pass.replacedBytes)} now shared`,
-    );
-  }
+  notes.push(
+    `${String(pass.replacedFiles)} of ${String(pass.plannedFiles)} planned file(s), ${formatByteSize(pass.replacedBytes)} now shared`,
+  );
   if (pass.changedFiles > 0) {
     notes.push(
       `${String(pass.changedFiles)} file(s) changed during the run and were left alone`,
@@ -208,6 +214,11 @@ function describeOutcome(
   if (pass.failedFiles > 0) {
     notes.push(
       `${String(pass.failedFiles)} file(s) could not be replaced (${pass.firstFailure ?? "unknown error"})`,
+    );
+  }
+  if (pass.leftAlone.cloneMismatch > 0) {
+    notes.push(
+      `${String(pass.leftAlone.cloneMismatch)} file(s) left alone because their clone did not come out with their size, owner and group`,
     );
   }
   return notes.length === 0 ? undefined : notes.join("; ");
@@ -236,7 +247,7 @@ function toAction(
       replacedBytes: pass.replacedBytes,
       refresh: pass.refresh,
       normalizedOrFilteredFiles: pass.normalizedOrFilteredFiles,
-      protectedFiles: pass.protectedFiles,
+      ...leftAloneMetadata(pass.leftAlone),
       staleSourceFiles: pass.staleSourceFiles,
     },
   };
@@ -257,7 +268,7 @@ type DedupeTally = {
   inspectedCount: number;
   matchedWorktree: boolean;
   normalizedOrFilteredFiles: number;
-  protectedFiles: number;
+  readonly leftAlone: LeftAloneCounts;
   staleSourceFiles: number;
   readonly actions: TendActionOutcome[];
   readonly warnings: string[];
@@ -278,7 +289,7 @@ async function dedupeRepository(
     const pass = await dedupeWorktreePass(wt, registry, ctx);
     tally.warnings.push(...pass.warnings);
     tally.normalizedOrFilteredFiles += pass.normalizedOrFilteredFiles;
-    tally.protectedFiles += pass.protectedFiles;
+    addLeftAlone(tally.leftAlone, pass.leftAlone);
     tally.staleSourceFiles += pass.staleSourceFiles;
     if (!wt.isTarget) {
       continue;
@@ -299,9 +310,9 @@ function summaryWarnings(tally: DedupeTally, ctx: DedupeContext): string[] {
       `${String(tally.normalizedOrFilteredFiles)} file(s) left alone as normalized or filtered: a filter, ident or working-tree-encoding attribute, or a file that is not as long as its blob, means equal blobs do not prove equal files`,
     );
   }
-  if (tally.protectedFiles > 0) {
+  if (leftAloneTotal(tally.leftAlone) > 0) {
     warnings.push(
-      `${String(tally.protectedFiles)} file(s) left alone as in use or not plain: open in a process, hard-linked elsewhere, another user's, or carrying file flags or extended attributes`,
+      `${String(leftAloneTotal(tally.leftAlone))} file(s) left alone as in use or not plain: ${describeLeftAlone(tally.leftAlone)}`,
     );
   }
   if (tally.staleSourceFiles > 0) {
@@ -384,7 +395,7 @@ export async function sweepDedupe(
     inspectedCount: 0,
     matchedWorktree: false,
     normalizedOrFilteredFiles: 0,
-    protectedFiles: 0,
+    leftAlone: noneLeftAlone(),
     staleSourceFiles: 0,
     actions: [],
     warnings: [],

@@ -1990,9 +1990,10 @@ only when all of this holds:
   never both qualify;
 - the file being replaced is plain and nobody's but this run's to replace:
   not open or mapped in any process, not hard-linked elsewhere, owned by the
-  current user, and without BSD file flags or extended attributes of its own
-  (macOS's `com.apple.provenance` aside). The copy being cloned from must be
-  free of flags and such attributes too, because a clone carries them along;
+  current user, in the group of its worktree's top directory, and without
+  BSD file flags or extended attributes of its own (macOS's
+  `com.apple.provenance` aside). The copy being cloned from must be free of
+  flags and such attributes too, because a clone carries them along;
 - the worktree's configuration lets `git status` notice edits: with
   `core.trustctime` false, `core.checkStat=minimal` or `core.ignoreStat` true
   the worktree is skipped. The booleans are read through git itself, so
@@ -2010,7 +2011,16 @@ symlink is touched.
 
 Files left alone are counted in the report, per worktree and for the run, by
 reason: normalized or filtered, in use or not plain, and the copy to clone
-from having changed.
+from having changed. The "in use or not plain" warning says how many files
+fell under each cause (hard-linked, another user's, another group's, file
+flags, extended attributes, open in a process, a marked copy to clone from,
+a clone that did not match), and each worktree's `metadata` carries the same
+split as `protectedOpen`, `protectedHardLinked` and so on.
+
+A dry run makes every check an applied run makes, short of cloning, so the
+files it plans are the files `--apply` shares. The applied summary holds the
+run to that plan: `shared 1756 of 1756 planned file(s)`. A planned file that
+was not shared stays in the count, and its worktree's line says why.
 
 The clone source is the main checkout's copy when it qualifies, otherwise the
 first worktree whose copy does. `--worktree` limits which worktree has files
@@ -2023,7 +2033,15 @@ own git directory, gives the clone the target's permissions and times, checks
 once more that neither file changed, and renames the clone over the target.
 The clone is staged there, not beside the target, because git never reports
 anything under a git directory: a session running `git status`, or staging
-everything in the worktree, cannot pick up a half-finished clone. A worktree
+everything in the worktree, cannot pick up a half-finished clone. A new file
+is in the group of the directory it is made in, so the staging directory has
+to be in the worktree's group for a clone to be the equal of the file it
+replaces. A git directory often is not: a worktree under `/tmp` is in group
+`wheel`, its git directory under the home directory in `staff`, and `chown`
+only gives a file to a group the user belongs to. The staging directory is
+then made, empty, as `.tend-dedupe-<pid>` in the worktree's top directory,
+where it gets the right group, and moved into the git directory before
+anything is cloned into it; git does not report empty directories. A worktree
 whose git directory is on a different volume than its files is skipped, since
 the rename would not be atomic. The directory's own times are then put back,
 because the reaper and build tools read directory mtimes as activity. A file

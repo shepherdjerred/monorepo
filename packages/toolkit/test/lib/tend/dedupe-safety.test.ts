@@ -24,20 +24,12 @@ import {
   PLAIN_FILE_PROBES,
   removeFixtures,
   SHARED,
+  system,
   UNTOUCHED_IN_A,
 } from "./dedupe-fixtures.ts";
 import { REAL_GIT_TIMEOUT_MS, realGitRunner } from "./real-git.ts";
 
 afterEach(removeFixtures);
-
-/** Run a system tool the fixtures need for setup; fail loudly if it fails. */
-function system(...argv: string[]): string {
-  const res = Bun.spawnSync(argv);
-  if (res.exitCode !== 0) {
-    throw new Error(`${argv.join(" ")} failed: ${res.stderr.toString()}`);
-  }
-  return res.stdout.toString().trim();
-}
 
 function copiesOf(fx: Fixture, name: string): string[] {
   return [fx.main, fx.a, fx.b].map((wt) => path.join(wt, name));
@@ -318,16 +310,33 @@ describe.skipIf(!onApfs)("sweepDedupe and files that are not plain", () => {
         "grown.bin",
       ]);
 
+      // A dry run finds the same files, for the same reasons, as the
+      // applied run that follows it.
+      const leftAlone = {
+        files: 1,
+        protectedFiles: 4,
+        protectedHardLinked: 1,
+        protectedFlagged: 1,
+        protectedXattr: 1,
+        protectedOpen: 1,
+      };
+      const warnings = [
+        "4 file(s) left alone as in use or not plain: 1 hard-linked elsewhere, 1 carrying file flags, 1 carrying extended attributes, 1 open in a process",
+      ];
+      const planned = await fx.sweep({ apply: false });
+      expect(actionFor(planned, fx.b)?.candidate.metadata).toMatchObject(
+        leftAlone,
+      );
+      expect(planned.warnings).toEqual(warnings);
+
       const result = await fx.sweep();
       await held.close();
 
       expect(actionFor(result, fx.b)?.candidate.metadata).toMatchObject({
+        ...leftAlone,
         replacedFiles: 1,
-        protectedFiles: 4,
       });
-      expect(result.warnings).toEqual([
-        "4 file(s) left alone as in use or not plain: open in a process, hard-linked elsewhere, another user's, or carrying file flags or extended attributes",
-      ]);
+      expect(result.warnings).toEqual(warnings);
       const after = await inodes(fx.b, [
         ...SHARED,
         "modified.bin",
@@ -383,7 +392,7 @@ describe.skipIf(!onApfs)("sweepDedupe and files that are not plain", () => {
         ).not.toContain("quarantine");
       }
       expect(result.warnings).toEqual([
-        "1 file(s) left alone as in use or not plain: open in a process, hard-linked elsewhere, another user's, or carrying file flags or extended attributes",
+        "1 file(s) left alone as in use or not plain: 1 whose copy to clone from carries file flags or extended attributes",
       ]);
     },
     REAL_GIT_TIMEOUT_MS,
@@ -420,11 +429,23 @@ describe.skipIf(!onApfs)("sweepDedupe and files that are not plain", () => {
         worktree: fx.b,
       });
 
-      expect(actionFor(result, fx.b)?.candidate.metadata).toMatchObject({
-        files: 4,
-        replacedFiles: 4,
-        protectedFiles: 1,
+      // The file stays in the plan: it was planned and then not shared.
+      expect(actionFor(result, fx.b)).toMatchObject({
+        status: "deduped",
+        detail:
+          "4 of 5 planned file(s), 449.2 KiB now shared; 1 file(s) left alone because their clone did not come out with their size, owner and group",
+        candidate: {
+          metadata: {
+            files: 5,
+            replacedFiles: 4,
+            protectedFiles: 1,
+            protectedCloneMismatch: 1,
+          },
+        },
       });
+      expect(result.warnings).toEqual([
+        "1 file(s) left alone as in use or not plain: 1 whose clone did not come out with their size, owner and group",
+      ]);
       const after = await inodes(fx.b, SHARED);
       expect(after["big.bin"]).toBe(before["big.bin"]);
       expect(await git(fx.b, "status", "--porcelain")).toBe("?? untracked.bin");
