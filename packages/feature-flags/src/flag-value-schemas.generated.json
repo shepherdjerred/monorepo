@@ -252,16 +252,23 @@
     "encoding": "string",
     "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "string",
-      "pattern": "^(?:\\d{1,25})(?:,\\s*(?:\\d{1,25}))*$"
+      "anyOf": [
+        { "type": "string", "const": "" },
+        {
+          "type": "string",
+          "pattern": "^(?:\\d{1,25})(?:,\\s*(?:\\d{1,25}))*$"
+        }
+      ]
     }
   },
   "karma-admin-user-id": {
     "encoding": "string",
     "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "string",
-      "pattern": "^\\d{1,25}$"
+      "anyOf": [
+        { "type": "string", "const": "" },
+        { "type": "string", "pattern": "^\\d{1,25}$" }
+      ]
     }
   },
   "karma-emoji": {
