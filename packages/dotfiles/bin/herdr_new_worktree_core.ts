@@ -321,6 +321,9 @@ async function shareWithMainCheckout(
       path,
       "--apply",
       "--no-refresh",
+      // Queue behind the daily sweep or another new worktree's run.
+      "--lock-wait",
+      "15m",
     ]);
     return started ? "started" : "skipped";
   } catch {

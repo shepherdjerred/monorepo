@@ -82,8 +82,9 @@ unnamed.
 
 A worktree created on this Mac then shares its unchanged files with the main
 checkout: the worker starts `~/.local/bin/toolkit tend dedupe --worktree <path>
---apply --no-refresh` in the background, which replaces them with APFS clones.
-Nothing waits on it, and it is skipped on other machines and platforms and
+--apply --no-refresh --lock-wait 15m` in the background, which replaces them
+with APFS clones and queues behind any other tend run. Nothing waits on it, and
+it is skipped on other machines and platforms and
 when toolkit is missing or does not provide the command. The run's
 `events.jsonl` line records `dedupe` as `started` or `skipped`.
 

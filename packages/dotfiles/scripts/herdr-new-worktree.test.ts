@@ -415,6 +415,8 @@ test("a worktree on this Mac starts sharing its files with the main checkout bef
       "/home/.herdr/worktrees/repo/fix-cache",
       "--apply",
       "--no-refresh",
+      "--lock-wait",
+      "15m",
     ],
   ]);
   expect(order).toEqual(["toolkit", "space"]);
