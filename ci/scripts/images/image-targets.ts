@@ -47,6 +47,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
   charts: { owner: "@shepherdjerred/charts" },
   "ci-cache": { owner: "@shepherdjerred/ci-cache" },
   errors: { owner: "@shepherdjerred/errors" },
+  artifacts: { owner: "@shepherdjerred/artifacts" },
 } as const satisfies Readonly<Record<string, ImageTargetRegistration>>;
 
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> =
