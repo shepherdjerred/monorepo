@@ -52,6 +52,7 @@ hold only scoped invariants that agents must keep in context.
 | [facet-protocol](facet-protocol/)         | Canonical wire protocol, codegen (Swift/TS/C#), and design tokens |
 | [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app with SQLite sync             |
 | [tasknotes-server](tasknotes-server/)     | Facet sync server (Bun + Hono + PostgreSQL/Prisma)                |
+| [tasknotes-web](tasknotes-web/)           | Facet in the browser — Inbox, Today, Upcoming, and the inspector  |
 | [tasknotes-windows](tasknotes-windows/)   | Facet for Windows — native WinUI 3 app with SQLite sync           |
 | [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — native SwiftUI app and widget over `TaskNotesKit` |
 
