@@ -1,8 +1,27 @@
 import { createHash } from "node:crypto";
-import type { V1Job, V1PodSpec } from "@kubernetes/client-node";
+import {
+  V1Capabilities,
+  V1Container,
+  V1EnvVar,
+  V1Job,
+  V1JobSpec,
+  V1KeyToPath,
+  V1LocalObjectReference,
+  V1ObjectMeta,
+  V1PersistentVolumeClaimVolumeSource,
+  V1PodSecurityContext,
+  V1PodSpec,
+  V1PodTemplateSpec,
+  V1ResourceRequirements,
+  V1SeccompProfile,
+  V1SecretVolumeSource,
+  V1SecurityContext,
+  V1Toleration,
+  V1Volume,
+  V1VolumeMount,
+} from "@kubernetes/client-node";
 import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
-import { deliveryTofuGrants } from "homelab/src/delivery-platform-grants.ts";
 import {
   DELIVERY_STAGE_LOCAL_QUEUE,
   DELIVERY_STAGE_REQUESTS,
@@ -12,12 +31,12 @@ import {
   DELIVERY_JOB_BOOTSTRAP,
   PREVIOUS_DELIVERY_JOB_BOOTSTRAPS,
   DeliveryJobRequestSchema,
-  deliveryJobArchive,
   deliveryJobNamespace,
   deliveryStageWorkspaceClaim,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
-import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
+import { model } from "#lib/k8s-model.ts";
+import { jobGrants } from "./job-grants.ts";
 import { deliveryJobNativeAddonEnv } from "./job-swc-env.ts";
 
 const PREFIX = "delivery.shepherdjerred.com/";
@@ -40,10 +59,10 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
   const grants = jobGrants(input);
   const namespace = deliveryJobNamespace(input.recipe);
   const pullSecret = `dockerhub-pull-${namespace}`;
-  return {
+  return model(V1Job, {
     apiVersion: "batch/v1",
     kind: "Job",
-    metadata: {
+    metadata: model(V1ObjectMeta, {
       name,
       namespace,
       labels: {
@@ -54,16 +73,16 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
         [`${PREFIX}request`]: input.deploymentId,
         [`${PREFIX}fingerprint`]: hash,
       },
-    },
-    spec: {
+    }),
+    spec: model(V1JobSpec, {
       suspend: true,
       parallelism: 1,
       completions: 1,
       backoffLimit: 0,
       activeDeadlineSeconds: 7200,
-      template: {
-        metadata: { labels: { app: "delivery-stage" } },
-        spec: {
+      template: model(V1PodTemplateSpec, {
+        metadata: model(V1ObjectMeta, { labels: { app: "delivery-stage" } }),
+        spec: model(V1PodSpec, {
           restartPolicy: "Never",
           serviceAccountName:
             input.recipe === "platform-recovery"
@@ -73,15 +92,17 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
           priorityClassName: "batch-low",
           nodeSelector: { "kubernetes.io/hostname": "liskov" },
           tolerations: [
-            {
+            model(V1Toleration, {
               key: "ci",
               operator: "Equal",
               value: "only",
               effect: "NoSchedule",
-            },
+            }),
           ],
-          imagePullSecrets: [{ name: pullSecret }],
-          securityContext: {
+          imagePullSecrets: [
+            model(V1LocalObjectReference, { name: pullSecret }),
+          ],
+          securityContext: model(V1PodSecurityContext, {
             runAsUser: 1000,
             runAsGroup: 1000,
             fsGroup: 1000,
@@ -89,42 +110,53 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
             // recursively across a checkout and node_modules on every Job.
             fsGroupChangePolicy: "OnRootMismatch",
             runAsNonRoot: true,
-            seccompProfile: { type: "RuntimeDefault" },
-          },
+            seccompProfile: model(V1SeccompProfile, { type: "RuntimeDefault" }),
+          }),
           volumes: [
-            {
+            model(V1Volume, {
               name: "workspace",
-              persistentVolumeClaim: {
-                claimName: deliveryStageWorkspaceClaim(input.recipe),
-              },
-            },
-            {
+              persistentVolumeClaim: model(
+                V1PersistentVolumeClaimVolumeSource,
+                {
+                  claimName: deliveryStageWorkspaceClaim(input.recipe),
+                },
+              ),
+            }),
+            model(V1Volume, {
               name: "docker",
-              secret: {
+              secret: model(V1SecretVolumeSource, {
                 secretName: pullSecret,
-                items: [{ key: ".dockerconfigjson", path: "config.json" }],
-              },
-            },
+                items: [
+                  model(V1KeyToPath, {
+                    key: ".dockerconfigjson",
+                    path: "config.json",
+                  }),
+                ],
+              }),
+            }),
             ...recoveryVolumes(input),
           ],
           containers: [
-            {
+            model(V1Container, {
               name: "stage",
               image: input.runnerImage,
               command: ["/bin/bash", "-c", DELIVERY_JOB_BOOTSTRAP],
               workingDir: "/workspace",
-              securityContext: {
+              securityContext: model(V1SecurityContext, {
                 allowPrivilegeEscalation: false,
                 readOnlyRootFilesystem: true,
-                capabilities: { drop: ["ALL"] },
-              },
+                capabilities: model(V1Capabilities, { drop: ["ALL"] }),
+              }),
               volumeMounts: [
-                { name: "workspace", mountPath: "/workspace" },
-                {
+                model(V1VolumeMount, {
+                  name: "workspace",
+                  mountPath: "/workspace",
+                }),
+                model(V1VolumeMount, {
                   name: "docker",
                   mountPath: "/var/run/delivery/docker",
                   readOnly: true,
-                },
+                }),
                 ...(input.recipe === "platform-recovery"
                   ? [
                       {
@@ -137,22 +169,31 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                   : []),
               ],
               env: [
-                { name: "HOME", value: "/workspace/home" },
-                { name: "TMPDIR", value: "/workspace/tmp" },
+                model(V1EnvVar, { name: "HOME", value: "/workspace/home" }),
+                model(V1EnvVar, { name: "TMPDIR", value: "/workspace/tmp" }),
                 ...deliveryJobNativeAddonEnv(),
-                { name: "DOCKER_CONFIG", value: "/var/run/delivery/docker" },
-                { name: "BUILDX_CONFIG", value: "/workspace/buildx" },
-                { name: "DELIVERY_JOB_REQUEST", value: canonicalJson(input) },
-                {
+                model(V1EnvVar, {
+                  name: "DOCKER_CONFIG",
+                  value: "/var/run/delivery/docker",
+                }),
+                model(V1EnvVar, {
+                  name: "BUILDX_CONFIG",
+                  value: "/workspace/buildx",
+                }),
+                model(V1EnvVar, {
+                  name: "DELIVERY_JOB_REQUEST",
+                  value: canonicalJson(input),
+                }),
+                model(V1EnvVar, {
                   name: "DELIVERY_SOURCE_REVISION",
                   value: input.sourceRevision,
-                },
-                {
+                }),
+                model(V1EnvVar, {
                   name: "TEMPORAL_ADDRESS",
                   value:
                     "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-                },
-                { name: "TEMPORAL_NAMESPACE", value: "prod" },
+                }),
+                model(V1EnvVar, { name: "TEMPORAL_NAMESPACE", value: "prod" }),
                 ...(["control-plane", "platform-recovery"].includes(
                   input.recipe,
                 )
@@ -197,105 +238,20 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                   valueFrom: { secretKeyRef: { name: secret, key } },
                 })),
               ],
-              resources: {
+              resources: model(V1ResourceRequirements, {
                 requests: { ...DELIVERY_STAGE_REQUESTS },
                 limits: {
                   cpu: "8",
                   memory: "16Gi",
                   "ephemeral-storage": STAGE_EPHEMERAL_STORAGE_LIMIT,
                 },
-              },
-            },
+              }),
+            }),
           ],
-        },
-      },
-    },
-  };
-}
-
-type Grant = { env: string; secret: string; key: string };
-function jobGrants(input: DeliveryJobRequest): Grant[] {
-  if (input.recipe === "platform-recovery") {
-    const frozen = RecoveryJobInputSchema.parse(input.input);
-    return [
-      {
-        env: "DELIVERY_EXECUTOR_TOKEN",
-        secret: "delivery-platform-api",
-        key: "DELIVERY_EXECUTOR_TOKEN",
-      },
-      ...(frozen.target === "tofu"
-        ? deliveryTofuGrants(z.string().parse(frozen.stack))
-        : [
-            {
-              env: "ARGOCD_TOKEN",
-              secret: "delivery-platform-argocd",
-              key: "ARGOCD_TOKEN",
-            },
-          ]),
-      // A model tofu recovery stages its frozen stack archive (X8).
-      ...(frozen.archive === undefined ? [] : ARCHIVE_READER_GRANTS),
-    ];
-  }
-  if (
-    ["worker-images", "worker-preflight", "worker-step", "test"].includes(
-      input.recipe,
-    )
-  )
-    return [];
-  if (input.recipe === "control-plane")
-    return [
-      {
-        env: "ARGOCD_TOKEN",
-        secret: "delivery-platform-argocd",
-        key: "ARGOCD_TOKEN",
-      },
-      {
-        env: "DELIVERY_EXECUTOR_TOKEN",
-        secret: "delivery-platform-api",
-        key: "DELIVERY_EXECUTOR_TOKEN",
-      },
-    ];
-  const stack = tofuJobStack(input.input);
-  return [
-    ...deliveryTofuGrants(stack),
-    ...(deliveryJobArchive(input) === undefined ? [] : ARCHIVE_READER_GRANTS),
-    ...(input.recipe === "tofu-apply"
-      ? [
-          {
-            env: "DELIVERY_EXECUTOR_TOKEN",
-            secret: "delivery-platform-api",
-            key: "DELIVERY_EXECUTOR_TOKEN",
-          },
-        ]
-      : []),
-  ];
-}
-
-/** Read-only artifact-store credential; provisioned as a Secret in `delivery-platform-jobs`. */
-const ARCHIVE_READER_GRANTS: Grant[] = [
-  {
-    env: "DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID",
-    secret: "delivery-archive-reader",
-    key: "DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID",
-  },
-  {
-    env: "DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY",
-    secret: "delivery-archive-reader",
-    key: "DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY",
-  },
-];
-
-/**
- * The stack whose grants a Tofu Job gets. Its input is a v1 frozen snapshot
- * (bare or `{ snapshot, archive }`) or a model step `{ model, archive }`;
- * the Job itself validates the whole input.
- */
-function tofuJobStack(input: unknown): string {
-  const Stack = z.object({ stack: z.string() }).loose();
-  const snapshot = z.object({ snapshot: Stack }).loose().safeParse(input);
-  if (snapshot.success) return snapshot.data.snapshot.stack;
-  const model = z.object({ model: Stack }).loose().safeParse(input);
-  return model.success ? model.data.model.stack : Stack.parse(input).stack;
+        }),
+      }),
+    }),
+  });
 }
 
 function recoveryVolumes(input: DeliveryJobRequest) {

@@ -18,7 +18,7 @@ import {
   discordCommandsTotal,
 } from "#src/metrics/index.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
-import type { ChatInputCommandInteraction } from "discord.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 
 const logger = createLogger("discord-commands");
 
@@ -83,7 +83,7 @@ export async function handleChatInputCommand(
         await interaction.reply({
           content:
             "Scout's detailed management tools are in the web dashboard. Use `/help` to get started.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         break;
     }
@@ -98,7 +98,7 @@ export async function handleChatInputCommand(
       await interaction.reply({
         content:
           "Scout could not complete that command. Open `/docs` for help or use the web dashboard.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({

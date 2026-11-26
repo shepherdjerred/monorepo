@@ -19,7 +19,7 @@ const ChampionIdSchema = z
       const championId = Number(key);
       return Number.isSafeInteger(championId) && championId > 0;
     },
-    { message: "Champion key must be a positive safe integer" },
+    { error: "Champion key must be a positive safe integer" },
   );
 
 export const ChampionListSchema = z.object({

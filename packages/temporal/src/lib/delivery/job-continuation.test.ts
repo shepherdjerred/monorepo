@@ -1,5 +1,10 @@
 import { expect, test, vi } from "vitest";
-import { KubeConfig } from "@kubernetes/client-node";
+import {
+  KubeConfig,
+  V1JobCondition,
+  V1JobStatus,
+} from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import { getOrCreateDeliveryJob, runDeliveryJob } from "./job.ts";
 import { deliveryJobManifest } from "./job-manifest.ts";
 import { DELIVERY_JOB_REQUEST_MAX_BYTES } from "./job-request-limit.ts";
@@ -15,10 +20,10 @@ function fixture() {
   });
   const native = structuredClone(expected);
   native.metadata!.uid = crypto.randomUUID();
-  native.status = {
-    conditions: [{ type: "Complete", status: "True" }],
+  native.status = model(V1JobStatus, {
+    conditions: [model(V1JobCondition, { type: "Complete", status: "True" })],
     active: 0,
-  };
+  });
   const prior = {
     namespace: "delivery-platform-jobs" as const,
     name: native.metadata!.name!,

@@ -29,7 +29,7 @@ const RegistryTokenSchema = z
   })
   .refine(
     (value) => value.token !== undefined || value.access_token !== undefined,
-    { message: "registry token response contains no token" },
+    { error: "registry token response contains no token" },
   );
 const BearerChallengeSchema = z.object({
   realm: z.url(),

@@ -143,7 +143,7 @@ export const CoachGameContextSchema = z
   .refine(
     (context) =>
       COACH_CONTEXT_SECTIONS.some((section) => context[section] !== undefined),
-    { message: "A game context carries at least one section." },
+    { error: "A game context carries at least one section." },
   );
 export type CoachGameContext = z.infer<typeof CoachGameContextSchema>;
 export type CoachLiveContext = z.infer<typeof CoachLiveSchema>;
@@ -217,7 +217,7 @@ export const ScoutDesktopAppTurnRequestSchema = z
       return Object.keys(request.gameContext).every((key) => key === allowed);
     },
     {
-      message:
+      error:
         "An app-started turn carries only the section its initiation names, never live state.",
       path: ["gameContext"],
     },

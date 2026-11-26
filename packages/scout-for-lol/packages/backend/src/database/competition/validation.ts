@@ -100,7 +100,7 @@ export const CompetitionCreationSchema = z
       }
     },
     {
-      message:
+      error:
         "criteriaConfig must be valid JSON matching the criteriaType schema",
       path: ["criteriaConfig"],
     },

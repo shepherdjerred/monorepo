@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Loaded } from "@shepherdjerred/loaded";
 import { createRoute } from "@tanstack/react-router";
 import { roleDisplayName } from "#src/model/role";

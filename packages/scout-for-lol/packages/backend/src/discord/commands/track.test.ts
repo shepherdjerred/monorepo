@@ -1,7 +1,7 @@
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
-import type { ChatInputCommandInteraction } from "discord.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import {
   executeTrack,
@@ -40,7 +40,7 @@ describe("/track", () => {
 
     expect(replyMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: expect.stringContaining("can only be used in a server"),
       }),
     );

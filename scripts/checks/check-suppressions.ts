@@ -61,6 +61,10 @@ const EXCLUDED_FILES = [
   // Intentional: Bun cannot close a spawned child's extra pipe fd, so toolkit's
   // /dev/fd/3 handoff (talosconfig without a file) must use node:fs closeSync.
   "packages/toolkit/src/lib/spawn-forwarding.ts",
+  // Intentional: typescript-eslint#13234 false positive on winston transports
+  // (winston re-exports winston-transport via an `import *` alias). Tracked by
+  // AI-947; remove this entry with the suppression once fixed upstream.
+  "packages/discord-plays-core/src/logger.ts",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
   "packages/temporal/src/activities/fetcher.ts",
   // Intentional: ha-codegen emits `/* eslint-disable */` into the generated HA schema header

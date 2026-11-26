@@ -1,5 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import React from "react";
+import type React from "react";
 import Highlighter from "react-highlight-words";
 import { Link } from "@tanstack/react-router";
 import { useContent } from "#src/hooks/use-content";

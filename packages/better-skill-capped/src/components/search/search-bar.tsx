@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Search } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Input } from "#components/ui/input";

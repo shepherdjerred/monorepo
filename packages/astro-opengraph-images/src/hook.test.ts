@@ -13,6 +13,7 @@ import { pathToFileURL } from "node:url";
 import { createElement } from "react";
 import { expect, test } from "vitest";
 import { buildDoneHook } from "./hook.ts";
+import { createConsoleLogger } from "astro/logger/console";
 import { astroOpenGraphImages } from "./integration.ts";
 import type {
   FilterFunction,
@@ -21,44 +22,8 @@ import type {
   RenderFunction,
 } from "./types.ts";
 
-class TestLogger implements AstroIntegrationLogger {
-  readonly options = {
-    destination: {
-      write: (_message: unknown) => {
-        // Test log output is intentionally discarded.
-      },
-    },
-    level: "silent" as const,
-  };
-  readonly label = "test";
-
-  fork(_label: string): TestLogger {
-    return new TestLogger();
-  }
-
-  info(_message: string): void {
-    // Test log output is intentionally discarded.
-  }
-
-  warn(_message: string): void {
-    // Test log output is intentionally discarded.
-  }
-
-  error(_message: string): void {
-    // Test log output is intentionally discarded.
-  }
-
-  debug(_message: string): void {
-    // Test log output is intentionally discarded.
-  }
-
-  flush(): void {
-    // Nothing to flush in the test logger.
-  }
-
-  close(): void {
-    // Nothing to close in the test logger.
-  }
+function createTestLogger(): AstroIntegrationLogger {
+  return createConsoleLogger({ level: "silent" }).forkIntegrationLogger("test");
 }
 
 test("an async path filter skips a page before reading its output", async () => {
@@ -98,7 +63,7 @@ test("an async path filter skips a page before reading its output", async () => 
         pages: [{ pathname: "/excluded/" }],
         dir: pathToFileURL(`${outputDir}/`),
         assets: new Map(),
-        logger: new TestLogger(),
+        logger: createTestLogger(),
       }),
     ).resolves.toBeUndefined();
   } finally {
@@ -126,7 +91,7 @@ test("a path-filtered-in page still requires Open Graph metadata", async () => {
         pages: [{ pathname: "/accepted/" }],
         dir: pathToFileURL(`${outputDir}/`),
         assets: new Map(),
-        logger: new TestLogger(),
+        logger: createTestLogger(),
         options: testOptions,
         render,
         filter,
@@ -171,7 +136,7 @@ test("an accepted page with Open Graph metadata renders an image", async () => {
         pages: [{ pathname: "/rendered/" }],
         dir: pathToFileURL(`${outputDir}/`),
         assets: new Map(),
-        logger: new TestLogger(),
+        logger: createTestLogger(),
         options: testOptions,
         render,
         filter,
@@ -211,7 +176,7 @@ test("the metadata-aware filter can skip a valid page", async () => {
         pages: [{ pathname: "/metadata-skipped/" }],
         dir: pathToFileURL(`${outputDir}/`),
         assets: new Map(),
-        logger: new TestLogger(),
+        logger: createTestLogger(),
         options: testOptions,
         render,
         filter,

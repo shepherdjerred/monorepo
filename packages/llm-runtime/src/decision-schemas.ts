@@ -210,7 +210,7 @@ export const DecisionRequestSchema: z.ZodType<DecisionRequest> = z.strictObject(
       .max(400)
       .readonly()
       .refine(hasUniqueQuestionNames, {
-        message: "Decision question names must be unique within a request",
+        error: "Decision question names must be unique within a request",
       }),
     promptCacheKey: z.string().min(1).optional(),
     promptCacheOptions: DecisionPromptCacheOptionsSchema.optional(),

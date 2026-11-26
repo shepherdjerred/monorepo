@@ -67,5 +67,5 @@ export const DeliveryBootstrapSchema = z
     (value) =>
       (value.MAIL_API_URL === undefined) ===
       (value.MAIL_API_TOKEN === undefined),
-    { message: "Both Mail bootstrap credentials must be supplied together" },
+    { error: "Both Mail bootstrap credentials must be supplied together" },
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { CloudDownload } from "lucide-react";
 import type { Commentary, Video } from "#src/model/content";
 import { getStreamUrl } from "#src/utils/url-utilities";

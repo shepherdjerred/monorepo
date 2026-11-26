@@ -1,7 +1,28 @@
 import { expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import { KubeConfig } from "@kubernetes/client-node";
-import type { V1Job } from "@kubernetes/client-node";
+import {
+  V1Container,
+  V1EnvVar,
+  V1EnvVarSource,
+  V1Job,
+  V1JobCondition,
+  V1JobSpec,
+  V1JobStatus,
+  V1ObjectFieldSelector,
+  V1HostPathVolumeSource,
+  V1ObjectMeta,
+  V1OwnerReference,
+  V1PersistentVolumeClaimVolumeSource,
+  V1Pod,
+  V1PodFailurePolicy,
+  V1PodSpec,
+  V1PodStatus,
+  V1PodTemplateSpec,
+  V1SecretKeySelector,
+  V1Volume,
+} from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import {
   ContentRecoveryNativeReceiptSchema,
   ContentRecoveryContextSchema,
@@ -38,68 +59,88 @@ function localKubernetes(server: string) {
   return config;
 }
 
+/** A fresh original Job fixture with the given spec and pod changes applied. */
+function jobWith(change: (spec: V1JobSpec, pod: V1PodSpec) => void): V1Job {
+  const { job } = original();
+  const spec = job.spec;
+  const pod = spec?.template.spec;
+  if (spec === undefined || pod === undefined)
+    throw new Error("Complete original Job fixture required");
+  change(spec, pod);
+  return job;
+}
+
 function original() {
-  const job = {
+  const metadata = model(V1ObjectMeta, {
+    namespace: "storm-forum",
+    name: "storm-forum-release-0123456789ab",
+    uid: crypto.randomUUID(),
+  });
+  const job = model(V1Job, {
     apiVersion: "batch/v1",
     kind: "Job",
-    metadata: {
-      namespace: "storm-forum",
-      name: "storm-forum-release-0123456789ab",
-      uid: crypto.randomUUID(),
-    },
-    spec: {
+    metadata,
+    spec: model(V1JobSpec, {
       backoffLimit: 0,
       activeDeadlineSeconds: 3600,
-      template: {
-        metadata: { labels: { app: "storm-forum", component: "release" } },
-        spec: {
+      template: model(V1PodTemplateSpec, {
+        metadata: model(V1ObjectMeta, {
+          labels: { app: "storm-forum", component: "release" },
+        }),
+        spec: model(V1PodSpec, {
           restartPolicy: "Never",
           serviceAccountName: "storm-forum-worker",
           automountServiceAccountToken: false,
           initContainers: [
-            {
+            model(V1Container, {
               name: "assemble",
               image: `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
               command: ["bun", "/opt/storm-forum/src/cli.ts", "assemble"],
-            },
+            }),
           ],
           containers: [
-            {
+            model(V1Container, {
               name: "release",
               image: `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
               command: ["bun", "/opt/storm-forum/src/cli.ts", "release"],
               env: [
-                { name: "FORUM_RELEASE_ID", value: "0123456789ab" },
-                {
+                model(V1EnvVar, {
+                  name: "FORUM_RELEASE_ID",
+                  value: "0123456789ab",
+                }),
+                model(V1EnvVar, {
                   name: "DB_PASSWORD",
-                  valueFrom: {
-                    secretKeyRef: {
+                  valueFrom: model(V1EnvVarSource, {
+                    secretKeyRef: model(V1SecretKeySelector, {
                       name: "original-secrets",
                       key: "DB_PASSWORD",
-                    },
-                  },
-                },
-                {
+                    }),
+                  }),
+                }),
+                model(V1EnvVar, {
                   name: "FORUM_RECOVERY_INTENT_ID",
-                  valueFrom: {
-                    fieldRef: {
+                  valueFrom: model(V1EnvVarSource, {
+                    fieldRef: model(V1ObjectFieldSelector, {
                       fieldPath: `metadata.annotations['${annotations.intent}']`,
-                    },
-                  },
-                },
+                    }),
+                  }),
+                }),
               ],
-            },
+            }),
           ],
           volumes: [
-            {
+            model(V1Volume, {
               name: "files",
-              persistentVolumeClaim: { claimName: "storm-forum-files" },
-            },
+              persistentVolumeClaim: model(
+                V1PersistentVolumeClaimVolumeSource,
+                { claimName: "storm-forum-files" },
+              ),
+            }),
           ],
-        },
-      },
-    },
-  } satisfies V1Job;
+        }),
+      }),
+    }),
+  });
   const receipt = ContentRecoveryNativeReceiptSchema.shape.receipt.parse({
     namespace: "storm-forum",
     name: job.metadata?.name,
@@ -107,7 +148,7 @@ function original() {
     specFingerprint: forumJobFingerprint(job),
     requestId: "original/release",
   });
-  return { job, receipt };
+  return { job, metadata, receipt };
 }
 
 test.each(["status-only", "uid", "spec", "annotations", "suspension"])(
@@ -145,7 +186,11 @@ test.each(["status-only", "uid", "spec", "annotations", "suspension"])(
           ]);
           if (!child.spec) throw new Error("Expected child spec");
           child.spec.suspend = false;
-          child.status = { conditions: [{ type: "Complete", status: "True" }] };
+          child.status = model(V1JobStatus, {
+            conditions: [
+              model(V1JobCondition, { type: "Complete", status: "True" }),
+            ],
+          });
           return Response.json(child);
         }
         if (url.pathname.endsWith("/log"))
@@ -228,9 +273,9 @@ test.each([
 ])(
   "original Forum recovery of $image projects the exact chart proof while retaining its separate operation identity",
   async ({ config: imageConfig }) => {
-    const { job } = original();
+    const { job, metadata } = original();
     const deploymentId = "forum/original/selection";
-    job.metadata.name = `storm-forum-release-${createHash("sha256").update(deploymentId).digest("hex").slice(0, 32)}`;
+    metadata.name = `storm-forum-release-${createHash("sha256").update(deploymentId).digest("hex").slice(0, 32)}`;
     const bytes = new TextEncoder().encode("immutable chart fixture");
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -403,7 +448,7 @@ test.each([
           };
         },
       );
-      expect(result.receipt.uid).toBe(job.metadata.uid);
+      expect(result.receipt.uid).toBe(metadata.uid);
       expect(commands.map((command) => command[0])).toEqual(["docker", "helm"]);
     } finally {
       await server.stop(true);
@@ -475,10 +520,8 @@ test("manual child is a suspended exact original PodSpec with only fixed intent/
   ).not.toBe(child.metadata?.name);
   expect(() =>
     forumRecoveryChild({
-      original: {
-        ...job,
-        metadata: { ...job.metadata, uid: crypto.randomUUID() },
-      },
+      // A fresh fixture carries a different Job uid than the receipt.
+      original: original().job,
       receipt,
       intentId: "operator/non-uuid",
       action: "repair",
@@ -489,21 +532,38 @@ test("manual child is a suspended exact original PodSpec with only fixed intent/
 
 test("a live manual copy or foreign release cannot coexist with native acknowledgement", () => {
   const uid = crypto.randomUUID();
-  const owned = {
-    metadata: {
+  const owned = model(V1Pod, {
+    metadata: model(V1ObjectMeta, {
       ownerReferences: [
-        { apiVersion: "batch/v1", kind: "Job", name: "exact-child", uid },
+        model(V1OwnerReference, {
+          apiVersion: "batch/v1",
+          kind: "Job",
+          name: "exact-child",
+          uid,
+        }),
       ],
-    },
-    status: { phase: "Running" },
-  };
+    }),
+    status: model(V1PodStatus, { phase: "Running" }),
+  });
   expect(() =>
-    assertNoOtherForumWriter([owned, { status: { phase: "Failed" } }], uid),
+    assertNoOtherForumWriter(
+      [
+        owned,
+        model(V1Pod, { status: model(V1PodStatus, { phase: "Failed" }) }),
+      ],
+      uid,
+    ),
   ).not.toThrow();
   for (const phase of ["Running", "Pending", "Unknown"])
     expect(() =>
       assertNoOtherForumWriter(
-        [owned, { metadata: { name: "operator-copy" }, status: { phase } }],
+        [
+          owned,
+          model(V1Pod, {
+            metadata: model(V1ObjectMeta, { name: "operator-copy" }),
+            status: model(V1PodStatus, { phase }),
+          }),
+        ],
         uid,
       ),
     ).toThrow("remains live");
@@ -515,60 +575,43 @@ test("a live manual copy or foreign release cannot coexist with native acknowled
 test("execution-policy defaults are normalized but extra parallel writers and altered original Pod bytes change fingerprint", () => {
   const { job } = original();
   expect(
-    forumJobFingerprint({
-      ...job,
-      spec: { ...job.spec, parallelism: 1, completions: 1 },
-    }),
+    forumJobFingerprint(
+      jobWith((spec) => {
+        spec.parallelism = 1;
+        spec.completions = 1;
+      }),
+    ),
   ).toBe(forumJobFingerprint(job));
   for (const changed of [
-    { ...job, spec: { ...job.spec, parallelism: 2 } },
-    { ...job, spec: { ...job.spec, completions: 2 } },
-    { ...job, spec: { ...job.spec, podFailurePolicy: { rules: [] } } },
-    {
-      ...job,
-      spec: {
-        ...job.spec,
-        template: {
-          ...job.spec?.template,
-          spec: {
-            ...job.spec?.template.spec,
-            serviceAccountName: "foreign-account",
-          },
-        },
-      },
-    },
-    {
-      ...job,
-      spec: {
-        ...job.spec,
-        template: {
-          ...job.spec?.template,
-          spec: {
-            ...job.spec?.template.spec,
-            containers: [
-              {
-                name: "release",
-                image: "foreign-image",
-                env: [{ name: "DB_PASSWORD", value: "injected" }],
-              },
-            ],
-          },
-        },
-      },
-    },
-    {
-      ...job,
-      spec: {
-        ...job.spec,
-        template: {
-          ...job.spec?.template,
-          spec: {
-            ...job.spec?.template.spec,
-            volumes: [{ name: "files", hostPath: { path: "/" } }],
-          },
-        },
-      },
-    },
+    jobWith((spec) => {
+      spec.parallelism = 2;
+    }),
+    jobWith((spec) => {
+      spec.completions = 2;
+    }),
+    jobWith((spec) => {
+      spec.podFailurePolicy = model(V1PodFailurePolicy, { rules: [] });
+    }),
+    jobWith((_spec, pod) => {
+      pod.serviceAccountName = "foreign-account";
+    }),
+    jobWith((_spec, pod) => {
+      pod.containers = [
+        model(V1Container, {
+          name: "release",
+          image: "foreign-image",
+          env: [model(V1EnvVar, { name: "DB_PASSWORD", value: "injected" })],
+        }),
+      ];
+    }),
+    jobWith((_spec, pod) => {
+      pod.volumes = [
+        model(V1Volume, {
+          name: "files",
+          hostPath: model(V1HostPathVolumeSource, { path: "/" }),
+        }),
+      ];
+    }),
   ])
     expect(forumJobFingerprint(changed)).not.toBe(forumJobFingerprint(job));
 });
@@ -658,7 +701,7 @@ test.each([
 ])(
   "original Forum recovery of a model release renders the release Job from %s's own chart",
   async (_shape, definition) => {
-    const { job } = original();
+    const { job, metadata } = original();
     const bytes = new TextEncoder().encode("immutable model chart fixture");
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -682,7 +725,7 @@ test.each([
         digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
       };
       const deployment = forumDeployment(definition, [], chart);
-      job.metadata.name = `storm-forum-release-${createHash("sha256").update(deployment.deployment.id).digest("hex").slice(0, 32)}`;
+      metadata.name = `storm-forum-release-${createHash("sha256").update(deployment.deployment.id).digest("hex").slice(0, 32)}`;
       const context = ContentRecoveryContextSchema.parse({
         intent: {
           id: "forum/model-recovery",
@@ -729,8 +772,8 @@ test.each([
       );
       expect(result.receipt).toMatchObject({
         namespace: "storm-forum",
-        name: job.metadata.name,
-        uid: job.metadata.uid,
+        name: metadata.name,
+        uid: metadata.uid,
       });
       // The forum Application's own chart, in its own namespace.
       expect(helm).toHaveLength(1);

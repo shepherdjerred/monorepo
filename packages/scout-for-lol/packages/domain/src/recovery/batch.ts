@@ -37,12 +37,12 @@ export const RecoveryScanCursorSchema = z
     pageBudget: z.int().positive(),
   })
   .refine((cursor) => cursor.pagesScanned <= cursor.pageBudget, {
-    message: "pagesScanned must not exceed pageBudget",
+    error: "pagesScanned must not exceed pageBudget",
   })
   .refine(
     (cursor) => (cursor.position === undefined) === (cursor.pagesScanned === 0),
     {
-      message:
+      error:
         "position comes from an advance, so it must be present exactly when pagesScanned is positive",
     },
   );
@@ -58,7 +58,7 @@ export const RecoveryCountsSchema = z
   .refine(
     (counts) =>
       counts.succeeded + counts.suppressed + counts.failed <= counts.discovered,
-    { message: "processed items must not exceed discovered items" },
+    { error: "processed items must not exceed discovered items" },
   );
 
 export type RecoveryAbandonReason = z.infer<typeof RecoveryAbandonReasonSchema>;

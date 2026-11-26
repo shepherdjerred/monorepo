@@ -33,7 +33,7 @@ function boundedText(min: number, max: number) {
       }
       return length >= min && length <= max;
     },
-    { message: `must be ${String(min)} to ${String(max)} characters` },
+    { error: `must be ${String(min)} to ${String(max)} characters` },
   );
 }
 

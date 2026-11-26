@@ -22,7 +22,7 @@ export const SessionCheckpointSchema = z
     (file) =>
       file.bytes ===
       file.chunks.reduce((total, chunk) => total + chunk.bytes, 0),
-    { message: "Session file chunk sizes do not match" },
+    { error: "Session file chunk sizes do not match" },
   );
 export type SessionCheckpoint = z.infer<typeof SessionCheckpointSchema>;
 

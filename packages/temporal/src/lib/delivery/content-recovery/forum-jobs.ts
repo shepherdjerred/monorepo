@@ -1,12 +1,16 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { model } from "#lib/k8s-model.ts";
 import {
   BatchV1Api,
   CoreV1Api,
   PatchStrategy,
   setHeaderOptions,
+  V1Job,
+  V1JobSpec,
+  V1ObjectMeta,
+  V1PodTemplateSpec,
   type KubeConfig,
-  type V1Job,
   type V1Pod,
 } from "@kubernetes/client-node";
 import {
@@ -259,10 +263,10 @@ export function forumRecoveryChild(input: {
       "Original Forum Job lacks the fixed native recovery protocol",
     );
   const requestId = deliveryOperationId(`${intentId}:${action}`);
-  return {
+  return model(V1Job, {
     apiVersion: "batch/v1",
     kind: "Job",
-    metadata: {
+    metadata: model(V1ObjectMeta, {
       namespace: receipt.namespace,
       name: `delivery-forum-recovery-${createHash("sha256")
         .update(`${intentId}:${action}:${String(attempt)}`)
@@ -273,15 +277,15 @@ export function forumRecoveryChild(input: {
         [annotations.originalName]: receipt.name,
         [annotations.request]: requestId,
       },
-    },
-    spec: {
+    }),
+    spec: model(V1JobSpec, {
       suspend: true,
       backoffLimit: 0,
       parallelism: 1,
       completions: 1,
       activeDeadlineSeconds: 3600,
-      template: {
-        metadata: {
+      template: model(V1PodTemplateSpec, {
+        metadata: model(V1ObjectMeta, {
           labels: { app: "storm-forum", component: "release" },
           annotations: {
             [annotations.intent]: intentId,
@@ -290,11 +294,11 @@ export function forumRecoveryChild(input: {
                 ? action
                 : `repair:${acknowledgement.step}:${acknowledgement.journalSha256}`,
           },
-        },
+        }),
         spec: structuredClone(original.spec.template.spec),
-      },
-    },
-  };
+      }),
+    }),
+  });
 }
 
 export async function runForumRecoveryChild(input: {

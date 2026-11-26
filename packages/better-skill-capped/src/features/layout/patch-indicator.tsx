@@ -1,5 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import React from "react";
+import type React from "react";
 import { useContent } from "#src/hooks/use-content";
 
 /**

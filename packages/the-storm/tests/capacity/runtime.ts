@@ -14,7 +14,7 @@ export const CapacityBootstrapSchema = z
     source: z.enum(["default", "environment"]),
   })
   .refine((value) => value.source !== "default" || value.initialHeap === "8G", {
-    message: "The default capacity bootstrap preserves its8G initial heap",
+    error: "The default capacity bootstrap preserves its8G initial heap",
   });
 export const RuntimeHeapSchema = z
   .strictObject({
@@ -22,7 +22,7 @@ export const RuntimeHeapSchema = z
     maxBytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
   })
   .refine((value) => value.initialBytes <= value.maxBytes, {
-    message: "Initial heap exceeds maximum heap",
+    error: "Initial heap exceeds maximum heap",
   });
 
 /** Only explicit heap flags leave the container; all other JVM arguments remain hashed. */

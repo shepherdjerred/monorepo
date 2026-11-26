@@ -7,6 +7,15 @@ function escapePointer(key: string): string {
   return key.replaceAll("~", "~0").replaceAll("/", "~1");
 }
 
+function childConstruct(parent: Construct, id: string): Construct {
+  const child = parent.node.tryFindChild(id);
+  return child instanceof Construct ? child : new Construct(parent, id);
+}
+
+function constructsOf(chart: Chart): Construct[] {
+  return chart.node.findAll().filter((node) => node instanceof Construct);
+}
+
 function childEntries(value: unknown): [key: string, child: unknown][] {
   return Array.isArray(value)
     ? value.map((child: unknown, index): [string, unknown] => [
@@ -39,16 +48,16 @@ function addressLabels(
 export function adoptRootChartAddresses(chart: Chart): void {
   const rootMirror = new Chart(new App(), ROOT_CHART);
   const addresses = new Map<string, string>();
-  for (const construct of chart.node.findAll()) {
+  for (const construct of constructsOf(chart)) {
     if (construct === chart) continue;
     let mirror: Construct = rootMirror;
     for (const id of construct.node.path
       .slice(chart.node.path.length + 1)
       .split("/"))
-      mirror = mirror.node.tryFindChild(id) ?? new Construct(mirror, id);
+      mirror = childConstruct(mirror, id);
     addresses.set(Names.toLabelValue(construct), Names.toLabelValue(mirror));
   }
-  for (const construct of chart.node.findAll()) {
+  for (const construct of constructsOf(chart)) {
     if (!ApiObject.isApiObject(construct)) continue;
     for (const [pointer, address] of addressLabels(construct.toJson(), [])) {
       const rootAddress = addresses.get(address);
@@ -69,14 +78,14 @@ export function adoptRootChartAddresses(chart: Chart): void {
  */
 export function adoptRootChartNames(chart: Chart): void {
   const rootMirror = new Chart(new App(), ROOT_CHART);
-  for (const construct of chart.node.findAll()) {
+  for (const construct of constructsOf(chart)) {
     if (!ApiObject.isApiObject(construct)) continue;
     if (construct.name !== chart.generateObjectName(construct)) continue;
     let mirror: Construct = rootMirror;
     for (const id of construct.node.path
       .slice(chart.node.path.length + 1)
       .split("/"))
-      mirror = mirror.node.tryFindChild(id) ?? new Construct(mirror, id);
+      mirror = childConstruct(mirror, id);
     construct.addJsonPatch(
       JsonPatch.replace(
         "/metadata/name",

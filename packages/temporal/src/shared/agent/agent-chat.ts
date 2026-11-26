@@ -99,7 +99,7 @@ function boundedTurnText(options: { allowEmpty: boolean }): z.ZodString {
       (value) =>
         new TextEncoder().encode(value).byteLength <= MAX_TURN_TEXT_BYTES,
       {
-        message: `Text must not exceed ${String(MAX_TURN_TEXT_BYTES)} UTF-8 bytes`,
+        error: `Text must not exceed ${String(MAX_TURN_TEXT_BYTES)} UTF-8 bytes`,
       },
     );
 }
@@ -156,7 +156,7 @@ export const AgentChatSourceSequenceSchema = z
       .max(MAX_AGENT_CHAT_SOURCE_SEQUENCE.length),
   ])
   .refine(isRecoverableSourceSequence, {
-    message: `Source sequence must not exceed ${MAX_AGENT_CHAT_SOURCE_SEQUENCE}`,
+    error: `Source sequence must not exceed ${MAX_AGENT_CHAT_SOURCE_SEQUENCE}`,
   });
 
 // An ingress must change this epoch before it restarts a bounded sequence. A
@@ -254,7 +254,7 @@ export const RunAgentChatTurnInputSchema = z
       (input.providerSessionId === undefined) ===
       (input.priorSessionManifestKey === undefined),
     {
-      message: "Provider session id and manifest key must be supplied together",
+      error: "Provider session id and manifest key must be supplied together",
     },
   );
 export type RunAgentChatTurnInput = z.infer<typeof RunAgentChatTurnInputSchema>;
@@ -329,7 +329,7 @@ const AgentChatFailedTurnSchema = z.strictObject({
         new TextEncoder().encode(value).byteLength <=
         MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES,
       {
-        message: `Failure message must not exceed ${String(MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES)} UTF-8 bytes`,
+        error: `Failure message must not exceed ${String(MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES)} UTF-8 bytes`,
       },
     ),
   failedAt: z.iso.datetime({ offset: true }),
@@ -356,7 +356,7 @@ export const AgentChatWorkflowStateSchema = z
     (state) =>
       (state.providerSessionId === undefined) ===
       (state.providerSessionManifestKey === undefined),
-    { message: "Provider session id and manifest key must be stored together" },
+    { error: "Provider session id and manifest key must be stored together" },
   );
 export type AgentChatWorkflowState = z.infer<
   typeof AgentChatWorkflowStateSchema
@@ -444,14 +444,14 @@ export const AgentChatCatalogStateSchema = z
   .refine(
     (state) =>
       new Set(state.retiredChatIds).size === state.retiredChatIds.length,
-    { message: "Retired agent chat IDs must be unique" },
+    { error: "Retired agent chat IDs must be unique" },
   )
   .refine(
     (state) =>
       new TextEncoder().encode(JSON.stringify(state)).byteLength <=
       MAX_AGENT_CHAT_CATALOG_STATE_BYTES,
     {
-      message: `Catalog state must not exceed ${String(MAX_AGENT_CHAT_CATALOG_STATE_BYTES)} UTF-8 bytes`,
+      error: `Catalog state must not exceed ${String(MAX_AGENT_CHAT_CATALOG_STATE_BYTES)} UTF-8 bytes`,
     },
   );
 export type AgentChatCatalogState = z.infer<typeof AgentChatCatalogStateSchema>;

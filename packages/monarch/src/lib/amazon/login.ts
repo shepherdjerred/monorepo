@@ -1,4 +1,4 @@
-import type { Page } from "playwright";
+import type { Locator, Page } from "playwright";
 import { log } from "../logger.ts";
 
 async function runOp(args: string[]): Promise<string> {
@@ -45,16 +45,24 @@ async function getAmazonTotp(): Promise<string> {
   return runOp(["item", "get", "Amazon", "--otp"]);
 }
 
+/** Wait up to `timeoutMs` for the locator to become visible. */
+async function becomesVisible(
+  locator: Locator,
+  timeoutMs: number,
+): Promise<boolean> {
+  try {
+    await locator.waitFor({ state: "visible", timeout: timeoutMs });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function skipPasskeyNudge(page: Page): Promise<void> {
   const skipPasskey = page.locator(
     'input[value="Not now"], a:has-text("Not now"), button:has-text("Not now"), a:has-text("Skip")',
   );
-  if (
-    await skipPasskey
-      .first()
-      .isVisible({ timeout: 3000 })
-      .catch(() => false)
-  ) {
+  if (await becomesVisible(skipPasskey.first(), 3000)) {
     await skipPasskey.first().click();
     await page.waitForLoadState("domcontentloaded");
   }
@@ -67,7 +75,7 @@ export async function autoLogin(page: Page): Promise<void> {
   // hidden input already carrying the address and the page asks for the
   // password (or a passkey) directly, so only fill it when visible.
   const emailField = page.locator("#ap_email");
-  if (await emailField.isVisible({ timeout: 3000 }).catch(() => false)) {
+  if (await becomesVisible(emailField, 3000)) {
     await emailField.fill(email);
 
     const continueBtn = page.locator("input#continue");
@@ -97,7 +105,7 @@ export async function autoLogin(page: Page): Promise<void> {
 
   // Handle TOTP if prompted
   const otpField = page.locator('#auth-mfa-otpcode, input[name="otpCode"]');
-  if (await otpField.isVisible({ timeout: 3000 }).catch(() => false)) {
+  if (await becomesVisible(otpField, 3000)) {
     log.info("2FA required, fetching TOTP from 1Password...");
     const totp = await getAmazonTotp();
     await otpField.fill(totp);

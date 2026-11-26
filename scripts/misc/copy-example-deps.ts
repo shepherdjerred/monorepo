@@ -29,7 +29,14 @@ const ParentPkgSchema = z.object({
 
 const [parentDirArg, depName, exampleDirArg] = process.argv.slice(2);
 
-if (!parentDirArg || !depName || !exampleDirArg) {
+if (
+  parentDirArg === undefined ||
+  parentDirArg === "" ||
+  depName === undefined ||
+  depName === "" ||
+  exampleDirArg === undefined ||
+  exampleDirArg === ""
+) {
   console.error(
     "Usage: copy-example-deps.ts <parent-dir> <dep-name> <example-dir>",
   );

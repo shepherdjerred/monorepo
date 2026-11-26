@@ -265,7 +265,7 @@ function weights<const Keys extends readonly [string, ...string[]]>(
   return z
     .partialRecord(z.enum(keys), positiveWeight)
     .refine((record) => Object.keys(record).length > 0, {
-      message: `at least one ${what} weight is required`,
+      error: `at least one ${what} weight is required`,
     });
 }
 
@@ -276,10 +276,10 @@ function prose(max: number) {
     .min(1)
     .max(max)
     .refine((text) => text.trim() === text, {
-      message: "no surrounding whitespace",
+      error: "no surrounding whitespace",
     })
     .refine((text) => bannedWord(text) === undefined, {
-      message: "contains a banned word",
+      error: "contains a banned word",
     });
 }
 
@@ -289,7 +289,7 @@ export const VoiceSchema = z.strictObject({
     .min(1)
     .max(MAX_TONE_TAGS)
     .refine((tags) => new Set(tags).size === tags.length, {
-      message: "tone tags must be distinct",
+      error: "tone tags must be distinct",
     }),
   verbosity: z.enum(VERBOSITIES),
   style: prose(MAX_STYLE_LENGTH),
@@ -302,7 +302,7 @@ function pool(moment: Moment) {
     .min(moment === "lobby" ? MIN_LOBBY_LINES : MIN_LINES)
     .max(moment === "lobby" ? MAX_LOBBY_LINES : MAX_LINES)
     .refine((lines) => new Set(lines).size === lines.length, {
-      message: `${moment} repeats a line`,
+      error: `${moment} repeats a line`,
     })
     .superRefine((lines, context) => {
       for (const line of lines) {
@@ -340,14 +340,14 @@ const QuirksSchema = z
   .min(1)
   .max(MAX_QUIRKS)
   .refine((quirks) => new Set(quirks).size === quirks.length, {
-    message: "quirks must be distinct",
+    error: "quirks must be distinct",
   });
 
 const RivalsSchema = z
   .array(z.string().regex(ID_PATTERN))
   .max(MAX_RIVALS)
   .refine((rivals) => new Set(rivals).size === rivals.length, {
-    message: "rivals must be distinct",
+    error: "rivals must be distinct",
   });
 
 /**
@@ -381,7 +381,7 @@ export const PersonalitySchema = z.strictObject({
     .string()
     .regex(NAME_PATTERN)
     .refine((name) => !name.startsWith("."), {
-      message: "name must not start with a dot",
+      error: "name must not start with a dot",
     }),
   skin: SkinSchema,
   skill: unit,

@@ -67,7 +67,7 @@ export const S3ObjectKeySchema = z
   .string()
   .min(1)
   .refine((key) => new TextEncoder().encode(key).byteLength <= 1024, {
-    message: "S3 object keys are limited to 1024 UTF-8 bytes",
+    error: "S3 object keys are limited to 1024 UTF-8 bytes",
   })
   .brand<"S3ObjectKey">();
 

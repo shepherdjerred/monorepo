@@ -50,7 +50,7 @@ const LogEntrySchema = z.looseObject({
     .string()
     .refine(
       (value) => Buffer.from(value, "base64").toString("base64") === value,
-      { message: "Woodpecker log data must be canonical base64" },
+      { error: "Woodpecker log data must be canonical base64" },
     )
     .nullable(),
 });

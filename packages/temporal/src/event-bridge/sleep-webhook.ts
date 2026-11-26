@@ -27,7 +27,7 @@ const SleepWebhookInputSchema = z
         .trim()
         .min(1)
         .refine((value) => Number.isFinite(Number(value)), {
-          message: "duration_hours must be numeric",
+          error: "duration_hours must be numeric",
         })
         .transform(Number),
     ]),

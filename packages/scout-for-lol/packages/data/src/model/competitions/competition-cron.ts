@@ -22,7 +22,7 @@ export const CronPresets = [
 export const CompetitionCronSchema = z
   .string()
   .trim()
-  .min(1, { message: "CRON expression must not be empty" })
+  .min(1, { error: "CRON expression must not be empty" })
   .superRefine((value, ctx) => {
     let iterator;
     try {

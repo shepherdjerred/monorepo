@@ -35,7 +35,7 @@ export const BootstrapSchema = z
   .refine(
     (value) =>
       (value.TMDB_TOKEN === undefined) !== (value.TMDB_API_KEY === undefined),
-    { message: "Exactly one TMDB credential is required" },
+    { error: "Exactly one TMDB credential is required" },
   );
 
 export function mediaBehaviorConfig(

@@ -27,7 +27,7 @@ export const HallRecordBreakAnnouncementSchema = z
       announcement.records.every(
         (record) => record.matchId === announcement.riotMatchId,
       ),
-    { message: "Hall records must belong to the announced match" },
+    { error: "Hall records must belong to the announced match" },
   );
 
 export const hallRecordBreakAnnouncementCodec = defineVersionedCodec({

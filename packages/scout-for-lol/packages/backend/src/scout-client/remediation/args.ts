@@ -11,7 +11,7 @@ const ArgsSchema = z
   .refine(
     (args) => (args.owner === undefined) === (args.device !== undefined),
     {
-      message: "Pass exactly one of --owner <userId> or --device <deviceId>",
+      error: "Pass exactly one of --owner <userId> or --device <deviceId>",
     },
   );
 

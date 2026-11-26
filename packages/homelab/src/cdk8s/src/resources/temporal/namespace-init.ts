@@ -1,6 +1,6 @@
 import { ApiObject, JsonPatch, type Chart } from "cdk8s";
 import type { Service } from "cdk8s-plus-31";
-import { Job } from "cdk8s-plus-31";
+import { EnvValue, Job } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalAddress } from "./address.ts";
@@ -69,12 +69,12 @@ export function createTemporalNamespaceInitJob(
         ].join(" && "),
       ],
       envVariables: {
-        TEMPORAL_ADDRESS: {
-          value: temporalAddress(props.serverService.name),
-        },
-        TEMPORAL_CLI_ADDRESS: {
-          value: temporalAddress(props.serverService.name),
-        },
+        TEMPORAL_ADDRESS: EnvValue.fromValue(
+          temporalAddress(props.serverService.name),
+        ),
+        TEMPORAL_CLI_ADDRESS: EnvValue.fromValue(
+          temporalAddress(props.serverService.name),
+        ),
       },
       ...temporalUtilityContainerDefaults(),
     }),

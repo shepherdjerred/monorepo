@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import type { ChatInputCommandInteraction } from "discord.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import {
   executeDocs,
@@ -31,7 +31,7 @@ describe("lightweight onboarding commands", () => {
 
     expect(command.replyMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: expect.stringContaining("/track"),
       }),
     );

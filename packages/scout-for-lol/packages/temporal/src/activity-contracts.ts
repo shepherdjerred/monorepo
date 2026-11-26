@@ -140,7 +140,7 @@ export const ScoutPostMatchScanResultSchema = z
           (match, index) => match.riotMatchId === scan.riotMatchIds[index],
         )),
     {
-      message:
+      error:
         "`matches` must name exactly the matches in `riotMatchIds`, in the same order",
       path: ["matches"],
     },

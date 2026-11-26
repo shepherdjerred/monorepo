@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 const linkClass = "underline underline-offset-2 hover:text-foreground";
 

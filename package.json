@@ -212,9 +212,9 @@
     "@ai-sdk/provider-utils": "5.0.83",
     "@grpc/grpc-js": "1.14.6",
     "@opentelemetry/api": "1.9.1",
-    "@typescript-eslint/eslint-plugin": "8.72.2",
-    "@typescript-eslint/parser": "8.72.2",
-    "@typescript-eslint/utils": "8.72.2",
+    "@typescript-eslint/eslint-plugin": "8.74.0",
+    "@typescript-eslint/parser": "8.74.0",
+    "@typescript-eslint/utils": "8.74.0",
     "axios": "1.20.0",
     "@opentelemetry/propagator-jaeger": "2.12.1",
     "fast-xml-parser": "5.11.1",
@@ -246,7 +246,7 @@
     "sherpa-onnx-win-x64": "1.13.8",
     "socket.io-parser": "4.2.7",
     "tmp": "0.2.7",
-    "typescript-eslint": "8.72.2",
+    "typescript-eslint": "8.74.0",
     "effect": "3.22.1"
   },
   "trustedDependencies": [

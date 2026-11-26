@@ -40,7 +40,7 @@ export const SupportMessageSchema = z
     context: SupportContextSchema.default({}),
   })
   .refine((input) => input.body.length > 0 || input.attachmentIds.length > 0, {
-    message: "Write a message or attach a screenshot.",
+    error: "Write a message or attach a screenshot.",
     path: ["body"],
   });
 

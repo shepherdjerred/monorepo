@@ -98,7 +98,7 @@ export const VoiceCascadeContractSchema = z
     (contract) =>
       contract.utterance.preRollMs >= contract.wake.verifierWindowMs,
     {
-      message: "the pre-roll must cover the verifier window",
+      error: "the pre-roll must cover the verifier window",
       path: ["utterance", "preRollMs"],
     },
   );

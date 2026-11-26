@@ -36,7 +36,7 @@ const WorkspacePatternSchema = z
       );
     },
     {
-      message:
+      error:
         "workspace patterns must be relative package directories without parent traversal",
     },
   );

@@ -169,7 +169,7 @@ export function parseInvocation(
       .array(SuiteNameSchema)
       .min(1)
       .refine((names) => new Set(names).size === names.length, {
-        message: "a suite runs only once",
+        error: "a suite runs only once",
       }),
     values.suite,
   );

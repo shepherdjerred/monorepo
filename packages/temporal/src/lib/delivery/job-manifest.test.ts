@@ -1,5 +1,13 @@
 import { createHash } from "node:crypto";
+import {
+  V1EmptyDirVolumeSource,
+  V1EnvVar,
+  V1ResourceRequirements,
+  V1SecretVolumeSource,
+  V1Volume,
+} from "@kubernetes/client-node";
 import { describe, expect, it } from "vitest";
+import { model } from "#lib/k8s-model.ts";
 import {
   assertMatchingDeliveryJob,
   deliveryJobManifest,
@@ -12,6 +20,9 @@ import {
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
 import { DELIVERY_STAGE_REQUESTS } from "homelab/src/delivery-stage-admission.ts";
+
+const envVar = (name: string, value: string) =>
+  model(V1EnvVar, { name, value });
 
 const request: DeliveryJobRequest = {
   deploymentId: "deployment-42",
@@ -348,21 +359,25 @@ describe("bounded revision-pinned Delivery Jobs", () => {
         ];
       },
       (job: ReturnType<typeof deliveryJobManifest>) => {
-        job.spec!.template.spec!.containers[0]!.env!.push({
-          name: "OP_SERVICE_ACCOUNT_TOKEN",
-          value: "forbidden",
-        });
+        job.spec!.template.spec!.containers[0]!.env!.push(
+          envVar("OP_SERVICE_ACCOUNT_TOKEN", "forbidden"),
+        );
       },
       (job: ReturnType<typeof deliveryJobManifest>) => {
-        job.spec!.template.spec!.containers[0]!.resources = {
-          requests: { cpu: "100" },
-        };
+        job.spec!.template.spec!.containers[0]!.resources = model(
+          V1ResourceRequirements,
+          {
+            requests: { cpu: "100" },
+          },
+        );
       },
       (job: ReturnType<typeof deliveryJobManifest>) => {
-        job.spec!.template.spec!.volumes!.push({
-          name: "vault",
-          secret: { secretName: "operator" },
-        });
+        job.spec!.template.spec!.volumes!.push(
+          model(V1Volume, {
+            name: "vault",
+            secret: model(V1SecretVolumeSource, { secretName: "operator" }),
+          }),
+        );
       },
       (job: ReturnType<typeof deliveryJobManifest>) => {
         job.spec!.template.spec!.automountServiceAccountToken = true;
@@ -515,19 +530,22 @@ describe("persistent stage workspace", () => {
     const pod = retired.spec!.template.spec!;
     pod.volumes = pod.volumes!.map((volume) =>
       volume.name === "workspace"
-        ? { name: "workspace", emptyDir: { sizeLimit: "32Gi" } }
+        ? model(V1Volume, {
+            name: "workspace",
+            emptyDir: model(V1EmptyDirVolumeSource, { sizeLimit: "32Gi" }),
+          })
         : volume,
     );
-    pod.containers[0]!.resources = {
+    pod.containers[0]!.resources = model(V1ResourceRequirements, {
       requests: { cpu: "2", memory: "8Gi", "ephemeral-storage": "32Gi" },
       limits: { cpu: "8", memory: "16Gi", "ephemeral-storage": "32Gi" },
-    };
+    });
     delete pod.securityContext!.fsGroupChangePolicy;
     expect(() => assertMatchingDeliveryJob(retired, expected)).not.toThrow();
     for (const mutate of [
       (spec: typeof pod) => {
         spec.volumes!.find((volume) => volume.name === "workspace")!.emptyDir =
-          { sizeLimit: "64Gi" };
+          model(V1EmptyDirVolumeSource, { sizeLimit: "64Gi" });
       },
       (spec: typeof pod) => {
         spec.containers[0]!.resources!.limits!["ephemeral-storage"] = "64Gi";
@@ -537,7 +555,10 @@ describe("persistent stage workspace", () => {
       },
       (spec: typeof pod) => {
         spec.volumes!.find((volume) => volume.name === "workspace")!.emptyDir =
-          { sizeLimit: "32Gi", medium: "Memory" };
+          model(V1EmptyDirVolumeSource, {
+            sizeLimit: "32Gi",
+            medium: "Memory",
+          });
       },
     ]) {
       const altered = structuredClone(retired);
@@ -595,10 +616,9 @@ describe("persistent stage workspace", () => {
         PREVIOUS_DELIVERY_JOB_BOOTSTRAPS[0]!,
       ];
       const legacyChanged = structuredClone(legacy);
-      legacyChanged.spec!.template.spec!.containers[0]!.env!.push({
-        name: "UNREVIEWED",
-        value: "1",
-      });
+      legacyChanged.spec!.template.spec!.containers[0]!.env!.push(
+        envVar("UNREVIEWED", "1"),
+      );
       expect(() => assertMatchingDeliveryJob(legacyChanged, expected)).toThrow(
         "frozen request",
       );

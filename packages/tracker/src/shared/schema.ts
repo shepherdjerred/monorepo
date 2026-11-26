@@ -125,7 +125,7 @@ export const BulkUpdateIssuesSchema = MutationSchema.extend({
       ),
     {
       path: ["expectedRevisions"],
-      message: "expectedRevisions may only name the listed identifiers",
+      error: "expectedRevisions may only name the listed identifiers",
     },
   );
 const issueListShape = {
@@ -176,7 +176,7 @@ export const IssueListSchema = z
   .object(issueListShape)
   .refine((input) => input.overdue === undefined || input.today !== undefined, {
     path: ["today"],
-    message: "today (YYYY-MM-DD) is required with overdue",
+    error: "today (YYYY-MM-DD) is required with overdue",
   });
 
 /** Paging and the caller's clock are not part of a saved view. */

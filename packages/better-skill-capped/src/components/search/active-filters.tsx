@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { X } from "lucide-react";
 import type { SearchParams } from "#src/routes/search";
 import { SEARCH_DEFAULTS } from "#src/routes/search";

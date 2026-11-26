@@ -11,6 +11,7 @@ import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   Colors,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
   type Interaction,
 } from "discord.js";
@@ -58,7 +59,7 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
 
   await interaction.reply({
     embeds: [embed],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
     ...((await isPolicyEnabled("scout_support_conversations_enabled"))
       ? { components: [supportContactRow()] }
       : {}),

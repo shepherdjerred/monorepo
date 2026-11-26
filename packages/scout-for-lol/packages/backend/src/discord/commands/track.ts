@@ -1,6 +1,7 @@
 import {
   type Interaction,
   type ChatInputCommandInteraction,
+  MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
@@ -99,12 +100,12 @@ export async function executeTrack(
     await interaction.reply({
       content:
         "`/track` can only be used in a server with valid player details.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const puuidResult = await resolveSubscriptionPuuid(
     args.data.riotId,

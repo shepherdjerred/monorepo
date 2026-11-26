@@ -23,7 +23,7 @@ export class PlexHomeClient {
       new URL("https://plex.tv/api/home/users"),
       "GET",
     );
-    const $ = load(document, { xmlMode: true });
+    const $ = load(document, { xml: true });
     const root = $("MediaContainer");
     const expected = z.coerce
       .number()
@@ -57,7 +57,7 @@ export class PlexHomeClient {
           .parse(pin),
       );
     const document = await this.xml(url, "POST");
-    const $ = load(document, { xmlMode: true });
+    const $ = load(document, { xml: true });
     const user = $("user");
     const identity = user.attr("id");
     const token = user.attr("authenticationToken");

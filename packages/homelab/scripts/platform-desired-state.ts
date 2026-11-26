@@ -306,7 +306,7 @@ const googleDesiredState = z.strictObject({
         (workload) =>
           workload.ai_studio_spend_cap_usd <= workload.monthly_budget_usd,
         {
-          message:
+          error:
             "ai_studio_spend_cap_usd must not exceed monthly_budget_usd, or the budget alert would fire only after the cap should have stopped spend",
         },
       ),

@@ -296,7 +296,7 @@ export const MemoryCandidateSchema = MemoryCandidateBaseSchema.refine(
     distinctRelatedUserCount(candidate.relatedUserIds) >=
       RELATIONSHIP_MEMORY_MIN_RELATED_USERS,
   {
-    message:
+    error:
       'A "relationship" memory must list at least two distinct related user IDs. Use scope "user" for a claim about one person, and never repeat the same ID twice.',
     path: ["relatedUserIds"],
   },
@@ -306,7 +306,7 @@ export const MemoryCandidateSchema = MemoryCandidateBaseSchema.refine(
     distinctRelatedUserCount(candidate.relatedUserIds) <=
       USER_MEMORY_MAX_RELATED_USERS,
   {
-    message:
+    error:
       'A "user" memory accepts at most one related user ID. Use scope "relationship" for a claim about two or more people.',
     path: ["relatedUserIds"],
   },

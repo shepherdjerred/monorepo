@@ -67,15 +67,15 @@ function safeTemporalUiTextSchema(maxBytes: number, field: string) {
     .trim()
     .min(1)
     .refine((value) => !value.includes("\n") || field !== "summary", {
-      message: "Temporal UI summary must be a single line",
+      error: "Temporal UI summary must be a single line",
     })
     .refine((value) => utf8Length(value) <= maxBytes, {
-      message: `Temporal UI ${field} exceeds ${String(maxBytes)} UTF-8 bytes`,
+      error: `Temporal UI ${field} exceeds ${String(maxBytes)} UTF-8 bytes`,
     })
     .refine(
       (value) => FORBIDDEN_UI_CONTENT.every((pattern) => !pattern.test(value)),
       {
-        message: `Temporal UI ${field} contains prohibited or sensitive content`,
+        error: `Temporal UI ${field} contains prohibited or sensitive content`,
       },
     );
 }

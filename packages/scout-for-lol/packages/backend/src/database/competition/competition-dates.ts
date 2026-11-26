@@ -22,7 +22,7 @@ const FixedDateCompetitionSchema = z
     endDate: z.date(),
   })
   .refine((data) => data.startDate < data.endDate, {
-    message: "startDate must be before endDate",
+    error: "startDate must be before endDate",
     path: ["startDate"],
   })
   .superRefine((data, ctx) => {

@@ -128,7 +128,8 @@ export function visualizationSnapshotToOption(
       right: presentation.options.legend === "right" ? 220 : 36,
       top: 105,
       bottom: 58,
-      containLabel: true,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
     },
     xAxis: horizontal
       ? {

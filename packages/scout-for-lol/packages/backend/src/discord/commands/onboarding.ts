@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { MessageFlags, SlashCommandBuilder } from "discord.js";
 import { getDashboardUrl, getDocsUrl } from "#src/discord/commands/links.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
@@ -30,7 +30,7 @@ export async function executeSetup(
 ): Promise<void> {
   await interaction.reply({
     content: `Open the Scout dashboard to sign in, add Scout to a server, and configure everything in one place:\n${getDashboardUrl()}\n\nYou can try /track for a quick single-channel setup. Use the dashboard for additional channels, filters, queues, competitions, reports, and permissions.`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -44,7 +44,7 @@ export async function executeStatus(
       : `Connected to **${interaction.guild.name}**.`;
   await interaction.reply({
     content: `✅ Scout is online. ${guildText}\nGateway latency: **${ping >= 0 ? `${ping.toString()} ms` : "checking"}**\n\nFor configuration and notification diagnostics, open the dashboard: ${getDashboardUrl()}`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -53,7 +53,7 @@ export async function executeInvite(
 ): Promise<void> {
   await interaction.reply({
     content: `Add Scout to another server:\n${buildDiscordInstallUrl()}\n\nIf Discord asks you to sign in first, use the dashboard setup flow: ${getDashboardUrl()}`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -62,6 +62,6 @@ export async function executeDocs(
 ): Promise<void> {
   await interaction.reply({
     content: `Scout documentation:\n${getDocsUrl()}`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

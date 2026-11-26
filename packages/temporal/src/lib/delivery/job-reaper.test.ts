@@ -1,5 +1,11 @@
-import type { V1Job } from "@kubernetes/client-node";
+import {
+  V1Job,
+  V1JobCondition,
+  V1JobStatus,
+  V1ObjectMeta,
+} from "@kubernetes/client-node";
 import { describe, expect, it, vi } from "vitest";
+import { model } from "#lib/k8s-model.ts";
 import {
   DELIVERY_PLATFORM_JOBS_NAMESPACE,
   DELIVERY_REQUEST_ANNOTATION,
@@ -20,10 +26,10 @@ function makeJob(options: {
   deleting?: boolean;
   completionTime?: string;
 }): V1Job {
-  return {
+  return model(V1Job, {
     apiVersion: "batch/v1",
     kind: "Job",
-    metadata: {
+    metadata: model(V1ObjectMeta, {
       name: options.name,
       namespace: options.namespace ?? DELIVERY_WORKER_JOBS_NAMESPACE,
       uid: options.uid ?? `uid-${options.name}`,
@@ -38,8 +44,8 @@ function makeJob(options: {
               [DELIVERY_REQUEST_ANNOTATION]: options.deploymentId,
             },
           }),
-    },
-    status: {
+    }),
+    status: model(V1JobStatus, {
       ...(options.active === undefined ? {} : { active: options.active }),
       ...(options.completionTime === undefined
         ? {}
@@ -47,10 +53,15 @@ function makeJob(options: {
       ...(options.condition === undefined
         ? {}
         : {
-            conditions: [{ type: options.condition, status: "True" }],
+            conditions: [
+              model(V1JobCondition, {
+                type: options.condition,
+                status: "True",
+              }),
+            ],
           }),
-    },
-  };
+    }),
+  });
 }
 
 function makeDeploymentDetail(options: {

@@ -137,7 +137,7 @@ export const ExploreTurnRequestSchema = z
   .refine(
     (request) =>
       request.question !== null || (request.attachmentIds ?? []).length === 0,
-    { message: "Images belong to a new question.", path: ["attachmentIds"] },
+    { error: "Images belong to a new question.", path: ["attachmentIds"] },
   );
 
 export type ExploreTurnRequest = z.infer<typeof ExploreTurnRequestSchema>;
