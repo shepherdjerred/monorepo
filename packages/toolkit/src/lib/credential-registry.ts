@@ -1,4 +1,5 @@
 import { BRIM_SYNC_CREDENTIALS } from "#lib/brim/sync/credential-specs.ts";
+import { AGENT_SHARE_CREDENTIALS } from "#lib/s3/credential-specs.ts";
 import { LIVE_TOKEN_OP_REF } from "@shepherdjerred/mc-harness/protocol/live.ts";
 
 /**
@@ -298,6 +299,7 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     },
   },
   ...BRIM_SYNC_CREDENTIALS,
+  ...AGENT_SHARE_CREDENTIALS,
   WOODPECKER_TOKEN: {
     description: "Woodpecker CI API token",
     source: {

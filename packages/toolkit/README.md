@@ -545,7 +545,7 @@ toolkit credentials references --json # effective op:// locators; no secret read
   `ExecCredential` with the homelab admin client certificate, valid for one
   hour. It runs only when client-go sets `KUBERNETES_EXEC_INFO`, so it cannot
   print the key into a terminal or transcript by hand.
-- `aws credential` serves the `seaweedfs`, `brim-sync`, `b2-velero`,
+- `aws credential` serves the `seaweedfs`, `brim-sync`, `agent-share`, `b2-velero`,
   `b2-postgres-wal`, and `b2-seaweedfs-backups` profiles. It refuses a
   terminal on stdout. The Backblaze keys are bucket-scoped, so list a bucket
   (`aws --profile b2-velero s3 ls s3://sjerred-velero/`), not all buckets.
@@ -887,7 +887,7 @@ Omitting PR infers the current branch; `--all` includes resolved/outdated items.
 exact PR head SHA (inferring the current branch's open PR when `PR` is omitted)
 and sends the `recheckReview` signal to `pr-code-review/<owner>/<repo>/<pr>/<sha>`
 in Temporal's `prod` namespace so `ci/code-review` re-evaluates immediately.
-`toolkit pr asset [PR] <file|dir...> [--markdown]` uploads PR demo media
+`toolkit pr asset [PR] <file|dir...> [--markdown] [--profile <name>]` uploads PR demo media
 (before/after screenshots, recordings, HTML previews, static directories, and
 casts; omitting `PR` infers the current branch's open PR) to `public.sjer.red`;
 directories require a root `index.html`. An asciinema `.cast` file also uploads
@@ -897,7 +897,68 @@ player page (`<name>.cast.html`, the printed URL) and a GIF preview
 [`agg`](https://docs.asciinema.org/manual/agg/); `--markdown` emits the GIF
 inline, linked to the player, because GitHub cannot embed the player. `agg`
 is required (`brew install agg`): if it is missing or fails, the command exits
-1 before uploading anything.
+1 before uploading anything. It uses the `agent-share` AWS profile unless
+`--profile` names another; files over 16 MiB upload in parts. `toolkit share`
+(below) shares ad-hoc files outside a PR.
+
+### Sharing files
+
+```bash
+toolkit share private <path...> [--keep] [--name <name>] [--json]
+toolkit share public  <path...> [--keep] [--name <name>] [--json]
+```
+
+`share` uploads files and directories to SeaweedFS and prints one URL per
+top-level path. `public` writes to `public-sjer-red` (`https://public.sjer.red/`,
+readable by anyone on the internet); use it only when asked for public
+sharing. `private` writes to `private-sjer-red`
+(`https://private.tailnet-1a49.ts.net/`), whose URLs open only on the tailnet.
+Both use the `agent-share` AWS profile (`--profile` overrides), an identity
+limited to those two buckets.
+
+Objects are stored at `share/{tmp|keep}/<yyyy-mm-dd>/<random>/<name>`, with a
+fresh 12-character random segment per top-level path, so every URL is unique
+and served with `Cache-Control: public, max-age=31536000, immutable`.
+`share/tmp/` (the default) expires after 30 days; `--keep` stores under
+`share/keep/`, which never expires. `--name` renames the stored file or
+directory (one path only).
+
+- A directory uploads recursively (dotfiles and symlinks are skipped, no
+  `index.html` required); its URL ends in `/`.
+- A `.cast` recording also uploads a player page and an `agg` GIF preview
+  (`brew install agg`); its printed URL is the player page.
+- Files over 16 MiB use multipart upload.
+- `--json` prints one object on stdout and nothing else; progress and the
+  expiry note go to stderr:
+
+```json
+{
+  "visibility": "public",
+  "expires": "30d",
+  "items": [
+    {
+      "path": "notes.txt",
+      "url": "https://public.sjer.red/share/tmp/2026-11-25/k3x7q2m9a4vd/notes.txt",
+      "key": "share/tmp/2026-11-25/k3x7q2m9a4vd/notes.txt",
+      "bytes": 1024,
+      "contentType": "text/plain; charset=utf-8"
+    }
+  ]
+}
+```
+
+`expires` is `"never"` with `--keep`. For a directory, `key` is the key prefix
+ending in `/` and `contentType` is `null`; for a `.cast`, `url` and `key`
+address the player page and `bytes` counts every uploaded object.
+
+| Exit | Meaning                                                             |
+| ---- | ------------------------------------------------------------------- |
+| 0    | Everything uploaded                                                 |
+| 2    | Usage error, missing path, credentials or profile problem, S3 error |
+
+A missing `agent-share` profile reports the fix: `chezmoi apply ~/.aws/config`,
+then confirm `toolkit aws credential agent-share >/dev/null` exits 0. Error
+text is scrubbed of key, token, and signature values.
 
 ### Deployment and browser acceptance
 
@@ -2176,7 +2237,6 @@ profiles remain owned by their respective clients.
 | `ALERT_DASHBOARD_URL` | Hub URL; defaults to the `hub` tailnet host |
 | `BUGSINK_URL`         | Bugsink instance URL                        |
 | `BUGSINK_TOKEN`       | Bugsink API token                           |
-| `AWS_PROFILE`         | AWS profile for `pr asset`                  |
 | `DISCORD_BOT_TOKEN`   | Bot identity for `discord daemon start`     |
 | `DISCORD_USER_TOKEN`  | Userbot identity for `discord daemon start` |
 
