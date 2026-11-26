@@ -60,6 +60,7 @@ const CONSUMER_NAMESPACES = [
   "mail",
   "feeds",
   "errors",
+  "artifacts",
 ] as const;
 
 export function createFlagsDeployment(chart: Chart) {

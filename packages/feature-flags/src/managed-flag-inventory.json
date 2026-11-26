@@ -95,6 +95,11 @@
       "key": "errors",
       "name": "Errors",
       "description": "First-party Sentry-envelope error tracker feature flags."
+    },
+    {
+      "key": "artifacts",
+      "name": "Artifacts",
+      "description": "First-party agent artifact review service runtime controls."
     }
   ],
   "flags": [
@@ -1131,6 +1136,138 @@
       "purpose": "Enable OpenTelemetry tracing for the errors service at process startup.",
       "type": "boolean",
       "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-enabled",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Accept writes (uploads, comments, board edits) in @shepherdjerred/artifacts; off pauses every mutation while reads keep working.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-max-file-bytes",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Largest single file, in bytes, an artifact upload may carry.",
+      "type": "variant",
+      "default": "524288000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-max-version-bytes",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Largest total size, in bytes, of one published artifact version.",
+      "type": "variant",
+      "default": "1073741824",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-max-files",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Most files one published artifact version may contain.",
+      "type": "variant",
+      "default": "2000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-feedback-settle-seconds",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Seconds a human comment can still be edited or deleted before an agent can claim it.",
+      "type": "variant",
+      "default": "10",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-delivery-orphan-minutes",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Minutes an agent must go unseen before another agent may take over the comments it claimed but never handled.",
+      "type": "variant",
+      "default": "15",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-board-idle-days",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Days of inactivity after which an unkept board's content is purged.",
+      "type": "variant",
+      "default": "90",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-archive-grace-days",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Days an archived board keeps its content before the cleanup purges it.",
+      "type": "variant",
+      "default": "7",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-upload-ttl-hours",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Hours an uncommitted upload session lives before the cleanup expires it.",
+      "type": "variant",
+      "default": "24",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-blob-grace-hours",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Hours an unreferenced blob is kept before the cleanup deletes it.",
+      "type": "variant",
+      "default": "24",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "artifacts-event-retention-days",
+      "owner": "artifacts",
+      "namespace": "artifacts",
+      "source": "artifacts",
+      "purpose": "Days the cleanup keeps change events before pruning them.",
+      "type": "variant",
+      "default": "30",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

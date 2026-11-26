@@ -30,7 +30,7 @@ RUN bun install --frozen-lockfile --filter '@shepherdjerred/artifacts'
 # stage's.
 FROM deps AS build
 COPY --parents tsconfig.base.json packages/artifacts packages/config packages/feature-flags packages/eslint-config ./
-RUN cd packages/artifacts && bun run build
+RUN cd packages/artifacts && bun run generate && bun run build
 
 FROM base AS prod-deps
 COPY --parents bun.lock bunfig.toml patches/ ./
@@ -44,12 +44,21 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 FROM base AS runtime
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/artifacts /app/packages/artifacts
-COPY --parents packages/config packages/feature-flags ./
+COPY --parents tsconfig.base.json packages/config packages/feature-flags ./
+# The build stage generated the client (it is gitignored). Running the CLI
+# again here, with `--trust`, fetches the engines `migrate deploy` needs at
+# container start. Prisma records per-run state under $HOME; keep it out of the
+# layer.
+RUN cd packages/artifacts && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/artifacts
-# The Bugsink release; declared after the build steps so it never busts caches.
+# The release version; declared after the build steps so it never busts caches.
 ARG VERSION=dev
 ENV VERSION=${VERSION}
 ENV NODE_ENV=production HOME=/tmp
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7440
 USER 1000:1000
@@ -63,7 +72,8 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # answers /healthz on the internal host class: the smoke's Host (127.0.0.1)
 # must differ from both origins below. The values are placeholders, set on the
 # one command so they never enter an image layer's environment.
-RUN DATABASE_URL=postgresql://smoke:smoke@127.0.0.1:15432/artifacts \
+RUN bunx --no-install prisma --version && \
+    DATABASE_URL=postgresql://smoke:smoke@127.0.0.1:15432/artifacts \
     S3_ENDPOINT=http://127.0.0.1:19000 \
     AWS_ACCESS_KEY_ID=smoke AWS_SECRET_ACCESS_KEY=smoke \
     ARTIFACTS_APP_ORIGIN=http://artifacts.smoke.test \

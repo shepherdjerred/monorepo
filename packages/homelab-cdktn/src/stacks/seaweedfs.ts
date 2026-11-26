@@ -265,6 +265,16 @@ export class SeaweedfsStack extends HomelabStack {
       { protected: true },
     );
 
+    // Private. Agent artifact blobs, written by the artifacts service. No
+    // lifecycle rule: its hourly Temporal cleanup decides what expires (boards
+    // archived or idle past their grace, unreferenced blobs) so the database
+    // and the objects never disagree, and boards marked keep never expire.
+    // Backed up to Backblaze like every bucket not listed as excluded.
+    this.consumed(
+      { env: "S3_BUCKET", namespace: "artifacts" },
+      { protected: true },
+    );
+
     // Private, loss-intolerant raw Discord corpus. Immutable response pages,
     // manifests, and projections are mirrored to R2 before a snapshot pointer
     // is advanced. No expiry: Discord history and captured deletions are not

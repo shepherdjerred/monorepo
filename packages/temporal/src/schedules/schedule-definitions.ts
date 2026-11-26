@@ -16,6 +16,7 @@ import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
 import { STORM_FORUM_SCHEDULES } from "./storm-forum-schedule-definitions.ts";
 import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 import { CI_SCHEDULES } from "./ci-schedule-definitions.ts";
+import { ARTIFACTS_CLEANUP_SCHEDULE } from "./artifacts-cleanup.ts";
 import { TRACKER_ATTACHMENT_SCHEDULE } from "./tracker-attachments.ts";
 import { TEMPORAL_FAILURE_WATCH_SCHEDULE } from "./temporal-failure-watch.ts";
 import { DELIVERY_DISPATCH_SCHEDULE } from "./delivery.ts";
@@ -86,6 +87,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   MEDIA_QUALITY_GUIDE_SCHEDULE,
   ...MEDIA_SUBTITLE_MAINTENANCE_SCHEDULES_V1,
   TRACKER_ATTACHMENT_SCHEDULE,
+  ARTIFACTS_CLEANUP_SCHEDULE,
   TEMPORAL_FAILURE_WATCH_SCHEDULE,
   DELIVERY_DISPATCH_SCHEDULE,
   {

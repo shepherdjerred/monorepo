@@ -26,6 +26,7 @@ export const TOOL_HOSTS = {
 export const APP_HOSTS = {
   hub: "https://hub.tailnet-1a49.ts.net",
   tracker: "https://tracker.tailnet-1a49.ts.net",
+  artifacts: "https://artifacts.tailnet-1a49.ts.net",
   delivery: "https://delivery.tailnet-1a49.ts.net",
   errors: "https://errors.tailnet-1a49.ts.net",
   flags: "https://flags.tailnet-1a49.ts.net",
@@ -62,6 +63,12 @@ export type ConsoleLink = {
  */
 export const CONSOLE_LINKS: readonly ConsoleLink[] = [
   { id: "hub", label: "Hub", url: APP_HOSTS.hub, group: "Apps" },
+  {
+    id: "artifacts",
+    label: "Artifacts",
+    url: APP_HOSTS.artifacts,
+    group: "Apps",
+  },
   { id: "delivery", label: "Delivery", url: APP_HOSTS.delivery, group: "Apps" },
   { id: "errors", label: "Errors", url: APP_HOSTS.errors, group: "Apps" },
   { id: "flags", label: "Flags", url: APP_HOSTS.flags, group: "Apps" },

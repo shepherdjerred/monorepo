@@ -51,6 +51,10 @@
         "bucket": "apple-sdks",
         "lifecycle": { "prevent_destroy": true }
       },
+      "artifacts_blobs": {
+        "bucket": "artifacts-blobs",
+        "lifecycle": { "prevent_destroy": true }
+      },
       "better_skill_capped": { "bucket": "better-skill-capped" },
       "brim_sessions": {
         "bucket": "brim-sessions",

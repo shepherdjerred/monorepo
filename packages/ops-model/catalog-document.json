@@ -2805,13 +2805,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["artifacts"]
+        "namespaces": ["artifacts"],
+        "argoApps": ["artifacts"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "artifacts": "inactive"
-        },
-        "charts": ["artifacts"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/artifacts",
+            "argoApp": "artifacts"
+          }
+        ]
       }
     }
   ],
@@ -3220,6 +3224,14 @@
       "configurationRevisionId": "errors/prod/1"
     },
     {
+      "id": "artifacts/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "artifacts/prod/2",
+      "configurationRevisionId": "artifacts/prod/1"
+    },
+    {
       "id": "flags/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3265,7 +3277,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/2",
-      "configurationRevisionId": "argocd/prod/20"
+      "configurationRevisionId": "argocd/prod/21"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3722,6 +3734,46 @@
     },
     {
       "dependent": "arcade/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "artifacts/prod",
       "prerequisite": "tofu-seaweedfs/prod",
       "rule": "any-accepted"
     },
@@ -5594,6 +5646,7 @@
       "mail": "outbound-mail/prod",
       "feeds": "feeds/prod",
       "errors": "errors/prod",
+      "artifacts": "artifacts/prod",
       "charts": "charts/prod",
       "ci-cache": "ci-cache/prod"
     },

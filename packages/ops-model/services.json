@@ -7,6 +7,7 @@
     "tracker": "tracker/prod",
     "feeds": "feeds/prod",
     "errors": "errors/prod",
+    "artifacts": "artifacts/prod",
     "delivery": "delivery/prod",
     "trmnl-dashboard": "trmnl-dashboard/prod",
     "alert-dashboard": "ops-dashboard/prod",
@@ -936,14 +937,25 @@
     },
     {
       "id": "artifacts",
-      "rootReleaseExclusions": { "artifacts": "inactive" },
-      "images": ["artifacts"],
-      "charts": ["artifacts"],
       "title": "Artifacts",
       "kind": "product",
       "package": "artifacts",
+      "aliases": [],
       "namespaces": ["artifacts"],
-      "argoApps": []
+      "argoApps": ["artifacts"],
+      "charts": [],
+      "images": ["artifacts"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/artifacts",
+          "argoApp": "artifacts"
+        }
+      ]
     }
   ]
 }
