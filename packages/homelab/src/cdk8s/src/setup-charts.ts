@@ -63,6 +63,8 @@ import {
 
 import { createCiCacheChart } from "./cdk8s-charts/ci-cache.ts";
 
+import { createArtifactsChart } from "./cdk8s-charts/artifacts.ts";
+
 /**
  * Sets up all charts for the application
  */
@@ -136,6 +138,8 @@ export async function setupCharts(app: App): Promise<void> {
   createChartsBootstrapChart(app);
 
   createCiCacheChart(app);
+
+  createArtifactsChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

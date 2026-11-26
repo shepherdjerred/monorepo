@@ -9,6 +9,7 @@ hold only scoped invariants that agents must keep in context.
 | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [alert-dashboard](alert-dashboard/)                             | Hub — snapshot overview, alert ledger, digest email, Grafana previews                                     |
 | [arcade](arcade/)                                               | Multi-game Discord arcade with dedicated streaming accounts, browser controllers, and per-game statistics |
+| [artifacts](artifacts/)                                         | Agent artifact review service: two-host isolated content, boards, threaded feedback, and `wait` delivery  |
 | [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history              |
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |
 | [golink](golink/)                                               | Tailnet shortlink service with live cluster/platform dynamic aliases and manual overrides                 |

@@ -85,6 +85,10 @@
         "*.ts"
       ]
     },
+    "packages/artifacts": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts", "prisma/**/*.prisma", "*.ts"]
+    },
     "packages/errors": {
       "entry": ["src/**/*.test.{ts,tsx}", "architecture-fixtures/**/*.ts"],
       "project": [
