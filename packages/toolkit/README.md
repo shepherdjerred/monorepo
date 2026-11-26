@@ -589,6 +589,82 @@ token; the CLI redacts it (`/_t/[redacted]/`) from everything it prints. The CLI
 the service's `contract` and `procedures` schemas, so the compiled binary
 carries no server code.
 
+## Incidents
+
+`toolkit incident` reads and writes Hub's incidents module
+(`/api/incidents`): one durable record per shared-system breakage or
+maintenance window, with a single commander. It replaces Forum notices for red
+main, stuck Delivery, and shared-service outages; resource leases stay Forum
+notices. Every `<INC-N>` also accepts `N` or the incident UUID. Reads need no
+identity; writes use the same native session actor as `forum`
+(`--actor-key`/`--actor-kind`/`--actor-name` override it). The Hub URL is
+`OPS_DASHBOARD_URL` / `ops.dashboard.url`, or `--hub-url`. Run
+`toolkit incident --help` for every flag.
+
+Blocked by Delivery, a red main, or another shared system:
+
+1. `toolkit incident check [--system X]`: open incidents, your relation, one next command.
+2. You likely caused it (exit 11): `toolkit incident take INC-N`, then fix it.
+3. Otherwise `toolkit incident wait INC-N` (or `--system X`): joins as affected and
+   exits 0 when it resolves. Past the takeover grace with nobody in command,
+   exactly one waiter wins the server's dispatch lease and spawns a commander
+   session; the rest keep waiting, and a failed or unclaimed spawn lets another retry.
+4. Nothing open: `toolkit incident declare`; a duplicate names the open one.
+
+```bash
+toolkit incident check --system main-ci
+toolkit incident wait --system delivery --timeout-sec 3600
+toolkit incident declare --system storage --severity sev2 --title "Storage is read-only" \
+  --exit-condition "Writes to the storage pool succeed again." --link pr=5150 --take
+toolkit incident update INC-12 --body "Remounted; watching writes"
+toolkit incident status INC-12 monitoring --expected-revision 4
+toolkit incident link INC-12 --kind pipeline --ref 19260 --title "red run"
+toolkit incident take INC-12 --spawn          # dispatch a commander session yourself
+toolkit incident claim INC-12 --dispatch-token <TOKEN>   # run by the spawned session
+toolkit incident handoff INC-12 --to claude-code:<session> | release INC-12
+toolkit incident resolve INC-12 --expected-revision 6 --note "Probe write succeeded"
+toolkit incident watch INC-12 --until-resolved --json
+```
+
+`status`, `edit`, `resolve`, and `reopen` require `--expected-revision`
+(read it with `view`); `update`, `handoff`, and `release` default to the
+current revision, since an appended note or a commander-only handoff does not
+depend on what the caller saw. `wait --no-spawn` takes command itself instead
+of spawning a session, and so does every waiter when the
+`alert-dashboard-incidents-takeover-spawn-enabled` flag is off. Maintenance is
+waited on but never taken over or dispatched. `wait` sets one
+timer for the next deadline (takeover eligibility or lease expiry, which the
+server lapses without publishing) and otherwise only refetches on stream
+frames; disconnects reconnect with backoff and refetch.
+
+The spawner is `herdr-new-worktree` from PATH (`INCIDENT_SPAWNER` /
+`incident.spawner` overrides it). It runs as `<spawner> --request-env` with the
+request in `HERDR_WORKTREE_REQUEST`, so the dispatch token never appears in a
+process list: provider from the lease, this machine, the current repository's
+main checkout and `~/.herdr/worktrees/<repo>`, and a tab named `INC-N
+commander`. The token appears only inside that request; JSON output prints
+`[redacted]`, and the timeline records the spawn without it.
+
+| Exit    | Meaning                                                                       |
+| ------- | ----------------------------------------------------------------------------- |
+| 0       | Done; `check`: nothing relevant open; `wait`: resolved, or nothing open       |
+| 1       | Refused (forbidden, not found, bad request) or Hub unreachable; spawn failed  |
+| 2       | Usage error                                                                   |
+| 6       | `wait`/`watch` `--timeout-sec` elapsed; the incident is not necessarily stuck |
+| 10      | `check`: a relevant open incident exists                                      |
+| 11      | `check`/`wait`: you likely caused it and nobody commands it; take it          |
+| 12      | `wait`: you are the commander (already, or took command after the grace)      |
+| 13      | `declare`: an open incident already covers the system; wait on or join it     |
+| 14      | Stale `--expected-revision`; the message names the current one                |
+| 15      | `take`/`claim`: someone else commands or is dispatching, or grace not over    |
+| 130/143 | SIGINT/SIGTERM                                                                |
+
+When main is red, `ci wait` (exit 5) and `ci main` add the open `main-ci`
+incident, its command state, and the `toolkit incident` command to run (`wait`,
+or `take` for its suspect) as `incident` in JSON and an `Incident:` line in
+text. A failing lookup prints a warning line instead and never changes the CI
+exit code.
+
 ## Platform commands
 
 Platform commands delegate to native CLIs. Explicit flags and environment
@@ -958,7 +1034,8 @@ to its verdict. A manual run must include verification, release admission,
 image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
 run keeps main red while its recovery build is pending. Keep working if main is
-red; read active forum threads (`toolkit forum list --json`) and failure
+red; check the main-ci incident the report names (`toolkit incident wait`,
+or `take` if you caused it), read active forum threads (`toolkit forum list --json`) and failure
 evidence, follow an owned recovery, repair failures your changes caused, or
 claim/post a `notice` (`--owner me`) before picking up an unowned blocker with
 no better active owner; otherwise continue your task. `ci explain --main` is an
@@ -2388,6 +2465,7 @@ value or unparseable file is an error, not a fallback.
 | `HISTORY_METRICS_PUSH_ENDPOINT` / `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
 | `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://hub.tailnet-1a49.ts.net`                     |
 | `ARTIFACTS_URL` / `artifacts.url`                                 | `https://artifacts.tailnet-1a49.ts.net`               |
+| `INCIDENT_SPAWNER` / `incident.spawner`                           | `herdr-new-worktree` (incident commander spawner)     |
 | `BRIM_SYNC_MACHINE_ID` / `brim.sync.machine.id`                   | normalized hostname                                   |
 | `BRIM_SYNC_BUCKET` / `brim.sync.bucket`                           | `brim-sessions`                                       |
 | `BRIM_SYNC_PROFILE` / `brim.sync.profile`                         | `brim-sync` (AWS profile)                             |
