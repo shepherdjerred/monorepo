@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { Button, StatusGlyph, type Severity } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -12,13 +13,26 @@ import { StaleNotice } from "./stale-notice.tsx";
 import { formatInstant } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
 import { UplotChart, type ChartSeries } from "#client/charts/uplot-chart.tsx";
-import { Button } from "#components/button";
 import {
   AlertOccurrenceIdSchema,
   type AlertDetail,
   type Previews,
 } from "#shared/schema";
 import { epochNanosecondsToInstantText } from "#shared/time";
+import { AlertSeverity } from "./ledger-severity.tsx";
+import { PageHeading } from "./ops/ops-ui.tsx";
+
+/** A preview's status as a glyph and its word. */
+const PREVIEW_STATUS: Readonly<
+  Record<
+    Previews["prometheus"]["status"],
+    { readonly tone: Severity; readonly label: string }
+  >
+> = {
+  available: { tone: "ok", label: "Available" },
+  error: { tone: "error", label: "Error" },
+  unavailable: { tone: "unknown", label: "Unavailable" },
+};
 
 const PrometheusMatrixBodySchema = z.object({
   resultType: z.literal("matrix"),
@@ -99,10 +113,13 @@ export function Preview({
       ? parsePrometheusMatrixSeries(value.data)
       : null;
   return (
-    <section className="preview">
+    <section className="preview chart-panel">
       <div className="preview-heading">
-        <h2>{title}</h2>
-        <span className={`preview-status ${value.status}`}>{value.status}</span>
+        <h3>{title}</h3>
+        <StatusGlyph
+          severity={PREVIEW_STATUS[value.status].tone}
+          label={PREVIEW_STATUS[value.status].label}
+        />
       </div>
       {value.status === "available" ? (
         <>
@@ -142,9 +159,13 @@ function AlertMetadataPanel({
 }): React.JSX.Element {
   const annotations = deduplicatedAnnotations(value.annotations, value.summary);
   return (
-    <section className="panel metadata">
-      <h2>Metadata</h2>
-      <dl>
+    <section className="ledger-section" aria-labelledby="metadata-heading">
+      <header className="ui-section-head">
+        <h2 className="ui-section-title" id="metadata-heading">
+          Metadata
+        </h2>
+      </header>
+      <dl className="def-table">
         <div>
           <dt>Fingerprint</dt>
           <dd className="mono">{value.fingerprint}</dd>
@@ -170,7 +191,7 @@ function AlertMetadataPanel({
           <dd>{value.resolutionSource ?? "—"}</dd>
         </div>
       </dl>
-      <h3>Labels</h3>
+      <h3 className="def-subhead">Labels</h3>
       <div className="label-list">
         {Object.entries(value.labels).map(([key, label]) => (
           <code key={key}>
@@ -178,7 +199,7 @@ function AlertMetadataPanel({
           </code>
         ))}
       </div>
-      <h3>Annotations</h3>
+      <h3 className="def-subhead">Annotations</h3>
       <div className="label-list">
         {annotations.map(([key, annotation]) => (
           <code key={key}>
@@ -247,142 +268,200 @@ function AlertDetailContent({
         const runbookUrl = value.annotations["runbook_url"];
         const isHouse = value.labels["category"] === "household";
         return (
-          <main>
+          <main className="ledger alert-detail">
             <title>{`${value.alertname} · Hub`}</title>
             <StaleNotice errors={meta.errors} />
-            <Link className="back-link" to={isHouse ? "/house" : "/alerts"}>
-              <ArrowLeftIcon /> {isHouse ? "House" : "Active alerts"}
-            </Link>
-            <div className="detail-heading">
-              <div>
-                <div className="badge-row">
-                  <span className={`severity severity-${value.severity}`}>
-                    {value.severity}
-                  </span>
-                  <span className="state">{value.lifecycleState}</span>
-                  {value.suppressionState === "none" ? null : (
-                    <span className="suppression">
-                      {value.suppressionState}
-                    </span>
-                  )}
-                </div>
-                <h1>{value.alertname}</h1>
-                <p>{value.summary}</p>
+            <PageHeading title={value.alertname} meta={value.summary}>
+              <AlertSeverity severity={value.severity} />
+              <span className="state">{value.lifecycleState}</span>
+              {value.suppressionState === "none" ? null : (
+                <span className="suppression">{value.suppressionState}</span>
+              )}
+              {runbookUrl === undefined ? null : (
+                <a
+                  className="ui-btn"
+                  href={runbookUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Runbook <ExternalLinkIcon aria-hidden="true" />
+                </a>
+              )}
+              {dashboardUrl === undefined ? null : (
+                <a
+                  className="ui-btn"
+                  href={dashboardUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Dashboard <ExternalLinkIcon aria-hidden="true" />
+                </a>
+              )}
+              {value.generatorUrl === null ? null : (
+                <a
+                  className="ui-btn"
+                  href={value.generatorUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Source <ExternalLinkIcon aria-hidden="true" />
+                </a>
+              )}
+            </PageHeading>
+            <div className="ledger-body">
+              <Link className="back-link" to={isHouse ? "/house" : "/alerts"}>
+                <ArrowLeftIcon aria-hidden="true" />{" "}
+                {isHouse ? "House" : "Active alerts"}
+              </Link>
+              <div className="detail-grid">
+                <AlertMetadataPanel value={value} />
+                <section
+                  className="ledger-section"
+                  aria-labelledby="lifecycle-heading"
+                >
+                  <header className="ui-section-head">
+                    <h2 className="ui-section-title" id="lifecycle-heading">
+                      Lifecycle
+                    </h2>
+                  </header>
+                  <div className="ui-table-scroll">
+                    <table
+                      className="ui-table"
+                      aria-labelledby="lifecycle-heading"
+                    >
+                      <thead>
+                        <tr>
+                          <th scope="col">When</th>
+                          <th scope="col">Event</th>
+                          <th scope="col">Source</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {value.events.map((event) => (
+                          <tr key={event.id}>
+                            <td className="mono">
+                              <time dateTime={event.occurredAt}>
+                                {formatInstant(event.occurredAt)}
+                              </time>
+                            </td>
+                            <th scope="row">
+                              {event.type.replaceAll("_", " ")}
+                            </th>
+                            <td>{event.source}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
-              <div className="link-row">
-                {runbookUrl === undefined ? null : (
-                  <a href={runbookUrl} rel="noreferrer" target="_blank">
-                    Runbook <ExternalLinkIcon />
-                  </a>
-                )}
-                {dashboardUrl === undefined ? null : (
-                  <a href={dashboardUrl} rel="noreferrer" target="_blank">
-                    Dashboard <ExternalLinkIcon />
-                  </a>
-                )}
-                {value.generatorUrl === null ? null : (
-                  <a href={value.generatorUrl} rel="noreferrer" target="_blank">
-                    Source <ExternalLinkIcon />
-                  </a>
-                )}
-              </div>
-            </div>
-            <div className="detail-grid">
-              <AlertMetadataPanel value={value} />
-              <section className="panel">
-                <h2 className="section-heading">Lifecycle</h2>
-                <div className="timeline compact">
-                  {value.events.map((event) => (
-                    <article key={event.id}>
-                      <span className="timeline-dot" />
-                      <div>
-                        <strong>{event.type.replaceAll("_", " ")}</strong>
-                        <p>{event.source}</p>
-                        <time className="mono" dateTime={event.occurredAt}>
-                          {formatInstant(event.occurredAt)}
-                        </time>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
-              <section className="panel">
-                <h2 className="section-heading">Webhook evidence</h2>
+              <section
+                className="ledger-section"
+                aria-labelledby="evidence-heading"
+              >
+                <header className="ui-section-head">
+                  <h2 className="ui-section-title" id="evidence-heading">
+                    Webhook evidence
+                  </h2>
+                </header>
                 {deliveries.length === 0 ? (
-                  <p>
+                  <p className="ledger-note">
                     No webhook delivery observed for this occurrence. It may
                     have been discovered by reconciliation.
                   </p>
                 ) : (
-                  <div className="timeline compact">
-                    {deliveries.map((delivery) => (
-                      <article key={delivery.id}>
-                        <span className="timeline-dot" />
-                        <div>
-                          <strong>
-                            {delivery.status} · {delivery.receiver}
-                          </strong>
-                          <p className="mono">{delivery.groupKey}</p>
-                          <time className="mono" dateTime={delivery.receivedAt}>
-                            {formatInstant(delivery.receivedAt)}
-                          </time>
-                          <p className="mono">
-                            sha256:{delivery.payloadHash.slice(0, 12)} · raw{" "}
-                            {delivery.rawPayloadRetained
-                              ? "retained"
-                              : "expired"}
-                          </p>
-                        </div>
-                      </article>
-                    ))}
+                  <div className="ui-table-scroll">
+                    <table
+                      className="ui-table"
+                      aria-labelledby="evidence-heading"
+                    >
+                      <thead>
+                        <tr>
+                          <th scope="col">Received</th>
+                          <th scope="col">Delivery</th>
+                          <th scope="col">Group key</th>
+                          <th scope="col">Payload</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deliveries.map((delivery) => (
+                          <tr key={delivery.id}>
+                            <td className="mono">
+                              <time dateTime={delivery.receivedAt}>
+                                {formatInstant(delivery.receivedAt)}
+                              </time>
+                            </td>
+                            <th scope="row">
+                              {delivery.status} · {delivery.receiver}
+                            </th>
+                            <td className="mono evidence-key">
+                              {delivery.groupKey}
+                            </td>
+                            <td className="mono">
+                              sha256:{delivery.payloadHash.slice(0, 12)} · raw{" "}
+                              {delivery.rawPayloadRetained
+                                ? "retained"
+                                : "expired"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
                 {alert.hasNextPage ? (
-                  <Button
-                    disabled={alert.isFetchingNextPage}
-                    onClick={() => void alert.fetchNextPage()}
-                    type="button"
-                  >
-                    {alert.isFetchingNextPage
-                      ? "Loading evidence…"
-                      : "Load more evidence"}
-                  </Button>
+                  <div className="ui-section-foot">
+                    <Button
+                      disabled={alert.isFetchingNextPage}
+                      onClick={() => void alert.fetchNextPage()}
+                    >
+                      {alert.isFetchingNextPage
+                        ? "Loading evidence…"
+                        : "Load more evidence"}
+                    </Button>
+                  </div>
                 ) : null}
               </section>
-            </div>
-            <div className="previews">
-              <h2>Observability previews</h2>
-              {Loaded.match(previewsValue, {
-                loading: () => (
-                  <div className="loading-state">Loading bounded previews…</div>
-                ),
-                error: () => (
-                  <div className="error-state">
-                    Previews are unavailable; alert details remain available.
-                  </div>
-                ),
-                available: (data, previewMeta) => (
-                  <>
-                    {/*
+              <section className="previews" aria-labelledby="previews-heading">
+                <header className="ui-section-head">
+                  <h2 className="ui-section-title" id="previews-heading">
+                    Observability previews
+                  </h2>
+                </header>
+                {Loaded.match(previewsValue, {
+                  loading: () => (
+                    <div className="loading-state">
+                      Loading bounded previews…
+                    </div>
+                  ),
+                  error: () => (
+                    <div className="error-state">
+                      Previews are unavailable; alert details remain available.
+                    </div>
+                  ),
+                  available: (data, previewMeta) => (
+                    <>
+                      {/*
                       The previews are their own dependency: the outer
                       LoadingBlock joins only `alertValue`, so a failed preview
                       refetch over cached previews is invisible to the page's
                       StaleNotice. Without this the old Prometheus/Loki/Tempo
                       values read as current.
                     */}
-                    <StaleNotice errors={previewMeta.errors} />
-                    <div className="preview-grid">
-                      <Preview
-                        enablePrometheusChart
-                        title="Prometheus"
-                        value={data.prometheus}
-                      />
-                      <Preview title="Loki" value={data.loki} />
-                      <Preview title="Tempo" value={data.tempo} />
-                    </div>
-                  </>
-                ),
-              })}
+                      <StaleNotice errors={previewMeta.errors} />
+                      <div className="preview-grid">
+                        <Preview
+                          enablePrometheusChart
+                          title="Prometheus"
+                          value={data.prometheus}
+                        />
+                        <Preview title="Loki" value={data.loki} />
+                        <Preview title="Tempo" value={data.tempo} />
+                      </div>
+                    </>
+                  ),
+                })}
+              </section>
             </div>
           </main>
         );

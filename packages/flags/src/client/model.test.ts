@@ -1,33 +1,35 @@
 import { expect, test } from "vitest";
 import {
   addSegment,
+  deploymentPath,
   filterFlags,
+  flagPath,
   flagState,
-  parseSearch,
+  pageTitle,
   searchSuffix,
   draftError,
   listState,
-  parseRoute,
   sameFlag,
   sidebarEntries,
+  withQuery,
 } from "./model.ts";
 
-test("parses a deployment and an encoded flag key", () => {
-  expect(parseRoute("/")).toBeUndefined();
-  expect(parseRoute("/scout/prod")).toEqual({
-    catalog: "scout",
-    stage: "prod",
-  });
-  expect(parseRoute("/scout/prod/dares_enabled")).toEqual({
-    catalog: "scout",
-    stage: "prod",
-    key: "dares_enabled",
-  });
-  expect(parseRoute("/scout/prod/a%2Fb")).toEqual({
-    catalog: "scout",
-    stage: "prod",
-    key: "a/b",
-  });
+test("builds deployment and flag paths with encoded segments", () => {
+  expect(deploymentPath("scout", "prod")).toBe("/scout/prod");
+  expect(flagPath("scout", "prod", "dares_enabled")).toBe(
+    "/scout/prod/dares_enabled",
+  );
+  expect(flagPath("scout", "prod", "a/b")).toBe("/scout/prod/a%2Fb");
+});
+
+test("the tab title names the flag and deployment, most specific first", () => {
+  expect(pageTitle(undefined)).toBe("Flags");
+  expect(pageTitle({ catalog: "scout", stage: "prod" })).toBe(
+    "scout/prod · Flags",
+  );
+  expect(pageTitle({ catalog: "scout", stage: "prod", key: "dares" })).toBe(
+    "dares · scout/prod · Flags",
+  );
 });
 
 test("prod-only catalogs are one row and two-stage catalogs stay grouped", () => {
@@ -112,8 +114,12 @@ test("search filters flags by key, ignoring case and surrounding spaces", () => 
 test("the search round-trips through the page URL", () => {
   expect(searchSuffix("")).toBe("");
   expect(searchSuffix(" a b ")).toBe("?q=a%20b");
-  expect(parseSearch("?q=a%20b")).toBe("a b");
-  expect(parseSearch("")).toBe("");
+  // The field's own params keep the text as typed and drop an empty search.
+  const page = new URLSearchParams("q=old&tab=x");
+  expect(withQuery(page, "a ").get("q")).toBe("a ");
+  expect(withQuery(page, "a ").get("tab")).toBe("x");
+  expect(withQuery(page, "").has("q")).toBe(false);
+  expect(page.get("q")).toBe("old");
 });
 
 test("flag state splits into a glyph kind and the word shown", () => {

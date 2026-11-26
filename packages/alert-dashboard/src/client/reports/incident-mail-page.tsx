@@ -1,3 +1,6 @@
+import { AlertSeverity } from "#client/ledger-severity.tsx";
+import { SeveritySchema } from "#shared/schema";
+import { pillSeverity } from "#client/visuals/pill.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useQuery } from "@tanstack/react-query";
@@ -41,11 +44,16 @@ const OCCURRENCE_COLUMNS: readonly DataTableColumn<IncidentMailOccurrence>[] = [
     key: "severity",
     header: "Severity",
     sortValue: (occ) => occ.severity,
-    render: (occ) => (
-      <span className={`severity severity-${occ.severity}`}>
-        {occ.severity}
-      </span>
-    ),
+    render: (occ) => {
+      // The outbox records the severity as text; a ledger severity reads as
+      // the ledger's glyph and word, anything else as recorded.
+      const parsed = SeveritySchema.safeParse(occ.severity);
+      return parsed.success ? (
+        <AlertSeverity severity={parsed.data} />
+      ) : (
+        occ.severity
+      );
+    },
   },
   {
     key: "lifecycle",
@@ -84,17 +92,17 @@ export function IncidentMailBody({
       </Link>
 
       <div className="rep-heading-badges">
-        <span className={`visual-pill visual-pill-${statusMeta.tone}`}>
+        <span className="visual-pill" data-sev={pillSeverity(statusMeta.tone)}>
           {statusMeta.label}
         </span>
         <code className="rep-mailbox-chip">{detail.mailboxTo}</code>
-        <span className="visual-pill visual-pill-neutral">
+        <span className="visual-pill">
           {String(detail.attemptCount)} attempt
           {detail.attemptCount === 1 ? "" : "s"}
         </span>
       </div>
 
-      <PageHeading eyebrow="Incident alert email" title={detail.subject} />
+      <PageHeading meta="Incident alert email" title={detail.subject} />
 
       <section
         className="panel rep-section-panel"
@@ -121,7 +129,10 @@ export function IncidentMailBody({
           <div>
             <dt>Status</dt>
             <dd>
-              <span className={`visual-pill visual-pill-${statusMeta.tone}`}>
+              <span
+                className="visual-pill"
+                data-sev={pillSeverity(statusMeta.tone)}
+              >
                 {statusMeta.label}
               </span>
             </dd>

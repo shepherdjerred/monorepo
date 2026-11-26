@@ -66,6 +66,13 @@ type. The search field filters flags by key and keeps the filter in the `?q=`
 query, so it survives choosing a flag. Choosing a flag opens its editor beside
 the table.
 
+Navigation is client-side (`react-router`): the sidebar, flag rows, the "All
+flags" link and the deployment select change the URL without reloading the
+page, and choosing another flag in the same deployment reuses the loaded
+document. While another deployment loads, the previous table stays on screen,
+dimmed and `aria-busy`, under the new deployment's header. The tab title names
+the open flag and deployment, e.g. `dares_enabled · scout/prod · Flags`.
+
 "Review save" opens a dialog with the stored flag before and the draft after;
 Save writes that revision. A conflicting write is left unchanged: a warning
 above the form shows the other value beside the draft, with a button to load it.

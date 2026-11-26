@@ -234,7 +234,6 @@
     "pdfjs-dist": "6.4.299",
     "postcss": "8.5.29",
     "sanitize-html": "2.18.2",
-    "shell-quote": "1.12.0",
     "satteri": "0.11.7",
     "sherpa-onnx-darwin-arm64": "1.13.8",
     "sherpa-onnx-darwin-x64": "1.13.8",
@@ -255,12 +254,7 @@
     "unrs-resolver"
   ],
   "patchedDependencies": {
-    "@react-native/metro-babel-transformer@0.87.1": "patches/@react-native%2Fmetro-babel-transformer@0.87.1.patch",
-    "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
-    "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
-    "react-native-worklets@0.13.0": "patches/react-native-worklets@0.13.0.patch",
     "@lng2004/node-datachannel@0.32.3-20260815.5": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
-    "@react-native-menu/menu@2.0.0": "patches/@react-native-menu%2Fmenu@2.0.0.patch",
     "mineflayer@4.39.0": "patches/mineflayer@4.39.0.patch",
     "discord.js-selfbot-v13@3.7.1": "patches/discord.js-selfbot-v13@3.7.1.patch",
     "@astrojs/internal-helpers@0.13.2": "patches/@astrojs%2Finternal-helpers@0.13.2.patch",

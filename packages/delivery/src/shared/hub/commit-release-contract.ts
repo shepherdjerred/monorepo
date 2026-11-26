@@ -46,3 +46,15 @@ export const CommitPipelineNoteSchema = z.object({
   author: z.string().nullable(),
 });
 export type CommitPipelineNote = z.infer<typeof CommitPipelineNoteSchema>;
+
+/**
+ * What a commit's own pipeline built and passed: how many services in all,
+ * and how many of them changed (the rest built with nothing to deploy).
+ * Zero services means no service was built on its own, so a carried failure
+ * is the whole commit.
+ */
+export const BuiltSchema = z.object({
+  services: z.number().int().nonnegative(),
+  changed: z.number().int().nonnegative(),
+});
+export type Built = z.infer<typeof BuiltSchema>;

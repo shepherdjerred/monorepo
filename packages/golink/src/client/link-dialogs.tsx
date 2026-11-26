@@ -112,17 +112,19 @@ export function MissingSlugBanner({
   onDismiss: () => void;
 }) {
   return (
-    <div className="golink-banner" data-sev="info" role="status">
+    <div className="ui-banner golink-missing" data-sev="info" role="status">
       <span>
-        <code className="ui-mono ui-strong">go/{slug}</code> does not exist yet.
+        <code className="golink-short">go/{slug}</code> does not exist yet.
       </span>
       <span className="golink-banner-actions">
         {writesEnabled && (
-          <Button variant="primary" onClick={onCreate}>
+          <Button size="page" variant="primary" onClick={onCreate}>
             Create go/{slug}
           </Button>
         )}
-        <Button onClick={onDismiss}>Dismiss</Button>
+        <Button size="page" onClick={onDismiss}>
+          Dismiss
+        </Button>
       </span>
     </div>
   );
@@ -159,6 +161,7 @@ export function DeleteConfirmDialog({
       )}
       <div className="golink-dialog-actions">
         <Button
+          size="page"
           disabled={isDeleting}
           onClick={() => {
             dialogRef.current?.close();
@@ -167,6 +170,7 @@ export function DeleteConfirmDialog({
           Cancel
         </Button>
         <Button
+          size="page"
           className="golink-danger"
           disabled={isDeleting}
           onClick={onConfirm}
@@ -260,7 +264,7 @@ export function LinkFormDialog({
               id="short-input"
               name="short"
               type="text"
-              className="ui-field-control"
+              className="ui-input"
               required
               pattern={SHORT_SLUG_PATTERN}
               maxLength={64}
@@ -301,7 +305,7 @@ export function LinkFormDialog({
             id="target-input"
             name="targetUrl"
             type="url"
-            className="ui-field-control"
+            className="ui-input"
             required
             placeholder="https://grafana.tailnet-1a49.ts.net"
             value={targetValue}
@@ -330,13 +334,14 @@ export function LinkFormDialog({
         </div>
 
         {mutationError !== null && (
-          <p className="golink-banner" data-sev="error" role="alert">
+          <p className="ui-banner" data-sev="error" role="alert">
             {mutationError}
           </p>
         )}
 
         <div className="golink-dialog-actions">
           <Button
+            size="page"
             type="button"
             disabled={isSubmitting}
             onClick={() => {
@@ -346,6 +351,7 @@ export function LinkFormDialog({
             Cancel
           </Button>
           <Button
+            size="page"
             type="submit"
             variant="primary"
             disabled={!writesEnabled || isSubmitting}

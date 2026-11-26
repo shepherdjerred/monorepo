@@ -15,9 +15,10 @@ import {
   type DataTableColumn,
 } from "#client/visuals/index.ts";
 import { formatValue } from "#shared/ops-format";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 type LcpClassification = {
-  readonly label: "Good" | "Needs Improvement" | "Poor" | "No data";
+  readonly label: "Good" | "Needs improvement" | "Poor" | "No data";
   readonly glyph: "✓" | "!" | "✕" | "—";
   readonly tone: "ok" | "warning" | "error" | "neutral";
 };
@@ -40,7 +41,10 @@ function FunnelCard({
     <article className="product-funnel-card" aria-label={funnel.name}>
       <header className="product-funnel-head">
         <h3>{funnel.name}</h3>
-        <span className="visual-pill visual-pill-info">{`${String(overall7d)}% 7d conversion`}</span>
+        <span
+          className="visual-pill"
+          data-sev="info"
+        >{`${String(overall7d)}% 7d conversion`}</span>
       </header>
       <StackedMeter
         label="7d entry outcome"
@@ -49,13 +53,13 @@ function FunnelCard({
             key: "converted",
             label: "Completed funnel",
             value: final7d,
-            color: "var(--status-good)",
+            color: "var(--ui-sev-ok)",
           },
           {
             key: "dropoff",
             label: "Drop-off",
             value: Math.max(0, entry7d - final7d),
-            color: "var(--status-unknown)",
+            color: "var(--ui-sev-unknown)",
           },
         ]}
       />
@@ -128,7 +132,7 @@ function buildSiteColumns(
   return [
     tableCol(
       "host",
-      "Site / Host",
+      "Site / host",
       (site) => {
         const owner =
           site.siteKey === null
@@ -145,7 +149,7 @@ function buildSiteColumns(
     ),
     tableCol(
       "trend",
-      "7d Trend",
+      "7d trend",
       (site) => (
         <div className="product-trend-cell">
           <Sparkline
@@ -185,7 +189,7 @@ function buildSiteColumns(
                 ? "—"
                 : `${String(Math.round(site.p75LcpMs))} ms`}
             </span>
-            <span className={`visual-pill visual-pill-${badge.tone}`}>
+            <span className="visual-pill" data-sev={pillSeverity(badge.tone)}>
               <span aria-hidden="true">{badge.glyph}</span>
               {badge.label}
             </span>
@@ -247,7 +251,7 @@ const TOP_PAGE_COLUMNS: readonly DataTableColumn<PostHogTopPage>[] = [
   ),
   tableCol(
     "pageviews",
-    "24h Pageviews",
+    "24h pageviews",
     (r) => r.pageviews24h.toLocaleString("en-US"),
     {
       align: "right",
@@ -267,7 +271,7 @@ const TOP_REFERRER_COLUMNS: readonly DataTableColumn<PostHogTopReferrer>[] = [
   ),
   tableCol(
     "pageviews",
-    "24h Pageviews",
+    "24h pageviews",
     (r) => r.pageviews24h.toLocaleString("en-US"),
     {
       align: "right",

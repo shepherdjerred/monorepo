@@ -7,17 +7,18 @@ import type {
   Metric,
   Section,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import {
+  FigureStrip,
+  HeaderBar,
+  StatusGlyph,
+  Tabs,
+} from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDownRightIcon,
   ArrowUpRightIcon,
-  CircleAlertIcon,
-  CircleCheckIcon,
-  CircleHelpIcon,
   ExternalLinkIcon,
-  InfoIcon,
   MinusIcon,
-  OctagonAlertIcon,
 } from "lucide-react";
 import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
@@ -26,12 +27,7 @@ import { ListToggle, useCapped } from "./capped-list.tsx";
 import { isSnapshotUnavailable, snapshotQuery } from "./ops-api.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
-import {
-  SEVERITY_LABEL,
-  formatDelta,
-  formatValue,
-  trendDelta,
-} from "#shared/ops-format";
+import { formatDelta, formatValue, trendDelta } from "#shared/ops-format";
 import {
   SERIES_RANGES,
   type ChangeView,
@@ -43,68 +39,32 @@ import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 
 export const services = new ServiceIndex();
 
-const SEVERITY_ICON: Record<Severity, typeof InfoIcon> = {
-  ok: CircleCheckIcon,
-  info: InfoIcon,
-  unknown: CircleHelpIcon,
-  warning: CircleAlertIcon,
-  error: OctagonAlertIcon,
-};
-
-/** Severity is always an icon plus a word, never color alone. */
-export function SeverityBadge({
-  severity,
-  large = false,
-}: {
-  readonly severity: Severity;
-  readonly large?: boolean;
-}): React.JSX.Element {
-  const Icon = SEVERITY_ICON[severity];
-  return (
-    <span className={`sev sev-${severity}${large ? " sev-large" : ""}`}>
-      <Icon aria-hidden="true" />
-      {SEVERITY_LABEL[severity]}
-    </span>
-  );
-}
-
 /**
- * A severity as an icon named for screen readers, for places too tight for a
- * `SeverityBadge`. The icon's shape differs per severity, so it never rests
- * on colour alone.
+ * The page's header: console-ui's 48px `HeaderBar` across the top of the
+ * panel, with the page title as its `<h1>`, an optional muted meta line, and
+ * the page's controls (range tabs, buttons, its verdict) at the far right.
  */
-export function SeverityIcon({
-  severity,
-  className,
-}: {
-  readonly severity: Severity;
-  readonly className: string;
-}): React.JSX.Element {
-  const Icon = SEVERITY_ICON[severity];
-  return (
-    <>
-      <Icon className={className} aria-hidden="true" />
-      <span className="sr-only">{SEVERITY_LABEL[severity].toLowerCase()}</span>
-    </>
-  );
-}
-
 export function PageHeading({
-  eyebrow,
   title,
+  tabs,
+  meta,
   children,
 }: {
-  readonly eyebrow: string;
   readonly title: string;
+  /** View tabs right after the title, such as Home's attention filter. */
+  readonly tabs?: ReactNode;
+  readonly meta?: ReactNode;
+  /** Controls for the far right of the bar. */
   readonly children?: ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="page-heading">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-      </div>
-      {children}
+    <div className="page-head">
+      <HeaderBar
+        title={title}
+        {...(tabs === undefined ? {} : { tabs })}
+        {...(meta === undefined ? {} : { meta })}
+        {...(children === undefined ? {} : { actions: children })}
+      />
     </div>
   );
 }
@@ -138,9 +98,10 @@ export function ServiceLink({
 }
 
 /**
- * One metric as a tile. A metric that needs attention carries an accent bar
- * and a corner icon with its severity in words, so it never reads as healthy
- * and never depends on colour alone. `ok` and `info` stay plain.
+ * One metric as a figure cell of a `MetricStrip`: its label, then the figure
+ * in mono. A metric that needs attention colours its figure and adds a glyph
+ * with its severity in words, so it never depends on colour alone. `ok` and
+ * `info` stay plain.
  */
 export function MetricTile({
   metric,
@@ -149,44 +110,33 @@ export function MetricTile({
 }): React.JSX.Element {
   const flagged = metric.severity !== "ok" && metric.severity !== "info";
   return (
-    <div className={`metric metric-${metric.severity}`}>
-      <span>{metric.label}</span>
-      <strong>{formatValue(metric.value, metric.unit)}</strong>
-      {flagged ? (
-        <SeverityIcon severity={metric.severity} className="metric-flag" />
-      ) : null}
+    <div className="metric" data-sev={metric.severity}>
+      <dt className="ui-strip-label">{metric.label}</dt>
+      <dd className="ui-strip-value">
+        <span className="ui-strip-figure">
+          {formatValue(metric.value, metric.unit)}
+        </span>
+        {flagged ? <StatusGlyph severity={metric.severity} /> : null}
+      </dd>
     </div>
   );
 }
 
-export function SectionCard({
-  section,
-  to,
+/**
+ * Metrics as one description list of figure cells separated by hairlines,
+ * wrapping onto as many rows as the width needs.
+ */
+export function MetricStrip({
+  metrics,
 }: {
-  readonly section: Section;
-  readonly to?: string;
+  readonly metrics: readonly Metric[];
 }): React.JSX.Element {
   return (
-    <article className={`section-card section-${section.severity}`}>
-      <header>
-        <h2>
-          {to === undefined ? (
-            section.title
-          ) : (
-            <Link to={to}>{section.title}</Link>
-          )}
-        </h2>
-        <SeverityBadge severity={section.severity} />
-      </header>
-      <p>{section.summary}</p>
-      {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.slice(0, 3).map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
-      )}
-    </article>
+    <dl className="metric-row">
+      {metrics.map((metric) => (
+        <MetricTile key={metric.id} metric={metric} />
+      ))}
+    </dl>
   );
 }
 
@@ -201,24 +151,24 @@ export function SectionSummary({
   const id = headingId ?? `summary-${section.id}`;
   return (
     <article
-      className={`section-summary section-${section.severity}`}
+      className="section-summary"
+      data-sev={section.severity}
       aria-labelledby={id}
     >
       <h2 id={id}>{section.title}</h2>
-      <SeverityBadge severity={section.severity} />
+      <StatusGlyph severity={section.severity} />
       <p>{section.summary}</p>
       {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
+        <MetricStrip metrics={section.metrics} />
       )}
     </article>
   );
 }
 
-/** A severity badge beside a one-line verdict, with a line of context under it. */
+/**
+ * A verdict as one quiet row: the severity glyph and word, the one-line
+ * summary, and a muted line of context after it.
+ */
 export function StatusBanner({
   severity,
   summary,
@@ -230,20 +180,23 @@ export function StatusBanner({
   /** Names the region for assistive technology. */
   readonly label: string;
   /** The meta line: what the verdict covers or how old it is. */
-  readonly children: ReactNode;
+  readonly children?: ReactNode;
 }): React.JSX.Element {
   return (
-    <section className={`status-banner status-${severity}`} aria-label={label}>
-      <SeverityBadge severity={severity} large />
-      <div>
-        <p className="status-summary">{summary}</p>
+    <section className="status-banner" data-sev={severity} aria-label={label}>
+      <StatusGlyph severity={severity} />
+      <p className="status-summary">{summary}</p>
+      {children === undefined ? null : (
         <p className="status-meta">{children}</p>
-      </div>
+      )}
     </section>
   );
 }
 
-/** The latest snapshot's verdict and its age. */
+/**
+ * The latest snapshot's verdict. Its age is in the page header; a stale
+ * snapshot also says so here, beside the verdict it qualifies.
+ */
 export function SnapshotStatusBanner({
   snapshot,
 }: {
@@ -255,10 +208,18 @@ export function SnapshotStatusBanner({
       summary={snapshot.summary}
       label="Overall status"
     >
-      Snapshot generated {age(snapshot.generatedAt)}
-      {snapshot.stale ? " · stale: treat green as unknown" : ""}
+      {snapshot.stale ? "Stale: treat green as unknown" : undefined}
     </StatusBanner>
   );
+}
+
+/** "Snapshot generated 2m ago", for a page header's meta line. */
+export function SnapshotAge({
+  snapshot,
+}: {
+  readonly snapshot: SnapshotResponse;
+}): React.JSX.Element {
+  return <>Snapshot generated {age(snapshot.generatedAt)}</>;
 }
 
 /** Changes a timeline shows before the rest sit behind "Show N more". */
@@ -280,37 +241,58 @@ export function ChangeTimeline({
     return <p className="list-empty">No changes recorded.</p>;
   return (
     <>
-      <ol className="change-list" id={listId}>
-        {list.shown.map((change) => (
-          <li key={change.id} className={`change change-${change.severity}`}>
-            <span className="change-kind">{change.kind}</span>
-            <div>
-              <p>
-                {change.url === undefined ? (
-                  change.title
-                ) : (
-                  <a href={change.url} target="_blank" rel="noreferrer">
-                    {change.title}
-                  </a>
-                )}
-              </p>
-              <div className="signal-meta">
-                <time dateTime={change.occurredAt}>
-                  {age(change.occurredAt)}
-                </time>
-                {showService && change.service !== undefined ? (
-                  <ServiceLink id={change.service} />
-                ) : null}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <div className="ui-table-scroll">
+        <table
+          className="ui-table change-list"
+          id={listId}
+          aria-label="Changes"
+        >
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.shown.map((change) => (
+              <tr key={change.id} className="change" data-sev={change.severity}>
+                <td className="num change-when">
+                  <time dateTime={change.occurredAt}>
+                    {age(change.occurredAt)}
+                  </time>
+                </td>
+                <td>
+                  <span className="change-kind">{change.kind}</span>
+                </td>
+                <th scope="row" className="change-title">
+                  {change.url === undefined ? (
+                    change.title
+                  ) : (
+                    <a href={change.url} target="_blank" rel="noreferrer">
+                      {change.title}
+                    </a>
+                  )}
+                  {showService && change.service !== undefined ? (
+                    <ServiceLink id={change.service} />
+                  ) : null}
+                </th>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <ListToggle list={list} controls={listId} />
     </>
   );
 }
 
+const RANGE_OPTIONS = SERIES_RANGES.map((range) => ({
+  value: range,
+  label: range,
+}));
+
+/** The chart range, as console-ui's underlined tabs (a radio group). */
 export function RangePicker({
   value,
   onChange,
@@ -319,21 +301,12 @@ export function RangePicker({
   readonly onChange: (range: SeriesRange) => void;
 }): React.JSX.Element {
   return (
-    <div className="segmented" role="radiogroup" aria-label="Chart range">
-      {SERIES_RANGES.map((range) => (
-        <button
-          key={range}
-          type="button"
-          role="radio"
-          aria-checked={range === value}
-          onClick={() => {
-            onChange(range);
-          }}
-        >
-          {range}
-        </button>
-      ))}
-    </div>
+    <Tabs
+      label="Chart range"
+      options={RANGE_OPTIONS}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 
@@ -430,7 +403,7 @@ export function TrendPanel({
         <h2 id={headingId}>Compared with the previous week</h2>
       </header>
       <div className="table-scroll">
-        <table className="trend-table">
+        <table className="trend-table ui-table">
           <thead>
             <tr>
               <th scope="col">Measure</th>
@@ -468,24 +441,19 @@ export function IncidentPanel({
       <header className="panel-heading">
         <h2 id={headingId}>Incidents</h2>
       </header>
-      <div className="metric-row">
-        <div className="metric">
-          <span>Opened</span>
-          <strong>{incidents.opened}</strong>
-        </div>
-        <div className="metric">
-          <span>Resolved</span>
-          <strong>{incidents.resolved}</strong>
-        </div>
-        <div className="metric">
-          <span>Median to resolve</span>
-          <strong>
-            {incidents.medianMinutesToResolve === null
-              ? "—"
-              : `${String(Math.round(incidents.medianMinutesToResolve))}m`}
-          </strong>
-        </div>
-      </div>
+      <FigureStrip
+        figures={[
+          { label: "Opened", value: incidents.opened },
+          { label: "Resolved", value: incidents.resolved },
+          {
+            label: "Median to resolve",
+            value:
+              incidents.medianMinutesToResolve === null
+                ? "—"
+                : `${String(Math.round(incidents.medianMinutesToResolve))}m`,
+          },
+        ]}
+      />
     </section>
   );
 }

@@ -1,3 +1,4 @@
+import { pillSeverity } from "#client/visuals/pill.ts";
 import { ExternalLinkIcon, FilterIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
@@ -24,7 +25,11 @@ function Pill({
   readonly tone: PillTone;
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  return <span className={`visual-pill visual-pill-${tone}`}>{children}</span>;
+  return (
+    <span className="visual-pill" data-sev={pillSeverity(tone)}>
+      {children}
+    </span>
+  );
 }
 
 function ScheduleDayStrip({

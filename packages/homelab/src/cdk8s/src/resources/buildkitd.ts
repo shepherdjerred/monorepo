@@ -27,17 +27,20 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { CI_STEP_POD_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/pod-labels.ts";
 import {
+  dnsEgressRule,
   nsPeer,
   tcp,
   prometheusIngressRule,
+  publicWebEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 // Plaintext gRPC port. BuildKit serves the build API here; the buildx `remote`
 // driver in CI connects to it in-cluster. No TLS/mTLS: the endpoint is a
 // ClusterIP Service reachable only inside the cluster (never a Tailscale/tunnel
 // ingress), on a single-tenant homelab. The NetworkPolicy below restricts
-// ingress to the woodpecker-ci namespace.
+// ingress to the CI step pods of the woodpecker-ci namespace.
 const PORT = 1234;
 
 // HTTP debug endpoint: serves Prometheus /metrics (and pprof). Scraped by the
@@ -258,9 +261,8 @@ export function createBuildkitdDeployment(chart: Chart) {
   });
 
   // The gRPC endpoint is plaintext and privileged — restrict ingress to the
-  // CI job pods (woodpecker-ci namespace) so nothing else in the cluster can drive
-  // builds through it. Egress stays open: buildkitd pulls base images and
-  // pushes to Docker Hub.
+  // CI step pods (woodpecker-ci namespace) so nothing else in the cluster can
+  // drive builds through it.
   new KubeNetworkPolicy(chart, "buildkitd-ingress-netpol", {
     metadata: { name: "buildkitd-ingress-netpol" },
     spec: {
@@ -268,12 +270,39 @@ export function createBuildkitdDeployment(chart: Chart) {
       policyTypes: ["Ingress"],
       ingress: [
         {
-          from: [nsPeer(WOODPECKER_CI_NAMESPACE)],
+          // CI step pods only. Other pods of the namespace, such as the
+          // Temporal maintenance worker, never drive builds.
+          from: [
+            {
+              ...nsPeer(WOODPECKER_CI_NAMESPACE),
+              podSelector: {
+                matchExpressions: [
+                  { key: CI_STEP_POD_LABEL, operator: "Exists" },
+                ],
+              },
+            },
+          ],
           ports: [tcp(PORT)],
         },
         // Prometheus scrapes the debug endpoint (/metrics, pprof) only.
         prometheusIngressRule([DEBUG_PORT]),
       ],
+    },
+  });
+
+  // Egress is broad on purpose. buildkitd pulls base images from and pushes
+  // images and cache to Docker Hub, and every Dockerfile RUN step runs in this
+  // pod's network namespace, fetching whatever its package managers and
+  // `curl` lines name, over HTTPS or plain HTTP (Ubuntu's apt mirrors). Those
+  // destinations follow the build inputs, so the rule admits any public
+  // address on 443 and 80. Private and tailnet ranges stay closed: a build
+  // reaches no cluster peer but DNS.
+  new KubeNetworkPolicy(chart, "buildkitd-egress-netpol", {
+    metadata: { name: "buildkitd-egress-netpol" },
+    spec: {
+      podSelector: {},
+      policyTypes: ["Egress"],
+      egress: [dnsEgressRule(), publicWebEgressRule()],
     },
   });
 

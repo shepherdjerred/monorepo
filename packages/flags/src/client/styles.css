@@ -30,6 +30,11 @@
   min-width: 0;
 }
 
+/* The previous deployment's table, kept on screen while the next one loads. */
+.fl-body[aria-busy="true"] {
+  opacity: 0.55;
+}
+
 .fl-list .ui-toolbar {
   padding: 12px 20px;
 }

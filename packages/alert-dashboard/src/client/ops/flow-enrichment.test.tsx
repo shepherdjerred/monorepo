@@ -147,8 +147,8 @@ describe("renderEngineeringServiceView", () => {
 
     const trackerHtml = wrap("tracker");
     expect(trackerHtml).toContain("Open Tracker issues");
-    expect(trackerHtml).toContain("Active Forum Notices");
-    expect(trackerHtml).toContain("Urgent Issues");
+    expect(trackerHtml).toContain("Active Forum notices");
+    expect(trackerHtml).toContain("Urgent issues");
     expect(trackerHtml).toContain("SJ-88");
 
     const gitopsHtml = wrap("gitops");

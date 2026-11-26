@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type {
   TraceListItem,
   TraceRange,
@@ -7,7 +8,7 @@ import type {
 import { SearchIcon } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
-import { ServiceLink, services, SeverityBadge } from "#client/ops/ops-ui.tsx";
+import { ServiceLink, services } from "#client/ops/ops-ui.tsx";
 import { formatValue } from "#shared/ops-format";
 
 import {
@@ -38,7 +39,7 @@ function ServiceCell({
         <ServiceLink id={catalogMatch.id} />
       )}
       {environment === null ? null : (
-        <span className="visual-pill visual-pill-neutral">{environment}</span>
+        <span className="visual-pill">{environment}</span>
       )}
     </div>
   );
@@ -73,7 +74,9 @@ function TraceRow({
               {item.traceId.slice(0, 12)}
             </code>
             {item.hasToolIo ? (
-              <span className="visual-pill visual-pill-info">Tool I/O</span>
+              <span className="visual-pill" data-sev="info">
+                Tool I/O
+              </span>
             ) : null}
           </div>
         </div>
@@ -96,7 +99,7 @@ function TraceRow({
             ))
           )}
           {item.providers.slice(0, 2).map((provider) => (
-            <span key={provider} className="visual-pill visual-pill-neutral">
+            <span key={provider} className="visual-pill">
               {provider}
             </span>
           ))}
@@ -135,7 +138,7 @@ function TraceRow({
         </div>
       </td>
       <td data-label="Status">
-        <SeverityBadge severity={item.errorCount > 0 ? "error" : "ok"} />
+        <StatusGlyph severity={item.errorCount > 0 ? "error" : "ok"} />
       </td>
     </tr>
   );
@@ -317,14 +320,14 @@ export function TracesResultsTable({
       tabIndex={0}
       role="region"
       aria-labelledby={tableHeadingId}
-      className="table-wrap traces-table-wrap"
+      className="ui-table-scroll traces-table-wrap"
     >
-      <table className="traces-table" aria-labelledby={tableHeadingId}>
+      <table className="ui-table traces-table" aria-labelledby={tableHeadingId}>
         <thead>
           <tr>
             <th scope="col">Trace</th>
             <th scope="col">Service</th>
-            <th scope="col">Model &amp; Provider</th>
+            <th scope="col">Model &amp; provider</th>
             <th scope="col">Subject</th>
             <th scope="col">Tokens</th>
             <th scope="col">Duration</th>

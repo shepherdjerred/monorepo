@@ -80,18 +80,20 @@ requirement.
 
 ## Cascade layers and naming
 
-| Layer           | File                      | Contents                              |
-| --------------- | ------------------------- | ------------------------------------- |
-| `ui.reset`      | `reset.css`               | Replacement for Tailwind v4 Preflight |
-| `ui.tokens`     | `tokens.css`, `fonts.css` | Colour tokens, Inter, font stacks     |
-| `ui.components` | `components.css`          | `ui-*` component classes              |
+| Layer           | File                         | Contents                                     |
+| --------------- | ---------------------------- | -------------------------------------------- |
+| `ui.reset`      | `reset.css`                  | Replacement for Tailwind v4 Preflight        |
+| `ui.tokens`     | `tokens.css`, `fonts.css`    | Colour tokens, Inter, font stacks            |
+| `ui.components` | `components.css`, `page.css` | `ui-*` shell, component and page-kit classes |
 
 Unlayered app CSS beats all three layers. Every class starts with `ui-`.
 
 ## Breakpoints
 
-| Width    | Change                                                      |
-| -------- | ----------------------------------------------------------- |
-| ≤ 1000px | Figure strip wraps to two columns                           |
-| ≤ 900px  | Sidebar hidden; the app supplies its own top bar and drawer |
-| ≤ 760px  | Panel loses its margin, border and radius                   |
+| Width                | Change                                                                      |
+| -------------------- | --------------------------------------------------------------------------- |
+| ≤ 1000px             | Figure strip wraps to two columns                                           |
+| ≤ 900px              | Sidebar hidden; `TopBar` (or the app's own bar) and drawer show             |
+| ≤ 900px of `ui-page` | Summary grid wraps to two columns                                           |
+| ≤ 760px              | Panel loses its margin, border and radius                                   |
+| ≤ 600px              | Page padding tightens; heading stacks; `ui-data` rows become labelled cards |

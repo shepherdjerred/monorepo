@@ -3,7 +3,10 @@ import type {
   CarriedFailure,
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
-import type { CarriedRelease } from "#shared/hub/commit-release-contract.ts";
+import type {
+  Built,
+  CarriedRelease,
+} from "#shared/hub/commit-release-contract.ts";
 import { namedWithMore } from "./commit-blockers.ts";
 import { capped, distinct, plural, series } from "./commit-text.ts";
 
@@ -142,28 +145,52 @@ export function carriedReleaseNote(entry: CarriedFailure) {
   }${carrierClause(entry.includedIn.slice(0, 7), [entry])}`;
 }
 
-/**
- * What happened to a commit's failed builds that a later commit carries. A
- * commit with no build of its own says "Not built on its own; included in X
- * (...)". One that built other services itself says so, and only the
- * carried services went through the carrier: "Built on its own for 7
- * services; 1 service (TRMNL dashboard) was built by a later commit: included
- * in bdf6689 (whose build of TRMNL dashboard passed)".
- */
-export function includedNote(
-  carried: readonly CarriedFailure[],
-  built: number,
-) {
-  if (built === 0)
-    return `Not built on its own; included in ${carriedIn(carried)}`;
-  const services = distinct(
+/** The titles of the services whose failed builds a later commit carries, each once. */
+const carriedServices = (carried: readonly CarriedFailure[]) =>
+  distinct(
     carried.flatMap((entry) =>
       entry.serviceTitle === undefined ? [] : [entry.serviceTitle],
     ),
   );
+
+/**
+ * What happened to a commit's failed builds that a later commit carries. A
+ * commit with no build of its own says "Not built on its own; included in X
+ * (...)". One that built other services itself says so, and only the
+ * carried services went through the carrier: "Built on its own for 25
+ * services (7 changed); 1 service (TRMNL dashboard) was built by a later
+ * commit: included in bdf6689 (whose build of TRMNL dashboard passed)".
+ */
+export function includedNote(
+  carried: readonly CarriedFailure[],
+  built: Built | undefined,
+) {
+  if (built === undefined || built.services === 0)
+    return `Not built on its own; included in ${carriedIn(carried)}`;
+  const services = carriedServices(carried);
   const count = Math.max(services.length, 1);
   const named = services.length === 0 ? "" : ` (${capped(services)})`;
-  return `Built on its own for ${plural(built, "service", "services")}; ${plural(count, "service", "services")}${named} ${count === 1 ? "was" : "were"} built by a later commit: included in ${carriedIn(carried)}`;
+  return `Built on its own for ${plural(built.services, "service", "services")} (${String(built.changed)} changed); ${plural(count, "service", "services")}${named} ${count === 1 ? "was" : "were"} built by a later commit: included in ${carriedIn(carried)}`;
+}
+
+/**
+ * The "Included in a newer commit" section's lead sentence: CI failed for the
+ * named services on this commit. Only a commit with no build of its own was
+ * "not built on its own"; otherwise the named services were built by a later
+ * commit, and the rest of the commit was built here.
+ */
+export function includedIntro(
+  carried: readonly CarriedFailure[],
+  built: Built | undefined,
+) {
+  const services = carriedServices(carried);
+  const failed = services.length === 0 ? "these services" : capped(services);
+  const one = services.length === 1;
+  const outcome =
+    built === undefined || built.services === 0
+      ? "so it was not built on its own"
+      : `so ${one ? "it was" : "they were"} built by a later commit`;
+  return `CI failed for ${failed} on this commit, ${outcome}. A newer commit includes this one, and its build of ${one ? "the same service" : "each of them"} passed and published the change; that commit's releases, shown below, decide whether ${one ? "it is" : "they are"} live.`;
 }
 
 /**

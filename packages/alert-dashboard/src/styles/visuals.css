@@ -9,7 +9,7 @@
 
 .visual-chart-subtitle {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.76rem;
   line-height: 1.35;
 }
@@ -35,40 +35,13 @@
 
 .chart-panel .chart-error p {
   margin: 0;
-  color: var(--sev-error-ink);
+  color: var(--ui-sev-error-text);
 }
 
 .visual-chart-retry {
   min-height: 32px;
   padding: 0.3rem 0.75rem;
   font-size: 0.78rem;
-}
-
-/* ---- Sparkline ---- */
-.visual-sparkline {
-  display: inline-block;
-  flex: none;
-  width: var(--sparkline-w, 96px);
-  height: var(--sparkline-h, 24px);
-  vertical-align: middle;
-  overflow: visible;
-  color: var(--muted);
-}
-
-.visual-sparkline-neutral {
-  color: var(--accent);
-}
-
-.visual-sparkline-good {
-  color: var(--status-good);
-}
-
-.visual-sparkline-warning {
-  color: var(--status-warning);
-}
-
-.visual-sparkline-error {
-  color: var(--status-critical);
 }
 
 /* ---- Meters (BudgetMeter & StackedMeter) ---- */
@@ -91,77 +64,29 @@
   align-items: center;
   gap: 0.35rem;
   min-width: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
 .visual-meter-reading {
   flex: none;
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
   font-weight: 650;
 }
 
 .visual-meter-max {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-weight: 400;
-}
-
-.visual-meter {
-  position: relative;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--meter-track);
-}
-
-.visual-meter-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--meter-fill, var(--status-good));
-}
-
-.visual-meter-projection {
-  position: absolute;
-  top: -4px;
-  width: 2px;
-  height: 18px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--ink);
-  font-style: normal;
-  pointer-events: none;
 }
 
 .visual-meter-detail {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.76rem;
-}
-
-.visual-meter-flag {
-  width: 0.85rem;
-  height: 0.85rem;
-  flex: none;
-}
-
-.visual-budget-meter-warning .visual-meter-flag {
-  color: var(--sev-warning-ink);
-}
-
-.visual-budget-meter-error .visual-meter-flag {
-  color: var(--sev-error-ink);
-}
-
-.visual-budget-meter-info .visual-meter-flag {
-  color: var(--sev-info-ink);
-}
-
-.visual-budget-meter-unknown .visual-meter-flag {
-  color: var(--sev-unknown-ink);
 }
 
 .visual-stacked-meter {
@@ -176,7 +101,7 @@
   gap: 2px;
   height: 10px;
   border-radius: 999px;
-  background: var(--meter-track);
+  background: var(--ui-track);
 }
 
 .visual-stacked-segment {
@@ -199,7 +124,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: var(--ink);
+  color: var(--ui-ink);
 }
 
 .visual-swatch {
@@ -212,12 +137,12 @@
 }
 
 .visual-stacked-name {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 
 .visual-stacked-count,
 .visual-stacked-pct {
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-family: var(--ui-font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -226,7 +151,7 @@
 }
 
 .visual-stacked-pct {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 
 /* ---- StatusMatrix ---- */
@@ -235,17 +160,9 @@
   min-width: 0;
 }
 
-.visual-matrix-region {
-  overflow-x: auto;
-  max-inline-size: 100%;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-}
-
 .visual-matrix-region:focus-visible,
 .visual-table-region:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: 2px;
 }
 
@@ -253,146 +170,49 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ui-font-sans);
   font-size: 0.8rem;
-}
-
-.visual-table-caption {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.85rem;
-  font-weight: 650;
-  text-align: left;
-  caption-side: top;
-}
-
-.visual-matrix-table thead th {
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 2;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--line);
-  white-space: nowrap;
 }
 
 .visual-matrix-rowhead {
   position: sticky;
   inset-inline-start: 0;
   z-index: 1;
-  background: var(--panel);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
   font-size: 0.82rem;
   font-weight: 600;
-  text-transform: none;
   letter-spacing: 0;
   white-space: nowrap;
 }
 
+/* The sticky first column stays opaque over cells scrolling beneath it; the
+   table look clears row-header backgrounds, so this needs more weight. */
+.visual-matrix-table tbody .visual-matrix-rowhead {
+  background: var(--ui-panel);
+}
+
 .visual-matrix-table tbody tr:hover .visual-matrix-rowhead {
-  background: var(--row-hover);
+  background: var(--ui-hover);
 }
 
 .visual-matrix-row-meta {
   display: block;
   margin-top: 2px;
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
   font-size: 0.7rem;
   font-weight: 400;
 }
 
-.visual-matrix-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.32rem;
-  min-height: 22px;
-  padding: 0.12rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.visual-matrix-glyph {
-  display: inline-block;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.visual-matrix-ok {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-
-.visual-matrix-warning {
-  background: var(--sev-warning-bg);
-  color: var(--sev-warning-ink);
-  border-color: var(--status-warning);
-}
-
-.visual-matrix-error {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-  border-color: var(--status-critical);
-}
-
-.visual-matrix-missing {
-  background: var(--sev-unknown-bg);
-  color: var(--sev-unknown-ink);
-  border-style: dashed;
-  border-color: var(--status-unknown);
-}
-
-.visual-matrix-info {
-  background: var(--sev-info-bg);
-  color: var(--sev-info-ink);
-}
-
-/* ---- StackTree ---- */
+/* ---- StackTree: one table, stacked PRs indented under their base ---- */
 .visual-stack-tree {
-  min-width: 0;
-}
-
-.visual-stack-list,
-.visual-stack-children {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.visual-stack-list {
-  display: grid;
-  gap: 8px;
-}
-
-.visual-stack-children {
-  display: grid;
-  gap: 6px;
-  margin-top: 6px;
-  padding-inline-start: 16px;
-  border-inline-start: 2px solid var(--line);
-}
-
-.visual-stack-card {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
   min-width: 0;
 }
 
 .visual-stack-head {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
   gap: 6px 8px;
   min-width: 0;
@@ -400,18 +220,18 @@
 
 .visual-stack-connector {
   flex: none;
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 0.78rem;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
 }
 
 .visual-stack-number {
   flex: none;
-  color: var(--accent);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 0.8rem;
+  color: var(--ui-accent);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -422,20 +242,27 @@
 
 .visual-stack-title {
   min-width: 0;
-  color: var(--ink);
-  font-size: 0.86rem;
-  font-weight: 600;
+  color: var(--ui-ink);
+  font-weight: 500;
   text-decoration: none;
-  overflow-wrap: anywhere;
 }
 
-.visual-stack-meta {
+.visual-stack-status {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  font-size: 0.73rem;
-  color: var(--muted);
+  gap: 2px 12px;
+}
+
+.visual-stack-branch {
+  font-size: 12px;
+}
+
+.visual-stack-table :is(th, td) {
+  padding-block: 8px;
+}
+
+.visual-stack-author {
+  color: var(--ui-muted);
 }
 
 .visual-branch-chip {
@@ -443,109 +270,13 @@
   align-items: center;
   max-width: 100%;
   padding: 0.1rem 0.42rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 5px;
-  background: var(--code-bg);
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  background: var(--ui-track);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.7rem;
-  overflow-wrap: anywhere;
-}
-
-.visual-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.visual-pill-ok {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-
-.visual-pill-warning {
-  background: var(--sev-warning-bg);
-  color: var(--sev-warning-ink);
-  border-color: var(--status-warning);
-}
-
-.visual-pill-error {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-  border-color: var(--status-critical);
-}
-
-.visual-pill-info {
-  background: var(--sev-info-bg);
-  color: var(--sev-info-ink);
-}
-
-.visual-pill-neutral {
-  background: var(--sev-unknown-bg);
-  color: var(--sev-unknown-ink);
-}
-
-.visual-stack-age {
-  margin-left: auto;
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- DataTable ---- */
-.visual-data-table {
-  container-type: inline-size;
-  display: grid;
-  gap: 0;
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-  overflow: hidden;
-}
-
-.visual-table-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-}
-
-.visual-search {
-  position: relative;
-  flex: 1 1 220px;
-  min-width: 0;
-}
-
-.visual-search svg {
-  position: absolute;
-  left: 0.65rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  pointer-events: none;
-}
-
-.visual-search .input {
-  width: 100%;
-  padding-left: 2rem;
-}
-
-.visual-filter-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  overflow-wrap: break-word;
 }
 
 .visual-export-group {
@@ -555,155 +286,49 @@
   margin-left: auto;
 }
 
-.visual-export-btn {
-  min-height: 32px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.74rem;
-}
-
 .visual-table-region {
   overflow-x: auto;
   max-inline-size: 100%;
-}
-
-.visual-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.8rem;
-}
-
-.visual-table td,
-.visual-table th {
-  font-variant-numeric: tabular-nums;
-}
-
-.visual-table thead th {
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--line);
-  white-space: nowrap;
-}
-
-.visual-table thead th:has(> .visual-sort-btn) {
-  padding: 0;
-}
-
-.visual-sort-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem;
-  width: 100%;
-  min-height: 36px;
-  padding: 9px 13px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  text-align: inherit;
-  cursor: pointer;
 }
 
 .visual-sort-btn.num {
   justify-content: flex-end;
 }
 
-.visual-sort-btn:hover {
-  background: var(--control-hover);
-  color: var(--ink);
-}
-
 .visual-sort-btn:focus-visible,
 .visual-expand-btn:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: -3px;
 }
 
-.visual-sort-indicator {
-  flex: none;
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 0.72rem;
-  opacity: 0.45;
-}
-
-.visual-table thead th[aria-sort="ascending"] .visual-sort-indicator,
-.visual-table thead th[aria-sort="descending"] .visual-sort-indicator {
-  color: var(--accent);
-  opacity: 1;
-}
-
-.visual-table thead th[aria-sort="ascending"],
-.visual-table thead th[aria-sort="descending"] {
-  color: var(--ink);
-}
-
-.visual-expand-col {
-  width: 40px;
-}
-
-.visual-expand-cell {
-  width: 40px;
-  padding: 4px 6px 4px 10px;
-}
-
-.visual-expand-btn {
-  display: inline-grid;
-  place-items: center;
-  min-width: 28px;
-  min-height: 28px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-}
-
 .visual-expand-btn:hover {
-  background: var(--control-hover);
-  color: var(--ink);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 
 .visual-expand-btn[aria-expanded="true"] svg {
   transform: rotate(90deg);
-  color: var(--accent);
-}
-
-.visual-expanded-row {
-  background: var(--panel-2);
-}
-
-.visual-expanded-row:hover {
-  background: var(--panel-2);
-}
-
-.visual-expanded-cell {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
-  box-shadow: inset 3px 0 0 var(--accent);
+  color: var(--ui-accent);
 }
 
 .visual-empty-cell {
   padding: 28px 16px;
-  color: var(--muted);
+  color: var(--ui-muted);
   text-align: center;
 }
 
 .visual-empty {
   margin: 0;
   padding: 16px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.86rem;
   text-align: center;
 }
 
-/* Container-responsive card-stack fallback so narrow panels and 375px phones never overflow */
-@container (max-width: 680px) {
+/* A wide DataTable (more than three columns) becomes a stack of labelled
+   cards when its own width is under 680px, so narrow panels and phones never
+   overflow; a narrower one stays a table and wraps its cells. */
+@container data-cards (max-width: 680px) {
   .visual-table-toolbar {
     padding: 10px 12px;
   }
@@ -714,8 +339,6 @@
 
   .visual-table-region {
     overflow-x: visible;
-    padding: 10px;
-    background: var(--panel-2);
   }
 
   .visual-table,
@@ -725,6 +348,12 @@
   .visual-table tbody th {
     display: block;
     width: 100%;
+  }
+
+  /* In a block table the caption would shrink to its longest word; it stays
+     the table's title bar, with the cards on the head surface below it. */
+  .visual-table caption {
+    display: block;
   }
 
   .visual-table thead:where(:not(:focus-within)) {
@@ -742,28 +371,33 @@
   .visual-table tbody {
     display: grid;
     gap: 10px;
+    padding: 10px;
+    background: var(--ui-head);
   }
 
   .visual-table tbody tr {
     padding: 8px 12px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--ui-line);
     border-radius: 9px;
-    background: var(--panel);
+    background: var(--ui-panel);
   }
 
   .visual-table tbody tr.visual-expanded-row {
     margin-top: -6px;
-    background: var(--panel-2);
+    background: var(--ui-head);
   }
 
-  .visual-table tbody th,
-  .visual-table tbody td {
+  /* Stronger than the table look's fixed row height, edge padding and
+     right-aligned numerals, which a card's label/value rows do not use. */
+  .visual-table.ui-table tbody :is(th, td) {
     display: grid;
     grid-template-columns: minmax(76px, 34%) minmax(0, 1fr);
     gap: 10px;
     align-items: start;
+    justify-items: start;
+    height: auto;
     padding: 6px 0;
-    border-bottom: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--ui-line-soft);
     text-align: left;
     white-space: normal;
   }
@@ -775,13 +409,9 @@
   .visual-table tbody th::before,
   .visual-table tbody td::before {
     content: attr(data-label);
-    color: var(--muted);
-    font:
-      700 0.65rem "Berkeley Mono",
-      ui-monospace,
-      monospace;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    color: var(--ui-muted);
+    font: 500 12px var(--ui-font-sans);
+    letter-spacing: normal;
   }
 
   .visual-table tbody td.visual-expanded-cell,
@@ -796,7 +426,291 @@
   }
 }
 
-/* Forced-colors / High Contrast Mode resilience */
+/* ---- Identifiers: one unbreakable segment between each "/" or "#" ---- */
+.id-seg {
+  white-space: nowrap;
+}
+
+/* ---- DataTable on the console look ---- */
+/* console-ui's `ui-table` draws the head row, rows and hairlines; these rules
+   frame the table and its toolbar. */
+.visual-data-table {
+  container: data-cards / inline-size;
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+}
+.visual-data-table[data-layout="table"] {
+  container-name: none;
+}
+/* A narrow table of up to three columns stays a table on a phone: long
+   values may wrap anywhere and head labels between words, so it fits. */
+@container (max-width: 480px) {
+  .visual-data-table[data-layout="table"] .visual-table tbody :is(th, td) {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .visual-data-table[data-layout="table"] .visual-table thead th {
+    white-space: normal;
+  }
+}
+.visual-table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+}
+/* The search box takes console-ui's inline field look. */
+.visual-search {
+  display: flex;
+  flex: 1 1 220px;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 0 0 9px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+}
+.visual-search:focus-within {
+  border-color: var(--ui-accent);
+}
+.visual-search svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
+.visual-search .input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 9px 0 0;
+  border: 0;
+  background: none;
+  font-size: 12.5px;
+}
+.visual-search .input:focus-visible {
+  outline: 0;
+}
+.visual-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px 18px;
+  min-height: 28px;
+}
+.visual-filter-group .ui-tabs {
+  margin-left: 0;
+}
+.visual-filter-group .ui-tabs + .ui-tabs {
+  padding-left: 18px;
+  border-left: 1px solid var(--ui-line);
+}
+.visual-table-caption {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  caption-side: top;
+}
+.visual-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+}
+.visual-table thead th:has(> .visual-sort-btn) {
+  padding: 0;
+}
+.visual-table thead th:has(> .visual-sort-btn):first-child .visual-sort-btn {
+  padding-left: 20px;
+}
+.visual-table thead th:has(> .visual-sort-btn):last-child .visual-sort-btn {
+  padding-right: 20px;
+}
+.visual-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  text-align: inherit;
+  cursor: pointer;
+}
+.visual-sort-btn:hover {
+  background: var(--ui-hover);
+  color: var(--ui-ink);
+}
+.visual-sort-indicator {
+  flex: none;
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  opacity: 0.45;
+}
+.visual-table thead th[aria-sort="ascending"],
+.visual-table thead th[aria-sort="descending"] {
+  color: var(--ui-ink);
+}
+.visual-table thead th[aria-sort="ascending"] .visual-sort-indicator,
+.visual-table thead th[aria-sort="descending"] .visual-sort-indicator {
+  color: var(--ui-accent);
+  opacity: 1;
+}
+.visual-expand-col,
+.visual-expand-cell {
+  width: 40px;
+}
+.visual-expand-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+.visual-expanded-row,
+.visual-expanded-row:hover,
+.visual-expanded-row > td {
+  background: var(--ui-head);
+}
+.visual-expanded-cell {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--ui-line);
+  box-shadow: inset 2px 0 0 var(--ui-accent);
+  white-space: normal;
+}
+.visual-table-cap-toggle {
+  margin: 8px 16px 12px;
+}
+
+/* ---- Standalone meters (spend, BudgetMeter) ---- */
+/* Wider than console-ui's 64px inline meter, on a slim track. The severity
+   colours the fill; the glyph and word beside the label carry the meaning. */
+.visual-meter {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ui-track);
+}
+.visual-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--ui-sev, var(--ui-sev-ok));
+}
+.visual-meter-projection {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 14px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--ui-ink);
+  font-style: normal;
+  pointer-events: none;
+}
+
+/* ---- Pills: category chips; a severity pill colours its glyph ---- */
+.visual-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ui-ink-2);
+  font-family: var(--ui-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.visual-pill[data-sev] > [aria-hidden="true"] {
+  color: var(--ui-sev-ink);
+  font-weight: 700;
+}
+.visual-pill:is([data-sev="warning"], [data-sev="error"]) {
+  color: var(--ui-sev-ink);
+}
+
+/* ---- Status matrix: each cell is a glyph and its word ---- */
+.visual-matrix-region {
+  overflow-x: auto;
+  max-inline-size: 100%;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+}
+/* console-ui's `ui-table` draws the head row; the region's frame is its top
+   edge, and the first column stays put while the matrix scrolls. */
+.visual-matrix-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  border-top: 0;
+  white-space: nowrap;
+}
+.visual-matrix-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.visual-matrix-cell:is([data-sev="warning"], [data-sev="error"]) {
+  color: var(--ui-sev-ink);
+}
+.visual-matrix-glyph {
+  display: inline-block;
+  width: 1ch;
+  color: var(--ui-sev-ink);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ---- Sparklines draw in their severity colour, or the accent ---- */
+.visual-sparkline {
+  display: inline-block;
+  flex: none;
+  width: var(--sparkline-w, 96px);
+  height: var(--sparkline-h, 24px);
+  overflow: visible;
+  color: var(--ui-accent);
+  vertical-align: middle;
+}
+.visual-sparkline[data-sev] {
+  color: var(--ui-sev);
+}
+
+/* Forced-colors / High Contrast Mode resilience. Last in the file so it
+   overrides the base meter, pill and swatch rules above. */
 @media (forced-colors: active) {
   .visual-meter,
   .visual-stacked-track {

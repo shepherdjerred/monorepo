@@ -11,6 +11,8 @@ import type { ReactNode } from "react";
 
 import { age } from "#client/time.ts";
 import type { DataTableColumn } from "#client/visuals/index.ts";
+import { pillSeverity, type PillTone } from "#client/visuals/pill.ts";
+import { Identifier } from "#client/visuals/identifier.tsx";
 
 export const UPDATE_TYPES = [
   "major",
@@ -21,18 +23,18 @@ export const UPDATE_TYPES = [
   "unknown",
 ] as const;
 export const TYPE_COLOR: Record<string, string> = {
-  major: "var(--status-critical)",
-  minor: "var(--status-warning)",
-  patch: "var(--status-good)",
-  digest: "var(--status-info)",
-  pin: "var(--accent)",
+  major: "var(--ui-sev-error)",
+  minor: "var(--ui-sev-warning)",
+  patch: "var(--ui-sev-ok)",
+  digest: "var(--ui-sev-info)",
+  pin: "var(--ui-accent)",
 };
 const IMPACT_META: Record<
   RenovateImpactLevel,
   {
     readonly g: string;
     readonly label: string;
-    readonly tone: string;
+    readonly tone: PillTone;
     readonly rank: number;
   }
 > = {
@@ -94,12 +96,12 @@ function col<T>(
 }
 
 function Pill(p: {
-  readonly tone: string;
+  readonly tone: PillTone;
   readonly g?: string;
   readonly text: string;
 }): React.JSX.Element {
   return (
-    <span className={`visual-pill visual-pill-${p.tone}`}>
+    <span className="visual-pill" data-sev={pillSeverity(p.tone)}>
       {p.g === undefined ? null : <span aria-hidden="true">{p.g}</span>}
       {p.text}
     </span>
@@ -130,10 +132,12 @@ export function buildUpdateColumns(
   return [
     col(
       "package",
-      "Package & Ecosystem",
+      "Package & ecosystem",
       (i) => (
         <div className="eng-pkg-cell">
-          <span className="eng-pkg-name">{i.packageName}</span>
+          <span className="eng-pkg-name">
+            <Identifier value={i.packageName} />
+          </span>
           <span className="eng-pkg-sub">
             <Pill tone="neutral" text={i.ecosystem} />
             <Pill tone="info" text={i.updateType} />
@@ -144,7 +148,7 @@ export function buildUpdateColumns(
     ),
     col(
       "versionDelta",
-      "Version Delta",
+      "Version delta",
       (i) => {
         const { running, pinned, target, drifted } = versions(i);
         return (
@@ -174,7 +178,7 @@ export function buildUpdateColumns(
     ),
     col(
       "summary",
-      "LLM Summary",
+      "LLM summary",
       (i) => (
         <p className="eng-summary-clamp">
           {i.delta?.summary ?? "Pending enrichment"}
@@ -249,7 +253,7 @@ export const DEPRECATION_COLUMNS: readonly DataTableColumn<RenovateDeprecation>[
   [
     col(
       "current",
-      "Deprecated Package",
+      "Deprecated package",
       (d) => <code>{d.current}</code>,
       (d) => d.current,
     ),

@@ -18,6 +18,7 @@ import {
   type DataTableColumn,
 } from "#client/visuals/index.ts";
 import type { SeriesRange } from "#shared/ops-schema";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 const CI_TASK_COLUMNS = buildExpensiveTaskColumns({ compact: true });
 
@@ -46,11 +47,12 @@ const ARGO_COLUMNS: readonly DataTableColumn<ClusterArgoApp>[] = [
   },
   {
     key: "syncStatus",
-    header: "Sync Status",
+    header: "Sync status",
     sortValue: (app) => app.syncStatus,
     render: (app) => (
       <span
-        className={`visual-pill visual-pill-${app.syncStatus === "Synced" ? "ok" : "warning"}`}
+        className="visual-pill"
+        data-sev={pillSeverity(app.syncStatus === "Synced" ? "ok" : "warning")}
       >
         <span aria-hidden="true">
           {app.syncStatus === "Synced" ? "✓" : "!"}
@@ -65,7 +67,14 @@ const ARGO_COLUMNS: readonly DataTableColumn<ClusterArgoApp>[] = [
     sortValue: (app) => app.healthStatus,
     render: (app) => (
       <span
-        className={`visual-pill visual-pill-${app.healthStatus === "Healthy" ? "ok" : app.healthStatus === "Progressing" ? "info" : "error"}`}
+        className="visual-pill"
+        data-sev={pillSeverity(
+          app.healthStatus === "Healthy"
+            ? "ok"
+            : app.healthStatus === "Progressing"
+              ? "info"
+              : "error",
+        )}
       >
         <span aria-hidden="true">
           {app.healthStatus === "Healthy"
@@ -80,12 +89,10 @@ const ARGO_COLUMNS: readonly DataTableColumn<ClusterArgoApp>[] = [
   },
   {
     key: "autoSync",
-    header: "Sync Policy",
+    header: "Sync policy",
     sortValue: (app) => (app.autoSync ? "auto" : "manual"),
     render: (app) => (
-      <span className="visual-pill visual-pill-neutral">
-        {app.autoSync ? "auto" : "manual"}
-      </span>
+      <span className="visual-pill">{app.autoSync ? "auto" : "manual"}</span>
     ),
   },
   {
@@ -152,9 +159,9 @@ export function CiServiceView({
       </div>
       {github === null ? null : (
         <div className="eng-flow-panel">
-          <div className="eng-flow-head">
-            <h3>Open pull request stacks</h3>
-          </div>
+          <header className="ui-section-head">
+            <h3 className="ui-section-title">Open pull request stacks</h3>
+          </header>
           <StackTree
             pullRequests={github.openPrs.map((pr) => mapGitHubPrToStackPr(pr))}
             emptyMessage="No open pull requests."
