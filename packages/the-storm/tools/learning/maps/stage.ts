@@ -58,7 +58,18 @@ export async function stageMap(
   source: string,
   output: string,
   mapId: string,
-  options: { duel: boolean; mapTool: string; trainingScenario?: Scenario },
+  options: {
+    duel: boolean;
+    mapTool: string;
+    trainingScenario?: Scenario;
+    /**
+     * Makes the baked nav meshes under `source` present and exact before they
+     * are copied. Git holds only their manifest, so a real caller passes
+     * `ensureNavMeshes`; staging itself never starts a build or a download, and
+     * unit tests pass a no-op.
+     */
+    ensureMeshes: (source: string) => Promise<void>;
+  },
 ) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(mapId))
     throw new Error("Invalid map selection");
@@ -77,6 +88,8 @@ export async function stageMap(
     ownedScenario,
     options.trainingScenario,
   );
+  // After every input check: a rejected request never reaches the fetch.
+  await options.ensureMeshes(source);
   await mkdir(output, { recursive: false, mode: 0o700 });
   const content = path.join(output, "TheStorm");
   await mkdir(content);

@@ -3,3 +3,7 @@
 **/.gradle/
 **/node_modules/
 **/.DS_Store
+# Baked rwf navigation meshes reach the image from the asset bucket (the fetch stage reads
+# rwf/nav-manifest.json), never from whatever a checkout happens to have fetched.
+**/nav.rwfnav
+**/nav.rwfnav.*.partial

@@ -39,6 +39,8 @@ val stuckSpotNavs =
 // Shipped content and the actor-parity fixture, for the unit suite and the local simulations.
 fun Test.rwfbotsFixtures() {
   dependsOn("prepareActorParity")
+  // The nav artifacts are not in Git; rwf/nav-manifest.json names them and this fetches them.
+  dependsOn(":rwfmap:fetchRwfNavs")
   inputs.dir(layout.buildDirectory.dir("actor-parity"))
       .withPropertyName("actorParity").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
@@ -131,7 +133,7 @@ val simulationCaptureInputs = tasks.register("simulationCaptureInputs") {
   }
 }
 tasks.register<JavaExec>("simulationCapture") {
-  dependsOn(simulationCaptureInputs)
+  dependsOn(simulationCaptureInputs, ":rwfmap:fetchRwfNavs")
   classpath = simulationClasspath
   mainClass.set("com.shepherdjerred.thestorm.rwfbots.sim.SimulationCapture")
   systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
