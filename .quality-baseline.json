@@ -1,5 +1,6 @@
 {
   "eslint-disable": {
+    "packages/discord-plays-core/src/logger.ts": 1,
     "packages/better-skill-capped/src/router.tsx": 1,
     "packages/better-skill-capped/src/vite-env.d.ts": 1,
     "packages/delivery/src/client/router.tsx": 1,
