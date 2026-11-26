@@ -418,4 +418,3 @@ export function createThreads(deps: Deps) {
     },
   };
 }
-export type Threads = ReturnType<typeof createThreads>;

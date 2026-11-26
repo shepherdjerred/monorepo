@@ -439,4 +439,3 @@ export function createFeedback(deps: Deps) {
     },
   };
 }
-export type Feedback = ReturnType<typeof createFeedback>;

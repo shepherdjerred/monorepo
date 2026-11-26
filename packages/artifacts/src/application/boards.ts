@@ -308,4 +308,3 @@ export function createBoards(deps: Deps) {
       }),
   };
 }
-export type Boards = ReturnType<typeof createBoards>;

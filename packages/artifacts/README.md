@@ -6,10 +6,9 @@ reviews it on a board, pins comments to a point in it, and the agent that is
 waiting receives each comment, replies, and publishes the next version.
 
 This package is **prepared and inactive**: it holds the Prisma schema, the
-frozen wire contract, and a health-only server. `ARTIFACTS_ACTIVE` is `false`,
-so the image builds and the chart publishes, and nothing deploys. The server
-routes, the UI, `toolkit artifacts` and the activation each land in their own
-change.
+wire contract and the server. `ARTIFACTS_ACTIVE` is `false`, so the image
+builds and the chart publishes, and nothing deploys. The UI, `toolkit
+artifacts` and the activation each land in their own change.
 
 ## Hosts and isolation
 
@@ -39,17 +38,78 @@ Agents never call the service directly. `toolkit artifacts` publishes
 (`publish`), blocks for feedback (`wait`), answers (`reply`) and lists
 (`list`, `show`, `boards`, `guide`). The caller identifies itself with the
 `X-Artifacts-Actor` header, the same base64 JSON actor `toolkit` sends to
-Tracker. `wait` delivers each human comment once, then acknowledges it, so a
-second `wait` returns only newer comments.
+Tracker; a browser needs no header, because the server derives
+`human:<login>` from the verified Tailscale login. `wait` delivers each human
+comment once, then acknowledges it, so a second `wait` returns only newer
+comments. The service serves its own guide at `/agent/SKILL.md`,
+`/agent/reference/{publishing,concepts,review-loop,sandbox}.md` and
+`/agent/index.json`, rendered from the same limits and CDN list as the
+Content-Security-Policy.
+
+## Server
+
+`src/index.ts` boots one `Bun.serve` listener (`idleTimeout` 60 s,
+`maxRequestBodySize` the per-file limit) whose `fetch` routes on `Host`:
+
+- **App** (`ARTIFACTS_APP_ORIGIN`): the UI, `/trpc`, `/api/uploads`,
+  `/api/feedback/stream`, `/api/events/stream`, `/agent/*`. Login gate, CSRF
+  rules (`src/domain/csrf.ts`), no CORS, `frame-ancestors 'none'`. `/_t/*` and
+  `/_p/*` are 404, and it never reads object bytes: only
+  `src/server/content-host.ts` calls `ObjectStore.read`/`readRange`.
+- **Content** (`ARTIFACTS_CONTENT_ORIGIN`): `GET|HEAD|OPTIONS` of
+  `/_t/<token>/*`, `/_bridge/*`, `/_viewer/*`. Every response, whatever its
+  status, carries the sandbox Content-Security-Policy with sources scoped to
+  the request's own token prefix (`src/domain/csp.ts`). HTML is streamed
+  through `HTMLRewriter` to add `/_bridge/<hash>.js`; Mermaid artifacts get the
+  self-hosted viewer at their token root.
+- **Internal** (any other `Host`): `/healthz`, `/readyz`, `/metrics` and
+  `/trpc/maintenance.*`. A request carrying `Tailscale-User-Login` came through
+  an ingress proxy and is refused.
+
+```text
+src/shared/      contract.ts (wire contract), procedures.ts (tRPC schemas)
+src/domain/      pure rules: CSP, CSRF, Range, paths, board ops, claim predicate
+src/application/ use cases over Prisma: boards, artifacts, uploads, threads,
+                 feedback, maintenance, inbox
+src/infrastructure/  config, database, object store, LISTEN hub, metrics
+src/server/      the three host handlers, tRPC router, SSE, agent guide
+src/bridge/      the in-frame script injected into HTML
+src/viewer/      the Mermaid viewer bundled on first request
+```
+
+Publishing is `POST /api/uploads` (manifest, idempotency key and compare-and-set
+token), `PUT /api/uploads/:id/blobs/:sha256` (raw body streamed through a
+counting sha256 into the object store; a mismatch deletes the object) and
+`POST /api/uploads/:id/commit` (one transaction: lock, check, mint the content
+token, insert the version and its files, place the frame, record the event).
+A feedback stream (`/api/feedback/stream`) only wakes an agent; the CLI then
+calls `feedback.claim`, prints, and calls `feedback.ack`.
+
+### Configuration
+
+Bootstrap environment: `DATABASE_URL`, `S3_ENDPOINT`, `S3_BUCKET`,
+`S3_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+`ARTIFACTS_APP_ORIGIN`, `ARTIFACTS_CONTENT_ORIGIN` (origins, no path),
+`ARTIFACTS_OPERATOR_LOGINS` (comma-separated Tailscale logins), `HOST`, `PORT`,
+`FEATURE_FLAGS_MODE`, `ENVIRONMENT`. Everything else is typed configuration
+resolved `flag -> default` (`src/infrastructure/config.ts`): the
+`artifacts-enabled` flag (off pauses writes with 403 and the cleanup reports
+`paused`) and the limits `artifacts-max-file-bytes`, `-max-version-bytes`,
+`-max-files`, `-feedback-settle-seconds`, `-delivery-orphan-minutes`,
+`-board-idle-days`, `-archive-grace-days`, `-upload-ttl-hours`,
+`-blob-grace-hours` and `-event-retention-days`. The flag keys join the managed
+inventory with the activation.
 
 ## Contract
 
-`@shepherdjerred/artifacts/contract` (`src/shared/contract.ts`) is the frozen
+`@shepherdjerred/artifacts/contract` (`src/shared/contract.ts`) is the
 wire contract shared by the server, the UI and the CLI: the actor, the board
 index and its operations, comment anchors, the upload manifest, feedback
-items, the live-stream messages, the limits and the allowed CDN origins. It
-imports nothing from the server. The tRPC `AppRouter` type joins it with the
-server change.
+items, the live-stream messages, the limits, the allowed CDN origins and the
+type-only `AppRouter`. The input and output schemas of every tRPC procedure
+are in `@shepherdjerred/artifacts/procedures` (`src/shared/procedures.ts`).
+Neither imports server code at runtime. tRPC reserves the router key `apply`,
+so the board operation procedure is `boards.applyOps`.
 
 ## Data
 
@@ -64,9 +124,9 @@ with ids only.
 ```bash
 bun run generate        # Prisma client into generated/prisma
 bun run migrate:deploy  # Apply migrations to DATABASE_URL
-bun run start           # Health-only server on :7440
-bun run test            # Contract and server unit tests
-bun run test:extended   # Migration, trigger and constraint tests (needs PostgreSQL)
+bun run start           # The server on :7440 (needs the bootstrap environment)
+bun run test            # Unit tests: contract, domain, bridge, host handlers
+bun run test:extended   # PostgreSQL suites: schema, publishing, feedback, cleanup
 bun run typecheck
 bun run lint
 ```

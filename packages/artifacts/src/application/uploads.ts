@@ -277,7 +277,6 @@ export function createUploads(deps: Deps) {
     },
   };
 }
-export type Uploads = ReturnType<typeof createUploads>;
 
 async function commitLocked(
   tx: Tx,
