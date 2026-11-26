@@ -1,21 +1,27 @@
+/*
+ * The board on console surfaces: columns are --ui-head wells with a 32px
+ * head row, cards are --ui-panel with the panel line. It starts under the
+ * same full-bleed rule as the list.
+ */
 .board {
   display: flex;
-  gap: 16px;
-  padding: 6px 30px 30px;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--ui-line);
   overflow-x: auto;
   min-height: calc(100dvh - 230px);
   scroll-snap-type: x proximity;
-  scroll-padding-inline: 30px;
+  scroll-padding-inline: 20px;
   align-items: stretch;
 }
 .board-column {
-  flex: 0 0 275px;
-  min-width: 275px;
-  padding: 10px;
-  background: var(--ui-bg);
+  flex: 0 0 280px;
+  min-width: 280px;
+  padding: 0 8px 8px;
+  background: var(--ui-head);
   border-radius: 8px;
   scroll-snap-align: start;
-  border: 1px solid transparent;
+  border: 1px solid var(--ui-line);
 }
 .board-column.over {
   border-color: var(--ui-accent);
@@ -24,23 +30,33 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 3px 15px;
-  font-size: 12px;
+  min-height: 36px;
+  margin: 0 -8px 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-line-soft);
+  font-size: 13px;
+  font-weight: 600;
 }
 .board-column h2 .count {
   margin-left: auto;
+  color: var(--ui-faint);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 /* Skeleton and carried cards look like cards without being one, so
    nothing that finds cards on the page finds them. */
 .board-card,
 .skeleton-card,
 .lifted-card {
-  padding: 11px 13px;
+  padding: 10px 12px;
   background: var(--ui-panel);
   border: 1px solid var(--ui-line);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-  border-radius: 7px;
+  box-shadow: none;
+  border-radius: 6px;
   margin-bottom: 8px;
+}
+.board-card:hover {
+  border-color: var(--ui-btn-edge);
 }
 /* The slot a lifted card left (motion.css draws it as a dashed outline). */
 .board-card.dragging {
@@ -49,7 +65,11 @@
 .card-top {
   display: flex;
   align-items: center;
-  margin-bottom: 5px;
+  gap: 4px;
+  margin: 0 0 4px -3px;
+}
+.card-top .identifier {
+  font-size: 12px;
 }
 .drag-handle {
   padding: 0;
@@ -61,8 +81,8 @@
 }
 .card-title {
   display: block;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.45;
   font-weight: 500;
 }
 .card-title:hover {
@@ -73,25 +93,21 @@
 }
 .card-labels {
   display: flex;
-  margin: 6px -3px;
+  margin: 8px -3px 2px;
 }
 .card-labels .row-labels {
   flex-wrap: wrap;
   max-width: 100%;
 }
-.card-top {
-  gap: 4px;
-  margin-left: -3px;
-}
 .card-bottom {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 23px;
-  margin-left: -3px;
+  min-height: 24px;
+  margin: 6px 0 0 -3px;
 }
 .card-bottom .muted {
-  font-size: 11px;
+  font-size: 12px;
   display: flex;
   gap: 4px;
   align-items: center;
@@ -103,12 +119,12 @@
   gap: 8px;
   color: var(--ui-muted);
   padding: 40px 0;
-  font-size: 11px;
+  font-size: 12.5px;
 }
 @media (max-width: 767px) {
   .board {
     scroll-padding-inline: 16px;
-    padding: 0 16px 25px;
+    padding: 12px 16px 25px;
     gap: 12px;
   }
   .board-column {
@@ -117,14 +133,11 @@
   .drag-handle {
     min-width: 44px;
     min-height: 44px;
-    margin: -8px -10px;
+    margin: -14px -10px;
   }
   .board-card,
   .skeleton-card,
   .lifted-card {
-    padding: 13px;
-  }
-  .card-title {
-    font-size: 13px;
+    padding: 12px;
   }
 }

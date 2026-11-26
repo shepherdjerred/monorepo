@@ -6,7 +6,8 @@
   align-items: center;
   gap: 4px;
   color: var(--ui-muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .due-chip[data-tone="soon"] {
@@ -58,7 +59,7 @@
   gap: 6px;
   min-height: 18px;
   padding: 0 2px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .due-preview:empty {
   display: none;
@@ -88,7 +89,7 @@
   font-weight: 600;
 }
 .due-choice .muted {
-  font-size: 11px;
+  font-size: 12px;
 }
 .due-clear {
   align-self: flex-start;
@@ -152,7 +153,7 @@
 .calendar-grid th {
   padding: 4px 0;
   color: var(--ui-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   text-align: center;
 }
@@ -180,7 +181,7 @@
 }
 .calendar-grid td[aria-selected="true"] {
   background: var(--ui-accent);
-  color: var(--ui-panel);
+  color: var(--ui-on-accent);
   font-weight: 600;
 }
 
@@ -231,13 +232,13 @@ progress.progress-ring::-moz-progress-bar {
   align-items: center;
   gap: 4px;
   color: var(--ui-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .row-parent {
   color: var(--ui-muted);
-  font-size: 11px;
+  font: 12px var(--ui-font-mono);
   white-space: nowrap;
 }
 
@@ -275,13 +276,14 @@ progress.progress-ring::-moz-progress-bar {
   border-radius: 6px;
 }
 .sub-issue:hover {
-  background: var(--ui-head);
+  background: var(--ui-hover);
 }
 .sub-issue[data-pending] {
   opacity: 0.6;
 }
 .sub-issue .identifier {
   width: 58px;
+  font-size: 12px;
 }
 .sub-issue-title {
   flex: 1;
@@ -443,10 +445,11 @@ progress.progress-ring::-moz-progress-bar {
   position: relative;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--ui-line);
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ui-btn-edge);
+  border-radius: 6px;
+  background: var(--ui-panel);
   color: var(--ui-muted);
   cursor: pointer;
 }

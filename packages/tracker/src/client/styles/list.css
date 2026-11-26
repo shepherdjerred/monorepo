@@ -1,65 +1,176 @@
+/*
+ * The issue list in console-ui's table rhythm: a section head, one inline
+ * toolbar of 28px controls, then full-bleed rows (36px, soft separators,
+ * hover on --ui-hover) under 32px group rows on --ui-head. Side padding is
+ * the panel's 20px throughout.
+ */
 .view-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30px 32px 25px;
+  gap: 12px;
+  padding: 16px 20px 4px;
 }
 .view-heading h2 {
   display: flex;
-  gap: 10px;
-  font-size: 19px;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.5px;
-  align-items: center;
+}
+.view-heading h2 .heading-icon {
+  align-self: center;
+}
+.view-heading h2 .count {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 .view-heading p {
-  margin-top: 5px;
+  margin-top: 2px;
   color: var(--ui-muted);
-  font-size: 12px;
+  font-size: 12.5px;
 }
+/* List / board: a 28px segmented control. */
 .view-toggle {
   display: flex;
-  padding: 3px;
+  flex: none;
+  height: 28px;
+  padding: 2px;
   border: 1px solid var(--ui-line);
-  border-radius: 7px;
+  border-radius: 6px;
+  background: var(--ui-panel);
   gap: 2px;
 }
 .view-toggle a {
   display: grid;
   place-items: center;
-  padding: 5px 8px;
+  width: 28px;
   color: var(--ui-muted);
   border-radius: 4px;
+}
+.view-toggle a:hover {
+  color: var(--ui-ink);
 }
 .view-toggle a.active {
   background: var(--ui-hover);
   color: var(--ui-ink);
 }
+.view-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* The view toolbar: every control is a flat 28px console field or button on
+   the panel line, as in console-ui's inline fields. */
 .filters {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 30px 16px;
+  padding: 10px 20px 12px;
   flex-wrap: wrap;
 }
 .filter-search {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  width: 220px;
+  height: 28px;
+  padding: 0 0 0 9px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
   color: var(--ui-muted);
-  width: 165px;
+}
+.filter-search:focus-within {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 1px var(--ui-accent);
 }
 .filter-search input {
+  height: 26px;
   border: 0;
   background: transparent;
-  padding: 6px 0;
+  padding: 0 9px 0 0;
   width: 100%;
-  font-size: 11px;
+  font-size: 12.5px;
+}
+.filter-search input:focus-visible {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+.filters :is(.toolbar-button, .picker) {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.filters .picker {
+  padding: 0 8px 0 9px;
+}
+.filters .toolbar-button svg,
+.filters .picker .option-icon {
+  color: var(--ui-muted);
+}
+.filters :is(.toolbar-button, .picker):hover:not(:disabled),
+.filters .toolbar-button[data-popup-open] {
+  background: var(--ui-hover);
+  color: var(--ui-ink);
+}
+.filters .toolbar-button kbd {
+  color: var(--ui-faint);
+  font: 10.5px var(--ui-font-mono);
+}
+.filters .sort-dir-button {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+}
+.filters .picker .team-icon {
+  min-width: 20px;
+  height: 16px;
+  font-size: 10px;
 }
 #team-picker {
   min-height: 28px;
-  color: var(--ui-muted);
 }
+/* The loading toolbar keeps the sizes and drops the borders. */
+.filters .skeleton-control {
+  border-color: transparent;
+  background: var(--ui-head);
+}
+/* Active filters read as console chips: 5px radius on the panel line. */
+.filters .filter-chip {
+  height: 28px;
+  border-color: var(--ui-line);
+  border-radius: 5px;
+  background: var(--ui-panel);
+  font-size: 12.5px;
+}
+.filters .filter-chip-body {
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 5px 0 0 5px;
+  font-size: 12.5px;
+}
+.filters .filter-chip-remove {
+  min-height: 26px;
+  border-radius: 0 5px 5px 0;
+}
+.filters .chip-values {
+  color: var(--ui-ink);
+}
+.filters .filter-chips .text-button {
+  min-height: 28px;
+  padding: 0 4px;
+  font-size: 12.5px;
+}
+
+/* Rows: full-bleed, console table density. */
 .issue-list {
   position: relative;
   border-top: 1px solid var(--ui-line);
@@ -76,23 +187,34 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 22px 0 12px;
-  min-height: 48px;
-  border-bottom: 1px solid var(--ui-line);
+  padding: 0 20px 0 14px;
+  /* 36px with the separator. */
+  min-height: 35px;
+  border-bottom: 1px solid var(--ui-line-soft);
 }
 .issue-row:has([aria-current="true"]),
 .issue-row:hover {
-  background: var(--ui-head);
+  background: var(--ui-hover);
+}
+/* Priority and status pickers sit inside the 36px row. */
+.issue-row .picker-icon {
+  height: 28px;
+}
+/* A control on a hovered row would vanish into the row's own hover. */
+.issue-row:hover :is(.row-control, .picker-icon):hover:not(:disabled) {
+  background: var(--ui-panel);
+  box-shadow: inset 0 0 0 1px var(--ui-line);
 }
 .issue-row-main {
   justify-content: flex-start;
   flex: 1;
   min-width: 0;
+  min-height: 35px;
   display: flex;
   gap: 12px;
   align-items: center;
   text-align: left;
-  padding: 14px 0;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -108,9 +230,9 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 48px;
+  min-height: 36px;
   color: var(--ui-muted);
-  font-size: 12px;
+  font-size: 12.5px;
 }
 .list-sentinel {
   height: 1px;
@@ -119,10 +241,11 @@
   opacity: 0.6;
 }
 .issue-row-main .identifier {
-  width: 62px;
+  width: 56px;
+  font-size: 12px;
 }
 .issue-row-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -134,28 +257,90 @@
   max-width: 260px;
   overflow: hidden;
 }
+/* Labels on a row are console chips: 22px, 5px radius, the panel line. */
+.issue-row .label,
+.board-card .label,
+.lifted-card .label {
+  height: 22px;
+  padding: 0 7px;
+  gap: 6px;
+  border-color: var(--ui-line);
+  border-radius: 5px;
+  font-size: 12px;
+}
 .row-project {
   display: flex;
   align-items: center;
   gap: 6px;
   color: var(--ui-muted);
-  font-size: 11px;
-  width: 104px;
+  font-size: 12px;
+  width: 112px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.row-project:hover {
+  color: var(--ui-ink);
+}
 .row-date {
-  width: 60px;
+  width: 64px;
   color: var(--ui-muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
 }
 .row-votes {
   color: var(--ui-muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
+
+/* Group rows: console table group rows, full-bleed on --ui-head. */
+.issue-list-frame .group-row {
+  border-bottom: 1px solid var(--ui-line-soft);
+  background: var(--ui-head);
+}
+.issue-list-frame .group-sticky .group-heading {
+  background: var(--ui-head);
+  border-bottom: 1px solid var(--ui-line-soft);
+  box-shadow: 0 1px 0 var(--ui-line-soft);
+}
+.issue-list-frame .group-heading {
+  gap: 6px;
+  min-height: 31px;
+  padding: 0 14px;
+}
+.issue-list-frame .group-heading h3 {
+  font-size: 13px;
+}
+.issue-list-frame .group-toggle {
+  min-height: 24px;
+  padding: 0 6px;
+  border-radius: 5px;
+  color: var(--ui-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.issue-list-frame .group-toggle .count {
+  margin-left: 2px;
+  color: var(--ui-faint);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.issue-list-frame .group-heading[data-empty="true"] {
+  min-height: 31px;
+  opacity: 1;
+}
+.issue-list-frame .group-heading[data-empty="true"] .group-toggle {
+  color: var(--ui-muted);
+  font-weight: 500;
+}
+.issue-list-frame .group-create {
+  width: 24px;
+  height: 24px;
+}
+
 @media (max-width: 1150px) {
   .issue-row .row-labels {
     display: none;
@@ -164,41 +349,57 @@
     gap: 6px;
   }
   .filter-search {
-    width: 140px;
+    width: 160px;
   }
   .row-project {
-    width: 85px;
+    width: 90px;
   }
 }
 @media (max-width: 767px) {
   .view-heading {
-    padding: 24px 17px 20px;
+    padding: 16px 16px 4px;
   }
   .view-heading h2 {
-    font-size: 21px;
+    font-size: 15px;
+  }
+  /* Touch targets stay 40px on a phone. */
+  .view-toggle {
+    height: 40px;
   }
   .view-toggle a {
-    padding: 10px;
+    width: 40px;
   }
   .filters {
-    padding: 0 16px 16px;
+    padding: 10px 16px 12px;
     gap: 8px;
   }
   .filter-search {
     width: 100%;
     height: 40px;
-    border-bottom: 1px solid var(--ui-line);
-    margin-bottom: 3px;
   }
   .filter-search input {
+    height: 38px;
     font-size: 16px;
+  }
+  .filters :is(.toolbar-button, .picker),
+  .filters .filter-chip,
+  #team-picker {
+    height: 40px;
+    min-height: 40px;
+  }
+  .filters .sort-dir-button {
+    width: 40px;
+    min-width: 40px;
+  }
+  .filters :is(.filter-chip-body, .filter-chip-remove) {
+    min-height: 38px;
   }
   .filters .spacer {
     display: none;
   }
   .issue-row {
-    padding: 0 10px 0 6px;
-    min-height: 64px;
+    padding: 0 16px 0 10px;
+    min-height: 56px;
     gap: 2px;
   }
   .row-check {
@@ -212,8 +413,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 3px;
-    padding: 10px 0 10px 4px;
+    justify-content: center;
+    gap: 2px;
+    padding: 9px 0 9px 4px;
   }
   .issue-row-title {
     white-space: normal;
@@ -229,7 +431,15 @@
     display: none;
   }
   .issue-row .avatar {
-    width: 25px;
-    height: 25px;
+    width: 24px;
+    height: 24px;
+  }
+  .issue-list-frame .group-heading {
+    min-height: 40px;
+    padding: 0 12px 0 10px;
+  }
+  .issue-list-frame .group-create {
+    width: 36px;
+    height: 36px;
   }
 }
