@@ -48,6 +48,12 @@ export async function crawlFixturePuuids(): Promise<string[]> {
   return loaded.info.participants.map((participant) => participant.puuid);
 }
 
+/** Both checkpoints, on frames stamped just before them as Riot's are. */
+const CHECKPOINTS = [
+  { atMs: 600_000, frameMs: 540_219 },
+  { atMs: 900_000, frameMs: 840_295 },
+] as const;
+
 export type CrawlRecordOptions = {
   crawledAt?: string;
   withTimeline?: boolean;
@@ -121,6 +127,16 @@ export async function crawlRecord(
                 levelUpType: "NORMAL",
               },
             ],
+            checkpoints: CHECKPOINTS.map(({ atMs, frameMs }) => ({
+              atMs,
+              frameMs,
+              participants: participants.map(({ participantId }) => ({
+                participantId,
+                totalGold: atMs / 100 + participantId * 50,
+                xp: atMs / 50 + participantId * 20,
+                minions: atMs / 5000 + participantId,
+              })),
+            })),
           },
   };
 }

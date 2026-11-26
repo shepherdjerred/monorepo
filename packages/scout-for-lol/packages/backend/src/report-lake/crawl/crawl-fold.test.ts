@@ -14,8 +14,10 @@ import {
   writeCrawlManifest,
 } from "#src/report-lake/crawl/crawl-manifest.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { encodeSegment } from "#src/league/crawl/crawl-segment.ts";
 import {
   crawlFixturePuuids,
+  crawlRecord,
   crawlSegment,
 } from "#src/testing/report-lake/crawl-segments.ts";
 
@@ -86,6 +88,7 @@ describe("foldCrawlInbox", () => {
         match_team_bans_crawl: 10,
         timeline_events_crawl: 2,
         timeline_event_participants_crawl: 2,
+        timeline_checkpoints_crawl: 20,
       },
     });
     expect(consumed.map((entry) => entry.sha256)).toEqual([segment.sha256]);
@@ -126,7 +129,104 @@ describe("foldCrawlInbox", () => {
       },
     ]);
   });
+});
 
+describe("foldCrawlInbox checkpoints", () => {
+  test("writes a checkpoint row per participant per checkpoint, keyed by match, participant and puuid", async () => {
+    const puuids = await crawlFixturePuuids();
+    await writeCrawlInboxSegment(
+      lakeDir,
+      await crawlSegment(DAY, ["NA1_9000000020"]),
+    );
+    await foldCrawlInbox({
+      lakeDir,
+      buildDir,
+      buildId: "b1",
+      loadErased: NO_ERASURES,
+      now: NOW,
+    });
+
+    const checkpoints = await rows(
+      "timeline_checkpoints_crawl",
+      "SELECT match_id, ingest_day, checkpoint_ms, frame_timestamp_ms, participant_id, puuid, total_gold, xp, minions FROM {files} ORDER BY checkpoint_ms, participant_id",
+    );
+    expect(checkpoints).toHaveLength(20);
+    expect(checkpoints.map((row) => row["checkpoint_ms"])).toEqual([
+      ...Array.from({ length: 10 }, () => 600_000),
+      ...Array.from({ length: 10 }, () => 900_000),
+    ]);
+    expect(checkpoints[0]).toEqual({
+      match_id: "NA1_9000000020",
+      ingest_day: DAY,
+      checkpoint_ms: 600_000,
+      frame_timestamp_ms: 540_219,
+      participant_id: 1,
+      puuid: puuids[0],
+      total_gold: 6050,
+      xp: 12_020,
+      minions: 121,
+    });
+    // Every row names the participant's own PUUID, one per player.
+    expect(new Set(checkpoints.map((row) => row["puuid"]))).toEqual(
+      new Set(puuids),
+    );
+    expect(
+      checkpoints.filter((row) => row["checkpoint_ms"] === 900_000)[9],
+    ).toMatchObject({
+      participant_id: 10,
+      frame_timestamp_ms: 840_295,
+      total_gold: 9500,
+    });
+  });
+
+  test("writes no checkpoint row for a game that never reached one, a legacy line or an unsampled match", async () => {
+    const reached = await crawlRecord("NA1_9000000021");
+    const short = await crawlRecord("NA1_9000000022");
+    const legacy = await crawlRecord("NA1_9000000023");
+    const unsampled = await crawlRecord("NA1_9000000024", {
+      withTimeline: false,
+    });
+    if (short.timeline === null || legacy.timeline === null) {
+      throw new Error("fixture timelines are sampled");
+    }
+    // A game over before the first checkpoint states an empty list; a line
+    // written before the crawl kept checkpoints has no list at all.
+    short.timeline.checkpoints = [];
+    delete legacy.timeline.checkpoints;
+    await writeCrawlInboxSegment(
+      lakeDir,
+      encodeSegment({
+        route: "na1",
+        dt: DAY,
+        records: [reached, short, legacy, unsampled],
+      }),
+    );
+
+    await foldCrawlInbox({
+      lakeDir,
+      buildDir,
+      buildId: "b1",
+      loadErased: NO_ERASURES,
+      now: NOW,
+    });
+
+    expect(
+      await rows(
+        "timeline_checkpoints_crawl",
+        "SELECT match_id, count(*) AS n FROM {files} GROUP BY match_id ORDER BY match_id",
+      ),
+    ).toEqual([{ match_id: "NA1_9000000021", n: 20n }]);
+    // The rest of every one of those matches is stored regardless.
+    expect(
+      await rows(
+        "matches_crawl",
+        "SELECT count(DISTINCT match_id) AS n FROM {files}",
+      ),
+    ).toEqual([{ n: 4n }]);
+  });
+});
+
+describe("foldCrawlInbox ledger and guards", () => {
   test("never folds a segment twice, even when the inbox file outlived a publish", async () => {
     const segment = await crawlSegment(DAY, ["NA1_9000000002"]);
     await writeCrawlInboxSegment(lakeDir, segment);
@@ -172,6 +272,10 @@ describe("foldCrawlInbox", () => {
     expect(summary).toMatchObject({ segments: 1, erasedMatches: 1 });
     expect(summary.rows.matches_crawl).toBe(0);
     expect(await rows("matches_crawl", "SELECT * FROM {files}")).toEqual([]);
+    expect(summary.rows.timeline_checkpoints_crawl).toBe(0);
+    expect(
+      await rows("timeline_checkpoints_crawl", "SELECT * FROM {files}"),
+    ).toEqual([]);
   });
 
   test("refuses an inbox file whose bytes do not match its name", async () => {

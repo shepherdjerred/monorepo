@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
+  CHECKPOINT_TIMES_MS,
   isCrawlableMatch,
   parseCrawlMatchEnvelope,
   reduceTimeline,
@@ -60,13 +62,27 @@ describe("crawl match envelope", () => {
   });
 });
 
+function participantFrame(participantId: number, totalGold: number) {
+  return {
+    participantId,
+    totalGold,
+    currentGold: 100,
+    xp: 400,
+    level: 3,
+    minionsKilled: 10,
+    jungleMinionsKilled: 2,
+    position: { x: 1, y: 2 },
+  };
+}
+
 describe("timeline reduction", () => {
   const timeline = {
     info: {
       participants: [{ participantId: 1, puuid: P("p1") }],
       frames: [
         {
-          participantFrames: { "1": { totalGold: 500 } },
+          timestamp: 60_000,
+          participantFrames: { "1": participantFrame(1, 500) },
           events: [
             {
               type: "ITEM_PURCHASED",
@@ -85,6 +101,8 @@ describe("timeline reduction", () => {
           ],
         },
         {
+          timestamp: 120_000,
+          participantFrames: { "1": participantFrame(1, 650) },
           events: [
             {
               type: "ITEM_UNDO",
@@ -123,10 +141,145 @@ describe("timeline reduction", () => {
     expect(reduced.participants).toEqual([
       { participantId: 1, puuid: P("p1") },
     ]);
-    expect(JSON.stringify(reduced)).not.toContain("totalGold");
+    const stored = JSON.stringify(reduced);
+    expect(stored).not.toContain("participantFrames");
+    expect(stored).not.toContain("position");
+    expect(stored).not.toContain("currentGold");
   });
 
   test("fails loudly on a timeline without frames", () => {
     expect(() => reduceTimeline({ info: {} })).toThrow();
+  });
+});
+
+/**
+ * A real League-client timeline (`testdata/lcu`, ten players, one frame about
+ * every 60 seconds) wrapped in the Match-V5 envelope the crawl reads. Frame
+ * timestamps carry the real jitter: the frame "at 10 minutes" is 600249 ms.
+ */
+const FixtureTimelineSchema = z.object({
+  frames: z.array(
+    z.looseObject({
+      timestamp: z.number(),
+      participantFrames: z.record(z.string(), z.looseObject({})),
+    }),
+  ),
+});
+
+async function fixtureTimeline(name: string) {
+  const raw = FixtureTimelineSchema.parse(
+    await Bun.file(
+      new URL(`../../../../../testdata/lcu/${name}.json`, import.meta.url),
+    ).json(),
+  );
+  const participants = Array.from({ length: 10 }, (_, index) => ({
+    participantId: index + 1,
+    puuid: P(`player${(index + 1).toString()}`),
+  }));
+  return { frames: raw.frames, participants };
+}
+
+function timelineOf(
+  fixture: Awaited<ReturnType<typeof fixtureTimeline>>,
+  frames = fixture.frames,
+) {
+  return { info: { participants: fixture.participants, frames } };
+}
+
+function economy(
+  frame: { participantFrames: Record<string, unknown> } | undefined,
+  participantId: number,
+) {
+  const parsed = z
+    .object({
+      totalGold: z.number(),
+      xp: z.number(),
+      minionsKilled: z.number(),
+      jungleMinionsKilled: z.number(),
+    })
+    .parse(frame?.participantFrames[participantId.toString()]);
+  return {
+    participantId,
+    totalGold: parsed.totalGold,
+    xp: parsed.xp,
+    minions: parsed.minionsKilled + parsed.jungleMinionsKilled,
+  };
+}
+
+describe("timeline checkpoints", () => {
+  test("keeps all ten participants at the latest frame at or before 10 and 15 minutes", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const { checkpoints } = reduceTimeline(timelineOf(fixture));
+
+    expect(CHECKPOINT_TIMES_MS).toEqual([600_000, 900_000]);
+    expect(checkpoints?.map(({ atMs, frameMs }) => [atMs, frameMs])).toEqual([
+      // The 10-minute frame is stamped 600249, after the checkpoint, so the
+      // latest frame at or before it is the one a minute earlier.
+      [600_000, 540_219],
+      [900_000, 840_295],
+    ]);
+    for (const checkpoint of checkpoints ?? []) {
+      const frame = fixture.frames.find(
+        (candidate) => candidate.timestamp === checkpoint.frameMs,
+      );
+      expect(checkpoint.participants).toEqual(
+        Array.from({ length: 10 }, (_, index) => economy(frame, index + 1)),
+      );
+    }
+    // The values are the frame's own, not placeholders.
+    expect(checkpoints?.[1]?.participants[0]?.totalGold).toBeGreaterThan(
+      checkpoints?.[0]?.participants[0]?.totalGold ?? Infinity,
+    );
+  });
+
+  test("reads a frame stamped exactly on the checkpoint, minions summed", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const frames = fixture.frames.map((frame) => ({
+      ...frame,
+      timestamp:
+        frame.timestamp >= 600_000 && frame.timestamp < 700_000
+          ? 600_000
+          : frame.timestamp >= 900_000 && frame.timestamp < 1_000_000
+            ? 900_000
+            : frame.timestamp,
+    }));
+    const { checkpoints } = reduceTimeline(timelineOf(fixture, frames));
+    expect(checkpoints?.map((checkpoint) => checkpoint.frameMs)).toEqual([
+      600_000, 900_000,
+    ]);
+    const exact = frames.find((frame) => frame.timestamp === 600_000);
+    expect(checkpoints?.[0]?.participants[3]).toEqual(economy(exact, 4));
+    expect(checkpoints?.[0]?.participants[3]?.minions).toBeGreaterThan(0);
+  });
+
+  test("a game that ends between the checkpoints has only the 10-minute one", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const frames = fixture.frames.filter((frame) => frame.timestamp < 720_000);
+    const { checkpoints } = reduceTimeline(timelineOf(fixture, frames));
+    expect(checkpoints?.map(({ atMs }) => atMs)).toEqual([600_000]);
+  });
+
+  test("a game shorter than 10 minutes states no checkpoint and is never given an earlier frame", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-bot-custom");
+    expect(fixture.frames.at(-1)?.timestamp).toBeLessThan(600_000);
+    expect(reduceTimeline(timelineOf(fixture)).checkpoints).toEqual([]);
+  });
+
+  test("a timeline whose last frame precedes the checkpoint gets nothing for it", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const frames = fixture.frames.filter((frame) => frame.timestamp < 600_000);
+    expect(reduceTimeline(timelineOf(fixture, frames)).checkpoints).toEqual([]);
+  });
+
+  test("a timeline with no frames has no checkpoints", () => {
+    expect(
+      reduceTimeline({ info: { participants: [], frames: [] } }).checkpoints,
+    ).toEqual([]);
+  });
+
+  test("fails loudly on a frame without participant frames", () => {
+    expect(() =>
+      reduceTimeline({ info: { frames: [{ timestamp: 0, events: [] }] } }),
+    ).toThrow();
   });
 });

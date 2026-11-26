@@ -23,9 +23,10 @@ import { lakeSchemaFingerprintOf } from "#src/report-lake/schema.ts";
  *
  * The participant, team and ban tables carry every tracked column, so a global
  * read can union a crawl row with a tracked row by name. The timeline tables
- * are narrower on purpose: the crawl keeps item and skill events only (see
- * `reduceTimeline`), with no frames, positions or kills, so they name only the
- * columns those events have and there is no `timeline_coverage` sibling.
+ * are narrower on purpose: the crawl keeps item and skill events and the 10- and
+ * 15-minute participant checkpoints only (see `reduceTimeline`), with no other
+ * frames, positions or kills, so they name only the columns those rows have and
+ * there is no `timeline_coverage` sibling.
  */
 
 export const CRAWL_LAKE_TABLES = [
@@ -34,6 +35,7 @@ export const CRAWL_LAKE_TABLES = [
   "match_team_bans_crawl",
   "timeline_events_crawl",
   "timeline_event_participants_crawl",
+  "timeline_checkpoints_crawl",
 ] as const;
 
 export type CrawlLakeTable = (typeof CRAWL_LAKE_TABLES)[number];
@@ -99,6 +101,26 @@ export const CRAWL_TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS = {
   role_index: "INTEGER",
 } as const satisfies Record<string, DuckDbColumnType>;
 
+/**
+ * One row per participant per checkpoint (10 and 15 minutes): the latest
+ * timeline frame at or before `checkpoint_ms`, as `fetchTimelineFramesAtTime`
+ * reads it for the logged-in app. A game that ended before a checkpoint has no
+ * row for it, and a segment written before the crawl kept checkpoints has none
+ * at all.
+ */
+export const CRAWL_TIMELINE_CHECKPOINT_LAKE_COLUMNS = {
+  match_id: "VARCHAR",
+  ...INGEST_DAY,
+  checkpoint_ms: "INTEGER",
+  frame_timestamp_ms: "INTEGER",
+  participant_id: "INTEGER",
+  puuid: "VARCHAR",
+  total_gold: "INTEGER",
+  xp: "INTEGER",
+  // minionsKilled + jungleMinionsKilled
+  minions: "INTEGER",
+} as const satisfies Record<string, DuckDbColumnType>;
+
 export const CRAWL_LAKE_TABLE_COLUMNS: Readonly<
   Record<CrawlLakeTable, Readonly<Record<string, DuckDbColumnType>>>
 > = {
@@ -108,6 +130,7 @@ export const CRAWL_LAKE_TABLE_COLUMNS: Readonly<
   timeline_events_crawl: CRAWL_TIMELINE_EVENT_LAKE_COLUMNS,
   timeline_event_participants_crawl:
     CRAWL_TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+  timeline_checkpoints_crawl: CRAWL_TIMELINE_CHECKPOINT_LAKE_COLUMNS,
 };
 
 /** The fingerprint a build's crawl tables were written at (`crawl-manifest.json`). */
@@ -125,6 +148,7 @@ export function emptyCrawlTableRows(): CrawlTableRows {
     match_team_bans_crawl: [],
     timeline_events_crawl: [],
     timeline_event_participants_crawl: [],
+    timeline_checkpoints_crawl: [],
   };
 }
 

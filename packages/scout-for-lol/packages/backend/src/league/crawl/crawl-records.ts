@@ -41,6 +41,13 @@ export const REDUCED_EVENT_TYPES: ReadonlySet<string> = new Set([
   "SKILL_LEVEL_UP",
 ]);
 
+/**
+ * The match times, in milliseconds, whose per-participant gold, experience and
+ * creep score the crawl keeps. Public "ahead at 15 minutes" lane rates read
+ * them, and they cannot be re-derived later: the raw segment keeps no frames.
+ */
+export const CHECKPOINT_TIMES_MS = [600_000, 900_000] as const;
+
 /** The item and skill fields a reduced event keeps, when Riot states them. */
 const EVENT_DETAIL_SCHEMAS = {
   itemId: z.number().int().optional(),
@@ -58,9 +65,31 @@ const TimelineEventSchema = z.looseObject({
   ...EVENT_DETAIL_SCHEMAS,
 });
 
+const CheckpointParticipantSchema = z.object({
+  participantId: z.number().int(),
+  totalGold: z.number().int(),
+  xp: z.number().int(),
+  /** `minionsKilled + jungleMinionsKilled`. */
+  minions: z.number().int(),
+});
+
+const CheckpointSchema = z.object({
+  /** The checkpoint time asked for (`CHECKPOINT_TIMES_MS`). */
+  atMs: z.number().int().positive(),
+  /** The timestamp of the frame read: the latest frame at or before `atMs`. */
+  frameMs: z.number().int().nonnegative(),
+  participants: z.array(CheckpointParticipantSchema),
+});
+
+export type Checkpoint = z.infer<typeof CheckpointSchema>;
+
 /**
  * A segment line's reduced timeline, as the lake fold reads it back. The
  * writer below and this reader share one field list, so the two cannot drift.
+ *
+ * `checkpoints` is absent on lines written before the crawl kept them, and a
+ * possibly empty list on every line after: a timeline that ended before every
+ * checkpoint states an empty list, so the two are never conflated.
  */
 export const ReducedTimelineSchema = z.object({
   participants: z.array(
@@ -74,7 +103,25 @@ export const ReducedTimelineSchema = z.object({
       ...EVENT_DETAIL_SCHEMAS,
     }),
   ),
+  checkpoints: z.array(CheckpointSchema).optional(),
 });
+
+const TimelineFrameSchema = z.looseObject({
+  timestamp: z.number().int().nonnegative(),
+  events: z.array(z.unknown()),
+  participantFrames: z.record(
+    z.string(),
+    z.looseObject({
+      participantId: z.number().int(),
+      totalGold: z.number().int(),
+      xp: z.number().int(),
+      minionsKilled: z.number().int(),
+      jungleMinionsKilled: z.number().int(),
+    }),
+  ),
+});
+
+type TimelineFrame = z.infer<typeof TimelineFrameSchema>;
 
 const TimelineEnvelopeSchema = z.object({
   info: z.object({
@@ -83,7 +130,7 @@ const TimelineEnvelopeSchema = z.object({
         z.object({ participantId: z.number().int(), puuid: LeaguePuuidSchema }),
       )
       .optional(),
-    frames: z.array(z.object({ events: z.array(z.unknown()) })),
+    frames: z.array(TimelineFrameSchema),
   }),
 });
 
@@ -102,6 +149,8 @@ export type ReducedEvent = {
 export type ReducedTimeline = {
   participants: { participantId: number; puuid: LeaguePuuid }[];
   events: ReducedEvent[];
+  /** Absent on a line written before the crawl kept checkpoints. */
+  checkpoints?: Checkpoint[];
 };
 
 const OPTIONAL_EVENT_FIELDS = [
@@ -131,10 +180,43 @@ function reducedEvent(raw: unknown): ReducedEvent | undefined {
 }
 
 /**
+ * The participants' economy at `atMs`: the latest frame with a timestamp at or
+ * before it, the rule `fetchTimelineFramesAtTime` applies for the logged-in
+ * app. A timeline that never reached `atMs` (no frame at or after it) has no
+ * checkpoint, so a short game is never given an earlier frame's numbers.
+ */
+function checkpointAt(
+  frames: readonly TimelineFrame[],
+  atMs: number,
+): Checkpoint | undefined {
+  if (!frames.some((frame) => frame.timestamp >= atMs)) return undefined;
+  let chosen: TimelineFrame | undefined;
+  for (const frame of frames) {
+    if (frame.timestamp > atMs) continue;
+    if (chosen === undefined || frame.timestamp > chosen.timestamp) {
+      chosen = frame;
+    }
+  }
+  if (chosen === undefined) return undefined;
+  return {
+    atMs,
+    frameMs: chosen.timestamp,
+    participants: Object.values(chosen.participantFrames)
+      .map((frame) => ({
+        participantId: frame.participantId,
+        totalGold: frame.totalGold,
+        xp: frame.xp,
+        minions: frame.minionsKilled + frame.jungleMinionsKilled,
+      }))
+      .toSorted((left, right) => left.participantId - right.participantId),
+  };
+}
+
+/**
  * Reduce a Match-V5 timeline to item and skill events, in time order, with the
- * participant-id to PUUID mapping needed to attribute them. Frames, positions,
- * kills and objectives are dropped: the crawl stores only what champion build
- * aggregates read.
+ * participant-id to PUUID mapping needed to attribute them, and the 10- and
+ * 15-minute checkpoints. Other frame data, positions, kills and objectives are
+ * dropped: the crawl stores only what champion build and lane aggregates read.
  */
 export function reduceTimeline(raw: unknown): ReducedTimeline {
   const timeline = TimelineEnvelopeSchema.parse(raw);
@@ -145,7 +227,15 @@ export function reduceTimeline(raw: unknown): ReducedTimeline {
       return event === undefined ? [] : [event];
     })
     .toSorted((left, right) => left.t - right.t);
-  return { participants: timeline.info.participants ?? [], events };
+  const checkpoints = CHECKPOINT_TIMES_MS.flatMap((atMs) => {
+    const checkpoint = checkpointAt(timeline.info.frames, atMs);
+    return checkpoint === undefined ? [] : [checkpoint];
+  });
+  return {
+    participants: timeline.info.participants ?? [],
+    events,
+    checkpoints,
+  };
 }
 
 /** One NDJSON line of a crawl segment (schema version 1). */
