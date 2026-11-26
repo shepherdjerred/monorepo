@@ -13,7 +13,11 @@ import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { lakeSchemaStatus } from "#src/report-lake/schema.ts";
+import {
+  buildDirLaneResultInputs,
+  writeLaneResultsParquet,
+} from "#src/report-lake/lane-results/derive-lane-results.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -70,9 +74,13 @@ export async function rebuildReportLake(
 ): Promise<CompactionSummary> {
   const { onProgress, abortSignal } = options;
   const currentDir = await readCurrentBuildDir(lakeDir);
+  // A rebuild replaces a build at the current schema or at the one declared
+  // predecessor (see LAKE_PREDECESSOR_SCHEMA_FINGERPRINT). Readers keep using
+  // the published build and staging until CURRENT switches, so migrating
+  // from the predecessor never takes the lake offline.
   if (
     currentDir !== undefined &&
-    (await readBuildFingerprint(currentDir)) !== lakeSchemaFingerprint()
+    lakeSchemaStatus(await readBuildFingerprint(currentDir)) === "unknown"
   ) {
     throw new Error(
       "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",
@@ -234,6 +242,17 @@ export async function rebuildReportLake(
     }
 
     deadline.throwIfAborted();
+    const laneResultRows = await writeLaneResultsParquet({
+      buildDir,
+      inputs: await buildDirLaneResultInputs(buildDir),
+      scope: "all",
+      derivedAt: new Date(),
+      timeoutMs: remainingTimeoutMs(),
+      abortSignal: deadline,
+    });
+    onProgress?.({ phase: "deriving-lane-results", rows: laneResultRows });
+
+    deadline.throwIfAborted();
     const accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
     onProgress?.({ phase: "writing-accounts", rows: accountRows });
     deadline.throwIfAborted();
@@ -317,6 +336,7 @@ export async function rebuildReportLake(
       timelineEventParticipantRows: timelines.eventParticipantRows,
       timelineParticipantFrameRows: timelines.participantFrameRows,
       timelineCoverageRows: timelines.coverageRows,
+      laneResultRows,
       skippedMatches,
       skippedPrematches,
       skippedCompetitionRankHistory: rankHistory.skipped,

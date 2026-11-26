@@ -34,6 +34,20 @@ export type RoleMatchup = {
   } | null;
 };
 
+/** The participant columns a role pairing reads. */
+export type RoleMatchupParticipant = Pick<
+  LakeMatchParticipantRow,
+  | "match_id"
+  | "participant_id"
+  | "team_id"
+  | "team_position"
+  | "queue"
+  | "queue_id"
+  | "game_mode"
+  | "game_type"
+  | "map_id"
+>;
+
 /** A role pairing needs timeline frames, which are keyed by participant id. */
 function requiredParticipantId(row: RoleMatchupRow): number {
   if (row.participant_id === null) {

@@ -77,6 +77,7 @@ vi.doMock("#src/report-store/live-ingest.ts", () => ({
   recordMatchForReportStore,
 }));
 vi.doMock("#src/report-lake/compactor.ts", () => ({
+  reportLakeMigrationPending: () => Promise.resolve(false),
   runReportLakeFold,
 }));
 

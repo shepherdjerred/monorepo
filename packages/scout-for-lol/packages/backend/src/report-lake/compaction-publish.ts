@@ -24,6 +24,8 @@ export type CompactionSummary = {
   timelineEventParticipantRows: number;
   timelineParticipantFrameRows: number;
   timelineCoverageRows: number;
+  /** Rows derived into `lane_results` (a fold's re-derivations, or all). */
+  laneResultRows: number;
   skippedMatches: number;
   skippedPrematches: number;
   skippedCompetitionRankHistory: number;
@@ -67,6 +69,7 @@ export function publishCompactionMetrics(
     ["timeline_event_participants", summary.timelineEventParticipantRows],
     ["timeline_participant_frames", summary.timelineParticipantFrameRows],
     ["timeline_coverage", summary.timelineCoverageRows],
+    ["lane_results", summary.laneResultRows],
   ] as const) {
     reportLakeCompactionRowsTotal.inc({ table, tier: summary.tier }, rows);
   }

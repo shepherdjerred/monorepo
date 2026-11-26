@@ -36,6 +36,7 @@ export const TEST_LAKE_FILES: LakeFiles = {
   timelineParticipantFramesStaging: [],
   timelineCoverageParquet: [],
   timelineCoverageStaging: [],
+  laneResults: { status: "unavailable" },
   crawl: NO_CRAWL_LAKE_FILES,
   crawlTombstones: [],
 };

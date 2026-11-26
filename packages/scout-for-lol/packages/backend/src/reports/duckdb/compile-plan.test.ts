@@ -108,6 +108,7 @@ const EMPTY_LAKE: LakeFiles = {
   timelineParticipantFramesStaging: [],
   timelineCoverageParquet: [],
   timelineCoverageStaging: [],
+  laneResults: { status: "unavailable" },
   crawl: NO_CRAWL_LAKE_FILES,
   crawlTombstones: [],
 };

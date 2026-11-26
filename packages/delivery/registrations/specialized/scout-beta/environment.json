@@ -5,6 +5,6 @@
   "application": "scout-beta",
   "pipelineRevisionId": "scout-beta/1",
   "configurationRevision": "scout-beta/1",
-  "configuration": { "scout.reportLakeSchemaEpoch": "2" },
+  "configuration": { "scout.reportLakeSchemaEpoch": "3" },
   "automatic": true
 }

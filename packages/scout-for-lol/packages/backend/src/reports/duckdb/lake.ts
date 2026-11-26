@@ -110,6 +110,7 @@ type UnionSourceInput = {
     | "timeline-event-participants"
     | "timeline-participant-frames"
     | "timeline-coverage"
+    | "lane-results"
     | "raw-documents";
   /** WHERE predicate pushed into BOTH branches (empty sql = no filter). */
   predicate: SqlFragment;
@@ -165,6 +166,12 @@ function compactedFirstSource(
     params: [...compactedParams, ...stagedParams, ...compactedParams],
   };
 }
+
+/** Which duplicate wins, where it is not simply the compacted row. */
+const SOURCE_ORDER: Partial<Record<UnionSourceInput["dedupe"], string>> = {
+  "raw-documents": "captured_at DESC, src DESC, source_digest",
+  "lane-results": "derived_at DESC",
+};
 
 /** A participant row's natural key. See the `matches` dedupe below. */
 const MATCH_DEDUPE_KEY =
@@ -227,6 +234,10 @@ export function buildUnionSource(
         return "match_id, frame_index, participant_id";
       case "timeline-coverage":
         return "match_id";
+      // Every fold re-derives the matches it touches, so a laner can have
+      // several derivations; the newest is the one with the most evidence.
+      case "lane-results":
+        return "match_id, participant_id";
       case "raw-documents":
         return "document_id";
     }
@@ -234,10 +245,7 @@ export function buildUnionSource(
   if (COMPACTED_UNIQUE.has(input.dedupe)) {
     return compactedFirstSource(input, partition);
   }
-  const sourceOrder =
-    input.dedupe === "raw-documents"
-      ? "captured_at DESC, src DESC, source_digest"
-      : "src";
+  const sourceOrder = SOURCE_ORDER[input.dedupe] ?? "src";
   return {
     sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${sourceOrder}) = 1`,
     params,

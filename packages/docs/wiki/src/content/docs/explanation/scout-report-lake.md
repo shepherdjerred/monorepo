@@ -362,7 +362,7 @@ That is deliberate. Reads name their columns, so
 a build published before a column existed fails any read that names it until
 the schema fingerprint's rebuild publishes. Leaving the loadout out of ordinary
 reads keeps reports working through that window
-([lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts)).
+([reports/duckdb/lake](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake)).
 
 ### Bots and unidentified players
 
@@ -476,6 +476,38 @@ for rebuild. Legacy flat files are still validated individually. Skips count in
 ([report-lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/reports/report-lake.ts)).
 Growth in that counter is the early warning that Riot's payloads drifted from
 the Zod schemas.
+
+### Derived tables: lane results
+
+Most lake tables flatten one raw document. `lane_results` is derived instead:
+one row per laner per tracked match, pairing each laner with the same-role
+opponent and stating the gold, creep score and experience difference at 15:00
+([report-lake](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/report-lake)).
+A lane rate across a friend group would otherwise read every frame of every
+game on each request, and consumer reads share two DuckDB slots per process.
+
+The table reuses the match page's own pairing, `buildRoleMatchups`, over the
+same checkpoint: the first frame stamped at or after 15:00 and before 16:00.
+Riot stamps each minute's frame just past the minute (about 900303 ms for
+15:00), so "the last frame at or before 15:00" would read the 14:00 frame. A
+game shorter than fifteen minutes, or one missing that frame, has no
+checkpoint, and its rows carry `NULL` differences rather than a nearby frame.
+A match with no timeline keeps its rows too, with `has_timeline` false, so a
+lane figure can state how many of its games could be measured.
+
+Nothing is staged for the table. A fold re-derives every match that its staged
+match or timeline rows name, and a rebuild derives every match. Timelines
+arrive separately from matches, so a match is often derived first without its
+timeline and again once it lands. Readers keep the newest derivation per laner
+(`derived_at`), which makes a lake built by many folds read the same rows as
+one rebuild
+([compactor.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/compactor.ts)).
+
+Adding the table changed the schema fingerprint, so it is migrated like a
+column: the declared predecessor is the lake without `lane_results`, and the
+next scheduled fold rebuilds it. Until a stage has published that rebuild,
+`buildLaneResultsSource` answers "unavailable" rather than "no lane games"
+([reports/duckdb/lake](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake)).
 
 Both tiers publish the same way: builds are immutable, and a `CURRENT` file
 is atomically renamed to point at the new build
