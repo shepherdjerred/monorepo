@@ -1,5 +1,5 @@
 {
-  "id": "glitter-boys-launcher/prod/2",
+  "id": "glitter-boys-launcher/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "glitter-boys-launcher"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "glitter-boys-launcher"
       },
       "syncOptions": ["CreateNamespace=true"],

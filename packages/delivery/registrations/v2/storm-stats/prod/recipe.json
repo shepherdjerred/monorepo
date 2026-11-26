@@ -1,5 +1,5 @@
 {
-  "id": "storm-stats/prod/2",
+  "id": "storm-stats/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "storm-stats"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "storm-stats"
       },
       "syncOptions": ["CreateNamespace=true"],

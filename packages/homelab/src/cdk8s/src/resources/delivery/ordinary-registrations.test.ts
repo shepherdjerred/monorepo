@@ -135,7 +135,8 @@ test("external Helm dependencies retain their namespace reader after Delivery im
 /** Render an active fixture for prepared services without changing their source activation. */
 function activeChart(name: string): Chart {
   if (!["tracker", "glitter-boys-launcher", "delivery"].includes(name)) {
-    const chart = app.charts.find((entry) => entry.node.id === name);
+    const chartId = name === "charts" ? "charts-bootstrap" : name;
+    const chart = app.charts.find((entry) => entry.node.id === chartId);
     if (chart === undefined) throw new Error(`Missing ordinary chart ${name}`);
     return chart;
   }

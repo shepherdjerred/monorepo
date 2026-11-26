@@ -12,6 +12,8 @@ const IPV6_UNAVAILABLE_CODES = new Set([
   "EHOSTUNREACH",
   "EADDRNOTAVAIL",
   "EAFNOSUPPORT",
+  "ECONNREFUSED",
+  "ETIMEDOUT",
 ]);
 
 export type IpTraceTransport = (family: 4 | 6) => Promise<string>;
@@ -28,12 +30,15 @@ function extractErrorCode(error: unknown): string | undefined {
     : undefined;
 }
 
-function isIpv6UnavailableError(error: unknown): boolean {
+export function isIpv6UnavailableError(error: unknown): boolean {
   const code = extractErrorCode(error);
   if (code !== undefined && IPV6_UNAVAILABLE_CODES.has(code)) {
     return true;
   }
   const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("Cloudflare IPv6 trace timed out")) {
+    return true;
+  }
   for (const unavailableCode of IPV6_UNAVAILABLE_CODES) {
     if (message.includes(unavailableCode)) {
       return true;
@@ -145,7 +150,10 @@ export function fetchPublicIpTrace(family: 4 | 6): Promise<string> {
     );
     request.on("timeout", () => {
       request.destroy(
-        new Error(`Cloudflare IPv${String(family)} trace timed out`),
+        Object.assign(
+          new Error(`Cloudflare IPv${String(family)} trace timed out`),
+          { code: "ETIMEDOUT" },
+        ),
       );
     });
     request.on("error", (error) => {

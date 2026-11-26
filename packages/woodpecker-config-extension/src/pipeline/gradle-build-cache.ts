@@ -9,8 +9,7 @@ import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
  * task outputs across runs; The Storm's `plugin/settings.gradle.kts` enables
  * it only when this URL is in the environment, so local builds are unchanged.
  */
-const GRADLE_BUILD_CACHE_URL =
-  "https://gradle-build-cache.tailnet-1a49.ts.net/cache/";
+const GRADLE_BUILD_CACHE_URL = "https://ci-cache.tailnet-1a49.ts.net/cache/";
 
 /** The CI credential Secret; one 1Password item holds both passwords. */
 const GRADLE_BUILD_CACHE_SECRET = "ci-gradle-build-cache-credentials";

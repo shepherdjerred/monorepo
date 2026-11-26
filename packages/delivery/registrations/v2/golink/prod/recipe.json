@@ -1,5 +1,5 @@
 {
-  "id": "golink/prod/3",
+  "id": "golink/prod/4",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "golink"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "golink"
       },
       "syncOptions": ["CreateNamespace=true", "ServerSideApply=true"],

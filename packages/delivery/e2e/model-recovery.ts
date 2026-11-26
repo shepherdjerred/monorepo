@@ -199,7 +199,7 @@ async function publish(
           id: `model/${service}/chart/${tag}`,
           component: `chart:${service}`,
           kind: "chart",
-          uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/${service}-2.${tag}.0.tgz`,
+          uri: `https://charts.tailnet-1a49.ts.net/charts/${service}-2.${tag}.0.tgz`,
           version: `2.${tag}.0`,
           digest: `sha256:${String(n).repeat(64)}`,
         },

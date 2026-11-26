@@ -23,7 +23,9 @@ import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
 import type { NamespaceCounts, NamespaceFilter } from "./types.ts";
 
 export const SWITCHER_CURRENT = { label: "CI cache", mark: "cc" } as const;
-const SWITCHER_APPS = CONSOLE_LINKS.map(({ label, url, group }) => ({
+export const SWITCHER_APPS = CONSOLE_LINKS.filter(
+  ({ id }) => id !== "ci-cache",
+).map(({ label, url, group }) => ({
   label,
   url,
   group,

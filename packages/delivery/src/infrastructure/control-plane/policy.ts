@@ -58,14 +58,17 @@ export async function controlPlaneArtifact(
   const component = image
     ? "image:temporal-worker"
     : "chart:delivery-control-plane";
-  const uri = image
-    ? "docker.io/shepherdjerred/temporal-worker"
-    : `https://chartmuseum.tailnet-1a49.ts.net/charts/delivery-control-plane-${selected.version}.tgz`;
+  const validUri = image
+    ? selected.uri === "docker.io/shepherdjerred/temporal-worker"
+    : selected.uri ===
+        `https://charts.tailnet-1a49.ts.net/charts/delivery-control-plane-${selected.version}.tgz` ||
+      selected.uri ===
+        `https://chartmuseum.tailnet-1a49.ts.net/charts/delivery-control-plane-${selected.version}.tgz`;
   if (
+    !validUri ||
     selected.kind !== kind ||
     selected.serviceId !== service ||
     selected.component !== component ||
-    selected.uri !== uri ||
     selected.origin.kind !== "first-party" ||
     build.sourceKind !== "ci" ||
     build.repositoryId !== repositoryId

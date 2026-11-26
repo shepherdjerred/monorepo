@@ -608,6 +608,7 @@ describe("signed extended verification routing", () => {
       CI_CHANGED_BASE: "",
       TURBO_TEAM: "monorepo",
       GRADLE_BUILD_CACHE_USERNAME: "ci-main",
+      SCCACHE_WEBDAV_USERNAME: "ci-main",
     });
     expect(step?.commands.join("\n")).toContain(
       "run-with-diagnostics.ts verify-extended --",
@@ -622,6 +623,7 @@ describe("signed extended verification routing", () => {
     ).toEqual([
       "GITHUB_DOWNLOAD_TOKEN",
       "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+      "SCCACHE_WEBDAV_PASSWORD",
       "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
       "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
       "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
