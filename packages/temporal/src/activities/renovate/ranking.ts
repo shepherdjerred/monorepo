@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   GitHubClient,
-  type GitHubReleaseNote,
+  type GitHubReleaseHistory,
 } from "@shepherdjerred/ops-clients/github.ts";
 import {
   DEPENDENCY_DASHBOARD_TITLE,
@@ -54,32 +54,38 @@ async function optionalEvidence<T>(
 
 async function readReleaseEvidence(
   targets: readonly LookupTarget[],
-  github: Pick<GitHubClient, "releasesBetween">,
+  github: Pick<GitHubClient, "releasesBetweenWithCoverage">,
   signal?: AbortSignal,
 ): Promise<{
   evidence: ReadonlyMap<LookupTarget, ReleaseEvidence>;
   failed: number;
 }> {
-  const lookups = new Map<string, Promise<GitHubReleaseNote[] | null>>();
+  const lookups = new Map<string, Promise<GitHubReleaseHistory | null>>();
   const evidence = new Map<LookupTarget, ReleaseEvidence>();
   let failed = 0;
   await mapWithBoundedConcurrency(targets, 4, async (entry) => {
     signal?.throwIfAborted();
     const source = githubReleaseSource(entry);
-    if (source === null) return;
+    if (source === null || entry.target.targetVersion === null) return;
     const key = `${source.owner}/${source.name}`;
     const request =
       lookups.get(key) ??
       optionalEvidence(
-        () => github.releasesBetween({ ...source, maxPages: 1 }),
+        () => github.releasesBetweenWithCoverage({ ...source, maxPages: 3 }),
         () => {
           failed += 1;
         },
       );
     lookups.set(key, request);
-    const releases = await request;
-    if (releases !== null)
-      evidence.set(entry, extractReleaseEvidence(entry, releases));
+    const history = await request;
+    evidence.set(
+      entry,
+      extractReleaseEvidence(
+        entry,
+        history?.releases ?? [],
+        history?.complete ?? false,
+      ),
+    );
   });
   return { evidence, failed };
 }
@@ -202,10 +208,7 @@ async function collectRenovateRanking(
       () => readLatestRenovateDeltas(),
       warn("Cached Renovate version deltas were unavailable."),
     ),
-    optionalEvidence(
-      () => readRenovateAdvisories(inventory.targets, fetch, signal),
-      warn("OSV advisory enrichment was unavailable."),
-    ),
+    readRenovateAdvisories(inventory.targets, fetch, signal),
     readReleaseEvidence(inventory.targets, github, signal),
   ]);
   signal?.throwIfAborted();
@@ -224,15 +227,29 @@ async function collectRenovateRanking(
       `Release notes could not be read for ${String(releases.failed)} upstream repositories.`,
     );
   }
+  const advisoryGaps = [...advisories.values()].filter(
+    (item) => item.state !== "assessed",
+  ).length;
+  if (advisoryGaps > 0) {
+    warnings.push(
+      `OSV advisory assessment did not complete for ${String(advisoryGaps)} targets.`,
+    );
+  }
+  const partialReleaseNotes = [...releases.evidence.values()].some(
+    (item) => !item.complete,
+  );
   return RenovateRankingSnapshotSchema.parse({
     scannedAt: scannedAt.toISOString(),
     baseSha,
-    coverage: inventory.incompleteLookups > 0 ? "partial" : "complete",
+    coverage:
+      partialReleaseNotes || inventory.incompleteLookups > 0 || advisoryGaps > 0
+        ? "partial"
+        : "complete",
     warnings: warnings.sort(),
     candidates: rankLookupTargets(inventory.targets, {
       dashboard: dashboard ?? undefined,
       deltas: deltas ?? {},
-      advisories: advisories ?? new Map(),
+      advisories,
       releases: releases.evidence,
     }),
   });

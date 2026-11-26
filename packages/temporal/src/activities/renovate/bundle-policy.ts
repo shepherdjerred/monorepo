@@ -139,6 +139,7 @@ function nearestTrackedFile(
   name: string,
   trackedPaths: ReadonlySet<string>,
 ): string | undefined {
+  if (!isSafeBundlePath(target)) return undefined;
   let dir = posix.dirname(target);
   for (;;) {
     const file = posix.join(dir, name);
@@ -170,7 +171,9 @@ export function targetArtifactPaths(
     const root = posix.dirname(target.filePath);
     const prefix = root === "." ? "" : `${root}/`;
     return [...trackedPaths].filter(
-      (file) => file.startsWith(prefix) && file.endsWith("/packages.lock.json"),
+      (file) =>
+        file.startsWith(prefix) &&
+        posix.basename(file) === "packages.lock.json",
     );
   }
   return [];

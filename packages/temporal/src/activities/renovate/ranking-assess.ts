@@ -22,6 +22,7 @@ import {
 export type ReleaseEvidence = {
   readonly breaking: boolean;
   readonly urls: string[];
+  readonly complete: boolean;
 };
 
 type AssessmentEvidence = {
@@ -53,9 +54,10 @@ export function githubReleaseSource(
 export function extractReleaseEvidence(
   entry: LookupTarget,
   releases: readonly GitHubReleaseNote[],
+  complete: boolean,
 ): ReleaseEvidence {
   const version = entry.target.targetVersion;
-  if (version === null) return { breaking: false, urls: [] };
+  if (version === null) return { breaking: false, urls: [], complete };
   const matching = releases.filter(
     (release) =>
       !release.prerelease &&
@@ -66,6 +68,7 @@ export function extractReleaseEvidence(
       }),
   );
   return {
+    complete,
     breaking: matching.some((release) =>
       /^\s*(?:#+\s*|[-*]\s*)?breaking\b|\bbreaking\s+changes?\b/imu.test(
         release.body,
@@ -143,12 +146,14 @@ function sameTargetDelta(
 ): RenovateVersionDelta | undefined {
   if (delta === undefined) return undefined;
   const deltaVersion = normalizeVersionString(delta.targetVersion);
+  const deltaBaseline = normalizeVersionString(delta.effectiveFromVersion);
   const matches =
     deltaVersion !== null &&
+    deltaBaseline !== null &&
     entries.every(
       ({ target }) =>
-        target.targetVersion !== null &&
-        normalizeVersionString(target.targetVersion) === deltaVersion,
+        normalizeVersionString(target.targetVersion) === deltaVersion &&
+        normalizeVersionString(target.currentVersion) === deltaBaseline,
     );
   return matches ? delta : undefined;
 }
@@ -158,11 +163,14 @@ function estimateEffort(input: {
   packages: number;
   breaking: boolean;
   releaseNotesBreaking: boolean;
+  releaseNotesPartial: boolean;
   blockers: readonly string[];
 }): RankedRenovateUpdate["effort"] {
   if (input.blockers.length > 0) return "unknown";
-  if (input.breaking || input.releaseNotesBreaking) {
-    if (input.paths > 20 && input.releaseNotesBreaking) return "xl";
+  const missingBreakingEvidence =
+    input.releaseNotesBreaking || input.releaseNotesPartial;
+  if (missingBreakingEvidence || input.breaking) {
+    if (missingBreakingEvidence && input.paths > 20) return "xl";
     return input.paths > 6 || input.packages > 3 ? "l" : "m";
   }
   if (input.paths > 8 || input.packages > 4) return "m";
@@ -190,6 +198,31 @@ function groupTargetsConflict(targets: readonly RenovateTarget[]): boolean {
   return false;
 }
 
+function advisoryBlocker(impact: AdvisoryImpact | undefined): string | null {
+  switch (impact?.state) {
+    case "missing-version":
+      return "Advisory assessment needs exact installed and target versions.";
+    case "unavailable":
+      return "Advisory lookup did not complete for this target.";
+    case "assessed":
+    case undefined:
+      return null;
+  }
+}
+
+function changeSummary(input: {
+  readonly breaking: boolean;
+  readonly releaseNotesBreaking: boolean;
+  readonly releaseNotesPartial: boolean;
+}): string {
+  if (input.releaseNotesBreaking)
+    return "Upstream release notes identify breaking changes.";
+  if (input.breaking) return "The version jump may require source migration.";
+  return input.releaseNotesPartial
+    ? ""
+    : "Routine maintenance for a declared dependency.";
+}
+
 function classifyGroup(input: {
   branch: string;
   entries: LookupTarget[];
@@ -197,9 +230,12 @@ function classifyGroup(input: {
   dashboardRow: DependencyDashboard["updates"][number] | undefined;
 }): RankedRenovateUpdate {
   const { branch, entries, evidence, dashboardRow } = input;
-  const targets = entries
-    .map((entry) => entry.target)
-    .sort((left, right) => targetKey(left).localeCompare(targetKey(right)));
+  const uniqueTargets = new Map(
+    entries.map(({ target }) => [targetKey(target), target]),
+  );
+  const targets = [...uniqueTargets.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([, target]) => target);
   const packages = [
     ...new Set(targets.map((target) => target.packageName)),
   ].sort();
@@ -220,7 +256,11 @@ function classifyGroup(input: {
     ...new Set([
       ...entries.flatMap((entry) => {
         const proof = platformProof(entry);
-        return [entry.blocker, proof].filter((message) => message !== null);
+        return [
+          entry.blocker,
+          proof,
+          advisoryBlocker(evidence.advisories.get(entry)),
+        ].filter((message) => message !== null);
       }),
       ...(untouched
         ? ["The Dependency Dashboard marks this proposal ignored."]
@@ -243,11 +283,13 @@ function classifyGroup(input: {
   const releaseNotesBreaking =
     Boolean(delta?.breakingChanges.length) ||
     releaseNotes.some((release) => release.breaking);
+  const releaseNotesPartial = releaseNotes.some((release) => !release.complete);
   const effort = estimateEffort({
     paths: paths.size,
     packages: packages.length,
     breaking,
     releaseNotesBreaking,
+    releaseNotesPartial,
     blockers,
   });
   const devOnly = entries.every((entry) => entry.devOnly);
@@ -258,11 +300,8 @@ function classifyGroup(input: {
       ? ""
       : `Fixes known advisories ${[...fixed].slice(0, 4).join(", ")}.`,
     delta?.summary ??
-      (releaseNotesBreaking
-        ? "Upstream release notes identify breaking changes."
-        : breaking
-          ? "The version jump may require source migration."
-          : "Routine maintenance for a declared dependency."),
+      changeSummary({ breaking, releaseNotesBreaking, releaseNotesPartial }),
+    releaseNotesPartial ? "Upstream release-note coverage is incomplete." : "",
     `Renovate found ${String(paths.size)} affected declaration ${paths.size === 1 ? "file" : "files"}.`,
   ]
     .filter(Boolean)
@@ -306,20 +345,20 @@ export function rankLookupTargets(
   targets: readonly LookupTarget[],
   evidence: AssessmentEvidence,
 ): RankedRenovateUpdate[] {
-  const groups = new Map<string, Map<string, LookupTarget>>();
+  const groups = new Map<string, LookupTarget[]>();
   const dashboard = new Map(
     evidence.dashboard?.updates.map((row) => [row.branch, row]),
   );
   for (const target of targets) {
-    const group = groups.get(target.branch) ?? new Map<string, LookupTarget>();
-    group.set(targetKey(target.target), target);
+    const group = groups.get(target.branch) ?? [];
+    group.push(target);
     groups.set(target.branch, group);
   }
   return [...groups]
     .map(([branch, entries]) =>
       classifyGroup({
         branch,
-        entries: [...entries.values()].sort((left, right) =>
+        entries: entries.sort((left, right) =>
           targetKey(left.target).localeCompare(targetKey(right.target)),
         ),
         evidence,

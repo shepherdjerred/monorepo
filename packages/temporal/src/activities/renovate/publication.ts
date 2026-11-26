@@ -13,6 +13,7 @@ export const RENOVATE_REPOSITORY = {
 };
 export const MAIN_BRANCH = "main";
 const REPO_SLUG = `${RENOVATE_REPOSITORY.owner}/${RENOVATE_REPOSITORY.repo}`;
+const PULL_REQUEST_FILE_LIMIT = 3000;
 
 const WoodpeckerQueueSchema = z.object({
   paused: z.boolean(),
@@ -78,6 +79,11 @@ export type BundlePullRequest = {
   state: "open" | "merged" | "closed";
 };
 
+type RecoveredBundlePullRequest = BundlePullRequest & {
+  baseSha: string;
+  closedUnverified?: true;
+};
+
 function isNotFound(error: unknown): boolean {
   return z.object({ status: z.literal(404) }).safeParse(error).success;
 }
@@ -137,7 +143,7 @@ export async function createRenovateGitHub() {
     },
     async createRecoveredPullRequest(
       publication: Publication,
-    ): Promise<BundlePullRequest> {
+    ): Promise<RecoveredBundlePullRequest> {
       const { data } = await client.rest.pulls.create({
         ...repo,
         base: MAIN_BRANCH,
@@ -145,12 +151,47 @@ export async function createRenovateGitHub() {
         title: publication.title,
         body: publication.body,
       });
-      return {
+      const created: RecoveredBundlePullRequest = {
         number: data.number,
         url: data.html_url,
         headSha: data.head.sha,
+        baseSha: data.base.sha,
         state: "open",
       };
+      if (
+        data.head.sha === publication.headSha &&
+        data.base.sha === publication.baseSha
+      )
+        return created;
+      // Only this successful create proves the App owns a newly opened PR.
+      // Reconciliation never closes a PR that it found by reading GitHub.
+      try {
+        const { data: current } = await client.rest.pulls.get({
+          ...repo,
+          pull_number: data.number,
+        });
+        if (
+          current.state !== "open" ||
+          current.node_id !== data.node_id ||
+          current.head.sha !== data.head.sha ||
+          current.base.sha !== data.base.sha
+        ) {
+          created.state = current.merged ? "merged" : current.state;
+          return created;
+        }
+        const { data: closed } = await client.rest.pulls.update({
+          ...repo,
+          pull_number: data.number,
+          state: "closed",
+        });
+        created.state = closed.state;
+        if (closed.state === "closed") created.closedUnverified = true;
+      } catch {
+        // Preserve the observed mismatch so dispatch can journal its blocked
+        // PR even if cleanup readback or closure was unconfirmed.
+        return created;
+      }
+      return created;
     },
     async openWorkPaths(): Promise<Set<string>> {
       const open = await client.paginate(client.rest.pulls.list, {
@@ -167,10 +208,16 @@ export async function createRenovateGitHub() {
           pull_number: pr.number,
           per_page: 100,
         });
-        if (paths.length === 3000)
-          throw new Error(
-            `GitHub truncated changed paths for PR ${String(pr.number)}`,
-          );
+        if (paths.length >= PULL_REQUEST_FILE_LIMIT) {
+          const { data } = await client.rest.pulls.get({
+            ...repo,
+            pull_number: pr.number,
+          });
+          if (data.changed_files !== paths.length)
+            throw new Error(
+              `GitHub returned an incomplete changed-path listing for PR ${String(pr.number)}`,
+            );
+        }
         for (const path of paths) {
           files.add(path.filename);
           if (path.previous_filename !== undefined)

@@ -20,6 +20,33 @@ const TOOLCHAIN_MOUNTS = [
   "/etc/group",
 ] as const;
 
+// Validate the lock offline before downloading wheels. Frozen mode prevents
+// metadata re-resolution, and skipping all local packages disables the
+// first-party and editable build exceptions to `--no-build`.
+const PYTHON_WHEEL_SYNC = [
+  "uv",
+  "sync",
+  "--frozen",
+  "--no-build",
+  "--no-install-local",
+  "--no-python-downloads",
+] as const;
+export const PYTHON_BUNDLE_CHECKS = [
+  ["uv", "lock", "--check", "--offline", "--no-python-downloads"],
+  PYTHON_WHEEL_SYNC,
+  ["uv", "sync", "--locked", "--offline", "--no-python-downloads"],
+  [
+    "uv",
+    "run",
+    "--no-sync",
+    "--offline",
+    "python",
+    "-m",
+    "unittest",
+    "discover",
+  ],
+] as const;
+
 export async function cleanIgnoredAgentArtifacts(input: {
   repoDir: string;
   tempDir: string;
@@ -50,8 +77,8 @@ export function sandboxBundleVerification(input: {
       (tool === "bun" && subcommand === "install") ||
       (tool === "cargo" && subcommand === "fetch") ||
       (tool === "go" && subcommand === "mod") ||
-      (tool === "uv" && subcommand === "sync") ||
-      (tool === "dotnet" && subcommand === "restore");
+      (args.length === PYTHON_WHEEL_SYNC.length &&
+        PYTHON_WHEEL_SYNC.every((argument, index) => argument === args[index]));
     return input.commandRunner(
       [
         "bwrap",

@@ -18,6 +18,8 @@ import type {
 
 const PUBLISH_SETTLEMENT_MS = 5 * 60 * 1000;
 const RETAIN_MS = 30 * 24 * 60 * 60 * 1000;
+const RECOVERY_REF_CONFLICT =
+  "The PR refs do not match the verified dependency bundle. Inspect the PR before retrying.";
 
 export function recordDisposition(
   record: DispatchRecord,
@@ -64,8 +66,24 @@ export function observePullRequest(
     recordDisposition(record, id, { status, reason, prUrl: pr.url }, now);
 }
 
-export function isActivePublication(publication: Publication): boolean {
+function isActivePublication(publication: Publication): boolean {
   return publication.state !== "closed" && publication.state !== "merged";
+}
+
+export function needsPublicationReconciliation(
+  publication: Publication,
+): boolean {
+  return publication.state !== "merged";
+}
+
+function blockPublication(
+  record: DispatchRecord,
+  publication: Publication,
+  disposition: Pick<RenovateDisposition, "reason" | "prUrl">,
+  now: number,
+): void {
+  for (const { id } of publication.candidates)
+    recordDisposition(record, id, { status: "blocked", ...disposition }, now);
 }
 
 function deferPublication(
@@ -110,10 +128,17 @@ async function recoverPublication(
     );
     return { state: "dropped" as const };
   }
-  if (remoteSha !== publication.headSha)
-    throw new Error(
-      `Dependency bundle ref ${publication.branch} no longer matches its journaled commit`,
+  if (remoteSha !== publication.headSha) {
+    blockPublication(
+      record,
+      publication,
+      {
+        reason: `Bundle branch ${publication.branch} no longer matches its verified commit.`,
+      },
+      now,
     );
+    return { state: "reserved" as const };
+  }
   if ((await github.branchHead(MAIN_BRANCH)) !== publication.baseSha) {
     deferPublication(
       record,
@@ -143,10 +168,70 @@ async function recoverPublication(
   // Claim the recovery before creating the PR. Another worker must use readback.
   publication.plannedAt = new Date(now).toISOString();
   await ctx.save();
-  return {
-    state: "recovered" as const,
-    pr: await github.createRecoveredPullRequest(publication),
-  };
+  const [headSha, baseSha] = await Promise.all([
+    github.branchHead(publication.branch),
+    github.branchHead(MAIN_BRANCH),
+  ]);
+  if (headSha !== publication.headSha) {
+    blockPublication(
+      record,
+      publication,
+      {
+        reason: `Bundle branch ${publication.branch} changed before PR recovery.`,
+      },
+      now,
+    );
+    return { state: "reserved" as const };
+  }
+  if (baseSha !== publication.baseSha) {
+    deferPublication(
+      record,
+      publication,
+      "Main changed before PR recovery. Reverification is needed.",
+      now,
+    );
+    return { state: "dropped" as const };
+  }
+  const pr = await github.createRecoveredPullRequest(publication);
+  if (pr.closedUnverified === true && pr.headSha === publication.headSha) {
+    deferPublication(
+      record,
+      publication,
+      "Main moved during PR recovery. The mismatched PR was closed and the bundle needs reverification.",
+      now,
+    );
+    return { state: "dropped" as const };
+  }
+  if (
+    pr.headSha !== publication.headSha ||
+    pr.baseSha !== publication.baseSha
+  ) {
+    // A PR number without an accepted state preserves a known recovery conflict.
+    publication.prNumber = pr.number;
+    blockPublication(
+      record,
+      publication,
+      {
+        reason: RECOVERY_REF_CONFLICT,
+        prUrl: pr.url,
+      },
+      now,
+    );
+    return { state: "reserved" as const };
+  }
+  return { state: "recovered" as const, pr };
+}
+
+function hasUnverifiedReadback(
+  publication: Publication,
+  pr: BundlePullRequest,
+): boolean {
+  return (
+    publication.state === undefined &&
+    pr.state !== "merged" &&
+    (pr.headSha !== publication.headSha ||
+      (pr.state === "open" && publication.prNumber !== undefined))
+  );
 }
 
 export async function reconcilePublications(
@@ -154,16 +239,29 @@ export async function reconcilePublications(
 ): Promise<boolean> {
   let awaitingReceipt = false;
   for (const publication of Object.values(ctx.record.value.publications).filter(
-    (candidate) => isActivePublication(candidate),
+    (candidate) => needsPublicationReconciliation(candidate),
   )) {
     let pr = await ctx.github.findPullRequest(publication);
     if (pr === undefined) {
+      if (publication.state === "closed") continue;
       const recovery = await recoverPublication(ctx, publication);
       if (recovery.state !== "recovered") {
         awaitingReceipt ||= recovery.state === "waiting";
         continue;
       }
       pr = recovery.pr;
+    }
+    if (hasUnverifiedReadback(publication, pr)) {
+      blockPublication(
+        ctx.record,
+        publication,
+        {
+          reason: RECOVERY_REF_CONFLICT,
+          prUrl: pr.url,
+        },
+        ctx.now,
+      );
+      continue;
     }
     observePullRequest(ctx.record, publication, pr, ctx.now);
     if (pr.state === "open" && !publication.woodpeckerSeen) {

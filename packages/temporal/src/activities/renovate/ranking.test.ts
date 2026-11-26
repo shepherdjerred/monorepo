@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest";
+import type { RenovateVersionDelta } from "@shepherdjerred/ops-model/facets.ts";
+import {
+  compareRankedRenovateUpdates,
+  isRenovateUpdateEligible,
+} from "@shepherdjerred/ops-model/renovate-ranking.ts";
 
 import { readRenovateAdvisories } from "./ranking-advisories.ts";
-import { rankLookupTargets } from "./ranking-assess.ts";
+import { extractReleaseEvidence, rankLookupTargets } from "./ranking-assess.ts";
 import {
   parseRenovateLookupInventory,
   type LookupTarget,
@@ -154,6 +159,45 @@ describe("Renovate lookup ranking", () => {
     ]);
   });
 
+  test("orders otherwise tied candidates by exact eligibility times with null first", () => {
+    const [base] = rank(
+      lookup([dependency("library", { updates: [update("library")] })]).targets,
+    );
+    if (base === undefined) throw new Error("expected ranked fixture");
+    const candidate = (id: string, eligibleAt: string | null) => ({
+      ...base,
+      id,
+      bake: { ...base.bake, eligibleAt },
+    });
+    expect(
+      [
+        candidate("later", "2026-11-26T12:00:00.500Z"),
+        candidate("earlier", "2026-11-26T12:00:00Z"),
+        candidate("no-date", null),
+      ]
+        .sort(compareRankedRenovateUpdates)
+        .map((item) => item.id),
+    ).toEqual(["no-date", "earlier", "later"]);
+  });
+
+  test("keeps one output pin while combining ready and pending observations", () => {
+    const ready = update("library");
+    const pending = update("library", { pendingChecks: true });
+    for (const updates of [
+      [ready, pending],
+      [pending, ready],
+      [ready, ready],
+    ]) {
+      const [candidate] = rank(
+        lookup([dependency("library", { updates })]).targets,
+      );
+      expect(candidate?.targets).toHaveLength(1);
+      expect(candidate?.bake.state).toBe(
+        updates.includes(pending) ? "unknown" : "ready",
+      );
+    }
+  });
+
   test("shows pending alternatives without claiming Renovate emitted an exact patch", () => {
     const inventory = lookup([
       dependency("example", {
@@ -172,7 +216,9 @@ describe("Renovate lookup ranking", () => {
       ["2.2.0", "unknown", true],
     ]);
   });
+});
 
+describe("Renovate group evidence", () => {
   test("holds related candidates without discarding unrelated valid lookup results", () => {
     const inventory = lookup(
       [
@@ -203,24 +249,136 @@ describe("Renovate lookup ranking", () => {
     ]);
   });
 
+  test("the global Renovate selector holds a grouped proposal when a scoped member lookup fails", () => {
+    const inventory = lookup(
+      [
+        dependency("@scope/member", { lookupFailed: true }),
+        dependency("sibling", { updates: [update("all")] }),
+      ],
+      {
+        config: {
+          ...policy,
+          packageRules: [{ groupName: "All", matchPackageNames: ["*"] }],
+        },
+      },
+    );
+    const [candidate] = rank(inventory.targets);
+    expect(candidate?.blockers).toContain(
+      "A related declaration has incomplete Renovate lookup evidence.",
+    );
+  });
+
+  test("a failed Docker lookup does not hold the unrelated npm package of the same name", () => {
+    const inventory = lookup([
+      dependency("redis", { datasource: "docker", lookupFailed: true }),
+      dependency("redis", { updates: [update("redis-npm")] }),
+    ]);
+    expect(inventory.incompleteLookups).toBe(1);
+    expect(rank(inventory.targets)[0]?.blockers).toEqual([]);
+  });
+
+  test("reuses cached release deltas only when both versions match", () => {
+    const inventory = lookup([
+      dependency("library", { updates: [update("library")] }),
+    ]);
+    const delta: RenovateVersionDelta = {
+      cacheKey: "example",
+      generatedAt: now.toISOString(),
+      runningVersion: null,
+      pinnedVersion: "1.0.0",
+      targetVersion: "2.0.0",
+      effectiveFromVersion: "1.0.0",
+      versionsBehindCount: 2,
+      summary: "Cached comparison summary.",
+      impactLevel: "breaking",
+      breakingChanges: ["Example"],
+      highlights: [],
+      repoRelevance: "Example",
+      evidenceSource: "github-releases",
+      releaseUrls: [],
+    };
+    const withBaseline = (effectiveFromVersion: string) =>
+      rankLookupTargets(inventory.targets, {
+        advisories: new Map(),
+        deltas: { "renovate/library": { ...delta, effectiveFromVersion } },
+        releases: new Map(),
+      })[0];
+    expect(withBaseline("1.0.0")?.rationale).not.toContain(delta.summary);
+    expect(withBaseline("v1.1.0")?.rationale).toContain(delta.summary);
+  });
+
+  test.each([
+    [1, "m"],
+    [8, "l"],
+    [21, "xl"],
+  ])(
+    "incomplete upstream release coverage for %s paths is sized %s",
+    (paths, effort) => {
+      const member = dependency("library", {
+        updates: [update("library", { updateType: "patch" })],
+      });
+      const inventory = lookup([member], {
+        additionalFiles: Array.from({ length: paths - 1 }, (_, index) =>
+          file(`packages/lib-${String(index)}/package.json`, [member]),
+        ),
+      });
+      const [target] = inventory.targets;
+      if (target === undefined) throw new Error("expected lookup fixture");
+      const [candidate] = rankLookupTargets(inventory.targets, {
+        advisories: new Map(),
+        deltas: {},
+        releases: new Map([
+          [target, extractReleaseEvidence(target, [], false)],
+        ]),
+      });
+      expect(candidate?.effort).toBe(effort);
+      expect(candidate?.rationale).toContain(
+        "Upstream release-note coverage is incomplete.",
+      );
+      expect(candidate?.rationale).not.toContain("Routine maintenance");
+    },
+  );
+
   test("surfaces invalid reports as errors instead of empty successful scans", () => {
     expect(() =>
       parseRenovateLookupInventory({ repositories: {} }, policy, now),
     ).toThrow("did not return an inventory");
   });
+});
 
+describe("Renovate advisory ranking", () => {
   test("raises urgency for a fixed advisory and holds a target that introduces one", async () => {
     const inventory = lookup([
-      dependency("library", { updates: [update("library")] }),
+      dependency("library", {
+        currentValue: "1.1.0",
+        lockedVersion: undefined,
+        updates: [update("library")],
+      }),
     ]);
     const fetchImpl: typeof fetch = Object.assign(
-      async () =>
-        Response.json({
+      async (url: string | Request | URL, init?: RequestInit) => {
+        expect(url).toBe("https://api.osv.dev/v1/querybatch");
+        expect(init?.body).toBe(
+          JSON.stringify({
+            queries: [
+              {
+                package: { ecosystem: "npm", name: "library" },
+                version: "1.1.0",
+              },
+              {
+                package: { ecosystem: "npm", name: "library" },
+                version: "2.0.0",
+              },
+            ],
+          }),
+        );
+        return Response.json({
           results: [
             { vulns: [{ id: "GHSA-fixed" }] },
             { vulns: [{ id: "GHSA-added" }] },
           ],
-        }),
+        });
+      },
       { preconnect: fetch.preconnect },
     );
     const advisories = await readRenovateAdvisories(
@@ -243,5 +401,87 @@ describe("Renovate lookup ranking", () => {
         "The target introduces an advisory absent from the installed version (GHSA-added).",
       ],
     });
+  });
+
+  test.each(["^1.1.0", "1.x", "npm:@scope/library@^1.1.0"])(
+    "marks unresolved range %s as not assessed and skips the OSV query",
+    async (currentValue) => {
+      const inventory = lookup([
+        dependency("library", {
+          currentValue,
+          lockedVersion: undefined,
+          updates: [update("library")],
+        }),
+      ]);
+      let requests = 0;
+      const fetchImpl: typeof fetch = Object.assign(
+        async () => {
+          requests += 1;
+          return Response.json({ results: [] });
+        },
+        { preconnect: fetch.preconnect },
+      );
+      const advisories = await readRenovateAdvisories(
+        inventory.targets,
+        fetchImpl,
+      );
+      expect(requests).toBe(0);
+      expect([...advisories.values()][0]?.state).toBe("missing-version");
+      const [candidate] = rankLookupTargets(inventory.targets, {
+        advisories,
+        deltas: {},
+        releases: new Map(),
+      });
+      expect(candidate?.blockers).toContain(
+        "Advisory assessment needs exact installed and target versions.",
+      );
+    },
+  );
+
+  test("keeps earlier advisory results and blocks targets from a failed batch", async () => {
+    const inventory = lookup(
+      Array.from({ length: 51 }, (_, index) =>
+        dependency(`lib-${String(index)}`, {
+          updates: [update(`lib-${String(index)}`)],
+        }),
+      ),
+    );
+    let requests = 0;
+    const fetchImpl: typeof fetch = Object.assign(
+      async () => {
+        requests += 1;
+        return requests === 1
+          ? Response.json({
+              results: Array.from({ length: 100 }, (_, index) =>
+                index === 1 ? { vulns: [{ id: "GHSA-added" }] } : {},
+              ),
+            })
+          : new Response(null, { status: 503 });
+      },
+      { preconnect: fetch.preconnect },
+    );
+    const advisories = await readRenovateAdvisories(
+      inventory.targets,
+      fetchImpl,
+    );
+    const candidates = rankLookupTargets(inventory.targets, {
+      advisories,
+      deltas: {},
+      releases: new Map(),
+    });
+    const first = candidates.find(({ name }) => name === "lib-0");
+    const independent = candidates.find(({ name }) => name === "lib-1");
+    const failed = candidates.find(({ name }) => name === "lib-50");
+    expect(requests).toBe(2);
+    expect(first?.blockers).toContain(
+      "The target introduces an advisory absent from the installed version (GHSA-added).",
+    );
+    expect(
+      independent !== undefined &&
+        isRenovateUpdateEligible(independent, now.getTime()),
+    ).toBe(true);
+    expect(failed?.blockers).toContain(
+      "Advisory lookup did not complete for this target.",
+    );
   });
 });

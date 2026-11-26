@@ -15,7 +15,7 @@ import {
 import {
   candidatesForDispatch,
   createDispatchSave,
-  isActivePublication,
+  needsPublicationReconciliation,
   observePullRequest,
   pruneDispatch,
   reconcilePublications,
@@ -281,13 +281,13 @@ export async function dispatchRenovateBundle(
     now - Date.parse(snapshot.scannedAt) <= MAX_SCAN_AGE_MS;
   const enabled = !preview && (await isEnabled());
   const canPublish = async () => (await isEnabled()) && (await hasRoom());
-  const activePublications = Object.values(record.value.publications).some(
-    (publication) => isActivePublication(publication),
-  );
+  const hasPublicationsToReconcile = Object.values(
+    record.value.publications,
+  ).some((publication) => needsPublicationReconciliation(publication));
   const hasCandidates =
     fresh && candidatesForDispatch(snapshot, record, now).length > 0;
   const needsGitHub =
-    !preview && (activePublications || (enabled && hasCandidates));
+    !preview && (hasPublicationsToReconcile || (enabled && hasCandidates));
   const github = needsGitHub ? await connectGitHub() : undefined;
   const save = createDispatchSave(store, record, preview);
   const awaitingReceipt =

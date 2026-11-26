@@ -3,8 +3,10 @@ import type {
   RankedRenovateUpdate,
   RenovateRankingSnapshot,
 } from "@shepherdjerred/ops-model/renovate-ranking.ts";
+import type * as githubAppToken from "#lib/github-app-token.ts";
 import { dispatchRenovateBundle } from "./dispatch.ts";
 import {
+  createRenovateGitHub,
   woodpeckerHasRoom,
   type BundlePullRequest,
   type RenovateGitHub,
@@ -15,12 +17,35 @@ import type { VerifiedRenovateBundle } from "./bundle.ts";
 const NOW = Date.parse("2026-11-26T19:00:00Z");
 const MAIN = "a".repeat(40);
 const HEAD = "b".repeat(40);
+const SKEWED = "c".repeat(40);
 const PR: BundlePullRequest = {
   number: 99,
   url: "https://github.com/example/repo/pull/99",
   headSha: HEAD,
   state: "open",
 };
+
+const githubApi = vi.hoisted(() => ({
+  list: vi.fn(),
+  listFiles: vi.fn(),
+  create: vi.fn(),
+  get: vi.fn(),
+  update: vi.fn(),
+}));
+
+vi.mock("octokit", () => ({
+  Octokit: class {
+    rest = { pulls: githubApi };
+    async paginate(method: () => Promise<unknown>) {
+      return await method();
+    }
+  },
+}));
+
+vi.mock("#lib/github-app-token.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof githubAppToken>()),
+  createGitHubAppInstallationToken: async () => ({ token: "test-token" }),
+}));
 
 function candidate(
   id: string,
@@ -86,7 +111,7 @@ function fixture(candidates: RankedRenovateUpdate[]) {
   };
   const recover = vi.fn(async () => {
     pr = PR;
-    return PR;
+    return { ...PR, baseSha: MAIN };
   });
   const github: RenovateGitHub = {
     token: "mock-token",
@@ -119,6 +144,11 @@ function fixture(candidates: RankedRenovateUpdate[]) {
     github,
     recover,
     state: () => state.value,
+    setPublications: (publications: Publication[]) => {
+      state.value.publications = Object.fromEntries(
+        publications.map((publication) => [publication.branch, publication]),
+      );
+    },
     setPr: (value: BundlePullRequest | undefined) => {
       pr = value;
     },
@@ -128,6 +158,20 @@ function fixture(candidates: RankedRenovateUpdate[]) {
     advance: (milliseconds = 600_000) => {
       now += milliseconds;
     },
+  };
+}
+
+function plannedPublication(update: RankedRenovateUpdate): Publication {
+  return {
+    branch: `chore/renovate-bundle-${update.id}`,
+    title: "chore(deps): update dependencies",
+    body: "Verified test bundle",
+    headSha: HEAD,
+    baseSha: MAIN,
+    plannedAt: new Date(NOW - 600_000).toISOString(),
+    files: update.targets.map(({ filePath }) => filePath),
+    candidates: [update],
+    woodpeckerSeen: false,
   };
 }
 
@@ -264,6 +308,118 @@ describe("Renovate dispatch", () => {
     expect(state().dispositions["alpha"]?.status).toBe("published");
     expect(deps.openPr).toHaveBeenCalledTimes(1);
   });
+});
+
+describe("Renovate recovery conflicts", () => {
+  test("reserves a conflicting branch while recovering an independent publication", async () => {
+    const alpha = candidate("alpha");
+    const beta = candidate("beta");
+    const conflicted = plannedPublication(alpha);
+    const recoverable = plannedPublication(beta);
+    const { deps, github, recover, state, setPublications } = fixture([
+      alpha,
+      beta,
+    ]);
+    setPublications([conflicted, recoverable]);
+    github.branchHead = async (branch) =>
+      branch === "main" ? MAIN : branch === conflicted.branch ? SKEWED : HEAD;
+    const execute = executor();
+
+    await dispatchRenovateBundle({}, { ...deps, execute });
+
+    expect(recover).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ branch: recoverable.branch }),
+    );
+    expect(state().dispositions[alpha.id]?.status).toBe("blocked");
+    expect(state().publications[conflicted.branch]).toEqual(conflicted);
+    expect(state().dispositions[beta.id]?.status).toBe("published");
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  test("reconciles a retained closed publication with publishing disabled and no dispatch candidates", async () => {
+    const update = candidate("alpha");
+    const closed: Publication = {
+      ...plannedPublication(update),
+      state: "closed",
+      prNumber: PR.number,
+    };
+    const { deps, state, setPr, setPublications } = fixture([]);
+    setPublications([closed]);
+    const execute = executor();
+    deps.enabled.mockResolvedValue(false);
+    setPr(PR);
+
+    await dispatchRenovateBundle({}, { ...deps, execute });
+
+    expect(state().dispositions[update.id]?.status).toBe("published");
+    expect(deps.hasReceipt).toHaveBeenCalledWith(PR.number, PR.headSha);
+    expect(execute).not.toHaveBeenCalled();
+
+    setPr({ ...PR, state: "merged" });
+    await dispatchRenovateBundle({}, { ...deps, execute });
+    expect(state().dispositions[update.id]?.status).toBe("merged");
+  });
+
+  test("checks both refs again after journaling a recovery claim", async () => {
+    const update = candidate("alpha");
+    const planned = plannedPublication(update);
+    const { deps, github, recover, state, setPublications } = fixture([update]);
+    setPublications([planned]);
+    vi.spyOn(github, "branchHead")
+      .mockResolvedValueOnce(HEAD)
+      .mockResolvedValueOnce(MAIN)
+      .mockResolvedValueOnce(SKEWED)
+      .mockResolvedValueOnce(MAIN);
+
+    await dispatchRenovateBundle({}, { ...deps, execute: executor() });
+
+    expect(recover).not.toHaveBeenCalled();
+    expect(state().dispositions[update.id]?.status).toBe("blocked");
+    expect(state().publications[planned.branch]?.headSha).toBe(HEAD);
+  });
+
+  test("reserves a mismatched PR only discovered by reconciliation", async () => {
+    const update = candidate("alpha");
+    const planned = plannedPublication(update);
+    const { deps, recover, state, setPublications, setPr } = fixture([update]);
+    setPublications([planned]);
+    setPr({ ...PR, headSha: SKEWED });
+
+    await dispatchRenovateBundle({}, { ...deps, execute: executor() });
+
+    expect(recover).not.toHaveBeenCalled();
+    expect(state().publications[planned.branch]).toEqual(planned);
+    expect(state().dispositions[update.id]).toMatchObject({
+      status: "blocked",
+      prUrl: PR.url,
+    });
+  });
+
+  test("preserves a known recovery base mismatch on later exact-head readback", async () => {
+    const update = candidate("alpha");
+    const planned = plannedPublication(update);
+    const { deps, recover, state, setPublications, setPr, setRemote } = fixture(
+      [update],
+    );
+    setPublications([planned]);
+    setRemote(HEAD);
+    recover.mockImplementationOnce(async () => {
+      setPr(PR);
+      return { ...PR, baseSha: SKEWED };
+    });
+    const execute = executor();
+
+    await dispatchRenovateBundle({}, { ...deps, execute });
+    await dispatchRenovateBundle({}, { ...deps, execute });
+
+    expect(recover).toHaveBeenCalledTimes(1);
+    expect(state().publications[planned.branch]).toMatchObject({
+      prNumber: PR.number,
+    });
+    expect(state().dispositions[update.id]?.status).toBe("blocked");
+    expect(deps.hasReceipt).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+  });
 
   test("holds a previously pushed commit when the eligibility snapshot expires", async () => {
     const { deps, recover, setRemote, advance } = fixture([candidate("alpha")]);
@@ -282,5 +438,108 @@ describe("Renovate dispatch", () => {
     ).resolves.toEqual({ outcome: "no-fresh-ranking" });
     expect(recover).not.toHaveBeenCalled();
     expect(execute).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("GitHub publication checks", () => {
+  test.each([3000, 3001])(
+    "checks an at-cap listing against a reported count of %i",
+    async (count) => {
+      githubApi.list.mockResolvedValueOnce([{ number: PR.number }]);
+      githubApi.listFiles.mockResolvedValueOnce(
+        Array.from({ length: 3000 }, (_, index) => ({
+          filename: `path-${String(index)}`,
+        })),
+      );
+      githubApi.get.mockResolvedValueOnce({ data: { changed_files: count } });
+      const github = await createRenovateGitHub();
+
+      if (count === 3000) {
+        const paths = await github.openWorkPaths();
+        expect(paths.size).toBe(3000);
+        expect(paths.has("path-2999")).toBe(true);
+      } else {
+        await expect(github.openWorkPaths()).rejects.toThrow(
+          "incomplete changed-path listing",
+        );
+      }
+    },
+  );
+
+  test("closes only the PR it just created when that PR's refs fail readback", async () => {
+    const data = {
+      number: PR.number,
+      node_id: "app-created-node",
+      html_url: PR.url,
+      head: { sha: HEAD },
+      base: { sha: SKEWED },
+      state: "open",
+    };
+    githubApi.create.mockResolvedValueOnce({ data });
+    githubApi.get.mockResolvedValueOnce({ data });
+    githubApi.update.mockResolvedValueOnce({ data: { state: "closed" } });
+    const github = await createRenovateGitHub();
+
+    await expect(
+      github.createRecoveredPullRequest(plannedPublication(candidate("alpha"))),
+    ).resolves.toMatchObject({
+      state: "closed",
+      closedUnverified: true,
+      baseSha: SKEWED,
+    });
+    expect(githubApi.update).toHaveBeenCalledWith(
+      expect.objectContaining({ pull_number: PR.number, state: "closed" }),
+    );
+  });
+
+  test("preserves a created PR whose head moved before cleanup readback", async () => {
+    const data = {
+      number: PR.number,
+      node_id: "app-created-node",
+      html_url: PR.url,
+      head: { sha: HEAD },
+      base: { sha: SKEWED },
+      state: "open",
+    };
+    githubApi.create.mockResolvedValueOnce({ data });
+    githubApi.get.mockResolvedValueOnce({
+      data: { ...data, head: { sha: SKEWED } },
+    });
+    githubApi.update.mockClear();
+    const github = await createRenovateGitHub();
+
+    const observed = await github.createRecoveredPullRequest(
+      plannedPublication(candidate("alpha")),
+    );
+
+    expect(observed.state).toBe("open");
+    expect(observed.closedUnverified).toBeUndefined();
+    expect(githubApi.update).not.toHaveBeenCalled();
+  });
+
+  test("returns the mismatched creation receipt if cleanup is unconfirmed", async () => {
+    const data = {
+      number: PR.number,
+      node_id: "app-created-node",
+      html_url: PR.url,
+      head: { sha: HEAD },
+      base: { sha: SKEWED },
+      state: "open",
+    };
+    githubApi.create.mockResolvedValueOnce({ data });
+    githubApi.get.mockResolvedValueOnce({ data });
+    githubApi.update.mockRejectedValueOnce(new Error("Closure response lost"));
+    const github = await createRenovateGitHub();
+
+    const observed = await github.createRecoveredPullRequest(
+      plannedPublication(candidate("alpha")),
+    );
+
+    expect(observed).toMatchObject({
+      number: PR.number,
+      baseSha: SKEWED,
+      state: "open",
+    });
+    expect(observed.closedUnverified).toBeUndefined();
   });
 });

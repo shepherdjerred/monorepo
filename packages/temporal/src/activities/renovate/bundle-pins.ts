@@ -68,6 +68,54 @@ function escapePattern(literal: string): string {
   return literal.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
 }
 
+function pinDeclarationOwnsValue(
+  prefix: string,
+  packagePattern: RegExp,
+  target: RenovateTarget,
+  current: string,
+): boolean {
+  for (const match of prefix.matchAll(packagePattern)) {
+    if (/(?:^|\s)(?:#|\/\/|<!--)/u.test(prefix.slice(0, match.index))) continue;
+    let gap = prefix.slice(match.index + match[0].length);
+    if (current === target.currentDigest) {
+      const tag = [target.targetValue, target.currentValue].find(
+        (value) => value !== null && gap.endsWith(`${value}@`),
+      );
+      if (tag !== null && tag !== undefined)
+        gap = gap.slice(0, -tag.length - 1);
+    }
+    // The gap can contain declaration syntax, such as `:`, `>=`, or
+    // `" Version="`. It may not contain another dependency or value.
+    if (/^[\s"'@:={^~<>!,[\]+]*$/u.test(gap.replace(/\bversion\b/iu, "")))
+      return true;
+  }
+  return false;
+}
+
+const HINTED_ASSIGNMENT =
+  /^\s*(?:(?:ARG|ENV|(?:export\s+)?const)\s+)?[A-Za-z_]\w*\s*=\s*["']?$/u;
+const HINTED_COMMIT = /^\s*(?:ARG|ENV)\s+([A-Za-z_]\w*)_COMMIT=$/u;
+const HINTED_VERSION_LINE =
+  /^\s*(?:ARG|ENV)\s+([A-Za-z_]\w*)_VERSION\s*=\s*["']?[\w.~-]+["']?\s*$/u;
+
+function hintOwnsValue(
+  before: string,
+  prefix: string,
+  hint: RegExp,
+  { lineStart, isDigest }: { lineStart: number; isDigest: boolean },
+): boolean {
+  if (!HINTED_ASSIGNMENT.test(prefix)) return false;
+  const precedingStart = before.lastIndexOf("\n", lineStart - 1);
+  const preceding = before.slice(precedingStart + 1, lineStart);
+  if (hint.test(preceding)) return true;
+  if (!isDigest) return false;
+  const commitName = HINTED_COMMIT.exec(prefix)?.[1];
+  const versionName = HINTED_VERSION_LINE.exec(preceding)?.[1];
+  if (commitName === undefined || commitName !== versionName) return false;
+  const hintStart = before.lastIndexOf("\n", precedingStart - 1);
+  return hint.test(before.slice(hintStart + 1, precedingStart));
+}
+
 function replaceUnambiguousPin(
   before: string,
   target: RenovateTarget,
@@ -81,24 +129,26 @@ function replaceUnambiguousPin(
     String.raw`(?<![\w.+-])${escapePattern(current)}(?![\w.+-])`,
     "gu",
   );
-  const matches = [...before.matchAll(pattern)];
-  const onlyMatch = matches[0];
-  if (onlyMatch !== undefined && matches.length === 1) {
+  const name = escapePattern(target.packageName);
+  const packagePattern = new RegExp(
+    String.raw`(?<![\w./@-])${name}(?![\w./@-])`,
+    "gu",
+  );
+  const hint = new RegExp(
+    String.raw`^\s*(?:#|//)\s*renovate:.*\s(?:depName|packageName)=${name}(?=\s|$)`,
+    "u",
+  );
+  const anchored = [...before.matchAll(pattern)].filter((match) => {
+    const lineStart = before.lastIndexOf("\n", match.index - 1);
+    const prefix = before.slice(lineStart + 1, match.index);
     return (
-      before.slice(0, onlyMatch.index) +
-      next +
-      before.slice(onlyMatch.index + current.length)
+      pinDeclarationOwnsValue(prefix, packagePattern, target, current) ||
+      (lineStart !== -1 &&
+        hintOwnsValue(before, prefix, hint, {
+          lineStart,
+          isDigest: current === target.currentDigest,
+        }))
     );
-  }
-  // Most repeated versions can be disambiguated by the dependency name on
-  // the declaration or immediately preceding Renovate hint.
-  const anchored = matches.filter((match) => {
-    const beginningOfLine = before.lastIndexOf("\n", match.index - 1);
-    const previousLine = before.lastIndexOf("\n", beginningOfLine - 1);
-    const endOfLine = before.indexOf("\n", match.index);
-    return before
-      .slice(previousLine + 1, endOfLine === -1 ? undefined : endOfLine)
-      .includes(target.packageName);
   });
   const match = anchored[0];
   return match !== undefined && anchored.length === 1

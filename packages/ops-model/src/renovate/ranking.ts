@@ -87,10 +87,18 @@ export function compareRankedRenovateUpdates(
   left: RankedRenovateUpdate,
   right: RankedRenovateUpdate,
 ): number {
+  const leftEligible =
+    left.bake.eligibleAt === null
+      ? Number.MIN_SAFE_INTEGER
+      : Date.parse(left.bake.eligibleAt);
+  const rightEligible =
+    right.bake.eligibleAt === null
+      ? Number.MIN_SAFE_INTEGER
+      : Date.parse(right.bake.eligibleAt);
   return (
     urgency.indexOf(left.urgency) - urgency.indexOf(right.urgency) ||
     effort.indexOf(left.effort) - effort.indexOf(right.effort) ||
-    (left.bake.eligibleAt ?? "").localeCompare(right.bake.eligibleAt ?? "") ||
+    leftEligible - rightEligible ||
     left.id.localeCompare(right.id)
   );
 }

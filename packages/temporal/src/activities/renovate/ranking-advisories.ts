@@ -96,6 +96,7 @@ async function queryBatch(
 }
 
 export type AdvisoryImpact = {
+  readonly state: "assessed" | "missing-version" | "unavailable";
   readonly fixed: string[];
   readonly added: string[];
 };
@@ -110,10 +111,15 @@ export async function readRenovateAdvisories(
     LookupTarget,
     { current: OsvQuery; next: OsvQuery }
   >();
+  const impacts = new Map<LookupTarget, AdvisoryImpact>();
   for (const target of targets) {
+    if (!OSV_ECOSYSTEM.has(target.target.datasource ?? "")) continue;
     const current = queryFor(target, target.installedVersion);
     const next = queryFor(target, target.target.targetVersion);
-    if (current === undefined || next === undefined) continue;
+    if (current === undefined || next === undefined) {
+      impacts.set(target, { state: "missing-version", fixed: [], added: [] });
+      continue;
+    }
     allQueries.set(queryKey(current), current);
     allQueries.set(queryKey(next), next);
     targetQueries.set(target, { current, next });
@@ -121,24 +127,34 @@ export async function readRenovateAdvisories(
   const queries = [...allQueries.values()];
   const found = new Map<string, Set<string>>();
   for (let start = 0; start < queries.length; start += QUERY_BATCH_SIZE) {
-    await queryBatch(
-      queries.slice(start, start + QUERY_BATCH_SIZE),
-      found,
-      fetchImpl,
-      signal,
+    const batchFound = new Map<string, Set<string>>();
+    try {
+      await queryBatch(
+        queries.slice(start, start + QUERY_BATCH_SIZE),
+        batchFound,
+        fetchImpl,
+        signal,
+      );
+      for (const [key, ids] of batchFound) found.set(key, ids);
+    } catch {
+      signal?.throwIfAborted();
+      // Publishable results require both queries and all of their pages.
+      // Successful earlier batches still supply evidence for other targets.
+    }
+  }
+  for (const [target, { current, next }] of targetQueries) {
+    const before = found.get(queryKey(current));
+    const after = found.get(queryKey(next));
+    impacts.set(
+      target,
+      before === undefined || after === undefined
+        ? { state: "unavailable", fixed: [], added: [] }
+        : {
+            state: "assessed",
+            fixed: [...before].filter((id) => !after.has(id)),
+            added: [...after].filter((id) => !before.has(id)),
+          },
     );
   }
-  return new Map(
-    [...targetQueries].map(([target, { current, next }]) => {
-      const before = found.get(queryKey(current)) ?? new Set<string>();
-      const after = found.get(queryKey(next)) ?? new Set<string>();
-      return [
-        target,
-        {
-          fixed: [...before].filter((id) => !after.has(id)),
-          added: [...after].filter((id) => !before.has(id)),
-        },
-      ];
-    }),
-  );
+  return impacts;
 }

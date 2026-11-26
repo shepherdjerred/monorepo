@@ -478,6 +478,7 @@ export async function openSeasonRefreshPr(
 ): Promise<OpenPrResult> {
   input.signal?.throwIfAborted();
   const signalOpt = input.signal === undefined ? {} : { signal: input.signal };
+  const repoOptions = { cwd: input.repoDir, ...signalOpt };
   const askpass = await writeGitAskpass(input.tempDir);
   const gitEnv = {
     GH_TOKEN: input.ghToken,
@@ -485,14 +486,8 @@ export async function openSeasonRefreshPr(
     GIT_TERMINAL_PROMPT: "0",
   };
 
-  await runCommand(["git", "config", "user.email", "ci@sjer.red"], {
-    cwd: input.repoDir,
-    ...signalOpt,
-  });
-  await runCommand(["git", "config", "user.name", "CI Bot"], {
-    cwd: input.repoDir,
-    ...signalOpt,
-  });
+  await runCommand(["git", "config", "user.email", "ci@sjer.red"], repoOptions);
+  await runCommand(["git", "config", "user.name", "CI Bot"], repoOptions);
   // A retry (or a later scheduled run reusing an open proposal branch) starts
   // from a shallow main-only clone. Fetch the existing branch first so
   // --force-with-lease has an actual remote-tracking value to protect against
@@ -506,24 +501,18 @@ export async function openSeasonRefreshPr(
   if (expectedRemoteSha !== undefined && input.beforePush !== undefined) {
     throw new Error(`Refusing to replace journaled branch ${input.branch}`);
   }
-  await runCommand(["git", "checkout", "-B", input.branch], {
-    cwd: input.repoDir,
-    ...signalOpt,
-  });
-  await runCommand(["git", "add", "--", ...input.files], {
-    cwd: input.repoDir,
-    ...signalOpt,
-  });
+  await runCommand(["git", "checkout", "-B", input.branch], repoOptions);
+  await runCommand(
+    ["git", "--literal-pathspecs", "add", "--", ...input.files],
+    repoOptions,
+  );
   // Disarm hooks right before the commit, not just via rootInstallWithoutHooks
   // earlier — an agentic Claude/Codex step upstream of this call may have
   // armed them on its own initiative (e.g. running a plain `bun install`).
   await disarmGitHooks(input.repoDir);
   const commitArgs = ["git", "commit", "-m", input.title];
   if (input.commitBody !== undefined) commitArgs.push("-m", input.commitBody);
-  await runCommand(commitArgs, {
-    cwd: input.repoDir,
-    ...signalOpt,
-  });
+  await runCommand(commitArgs, repoOptions);
   const commitHash = await pushOwnedGeneratedCommit({
     repoDir: input.repoDir,
     branch: input.branch,

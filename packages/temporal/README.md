@@ -1963,6 +1963,10 @@ Each GitHub write is journaled in `renovate-ranking/v1/dispatch.json`. The next
 bundle can proceed after the exact head has a Woodpecker receipt. Open work
 reserves its changed paths and lockfiles until it merges or closes. A native or
 operator check the worker cannot complete is shown as a blocker in Hub.
+Python verification downloads locked wheels before running builds and tests
+offline. A dependency that requires an uncached source build stays blocked.
+.NET verification requires the SDK and a populated NuGet cache so MSBuild
+runs offline.
 
 Both schedules register paused for worker cutover. Once the new workflow and
 repo workers are active, trigger `renovate-ranking-daily` and read the resulting

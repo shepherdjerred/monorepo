@@ -25,6 +25,7 @@ import {
 } from "./bundle-policy.ts";
 import {
   cleanIgnoredAgentArtifacts,
+  PYTHON_BUNDLE_CHECKS,
   sandboxBundleVerification,
 } from "./bundle-sandbox.ts";
 
@@ -184,27 +185,20 @@ function nativeVerificationCommands(
         cmd(`${root}/${dir}`, "go", "vet", "-mod=readonly", "./..."),
       ]);
     case "python":
-      return dirs.flatMap((dir) => [
-        cmd(`${root}/${dir}`, "uv", "sync", "--locked"),
-        cmd(
-          `${root}/${dir}`,
-          "uv",
-          "run",
-          "--frozen",
-          "--offline",
-          "python",
-          "-m",
-          "unittest",
-          "discover",
-        ),
-      ]);
+      return dirs.flatMap((dir) =>
+        PYTHON_BUNDLE_CHECKS.map((check) => cmd(`${root}/${dir}`, ...check)),
+      );
     case "dotnet": {
       const solutions = [...repo.trackedPaths].filter(
         (file) =>
           /\.slnx?$/u.test(file) &&
           dirs.some((dir) => {
             const solutionDir = posix.dirname(file);
-            return dir === solutionDir || dir.startsWith(`${solutionDir}/`);
+            return (
+              solutionDir === "." ||
+              dir === solutionDir ||
+              dir.startsWith(`${solutionDir}/`)
+            );
           }),
       );
       return solutions.flatMap((solution) => [
@@ -377,15 +371,22 @@ export async function readBundleDiff(
   for (const file of files) {
     if (!isSafeBundlePath(file))
       throw new Error("Invalid path in verified bundle diff.");
-    const tracked = await commandRunner(["git", "ls-files", "--", file], {
-      cwd: repoDir,
-    });
+    const tracked = await commandRunner(
+      ["git", "--literal-pathspecs", "ls-files", "--", file],
+      {
+        cwd: repoDir,
+      },
+    );
     if (tracked === "")
-      await commandRunner(["git", "add", "-N", "--", file], { cwd: repoDir });
+      await commandRunner(
+        ["git", "--literal-pathspecs", "add", "-N", "--", file],
+        { cwd: repoDir },
+      );
   }
   return commandRunner(
     [
       "git",
+      "--literal-pathspecs",
       "diff",
       "--binary",
       "--no-ext-diff",

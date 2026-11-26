@@ -4,9 +4,12 @@ import {
   type RankedRenovateUpdate,
   type RenovateTarget,
 } from "@shepherdjerred/ops-model/renovate-ranking.ts";
+import { createScratchWorkspace } from "#activities/remediation/codex-pr-remediation-git.ts";
 import { runCommand } from "#activities/scout/scout-season-refresh-git.ts";
 import { actualPinFile, expectedPinFile } from "./bundle-pins.ts";
-import { canBundleTogether } from "./bundle-policy.ts";
+import { canBundleTogether, targetArtifactPaths } from "./bundle-policy.ts";
+import { sandboxBundleVerification } from "./bundle-sandbox.ts";
+import { missingVerification, readBundleDiff } from "./bundle-verify.ts";
 import {
   executeRenovateBundle,
   type VerifiedRenovateBundle,
@@ -186,12 +189,197 @@ describe("Renovate exact bundle pins", () => {
     ).toBeUndefined();
   });
 
+  test.each([
+    "first: registry.example/first:9.0.0\nsecond: registry.example/second:1.2.3\n",
+    "first: registry.example/first:9.0.0, second: registry.example/second:1.2.3\n",
+    "second: registry.example/first-alias:1.2.3\n",
+    "# first: registry.example/first:1.2.3\nfirst: registry.example/first:9.0.0\n",
+    "image: 1.2.3\n",
+  ])(
+    "rejects a unique old version outside its own declaration: %j",
+    (before) => {
+      const filePath = "container.yaml";
+      const pin = {
+        ...target("registry.example/first"),
+        filePath,
+        currentValue: "1.2.3",
+        targetValue: "2.0.0",
+      };
+      expect(expectedPinFile(filePath, before, [pin])).toBeUndefined();
+    },
+  );
+
+  test("uses an exact declaration or adjacent package hint to disambiguate repeated versions", () => {
+    const filePath = "versions.toml";
+    const before = [
+      "# renovate: datasource=docker depName=custom-caddy packageName=caddy",
+      'CADDY = "1.2.3"',
+      "# renovate: datasource=docker depName=caddy-other",
+      'OTHER_CADDY = "1.2.3"',
+      'rust = "1.2.3"',
+      "",
+    ].join("\n");
+    const pin = {
+      ...target("caddy"),
+      filePath,
+      currentValue: "1.2.3",
+      targetValue: "2.0.0",
+    };
+    expect(
+      expectedPinFile(filePath, before, [pin, { ...pin, packageName: "rust" }]),
+    ).toBe(
+      before
+        .replace('CADDY = "1.2.3"', 'CADDY = "2.0.0"')
+        .replace('rust = "1.2.3"', 'rust = "2.0.0"'),
+    );
+  });
+
+  test("binds the companion commit to the same hinted version", () => {
+    const filePath = "Dockerfile";
+    const before = [
+      "# renovate: datasource=github-tags depName=example/project",
+      'ARG PROJECT_VERSION="1.2.3"',
+      `ARG PROJECT_COMMIT=${"a".repeat(40)}`,
+      "",
+    ].join("\n");
+    const pin = {
+      ...target("example/project"),
+      filePath,
+      currentValue: "1.2.3",
+      targetValue: "2.0.0",
+      currentDigest: "a".repeat(40),
+      digest: "b".repeat(40),
+    };
+    expect(expectedPinFile(filePath, before, [pin])).toBe(
+      before.replace("1.2.3", "2.0.0").replace("a".repeat(40), "b".repeat(40)),
+    );
+    expect(
+      expectedPinFile(
+        filePath,
+        before.replace("PROJECT_COMMIT=", "OTHER_COMMIT="),
+        [pin],
+      ),
+    ).toBeUndefined();
+  });
+
   test("separates alternatives for the same pin, while grouping compatible dependencies", () => {
     expect(
       canBundleTogether(candidate(), candidate("alternative", target())),
     ).toBe(false);
     expect(canBundleTogether(candidate(), candidate("second"))).toBe(true);
   });
+});
+
+describe("Renovate independent verification", () => {
+  test("does not walk to the filesystem root for an unsafe target path", () => {
+    expect(
+      targetArtifactPaths(
+        { ...target(), manager: "cargo", filePath: "/invalid/Cargo.toml" },
+        new Set(),
+      ),
+    ).toEqual([]);
+    expect(
+      targetArtifactPaths(
+        { ...target(), manager: "cargo", filePath: "valid/child/Cargo.toml" },
+        new Set(["valid/Cargo.lock"]),
+      ),
+    ).toEqual(["valid/Cargo.lock"]);
+  });
+
+  test("finds a root solution for a nested locked project", () => {
+    const repo = {
+      repoDir: "/scratch",
+      baseSha: "base",
+      commandRunner: runCommand,
+      trackedPaths: new Set([
+        "App.sln",
+        "src/App/App.csproj",
+        "src/App/packages.lock.json",
+      ]),
+    };
+    const update = candidate("dotnet", {
+      ...target("NodaTime"),
+      filePath: "src/App/App.csproj",
+      manager: "nuget",
+    });
+    expect(missingVerification(repo, update, () => "dotnet")).toBeUndefined();
+    expect(
+      missingVerification(
+        {
+          ...repo,
+          trackedPaths: new Set([
+            "unrelated/App.sln",
+            "src/App/packages.lock.json",
+          ]),
+        },
+        update,
+        () => "dotnet",
+      ),
+    ).toContain("No locked dotnet verification project");
+  });
+
+  test("verifies a new bracketed path even beside a previously tracked glob match", async () => {
+    const workspace = await createScratchWorkspace("renovate-literal-test");
+    const { repoDir } = workspace;
+    const file = "packages/sample/routes/[id].ts";
+    try {
+      await sandboxRepo().deps.cloneRepo(repoDir);
+      const globMatch = "packages/sample/routes/i.ts";
+      await Bun.write(`${repoDir}/${globMatch}`, "export const route = 1;\n", {
+        createPath: true,
+      });
+      await runCommand(["git", "add", "--", globMatch], { cwd: repoDir });
+      await Bun.write(`${repoDir}/${file}`, "export const route = 2;\n");
+      const first = await readBundleDiff(repoDir, [file], runCommand);
+      expect(first).toContain(`+++ b/${file}`);
+      expect(first).not.toContain(globMatch);
+      await Bun.write(`${repoDir}/${file}`, "export const route = 3;\n");
+      const after = await readBundleDiff(repoDir, [file], runCommand);
+      expect(after).toContain("+export const route = 3;");
+      expect(after).not.toBe(first);
+    } finally {
+      await workspace.cleanup();
+    }
+  });
+
+  test.each([
+    { args: ["uv", "sync", "--locked"], network: false },
+    {
+      args: ["uv", "sync", "--frozen", "--no-build", "--no-python-downloads"],
+      network: false,
+    },
+    {
+      args: [
+        "uv",
+        "sync",
+        "--frozen",
+        "--no-build",
+        "--no-install-local",
+        "--no-python-downloads",
+      ],
+      network: true,
+    },
+    { args: ["uv", "sync", "--locked", "--offline"], network: false },
+    {
+      args: ["uv", "run", "--offline", "--no-sync", "python", "-m", "unittest"],
+      network: false,
+    },
+    { args: ["dotnet", "restore", "--locked-mode", "App.sln"], network: false },
+  ])(
+    "isolates network for the verification command %j",
+    async ({ args, network }) => {
+      const commandRunner = vi.fn((_args: string[]) => Promise.resolve(""));
+      const runner = sandboxBundleVerification({
+        tempDir: "/tmp/scratch",
+        repoDir: "/tmp/scratch/monorepo",
+        commandRunner,
+      });
+      await runner(args, { cwd: "/tmp/scratch/monorepo" });
+      const wrapped = commandRunner.mock.calls[0]?.[0] ?? [];
+      expect(wrapped.slice(wrapped.indexOf("--") + 1)).toEqual(args);
+      expect(wrapped.includes("--share-net")).toBe(network);
+    },
+  );
 });
 
 describe("Renovate bundle executor", () => {

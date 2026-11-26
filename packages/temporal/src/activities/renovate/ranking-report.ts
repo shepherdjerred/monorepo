@@ -136,7 +136,8 @@ function matchesGroupField(
     // Ignore negative selectors here to conservatively include groups that
     // could have a missing member. Renovate still chooses the exact branches.
     return regex?.[1] === undefined
-      ? selector.startsWith("!") ||
+      ? selector === "*" ||
+          selector.startsWith("!") ||
           new Bun.Glob(selector.toLowerCase()).match(value.toLowerCase())
       : new RegExp(regex[1], regex[2]).test(value);
   });
@@ -206,6 +207,34 @@ function earlyBlocker(
     : null;
 }
 
+function installedVersionFor(
+  dependency: Dependency,
+  currentVersion: string | null,
+): string | null {
+  const resolved = dependency.lockedVersion ?? dependency.fixedVersion;
+  if (resolved != null) return resolved;
+  if (currentVersion === null || dependency.currentValue == null) return null;
+  const value = dependency.currentValue.trim();
+  // Bare Cargo and NuGet declarations can resolve to a newer version.
+  if (dependency.datasource === "crate" && !value.startsWith("=")) return null;
+  if (dependency.datasource === "nuget" && !/^\[[^,]+\]$/u.test(value))
+    return null;
+  const declared = (
+    value.startsWith("npm:") ? value.slice(value.lastIndexOf("@") + 1) : value
+  )
+    .replace(/^={1,2}\s*/u, "")
+    .replace(/^\[([^,]+)\]$/u, "$1");
+  const exact =
+    dependency.datasource === "npm"
+      ? /^v?\d+\.\d+\.\d+(?:[-+][\w.+-]+)?$/u.test(declared)
+      : /^v?\d+(?:\.\d+)*(?:[-+][\w.+-]+)?$/u.test(declared);
+  return exact &&
+    declared.replace(/^v(?=\d)/u, "") ===
+      currentVersion.replace(/^v(?=\d)/u, "")
+    ? currentVersion
+    : null;
+}
+
 function targetForLookup(
   source: LookupDeclaration,
   update: LookupUpdate,
@@ -224,8 +253,7 @@ function targetForLookup(
     return null;
   const currentVersion =
     dependency.currentVersion ?? update.currentVersion ?? null;
-  const installedVersion =
-    dependency.lockedVersion ?? dependency.fixedVersion ?? null;
+  const installedVersion = installedVersionFor(dependency, currentVersion);
   const target: RenovateTarget = {
     manager,
     datasource: dependency.datasource ?? null,
@@ -304,7 +332,7 @@ export function parseRenovateLookupInventory(
   }
   const config = AgeConfigSchema.parse(rawConfig);
   const declarations = lookupDeclarations(lookup.packageFiles);
-  const incompleteNames = new Set<string>();
+  const incompleteIdentities = new Set<string>();
   const incompleteGroups = new Set<string>();
   const results = declarations.map((item) =>
     collectDeclarationTargets(item, config, now),
@@ -312,7 +340,11 @@ export function parseRenovateLookupInventory(
   const incomplete = results.filter((result) => result.incomplete);
   for (const result of incomplete) {
     const member = result.member;
-    if (member.lookupName !== "") incompleteNames.add(member.lookupName);
+    if (member.lookupName !== "") {
+      incompleteIdentities.add(
+        JSON.stringify([member.datasource, member.lookupName]),
+      );
+    }
     for (const group of matchingGroups(config, member))
       incompleteGroups.add(group);
   }
@@ -336,7 +368,9 @@ export function parseRenovateLookupInventory(
     targets: targets.map((entry) => {
       if (entry.blocker !== null) return entry;
       const affected =
-        incompleteNames.has(entry.lookupName) ||
+        incompleteIdentities.has(
+          JSON.stringify([entry.target.datasource, entry.lookupName]),
+        ) ||
         matchingGroups(config, {
           manager: entry.target.manager,
           name: entry.target.packageName,
