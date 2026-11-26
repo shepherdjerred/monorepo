@@ -176,6 +176,7 @@ async function restartTerminals(
   options: Options,
   mode: Appearance,
   queued?: Target,
+  themeOnly = options.onChange,
 ): Promise<Outcome[]> {
   try {
     const discovered =
@@ -206,7 +207,10 @@ async function restartTerminals(
           : await restart(runtime, target, options);
       outcomes.push(outcome);
       report(outcome);
-      if (options.onChange && outcome.retry === true) await queue(target, true);
+      // A queued worker finds its conversation unready again if a turn or draft
+      // began before it held the lock, so it keeps waiting as a fresh worker.
+      const waiting = queued !== undefined || options.onChange;
+      if (waiting && outcome.retry === true) await queue(target, themeOnly);
     }
     return outcomes;
   } catch (error) {
@@ -255,6 +259,7 @@ async function run(
     queued === undefined ? options : { ...options, onChange: false },
     mode,
     queued,
+    options.onChange,
   );
   progress.panes = outcomes;
   if (options.onChange && outcomes.length === 0) {
