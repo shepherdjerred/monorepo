@@ -186,6 +186,10 @@ export async function waitCommand(
     return EXIT.ok;
   }
   const client = await runtime.connect({ url: plan.url, actor: "required" });
+  if (client.actor?.kind === "human" && plan.scope === undefined)
+    throw usageError(
+      "A human caller has no worktree to scope a wait to: pass --board <slug> or --artifact <id>.",
+    );
   runtime.io.stderr(
     `Waiting for review feedback on ${describeTarget(plan.scope)}. Keep this process running; it returns as soon as a comment arrives.`,
   );

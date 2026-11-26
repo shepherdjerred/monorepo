@@ -4,6 +4,7 @@ import {
   artifactsBaseUrl,
   createArtifactsClient,
   encodeActorHeader,
+  failureFromResponse,
 } from "#lib/artifacts/client.ts";
 import { artifactsActorFrom, workspaceKeyFor } from "#lib/artifacts/actor.ts";
 import { ArtifactsCliError, redactTokens } from "#lib/artifacts/errors.ts";
@@ -53,6 +54,30 @@ test("the actor travels as base64 JSON in the contract header and is never a tok
   ).toEqual(ACTOR);
   expect(header).toBe(encodeActorHeader(ACTOR));
   expect(service.calls[0]?.headers.get("authorization")).toBeNull();
+});
+
+test("a human caller sends no actor header: the service derives it from the login", async () => {
+  const service = fakeService({ trpc: { "boards.list": () => [] } });
+  const human = { ...ACTOR, key: "human:jerred", kind: "human" as const };
+  await service.client(human).trpc.boards.list.query();
+  expect(service.calls[0]?.headers.get(ACTOR_HEADER)).toBeNull();
+});
+
+test("an expired upload says to run the command again", async () => {
+  const client = createArtifactsClient({
+    baseUrl: BASE,
+    actor: ACTOR,
+    fetch: () =>
+      Promise.resolve(
+        Response.json({ error: "The upload expired" }, { status: 410 }),
+      ),
+  });
+  const response = await client.request("/api/uploads/x/commit", {
+    method: "POST",
+  });
+  const failure = await failureFromResponse(response, BASE);
+  expect(failure.message).toContain("The upload expired");
+  expect(failure.message).toContain("run the command again");
 });
 
 test("no actor, no header", async () => {

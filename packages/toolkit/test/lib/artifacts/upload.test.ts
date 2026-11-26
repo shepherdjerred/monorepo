@@ -32,6 +32,7 @@ const committed = {
   number: 1,
   reviewUrl: `${BASE}/a/${IDS.artifact}?v=1`,
   boardUrl: `${BASE}/b/concepts`,
+  deduplicated: false,
 };
 
 async function site() {
@@ -82,6 +83,7 @@ test("only the blobs the service lacks are sent, then the upload is committed", 
           uploadId: IDS.upload,
           missing: [wanted?.sha256],
           expiresAt: "2026-11-27T00:00:00.000Z",
+          deduplicated: false,
         });
       }
       if (request.method === "PUT") {
@@ -123,6 +125,7 @@ test("a replayed commit reports deduplicated and sends nothing", async () => {
           uploadId: IDS.upload,
           missing: [],
           expiresAt: "2026-11-27T00:00:00.000Z",
+          deduplicated: false,
         });
       return Response.json({ ...committed, deduplicated: true });
     },
@@ -145,6 +148,7 @@ test("a commit that still misses blobs re-sends them and commits again", async (
           uploadId: IDS.upload,
           missing: [],
           expiresAt: "2026-11-27T00:00:00.000Z",
+          deduplicated: false,
         });
       if (request.method === "PUT") {
         puts.push(url.pathname);
@@ -201,6 +205,7 @@ test("transient failures are retried and permanent ones are not", async () => {
               uploadId: IDS.upload,
               missing: [],
               expiresAt: "2026-11-27T00:00:00.000Z",
+              deduplicated: false,
             });
       }
       return Response.json(committed);

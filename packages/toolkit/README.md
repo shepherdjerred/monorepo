@@ -477,7 +477,9 @@ operator list. The service URL resolves `--url`, then `ARTIFACTS_URL` /
 identify themselves with the same native session identity as `tracker` (see
 [Tracker](#tracker)); the actor travels base64-encoded in `X-Artifacts-Actor`
 and includes a `workspaceKey` of `<hostname>:<worktree or cwd>`, which scopes a
-bare `wait` to the artifacts published from this worktree.
+bare `wait` to the artifacts published from this worktree. A human caller (no agent session) sends no header: the
+service derives the human from the Tailscale login and refuses a human actor in
+the header, so a human names `--board` or `--artifact` to wait.
 
 ```bash
 toolkit artifacts publish report.pdf                              # one file: its own entry; viewer chosen by extension
@@ -517,10 +519,15 @@ overrides it. The client rejects what the service would: paths the service
 reserves (a leading `_`), symbolic links, more than 2000 files, 500 MiB per
 file, 1 GiB per version. `--version-of` sends the artifact's current version as
 `expectedCurrentVersionId`; if someone published since, it exits 2 naming the
-current version and the fix. Text output starts with the review URL:
+current version and the fix. Publishing the exact files the artifact's current version already
+holds (with an unchanged note) creates nothing and reports `deduplicated`. For a
+new version the idempotency key also covers the version it was based on, so
+reverting to older content publishes a new version instead of replaying the
+first one, and this check is what makes a retry after a lost commit response
+safe. Text output starts with the review URL:
 
 ```text
-Review: https://artifacts.tailnet-1a49.ts.net/a/<artifactId>?v=1
+Review: https://artifacts.tailnet-1a49.ts.net/a/<artifactId>
 Board: https://artifacts.tailnet-1a49.ts.net/b/<board>
 Next: toolkit artifacts wait
 ```

@@ -5,24 +5,22 @@ import {
   CreateUploadResponseSchema,
   Sha256Schema,
   type ArtifactKind,
-  type CommitUploadResponse,
   type CreateUploadRequest,
   type Viewport,
 } from "@shepherdjerred/artifacts/contract";
+import type { ArtifactDetail } from "@shepherdjerred/artifacts/procedures";
 import type { ArtifactsClient } from "./client.ts";
 import { failureFromResponse } from "./client.ts";
 import { ArtifactsCliError, usageError } from "./errors.ts";
 import type { ArtifactSource, ManifestFile } from "./manifest.ts";
 
-/** The service may report that a commit replayed an earlier one. */
-const CommitResultSchema = CommitUploadResponseSchema.extend({
-  deduplicated: z.boolean().optional(),
-});
-
 export type UploadParams = {
   board: string;
   title: string;
-  kind: ArtifactKind;
+  /** Title of a board the service creates for this publish. */
+  boardTitle?: string | undefined;
+  /** Omitted for a new version: an artifact's kind cannot change. */
+  kind?: ArtifactKind | undefined;
   artifactId?: string | undefined;
   expectedCurrentVersionId: string | null;
   idempotencyKey: string;
@@ -31,7 +29,7 @@ export type UploadParams = {
   placement?: CreateUploadRequest["placement"];
 };
 
-export type UploadResult = CommitUploadResponse & { deduplicated: boolean };
+export type UploadResult = z.infer<typeof CommitUploadResponseSchema>;
 
 /** The artifact's current version is not the one this publish was based on. */
 export class PublishConflictError extends ArtifactsCliError {
@@ -43,10 +41,48 @@ export class PublishConflictError extends ArtifactsCliError {
   }
 }
 
+/**
+ * A new version whose files are exactly the artifact's current version is the
+ * answer to a retried publish: the service keys a retry on the whole request,
+ * and the compare-and-set token moves once the first attempt commits, so the
+ * retry could not resume. Returns the existing version, or null when this
+ * publish changes something.
+ */
+export function unchangedVersion(
+  client: Pick<ArtifactsClient, "baseUrl">,
+  artifact: ArtifactDetail,
+  source: ArtifactSource,
+  note: string | undefined,
+): UploadResult | null {
+  const version = artifact.current;
+  if (version === null || version.purged) return null;
+  if (
+    version.entryPath !== source.entryPath ||
+    version.files.length !== source.files.length ||
+    (note !== undefined && note !== version.note)
+  )
+    return null;
+  const have = new Map(version.files.map((file) => [file.path, file.sha256]));
+  if (!source.files.every((file) => have.get(file.path) === file.sha256))
+    return null;
+  return {
+    artifactId: artifact.id,
+    versionId: version.id,
+    number: version.number,
+    reviewUrl: `${client.baseUrl}/a/${artifact.id}`,
+    boardUrl: `${client.baseUrl}/b/${artifact.boardSlug}`,
+    deduplicated: true,
+  };
+}
+
 export function idempotencyKey(parts: {
   workspaceKey: string;
   board: string;
-  /** The artifact id for a new version, or `new:<title>` for a new artifact. */
+  /**
+   * `<artifactId>@<expected version>` for a new version, or `new:<title>` for
+   * a new artifact. The expected version keeps a revert to older content from
+   * replaying the first publish of that content.
+   */
   target: string;
   digest: string;
 }): string {
@@ -248,11 +284,14 @@ export async function uploadVersion(
 ): Promise<UploadResult> {
   const request = CreateUploadRequestSchema.safeParse({
     board: params.board,
+    ...(params.boardTitle === undefined
+      ? {}
+      : { boardTitle: params.boardTitle }),
     ...(params.artifactId === undefined
       ? {}
       : { artifactId: params.artifactId }),
     title: params.title,
-    kind: params.kind,
+    ...(params.kind === undefined ? {} : { kind: params.kind }),
     entryPath: source.entryPath,
     ...(params.note === undefined ? {} : { note: params.note }),
     ...(params.viewport === undefined ? {} : { viewport: params.viewport }),
@@ -322,12 +361,12 @@ async function commitOnce(
         ? ({ kind: "missing", missing: conflict.missing } as const)
         : failFromConflict(conflict, client.baseUrl);
     }
-    const { deduplicated = false, ...result } = await parseOk(
+    const result = await parseOk(
       client,
       response,
-      CommitResultSchema,
+      CommitUploadResponseSchema,
       "commit",
     );
-    return { kind: "committed", result: { ...result, deduplicated } } as const;
+    return { kind: "committed", result } as const;
   });
 }

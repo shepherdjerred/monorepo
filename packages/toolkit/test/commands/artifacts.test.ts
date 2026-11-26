@@ -6,6 +6,7 @@ import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import { artifactsCommand } from "#commands/artifacts/index.ts";
 import type { Runtime } from "#commands/artifacts/runtime.ts";
 import { createArtifactsClient } from "#lib/artifacts/client.ts";
+import { buildSource } from "#lib/artifacts/manifest.ts";
 import {
   ACTOR,
   BASE,
@@ -62,6 +63,7 @@ const committed = (number = 1) => ({
   number,
   reviewUrl: `${BASE}/a/${IDS.artifact}?v=${String(number)}`,
   boardUrl: `${BASE}/b/concept-a`,
+  deduplicated: false,
 });
 
 const UploadBodySchema = z.looseObject({
@@ -71,17 +73,21 @@ type Created = { body: z.infer<typeof UploadBodySchema> };
 
 /** A publish-capable service that records each create request. */
 function publishService(
-  options: { boardExists?: boolean; conflict?: boolean } = {},
+  options: {
+    conflict?: boolean;
+    /** The files the artifact's current version already holds. */
+    unchangedFiles?: readonly {
+      path: string;
+      sha256: string;
+      size: number;
+      mediaType: string;
+    }[];
+  } = {},
 ) {
   const created: Created[] = [];
   let artifactCounter = 0;
   const service = fakeService({
     trpc: {
-      "boards.touch": () => {
-        if (options.boardExists === true) return { ok: true };
-        throw new TrpcFailure("NOT_FOUND", 404, "no board");
-      },
-      "boards.create": (input) => ({ created: input }),
       "artifacts.get": () => ({
         id: IDS.artifact,
         boardId: IDS.board,
@@ -109,7 +115,35 @@ function publishService(
           },
           purged: false,
         },
-        current: null,
+        current:
+          options.unchangedFiles === undefined
+            ? null
+            : {
+                id: IDS.version,
+                artifactId: IDS.artifact,
+                number: 1,
+                entryPath: options.unchangedFiles[0]?.path ?? "index.html",
+                totalBytes: 5,
+                fileCount: options.unchangedFiles.length,
+                note: "",
+                viewport: null,
+                createdAt: "2026-11-26T08:00:00.000Z",
+                publisher: {
+                  key: "claude-code:s",
+                  kind: "agent",
+                  name: "claude-code",
+                },
+                purged: false,
+                contentUrl: null,
+                files: options.unchangedFiles.map(
+                  ({ path: filePath, sha256, size, mediaType }) => ({
+                    path: filePath,
+                    sha256,
+                    size,
+                    mediaType,
+                  }),
+                ),
+              },
       }),
     },
     http: async (request) => {
@@ -129,6 +163,7 @@ function publishService(
           uploadId: IDS.upload,
           missing: body.files.map((file) => file.sha256),
           expiresAt: "2026-11-27T00:00:00.000Z",
+          deduplicated: false,
         });
       }
       if (request.method === "PUT") {
@@ -179,15 +214,13 @@ test("publish prints the review URL first, then the board, then the next command
     placement: { w: 1440, h: 900 },
   });
   expect(String(body?.["idempotencyKey"])).toMatch(/^[0-9a-f]{64}$/u);
-  // The board is created before the upload, as the service does not make one.
-  expect(service.calls.map((call) => call.procedure).filter(Boolean)).toEqual([
-    "boards.touch",
-    "boards.create",
-  ]);
+  // The service creates the board from the slug and title in the same call.
+  expect(body?.["boardTitle"]).toBe("concept-a");
+  expect(service.calls.filter((call) => call.procedure !== null)).toEqual([]);
 });
 
 test("--json prints one object with the artifacts, the board, and the next command", async () => {
-  const { service } = publishService({ boardExists: true });
+  const { service } = publishService();
   const { runtime, out, err } = runtimeFor(service);
   const code = await artifactsCommand(
     "publish",
@@ -213,7 +246,7 @@ test("--json prints one object with the artifacts, the board, and the next comma
 test("republishing the same content sends the same idempotency key", async () => {
   const keys: string[] = [];
   for (let run = 0; run < 2; run += 1) {
-    const { service, created } = publishService({ boardExists: true });
+    const { service, created } = publishService();
     const { runtime } = runtimeFor(service);
     await artifactsCommand(
       "publish",
@@ -223,7 +256,7 @@ test("republishing the same content sends the same idempotency key", async () =>
     keys.push(String(created[0]?.body["idempotencyKey"]));
   }
   expect(keys[0]).toBe(keys[1]);
-  const { service, created } = publishService({ boardExists: true });
+  const { service, created } = publishService();
   await artifactsCommand(
     "publish",
     [
@@ -272,7 +305,7 @@ test("several paths publish one board with labels and frames placed side by side
 });
 
 test("--note-file and an explicit --title reach the service", async () => {
-  const { service, created } = publishService({ boardExists: true });
+  const { service, created } = publishService();
   const dir = await tempDirectory();
   const note = path.join(dir, "note.md");
   await writeFile(note, "Why this concept");
@@ -318,6 +351,64 @@ test("--version-of builds on the current version and names the artifact's board"
   expect(service.calls.some((call) => call.procedure === "boards.create")).toBe(
     false,
   );
+});
+
+test("a new version leaves the kind to the artifact: the service forbids changing it", async () => {
+  const { service, created } = publishService();
+  await artifactsCommand(
+    "publish",
+    [await htmlFile(), "--version-of", IDS.artifact],
+    runtimeFor(service).runtime,
+  );
+  expect(created[0]?.body["kind"]).toBeUndefined();
+});
+
+test("republishing identical files as a new version creates nothing and says so", async () => {
+  const file = await htmlFile("page.html", "<h1>same</h1>");
+  const source = await buildSource(file);
+  const { service, created } = publishService({ unchangedFiles: source.files });
+  const { runtime, out } = runtimeFor(service);
+  expect(
+    await artifactsCommand(
+      "publish",
+      [file, "--version-of", IDS.artifact, "--json"],
+      runtime,
+    ),
+  ).toBe(0);
+  expect(created).toHaveLength(0);
+  expect(JSON.parse(out.join(""))).toMatchObject({
+    artifacts: [{ id: IDS.artifact, version: 1 }],
+    deduplicated: true,
+  });
+  // A changed note is a real change: it publishes.
+  const noted = publishService({ unchangedFiles: source.files });
+  const dir = await tempDirectory();
+  const note = path.join(dir, "note.md");
+  await writeFile(note, "now with a note");
+  await artifactsCommand(
+    "publish",
+    [file, "--version-of", IDS.artifact, "--note-file", note],
+    runtimeFor(noted.service).runtime,
+  );
+  expect(noted.created).toHaveLength(1);
+});
+
+test("a human caller must name a board or artifact to wait", async () => {
+  const { service } = waitService([claimWith([])]);
+  const human = { ...ACTOR, key: "human:jerred", kind: "human" as const };
+  const { runtime, err } = runtimeFor(service, {
+    wait: FAST_WAIT,
+    connect: () =>
+      Promise.resolve(
+        createArtifactsClient({
+          baseUrl: BASE,
+          actor: human,
+          fetch: service.fetch,
+        }),
+      ),
+  });
+  expect(await artifactsCommand("wait", [], runtime)).toBe(2);
+  expect(err.join("")).toContain("--board <slug> or --artifact <id>");
 });
 
 test("a stale --version-of exits 2 with the current version and the fix", async () => {

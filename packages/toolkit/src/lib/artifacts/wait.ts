@@ -132,6 +132,7 @@ type Context = {
   connected: boolean;
   gone: boolean;
   fatal: Error | null;
+  notFoundIsGone: boolean;
   firstContact: PromiseWithResolvers<undefined>;
 };
 
@@ -158,6 +159,14 @@ async function consumeStream(context: Context): Promise<"gone" | "ended"> {
   return "ended";
 }
 
+/** A stream refused for good ends the wait: as gone, or with the error. */
+function endForGood(context: Context, error: ArtifactsCliError): void {
+  // A named board or artifact the service no longer knows is gone, not broken.
+  if (context.notFoundIsGone && error.kind === "not-found") context.gone = true;
+  else context.fatal = error;
+  context.wake.signal();
+}
+
 /** Keeps one stream connected until the wait ends, reconnecting with backoff. */
 async function subscribe(context: Context): Promise<void> {
   let attempt = 0;
@@ -174,8 +183,7 @@ async function subscribe(context: Context): Promise<void> {
     // A stream that failed to connect must not hold the first claim back.
     context.firstContact.resolve(undefined);
     if (error instanceof ArtifactsCliError && !error.transient) {
-      context.fatal = error;
-      context.wake.signal();
+      endForGood(context, error);
       return;
     }
     if (Date.now() - started >= HEALTHY_CONNECTION_MS) attempt = 0;
@@ -232,6 +240,7 @@ export async function waitForFeedback(
     connected: false,
     gone: false,
     fatal: null,
+    notFoundIsGone: options.notFoundIsGone === true,
     firstContact: Promise.withResolvers<undefined>(),
   };
   const deadlineState: { timedOut: boolean } = { timedOut: false };

@@ -9,7 +9,7 @@ import {
   type ArtifactDetail,
 } from "@shepherdjerred/artifacts/procedures";
 import { z } from "zod";
-import { boardSlugFor, ensureBoard, localDate } from "#lib/artifacts/boards.ts";
+import { boardSlugFor, localDate } from "#lib/artifacts/boards.ts";
 import path from "node:path";
 import { ArtifactsCliError, EXIT, usageError } from "#lib/artifacts/errors.ts";
 import {
@@ -20,6 +20,7 @@ import {
 import {
   idempotencyKey,
   PublishConflictError,
+  unchangedVersion,
   uploadVersion,
   type UploadResult,
 } from "#lib/artifacts/upload.ts";
@@ -296,7 +297,10 @@ function keyFor(prepared: Prepared, index: number, digest: string): string {
   return idempotencyKey({
     workspaceKey,
     board,
-    target: current === null ? `new:${titles[index] ?? ""}` : current.id,
+    target:
+      current === null
+        ? `new:${titles[index] ?? ""}`
+        : `${current.id}@${current.currentVersion?.id ?? "none"}`,
     digest,
   });
 }
@@ -313,13 +317,19 @@ async function publishOne(
   if (source === undefined || title === undefined)
     throw new Error("missing source");
   const fixed = source.kind === "html" || source.kind === "site";
+  const unchanged =
+    current === null
+      ? null
+      : unchangedVersion(client, current, source, plan.note);
+  if (unchanged !== null) return { title, result: unchanged };
   const result = await uploadVersion(
     client,
     source,
     {
       board,
+      boardTitle: current === null ? prepared.boardTitle : undefined,
       title,
-      kind: source.kind,
+      kind: current === null ? source.kind : plan.kind,
       artifactId: current?.id,
       expectedCurrentVersionId: current?.currentVersion?.id ?? null,
       idempotencyKey: keyFor(prepared, index, source.digest),
@@ -362,11 +372,9 @@ async function publishAll(
   runtime: Runtime,
   prepared: Prepared,
 ): Promise<Published[]> {
-  const { client, current, board, boardTitle, sources, plan } = prepared;
+  const { client, sources, plan } = prepared;
   const published: Published[] = [];
   try {
-    if (current === null)
-      await ensureBoard(client, board, boardTitle, runtime.signal);
     for (const index of sources.keys())
       published.push(
         await publishOne(

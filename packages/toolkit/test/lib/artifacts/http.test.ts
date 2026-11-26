@@ -44,6 +44,7 @@ test("a file streams from disk with its Content-Length over a real socket", asyn
         uploadId: IDS.upload,
         missing: [source.files[0]?.sha256],
         expiresAt: "2026-11-27T00:00:00.000Z",
+        deduplicated: false,
       });
     if (request.method === "PUT") {
       const body = new Uint8Array(await request.arrayBuffer());
@@ -60,6 +61,7 @@ test("a file streams from disk with its Content-Length over a real socket", asyn
       number: 1,
       reviewUrl: "https://artifacts.test/a/x",
       boardUrl: "https://artifacts.test/b/x",
+      deduplicated: false,
     });
   });
   const result = await uploadVersion(client, source, {

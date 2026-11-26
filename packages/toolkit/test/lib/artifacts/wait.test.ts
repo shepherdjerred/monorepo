@@ -124,6 +124,9 @@ function noop(): void {
   // Replaced once the promise it releases exists.
 }
 
+const boardNotFound = () =>
+  new ArtifactsCliError("not-found", "Board not found");
+
 const transient = () => new ArtifactsCliError("unreachable", "down");
 
 test("the stream is subscribed before the first claim", async () => {
@@ -306,6 +309,29 @@ test("a missing board is gone only when a scope was named", async () => {
   });
   await expect(waitForFeedback(bare.deps, FAST)).rejects.toThrow(
     /no such board/u,
+  );
+});
+
+test("a named scope the stream cannot find is gone; an unnamed one is an error", async () => {
+  const named = harness({
+    claims: [EMPTY],
+    onConnect: (conn) => {
+      conn.fail(boardNotFound());
+    },
+  });
+  const gone = await waitForFeedback(named.deps, {
+    ...FAST,
+    notFoundIsGone: true,
+  });
+  expect(gone.outcome).toBe("gone");
+  const bare = harness({
+    claims: [EMPTY],
+    onConnect: (conn) => {
+      conn.fail(boardNotFound());
+    },
+  });
+  await expect(waitForFeedback(bare.deps, FAST)).rejects.toThrow(
+    /Board not found/u,
   );
 });
 

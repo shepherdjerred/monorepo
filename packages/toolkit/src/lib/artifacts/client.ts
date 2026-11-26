@@ -121,6 +121,11 @@ export function failureForStatus(
   const text = redactTokens(message);
   if (status === 401 || status === 403)
     return new ArtifactsCliError("forbidden", FORBIDDEN_FIX(baseUrl));
+  if (status === 410)
+    return new ArtifactsCliError(
+      "rejected",
+      `Gone (HTTP 410)${text === "" ? "" : `: ${text}`}. An expired upload resumes when you run the command again.`,
+    );
   if (status === 404)
     return new ArtifactsCliError(
       "not-found",
@@ -191,8 +196,10 @@ export function createArtifactsClient(
     options.fetch ?? ((input, init) => fetch(input, init));
   const defaultTimeout =
     options.timeoutMs === undefined ? DEFAULT_TIMEOUT_MS : options.timeoutMs;
+  // The service derives a human caller from the Tailscale login and refuses a
+  // human actor in the header, so only agents and runners send one.
   const actorHeaders: Record<string, string> =
-    options.actor === null
+    options.actor === null || options.actor.kind === "human"
       ? {}
       : { [ACTOR_HEADER]: encodeActorHeader(options.actor) };
 
