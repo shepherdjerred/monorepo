@@ -24,8 +24,17 @@
 .ar-cv-viewport[data-pan="true"] {
   cursor: grab;
 }
-.ar-cv[data-commenting="true"] .ar-cv-viewport {
-  cursor: crosshair;
+/* Comment mode: the speech-bubble cursor wherever a click would place a pin. */
+.ar-cv[data-commenting="true"] .ar-cv-viewport,
+.ar-cv[data-commenting="true"] .ar-cf,
+.ar-cv[data-commenting="true"] .ar-cf * {
+  cursor: var(--ar-comment-cursor);
+}
+.ar-cv [data-cv-ignore] {
+  cursor: default;
+}
+.ar-cv [data-cv-ignore] :is(button, a, .ar-pin) {
+  cursor: pointer;
 }
 .ar-cv-blanket {
   position: absolute;
@@ -91,8 +100,17 @@
   font-size: 12.5px;
   pointer-events: auto;
 }
+/* One ring only: the frame carries the selection ring, the chip a tint. */
 .ar-cv-chip[data-selected="true"] {
-  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--ui-panel));
+}
+.ar-cv-chip-main:focus-visible {
+  outline: none;
+}
+/* Keyboard focus is shown on the whole chip, not as a second ring inside it. */
+.ar-cv-chip:has(.ar-cv-chip-main:focus-visible) {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 1px;
 }
 .ar-cv-chip-main {
   flex: 1;

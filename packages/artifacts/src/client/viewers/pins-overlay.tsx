@@ -1,6 +1,7 @@
 import { useLayoutEffect, useState } from "react";
 import { clusterPins, type PinCluster } from "#client/lib/cluster.ts";
 import type { Pin } from "#client/lib/pins.ts";
+import { PinBubble } from "./pin-bubble.tsx";
 import type { AnchorAdapter } from "./types.ts";
 
 type Placed = {
@@ -87,30 +88,24 @@ export function PinsOverlay({
         const hollow = members.every((pin) => pin.stale);
         const resolved = members.every((pin) => pin.state === "resolved");
         return (
-          <button
+          <PinBubble
             key={cluster.ids.join(",")}
-            type="button"
-            className="ar-pin"
-            data-selected={selected}
-            data-hollow={hollow}
-            data-resolved={resolved}
-            data-approximate={approximate}
-            data-testid="pin"
-            style={{ left: cluster.x, top: cluster.y }}
-            aria-pressed={selected}
-            aria-label={
+            label={
               members.length === 1
                 ? describePin(first)
                 : `${String(members.length)} threads: ${members.map((pin) => String(pin.index)).join(", ")}`
             }
-            title={approximate ? "Approximate position" : undefined}
+            text={members.length === 1 ? first.index : members.length}
+            selected={selected}
+            hollow={hollow}
+            resolved={resolved}
+            approximate={approximate}
+            style={{ left: cluster.x, top: cluster.y }}
             onClick={(event) => {
               event.stopPropagation();
               onSelect(next.id);
             }}
-          >
-            {members.length === 1 ? first.index : members.length}
-          </button>
+          />
         );
       })}
     </div>

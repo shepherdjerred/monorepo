@@ -7,6 +7,11 @@
   --ar-top: 44px;
   --ar-pin: var(--ui-accent);
   --ar-pin-ink: var(--ui-on-accent);
+  /* The comment cursor: a speech bubble whose tail tip (2, 31) is the hotspot. */
+  --ar-comment-cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='32' viewBox='-1 -1 28 32'%3E%3Cpath d='M13 .75C19.9 .75 25.25 5.4 25.25 11C25.25 16.6 19.9 21.25 13 21.25H11L1 30L4.6 20.2C2.2 18.4 .75 15.1 .75 11C.75 5.4 6.1 .75 13 .75Z' fill='none' stroke='%23000' stroke-opacity='.3' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M13 .75C19.9 .75 25.25 5.4 25.25 11C25.25 16.6 19.9 21.25 13 21.25H11L1 30L4.6 20.2C2.2 18.4 .75 15.1 .75 11C.75 5.4 6.1 .75 13 .75Z' fill='%23fff' stroke='%23176b4d' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E")
+      2 31,
+    crosshair;
 }
 
 body {

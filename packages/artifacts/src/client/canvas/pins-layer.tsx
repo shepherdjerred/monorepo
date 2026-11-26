@@ -10,6 +10,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { clusterPins } from "#client/lib/cluster.ts";
 import type { Point } from "#client/lib/geometry.ts";
 import { describePin } from "#client/viewers/pins-overlay.tsx";
+import { PinBubble } from "#client/viewers/pin-bubble.tsx";
 import type { AnchorAdapter } from "#client/viewers/types.ts";
 import {
   screenToWorld,
@@ -142,29 +143,23 @@ function PinMarker({
       : first;
   return (
     <div ref={ref} className="ar-cv-pin" data-cv-ignore="">
-      <button
-        type="button"
-        className="ar-pin"
-        data-testid="pin"
-        data-selected={selected}
-        data-hollow={pins.every((pin) => pin.stale)}
-        data-resolved={pins.every((pin) => pin.state === "resolved")}
-        data-approximate={approximate}
-        data-board-pin={first.frameId === null}
-        aria-pressed={selected}
-        aria-label={
+      <PinBubble
+        label={
           pins.length === 1
             ? describePin(first)
             : `${String(pins.length)} threads: ${pins.map((pin) => String(pin.index)).join(", ")}`
         }
-        title={approximate ? "Approximate position" : undefined}
+        text={pins.length === 1 ? first.index : pins.length}
+        selected={selected}
+        hollow={pins.every((pin) => pin.stale)}
+        resolved={pins.every((pin) => pin.state === "resolved")}
+        approximate={approximate}
+        boardPin={first.frameId === null}
         onClick={(event) => {
           event.stopPropagation();
           onSelect(next.id);
         }}
-      >
-        {pins.length === 1 ? first.index : pins.length}
-      </button>
+      />
     </div>
   );
 }

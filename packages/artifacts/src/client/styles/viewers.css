@@ -104,13 +104,17 @@
 }
 .ar-stage[data-commenting="true"],
 .ar-stage[data-commenting="true"] * {
-  cursor: crosshair;
+  cursor: var(--ar-comment-cursor);
 }
 .ar-stage[data-commenting="true"] .ar-pin {
   cursor: pointer;
 }
 
-/* Pins: constant size, never scaled with the content. */
+/*
+ * Pins: constant size, never scaled with the content. A pin is a 26 x 30
+ * speech bubble whose tail tip is the anchor, so the box is shifted left and
+ * up by the tip's position (see lib/pin-shape.ts).
+ */
 .ar-pins {
   position: absolute;
   inset: 0;
@@ -121,37 +125,59 @@
   position: absolute;
   display: grid;
   place-items: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 4px;
-  border: 2px solid var(--ui-panel);
-  border-radius: 999px 999px 999px 2px;
-  background: var(--ar-pin);
+  width: 26px;
+  height: 30px;
+  padding: 0 0 8px;
+  border: 0;
+  background: none;
   color: var(--ar-pin-ink);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 1px 4px color-mix(in srgb, black 35%, transparent);
-  transform: translate(-2px, -100%);
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, black 40%, transparent));
+  transform: translate(-1px, -30px);
   pointer-events: auto;
   cursor: pointer;
 }
-.ar-pin[data-hollow="true"] {
-  background: var(--ui-panel);
-  border-color: var(--ar-pin);
+.ar-pin svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ar-pin path {
+  fill: var(--ar-pin);
+  stroke: var(--ui-panel);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ar-pin-n {
+  position: relative;
+}
+/* A thread on another version, or a position that is a guess: not filled. */
+.ar-pin[data-hollow="true"],
+.ar-pin[data-approximate="true"] {
   color: var(--ar-pin);
+}
+.ar-pin[data-hollow="true"] path,
+.ar-pin[data-approximate="true"] path {
+  fill: var(--ui-panel);
+  stroke: var(--ar-pin);
+}
+.ar-pin[data-approximate="true"] path {
+  stroke-dasharray: 3 2;
 }
 .ar-pin[data-resolved="true"] {
   opacity: 0.55;
   filter: grayscale(1);
 }
-.ar-pin[data-approximate="true"] {
-  border-style: dashed;
-}
 .ar-pin[data-selected="true"] {
-  outline: 3px solid color-mix(in srgb, var(--ar-pin) 45%, transparent);
-  outline-offset: 1px;
   z-index: 2;
+  filter: drop-shadow(0 0 3px var(--ar-pin));
+}
+.ar-pin[data-selected="true"] path {
+  stroke-width: 2.25;
 }
 .ar-pin-badge {
   display: inline-grid;
