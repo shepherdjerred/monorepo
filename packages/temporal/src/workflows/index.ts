@@ -161,6 +161,7 @@ import {
 } from "./ops/llm-archive-index.ts";
 import type { SyncLlmArchiveIndexResult } from "#activities/ops/llm-archive/llm-archive-index.ts";
 import { runRenovateDeltaEnrichment as _runRenovateDeltaEnrichment } from "./ops/renovate-delta-enrichment.ts";
+import * as renovate from "./ops/renovate-automation.ts";
 import * as agentChat from "./agent-chat/entrypoints.ts";
 import type {
   BlueBubblesCursor,
@@ -168,13 +169,11 @@ import type {
 } from "#shared/agent/agent-chat-imessage.ts";
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
-import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
+import * as photonMessage from "./photon/message.ts";
 import * as photonConversation from "./photon/conversation.ts";
 export const photonConversationWorkflow =
   photonConversation.photonConversationWorkflow;
-export const photonAgentChatWorkflow = (
-  ...args: Parameters<typeof _photonAgentChatWorkflow>
-) => _photonAgentChatWorkflow(...args);
+export const photonAgentChatWorkflow = photonMessage.photonAgentChatWorkflow;
 export async function blueBubblesIngressWorkflow(
   cursor: BlueBubblesCursor,
 ): Promise<never> {
@@ -400,6 +399,8 @@ export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
 export const runOpsSnapshot = () => _runOpsSnapshot();
 export const runRenovateDeltaEnrichment = () => _runRenovateDeltaEnrichment();
+export const runDailyRenovateRanking = renovate.runDailyRenovateRanking;
+export const runRenovateBundleDispatch = renovate.runRenovateBundleDispatch;
 export async function runLlmArchiveIndex(
   input: LlmArchiveIndexWorkflowInput = {},
 ): Promise<SyncLlmArchiveIndexResult> {

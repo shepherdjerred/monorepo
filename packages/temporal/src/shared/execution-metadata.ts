@@ -135,6 +135,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runFlagInventorySync: "repo",
   runLlmBilledCostReconciliation: "platform",
   generateDependencySummary: "repo",
+  runDailyRenovateRanking: "repo",
+  runRenovateBundleDispatch: "repo",
   runPokeemeraldDataRefresh: "repo",
   cancelCiPipelinesWorkflow: "repo",
   checkPrMergeConflictsWorkflow: "repo",

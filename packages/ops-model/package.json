@@ -36,6 +36,7 @@
     "./catalog-document.json": "./catalog-document.json",
     "./facets.ts": "./src/facets/index.ts",
     "./llm-traces.ts": "./src/llm-traces/index.ts",
+    "./renovate-ranking.ts": "./src/renovate/ranking.ts",
     "./*": "./src/*"
   }
 }

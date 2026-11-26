@@ -593,6 +593,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Awaits a single bounded enrichRenovateVersionDeltas Activity on the ops
   // queue. No workflow-level sleeps.
   "runRenovateDeltaEnrichment",
+  "runDailyRenovateRanking",
+  "runRenovateBundleDispatch",
   // Loops up to five bounded syncLlmArchiveIndex Activities on the infra queue
   // and continues as new if more objects remain; no workflow-level sleeps.
   "runLlmArchiveIndex",

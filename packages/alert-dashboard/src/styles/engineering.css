@@ -54,6 +54,51 @@
   overflow-wrap: anywhere;
 }
 
+.eng-renovate-ranking {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin-block-end: 18px;
+}
+
+.eng-renovate-ranking .block-heading,
+.eng-renovate-meta {
+  margin: 0;
+}
+
+.eng-renovate-meta,
+.eng-renovate-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--ui-muted);
+  font-size: 0.78rem;
+}
+
+.eng-renovate-filters > div {
+  display: grid;
+  gap: 4px;
+}
+
+.eng-renovate-warnings {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.eng-renovate-assessment ul {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.eng-renovate-evidence .eng-ext-link {
+  white-space: normal;
+}
+
 /* ---- Headline Meters & KPI Strip ---- */
 .eng-meters-grid {
   display: grid;

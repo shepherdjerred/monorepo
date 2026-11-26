@@ -192,11 +192,13 @@ export type OpenPrInput = {
   branch: string;
   title: string;
   body: string;
+  commitBody?: string;
   files: readonly string[];
   ghToken: string;
   repoSlug: string;
   mainBranch: string;
   signal?: AbortSignal;
+  beforePush?: (commitHash: string) => Promise<void>;
 };
 
 export type OpenPrResult = {
@@ -452,6 +454,7 @@ export async function pushOwnedGeneratedCommit(input: {
   gitEnv: Record<string, string>;
   expectedRemoteSha: string | undefined;
   signal?: AbortSignal;
+  beforePush?: (commitHash: string) => Promise<void>;
 }): Promise<string> {
   input.signal?.throwIfAborted();
   if (input.expectedRemoteSha !== undefined) {
@@ -464,6 +467,8 @@ export async function pushOwnedGeneratedCommit(input: {
     cwd: input.repoDir,
     ...(input.signal === undefined ? {} : { signal: input.signal }),
   });
+  await input.beforePush?.(commitHash);
+  input.signal?.throwIfAborted();
   await pushGeneratedBranch(input);
   return commitHash;
 }
@@ -498,6 +503,9 @@ export async function openSeasonRefreshPr(
     gitEnv,
     ...signalOpt,
   });
+  if (expectedRemoteSha !== undefined && input.beforePush !== undefined) {
+    throw new Error(`Refusing to replace journaled branch ${input.branch}`);
+  }
   await runCommand(["git", "checkout", "-B", input.branch], {
     cwd: input.repoDir,
     ...signalOpt,
@@ -510,7 +518,9 @@ export async function openSeasonRefreshPr(
   // earlier — an agentic Claude/Codex step upstream of this call may have
   // armed them on its own initiative (e.g. running a plain `bun install`).
   await disarmGitHooks(input.repoDir);
-  await runCommand(["git", "commit", "-m", input.title], {
+  const commitArgs = ["git", "commit", "-m", input.title];
+  if (input.commitBody !== undefined) commitArgs.push("-m", input.commitBody);
+  await runCommand(commitArgs, {
     cwd: input.repoDir,
     ...signalOpt,
   });
@@ -519,6 +529,7 @@ export async function openSeasonRefreshPr(
     branch: input.branch,
     gitEnv,
     expectedRemoteSha,
+    ...(input.beforePush === undefined ? {} : { beforePush: input.beforePush }),
     ...signalOpt,
   });
   // Idempotency across activity retries: if a PR for this head branch already

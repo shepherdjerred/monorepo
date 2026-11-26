@@ -1,7 +1,11 @@
 import { Hono, type Context } from "hono";
 import type { KeyObject } from "node:crypto";
 import { ConfigExtensionRequestSchema, type Pipeline } from "#src/schemas.ts";
-import { authorizePipeline } from "#src/authorization.ts";
+import {
+  authorizePipeline,
+  requiresPrHeadApproval,
+  type ActorClass,
+} from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
@@ -71,8 +75,8 @@ export type AppOptions = {
     branch: string,
   ) => Promise<SuccessfulWorkflowPipeline | undefined>;
   readonly compareChangedFiles?: typeof changedFilesSince;
-  /** Checks an exact hosted-automation head against forge review state. */
-  readonly hostedAutomationApproved?: (pipeline: Pipeline) => Promise<boolean>;
+  /** Checks an exact automation proposal head against forge review state. */
+  readonly automationHeadApproved?: (pipeline: Pipeline) => Promise<boolean>;
   /** Best-effort capacity cleanup; never substitutes for current-head gates. */
   readonly cancelSupersededPr?: (
     repoId: number,
@@ -80,18 +84,16 @@ export type AppOptions = {
   ) => Promise<unknown>;
 };
 
-async function needsCredentiallessHostedAutomation(
-  actorClass: "owner-controlled" | "hosted-automation",
+async function needsCredentiallessPrVerification(
+  actorClass: ActorClass,
   pipeline: Pipeline,
-  approvalCheck: AppOptions["hostedAutomationApproved"],
+  approvalCheck: AppOptions["automationHeadApproved"],
 ): Promise<boolean> {
-  if (actorClass !== "hosted-automation" || !isPrVerificationEvent(pipeline)) {
-    return false;
-  }
+  if (!requiresPrHeadApproval(pipeline, actorClass)) return false;
   try {
     return (await approvalCheck?.(pipeline)) !== true;
   } catch (error) {
-    console.warn("hosted automation approval lookup failed", error);
+    console.warn("automation head approval lookup failed", error);
     return true;
   }
 }
@@ -385,10 +387,10 @@ export function createApp(options: AppOptions): Hono {
       defaultBranch: repo.default_branch,
       changedFiles: pipeline.changed_files,
     };
-    const credentiallessAutomation = await needsCredentiallessHostedAutomation(
+    const credentiallessAutomation = await needsCredentiallessPrVerification(
       authorization.actorClass,
       pipeline,
-      options.hostedAutomationApproved,
+      options.automationHeadApproved,
     );
     if (maintenance.kind !== undefined) {
       let verified: Promise<string | undefined> | undefined;

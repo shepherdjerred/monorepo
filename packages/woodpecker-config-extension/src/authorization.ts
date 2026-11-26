@@ -18,6 +18,10 @@
  */
 
 import type { Pipeline } from "#src/schemas.ts";
+import { isPrVerificationEvent } from "#src/pr-event.ts";
+
+const REPOSITORY_BOT = "long-summer-intern[bot]";
+const RENOVATE_BUNDLE_HEAD = /^chore\/renovate-bundle-[0-9a-f]{16}$/u;
 
 /**
  * Forge logins permitted to start a pipeline.
@@ -34,7 +38,7 @@ export const OWNER_CONTROLLED_ACTORS: readonly string[] = [
   "derrej",
   // The repository's own GitHub App: release commits, version pin commit-back,
   // and the CI image refresh lanes all push under this identity.
-  "long-summer-intern[bot]",
+  REPOSITORY_BOT,
   // The local Tracker queue publishes its owner-requested work under this App.
   "justin-principal-engineer[bot]",
 ];
@@ -55,6 +59,23 @@ export type ActorClass = "owner-controlled" | "hosted-automation";
 export type AuthorizationResult =
   | { readonly allowed: true; readonly actorClass: ActorClass }
   | { readonly allowed: false; readonly reason: string };
+
+/** Credential grants require the owner to review an automated proposal's SHA. */
+export function requiresPrHeadApproval(
+  pipeline: Pipeline,
+  actorClass: ActorClass,
+): boolean {
+  if (!isPrVerificationEvent(pipeline)) return false;
+  if (actorClass === "hosted-automation") return true;
+  if (pipeline.author !== REPOSITORY_BOT) return false;
+
+  // Woodpecker signs the GitHub PR source:target refspec. `branch` is the
+  // target, so looking there would miss a bundle proposed against main.
+  const [source = "", target, extra] = pipeline.refspec.split(":");
+  const validRefspec =
+    extra === undefined && source !== "" && target === pipeline.branch;
+  return !validRefspec || RENOVATE_BUNDLE_HEAD.test(source);
+}
 
 /**
  * Decide whether a pipeline may be generated.

@@ -22,6 +22,7 @@
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
 # binaries — no QEMU fallback needed.
 FROM public.ecr.aws/aws-cli/aws-cli:2.37.12@sha256:ce44b800602264c12298bbf3399055a4cefdb9ed4a098abe564afe26e7071bce AS aws-cli
+FROM node:24.22.3-bookworm-slim@sha256:873f586f3794f52281bd039bf02c048a0be08fde619338f9941bad1eb6b34530 AS renovate-node
 FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
 
@@ -176,6 +177,7 @@ RUN case "$(dpkg --print-architecture)" in \
 
 # ── runtime: operator CLIs + COPY-only app layers ───────────────────────────
 FROM base AS runtime
+COPY --from=renovate-node /usr/local/bin/node /usr/local/bin/node
 COPY --from=aws-cli /usr/local/aws-cli /usr/local/aws-cli
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws && aws --version
 
@@ -233,7 +235,7 @@ ARG POSTGRESQL_BINARIES_VERSION=18.7.0
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git git-lfs iptables libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libxml2 procps socat tini tzdata util-linux xz-utils; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git git-lfs iptables libatomic1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libxml2 procps socat tini tzdata util-linux xz-utils; \
     rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache
 
 # Use the same upstream 7zz artifact as local and CI tests. Debian's 7zip

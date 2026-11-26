@@ -380,6 +380,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "the-storm-rwf-recording-archive-enabled",
   "temporal-renovate-llm-delta-enabled",
   "temporal-code-review-enabled",
+  "temporal-renovate-publishing-enabled",
   "temporal-report-auto-remediation-enabled",
 ] as const;
 

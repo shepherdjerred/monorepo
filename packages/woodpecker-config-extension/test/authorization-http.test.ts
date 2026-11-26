@@ -31,7 +31,7 @@ type HarnessLanes = {
 };
 
 function harness(
-  hostedAutomationApproved = false,
+  approved: boolean | Error = false,
   trustedGateImage?: string,
   cacheEnabled = false,
   lanes: HarnessLanes = {},
@@ -47,6 +47,11 @@ function harness(
   );
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
+  const automationHeadApproved = vi.fn(() =>
+    typeof approved === "boolean"
+      ? Promise.resolve(approved)
+      : Promise.reject(approved),
+  );
   const performance = lanes.performance;
   const app = createApp({
     deliveryPublicationEnabled: () => Promise.resolve(true),
@@ -67,7 +72,7 @@ function harness(
     verifyBase: base,
     imageReleaseBase: base,
     cancelSupersededPr,
-    hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
+    automationHeadApproved,
   });
   return {
     app,
@@ -76,6 +81,7 @@ function harness(
     changedBase,
     cancelSupersededPr,
     sourceCacheEnabled,
+    automationHeadApproved,
   };
 }
 
@@ -756,4 +762,113 @@ describe("hosted Renovate pipeline authorization", () => {
     );
     expect(base).toHaveBeenCalled();
   });
+});
+
+describe("repository bot dependency proposal authorization", () => {
+  const branch = "chore/renovate-bundle-0123456789abcdef";
+  const bundle = {
+    author: "long-summer-intern[bot]",
+    sender: "shepherdjerred",
+    branch: "main",
+    refspec: `${branch}:main`,
+    changed_files: [
+      "package.json",
+      "bun.lock",
+      "packages/toolkit/src/example.ts",
+    ],
+  };
+
+  test.each([
+    {},
+    { event: "pull_request_metadata", event_reason: ["ready_for_review"] },
+    { refspec: "" },
+  ])(
+    "keeps an unapproved repo proposal credentialless with %j",
+    async (overrides) => {
+      const {
+        app,
+        automationHeadApproved,
+        sourceCacheEnabled,
+        cancelSupersededPr,
+      } = harness(false, TEST_IMAGES.base, true);
+      const response = await app.request(
+        await request({ ...bundle, ...overrides }),
+      );
+      const result = ConfigResponseSchema.parse(await response.json());
+      expect(response.status).toBe(200);
+      expect(automationHeadApproved).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          author: bundle.author,
+          commit: fixture.pipeline.commit,
+          ref: fixture.pipeline.ref,
+        }),
+      );
+      expect(result.configs.map((entry) => entry.name).sort()).toEqual([
+        ".woodpecker/semgrep.yaml",
+        ".woodpecker/trivy.yaml",
+        ".woodpecker/verify.yaml",
+      ]);
+      const emitted = result.configs.map((entry) => entry.data).join("\n");
+      expect(emitted).not.toMatch(/secrets:|woodpecker-source-|TURBO_TOKEN/u);
+      expect(sourceCacheEnabled).not.toHaveBeenCalled();
+      expect(cancelSupersededPr).not.toHaveBeenCalled();
+    },
+  );
+
+  test("normal verification is admitted after review of the same head", async () => {
+    const { app, automationHeadApproved } = harness(true);
+    const response = await app.request(await request(bundle));
+    expect(response.status).toBe(200);
+    expect(automationHeadApproved).toHaveBeenCalledOnce();
+    expect(await response.json()).toMatchObject({
+      configs: expect.arrayContaining([
+        expect.objectContaining({ name: ".woodpecker/ci-complete.yaml" }),
+      ]),
+    });
+  });
+
+  test("keeps the credentialless graph when GitHub review state is unavailable", async () => {
+    const { app } = harness(new Error("review unavailable"));
+    const response = await app.request(await request(bundle));
+    expect(response.status).toBe(200);
+    const { configs } = ConfigResponseSchema.parse(await response.json());
+    expect(configs.map((entry) => entry.name)).toContain(
+      ".woodpecker/verify.yaml",
+    );
+    expect(configs.map((entry) => entry.name)).not.toContain(
+      ".woodpecker/ci-complete.yaml",
+    );
+    expect(configs.map((entry) => entry.data).join("\n")).not.toContain(
+      "secrets:",
+    );
+  });
+
+  test.each([
+    { author: BOT },
+    { branch, refspec: `chore/regular-bot-pr:${branch}` },
+    { refspec: `${branch}-extra:main` },
+    { refspec: "chore/renovate-bundle-0123456789ABCDEf:main" },
+  ])(
+    "does not require proposal approval for unrelated metadata %j",
+    async (overrides) => {
+      const { app, automationHeadApproved } = harness();
+      const response = await app.request(
+        await request({ ...bundle, ...overrides }),
+      );
+      expect(response.status).toBe(200);
+      expect(automationHeadApproved).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each([{ from_fork: true }, { sender: "mallory" }])(
+    "rejects the signed proposal before review lookup for %j",
+    async (overrides) => {
+      const { app, automationHeadApproved } = harness(true);
+      const response = await app.request(
+        await request({ ...bundle, ...overrides }),
+      );
+      expect(response.status).toBe(403);
+      expect(automationHeadApproved).not.toHaveBeenCalled();
+    },
+  );
 });
