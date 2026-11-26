@@ -521,7 +521,6 @@
   ],
   "ignoreDependencies": [
     "@eslint-community/eslint-plugin-eslint-comments",
-    "@eslint/compat",
     "@eslint/eslintrc",
     "@eslint/js",
     "@fontsource/roboto",
