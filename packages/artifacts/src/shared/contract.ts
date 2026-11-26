@@ -335,6 +335,9 @@ export const BoardOpSchema = z.discriminatedUnion("op", [
           x: Coordinate,
           y: Coordinate,
           page: PageIndex.optional(),
+          /** A resize: both optional, so a plain move leaves the size alone. */
+          w: Size.optional(),
+          h: Size.optional(),
         }),
       )
       .min(1)

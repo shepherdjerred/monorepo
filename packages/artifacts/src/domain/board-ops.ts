@@ -54,7 +54,14 @@ function move(index: BoardIndex, op: Extract<BoardOp, { op: "moveFrames" }>) {
       step.page !== undefined && step.page < index.pages.length
         ? step.page
         : frame.page;
-    frames[step.artifactId] = { ...frame, x: step.x, y: step.y, page };
+    frames[step.artifactId] = {
+      ...frame,
+      x: step.x,
+      y: step.y,
+      page,
+      w: step.w ?? frame.w,
+      h: step.h ?? frame.h,
+    };
   }
   return { ...index, frames };
 }

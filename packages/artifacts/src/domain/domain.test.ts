@@ -317,6 +317,19 @@ describe("board operations", () => {
     expect(next.frames[A]).toMatchObject({ x: 5, y: 6, page: 0 });
     expect(C in next.frames).toBe(false);
   });
+  it("resizes in a move and leaves the size alone otherwise", () => {
+    const resized = applyBoardOps(placed, [
+      {
+        op: "moveFrames",
+        moves: [{ artifactId: A, x: 5, y: 6, w: 800, h: 500 }],
+      },
+    ]);
+    expect(resized.frames[A]).toMatchObject({ x: 5, y: 6, w: 800, h: 500 });
+    const moved = applyBoardOps(resized, [
+      { op: "moveFrames", moves: [{ artifactId: A, x: 7, y: 8 }] },
+    ]);
+    expect(moved.frames[A]).toMatchObject({ x: 7, y: 8, w: 800, h: 500 });
+  });
   it("reorders without losing or duplicating ids", () => {
     const next = applyBoardOps(placed, [
       { op: "reorder", order: [B, B, C, "zzz"] },
