@@ -14,6 +14,7 @@ const EnvSchema = z
 const ProbeSchema = z
   .object({
     failureThreshold: z.number(),
+    exec: z.object({ command: z.array(z.string()) }).optional(),
     httpGet: z
       .object({
         path: z.string(),
@@ -22,6 +23,7 @@ const ProbeSchema = z
       })
       .optional(),
     periodSeconds: z.number(),
+    timeoutSeconds: z.number().optional(),
     tcpSocket: z
       .object({
         port: z.number(),
@@ -34,6 +36,7 @@ const ContainerSchema = z
   .object({
     name: z.string(),
     image: z.string(),
+    restartPolicy: z.string().optional(),
     env: z.array(EnvSchema).optional(),
     ports: z
       .array(
@@ -99,6 +102,7 @@ const DeploymentSchema = z
           spec: z
             .object({
               containers: z.array(ContainerSchema),
+              initContainers: z.array(ContainerSchema),
               volumes: z.array(
                 z
                   .object({
@@ -179,8 +183,9 @@ const qbittorrentMetricsService = ServiceSchema.parse(
 );
 
 function getContainer(name: string): z.infer<typeof ContainerSchema> {
+  const { containers, initContainers } = deployment.spec.template.spec;
   return ContainerSchema.parse(
-    deployment.spec.template.spec.containers.find(
+    [...containers, ...initContainers].find(
       (container) => container.name === name,
     ),
   );
@@ -209,12 +214,37 @@ describe("qBittorrent deployment", () => {
       deployment.spec.template.spec.containers.map(
         (container) => container.name,
       ),
-    ).toEqual(["gluetun", "qbittorrent", "qbittorrent-exporter"]);
+    ).toEqual(["qbittorrent", "qbittorrent-exporter"]);
     expect(
       deployment.spec.template.spec.volumes.flatMap((volume) =>
         volume.configMap?.name ? [volume.configMap.name] : [],
       ),
-    ).toEqual(["qbittorrent-config"]);
+    ).toEqual(["qbittorrent-config-v53"]);
+  });
+
+  it("establishes the AirVPN tunnel in Vancouver before starting qBittorrent", () => {
+    expect(
+      deployment.spec.template.spec.initContainers.map(
+        (container) => container.name,
+      ),
+    ).toEqual(["qbittorrent-config-seed", "gluetun"]);
+    const gluetun = getContainer("gluetun");
+    expect(gluetun.restartPolicy).toBe("Always");
+    expect(gluetun.startupProbe).toEqual({
+      exec: { command: ["/gluetun-entrypoint", "healthcheck"] },
+      periodSeconds: 5,
+      timeoutSeconds: 3,
+      failureThreshold: 24,
+    });
+    expect(gluetun.env).toEqual(
+      expect.arrayContaining([
+        { name: "VPN_SERVICE_PROVIDER", value: "airvpn" },
+        { name: "VPN_TYPE", value: "wireguard" },
+        { name: "VPN_INTERFACE", value: "wg0" },
+        { name: "SERVER_CITIES", value: "Vancouver" },
+        { name: "FIREWALL_VPN_INPUT_PORTS", value: "17826" },
+      ]),
+    );
   });
 
   it("gates WebUI traffic on qBittorrent readiness while keeping metrics discoverable", () => {
