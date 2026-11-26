@@ -65,14 +65,6 @@ export function utcDayKey(now: Date): string {
   return now.toISOString().slice(0, 10);
 }
 
-/**
- * Production stays disabled until the plan's third gate (deletion deployed,
- * privacy page live, Riot declaration made), whatever the flag answers.
- */
-export function crawlHardDisabledIn(environment: "dev" | "beta" | "prod") {
-  return environment === "prod";
-}
-
 /** A deterministic 20% of matches get a timeline; the same id always answers alike. */
 export function shouldSampleTimeline(matchId: string): boolean {
   const digest = createHash("sha256").update(matchId).digest();

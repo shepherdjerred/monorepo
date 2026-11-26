@@ -251,9 +251,8 @@ const DEFINITION = {
     names: { flag: "scout-riot-budget-mode" },
   },
   /**
-   * Whether the participant crawl runs. Off everywhere by default; production
-   * stays hard-disabled in code (`crawl/crawl-config.ts`) until deletion, the
-   * privacy page and the Riot declaration are live, whatever this answers.
+   * Whether the participant crawl runs. Off by default; this flag alone
+   * decides, in every environment.
    */
   participantCrawlEnabled: {
     schema: z.boolean(),
