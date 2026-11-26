@@ -31,15 +31,20 @@ export function parseStatusPorcelainZ(stdout: string): string[] {
  * (which would look like activity and contend with a live session), and
  * fsmonitor is off so inspecting an idle worktree never starts a daemon.
  *
- * `--untracked-files=all` names every untracked file instead of only the
- * directory that holds it. Editing a file does not move its directory's
- * mtime, so without the files themselves recent work inside an old untracked
- * directory would not count as activity. It also overrides a user setting
- * that hides untracked files.
+ * `untrackedFiles` is always given, so that a user's own setting never
+ * decides it:
+ *
+ * - `all` names every untracked file instead of only the directory that
+ *   holds it. Editing a file does not move its directory's mtime, so without
+ *   the files themselves recent work inside an old untracked directory would
+ *   not count as activity. It costs git its untracked cache and a full walk.
+ * - `no` reports changes to tracked files only and skips that walk, for a
+ *   caller that never looks at untracked files.
  */
 export async function readWorktreeStatus(
   wtPath: string,
   runner: CommandRunner,
+  untrackedFiles: "all" | "no",
 ): Promise<WorktreeStatus> {
   const res = await runner(
     [
@@ -49,7 +54,7 @@ export async function readWorktreeStatus(
       "core.fsmonitor=false",
       "status",
       "--porcelain",
-      "--untracked-files=all",
+      `--untracked-files=${untrackedFiles}`,
       "-z",
     ],
     { cwd: wtPath, timeoutMs: WORKTREE_STATUS_TIMEOUT_MS },

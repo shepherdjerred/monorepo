@@ -443,11 +443,18 @@ describe("readWorktreeStatus with real git", () => {
       // Even when the user's configuration hides untracked files.
       await git(wt, "config", "status.showUntrackedFiles", "no");
 
-      const status = await readWorktreeStatus(wt, runner);
+      const status = await readWorktreeStatus(wt, runner, "all");
 
       expect(status).toEqual({
         kind: "dirty",
         paths: ["scratch/deep/draft.txt", "scratch/other.txt"],
+      });
+
+      // A caller that only cares about tracked files skips the walk.
+      await write(wt, "tracked.txt", "edited\n");
+      expect(await readWorktreeStatus(wt, runner, "no")).toEqual({
+        kind: "dirty",
+        paths: ["tracked.txt"],
       });
     },
     REAL_GIT_TIMEOUT_MS,

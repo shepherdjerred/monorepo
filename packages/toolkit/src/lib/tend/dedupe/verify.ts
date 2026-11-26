@@ -25,8 +25,31 @@ export function parseIndexLine(line: string): IndexEntry | null {
     : null;
 }
 
-/** Paths per git invocation, far inside the limit on argument length. */
-const PATHS_PER_COMMAND = 500;
+/**
+ * Bytes of path arguments per git invocation: a few thousand paths, and far
+ * inside the limit on argument length on every platform.
+ */
+const PATH_BYTES_PER_COMMAND = 120_000;
+
+function batchPaths(paths: readonly string[]): string[][] {
+  const batches: string[][] = [];
+  let batch: string[] = [];
+  let bytes = 0;
+  for (const filePath of paths) {
+    const size = Buffer.byteLength(filePath) + 1;
+    if (batch.length > 0 && bytes + size > PATH_BYTES_PER_COMMAND) {
+      batches.push(batch);
+      batch = [];
+      bytes = 0;
+    }
+    batch.push(filePath);
+    bytes += size;
+  }
+  if (batch.length > 0) {
+    batches.push(batch);
+  }
+  return batches;
+}
 
 /**
  * Run a git command over `paths` in batches and join the output. `null` when
@@ -39,11 +62,11 @@ async function gitOverPaths(
   ctx: DedupeContext,
 ): Promise<string | null> {
   let output = "";
-  for (let start = 0; start < paths.length; start += PATHS_PER_COMMAND) {
-    const res = await ctx.runner(
-      ["git", ...argv, "--", ...paths.slice(start, start + PATHS_PER_COMMAND)],
-      { cwd: wt.path, timeoutMs: 300_000 },
-    );
+  for (const batch of batchPaths(paths)) {
+    const res = await ctx.runner(["git", ...argv, "--", ...batch], {
+      cwd: wt.path,
+      timeoutMs: 300_000,
+    });
     if (res.exitCode !== 0) {
       return null;
     }
@@ -52,19 +75,19 @@ async function gitOverPaths(
   return output;
 }
 
-/** The index lines a worktree has right now for `paths`. */
+/**
+ * The index lines a worktree has right now. The whole index is listed again:
+ * that takes a fraction of the time git needs to match thousands of paths.
+ */
 async function readIndexLines(
   wt: DedupeWorktree,
-  paths: readonly string[],
   ctx: DedupeContext,
 ): Promise<Set<string> | null> {
-  const output = await gitOverPaths(
-    wt,
-    ["--literal-pathspecs", "ls-files", "-s", "-v", "-z"],
-    paths,
-    ctx,
-  );
-  return output === null ? null : new Set(output.split("\0"));
+  const res = await ctx.runner(["git", "ls-files", "-s", "-v", "-z"], {
+    cwd: wt.path,
+    timeoutMs: 60_000,
+  });
+  return res.exitCode === 0 ? new Set(res.stdout.split("\0")) : null;
 }
 
 const BYTE_CHANGING_ATTRIBUTES = ["filter", "ident", "working-tree-encoding"];
@@ -137,7 +160,7 @@ export async function confirmTargets(
     return [];
   }
   const paths = pending.map((item) => item.entry.path);
-  const lines = await readIndexLines(wt, paths, ctx);
+  const lines = await readIndexLines(wt, ctx);
   const filtered = await readFilteredPaths(wt, paths, ctx);
   if (lines === null || filtered === null) {
     result.warnings.push(
@@ -189,7 +212,7 @@ async function verifyWorktreeCopies(
   }
   const present = items.filter((_item, index) => before[index] !== null);
   const paths = present.map((item) => item.entry.path);
-  const lines = await readIndexLines(sourceWt, paths, ctx);
+  const lines = await readIndexLines(sourceWt, ctx);
   const filtered = await readFilteredPaths(sourceWt, paths, ctx);
   const hashes = await hashFiles(sourceWt, paths, ctx);
   for (const [index, item] of items.entries()) {

@@ -36,7 +36,9 @@ function cleanCheck(
 ): Promise<CleanCheck> {
   wt.clean ??= (async (): Promise<CleanCheck> => {
     const startedMs = Date.now();
-    const status = await readWorktreeStatus(wt.path, ctx.runner);
+    // Only tracked files are ever replaced, so untracked ones are not
+    // looked for: listing them is most of what a status costs.
+    const status = await readWorktreeStatus(wt.path, ctx.runner, "no");
     if (status.kind === "timeout") {
       return { ok: false, reason: "git status timed out" };
     }

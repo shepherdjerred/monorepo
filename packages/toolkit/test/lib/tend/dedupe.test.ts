@@ -257,6 +257,19 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
 
       const result = await fx.sweep();
 
+      // Only tracked files matter here, so status is never asked to walk
+      // the worktree for untracked ones.
+      const statusCalls = fx.commands.filter((command) =>
+        command.argv.includes("status"),
+      );
+      expect(statusCalls.map((command) => command.cwd).sort()).toEqual([
+        fx.a,
+        fx.b,
+      ]);
+      for (const command of statusCalls) {
+        expect(command.argv).toContain("--untracked-files=no");
+      }
+
       // The three copies now sit on the same blocks.
       expect(new Set(await physicalOffsets(copies)).size).toBe(1);
       expect(result.warnings).toEqual([]);

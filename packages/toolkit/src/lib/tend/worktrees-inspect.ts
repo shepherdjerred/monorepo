@@ -241,7 +241,7 @@ async function gatherWorkFacts(options: {
   readonly ctx: RepoSweepContext;
 }): Promise<WorktreeWorkFacts> {
   const { wt, gitDir, defaultBranch, pr, ctx } = options;
-  const status = await readWorktreeStatus(wt.path, ctx.runner);
+  const status = await readWorktreeStatus(wt.path, ctx.runner, "all");
   if (status.kind === "timeout") {
     return { status: "timeout", timeoutMs: status.timeoutMs };
   }
