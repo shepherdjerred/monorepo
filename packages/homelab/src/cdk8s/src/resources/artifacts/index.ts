@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, EnvValue } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { bunServerEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   dnsEgressRule,
@@ -18,10 +19,12 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
  */
 export const ARTIFACTS_ACTIVE = false;
 
+const ARTIFACTS_PORT = 7440;
+
 export function createArtifactsDeployment(chart: Chart) {
   return new FirstPartyWebService(chart, "artifacts-web-service", {
     name: "artifacts",
-    port: 7440,
+    port: ARTIFACTS_PORT,
     probes: { live: "/healthz", ready: "/healthz" },
     containers: () => ({
       server: {
@@ -32,11 +35,7 @@ export function createArtifactsDeployment(chart: Chart) {
           memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
         },
         envVariables: {
-          // Bun writes runtime state under $HOME; the root filesystem is
-          // read-only, so HOME points at the writable emptyDir.
-          HOME: EnvValue.fromValue("/tmp"),
-          HOST: EnvValue.fromValue("0.0.0.0"),
-          PORT: EnvValue.fromValue("7440"),
+          ...bunServerEnv(ARTIFACTS_PORT),
           ENVIRONMENT: EnvValue.fromValue("production"),
         },
       },
@@ -65,7 +64,7 @@ export function createArtifactsDeployment(chart: Chart) {
         ingress: [
           {
             from: [nsPeer("tailscale"), nsPeer("prometheus")],
-            ports: [tcp(7440)],
+            ports: [tcp(ARTIFACTS_PORT)],
           },
         ],
         // Add an egress rule for each dependency the service calls.

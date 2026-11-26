@@ -1,10 +1,7 @@
 import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
-  createEmptyTestDatabase,
-  ensureSharedPostgres,
-  envWithPostgresBin,
-  runCommandAsync,
+  createMigratedTestDatabase,
   type OwnedTestDatabaseHandle,
 } from "@shepherdjerred/test-postgres";
 import pg from "pg";
@@ -19,23 +16,12 @@ let databaseUrl = "";
 let prisma: PrismaClient;
 
 beforeAll(async () => {
-  const shared = ensureSharedPostgres();
-  dbHandle = await createEmptyTestDatabase({
+  dbHandle = await createMigratedTestDatabase({
     prefix: "tracker",
-    kind: "test",
-    adminUrl: shared.superUrl,
+    packageRoot,
+    packageName: "artifacts",
   });
   databaseUrl = dbHandle.url;
-
-  const migrate = await runCommandAsync(["bun", "run", "migrate:deploy"], {
-    cwd: packageRoot,
-    env: envWithPostgresBin({ DATABASE_URL: databaseUrl }),
-  });
-  if (migrate.exitCode !== 0) {
-    throw new Error(
-      `artifacts prisma migrate deploy failed: ${migrate.stderr || migrate.stdout}`,
-    );
-  }
   prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: databaseUrl }),
   });

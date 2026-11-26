@@ -56,22 +56,25 @@ const MAX_PATH_BYTES = 512;
 
 // ── Actor ───────────────────────────────────────────────────────────────────
 
+/** An optional metadata string bounded to `max` characters. */
+const metadataText = (max: number) => z.string().max(max).optional();
+
 const ActorMetadataSchema = z.strictObject({
-  harness: z.string().max(200).optional(),
-  harnessVersion: z.string().max(200).optional(),
-  model: z.string().max(200).optional(),
-  sessionId: z.string().max(500).optional(),
-  sessionLink: z.string().max(2000).optional(),
-  executable: z.string().max(2000).optional(),
-  hostname: z.string().max(200).optional(),
-  branch: z.string().max(1000).optional(),
-  worktree: z.string().max(2000).optional(),
-  repoHead: z.string().max(200).optional(),
-  cwd: z.string().max(2000).optional(),
-  herdrWorkspace: z.string().max(500).optional(),
-  hcTerminal: z.string().max(500).optional(),
-  parentKey: z.string().max(500).optional(),
-  plan: z.string().max(2000).optional(),
+  harness: metadataText(200),
+  harnessVersion: metadataText(200),
+  model: metadataText(200),
+  sessionId: metadataText(500),
+  sessionLink: metadataText(2000),
+  executable: metadataText(2000),
+  hostname: metadataText(200),
+  branch: metadataText(1000),
+  worktree: metadataText(2000),
+  repoHead: metadataText(200),
+  cwd: metadataText(2000),
+  herdrWorkspace: metadataText(500),
+  hcTerminal: metadataText(500),
+  parentKey: metadataText(500),
+  plan: metadataText(2000),
 });
 
 /**

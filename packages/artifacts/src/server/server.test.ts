@@ -1,12 +1,14 @@
 import { expect, test } from "vitest";
 import { handle } from "./server.ts";
 
-test("reports health", async () => {
-  const response = handle(new Request("http://localhost/healthz"));
+const probe = (path: string) => handle(new Request(`http://localhost${path}`));
+
+test("answers the health probe with ok", async () => {
+  const response = probe("/healthz");
   expect(response.status).toBe(200);
   expect(await response.text()).toBe("ok");
 });
 
-test("answers 404 elsewhere", () => {
-  expect(handle(new Request("http://localhost/")).status).toBe(404);
+test("answers every other path with 404", () => {
+  expect(probe("/").status).toBe(404);
 });
