@@ -2,7 +2,7 @@ import { ChampionPortrait } from "#src/assets/index.tsx";
 import { cn } from "#src/lib/cn.ts";
 
 /** The diameters the redesigned pages use, in CSS pixels. */
-export const CHAMPION_FACE_SIZES = [26, 36, 40, 46, 76, 92] as const;
+export const CHAMPION_FACE_SIZES = [26, 36, 40, 46, 72, 76, 92] as const;
 export type ChampionFaceSize = (typeof CHAMPION_FACE_SIZES)[number];
 
 export type ChampionFaceResult = "win" | "loss";
