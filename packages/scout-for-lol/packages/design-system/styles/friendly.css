@@ -38,6 +38,11 @@
     var(--scout-color-success-on-surface) 17%,
     var(--scout-color-surface)
   );
+  --scout-loss-soft: color-mix(
+    in srgb,
+    var(--scout-color-danger-on-surface) 14%,
+    var(--scout-color-surface)
+  );
 
   /* A hairline ring that lifts an inset pill off its panel, and the floating
      shadow for panels and raised chips. */
