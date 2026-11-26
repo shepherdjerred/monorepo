@@ -6,6 +6,7 @@ import {
 import {
   handleIosAction,
   handleStateChanged,
+  signalClimateReconciler,
   syncPetCareStates,
   syncRoborockStates,
 } from "./triggers.ts";
@@ -116,6 +117,12 @@ export async function startEventBridge(
           const detail = error instanceof Error ? error.message : String(error);
           console.error(`Failed to reconcile Roborock states: ${detail}`);
         }
+        try {
+          await signalClimateReconciler(client);
+        } catch (error: unknown) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.error(`Failed to reconcile climate: ${detail}`);
+        }
       } finally {
         stateSyncInFlight = false;
         if (stateSyncAgain) {
@@ -150,6 +157,7 @@ export async function startEventBridge(
     health.subscriptionsStarted();
     await syncPetCareStates(client, rest);
     await syncRoborockStates(client, rest);
+    await signalClimateReconciler(client);
   } catch (error: unknown) {
     // A supervisor retry must not leave a partially subscribed client alive.
     await events.close();

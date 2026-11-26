@@ -156,6 +156,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   welcomeHome: "home",
   leavingHome: "home",
   reconcileLock: "home",
+  reconcileClimate: "home",
+  applyClimateSchedule: "home",
   reconcileRoborock: "home",
   petCareAlerts: "home",
   motionLight: "home",

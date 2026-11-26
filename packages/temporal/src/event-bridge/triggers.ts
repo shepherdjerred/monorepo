@@ -79,6 +79,7 @@ const MOTION_LIGHT_ROOMS_BY_ENTITY = new Map<
 // spawning per-edge lock/unlock workflows, so a flapping sensor can never make
 // the bolt cycle. See workflows/ha/reconcile-lock.ts.
 const RECONCILE_LOCK_WORKFLOW_ID = "reconcile-lock";
+const RECONCILE_CLIMATE_WORKFLOW_ID = "reconcile-climate";
 const PRESENCE_CHANGED_SIGNAL = "presenceChanged";
 const RECONCILE_ROBOROCK_WORKFLOW_ID = "reconcile-roborock";
 const ROBOROCK_UNAVAILABLE_SIGNAL = "roborockUnavailable";
@@ -225,6 +226,21 @@ async function bumpLockReconciler(client: Client): Promise<void> {
   );
 }
 
+/** Re-apply occupied climate after a presence edge, startup, or reconnect. */
+export async function signalClimateReconciler(client: Client): Promise<void> {
+  await signalSingletonWorkflow(
+    client,
+    "reconcileClimate",
+    {
+      workflowId: RECONCILE_CLIMATE_WORKFLOW_ID,
+      workflowExecutionTimeout: "10 minutes",
+      signal: PRESENCE_CHANGED_SIGNAL,
+      signalArgs: [],
+    },
+    "reconcileClimate",
+  );
+}
+
 function dayKey(): string {
   const now = new Date();
   return `${String(now.getUTCFullYear())}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`;
@@ -317,6 +333,7 @@ async function handlePersonTransition(
   // Every presence transition (both directions) re-arms the debounced lock
   // reconciler; it decides lock/unlock from settled, live state.
   await bumpLockReconciler(client);
+  await signalClimateReconciler(client);
 
   if (oldState === "not_home" && newState === "home") {
     // Fire on every arrival so the door is always unlocked and lights come
