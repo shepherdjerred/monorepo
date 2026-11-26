@@ -371,11 +371,37 @@
       "allowedVersions": "<1.14.1 || >=1.14.3"
     },
     {
-      "description": "Storm's Java convention script resolves tool and library versions from libs.versions.toml. Skip native Gradle extraction of this catalog-only consumer, which mistakes version(\"jacoco\") and version(\"pmd\") for literal versions; the authoritative TOML catalog remains managed.",
+      "description": "Renovate's gradle manager extracts the jacoco and pmd Gradle tool versions as deps whose `version` variable resolves to the plugin's own version in gradle.properties, proposing nonsense bumps such as jacoco 0.8.16 that would rewrite it. The real pins live in libs.versions.toml, tracked through the jacoco-agent and pmd-java catalog libraries.",
       "matchManagers": ["gradle"],
-      "matchFileNames": [
-        "packages/the-storm/plugin/build-logic/src/main/kotlin/storm.java-conventions.gradle.kts"
-      ],
+      "matchDepNames": ["jacoco", "pmd"],
+      "matchFileNames": ["packages/the-storm/plugin/gradle.properties"],
+      "enabled": false
+    },
+    {
+      "description": "Fabric API versions end in +<minecraft version>; stay on the build for the Minecraft version in client-minecraft (libs.versions.toml) and move both by hand together.",
+      "matchPackageNames": ["net.fabricmc.fabric-api:fabric-api"],
+      "allowedVersions": "/\\+26\\.3$/"
+    },
+    {
+      "description": "Hold Renovate's built-in @tsconfig/node24 to @tsconfig/node26 replacement: Node 26 adoption is tracked in Tracker AI-871 and .mise.toml pins node 24.",
+      "matchPackageNames": ["@tsconfig/node24"],
+      "matchUpdateTypes": ["replacement"],
+      "enabled": false
+    },
+    {
+      "description": "Keep @tsconfig/node-lts below node26 until Tracker AI-871 moves Node past the node 24 pin in .mise.toml.",
+      "matchPackageNames": ["@tsconfig/node-lts"],
+      "allowedVersions": "<26"
+    },
+    {
+      "description": "Every Bun pin (mise, Dockerfile images, @types/bun) moves together in one PR.",
+      "groupName": "Bun",
+      "matchPackageNames": ["bun", "oven-sh/bun", "oven/bun", "@types/bun"]
+    },
+    {
+      "description": "The Dockerfile workspace-copy test's FROM lines are fixtures, not images; they otherwise produce a bogus pin-oven/bun branch.",
+      "matchManagers": ["dockerfile"],
+      "matchFileNames": ["scripts/checks/dockerfile-workspace-copies.test.ts"],
       "enabled": false
     },
     {
