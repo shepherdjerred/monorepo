@@ -104,6 +104,10 @@ function validReply(reply: string): boolean {
   );
 }
 
+function normalizeEvidenceWhitespace(value: string): string {
+  return value.replaceAll(/\s+/gu, " ").trim();
+}
+
 /** Draft output may decline a match; it cannot promote or change its qualification. */
 export function guardRedditInviteDraft(
   raw: unknown,
@@ -116,13 +120,16 @@ export function guardRedditInviteDraft(
   if (reply === null) return draft;
   if (MORE_SPECIFIC_SERVER_LOCATION.test(reply))
     return declined("Draft used a more specific location than US West.");
-  const request = `${input.post.title}\n${input.post.body}`;
+  const request = normalizeEvidenceWhitespace(
+    `${input.post.title}\n${input.post.body}`,
+  );
+  const facts = normalizeEvidenceWhitespace(input.serverFacts);
   const evidenceSupported =
     draft.evidence.length > 0 &&
     draft.evidence.every(
       (item) =>
-        request.includes(item.requestQuote) &&
-        input.serverFacts.includes(item.factQuote),
+        request.includes(normalizeEvidenceWhitespace(item.requestQuote)) &&
+        facts.includes(normalizeEvidenceWhitespace(item.factQuote)),
     );
   if (!evidenceSupported)
     return declined(

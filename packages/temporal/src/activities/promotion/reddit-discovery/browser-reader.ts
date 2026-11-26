@@ -252,26 +252,75 @@ export async function readRedditListing(
   });
 }
 
-export async function readRedditThread(
+export const RedditLoadedCommentSchema = z.strictObject({
+  id: z.string().regex(/^[a-z0-9]+$/u),
+  parentId: z.string().regex(/^t[13]_[a-z0-9]+$/u),
+  body: z.string().nullable(),
+  createdAt: z.iso.datetime().nullable(),
+  isStormReply: z.boolean(),
+});
+const RedditThreadSnapshotSchema = z.strictObject({
+  post: RedditRequestPostSchema,
+  comments: z.array(RedditLoadedCommentSchema),
+});
+export type RedditThreadSnapshot = z.infer<typeof RedditThreadSnapshotSchema>;
+
+async function readScannedRedditThread<T>(
   browser: RedditPageReader,
-  input: { account: string },
+  account: string,
+  includeComments: boolean,
+  schema: z.ZodType<T>,
 ) {
   z.string()
-    .regex(/^[\w-]+$/)
-    .parse(input.account);
+    .regex(/^[\w-]+$/u)
+    .parse(account);
   const url = new URL(await browser.currentUrl());
   if (url.hostname !== "old.reddit.com")
     throw new Error("Reddit discovery requires old Reddit thread rendering");
   const canonical = canonicalRedditPostUrl(url.href);
   await browser.snapshot({ selector: "#siteTable" });
   await browser.snapshot({ selector: ".commentarea" });
-  const post = RedditRequestPostSchema.parse(
-    await browser.evaluate(redditThreadScript(input.account)),
+  const raw = await browser.evaluate(
+    redditThreadScript(account, includeComments),
   );
+  return { result: schema.parse(raw), canonical };
+}
+
+function assertObservedRedditThread(
+  post: z.infer<typeof RedditRequestPostSchema>,
+  canonical: string,
+) {
   assertRedditPostIdentity(post);
   if (post.url.toLowerCase() !== canonical.toLowerCase())
     throw new Error("Reddit thread changed during discovery");
-  return post;
+}
+
+export async function readRedditThread(
+  browser: RedditPageReader,
+  input: { account: string },
+) {
+  const { result, canonical } = await readScannedRedditThread(
+    browser,
+    input.account,
+    false,
+    RedditRequestPostSchema,
+  );
+  assertObservedRedditThread(result, canonical);
+  return result;
+}
+
+export async function readRedditThreadSnapshot(
+  browser: RedditPageReader,
+  input: { account: string },
+) {
+  const { result, canonical } = await readScannedRedditThread(
+    browser,
+    input.account,
+    true,
+    RedditThreadSnapshotSchema,
+  );
+  assertObservedRedditThread(result.post, canonical);
+  return result;
 }
 
 export async function readRedditCommentReceipt(browser: RedditPageReader) {

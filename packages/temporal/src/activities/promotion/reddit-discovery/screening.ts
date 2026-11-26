@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 import {
+  DecisionAnswerSchema,
   StructuredOutputUsageError,
   type AggregateLlmUsage,
+  type DecisionAnswer,
 } from "@shepherdjerred/llm-runtime";
 import { reservePromotionAi } from "#activities/promotion/control/budget.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
@@ -22,11 +24,22 @@ import {
 const CacheSchema = z.strictObject({
   fingerprint: z.string(),
   qualification: RedditQualificationSchema,
+  capturedAt: z.iso.datetime().optional(),
+  answers: z.array(DecisionAnswerSchema).optional(),
 });
 type ScreenInput = { post: RedditJudgeInput["post"]; rules: string };
 type ScoreResult = {
   qualification: RedditQualification;
   usage: AggregateLlmUsage;
+  answers?: readonly DecisionAnswer[];
+};
+type AssessmentObservation = {
+  post: ScreenInput["post"];
+  communityRules: string;
+  approvedServerFacts: string;
+  capturedAt: string;
+  model: string;
+  answers: readonly DecisionAnswer[] | null;
 };
 
 export function redditAssessmentFingerprint({ post, rules }: ScreenInput) {
@@ -53,8 +66,25 @@ export async function screenRedditBatch(input: {
   signal: AbortSignal;
   cacheScope?: "thread";
   judge?: (input: RedditJudgeInput) => Promise<ScoreResult>;
+  onAssessment?: (observation: AssessmentObservation) => Promise<void>;
 }) {
   const { store, signal } = input;
+  const observe = async (
+    item: ScreenInput,
+    assessment: {
+      capturedAt?: string | undefined;
+      answers?: readonly DecisionAnswer[] | undefined;
+    },
+  ) => {
+    await input.onAssessment?.({
+      post: item.post,
+      communityRules: item.rules,
+      approvedServerFacts: REDDIT_OUTREACH_FACTS,
+      capturedAt: assessment.capturedAt ?? new Date().toISOString(),
+      model: REDDIT_DECISIONS_MODEL,
+      answers: assessment.answers ?? null,
+    });
+  };
   const checked = await Promise.all(
     input.items.map(async (item) => {
       const scope = input.cacheScope === "thread" ? "thread/" : "";
@@ -68,16 +98,23 @@ export async function screenRedditBatch(input: {
         current,
         cached:
           current?.value.fingerprint === fingerprint
-            ? current.value.qualification
+            ? current.value
             : undefined,
       };
     }),
   );
   const pending = checked.filter((item) => item.cached === undefined);
-  const cached = checked.flatMap((item) =>
-    item.cached === undefined
-      ? []
-      : [{ post: item.post, qualification: item.cached }],
+  const cached = await Promise.all(
+    checked.flatMap((item) => {
+      const assessment = item.cached;
+      if (assessment === undefined) return [];
+      return [
+        (async () => {
+          await observe(item, assessment);
+          return { post: item.post, qualification: assessment.qualification };
+        })(),
+      ];
+    }),
   );
   if (pending.length === 0)
     return { matches: cached, assessed: 0, cached: cached.length };
@@ -87,14 +124,15 @@ export async function screenRedditBatch(input: {
     dailySpendUsd: input.dailySpendUsd,
   });
   const judged = await Promise.allSettled(
-    pending.map(async ({ post, rules }) =>
-      (input.judge ?? judgeRedditRequest)({
+    pending.map(async ({ post, rules }) => ({
+      ...(await (input.judge ?? judgeRedditRequest)({
         post,
         communityRules: rules,
         serverFacts: REDDIT_OUTREACH_FACTS,
         signal,
-      }),
-    ),
+      })),
+      capturedAt: new Date().toISOString(),
+    })),
   );
   const charges = judged.map((result) => decisionUsage(result));
   if (charges.every((usage) => usage !== undefined))
@@ -105,15 +143,21 @@ export async function screenRedditBatch(input: {
       if (result?.status !== "fulfilled") return [];
       return [
         (async () => {
-          const { qualification } = result.value;
+          const { qualification, capturedAt, answers } = result.value;
           if (
             !(await store.put(
               item.key,
-              { fingerprint: item.fingerprint, qualification },
+              {
+                fingerprint: item.fingerprint,
+                qualification,
+                capturedAt,
+                answers,
+              },
               item.current?.etag,
             ))
           )
             throw new Error("Concurrent Reddit Decisions cache update");
+          await observe(item, result.value);
           return { post: item.post, qualification };
         })(),
       ];
