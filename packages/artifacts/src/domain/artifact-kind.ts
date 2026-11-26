@@ -27,16 +27,33 @@ export function inferKind(request: CreateUploadRequest): ArtifactKind {
 }
 
 /**
- * A stable digest of an upload request: the same manifest hashes the same
- * whatever order its files arrive in, so a retried publish is recognized.
+ * A stable digest of what an upload publishes: the artifact target and the
+ * manifest, in path order. It leaves out `expectedCurrentVersionId`, `note`
+ * and `boardTitle`, so a retry after a successful commit, by a client that
+ * re-read the now-advanced current version, is recognized as the same upload.
  */
 export async function requestDigest(
   request: CreateUploadRequest,
 ): Promise<string> {
-  const files = request.files.toSorted((a, b) =>
-    a.path < b.path ? -1 : a.path > b.path ? 1 : 0,
+  const files = request.files
+    .map((file) => ({
+      path: file.path,
+      size: file.size,
+      sha256: file.sha256,
+      mediaType: file.mediaType,
+    }))
+    .toSorted((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  const target = {
+    board: request.board,
+    artifactId: request.artifactId ?? null,
+    title: request.title,
+    kind: request.kind ?? null,
+    entryPath: request.entryPath,
+    files,
+  };
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(JSON.stringify(target)),
   );
-  const bytes = new TextEncoder().encode(JSON.stringify({ ...request, files }));
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Buffer.from(digest).toString("hex");
 }

@@ -9,7 +9,7 @@ import {
   ArtifactRefInputSchema,
   ArtifactRenameInputSchema,
   ArtifactSummarySchema,
-  BoardApplyInputSchema,
+  BoardApplyOpsInputSchema,
   BoardArchiveInputSchema,
   BoardCreateInputSchema,
   BoardDocumentSchema,
@@ -89,7 +89,7 @@ const boardsRouter = t.router({
     .output(Ok)
     .mutation(({ ctx, input }) => ctx.services.boards.touch(input.slug)),
   applyOps: mutation
-    .input(BoardApplyInputSchema)
+    .input(BoardApplyOpsInputSchema)
     .output(BoardDocumentSchema)
     .mutation(({ ctx, input }) =>
       ctx.services.boards.applyOps(input, ctx.caller, ctx.requestId),

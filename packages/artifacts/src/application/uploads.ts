@@ -67,59 +67,63 @@ async function missingDigests(tx: Pick<Tx, "blob">, digests: string[]) {
   return [...new Set(digests)].filter((digest) => !have.has(digest));
 }
 
-export function createUploads(deps: Deps) {
-  const { db } = deps;
+/** Creates the board by slug when absent, titled `boardTitle ?? slug`. */
+async function ensureBoard(tx: Tx, request: CreateUploadRequest, audit: Audit) {
+  const created = await tx.board.createMany({
+    data: [
+      {
+        slug: request.board,
+        title: request.boardTitle ?? request.board,
+        index: EMPTY_BOARD_INDEX,
+      },
+    ],
+    skipDuplicates: true,
+  });
+  const board = await tx.board.findUniqueOrThrow({
+    where: { slug: request.board },
+  });
+  if (created.count === 1)
+    await recordEvents(tx, [
+      {
+        boardId: board.id,
+        kind: "board.created",
+        entityId: board.id,
+        actorId: audit.actor.id,
+        requestId: audit.requestId,
+      },
+    ]);
+  return board;
+}
 
-  async function ensureBoard(slug: string, actor: Caller, requestId: string) {
-    const existing = await db.board.findUnique({ where: { slug } });
-    if (existing !== null) return existing;
-    try {
-      return await transact(db, async (tx) => {
-        const board = await tx.board.create({
-          data: { slug, title: slug, index: EMPTY_BOARD_INDEX },
-        });
-        await recordEvents(tx, [
-          {
-            boardId: board.id,
-            kind: "board.created",
-            entityId: board.id,
-            actorId: actor.id,
-            requestId,
-          },
-        ]);
-        return board;
-      });
-    } catch (error) {
-      if (!isUniqueViolation(error)) throw error;
-      return db.board.findUniqueOrThrow({ where: { slug } });
-    }
-  }
-
-  async function checkArtifact(request: CreateUploadRequest, boardId: string) {
-    if (request.artifactId === undefined) {
-      if (request.expectedCurrentVersionId !== null)
-        throw new ArtifactsError(
-          "BAD_REQUEST",
-          "expectedCurrentVersionId must be null for a new artifact",
-        );
-      return null;
-    }
-    const artifact = await db.artifact.findFirst({
-      where: { id: request.artifactId, boardId, deletedAt: null },
-    });
-    if (artifact === null)
-      throw new ArtifactsError("NOT_FOUND", "Artifact not found on that board");
-    if (artifact.currentVersionId !== request.expectedCurrentVersionId)
-      throw new ArtifactsError("CONFLICT", "The artifact has a newer version", {
-        currentVersionId: artifact.currentVersionId,
-      });
-    if (request.kind !== undefined && request.kind !== artifact.kind)
+async function checkArtifact(
+  tx: Tx,
+  request: CreateUploadRequest,
+  boardId: string,
+) {
+  if (request.artifactId === undefined) {
+    if (request.expectedCurrentVersionId !== null)
       throw new ArtifactsError(
         "BAD_REQUEST",
-        "An artifact's kind cannot change",
+        "expectedCurrentVersionId must be null for a new artifact",
       );
-    return artifact;
+    return null;
   }
+  const artifact = await tx.artifact.findFirst({
+    where: { id: request.artifactId, boardId, deletedAt: null },
+  });
+  if (artifact === null)
+    throw new ArtifactsError("NOT_FOUND", "Artifact not found on that board");
+  if (artifact.currentVersionId !== request.expectedCurrentVersionId)
+    throw new ArtifactsError("CONFLICT", "The artifact has a newer version", {
+      currentVersionId: artifact.currentVersionId,
+    });
+  if (request.kind !== undefined && request.kind !== artifact.kind)
+    throw new ArtifactsError("BAD_REQUEST", "An artifact's kind cannot change");
+  return artifact;
+}
+
+export function createUploads(deps: Deps) {
+  const { db } = deps;
 
   async function openSession(
     request: CreateUploadRequest,
@@ -127,14 +131,14 @@ export function createUploads(deps: Deps) {
     actor: Caller,
     requestId: string,
   ): Promise<CreateUploadResponse> {
-    const board = await ensureBoard(request.board, actor, requestId);
-    const artifact = await checkArtifact(request, board.id);
     const expiresAt = new Date(
       deps.now().getTime() +
         (await deps.settings.value("uploadTtlHours")) * HOUR_MS,
     );
-    const session = await transact(db, async (tx) =>
-      tx.uploadSession.create({
+    const session = await transact(db, async (tx) => {
+      const board = await ensureBoard(tx, request, { actor, requestId });
+      const artifact = await checkArtifact(tx, request, board.id);
+      return tx.uploadSession.create({
         data: {
           idempotencyKey: request.idempotencyKey,
           requestDigest: digest,
@@ -153,8 +157,8 @@ export function createUploads(deps: Deps) {
             })),
           },
         },
-      }),
-    );
+      });
+    });
     return {
       uploadId: session.id,
       missing: await missingDigests(
@@ -162,10 +166,15 @@ export function createUploads(deps: Deps) {
         request.files.map((file) => file.sha256),
       ),
       expiresAt: expiresAt.toISOString(),
+      deduplicated: false,
     };
   }
 
-  /** The same key and digest resume; a different digest is a conflict. */
+  /**
+   * The same key and digest resume, even when the artifact has advanced since:
+   * a retry after a successful commit gets the original result, not a
+   * compare-and-set conflict. A different digest is a conflict.
+   */
   async function resume(
     session: SessionRow,
     digest: string,
@@ -185,6 +194,7 @@ export function createUploads(deps: Deps) {
             )
           : [],
       expiresAt: session.expiresAt.toISOString(),
+      deduplicated: session.committedVersionId !== null,
     };
   }
 
@@ -301,6 +311,7 @@ async function commitLocked(
       number: version.number,
       reviewUrl: `${deps.origins.app}/a/${version.artifactId}`,
       boardUrl: `${deps.origins.app}/b/${session.board.slug}`,
+      deduplicated: true,
     };
   }
   if (session.expiresAt <= deps.now())
@@ -374,6 +385,7 @@ async function commitLocked(
     number: version.number,
     reviewUrl: `${deps.origins.app}/a/${artifactId}`,
     boardUrl: `${deps.origins.app}/b/${session.board.slug}`,
+    deduplicated: false,
   };
 }
 

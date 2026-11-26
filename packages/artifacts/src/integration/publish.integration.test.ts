@@ -114,7 +114,9 @@ describe("publish", () => {
     });
     expect(again.created.uploadId).toBe(first.created.uploadId);
     expect(again.created.missing).toEqual([]);
-    expect(again.committed).toEqual(first.committed);
+    expect(again.created.deduplicated).toBe(true);
+    expect(first.committed.deduplicated).toBe(false);
+    expect(again.committed).toEqual({ ...first.committed, deduplicated: true });
     await expectHttp(
       publish(
         agent,
@@ -202,6 +204,79 @@ describe("publish", () => {
       409,
     );
     expect(conflict).toMatchObject({ currentVersionId: expect.any(String) });
+  });
+});
+
+describe("retries and board titles", () => {
+  it("returns the original result when a client retries after a successful commit", async () => {
+    const v1 = await publish(
+      agent,
+      { "index.html": unique("retry") },
+      { board: "retry" },
+    );
+    const files = { "index.html": unique("retry v2") };
+    const options = {
+      board: "retry",
+      artifactId: v1.committed.artifactId,
+      key: "retry-key-00000000001",
+    };
+    const v2 = await publish(agent, files, {
+      ...options,
+      expected: v1.committed.versionId,
+    });
+    expect(v2.committed).toMatchObject({ number: 2, deduplicated: false });
+    // The client lost the response, re-read the current version (now v2) and retries.
+    const again = await publish(agent, files, {
+      ...options,
+      expected: v2.committed.versionId,
+    });
+    expect(again.created).toMatchObject({
+      uploadId: v2.created.uploadId,
+      deduplicated: true,
+      missing: [],
+    });
+    expect(again.committed).toEqual({ ...v2.committed, deduplicated: true });
+    // A genuinely different manifest under the same key is still a conflict.
+    await expectHttp(
+      publish(
+        agent,
+        { "index.html": unique("other") },
+        { ...options, expected: v2.committed.versionId },
+      ),
+      409,
+    );
+    // The artifact still has exactly two versions.
+    const versions = z.array(z.unknown()).parse(
+      await human.query("artifacts.versions", {
+        id: v1.committed.artifactId,
+      }),
+    );
+    expect(versions).toHaveLength(2);
+  });
+
+  it("creates a missing board with boardTitle, or the slug, in the create call", async () => {
+    await publish(
+      agent,
+      { "index.html": unique("titled") },
+      { board: "titled-board", boardTitle: "Pretty Title" },
+    );
+    await publish(
+      agent,
+      { "index.html": unique("untitled") },
+      { board: "untitled-board" },
+    );
+    await publish(
+      agent,
+      { "index.html": unique("kept") },
+      { board: "titled-board", boardTitle: "Ignored" },
+    );
+    const boards = z
+      .array(z.object({ slug: z.string(), title: z.string() }))
+      .parse(await human.query("boards.list"));
+    const title = (slug: string) =>
+      boards.find((board) => board.slug === slug)?.title;
+    expect(title("titled-board")).toBe("Pretty Title");
+    expect(title("untitled-board")).toBe("untitled-board");
   });
 });
 

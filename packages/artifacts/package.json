@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     "./contract": "./src/shared/contract.ts",
-    "./procedures": "./src/shared/procedures.ts"
+    "./procedures": "./src/shared/procedures.ts",
+    "./testing": "./src/testing/service.ts"
   },
   "imports": {
     "#generated/*": "./generated/*",

@@ -115,6 +115,7 @@ const UploadResponse = z.object({
   uploadId: z.string(),
   missing: z.array(z.string()),
   expiresAt: z.string(),
+  deduplicated: z.boolean(),
 });
 const CommitResponse = z.object({
   artifactId: z.string(),
@@ -122,6 +123,7 @@ const CommitResponse = z.object({
   number: z.number(),
   reviewUrl: z.string(),
   boardUrl: z.string(),
+  deduplicated: z.boolean(),
 });
 
 /** The manifest of an upload, built from file bodies. */
@@ -147,6 +149,7 @@ export type PublishOptions = {
   expected?: string | null;
   key?: string;
   kind?: string;
+  boardTitle?: string;
 };
 
 /** The whole publish: create, upload what is missing, commit. */
@@ -166,6 +169,9 @@ export async function publish(
       ? {}
       : { artifactId: options.artifactId }),
     ...(options.kind === undefined ? {} : { kind: options.kind }),
+    ...(options.boardTitle === undefined
+      ? {}
+      : { boardTitle: options.boardTitle }),
   };
   const created = UploadResponse.parse(
     await client.json("/api/uploads", { body: request }),

@@ -70,7 +70,7 @@ export const BoardKeepInputSchema = z.strictObject({
   keep: z.boolean(),
 });
 
-export const BoardApplyInputSchema = z.strictObject({
+export const BoardApplyOpsInputSchema = z.strictObject({
   slug: BoardSlugSchema,
   ops: z.array(BoardOpSchema).min(1).max(500),
 });
