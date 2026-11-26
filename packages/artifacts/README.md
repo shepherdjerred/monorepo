@@ -167,6 +167,22 @@ the typed placeholder card. Stacking is CSS `z-index` from the index `order`;
 an iframe is never moved or remounted, because that reloads it. The outline
 route stays the keyboard and screen-reader path.
 
+**Arranging** (`src/client/canvas/arrange/`). Click selects, Shift-click adds,
+a drag on empty canvas draws a marquee, a drag on a frame moves the selection
+(4 px threshold, pointer capture, edge auto-pan, 8 px grid, Alt for free
+movement, Esc cancels), eight handles resize one frame (a fixed-viewport frame
+keeps its aspect), arrows nudge by 1 px (Shift 10), `[` `]` step z-order, Delete
+removes from the board after a confirm (never the artifact), Mod+Z and
+Shift+Mod+Z undo and redo. The arrangement is a replicated document:
+`useBoardLayout` keeps the server's index plus an outbox of
+`boards.applyOps` ops (`moveFrames` with optional `w` and `h`, `reorder`,
+`removeFrame`), saved 400 ms after the last edit and on `pagehide` (a
+`keepalive` request). What is drawn is the index with the outbox applied on
+top, and the ops are absolute, so another actor's change (an agent publishing a
+frame) merges by id without moving the camera or losing a drag in progress;
+a toast names the new frame with a jump-to. Undo entries record before and
+after per touched frame and replay as ops against the current board.
+
 Browser support is Baseline Widely Available. `bun run dev:client` serves the
 UI with Vite against a service on `:7440`.
 

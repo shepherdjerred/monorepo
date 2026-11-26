@@ -1,25 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import type { Anchor } from "@shepherdjerred/artifacts/contract";
+import type { BoardData } from "#client/data/api.ts";
 import { useCreateThread } from "#client/data/mutations.ts";
 import type { Point } from "#client/lib/geometry.ts";
 import {
   PlacementComposer,
   type Placement,
 } from "#client/pages/placement-composer.tsx";
-import { useShortcuts } from "#client/shell/shortcuts.ts";
-import { screenToWorld } from "./camera.ts";
+import { clickSelection } from "./arrange/geometry.ts";
+import { MarqueeBox, ResizeHandles } from "./arrange/handles.tsx";
+import { RemoveDialog } from "./arrange/remove-dialog.tsx";
+import { Toasts, useNewFrameToasts } from "./arrange/toasts.tsx";
+import { useArrange } from "./arrange/use-arrange.ts";
+import { useArrangeKeys } from "./arrange/use-keys.ts";
+import { useArrangeSessions } from "./arrange/use-sessions.ts";
+import { screenToWorld, type WorldRect } from "./camera.ts";
 import { CanvasFrame } from "./canvas-frame.tsx";
 import type { Tap, Tool } from "./gestures.ts";
-import {
-  readingOrder,
-  type CanvasFrameModel,
-  type CanvasPin,
-} from "./model.ts";
+import { readingOrder, type CanvasPin } from "./model.ts";
 import { ExitChip, FrameChip, SelectionRing } from "./overlay.tsx";
 import { PinsLayer } from "./pins-layer.tsx";
 import { CanvasToolbar } from "./toolbar.tsx";
-import { useCanvasCamera, ZOOM_STEP } from "./use-camera.ts";
+import { useCanvasCamera } from "./use-camera.ts";
+import { useCanvasKeys } from "./use-canvas-keys.ts";
 import { useCanvasInput } from "./use-input.ts";
 import { useFrameTiers } from "./use-tiers.ts";
 
@@ -32,21 +35,27 @@ type CanvasPlacement = Placement & { readonly frameId: string | null };
 
 export type CanvasProps = {
   readonly slug: string;
-  readonly frames: readonly CanvasFrameModel[];
+  readonly data: Pick<BoardData, "index" | "artifacts">;
   readonly pins: readonly CanvasPin[];
   readonly selectedThreadId: string | null;
   readonly onSelectThread: (threadId: string | null) => void;
 };
 
+const SAVE_TEXT = {
+  saving: "Saving…",
+  error: "Could not save; retrying",
+} as const;
+
 export function Canvas({
   slug,
-  frames,
+  data,
   pins,
   selectedThreadId,
   onSelectThread,
 }: CanvasProps): React.JSX.Element {
-  const navigate = useNavigate();
   const create = useCreateThread();
+  const arrange = useArrange(slug, data);
+  const { frames, selection, setSelection } = arrange;
 
   const byId = useMemo(
     () => new Map(frames.map((frame) => [frame.id, frame])),
@@ -57,20 +66,25 @@ export function Canvas({
     [frames],
   );
   const inReadingOrder = useMemo(() => readingOrder(frames), [frames]);
+  const selectedFrames = useMemo(
+    () => frames.filter((frame) => selection.has(frame.id)),
+    [frames, selection],
+  );
+  const only = selectedFrames.length === 1 ? selectedFrames[0] : undefined;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tool, setTool] = useState<Tool>("select");
   const [commentMode, setCommentMode] = useState(false);
   const [placement, setPlacement] = useState<CanvasPlacement | null>(null);
+  const [marquee, setMarquee] = useState<WorldRect | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [tick, setTick] = useState(0);
   const [blanket, setBlanket] = useState<HTMLDivElement | null>(null);
   const [section, setSection] = useState<HTMLElement | null>(null);
 
-  const selectedFrame = selectedId === null ? undefined : byId.get(selectedId);
   const activeFrame = activeId === null ? undefined : byId.get(activeId);
-  const camera = useCanvasCamera(slug, frames, selectedFrame);
-  const { controller, viewport, reveal } = camera;
+  const camera = useCanvasCamera(slug, frames, selectedFrames);
+  const { controller, viewport, reveal, sizeRef } = camera;
   const tiers = useFrameTiers({
     frames,
     settled: camera.settled,
@@ -79,14 +93,14 @@ export function Canvas({
     activeId,
   });
 
-  const latest = useRef({ commentMode, byId });
-  latest.current = { commentMode, byId };
+  const latest = useRef({ commentMode, activeId, byId });
+  latest.current = { commentMode, activeId, byId };
 
   const activate = useCallback(
     (id: string) => {
       const frame = latest.current.byId.get(id);
       if (frame === undefined || frame.summary.kind === "file") return;
-      setSelectedId(id);
+      setSelection(new Set([id]));
       setActiveId(id);
       setCommentMode(false);
       setPlacement(null);
@@ -101,7 +115,7 @@ export function Canvas({
           ?.focus();
       });
     },
-    [reveal],
+    [reveal, setSelection],
   );
 
   const deactivate = useCallback(() => {
@@ -118,10 +132,17 @@ export function Canvas({
     });
   }, []);
 
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
   const onTap = useCallback(
     (tap: Tap) => {
       if (!latest.current.commentMode) {
-        setSelectedId(tap.frameId);
+        if (tap.frameId === null) {
+          if (!tap.shiftKey) setSelection(new Set());
+        } else
+          setSelection(
+            clickSelection(selectionRef.current, tap.frameId, tap.shiftKey),
+          );
         return;
       }
       // On a frame, the frame's own stage places the pin; empty canvas places a board pin.
@@ -136,7 +157,7 @@ export function Canvas({
         frameId: null,
       });
     },
-    [controller, viewport],
+    [controller, viewport, setSelection],
   );
 
   const onDoubleTap = useCallback(
@@ -146,6 +167,17 @@ export function Canvas({
     },
     [activate],
   );
+  const viewportSize = useCallback(() => sizeRef.current, [sizeRef]);
+  const sessions = useArrangeSessions({
+    controller,
+    size: viewportSize,
+    arrange,
+    frames,
+    blocked: (frameId) =>
+      latest.current.commentMode ||
+      (frameId !== null && frameId === latest.current.activeId),
+    setMarquee,
+  });
   const onHostInput = useCanvasInput({
     controller,
     viewport,
@@ -153,6 +185,7 @@ export function Canvas({
     tool,
     onTap,
     onDoubleTap,
+    beginSession: sessions.beginSession,
   });
 
   const onPlace = useCallback((frameId: string, anchor: Anchor, at: Point) => {
@@ -200,67 +233,50 @@ export function Canvas({
       reveal({ x: pin.anchor.x - 40, y: pin.anchor.y - 40, w: 80, h: 80 });
   }, [selectedThreadId, pins, byId, reveal]);
 
-  useShortcuts([
-    { key: "1", run: camera.fitAll },
-    { key: "2", run: camera.fitSelection },
-    { key: "0", run: camera.reset },
-    {
-      key: "=",
-      run: () => {
-        camera.zoomBy(ZOOM_STEP);
-      },
+  const toasts = useNewFrameToasts(frames, arrange.takeOwn);
+  const jumpTo = useCallback(
+    (id: string) => {
+      const frame = latest.current.byId.get(id);
+      if (frame === undefined) return;
+      setSelection(new Set([id]));
+      reveal(frame.rect);
     },
-    {
-      key: "+",
-      run: () => {
-        camera.zoomBy(ZOOM_STEP);
-      },
+    [reveal, setSelection],
+  );
+
+  useArrangeKeys({
+    arrange,
+    onDelete: () => {
+      if (activeId === null && selection.size > 0) setConfirmRemove(true);
     },
-    {
-      key: "-",
-      run: () => {
-        camera.zoomBy(1 / ZOOM_STEP);
-      },
+  });
+  useCanvasKeys({
+    camera,
+    onlyId: only?.id ?? null,
+    placing: placement !== null,
+    activeId,
+    commentMode,
+    tool,
+    setTool,
+    toggleComment: () => {
+      setCommentMode((on) => !on);
+      setActiveId(null);
+      setPlacement(null);
     },
-    {
-      key: "h",
-      run: () => {
-        setTool((current) => (current === "hand" ? "select" : "hand"));
-      },
+    activate,
+    cancelPlacement: () => {
+      setPlacement(null);
     },
-    {
-      key: "c",
-      run: () => {
-        setCommentMode((on) => !on);
-        setActiveId(null);
-        setPlacement(null);
-      },
+    deactivate,
+    leaveComment: () => {
+      setCommentMode(false);
     },
-    {
-      key: "f",
-      run: () => {
-        if (selectedId !== null) void navigate(`/a/${selectedId}`);
-      },
+    clearSelection: () => {
+      setSelection(new Set());
     },
-    {
-      key: "Enter",
-      run: (event) => {
-        if (selectedId === null) return;
-        event.preventDefault();
-        activate(selectedId);
-      },
-    },
-    {
-      key: "Escape",
-      run: () => {
-        if (placement !== null) setPlacement(null);
-        else if (activeId !== null) deactivate();
-        else if (commentMode) setCommentMode(false);
-        else if (tool === "hand") setTool("select");
-        else setSelectedId(null);
-      },
-    },
-  ]);
+  });
+
+  const removing = selectedFrames.map((frame) => frame.summary.title);
 
   return (
     <section
@@ -288,9 +304,11 @@ export function Canvas({
                 key={frame.id}
                 controller={controller}
                 model={frame}
-                selected={frame.id === selectedId}
+                selected={selection.has(frame.id)}
                 active={frame.id === activeId}
-                onSelect={setSelectedId}
+                onSelect={(id) => {
+                  setSelection(new Set([id]));
+                }}
                 onActivate={activate}
                 onFocusFrame={(id) => {
                   const target = byId.get(id);
@@ -299,12 +317,26 @@ export function Canvas({
               />
             ))}
           </div>
-          {selectedFrame === undefined ? null : (
+          {selectedFrames.map((frame) => (
             <SelectionRing
+              key={frame.id}
               controller={controller}
-              model={selectedFrame}
-              active={selectedFrame.id === activeId}
+              model={frame}
+              active={frame.id === activeId}
             />
+          ))}
+          {commentMode || only === undefined || only.id === activeId ? null : (
+            <ResizeHandles
+              key={only.id}
+              controller={controller}
+              rect={only.rect}
+              start={(handle, point) =>
+                sessions.startResize(only.id, handle, point)
+              }
+            />
+          )}
+          {marquee === null ? null : (
+            <MarqueeBox controller={controller} rect={marquee} />
           )}
           {activeFrame === undefined ? null : (
             <ExitChip
@@ -328,7 +360,7 @@ export function Canvas({
             controller={controller}
             tool={tool}
             commenting={commentMode}
-            hasSelection={selectedId !== null}
+            hasSelection={selection.size > 0}
             onZoom={camera.zoomBy}
             onReset={camera.reset}
             onFitAll={camera.fitAll}
@@ -367,6 +399,24 @@ export function Canvas({
       {frames.length === 0 ? (
         <p className="ar-cv-empty">Nothing on this board yet.</p>
       ) : null}
+      {arrange.status === "idle" ? null : (
+        <p
+          className="ar-cv-save"
+          role="status"
+          data-status={arrange.status}
+          data-testid="save-status"
+        >
+          {SAVE_TEXT[arrange.status]}
+        </p>
+      )}
+      <Toasts
+        toasts={toasts.toasts}
+        onJump={jumpTo}
+        onDismiss={toasts.dismiss}
+      />
+      <p className="ui-sr-only" role="status" aria-live="polite">
+        {arrange.announcement}
+      </p>
       {placement === null ? null : (
         <PlacementComposer
           placement={placement}
@@ -383,6 +433,17 @@ export function Canvas({
           Comment mode: click where the comment belongs. Esc to leave.
         </p>
       ) : null}
+      <RemoveDialog
+        titles={removing}
+        open={confirmRemove}
+        onClose={() => {
+          setConfirmRemove(false);
+        }}
+        onConfirm={() => {
+          arrange.remove();
+          setConfirmRemove(false);
+        }}
+      />
     </section>
   );
 }

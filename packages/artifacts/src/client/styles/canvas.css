@@ -211,3 +211,79 @@
     height: 70dvh;
   }
 }
+
+/* Arranging */
+.ar-cv-handles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+.ar-cv-handle {
+  position: absolute;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--ui-accent);
+  border-radius: 2px;
+  background: var(--ui-panel);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+/* A larger hit target than the square that is drawn. */
+.ar-cv-handle::after {
+  position: absolute;
+  inset: -6px;
+  content: "";
+}
+.ar-cv-marquee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  pointer-events: none;
+}
+.ar-cv-toasts {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 12;
+  display: grid;
+  gap: 6px;
+  max-width: min(360px, calc(100% - 24px));
+}
+.ar-cv-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  box-shadow: 0 2px 10px color-mix(in srgb, black 16%, transparent);
+  font-size: 12.5px;
+}
+.ar-cv-toast span {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-cv-save {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 11;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ui-panel);
+  box-shadow: 0 1px 6px color-mix(in srgb, black 14%, transparent);
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+.ar-cv-save[data-status="error"] {
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+}

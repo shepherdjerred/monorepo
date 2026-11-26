@@ -2,12 +2,11 @@
  * What the canvas draws, derived from one `boards.get` answer and the board's
  * threads. Pure, so reading order and pin selection are testable.
  */
-import type { Anchor } from "@shepherdjerred/artifacts/contract";
+import type { Anchor, BoardIndex } from "@shepherdjerred/artifacts/contract";
 import type {
   ArtifactSummary,
   ThreadView,
 } from "@shepherdjerred/artifacts/procedures";
-import type { BoardData } from "#client/data/api.ts";
 import { isOtherVersion, isPlaced } from "#client/lib/pins.ts";
 import type { WorldRect } from "./camera.ts";
 
@@ -27,7 +26,10 @@ export const CANVAS_PAGE = 0;
  * artifacts). The order must not change when a frame moves: the iframes are
  * rendered from this list, and moving an iframe in the DOM reloads it.
  */
-export function frameModels(data: BoardData): CanvasFrameModel[] {
+export function frameModels(data: {
+  readonly index: Pick<BoardIndex, "order" | "frames">;
+  readonly artifacts: readonly ArtifactSummary[];
+}): CanvasFrameModel[] {
   const { index, artifacts } = data;
   const stacking = new Map(index.order.map((id, position) => [id, position]));
   return artifacts.flatMap((summary) => {
@@ -120,5 +122,37 @@ export function canvasPins(
         frameId: frame.id,
       },
     ];
+  });
+}
+
+/**
+ * Width over height a resize keeps: the design viewport a frame was published
+ * at, for kinds that render in a fixed viewport. Responsive frames and the
+ * other kinds resize freely.
+ */
+export function fixedAspect(summary: ArtifactSummary): number | null {
+  const viewport = summary.currentVersion?.viewport ?? null;
+  const framed =
+    summary.kind === "html" ||
+    summary.kind === "site" ||
+    summary.kind === "mermaid";
+  return framed && viewport !== null ? viewport.width / viewport.height : null;
+}
+
+/**
+ * The frames with a drag or resize in progress drawn at its live rectangle.
+ * The draft is not part of the document: a change from elsewhere (an agent
+ * publishing a frame) arrives underneath it and never disturbs the drag.
+ */
+export function applyDraft<
+  T extends { readonly id: string; readonly rect: WorldRect },
+>(
+  models: readonly T[],
+  draft: ReadonlyMap<string, WorldRect> | null,
+): readonly T[] {
+  if (draft === null) return models;
+  return models.map((model) => {
+    const rect = draft.get(model.id);
+    return rect === undefined ? model : { ...model, rect };
   });
 }

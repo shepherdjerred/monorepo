@@ -78,7 +78,7 @@ export type CanvasCamera = {
 export function useCanvasCamera(
   slug: string,
   frames: readonly CanvasFrameModel[],
-  selected: CanvasFrameModel | undefined,
+  selected: readonly CanvasFrameModel[],
 ): CanvasCamera {
   const restored = useRef(storedCamera(slug));
   const [controller] = useState(() =>
@@ -148,9 +148,10 @@ export function useCanvasCamera(
   }, [size.width, frames.length, fitAll]);
 
   const fitSelection = useCallback(() => {
-    if (selected === undefined || sizeRef.current.width === 0) return;
+    const bounds = boundsOf(selected.map((frame) => frame.rect));
+    if (bounds === null || sizeRef.current.width === 0) return;
     move(
-      fitRect(selected.rect, sizeRef.current, {
+      fitRect(bounds, sizeRef.current, {
         padding: FIT_PADDING,
         maxScale: FIT_SELECTION_MAX_SCALE,
       }),

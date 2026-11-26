@@ -84,7 +84,7 @@ export function BoardPage(): React.JSX.Element {
         <Canvas
           key={slug}
           slug={slug}
-          frames={frames}
+          data={board.data}
           pins={pins}
           selectedThreadId={selectedThreadId}
           onSelectThread={setSelectedThreadId}

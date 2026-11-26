@@ -34,6 +34,26 @@ export type Tap = {
   readonly shiftKey: boolean;
 };
 
+/**
+ * A drag the page runs once a press has moved past the threshold: moving
+ * frames, a marquee. The gesture layer feeds it pointer positions and ends it.
+ */
+export type PointerSession = {
+  readonly move: (
+    point: Point,
+    modifiers: { readonly altKey: boolean },
+  ) => void;
+  readonly end: (cancelled: boolean) => void;
+};
+
+export type SessionStart = {
+  /** The frame under the pointer when it went down, or null on empty canvas. */
+  readonly frameId: string | null;
+  /** Viewport-relative. */
+  readonly point: Point;
+  readonly shiftKey: boolean;
+};
+
 export type GestureDeps = {
   readonly viewport: HTMLElement;
   readonly blanket: HTMLElement;
@@ -42,6 +62,11 @@ export type GestureDeps = {
   readonly spaceHeld: () => boolean;
   readonly onTap: (tap: Tap) => void;
   readonly onDoubleTap: (frameId: string) => void;
+  /**
+   * A mouse press with the select tool; the session it returns takes over
+   * from panning once the pointer moves 4 px. Null pans (or taps) instead.
+   */
+  readonly beginSession?: (start: SessionStart) => PointerSession | null;
 };
 
 /** A pointer must move this far before a press becomes a drag. */
@@ -50,6 +75,7 @@ const DOUBLE_TAP_MS = 350;
 const DOUBLE_TAP_DISTANCE_PX = 12;
 
 type Tracked = {
+  session?: PointerSession | null;
   point: Point;
   readonly down: Point;
   readonly frameId: string | null;
@@ -84,6 +110,7 @@ export function attachGestures(deps: GestureDeps): () => void {
   const pointers = new Map<number, Tracked>();
   const pinch = createPinch();
   let pan: Pan | null = null;
+  let session: PointerSession | null = null;
   let dragged = false;
   let lastTap: { frameId: string; at: number; point: Point } | null = null;
 
@@ -115,6 +142,23 @@ export function attachGestures(deps: GestureDeps): () => void {
     return a === undefined || b === undefined ? null : [a.point, b.point];
   }
 
+  /** A mouse press with the select tool may become the page's own drag. */
+  function startSession(event: PointerEvent, point: Point): void {
+    const tracked = pointers.get(event.pointerId);
+    const wanted =
+      event.pointerType === "mouse" &&
+      event.button === 0 &&
+      deps.tool() === "select" &&
+      !deps.spaceHeld();
+    if (tracked === undefined || !wanted) return;
+    tracked.session =
+      deps.beginSession?.({
+        frameId: tracked.frameId,
+        point,
+        shiftKey: event.shiftKey,
+      }) ?? null;
+  }
+
   function onPointerDown(event: PointerEvent): void {
     if (inIgnored(event.target)) return;
     if (event.pointerType === "mouse" && event.button > 1) return;
@@ -129,6 +173,7 @@ export function attachGestures(deps: GestureDeps): () => void {
     });
     if (pointers.size === 1) {
       dragged = false;
+      startSession(event, point);
       const immediate =
         event.button === 1 ||
         (event.pointerType === "mouse" &&
@@ -160,6 +205,10 @@ export function attachGestures(deps: GestureDeps): () => void {
       if (next !== null) controller.moveTo(next, "zoom");
       return;
     }
+    if (session !== null) {
+      session.move(tracked.point, { altKey: event.altKey });
+      return;
+    }
     if (pan === null) {
       const moved = Math.hypot(
         tracked.point.x - tracked.down.x,
@@ -167,6 +216,14 @@ export function attachGestures(deps: GestureDeps): () => void {
       );
       if (moved < DRAG_THRESHOLD_PX) return;
       capture(event.pointerId);
+      if (tracked.session !== undefined && tracked.session !== null) {
+        // The page's drag (move frames, marquee) takes over from panning.
+        session = tracked.session;
+        dragged = true;
+        showBlanket(true);
+        session.move(tracked.point, { altKey: event.altKey });
+        return;
+      }
       beginPan(tracked.down);
     }
     if (pan === null) return;
@@ -197,9 +254,13 @@ export function attachGestures(deps: GestureDeps): () => void {
     pinch.endPointers();
     showBlanket(false);
     const wasDrag = dragged;
+    const cancelled = event.type === "pointercancel";
+    // A press that never moved still owns a session that must clean up.
+    (session ?? tracked.session)?.end(cancelled || !wasDrag);
+    session = null;
     pan = null;
     dragged = false;
-    if (wasDrag || event.type === "pointercancel") return;
+    if (wasDrag || cancelled) return;
     tap(tracked, event.type === "pointerup");
   }
 

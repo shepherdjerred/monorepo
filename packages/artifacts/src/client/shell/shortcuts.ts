@@ -96,6 +96,10 @@ export const SHORTCUT_SHEET: readonly {
     keys: "H, Space",
     does: "Canvas: hand tool, or hold Space and drag to pan",
   },
+  { keys: "Arrows", does: "Canvas: nudge the selection 1 px (Shift: 10 px)" },
+  { keys: "[ / ]", does: "Canvas: send the selection back or forward" },
+  { keys: "Delete", does: "Canvas: remove the selection from the board" },
+  { keys: "Ctrl/⌘ Z", does: "Canvas: undo (Shift to redo)" },
   { keys: "C", does: "Comment mode: click to place a pin" },
   { keys: "Enter", does: "Interact with the selected frame" },
   { keys: "Esc", does: "Leave the frame, comment mode, or a draft" },
@@ -103,6 +107,6 @@ export const SHORTCUT_SHEET: readonly {
   { keys: "J / K", does: "Next and previous thread" },
   { keys: "R", does: "Reply to the selected thread" },
   { keys: "E", does: "Resolve or reopen the selected thread" },
-  { keys: "[ / ]", does: "Previous and next version" },
+  { keys: "[ / ]", does: "Focused view: previous and next version" },
   { keys: "?", does: "This sheet" },
 ];
