@@ -76,7 +76,7 @@ const CheckpointParticipantSchema = z.object({
 const CheckpointSchema = z.object({
   /** The checkpoint time asked for (`CHECKPOINT_TIMES_MS`). */
   atMs: z.number().int().positive(),
-  /** The timestamp of the frame read: the latest frame at or before `atMs`. */
+  /** The timestamp of the frame read: the first at or after `atMs`, within 60 s. */
   frameMs: z.number().int().nonnegative(),
   participants: z.array(CheckpointParticipantSchema),
 });
@@ -179,21 +179,30 @@ function reducedEvent(raw: unknown): ReducedEvent | undefined {
   return { ...reduced, ...optional };
 }
 
+/** A frame is the checkpoint's only if stamped within this window after it. */
+const CHECKPOINT_WINDOW_MS = 60_000;
+
 /**
- * The participants' economy at `atMs`: the latest frame with a timestamp at or
- * before it, the rule `fetchTimelineFramesAtTime` applies for the logged-in
- * app. A timeline that never reached `atMs` (no frame at or after it) has no
- * checkpoint, so a short game is never given an earlier frame's numbers.
+ * The participants' economy at `atMs`: the first frame stamped at or after
+ * `atMs` and before `atMs + 60000`. Riot stamps the frame for a minute just
+ * after it (600249 for 10:00), so this is the frame at about that minute, not
+ * the one before it. When no frame falls in the window (the game ended before
+ * `atMs`, or the frame is missing) there is no checkpoint: a neighbouring
+ * frame is never substituted.
  */
 function checkpointAt(
   frames: readonly TimelineFrame[],
   atMs: number,
 ): Checkpoint | undefined {
-  if (!frames.some((frame) => frame.timestamp >= atMs)) return undefined;
   let chosen: TimelineFrame | undefined;
   for (const frame of frames) {
-    if (frame.timestamp > atMs) continue;
-    if (chosen === undefined || frame.timestamp > chosen.timestamp) {
+    if (
+      frame.timestamp < atMs ||
+      frame.timestamp >= atMs + CHECKPOINT_WINDOW_MS
+    ) {
+      continue;
+    }
+    if (chosen === undefined || frame.timestamp < chosen.timestamp) {
       chosen = frame;
     }
   }

@@ -2653,11 +2653,13 @@ stored per UTC day.
   28 days, and stores unseen Summoner's Rift games. A deterministic 20% of
   matches also get a timeline, reduced to item and skill events plus each
   participant's gold, XP and minions (`minionsKilled + jungleMinionsKilled`) at
-  10 and 15 minutes. A checkpoint is the latest frame stamped at or before the
-  time, the rule `fetchTimelineFramesAtTime` uses for the logged-in app, kept
-  only when the timeline has a frame at or after that time: a shorter game has
-  no row for it. A segment written before the crawl kept checkpoints has none,
-  and lane data cannot be backfilled from raw segments.
+  10 and 15 minutes. A checkpoint at T is the first frame stamped at or after T
+  and before T + 60 seconds (Riot stamps the frame for 10:00 at about 600249
+  ms), and there is none when no frame falls in that window: a game that ended
+  first, or a missing frame, has no row and no neighbouring frame stands in.
+  This differs from today's `fetchTimelineFramesAtTime`, which takes the latest
+  frame at or before T. A segment written before the crawl kept checkpoints has
+  none, and lane data cannot be backfilled from raw segments.
 - **Riot client.** `crawl-riot-client.ts` is a dedicated `RiotClient` with no
   retries and no payload capture; every call is the `crawl` priority class, so
   the budget ledger stops it at a quarter of each window. A 429 ends the tick.

@@ -155,7 +155,7 @@ describe("timeline reduction", () => {
 /**
  * A real League-client timeline (`testdata/lcu`, ten players, one frame about
  * every 60 seconds) wrapped in the Match-V5 envelope the crawl reads. Frame
- * timestamps carry the real jitter: the frame "at 10 minutes" is 600249 ms.
+ * timestamps carry the real jitter: the frame "at 10 minutes" is stamped 600249 ms.
  */
 const FixtureTimelineSchema = z.object({
   frames: z.array(
@@ -206,17 +206,29 @@ function economy(
   };
 }
 
+/** The frames with the given timestamps replaced, `[from, to]` pairs. */
+function restamped<Frame extends { timestamp: number }>(
+  frames: readonly Frame[],
+  changes: readonly (readonly [number, number])[],
+): Frame[] {
+  const to = new Map(changes);
+  return frames.map((frame) => ({
+    ...frame,
+    timestamp: to.get(frame.timestamp) ?? frame.timestamp,
+  }));
+}
+
 describe("timeline checkpoints", () => {
-  test("keeps all ten participants at the latest frame at or before 10 and 15 minutes", async () => {
+  test("keeps all ten participants at the frames about 10 and 15 minutes", async () => {
     const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
     const { checkpoints } = reduceTimeline(timelineOf(fixture));
 
     expect(CHECKPOINT_TIMES_MS).toEqual([600_000, 900_000]);
     expect(checkpoints?.map(({ atMs, frameMs }) => [atMs, frameMs])).toEqual([
-      // The 10-minute frame is stamped 600249, after the checkpoint, so the
-      // latest frame at or before it is the one a minute earlier.
-      [600_000, 540_219],
-      [900_000, 840_295],
+      // Riot stamps each minute's frame just after it, so the checkpoint is
+      // the first frame at or after T, never the one a minute earlier.
+      [600_000, 600_249],
+      [900_000, 900_303],
     ]);
     for (const checkpoint of checkpoints ?? []) {
       const frame = fixture.frames.find(
@@ -234,15 +246,10 @@ describe("timeline checkpoints", () => {
 
   test("reads a frame stamped exactly on the checkpoint, minions summed", async () => {
     const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
-    const frames = fixture.frames.map((frame) => ({
-      ...frame,
-      timestamp:
-        frame.timestamp >= 600_000 && frame.timestamp < 700_000
-          ? 600_000
-          : frame.timestamp >= 900_000 && frame.timestamp < 1_000_000
-            ? 900_000
-            : frame.timestamp,
-    }));
+    const frames = restamped(fixture.frames, [
+      [600_249, 600_000],
+      [900_303, 900_000],
+    ]);
     const { checkpoints } = reduceTimeline(timelineOf(fixture, frames));
     expect(checkpoints?.map((checkpoint) => checkpoint.frameMs)).toEqual([
       600_000, 900_000,
@@ -250,6 +257,40 @@ describe("timeline checkpoints", () => {
     const exact = frames.find((frame) => frame.timestamp === 600_000);
     expect(checkpoints?.[0]?.participants[3]).toEqual(economy(exact, 4));
     expect(checkpoints?.[0]?.participants[3]?.minions).toBeGreaterThan(0);
+  });
+
+  test("reads a frame stamped just after the checkpoint, up to but not including 60 seconds", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const late = restamped(fixture.frames, [
+      [600_249, 659_999],
+      [900_303, 900_001],
+    ]);
+    expect(
+      reduceTimeline(timelineOf(fixture, late)).checkpoints?.map(
+        (checkpoint) => checkpoint.frameMs,
+      ),
+    ).toEqual([659_999, 900_001]);
+
+    // At exactly T + 60000 the frame belongs to the next minute: no checkpoint.
+    const next = restamped(fixture.frames, [[600_249, 660_000]]);
+    expect(
+      reduceTimeline(timelineOf(fixture, next)).checkpoints?.map(
+        ({ atMs }) => atMs,
+      ),
+    ).toEqual([900_000]);
+  });
+
+  test("takes the earliest frame when two fall in the window", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const extra = fixture.frames.find((frame) => frame.timestamp === 600_249);
+    if (extra === undefined) throw new Error("fixture has no 600249 frame");
+    const frames = [
+      ...fixture.frames,
+      { ...extra, timestamp: 630_000, participantFrames: {} },
+    ];
+    expect(
+      reduceTimeline(timelineOf(fixture, frames)).checkpoints?.[0]?.frameMs,
+    ).toBe(600_249);
   });
 
   test("a game that ends between the checkpoints has only the 10-minute one", async () => {
@@ -265,10 +306,22 @@ describe("timeline checkpoints", () => {
     expect(reduceTimeline(timelineOf(fixture)).checkpoints).toEqual([]);
   });
 
-  test("a timeline whose last frame precedes the checkpoint gets nothing for it", async () => {
+  test("a game that ends before the checkpoint frame gets nothing for it", async () => {
     const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    // The last frame is 540219: the game ended before 10:00.
     const frames = fixture.frames.filter((frame) => frame.timestamp < 600_000);
     expect(reduceTimeline(timelineOf(fixture, frames)).checkpoints).toEqual([]);
+  });
+
+  test("a missing frame gives no checkpoint and no neighbouring frame stands in", async () => {
+    const fixture = await fixtureTimeline("lcu-timeline-ranked-solo");
+    const frames = fixture.frames.filter(
+      (frame) => frame.timestamp !== 600_249,
+    );
+    const { checkpoints } = reduceTimeline(timelineOf(fixture, frames));
+    expect(checkpoints?.map(({ atMs, frameMs }) => [atMs, frameMs])).toEqual([
+      [900_000, 900_303],
+    ]);
   });
 
   test("a timeline with no frames has no checkpoints", () => {

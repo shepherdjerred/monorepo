@@ -48,10 +48,10 @@ export async function crawlFixturePuuids(): Promise<string[]> {
   return loaded.info.participants.map((participant) => participant.puuid);
 }
 
-/** Both checkpoints, on frames stamped just before them as Riot's are. */
+/** Both checkpoints, on frames stamped just after them, as Riot's are. */
 const CHECKPOINTS = [
-  { atMs: 600_000, frameMs: 540_219 },
-  { atMs: 900_000, frameMs: 840_295 },
+  { atMs: 600_000, frameMs: 600_249 },
+  { atMs: 900_000, frameMs: 900_303 },
 ] as const;
 
 export type CrawlRecordOptions = {

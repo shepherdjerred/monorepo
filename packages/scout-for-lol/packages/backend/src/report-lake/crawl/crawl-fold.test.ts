@@ -159,7 +159,7 @@ describe("foldCrawlInbox checkpoints", () => {
       match_id: "NA1_9000000020",
       ingest_day: DAY,
       checkpoint_ms: 600_000,
-      frame_timestamp_ms: 540_219,
+      frame_timestamp_ms: 600_249,
       participant_id: 1,
       puuid: puuids[0],
       total_gold: 6050,
@@ -174,7 +174,7 @@ describe("foldCrawlInbox checkpoints", () => {
       checkpoints.filter((row) => row["checkpoint_ms"] === 900_000)[9],
     ).toMatchObject({
       participant_id: 10,
-      frame_timestamp_ms: 840_295,
+      frame_timestamp_ms: 900_303,
       total_gold: 9500,
     });
   });

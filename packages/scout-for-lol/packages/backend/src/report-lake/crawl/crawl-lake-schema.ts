@@ -102,11 +102,10 @@ export const CRAWL_TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS = {
 } as const satisfies Record<string, DuckDbColumnType>;
 
 /**
- * One row per participant per checkpoint (10 and 15 minutes): the latest
- * timeline frame at or before `checkpoint_ms`, as `fetchTimelineFramesAtTime`
- * reads it for the logged-in app. A game that ended before a checkpoint has no
- * row for it, and a segment written before the crawl kept checkpoints has none
- * at all.
+ * One row per participant per checkpoint (10 and 15 minutes): the first
+ * timeline frame stamped at or after `checkpoint_ms` and before it plus 60
+ * seconds (see `reduceTimeline`). A game with no such frame has no row for it,
+ * and a segment written before the crawl kept checkpoints has none at all.
  */
 export const CRAWL_TIMELINE_CHECKPOINT_LAKE_COLUMNS = {
   match_id: "VARCHAR",
