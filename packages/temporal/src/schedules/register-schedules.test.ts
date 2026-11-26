@@ -915,7 +915,6 @@ test("terminates workflows for schedules being removed", async () => {
     'WorkflowType = "backupStormForumWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runVeleroR2OrphanAuditWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "syncGolinks" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runFliptFlagInventory" AND ExecutionStatus = "Running"',
   ]);
 });
 
