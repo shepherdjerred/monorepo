@@ -28,6 +28,13 @@ export const AWS_CREDENTIAL_PROFILES: ReadonlyMap<
     },
   ],
   [
+    "agent-share",
+    {
+      accessKeyId: "AGENT_SHARE_S3_ACCESS_KEY_ID",
+      secretAccessKey: "AGENT_SHARE_S3_SECRET_ACCESS_KEY",
+    },
+  ],
+  [
     "b2-velero",
     {
       accessKeyId: "B2_VELERO_ACCESS_KEY_ID",
