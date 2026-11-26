@@ -87,12 +87,13 @@ function findScheduleById(id: string) {
   return schedule;
 }
 
-test("Reddit outreach is registered on a 15-minute interval and starts paused", () => {
+test("Reddit outreach is registered on a five-minute interval and starts paused", () => {
   const schedule = findScheduleById("the-storm-reddit-outreach");
   expect(schedule).toMatchObject({
     workflowType: "runStormRedditOutreach",
-    timing: { kind: "interval", every: "15 minutes" },
+    timing: { kind: "interval", every: 5 * 60_000 },
     overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "1 minute",
     workflowExecutionTimeout: "15 minutes",
   });
   expect(buildScheduleState(schedule, {})).toEqual({
