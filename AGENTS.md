@@ -168,12 +168,12 @@ The primary commit includes `Why`, `What`, and `Verification` (including live
 checks not run); the PR body adds `Demo` from the complete branch diff so a
 reviewer immediately sees what changed. Stage explicit paths only.
 
-Upload PR media with `toolkit pr asset [PR] <file|dir...> --markdown`: show
-**before and after** for UI, sites, docs, and reports (screenshots, flow
-recordings, or `.html`/directory previews), an asciinema `.cast` (inline GIF +
-player) for CLI/TUI, and concrete output for backend/data/infra (payload or
-`cdk8s`/`tofu`/SQL diff, `duckdb -markdown` table, `uplot` chart, or `mermaid`
-diagram — only mechanical non-behavioral chores write `None — <reason>`).
+Upload PR media with `toolkit pr asset [PR] <file|dir...> --markdown` (GitHub
+cannot reach the tailnet; the `artifacts` skill shows Jerred work for feedback):
+**before and after** for UI, sites, docs, and reports (screenshots, recordings,
+`.html` previews), an asciinema `.cast` for CLI/TUI, and concrete output for
+backend/data/infra (payload, plan, or SQL diff, `duckdb -markdown` table, `uplot`
+chart, or `mermaid` diagram) — only mechanical chores write `None — <reason>`.
 
 Automated review focuses on P0-P2 correctness, architecture, process, and secret
 hygiene. Mechanical formatting and type errors are covered elsewhere. Before

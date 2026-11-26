@@ -266,7 +266,7 @@ Every research report is delivered in three formats: Markdown (`.md`), Typst (`.
    - **Visual hierarchy** — use color, spacing, and layout to guide the reader's eye
      The reader should be able to understand the core findings by scanning the document for 60 seconds. Save to `~/.claude-extra/research/[topic-slug].typ`.
 4. **Compile PDF** — Run `typst compile ~/.claude-extra/research/[topic-slug].typ ~/.claude-extra/research/[topic-slug].pdf`. If compilation fails, fix the Typst source (common issues: unescaped special characters `#`, `@`, `$` need `\#`, `\@`, `\$` in content text) and retry.
-5. **Open PDF** — Run `open ~/.claude-extra/research/[topic-slug].pdf` to open the rendered PDF for the user. This step is mandatory — always open the PDF. **Only open the PDF once the entire research process is 100% complete** — all phases finished, editorial synthesis done, quality checklist passed, and final PDF compiled without errors. Never open intermediate or draft versions.
+5. **Deliver the PDF** — This step is mandatory. On the MacBook, run `open ~/.claude-extra/research/[topic-slug].pdf`. On a remote host (such as `karpathy`), load the `artifacts` skill and run `toolkit artifacts publish ~/.claude-extra/research/[topic-slug].pdf`, then give Jerred the review URL first. Deliver only once the entire research process is 100% complete — all phases finished, editorial synthesis done, quality checklist passed, and the final PDF compiled without errors. Never deliver intermediate or draft versions.
 6. **Present summary** — Show a concise inline summary with:
    - The report title and key findings (3-5 bullets)
    - File paths for all three outputs

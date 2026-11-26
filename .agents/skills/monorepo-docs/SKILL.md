@@ -30,4 +30,6 @@ copy inventories, flags, commands, or procedures across pages.
 Verify with the wiki's typecheck, test, build, and E2E scripts. Inspect changed
 pages at desktop and mobile widths, and embed **before and after** screenshots
 (or desktop + mobile screenshots / an `.html` preview for new pages) in the PR's
-`## Demo` section via `toolkit pr asset --markdown`.
+`## Demo` section via `toolkit pr asset --markdown`. To show Jerred a draft
+page or diagram for feedback before or beside the PR, publish it with the
+`artifacts` skill; GitHub cannot reach the tailnet.

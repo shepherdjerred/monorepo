@@ -36,15 +36,18 @@ official documentation before relying on a flag from this skill.
 - ACLs, grants, and SSH rules cannot be read from the CLI. Reachability that
   depends on policy is unverified until checked in the admin console or API.
 - Do not install or invoke an MCP server for Tailscale.
+- To show Jerred a result or send him a file, do not use Serve or Taildrop: load
+  the `artifacts` skill (`toolkit artifacts publish`, `toolkit share private`).
+  Serve and Taildrop below are Tailscale reference for other tasks.
 
 ## Most-used commands
 
 ```bash
 tailscale status [--json]                 # peers, online state, health
 tailscale ping --verbose <host>           # direct vs DERP; works when OS ping is firewalled
-tailscale serve --bg <port>               # tailnet-only HTTPS proxy to 127.0.0.1:<port>
+tailscale serve --bg <port>               # tailnet-only HTTPS proxy to 127.0.0.1:<port> (not for sharing results)
 tailscale serve status
-tailscale file cp <file> <host>:          # Taildrop send (trailing colon)
+tailscale file cp <file> <host>:          # Taildrop send (trailing colon; not for sharing results)
 tailscale file get <dir>                  # Taildrop receive (Linux; GUI apps use Downloads)
 tailscale ssh user@host
 tailscale nc <host> <port>                # test a port over the tailnet

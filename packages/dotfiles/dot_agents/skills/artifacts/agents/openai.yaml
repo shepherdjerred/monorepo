@@ -1,0 +1,4 @@
+interface:
+  display_name: "Artifacts"
+  short_description: "Show Jerred plans, designs, and demos for feedback, and share files"
+  default_prompt: "Use $artifacts to publish this work for Jerred's review, wait for his comments, and answer them."

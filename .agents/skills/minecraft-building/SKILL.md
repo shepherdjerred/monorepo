@@ -147,5 +147,6 @@ add <x> <z>` first, or use WorldEdit ops (which load chunks).
 ## Evidence
 
 Report the capture, the final render path, lint result, replay result, plan
-hash, apply id, and verification status. Attach the contact sheet to the PR or
-send it to the user.
+hash, apply id, and verification status. Attach the contact sheet to the PR
+(`toolkit pr asset`) or, to show Jerred a build and collect feedback, publish it
+with the `artifacts` skill.

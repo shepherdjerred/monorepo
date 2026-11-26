@@ -17,6 +17,10 @@ and their online state change, so do not copy a host list into other files.
 
 ## Reach a dev server from another machine
 
+To show Jerred a result or a build for review, publish it with the `artifacts`
+skill instead of exposing a port; the recipes below are for reaching a server you
+are actively developing.
+
 Pick one:
 
 1. **Serve (HTTPS, tailnet only).** On the machine running the server:
@@ -52,6 +56,9 @@ Framework host checks:
   only at the start of a pattern.
 
 ## Send files between machines
+
+To give Jerred a file, use `toolkit share private <path>` (see the `artifacts`
+skill). Taildrop is for moving files between your own devices:
 
 Taildrop:
 
