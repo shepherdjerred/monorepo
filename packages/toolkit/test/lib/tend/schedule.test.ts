@@ -104,13 +104,24 @@ describe("tend LaunchAgent", () => {
     );
   });
 
-  it("keeps its logs under TOOLKIT_TEND_DIR when that is set", () => {
+  it("keeps its logs and state under TOOLKIT_TEND_DIR when that is set", () => {
     const overridden = resolveTendPaths({
       homeDir: HOME,
       env: { TOOLKIT_TEND_DIR: "/tmp/tend-state" },
     });
-    expect(tendLaunchAgent(overridden, HOME).logsDir).toBe(
-      path.join("/tmp/tend-state", "logs"),
+    const spec = tendLaunchAgent(overridden, HOME);
+    expect(spec.logsDir).toBe(path.join("/tmp/tend-state", "logs"));
+    // launchd passes nothing on from the installing shell, so the job is
+    // told where its lock, leases and events live.
+    expect(spec.environment).toMatchObject({
+      TOOLKIT_TEND_DIR: "/tmp/tend-state",
+    });
+    expect(renderLaunchAgentPlist(spec)).toContain(
+      "<key>TOOLKIT_TEND_DIR</key>\n    <string>/tmp/tend-state</string>",
+    );
+    // The default location needs no override.
+    expect(Object.keys(tendLaunchAgent(paths, HOME).environment ?? {})).toEqual(
+      ["PATH"],
     );
   });
 });

@@ -3,6 +3,26 @@ import path from "node:path";
 import { z } from "zod";
 import type { CommandRunner } from "./types.ts";
 
+/**
+ * Run git against the directory it is started in and nothing else. Inside a
+ * git hook `GIT_DIR`, `GIT_WORK_TREE` and `GIT_INDEX_FILE` are set, and an
+ * inherited value would point every command at the hook's repository.
+ */
+export function withoutInheritedGitContext(
+  runner: CommandRunner,
+): CommandRunner {
+  return (argv, options = {}) =>
+    runner(argv, {
+      ...options,
+      env: {
+        GIT_DIR: undefined,
+        GIT_WORK_TREE: undefined,
+        GIT_INDEX_FILE: undefined,
+        ...options.env,
+      },
+    });
+}
+
 export type WorktreePorcelainEntry = {
   readonly path: string;
   readonly headSha: string;
@@ -208,6 +228,21 @@ export async function isMidGitOperation(gitDir: string): Promise<boolean> {
   return false;
 }
 
+async function nearestExistingAncestorMtimeMs(
+  wtPath: string,
+  missingPath: string,
+): Promise<number> {
+  let dir = path.dirname(missingPath);
+  while (dir.length > wtPath.length && dir.startsWith(wtPath)) {
+    const mtimeMs = await mtimeMsIfExists(dir);
+    if (mtimeMs > 0) {
+      return mtimeMs;
+    }
+    dir = path.dirname(dir);
+  }
+  return mtimeMsIfExists(wtPath);
+}
+
 async function newestChangedPathMtimeMs(
   wtPath: string,
   relativePaths: readonly string[],
@@ -219,8 +254,12 @@ async function newestChangedPathMtimeMs(
       const info = await lstat(target);
       newest = Math.max(newest, info.mtimeMs);
     } catch {
-      // A deleted path: the directory it was removed from records when.
-      newest = Math.max(newest, await mtimeMsIfExists(path.dirname(target)));
+      // A deleted path: the nearest directory that still exists records
+      // when, since removing an entry moves its directory's mtime.
+      newest = Math.max(
+        newest,
+        await nearestExistingAncestorMtimeMs(wtPath, target),
+      );
     }
   }
   return newest;

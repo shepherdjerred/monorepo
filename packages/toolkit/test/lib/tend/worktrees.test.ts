@@ -1,15 +1,17 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, utimes } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { DEFAULT_WORKTREE_MIN_AGE_MS } from "#lib/tend/paths.ts";
 import type {
+  CommandExecResult,
   LivenessSnapshot,
   OsProcessEntry,
   SurfaceSweepResult,
 } from "#lib/tend/types.ts";
 import { sweepWorktrees } from "#lib/tend/worktrees.ts";
 import {
+  directoryExists,
   parsePorcelainWorktrees,
   parsePullRequestList,
 } from "#lib/tend/worktrees-git.ts";
@@ -93,7 +95,7 @@ async function runSweep(
       recorded,
     }),
     apply: options.apply ?? true,
-    worktreeMinAgeMs: DEFAULT_WORKTREE_MIN_AGE_MS,
+    // The idle window is left to its default on purpose.
     gitDirs: [repo.gitRoot],
     homeDir: root,
     selfCwd: "/Users/jerred/elsewhere",
@@ -217,13 +219,25 @@ describe("sweepWorktrees policy", () => {
     ]);
     const calls = gitCalls(recorded);
     expect(calls).toContainEqual(["worktree", "remove", repo.pathOf("squash")]);
-    expect(calls).toContainEqual(["branch", "-D", "feat/squash"]);
+    // A merged branch goes only if it is still the commit that was judged.
+    expect(calls).toContainEqual([
+      "update-ref",
+      "-d",
+      "refs/heads/feat/squash",
+      "head-squash",
+    ]);
+    expect(calls).toContainEqual([
+      "config",
+      "--remove-section",
+      "branch.feat/squash",
+    ]);
     expect(calls).toContainEqual([
       "worktree",
       "remove",
       repo.pathOf("diverged"),
     ]);
-    expect(calls.filter((call) => call[0] === "branch")).toHaveLength(1);
+    expect(calls.filter((call) => call[0] === "branch")).toEqual([]);
+    expect(calls.filter((call) => call[1] === "-d")).toHaveLength(1);
     expect(result.actions[1]?.detail).toBe("branch feat/diverged kept");
     expect(calls).toContainEqual(["worktree", "prune"]);
 
@@ -267,21 +281,55 @@ describe("sweepWorktrees policy", () => {
       "core.fsmonitor=false",
       "status",
       "--porcelain",
+      "--untracked-files=all",
       "-z",
     ]);
   });
 
   it("counts a recently edited uncommitted file as activity", async () => {
     const { keepCategory, result } = await runSweep(
-      [{ name: "editing", ageDays: 9, status: " M notes.md\0" }],
+      [
+        { name: "editing", ageDays: 9, status: " M notes.md\0" },
+        // Recent work inside an old untracked directory: only the file's
+        // own mtime shows it, which is why status lists untracked files.
+        { name: "scratch", ageDays: 9, status: "?? scratch/deep/draft.txt\0" },
+        // A deleted file whose directory went with it: the nearest directory
+        // that still exists records the deletion.
+        { name: "pruned", ageDays: 9, status: " D src/obsolete/a.ts\0" },
+        { name: "untouched", ageDays: 9, status: " M old.md\0" },
+      ],
       {
+        apply: false,
         prepare: async (repo) => {
-          await Bun.write(path.join(repo.pathOf("editing"), "notes.md"), "x");
+          const old = new Date((NOW_SECONDS - 9 * DAY_SECONDS) * 1000);
+          const recent = new Date((NOW_SECONDS - 3600) * 1000);
+          const place = async (name: string, file: string, at: Date) => {
+            const root = repo.pathOf(name);
+            await Bun.write(path.join(root, file), "x");
+            await utimes(path.join(root, file), at, at);
+            // Creating the file touched every directory above it.
+            for (
+              let dir = path.dirname(path.join(root, file));
+              dir.length >= root.length;
+              dir = path.dirname(dir)
+            ) {
+              await utimes(dir, old, old);
+            }
+          };
+          await place("editing", "notes.md", recent);
+          await place("scratch", "scratch/deep/draft.txt", recent);
+          await place("untouched", "old.md", old);
+          await place("pruned", "src/kept.ts", old);
+          await utimes(path.join(repo.pathOf("pruned"), "src"), recent, recent);
         },
       },
     );
     expect(keepCategory("editing")).toBe("recent activity");
-    expect(result.candidates).toEqual([]);
+    expect(keepCategory("scratch")).toBe("recent activity");
+    expect(keepCategory("pruned")).toBe("recent activity");
+    expect(result.candidates.map((c) => path.basename(c.target))).toEqual([
+      "untouched",
+    ]);
   });
 
   it("holds the whole surface when hc is unavailable", async () => {
@@ -360,6 +408,14 @@ function claudeProcess(processStart: string): OsProcessEntry {
   };
 }
 
+/** `ps -o lstart=` answering with one start time, whatever the pid. */
+function processStartNow(start: string): MockRunnerOptions["override"] {
+  return (command) =>
+    command.argv[0] === "ps"
+      ? { exitCode: 0, stdout: `${start}\n`, stderr: "" }
+      : undefined;
+}
+
 describe("sweepWorktrees lock and liveness rechecks", () => {
   it("releases a Claude agent lock whose pid now belongs to another process", async () => {
     const specs: WorktreeSpec[] = [
@@ -371,8 +427,11 @@ describe("sweepWorktrees lock and liveness rechecks", () => {
     expect(same.keepCategory("agent")).toBe("locked by a live Claude agent");
     expect(same.result.candidates).toEqual([]);
 
+    // The pid is seen with another start time in the snapshot, and still
+    // has it when asked again now.
     const reused = await runSweep(specs, {
       processes: new Map([[4242, claudeProcess("Mon Nov 24 08:00:00 2026")]]),
+      override: processStartNow("Mon Nov 24 08:00:00 2026"),
     });
     expect(reused.result.actions.map((action) => action.status)).toEqual([
       "removed",
@@ -381,6 +440,23 @@ describe("sweepWorktrees lock and liveness rechecks", () => {
       "worktree",
       "unlock",
       reused.repo.pathOf("agent"),
+    ]);
+  });
+
+  it("does not call a lock dead on a start time older than the lock", async () => {
+    // The snapshot saw an earlier process on this pid. The agent that holds
+    // the lock started afterwards and reused the number.
+    const { keepCategory, result, recorded } = await runSweep(
+      [{ name: "agent", ageDays: 30, lock: LIVE_AGENT_LOCK }],
+      {
+        processes: new Map([[4242, claudeProcess("Mon Nov 16 08:00:00 2026")]]),
+        override: processStartNow("Thu Nov 20 10:11:12 2026"),
+      },
+    );
+    expect(keepCategory("agent")).toBe("locked by a live Claude agent");
+    expect(result.candidates).toEqual([]);
+    expect(recorded.filter((command) => command.argv[0] === "ps")).toEqual([
+      expect.objectContaining({ argv: ["ps", "-o", "lstart=", "-p", "4242"] }),
     ]);
   });
 
@@ -461,28 +537,55 @@ describe("sweepWorktrees preserves work", () => {
     ]);
     const wtPath = repo.pathOf("dirty");
     const calls = gitCalls(recorded, wtPath).map((call) => call[0]);
-    expect(calls.slice(calls.indexOf("add"))).toEqual([
-      "add",
-      "diff-index",
+    expect(calls.slice(calls.indexOf("rev-list") + 1)).toEqual([
+      // Still the commit that was inspected?
+      "rev-parse",
+      // Staged state first, then the working tree on top of it.
       "write-tree",
+      "add",
+      "ls-files",
+      "write-tree",
+      "commit-tree",
       "commit-tree",
       "update-ref",
       "fsmonitor--daemon",
+      // Read again immediately before the forced removal.
+      "rev-parse",
+      "write-tree",
+      "add",
+      "ls-files",
+      "write-tree",
+    ]);
+    const commits = gitCalls(recorded, wtPath).filter(
+      (call) => call[0] === "commit-tree",
+    );
+    expect(commits.map((call) => call.slice(1, 4))).toEqual([
+      ["tree0001", "-p", "head-dirty"],
+      ["tree0001", "-p", "commit0001"],
     ]);
 
     const snapshotCommands = recorded.filter(
       (command) => command.env["GIT_INDEX_FILE"] !== undefined,
     );
-    expect(snapshotCommands).toHaveLength(4);
+    expect(snapshotCommands).toHaveLength(8);
     const indexFiles = new Set(
       snapshotCommands.map((command) => command.env["GIT_INDEX_FILE"]),
     );
-    expect(indexFiles.size).toBe(1);
-    const [temporaryIndex] = [...indexFiles];
-    expect(temporaryIndex).not.toBe(
-      path.join(repo.worktrees.get(wtPath)?.gitDir ?? "", "index"),
-    );
-    expect(await Bun.file(temporaryIndex ?? "").exists()).toBe(false);
+    expect(indexFiles.size).toBe(2);
+    for (const temporaryIndex of indexFiles) {
+      expect(temporaryIndex).not.toBe(
+        path.join(repo.worktrees.get(wtPath)?.gitDir ?? "", "index"),
+      );
+      expect(await Bun.file(temporaryIndex ?? "").exists()).toBe(false);
+    }
+    // An inherited git context cannot redirect any of it.
+    for (const command of recorded.filter((c) => c.argv[0] === "git")) {
+      expect(command.env).toMatchObject({
+        GIT_DIR: undefined,
+        GIT_WORK_TREE: undefined,
+      });
+      expect(Object.keys(command.env)).toContain("GIT_DIR");
+    }
 
     const rescueRef = "refs/tend/rescue/dirty-20251009T085320Z";
     expect(gitCalls(recorded, wtPath)).toContainEqual([
@@ -524,7 +627,7 @@ describe("sweepWorktrees preserves work", () => {
       expect.objectContaining({
         status: "failed",
         detail:
-          "worktree kept: could not save its work (git write-tree: fatal: unable to write)",
+          "worktree kept: could not save its work (git write-tree (staged): fatal: unable to write)",
       }),
     ]);
     expect(keepCategory("dirty")).toBe("removal failed");
@@ -663,6 +766,271 @@ describe("sweepWorktrees pull requests", () => {
   });
 });
 
+function ok(stdout: string): CommandExecResult {
+  return { exitCode: 0, stdout, stderr: "" };
+}
+
+describe("sweepWorktrees re-verifies before removing", () => {
+  it("leaves a worktree whose HEAD moved after it was inspected", async () => {
+    const { recorded, result, keepCategory } = await runSweep(
+      [
+        { name: "detached", ageDays: 9, ahead: 2, head: "aaaa1111" },
+        { name: "branch", branch: "feat/b", ageDays: 9, head: "bbbb2222" },
+      ],
+      {
+        override: (command) =>
+          command.argv.includes("rev-parse") && command.argv.includes("HEAD")
+            ? ok("cccc3333\n")
+            : undefined,
+      },
+    );
+    expect(
+      result.actions.map((action) => [action.status, action.detail]),
+    ).toEqual([
+      [
+        "skipped",
+        "changed during the sweep: HEAD moved from aaaa1111 to cccc3333",
+      ],
+      [
+        "skipped",
+        "changed during the sweep: HEAD moved from bbbb2222 to cccc3333",
+      ],
+    ]);
+    expect(keepCategory("detached")).toBe("changed during the sweep");
+    const calls = gitCalls(recorded);
+    // No rescue ref at the stale commit, and nothing removed or deleted.
+    expect(calls.filter((call) => call[0] === "update-ref")).toEqual([]);
+    expect(calls.filter((call) => call[1] === "remove")).toEqual([]);
+    expect(calls.filter((call) => call[0] === "branch")).toEqual([]);
+  });
+
+  it("keeps a merged branch that a worktree has checked out, or that cannot be checked", async () => {
+    const merged: WorktreeSpec = {
+      name: "squash",
+      branch: "feat/squash",
+      ageDays: 9,
+      ahead: 3,
+    };
+    const allPrs: PullRequestRow[] = [
+      {
+        headRefName: "feat/squash",
+        state: "MERGED",
+        updatedAt: isoDaysAgo(9),
+        headRefOid: "head-squash",
+      },
+    ];
+    const elsewhere = await runSweep([merged], {
+      allPrs,
+      override: (command) =>
+        command.argv.includes("for-each-ref")
+          ? ok("/somewhere/else\n")
+          : undefined,
+    });
+    expect(elsewhere.result.actions[0]).toMatchObject({
+      status: "removed",
+      detail: "branch feat/squash kept (checked out in /somewhere/else)",
+    });
+    expect(gitCalls(elsewhere.recorded)).toContainEqual([
+      "for-each-ref",
+      "--format=%(worktreepath)",
+      "refs/heads/feat/squash",
+    ]);
+
+    const unknown = await runSweep([merged], {
+      allPrs,
+      override: (command) =>
+        command.argv.includes("for-each-ref")
+          ? { exitCode: 129, stdout: "", stderr: "unknown field name" }
+          : undefined,
+    });
+    expect(unknown.result.actions[0]?.detail).toBe(
+      "branch feat/squash kept (could not tell whether it is checked out)",
+    );
+    for (const sweep of [elsewhere, unknown]) {
+      expect(
+        gitCalls(sweep.recorded).filter((call) => call[0] === "update-ref"),
+      ).toEqual([]);
+    }
+  });
+
+  it("leaves a worktree that was locked, or re-locked, after it was inspected", async () => {
+    const { recorded, result } = await runSweep(
+      [
+        { name: "newly-locked", ageDays: 9 },
+        { name: "relocked", ageDays: 30, lock: DEAD_AGENT_LOCK },
+      ],
+      {
+        prepare: async (repo) => {
+          const gitDir = (name: string) =>
+            repo.worktrees.get(repo.pathOf(name))?.gitDir ?? "";
+          await Bun.write(path.join(gitDir("newly-locked"), "locked"), "mine");
+          await Bun.write(
+            path.join(gitDir("relocked"), "locked"),
+            `${LIVE_AGENT_LOCK}\n`,
+          );
+        },
+      },
+    );
+    expect(
+      result.actions.map((action) => [action.status, action.detail]),
+    ).toEqual([
+      ["skipped", "changed during the sweep: its lock changed"],
+      ["skipped", "changed during the sweep: its lock changed"],
+    ]);
+    const calls = gitCalls(recorded);
+    expect(calls.filter((call) => call[1] === "unlock")).toEqual([]);
+    expect(calls.filter((call) => call[1] === "remove")).toEqual([]);
+  });
+
+  it("does not force-remove a worktree whose files changed after they were saved", async () => {
+    let treesWritten = 0;
+    const { repo, recorded, result, keepCategory } = await runSweep(
+      [{ name: "dirty", ageDays: 9, status: " M src/app.ts\0" }],
+      {
+        override: (command) => {
+          const writesTree = command.argv.includes("write-tree");
+          treesWritten += writesTree ? 1 : 0;
+          // Staged and working trees at the snapshot, then again before the
+          // removal, by which time an editor has saved the file once more.
+          const tree = treesWritten === 4 ? "tree-after-edit" : "tree0001";
+          return writesTree ? ok(`${tree}\n`) : undefined;
+        },
+      },
+    );
+    const rescueRef = "refs/tend/rescue/dirty-20251009T085320Z";
+    expect(result.actions).toEqual([
+      expect.objectContaining({
+        status: "skipped",
+        detail: `changed during the sweep: files changed after they were saved; work saved to ${rescueRef}`,
+      }),
+    ]);
+    expect(keepCategory("dirty")).toBe("changed during the sweep");
+    expect(treesWritten).toBe(4);
+    const calls = gitCalls(recorded);
+    expect(calls.filter((call) => call[1] === "remove")).toEqual([]);
+    expect(
+      await Bun.file(path.join(repo.pathOf("dirty"), ".git")).exists(),
+    ).toBe(true);
+  });
+
+  it("keeps a worktree that has submodules instead of trying to remove it", async () => {
+    const { recorded, result, keepCategory } = await runSweep([
+      { name: "with-submodule", ageDays: 9, submodules: true },
+      {
+        name: "dirty-submodule",
+        ageDays: 9,
+        submodules: true,
+        status: " M deps/lib\0",
+      },
+      { name: "young-submodule", ageDays: 1, submodules: true },
+    ]);
+    expect(result.candidates).toEqual([]);
+    expect(keepCategory("with-submodule")).toBe("contains a submodule");
+    expect(keepCategory("dirty-submodule")).toBe("contains a submodule");
+    expect(keepCategory("young-submodule")).toBe("recent activity");
+    expect(gitCalls(recorded).filter((call) => call[1] === "remove")).toEqual(
+      [],
+    );
+  });
+
+  it("refuses a snapshot that would hold a gitlink in place of files", async () => {
+    const { recorded, result } = await runSweep(
+      [{ name: "dirty", ageDays: 9, status: "?? vendor/inner/\0" }],
+      {
+        override: (command) =>
+          command.argv.includes("ls-files")
+            ? ok(
+                [
+                  "100644 1111 0\tREADME.md",
+                  "160000 2222 0\tvendor/inner",
+                  "",
+                ].join("\0"),
+              )
+            : undefined,
+      },
+    );
+    expect(result.actions).toEqual([
+      expect.objectContaining({
+        status: "failed",
+        detail:
+          "worktree kept: could not save its work (contains a submodule or nested git repository at vendor/inner, whose files a snapshot cannot save)",
+      }),
+    ]);
+    const calls = gitCalls(recorded);
+    expect(calls.filter((call) => call[0] === "commit-tree")).toEqual([]);
+    expect(calls.filter((call) => call[1] === "remove")).toEqual([]);
+  });
+});
+
+describe("sweepWorktrees metadata and repositories it cannot judge", () => {
+  const gone: WorktreeSpec = { name: "gone", ageDays: 30, absent: true };
+
+  it("reports stale metadata as removed only once the list no longer has it", async () => {
+    let lists = 0;
+    const pruned = await runSweep([gone, { name: "idle", ageDays: 1 }], {
+      override: (command) => {
+        const isList =
+          command.argv[1] === "worktree" && command.argv[2] === "list";
+        lists += isList ? 1 : 0;
+        // After `git worktree prune` the entry is gone from the list.
+        return isList && lists > 1
+          ? ok("worktree /repo\nHEAD aaaa\n")
+          : undefined;
+      },
+    });
+    expect(lists).toBe(2);
+    expect(pruned.result.actions).toEqual([
+      expect.objectContaining({
+        status: "removed",
+        candidate: expect.objectContaining({ kind: "worktree-metadata" }),
+      }),
+    ]);
+
+    // The same sweep where prune keeps the entry: the list still has it.
+    const kept = await runSweep([gone]);
+    expect(kept.result.actions).toEqual([
+      expect.objectContaining({
+        status: "failed",
+        detail: "git worktree prune kept this entry",
+      }),
+    ]);
+    expect(kept.keepCategory("gone")).toBe("removal failed");
+
+    const dryRun = await runSweep([gone], { apply: false });
+    expect(dryRun.result.actions[0]?.status).toBe("planned");
+  });
+
+  it("does not offer to prune a missing worktree that is locked", async () => {
+    const { result, keepCategory } = await runSweep([
+      { ...gone, lock: "on the external drive" },
+      { ...gone, name: "gone-pool", lock: "Herdr worktree pool" },
+    ]);
+    expect(result.candidates).toEqual([]);
+    expect(keepCategory("gone")).toBe("locked, directory missing");
+    expect(keepCategory("gone-pool")).toBe("locked, directory missing");
+  });
+
+  it("records a keep for every worktree of a repository with no default branch", async () => {
+    const { result, keepCategory } = await runSweep(
+      [
+        { name: "one", ageDays: 30 },
+        { name: "two", branch: "feat/two", ageDays: 30 },
+      ],
+      {
+        override: (command) =>
+          command.argv.includes("symbolic-ref")
+            ? { exitCode: 1, stdout: "", stderr: "not a symbolic ref" }
+            : undefined,
+      },
+    );
+    expect(result.inspectedCount).toBe(2);
+    expect(result.decisions).toHaveLength(2);
+    expect(keepCategory("one")).toBe("default branch unknown");
+    expect(keepCategory("two")).toBe("default branch unknown");
+    expect(result.candidates).toEqual([]);
+  });
+});
+
 describe("sweepWorktrees unknown directories", () => {
   it("reports directories git has no worktree for and leaves them in place", async () => {
     let stray = "";
@@ -692,6 +1060,8 @@ describe("sweepWorktrees unknown directories", () => {
           orphan = path.join(repo.repoPath, ".claude", "worktrees", "orphan");
           await Bun.write(path.join(stray, "notes.txt"), "keep me");
           await Bun.write(path.join(orphan, "notes.txt"), "keep me");
+          // What a removed worktree leaves behind: not reported, and cleared.
+          await mkdir(path.join(path.dirname(stray), "leftover"));
         },
       },
     );
@@ -705,5 +1075,8 @@ describe("sweepWorktrees unknown directories", () => {
     expect(await Bun.file(path.join(orphan, "notes.txt")).text()).toBe(
       "keep me",
     );
+    expect(
+      await directoryExists(path.join(path.dirname(stray), "leftover")),
+    ).toBe(false);
   });
 });

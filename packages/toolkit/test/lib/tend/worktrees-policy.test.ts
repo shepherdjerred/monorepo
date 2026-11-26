@@ -22,6 +22,7 @@ function idleWork(
     lastActivityMs: NOW_MS - 9 * DAY_MS,
     aheadOfDefault: 2,
     branchVerdict: { prune: false, reason: "has unmerged commits" },
+    hasSubmodules: false,
     ...overrides,
   };
 }
@@ -148,6 +149,42 @@ const KEEP_CASES: readonly PolicyCase[] = [
     facts: facts({ work: idleWork({ lastActivityMs: 0 }) }),
     expected: { action: "keep", category: "activity unknown" },
   },
+  {
+    row: "fail closed: idle, but it has submodules",
+    facts: facts({ work: idleWork({ hasSubmodules: true }) }),
+    expected: {
+      action: "keep",
+      category: "contains a submodule",
+      reason:
+        "contains a submodule, whose files cannot be saved before removal",
+    },
+  },
+  {
+    row: "fail closed: idle and dirty, with submodules",
+    facts: facts({
+      ...detached,
+      work: idleWork({ status: "dirty", hasSubmodules: true }),
+    }),
+    expected: { action: "keep", category: "contains a submodule" },
+  },
+  {
+    row: "1: directory missing but locked, so git keeps the metadata",
+    facts: facts({
+      missing: true,
+      lock: { kind: "unknown", reason: "on the external drive" },
+      work: undefined,
+    }),
+    expected: { action: "keep", category: "locked, directory missing" },
+  },
+  {
+    row: "1: directory missing and locked by a dead Claude agent",
+    facts: facts({
+      missing: true,
+      lock: { kind: "claude-agent", pid: 4343, alive: false },
+      work: undefined,
+    }),
+    expected: { action: "keep", category: "locked, directory missing" },
+  },
 ];
 
 const REMOVE_CASES: readonly PolicyCase[] = [
@@ -259,12 +296,12 @@ const REMOVE_CASES: readonly PolicyCase[] = [
 ];
 
 describe("decideWorktree", () => {
-  it("row 1: prunes metadata when the directory is missing, whatever else is true", () => {
+  it("row 1: prunes metadata when an unlocked worktree's directory is missing, whatever else is true", () => {
     expect(
       decideWorktree(
         facts({
           missing: true,
-          lock: { kind: "herdr-pool" },
+          liveHold: { category: "live Herdr terminal", detail: "/wt" },
           prState: "OPEN",
           work: undefined,
         }),

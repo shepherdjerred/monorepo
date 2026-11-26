@@ -54,6 +54,10 @@ export type WorktreeSpec = {
   readonly marker?: string;
   /** Age of the index file when it differs from the other signals. */
   readonly indexAgeDays?: number;
+  /** Git still lists the worktree but its directory is gone. */
+  readonly absent?: boolean;
+  /** The checkout has a `.gitmodules` file. */
+  readonly submodules?: boolean;
 };
 
 export type WorktreeFixture = {
@@ -79,8 +83,21 @@ function secondsAgo(days: number): number {
 
 async function writeWorktreeFiles(fixture: WorktreeFixture): Promise<void> {
   const { spec } = fixture;
-  await mkdir(fixture.path, { recursive: true });
   await mkdir(fixture.gitDir, { recursive: true });
+  if (spec.lock !== undefined) {
+    // Where git itself records a lock and its reason.
+    await Bun.write(
+      path.join(fixture.gitDir, "locked"),
+      spec.lock === true ? "" : `${spec.lock}\n`,
+    );
+  }
+  if (spec.absent === true) {
+    return;
+  }
+  await mkdir(fixture.path, { recursive: true });
+  if (spec.submodules === true) {
+    await Bun.write(path.join(fixture.path, ".gitmodules"), "[submodule]\n");
+  }
   const dotGit = path.join(fixture.path, ".git");
   const headFile = path.join(fixture.gitDir, "HEAD");
   const indexFile = path.join(fixture.gitDir, "index");
@@ -241,10 +258,14 @@ const GIT_RESPONDERS: Readonly<Record<string, GitResponder>> = {
   worktree: (detail, _fixture, repo) =>
     detail === "list" ? out(repo.porcelain) : OK,
   "symbolic-ref": () => out("origin/main\n"),
-  "rev-parse": (detail, fixture, repo) =>
-    detail === "--git-dir"
-      ? out(`${fixture?.gitDir ?? repo.repoPath}\n`)
-      : { exitCode: 128, stdout: "", stderr: "fatal: no upstream" },
+  "rev-parse": (detail, fixture, repo) => {
+    if (detail === "--git-dir") {
+      return out(`${fixture?.gitDir ?? repo.repoPath}\n`);
+    }
+    return detail === "HEAD" && fixture !== undefined
+      ? out(`${fixture.head}\n`)
+      : { exitCode: 128, stdout: "", stderr: "fatal: no upstream" };
+  },
   log: (_detail, fixture) => out(`${String(fixture?.commitEpoch ?? 0)}\n`),
   status: (_detail, fixture) =>
     fixture?.spec.statusResult ?? out(fixture?.spec.status ?? ""),

@@ -10,6 +10,7 @@ import {
 import {
   defaultCommandRunner,
   isProcessAliveByKillZero,
+  readSingleProcessStart,
 } from "./process-probe.ts";
 import type {
   ClassifiedLease,
@@ -22,13 +23,14 @@ import type {
 } from "./types.ts";
 import {
   applyWorktreeRemoval,
-  removeEmptyChildDirectories,
+  findUnknownWorktreeDirectories,
+  pruneRepoWorktreeMetadataAndDirs,
 } from "./worktrees-apply.ts";
 import {
-  directoryExists,
   fileOrDirExists,
   parsePorcelainWorktrees,
   resolveDefaultBranch,
+  withoutInheritedGitContext,
   type WorktreePorcelainEntry,
 } from "./worktrees-git.ts";
 import {
@@ -95,67 +97,6 @@ type RepoSweepResult = {
   readonly decisions: TendDecision[];
   readonly warnings: string[];
 };
-
-function worktreeParentDirectories(ctx: RepoSweepContext): string[] {
-  return [
-    path.join(ctx.homeDir, ".herdr", "worktrees", path.basename(ctx.repoPath)),
-    path.join(ctx.repoPath, ".claude", "worktrees"),
-  ];
-}
-
-/**
- * Directories in the places worktrees are created that git has no worktree
- * for. They are reported and never removed: nothing here knows what they are.
- */
-async function findUnknownWorktreeDirectories(
-  ctx: RepoSweepContext,
-  worktrees: readonly WorktreePorcelainEntry[],
-): Promise<string[]> {
-  const known: string[] = [];
-  for (const wt of worktrees) {
-    known.push(await canonicalizeExistingPath(wt.path, ctx.platform));
-  }
-  const unknown: string[] = [];
-  for (const parentDir of worktreeParentDirectories(ctx)) {
-    let names: string[];
-    try {
-      names = await readdir(parentDir);
-    } catch {
-      continue;
-    }
-    for (const name of names.sort((a, b) => a.localeCompare(b))) {
-      const child = path.join(parentDir, name);
-      if (!(await directoryExists(child))) {
-        continue;
-      }
-      const canonicalChild = await canonicalizeExistingPath(
-        child,
-        ctx.platform,
-      );
-      // A directory may also be the parent of worktrees named `a/b`.
-      if (
-        !known.some((wtPath) =>
-          isPathInside(wtPath, canonicalChild, ctx.platform),
-        )
-      ) {
-        unknown.push(child);
-      }
-    }
-  }
-  return unknown;
-}
-
-async function pruneRepoWorktreeMetadataAndDirs(
-  ctx: RepoSweepContext,
-): Promise<void> {
-  await ctx.runner(["git", "worktree", "prune"], {
-    cwd: ctx.repoPath,
-    timeoutMs: 5000,
-  });
-  for (const parentDir of worktreeParentDirectories(ctx)) {
-    await removeEmptyChildDirectories(parentDir);
-  }
-}
 
 function toCandidate(
   wt: WorktreePorcelainEntry,
@@ -242,6 +183,8 @@ async function actOnCandidate(
     return { action: { candidate, status: "planned" }, decision: record };
   }
   if (decision.action === "prune-metadata") {
+    // Reported as removed once `git worktree prune` has run and the entry is
+    // seen to be gone; see `confirmPrunedMetadata`.
     return { action: { candidate, status: "removed" }, decision: record };
   }
   if (inspection.gitDir === undefined) {
@@ -274,10 +217,61 @@ async function actOnCandidate(
         : {
             target: wt.path,
             action: "keep",
-            category: "removal failed",
+            category:
+              outcome.status === "skipped"
+                ? "changed during the sweep"
+                : "removal failed",
             reason: outcome.detail ?? "removal failed",
           },
   };
+}
+
+/**
+ * `git worktree prune` decides what it drops. A metadata entry is only
+ * reported as removed if the list no longer has it afterwards.
+ */
+async function confirmPrunedMetadata(
+  ctx: RepoSweepContext,
+  result: RepoSweepResult,
+): Promise<void> {
+  if (
+    !result.actions.some(
+      (action) => action.candidate.kind === "worktree-metadata",
+    )
+  ) {
+    return;
+  }
+  const listRes = await ctx.runner(["git", "worktree", "list", "--porcelain"], {
+    cwd: ctx.repoPath,
+    timeoutMs: 5000,
+  });
+  const remaining =
+    listRes.exitCode === 0
+      ? new Set(parsePorcelainWorktrees(listRes.stdout).map((wt) => wt.path))
+      : null;
+  for (const [index, action] of result.actions.entries()) {
+    const { candidate } = action;
+    if (
+      candidate.kind !== "worktree-metadata" ||
+      remaining?.has(candidate.target) === false
+    ) {
+      continue;
+    }
+    const detail =
+      remaining === null
+        ? "git worktree list failed after pruning, so removal is unconfirmed"
+        : "git worktree prune kept this entry";
+    result.actions[index] = { candidate, status: "failed", detail };
+    const decisionIndex = result.decisions.findIndex(
+      (decision) => decision.target === candidate.target,
+    );
+    result.decisions[decisionIndex] = {
+      target: candidate.target,
+      action: "keep",
+      category: "removal failed",
+      reason: detail,
+    };
+  }
 }
 
 async function sweepRepositoryWorktrees(
@@ -312,6 +306,15 @@ async function sweepRepositoryWorktrees(
     result.warnings.push(
       `Skipping ${ctx.repoPath}: could not determine origin default branch`,
     );
+    for (const wt of nonMain) {
+      result.decisions.push({
+        target: wt.path,
+        action: "keep",
+        category: "default branch unknown",
+        reason:
+          "the repository's origin default branch could not be determined",
+      });
+    }
     return { ...result, inspected: nonMain.length };
   }
 
@@ -338,6 +341,7 @@ async function sweepRepositoryWorktrees(
 
   if (ctx.apply) {
     await pruneRepoWorktreeMetadataAndDirs(ctx);
+    await confirmPrunedMetadata(ctx, result);
   }
 
   return { ...result, inspected: nonMain.length };
@@ -365,7 +369,9 @@ export async function sweepWorktrees(
     };
   }
 
-  const runner = options.runner ?? defaultCommandRunner;
+  const runner = withoutInheritedGitContext(
+    options.runner ?? defaultCommandRunner,
+  );
   const homeDir = options.homeDir ?? Bun.env["HOME"] ?? os.homedir();
   const defaultGitDirs =
     options.liveness.platform === "win32"
@@ -414,6 +420,8 @@ export async function sweepWorktrees(
       homeDir,
       isPidAlive: (pid) => processes.has(pid) || probePid(pid),
       processStartOf: (pid) => processes.get(pid)?.processStart,
+      readProcessStart: (pid) =>
+        readSingleProcessStart(pid, { runner, platform }),
       listLiveTerminals,
     });
     inspectedCount += repoSweep.inspected;

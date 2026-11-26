@@ -58,6 +58,12 @@ export function tendLaunchAgent(
     // and a sweep that cannot see Herdr sessions holds itself.
     environment: {
       PATH: `${path.join(homeDir, ".local", "bin")}:${HOMEBREW_JOB_PATH}`,
+      // launchd passes nothing on from the shell that installed the job. An
+      // overridden state directory has to travel with it, or the job would
+      // keep its lock, leases and events somewhere else than its logs.
+      ...(paths.rootDir === path.join(homeDir, ".toolkit", "tend")
+        ? {}
+        : { TOOLKIT_TEND_DIR: paths.rootDir }),
     },
   };
 }
