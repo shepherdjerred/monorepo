@@ -417,39 +417,59 @@ test("manually killing the tip main push keeps main red when no newer verifying 
   expect(result.lastVerdict?.number).toBe(11);
 });
 
+function stubPinnedMainFetch(options: {
+  tipSha: string;
+  runs: (ReturnType<typeof pipeline> & { commit: string })[];
+  compareStatus: string;
+  compares?: string[];
+}) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: URL) => {
+      const url = new URL(input);
+      if (url.pathname.endsWith("/branches/main")) {
+        return Promise.resolve(
+          Response.json({ commit: { sha: options.tipSha } }),
+        );
+      }
+      const compare = /\/compare\/([^/]+)$/.exec(url.pathname)?.[1];
+      if (compare !== undefined) {
+        options.compares?.push(compare);
+        return Promise.resolve(
+          Response.json({ status: options.compareStatus }),
+        );
+      }
+      const number = /\/pipelines\/(\d+)$/.exec(url.pathname)?.[1];
+      if (number !== undefined) {
+        const found = options.runs.find(
+          (item) => item.number === Number(number),
+        );
+        return found === undefined
+          ? Promise.reject(new Error(`Unexpected pipeline ${number}`))
+          : Promise.resolve(Response.json(found));
+      }
+      return Promise.resolve(Response.json(options.runs));
+    }),
+  );
+}
+
 test("pinned main wait follows the earliest non-superseded descendant when the pinned push was canceled", async () => {
   const pinnedSha = "1".repeat(40);
   const canceledNext = "2".repeat(40);
   const keptRunning = "3".repeat(40);
   const newestTip = "4".repeat(40);
-  const runs = [
-    { ...pipeline(103, "push", "pending"), commit: newestTip, finished: 0 },
-    { ...pipeline(102, "push", "running"), commit: keptRunning },
-    { ...pipeline(101, "push", "canceled"), commit: canceledNext },
-    { ...pipeline(100, "push", "canceled"), commit: pinnedSha },
-  ];
   const compares: string[] = [];
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (input: URL) => {
-      const url = new URL(input);
-      if (url.pathname.endsWith("/branches/main"))
-        return Response.json({ commit: { sha: newestTip } });
-      const compare = /\/compare\/([^/]+)$/.exec(url.pathname)?.[1];
-      if (compare !== undefined) {
-        compares.push(compare);
-        return Response.json({ status: "ahead" });
-      }
-      const number = /\/pipelines\/(\d+)$/.exec(url.pathname)?.[1];
-      if (number !== undefined) {
-        const found = runs.find((item) => item.number === Number(number));
-        if (found === undefined)
-          throw new Error(`Unexpected pipeline ${number}`);
-        return Response.json(found);
-      }
-      return Response.json(runs);
-    }),
-  );
+  stubPinnedMainFetch({
+    tipSha: newestTip,
+    compareStatus: "ahead",
+    compares,
+    runs: [
+      { ...pipeline(103, "push", "pending"), commit: newestTip, finished: 0 },
+      { ...pipeline(102, "push", "running"), commit: keptRunning },
+      { ...pipeline(101, "push", "canceled"), commit: canceledNext },
+      { ...pipeline(100, "push", "canceled"), commit: pinnedSha },
+    ],
+  });
 
   const result = await pinned(pinnedSha);
   expect(result.sha).toBe(pinnedSha);
@@ -461,28 +481,14 @@ test("pinned main wait follows the earliest non-superseded descendant when the p
 test("pinned main wait refuses non-descendant newer commits and keeps a killed tip failed", async () => {
   const pinnedSha = "5".repeat(40);
   const divergedSha = "6".repeat(40);
-  const runs = [
-    { ...pipeline(51, "push", "running"), commit: divergedSha },
-    { ...pipeline(50, "push", "canceled"), commit: pinnedSha },
-  ];
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (input: URL) => {
-      const url = new URL(input);
-      if (url.pathname.endsWith("/branches/main"))
-        return Response.json({ commit: { sha: divergedSha } });
-      if (url.pathname.includes("/compare/"))
-        return Response.json({ status: "diverged" });
-      const number = /\/pipelines\/(\d+)$/.exec(url.pathname)?.[1];
-      if (number !== undefined) {
-        const found = runs.find((item) => item.number === Number(number));
-        if (found === undefined)
-          throw new Error(`Unexpected pipeline ${number}`);
-        return Response.json(found);
-      }
-      return Response.json(runs);
-    }),
-  );
+  stubPinnedMainFetch({
+    tipSha: divergedSha,
+    compareStatus: "diverged",
+    runs: [
+      { ...pipeline(51, "push", "running"), commit: divergedSha },
+      { ...pipeline(50, "push", "canceled"), commit: pinnedSha },
+    ],
+  });
 
   const result = await pinned(pinnedSha);
   expect(result.run?.number).toBe(50);

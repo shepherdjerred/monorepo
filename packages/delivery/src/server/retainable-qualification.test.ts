@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { DeliveryError } from "#domain/error.ts";
+import {
+  createQualifier,
+  type QualificationRequest,
+} from "#infrastructure/qualification.ts";
 import { testExecutor } from "#testing/seed.ts";
 import {
   createRetainableQualificationCounters,
@@ -27,35 +31,47 @@ function makeBuild(id: string, pipelineNumber: number) {
   };
 }
 
+function createHarness(
+  requestId: string,
+  qualifyBuild: (
+    request: QualificationRequest,
+  ) => Promise<RetainableQualificationOutcome>,
+) {
+  const qualifiedCalls: {
+    buildId: string;
+    status: RetainableQualificationOutcome;
+    reason?: string;
+  }[] = [];
+  const counters = createRetainableQualificationCounters();
+  const qualifyPending = createRetainableQualifier({
+    qualifyInStore: (buildId, status, _actor, reason) => {
+      qualifiedCalls.push({
+        buildId,
+        status,
+        ...(reason === undefined ? {} : { reason }),
+      });
+      return Promise.resolve({ status });
+    },
+    qualifyBuild,
+    principal: testExecutor,
+    requestId,
+    recordOutcome: (outcome) => {
+      counters.record(outcome);
+    },
+  });
+  return { qualifiedCalls, counters, qualifyPending };
+}
+
 describe("on-read retainable qualification wiring", () => {
   test("memoizes Woodpecker pipeline lookups per request and settles distinct builds", async () => {
-    const qualifiedCalls: {
-      buildId: string;
-      status: RetainableQualificationOutcome;
-      reason?: string;
-    }[] = [];
     const woodpeckerLookups: string[] = [];
-    const counters = createRetainableQualificationCounters();
-
-    const qualifyPending = createRetainableQualifier({
-      qualifyInStore: (buildId, status, _actor, reason) => {
-        qualifiedCalls.push({
-          buildId,
-          status,
-          ...(reason === undefined ? {} : { reason }),
-        });
-        return Promise.resolve({ status });
-      },
-      qualifyBuild: (request) => {
+    const { qualifiedCalls, counters, qualifyPending } = createHarness(
+      "req-1",
+      (request) => {
         woodpeckerLookups.push(request.ciUrl);
         return Promise.resolve("failed");
       },
-      principal: testExecutor,
-      requestId: "req-1",
-      recordOutcome: (outcome) => {
-        counters.record(outcome);
-      },
-    });
+    );
 
     const buildA = makeBuild("build-42-a", 42);
     const buildB = makeBuild("build-42-b", 42);
@@ -74,34 +90,15 @@ describe("on-read retainable qualification wiring", () => {
   });
 
   test("leaves pending builds pending on PAUSED and fails INVALID builds with reason", async () => {
-    const qualifiedCalls: {
-      buildId: string;
-      status: RetainableQualificationOutcome;
-      reason?: string;
-    }[] = [];
-    const counters = createRetainableQualificationCounters();
-
-    const qualifyPending = createRetainableQualifier({
-      qualifyInStore: (buildId, status, _actor, reason) => {
-        qualifiedCalls.push({
-          buildId,
-          status,
-          ...(reason === undefined ? {} : { reason }),
-        });
-        return Promise.resolve({ status });
-      },
-      qualifyBuild: (request) =>
+    const { qualifiedCalls, counters, qualifyPending } = createHarness(
+      "req-2",
+      (request) =>
         Promise.reject(
           request.ciUrl.endsWith("/50")
             ? new DeliveryError("PAUSED", "Woodpecker 503 unavailable")
             : new DeliveryError("INVALID", "Pipeline commit mismatch"),
         ),
-      principal: testExecutor,
-      requestId: "req-2",
-      recordOutcome: (outcome) => {
-        counters.record(outcome);
-      },
-    });
+    );
 
     expect(await qualifyPending(makeBuild("paused-build", 50))).toBe("pending");
     expect(await qualifyPending(makeBuild("invalid-build", 51))).toBe("failed");
@@ -113,5 +110,36 @@ describe("on-read retainable qualification wiring", () => {
       },
     ]);
     expect(counters.snapshot()).toEqual({ pending: 1, verified: 0, failed: 1 });
+  });
+
+  test("maps Woodpecker fetch transport failures to pending while propagating schema errors", async () => {
+    const networkQualifier = createQualifier({
+      origin: "https://woodpecker.sjer.red",
+      repositoryId: 1,
+      token: "wp-token",
+      recordSourceCommit: () => Promise.resolve(),
+      fetch: () => Promise.reject(new TypeError("fetch failed")),
+    });
+    const { qualifiedCalls, counters, qualifyPending } = createHarness(
+      "req-3",
+      networkQualifier,
+    );
+    expect(await qualifyPending(makeBuild("network-error", 60))).toBe(
+      "pending",
+    );
+    expect(qualifiedCalls).toEqual([]);
+    expect(counters.snapshot()).toEqual({ pending: 1, verified: 0, failed: 0 });
+
+    const schemaErrorQualifier = createQualifier({
+      origin: "https://woodpecker.sjer.red",
+      repositoryId: 1,
+      token: "wp-token",
+      recordSourceCommit: () => Promise.resolve(),
+      fetch: () => Promise.resolve(Response.json({ unexpected: true })),
+    });
+    const broken = createHarness("req-4", schemaErrorQualifier);
+    await expect(
+      broken.qualifyPending(makeBuild("schema-error", 61)),
+    ).rejects.toThrow();
   });
 });

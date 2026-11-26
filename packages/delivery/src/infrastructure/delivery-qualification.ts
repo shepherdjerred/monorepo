@@ -188,7 +188,7 @@ export async function qualify(
     return { status: BuildSummarySchema.shape.status.parse(build.status) };
   if (status === "pending") return { status };
   try {
-    await this.database.$transaction(async (tx) => {
+    return await this.database.$transaction(async (tx) => {
       await lock(tx, `qualification:${build.serviceId}`);
       const changed = await tx.build.updateMany({
         where: { id: buildId, status: "pending" },
@@ -198,15 +198,16 @@ export async function qualify(
           ...(status === "failed" ? { qualificationReason: reason } : {}),
         },
       });
-      if (changed.count === 0) return;
+      if (changed.count === 0) return readStoredBuildStatus(tx, buildId);
       await audit(tx, actor, {
         action: `build.${status}`,
         entityId: buildId,
         requestId: id(),
       });
-      if (status !== "verified") return;
+      if (status !== "verified") return { status };
       await requireQualifiedReferences(tx, build);
       if (build.sourceKind === "ci") await composeVerifiedBuild(tx, build);
+      return { status };
     });
   } catch (error) {
     if (error instanceof AwaitingRetainedBuild) return { status: "pending" };
@@ -225,5 +226,15 @@ export async function qualify(
     });
     return { status: "failed" };
   }
-  return { status };
+}
+
+async function readStoredBuildStatus(
+  tx: Transaction,
+  buildId: string,
+): Promise<{ status: "pending" | "verified" | "failed" }> {
+  const stored = await tx.build.findUniqueOrThrow({
+    where: { id: buildId },
+    select: { status: true },
+  });
+  return { status: BuildSummarySchema.shape.status.parse(stored.status) };
 }
