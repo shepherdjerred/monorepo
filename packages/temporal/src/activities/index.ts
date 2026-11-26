@@ -7,7 +7,6 @@ import { homelabAuditActivities } from "./homelab/homelab-audit.ts";
 import { homelabAuditCollectorActivities } from "./homelab/homelab-audit-collectors.ts";
 import { agentTaskActivities } from "./agent/agent-task.ts";
 import { zfsMaintenanceActivities } from "./homelab/zfs-maintenance.ts";
-import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon/data-dragon.ts";
 import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { championMetaActivities } from "./scout/champion-meta-refresh.ts";
@@ -92,7 +91,6 @@ export const infraActivities = {
   ...homelabAuditActivities,
   ...homelabAuditCollectorActivities,
   ...zfsMaintenanceActivities,
-  ...bugsinkHousekeepingActivities,
   ...veleroOrphanAuditActivities,
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,

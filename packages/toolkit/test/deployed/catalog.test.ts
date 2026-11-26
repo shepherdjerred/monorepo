@@ -111,6 +111,7 @@ describe("deployed registry derived from the service catalog", () => {
     "postal",
     "freshrss",
     "phoenix",
+    "bugsink",
   ])("does not advertise retired workload %s", (selector) => {
     expect(resolveServiceSelector(selector)).toBeNull();
   });

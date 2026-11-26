@@ -262,14 +262,18 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
     }),
   ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");
 
-  await page.goto("/services/bugsink");
+  await page.goto("/services/errors");
   await expect(
     page.getByRole("table", { name: "Bugsink projects error summary" }),
   ).toContainText("Scout for LoL");
   await expect(
     page.getByRole("table", { name: "Top unresolved Bugsink issues" }),
   ).toContainText("RiotUpstreamTimeoutError");
-  await expect(page.getByRole("link", { name: /^Open in / })).toHaveCount(0);
+  await expect(
+    page.locator("main .page-head").getByRole("link", {
+      name: "Open in Errors",
+    }),
+  ).toHaveAttribute("href", "https://errors.tailnet-1a49.ts.net");
 
   await page.goto("/services/observability");
   await expect(
@@ -305,7 +309,7 @@ const HUB_PATHS = [
   "/the-storm",
   "/services/networking",
   "/services/flags",
-  "/services/bugsink",
+  "/services/errors",
   "/services/observability",
   "/services/temporal",
 ] as const;

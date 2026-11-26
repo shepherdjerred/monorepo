@@ -108,7 +108,6 @@ function optionalWoodpeckerLinkConfig(): {
 export const SECRET_ENVIRONMENT = [
   "OPS_INGEST_TOKEN",
   "POSTHOG_PERSONAL_API_KEY",
-  "BUGSINK_TOKEN",
   "WOODPECKER_TOKEN",
   "GITHUB_APP_PRIVATE_KEY",
   "CLOUDFLARE_API_TOKEN",
@@ -348,8 +347,7 @@ export const opsActivities = {
     return await timed("bugsink", (context) =>
       collectBugsink(
         new BugsinkClient({
-          baseUrl: requiredEnvironment("BUGSINK_URL"),
-          token: requiredEnvironment("BUGSINK_TOKEN"),
+          baseUrl: requiredEnvironment("ERRORS_URL"),
         }),
         context,
       ),

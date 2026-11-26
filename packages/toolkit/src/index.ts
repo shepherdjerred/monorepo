@@ -72,7 +72,6 @@ Monorepo workflows:
   scout ops <ACTION>           Operate Scout's durable pipeline without a browser
   promotion <ACTION> [TARGET]  Operate The Storm promotion agents and posting history
   errors <SUBCOMMAND>          Query and triage first-party error tracking
-  bugsink <SUBCOMMAND>         Query self-hosted error tracking
   flags <COMMAND>              Read and apply deployment flag documents
   discord <SUBCOMMAND>         Use the local Discord session daemon
   mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
@@ -144,10 +143,6 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     "errors",
     () =>
       import("./handlers/errors/index.ts").then((m) => m.handleErrorsCommand),
-  ],
-  [
-    "bugsink",
-    () => import("./handlers/bugsink.ts").then((m) => m.handleBugsinkCommand),
   ],
   [
     "flags",

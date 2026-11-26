@@ -5,7 +5,7 @@ import { errorLogQuery } from "@shepherdjerred/ops-clients/loki.ts";
 export const GRAFANA_URL = "https://grafana.tailnet-1a49.ts.net";
 export const ARGOCD_URL = "https://argocd.tailnet-1a49.ts.net";
 export const ALERTMANAGER_URL = "https://alertmanager.tailnet-1a49.ts.net";
-export const BUGSINK_URL = "https://bugsink.sjer.red";
+export const BUGSINK_URL = "https://errors.tailnet-1a49.ts.net";
 export const POSTHOG_PROJECT_URL = "https://us.posthog.com/project/549883";
 export const MONOREPO_URL = "https://github.com/shepherdjerred/monorepo";
 

@@ -120,12 +120,6 @@
     "reason": "Alert dashboard SQLite ledger and lifecycle history"
   },
   {
-    "namespace": "bugsink",
-    "name": "pgdata-bugsink-postgresql-0",
-    "backup": "enabled",
-    "reason": "Bugsink PostgreSQL database"
-  },
-  {
     "namespace": "woodpecker",
     "name": "pgdata-woodpecker-postgresql-0",
     "backup": "enabled",

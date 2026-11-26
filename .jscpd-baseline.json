@@ -2460,10 +2460,6 @@
       "clones": 2,
       "tokens": 194
     },
-    "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
-      "clones": 1,
-      "tokens": 116
-    },
     "packages/temporal/src/activities/maintenance/deps-summary/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
       "tokens": 79
@@ -2672,21 +2668,9 @@
       "clones": 1,
       "tokens": 107
     },
-    "packages/toolkit/src/lib/bugsink/issues.ts|packages/toolkit/src/lib/bugsink/queries.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/toolkit/src/lib/bugsink/schemas.ts|packages/toolkit/src/lib/bugsink/schemas.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
     "packages/toolkit/src/lib/discord/handlers.ts|packages/toolkit/src/lib/discord/handlers.ts": {
       "clones": 1,
       "tokens": 77
-    },
-    "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
-      "clones": 1,
-      "tokens": 84
     },
     "packages/toolkit/test/lib/git-conflicts.test.ts|scripts/lib/test-git.ts": {
       "clones": 1,

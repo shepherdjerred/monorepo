@@ -98,38 +98,6 @@ export function createTemporalWorkerMaintenanceRbac(
     })),
   });
 
-  // Namespace-scoped RBAC for the Bugsink housekeeping workflow, which execs
-  // into the bugsink pod to run bugsink-manage maintenance commands.
-  new KubeRole(chart, "temporal-worker-bugsink-exec", {
-    metadata: { name: "temporal-worker-bugsink-exec", namespace: "bugsink" },
-    rules: [
-      {
-        apiGroups: [""],
-        resources: ["pods/exec"],
-        verbs: ["create"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["pods"],
-        verbs: ["get", "list"],
-      },
-    ],
-  });
-
-  new KubeRoleBinding(chart, "temporal-worker-bugsink-exec-binding", {
-    metadata: { name: "temporal-worker-bugsink-exec", namespace: "bugsink" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-worker-bugsink-exec",
-    },
-    subjects: serviceAccounts.map((serviceAccount) => ({
-      kind: "ServiceAccount",
-      name: serviceAccount.name,
-      namespace: serviceAccount.metadata.namespace ?? "temporal",
-    })),
-  });
-
   // Namespace-scoped RBAC for the Velero orphan-snapshot audit workflow.
   // Reads `velero.io/v1/Backup` CRs in the velero namespace and execs into
   // the openebs-zfs-localpv-node pod to enumerate ZFS snapshots.

@@ -128,15 +128,15 @@ it("excludes Media's artwork cache from Velero; the API refetches it from TMDB",
   });
 });
 
-it("classifies 53 included and 49 excluded PVCs, including the separate BlueMap and Git mirror caches", () => {
+it("classifies 52 included and 49 excluded PVCs, including the separate BlueMap and Git mirror caches", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(102);
-  expect(new Set(keys).size).toBe(102);
+  expect(keys).toHaveLength(101);
+  expect(new Set(keys).size).toBe(101);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(53);
+  ).toHaveLength(52);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
   ).toHaveLength(49);
@@ -400,7 +400,6 @@ describe("PostgreSQL restore backup policy", () => {
     const clusters = [
       ["scout-beta", "scout-beta", "scout-beta"],
       ["grafana", "prometheus", "grafana"],
-      ["bugsink", "bugsink", "bugsink"],
       ["scout-prod", "scout-prod", "scout-prod"],
       ["temporal", "temporal", "temporal"],
       ["woodpecker", "woodpecker", "woodpecker"],

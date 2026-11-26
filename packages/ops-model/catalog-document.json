@@ -169,11 +169,6 @@
       "kind": "platform"
     },
     {
-      "id": "bugsink",
-      "title": "Bugsink",
-      "kind": "platform"
-    },
-    {
       "id": "ci",
       "title": "CI (Woodpecker)",
       "kind": "platform"
@@ -1992,25 +1987,6 @@
       }
     },
     {
-      "id": "bugsink",
-      "title": "Bugsink",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "bugsink",
-      "components": [
-        {
-          "name": "chart:bugsink",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["bugsink"],
-        "argoApps": ["bugsink"]
-      }
-    },
-    {
       "id": "ci",
       "title": "CI runtime images",
       "lifecycle": "active",
@@ -3185,7 +3161,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/2",
-      "configurationRevisionId": "argocd/prod/22"
+      "configurationRevisionId": "argocd/prod/23"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3410,14 +3386,6 @@
       "automatic": true,
       "recipeRevisionId": "promtail/prod/1",
       "configurationRevisionId": "promtail/prod/1"
-    },
-    {
-      "id": "bugsink/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "bugsink/prod/2",
-      "configurationRevisionId": "bugsink/prod/1"
     },
     {
       "id": "woodpecker/prod",
@@ -3685,46 +3653,6 @@
     {
       "dependent": "blackbox-exporter/prod",
       "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cert-manager/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "postgres-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -5190,11 +5118,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "arcade/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "bugsink/prod",
       "rule": "any-accepted"
     },
     {
