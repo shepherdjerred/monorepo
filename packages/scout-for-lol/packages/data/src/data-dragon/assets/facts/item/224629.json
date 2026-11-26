@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "224629",
+  "name": "Cosmic Drive",
+  "description": "Spelldance: Dealing magic or true damage to champions grants Move Speed for 4 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    },
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "35"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/224629.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

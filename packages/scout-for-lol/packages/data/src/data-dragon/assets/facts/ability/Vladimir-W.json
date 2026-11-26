@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vladimir-W",
+  "name": "Sanguine Pool",
+  "description": "Vladimir sinks into a pool of blood for 2 seconds, gaining 37.5% decaying Move Speed for 1 second and becoming Untargetable and Ghosted while Slowing enemies in the pool by 40%.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vladimir-W.png",
+  "slot": "W",
+  "championKey": "Vladimir",
+  "championName": "Vladimir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    28,
+    25,
+    22,
+    19,
+    16
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "28/25/22/19/16 s"
+  }
+}

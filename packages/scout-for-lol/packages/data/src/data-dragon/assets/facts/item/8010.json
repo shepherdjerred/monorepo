@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "8010",
+  "name": "Bloodletter's Curse",
+  "description": "Vile Decay: Dealing magic damage with abilities or passives to champions reduces their Magic Resist by 7.5% for 6 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3147",
+      "name": "Haunting Guise",
+      "icon": "img/item/3147.png"
+    },
+    {
+      "kind": "item",
+      "key": "3108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/3108.png"
+    }
+  ],
+  "icon": "img/item/8010.png",
+  "goldTotal": 2900,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

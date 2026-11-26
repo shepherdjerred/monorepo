@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Alistar-W",
+  "name": "Headbutt",
+  "description": "Alistar rams into an enemy, Knocking them Back and dealing 55/110/165/220/275 (+100% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Alistar-W.png",
+  "slot": "W",
+  "championKey": "Alistar",
+  "championName": "Alistar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

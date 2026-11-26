@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772043",
+  "name": "Vision Ward",
+  "description": "Click to Consume: Places an invisible ward that reveals the surrounding area and invisible units in the area for 3 minutes.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772043.png",
+  "goldTotal": 125,
+  "goldCombine": 125,
+  "keyFact": {
+    "label": "Cost",
+    "value": "125 gold"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Taric",
+  "name": "Taric",
+  "description": "Taric is the Aspect of the Protector, wielding incredible power as Runeterra's guardian of life, love, and beauty.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "645"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Taric-passive",
+      "name": "Bravado",
+      "icon": "img/ability/Taric-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taric-Q",
+      "name": "Starlight's Touch",
+      "icon": "img/ability/Taric-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taric-W",
+      "name": "Bastion",
+      "icon": "img/ability/Taric-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taric-E",
+      "name": "Dazzle",
+      "icon": "img/ability/Taric-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taric-R",
+      "name": "Cosmic Radiance",
+      "icon": "img/ability/Taric-R.png"
+    }
+  ],
+  "icon": "img/champion/Taric.png",
+  "art": "img/champion-splash/Taric_0.jpg",
+  "title": "the Shield of Valoran",
+  "roles": [
+    "Support",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Tank"
+  }
+}

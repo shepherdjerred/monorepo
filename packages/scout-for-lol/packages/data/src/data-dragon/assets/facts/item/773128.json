@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773128",
+  "name": "Deathfire Grasp",
+  "description": "Active 60s Deals 15% of target champion's maximum Health in magic damage and increases all subsequent magic damage taken by the target by 20% for 4 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "120"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771058",
+      "name": "Needlessly Large Rod",
+      "icon": "img/item/771058.png"
+    },
+    {
+      "kind": "item",
+      "key": "773108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/773108.png"
+    }
+  ],
+  "icon": "img/item/773128.png",
+  "goldTotal": 3100,
+  "goldCombine": 680,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3100 gold"
+  }
+}

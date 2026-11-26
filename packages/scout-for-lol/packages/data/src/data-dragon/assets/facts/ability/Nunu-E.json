@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nunu-E",
+  "name": "Snowball Barrage",
+  "description": "Nunu throws three snowballs, dealing 15/22.5/30/37.5/45 (+12% AP) magic damage per snowball and Slowing enemies hit by all three by 30/35/40/45/50% for 1 second. Nunu can Recast this up to twice more.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nunu-E.png",
+  "slot": "E",
+  "championKey": "Nunu",
+  "championName": "Nunu & Willump",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    625,
+    625,
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

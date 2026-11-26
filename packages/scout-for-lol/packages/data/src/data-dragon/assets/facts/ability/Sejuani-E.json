@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sejuani-E",
+  "name": "Permafrost",
+  "description": "Passive: Nearby melee allied champions' Attacks apply a stack to champions and jungle monsters. Active: Sejuani deals 55/105/155/205/255 (+70% AP) magic damage to target enemy with 4 stacks and Stuns them for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "560"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sejuani-E.png",
+  "slot": "E",
+  "championKey": "Sejuani",
+  "championName": "Sejuani",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    560,
+    560,
+    560,
+    560,
+    560
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1.5 s"
+  }
+}

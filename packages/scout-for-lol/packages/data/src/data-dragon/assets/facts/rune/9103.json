@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "9103",
+  "name": "Legend: Bloodline",
+  "description": "Takedowns on enemies grant permanent Life Steal, up to a cap. Once the cap is reached, increase your max health.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/LegendBloodline.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}

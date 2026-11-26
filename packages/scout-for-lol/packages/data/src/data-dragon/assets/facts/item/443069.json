@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443069",
+  "name": "Hamstringer",
+  "description": "Scour: On Critical Strike: Apply a bleed, dealing 25% of the damage done + physical damage on hit over 2 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443069.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

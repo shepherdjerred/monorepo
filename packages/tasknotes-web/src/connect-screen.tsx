@@ -46,8 +46,8 @@ export function ConnectScreen(props: {
               }}
             />
             <p id={originHintId} className="hint">
-              Local dev sends /api through this page to http://127.0.0.1:3000.
-              Any other origin is called directly.
+              Leave this blank to use this page. Local dev then sends /api to
+              http://127.0.0.1:3000. Any other origin is called directly.
             </p>
           </div>
           <div className="field">

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Seraphine",
+  "name": "Seraphine",
+  "description": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "570"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Seraphine-passive",
+      "name": "Stage Presence",
+      "icon": "img/ability/Seraphine-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Seraphine-Q",
+      "name": "High Note",
+      "icon": "img/ability/Seraphine-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Seraphine-W",
+      "name": "Surround Sound",
+      "icon": "img/ability/Seraphine-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Seraphine-E",
+      "name": "Beat Drop",
+      "icon": "img/ability/Seraphine-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Seraphine-R",
+      "name": "Encore",
+      "icon": "img/ability/Seraphine-R.png"
+    }
+  ],
+  "icon": "img/champion/Seraphine.png",
+  "art": "img/champion-splash/Seraphine_0.jpg",
+  "title": "the Starry-Eyed Songstress",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

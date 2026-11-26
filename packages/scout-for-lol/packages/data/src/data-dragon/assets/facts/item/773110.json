@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773110",
+  "name": "Frozen Heart",
+  "description": "Aura - Frostbite: Reduces the Attack Speed of nearby enemies by 20%.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "95"
+    },
+    {
+      "label": "Mana",
+      "value": "400"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773024",
+      "name": "Glacial Shroud",
+      "icon": "img/item/773024.png"
+    },
+    {
+      "kind": "item",
+      "key": "773082",
+      "name": "Warden's Mail",
+      "icon": "img/item/773082.png"
+    }
+  ],
+  "icon": "img/item/773110.png",
+  "goldTotal": 2900,
+  "goldCombine": 550,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

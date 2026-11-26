@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Brand-W",
+  "name": "Pillar of Flame",
+  "description": "Brand creates a pillar of pure fire, dealing 75/120/165/210/255 (+70% AP) magic damage. Units that are Ablaze take 93.75/150/206.25/262.5/318.75 (+87.5% AP) damage instead.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Brand-W.png",
+  "slot": "W",
+  "championKey": "Brand",
+  "championName": "Brand",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

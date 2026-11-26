@@ -157,8 +157,8 @@ export function createTasknotesDeployment(chart: Chart) {
     },
     // Only accessible via Tailscale.
     tailscale: {
-      // "/" is AUTH_TOKEN-gated (401); /api/health is the unauthenticated
-      // health endpoint (same one the container's k8s probes use).
+      // "/" is the web app and is not token-gated. /api/* requires the bearer
+      // token except /api/health, the unauthenticated probe.
       probePath: "/api/health",
       hosts: [{ id: "tasknotes-ingress", host: tailnetService("tasknotes") }],
     },

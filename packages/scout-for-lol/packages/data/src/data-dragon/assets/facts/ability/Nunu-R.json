@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nunu-R",
+  "name": "Absolute Zero",
+  "description": "Nunu and Willump channel a powerful blizzard for up to 3 seconds. Enemies inside are Slowed by 50%, increasing to 95% over the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nunu-R.png",
+  "slot": "R",
+  "championKey": "Nunu",
+  "championName": "Nunu & Willump",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    100,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/100/90 s"
+  }
+}

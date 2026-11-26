@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TahmKench-E",
+  "name": "Thick Skin",
+  "description": "Passive: 15/23/31/39/47% of damage Tahm Kench takes is stored by his Thick Skin, increased to 42/44/46/48/50% if there are at least 2 nearby enemy champions.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "2400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TahmKench-E.png",
+  "slot": "E",
+  "championKey": "TahmKench",
+  "championName": "Tahm Kench",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    2400,
+    2400,
+    2400,
+    2400,
+    2400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3 s"
+  }
+}

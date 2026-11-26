@@ -3,9 +3,16 @@
 // the worktree on the space's machine, and open a space whose agent starts
 // with that message. The dialog only gathers choices; this owns the slow parts.
 
+import {
+  startMacBackground,
+  type Launchd,
+} from "./herdr_worktree_pool_launchd.ts";
+
 export type Request = {
   /** The agent's first message; also what the branch and tab are named from. */
   readonly message: string;
+  /** An explicitly selected branch skips generated naming and keeps its history if it exists. */
+  readonly branch?: string;
   /** Brim provider id, or null for a plain shell. */
   readonly provider: string | null;
   /** hc machine name, or null for this computer. */
@@ -46,7 +53,7 @@ const PROFILE_COMMAND: Readonly<Record<string, string>> = {
   muse: "muse",
 };
 
-export type Named = { readonly branch: string; readonly title: string };
+export type Named = { readonly branch: string; readonly title: string | null };
 
 export type ExecResult = {
   readonly code: number;
@@ -57,22 +64,20 @@ export type ExecResult = {
 export type Runtime = {
   /** One OpenAI call: a valid branch name and a short title. */
   readonly name: (message: string) => Promise<Named>;
-  /** `base`, or the first free `base-N`. */
-  readonly freeBranch: (
-    base: string,
-    taken: (name: string) => Promise<boolean>,
-  ) => Promise<string>;
-  /** Run git on the machine (null: here) in `cwd`. */
-  readonly git: (
-    machine: string | null,
-    cwd: string,
-    args: string[],
-  ) => Promise<ExecResult>;
+  /** Allocate the branch and checkout together on the target host. */
+  readonly allocate: (
+    request: Request,
+    branch: string,
+  ) => Promise<{ branch: string; path: string; dedupe: Dedupe }>;
   /** `herdr-app do space.new <json>`; resolves to the new terminal's address. */
   readonly newSpace: (args: Record<string, unknown>) => Promise<string>;
   /** An `hc` call, for agents whose first message is typed in. */
   readonly hc: (args: string[]) => Promise<ExecResult>;
   readonly sleep: (ms: number) => Promise<void>;
+};
+
+/** What starting `toolkit` in the background needs from this computer. */
+export type Toolkit = {
   /** `process.platform` of this computer. */
   readonly platform: string;
   /**
@@ -128,7 +133,7 @@ export function activeRun(
 
 export type Outcome = {
   readonly branch: string;
-  readonly title: string;
+  readonly title: string | null;
   readonly path: string;
   readonly terminal: string;
   readonly messageSent: "argument" | "typed" | "none";
@@ -180,8 +185,14 @@ export function parseRequest(json: string): Request {
   const rawSend = r.get("sendMessage");
   if (rawSend !== undefined && typeof rawSend !== "boolean")
     throw new TypeError("Request sendMessage must be a boolean.");
+  const rawBranch = r.get("branch");
+  const branch =
+    rawBranch === undefined ? undefined : text(rawBranch, "branch");
+  const message =
+    branch === undefined ? text(r.get("message"), "message").trim() : "";
   return {
-    message: text(r.get("message"), "message").trim(),
+    message,
+    ...(branch === undefined ? {} : { branch }),
     provider: nullableText(r.get("provider"), "provider"),
     machine: nullableText(r.get("machine"), "machine"),
     repoMain: text(r.get("repoMain"), "repoMain"),
@@ -192,7 +203,7 @@ export function parseRequest(json: string): Request {
     launcher,
     argv: nullableStrings(r.get("argv"), "argv"),
     tab: r.get("tab") === undefined ? null : nullableText(r.get("tab"), "tab"),
-    sendMessage: rawSend ?? true,
+    sendMessage: branch === undefined && (rawSend ?? true),
   };
 }
 
@@ -246,7 +257,8 @@ export function launch(
           typed: false,
         };
   const extra = [...request.agentArgs];
-  if (provider === "claude-code") extra.push("--name", named.title);
+  if (provider === "claude-code" && named.title !== null)
+    extra.push("--name", named.title);
   if (!sendMessage)
     return {
       argv: agentCommand(request, provider, extra),
@@ -267,6 +279,15 @@ function firstLine(result: ExecResult, fallback: string): string {
   const output = result.stderr.trim() === "" ? result.stdout : result.stderr;
   const line = output.trim().split("\n")[0] ?? "";
   return line === "" ? fallback : line;
+}
+
+async function labelTask(
+  runtime: Runtime,
+  address: string,
+  title: string,
+): Promise<string | null> {
+  const result = await runtime.hc(["label", address, `agent.task=${title}`]);
+  return result.code === 0 ? null : firstLine(result, "hc label failed");
 }
 
 function agentState(result: ExecResult): string | null {
@@ -301,18 +322,44 @@ async function typeFirstMessage(
 }
 
 /**
- * A new worktree copies every tracked file. `toolkit tend dedupe` replaces the
- * ones identical to the main checkout's with APFS clones, so this starts it in
- * the background for a checkout on this Mac. It is an optimization only:
- * nothing waits on it, and a toolkit that is missing, does not know the
- * command, or fails leaves the worktree as git made it.
+ * Submit Toolkit to the user's launchd domain so it outlives this process.
+ * False when Toolkit is missing. `submitted` records the accepted job label.
  */
-async function shareWithMainCheckout(
-  runtime: Runtime,
-  machine: string | null,
+export async function startDetachedToolkit(
+  toolkitPath: string,
+  cwd: string,
+  args: string[],
+  options: {
+    submitted?: (job: string) => void | Promise<void>;
+    launchd?: Launchd;
+  } = {},
+): Promise<boolean> {
+  if (!(await Bun.file(toolkitPath).exists())) return false;
+  const job = await startMacBackground(
+    cwd,
+    [toolkitPath, ...args],
+    options.launchd,
+  );
+  try {
+    await options.submitted?.(job);
+  } catch {
+    // Recording is for diagnosis only.
+  }
+  return true;
+}
+
+/**
+ * A new worktree, or a pool slot, copies every tracked file. `toolkit tend
+ * dedupe` replaces the ones identical to the main checkout's with APFS clones,
+ * so this starts it in the background for a checkout on this Mac. It is an
+ * optimization only: nothing waits on it, and a toolkit that is missing, does
+ * not know the command, or fails leaves the worktree as git made it.
+ */
+export async function shareWithMainCheckout(
+  runtime: Toolkit | undefined,
   path: string,
 ): Promise<Dedupe> {
-  if (machine !== null || runtime.platform !== "darwin") return "skipped";
+  if (runtime?.platform !== "darwin") return "skipped";
   try {
     const started = await runtime.startToolkit(path, [
       "tend",
@@ -344,61 +391,46 @@ export async function createWorktree(
     branch: string | null,
     path: string | null,
   ) => progress({ step, title, branch, path });
-  await report("naming", null, null, null);
-  const named = await runtime.name(request.message);
-  await report("branch", named.title, null, null);
-  const taken = async (name: string) => {
-    const shown = await runtime.git(machine, request.repoMain, [
-      "show-ref",
-      "--verify",
-      "--quiet",
-      `refs/heads/${name}`,
-    ]);
-    return shown.code === 0;
-  };
-  // A generated name always starts new work: never check out a branch that exists.
-  const branch = await runtime.freeBranch(named.branch, taken);
-  const valid = await runtime.git(machine, request.repoMain, [
-    "check-ref-format",
-    "--branch",
-    branch,
-  ]);
-  if (valid.code !== 0)
-    throw new Error(firstLine(valid, `git rejects the branch ${branch}.`));
-  const path = `${request.root}/${slug(branch)}`;
-  await report("worktree", named.title, branch, path);
-  const added = await runtime.git(machine, request.repoTop, [
-    "worktree",
-    "add",
-    "-b",
-    branch,
-    path,
-    "HEAD",
-  ]);
-  if (added.code !== 0)
-    throw new Error(firstLine(added, "git worktree add failed."));
-  const dedupe = await shareWithMainCheckout(runtime, machine, path);
+  if (request.branch === undefined) await report("naming", null, null, null);
+  const named =
+    request.branch === undefined
+      ? await runtime.name(request.message)
+      : { branch: request.branch, title: null };
+  await report("worktree", named.title, named.branch, null);
+  const { branch, path, dedupe } = await runtime.allocate(
+    request,
+    named.branch,
+  );
   await report("space", named.title, branch, path);
   const { argv, task, typed } = launch(request, { branch, title: named.title });
+  const tab = request.tab ?? named.title;
   // Nesting follows the checkout folder. The generated title names the space
   // and, unless the caller named it, the first tab.
   const terminal = await runtime.newSpace({
     folder: path,
     machine: machine ?? "",
-    name: named.title,
-    tab: request.tab ?? named.title,
+    focus: false,
+    ...(named.title === null ? {} : { name: named.title }),
+    ...(tab === null ? {} : { tab }),
     ...(argv === null ? {} : { argv }),
     ...(task === null ? {} : { task }),
   });
+  const address =
+    machine === null || terminal.includes("/")
+      ? terminal
+      : `${machine}/${terminal}`;
+  const labelError =
+    argv === null || named.title === null
+      ? null
+      : await labelTask(runtime, address, named.title);
   if (typed) {
     await report("message", named.title, branch, path);
-    const remote = machine !== null && !terminal.includes("/");
-    await typeFirstMessage(
-      runtime,
-      remote ? `${machine}/${terminal}` : terminal,
-      request.message,
-    );
+    await typeFirstMessage(runtime, address, request.message);
   }
+  if (labelError !== null)
+    throw new Error(
+      `The space is ready, but its task label was not set: ${labelError}`,
+    );
   return {
     branch,
     title: named.title,

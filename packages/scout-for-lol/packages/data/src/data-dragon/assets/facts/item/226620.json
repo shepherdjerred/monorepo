@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226620",
+  "name": "Echoes of Helia",
+  "description": "Soul Siphon: Damaging a champion grants a Soul Shard: .",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "40"
+    },
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "30"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226620.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

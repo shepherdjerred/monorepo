@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Graves-R",
+  "name": "Collateral Damage",
+  "description": "Graves fires an explosive cartridge, blasting himself backwards. The cartridge deals 275/425/575 (+150% bonus AD) physical damage to the first enemy hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Graves-R.png",
+  "slot": "R",
+  "championKey": "Graves",
+  "championName": "Graves",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    80,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/80/60 s"
+  }
+}

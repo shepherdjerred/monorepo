@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Smolder-Q",
+  "name": "Super Scorcher Breath",
+  "description": "Smolder breathes fire on an enemy. As he gains more stacks, this ability becomes more powerful.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "25 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Smolder-Q.png",
+  "slot": "Q",
+  "championKey": "Smolder",
+  "championName": "Smolder",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5.5,
+    5,
+    4.5,
+    4,
+    3.5
+  ],
+  "costByRank": [
+    25,
+    25,
+    25,
+    25,
+    25
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5.5/5/4.5/4/3.5 s"
+  }
+}

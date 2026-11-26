@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kindred-R",
+  "name": "Lamb's Respite",
+  "description": "Kindred blesses the ground for 4 seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kindred-R.png",
+  "slot": "R",
+  "championKey": "Kindred",
+  "championName": "Kindred",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    140,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/140/120 s"
+  }
+}

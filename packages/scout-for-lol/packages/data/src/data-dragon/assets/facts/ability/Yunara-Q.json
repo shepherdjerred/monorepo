@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yunara-Q",
+  "name": "Cultivation of Spirit",
+  "description": "Passive: Yunara deal 3/8/13/18/23 (+20% AP) magic damage On-Hit and attacking grants 1 Unleash (2 Unleash for champions).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yunara-Q.png",
+  "slot": "Q",
+  "championKey": "Yunara",
+  "championName": "Yunara",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

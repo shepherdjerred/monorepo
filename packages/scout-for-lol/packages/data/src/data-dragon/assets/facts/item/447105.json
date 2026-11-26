@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447105",
+  "name": "Empyrean Promise",
+  "description": "ACTIVE: (0s) Vigilance: Teleport to your ally and grant shield for 5s when landing.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "18%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "30"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "125%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447105.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

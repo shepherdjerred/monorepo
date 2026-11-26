@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Alistar-passive",
+  "name": "Triumphant Roar",
+  "description": "Alistar charges his roar by stunning or displacing enemy champions or when nearby enemies die. When fully charged he heals himself all nearby allied champions.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Alistar-passive.png",
+  "slot": "passive",
+  "championKey": "Alistar",
+  "championName": "Alistar",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

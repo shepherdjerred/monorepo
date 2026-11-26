@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Samira-W",
+  "name": "Blade Whirl",
+  "description": "Samira slashes around her for 0.75 seconds, damaging enemies twice for 20/35/50/65/80 (+50% bonus AD) physical damage each and destroying any enemy missiles that enter the area.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Samira-W.png",
+  "slot": "W",
+  "championKey": "Samira",
+  "championName": "Samira",
+  "maxRank": 5,
+  "cooldownByRank": [
+    30,
+    28,
+    26,
+    24,
+    22
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "30/28/26/24/22 s"
+  }
+}

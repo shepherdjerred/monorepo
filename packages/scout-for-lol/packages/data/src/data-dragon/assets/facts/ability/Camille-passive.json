@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Camille-passive",
+  "name": "Adaptive Defenses",
+  "description": "Basic attacks on champions grant a shield equal to a percentage of Camille's maximum health against their damage type (Physical or Magic) for a brief duration.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Camille-passive.png",
+  "slot": "passive",
+  "championKey": "Camille",
+  "championName": "Camille",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

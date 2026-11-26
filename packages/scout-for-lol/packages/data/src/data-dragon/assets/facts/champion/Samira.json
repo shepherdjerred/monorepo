@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Samira",
+  "name": "Samira",
+  "description": "Samira stares death in the eye with unyielding confidence, seeking thrill wherever she goes.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Samira-passive",
+      "name": "Daredevil Impulse",
+      "icon": "img/ability/Samira-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Samira-Q",
+      "name": "Flair",
+      "icon": "img/ability/Samira-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Samira-W",
+      "name": "Blade Whirl",
+      "icon": "img/ability/Samira-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Samira-E",
+      "name": "Wild Rush",
+      "icon": "img/ability/Samira-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Samira-R",
+      "name": "Inferno Trigger",
+      "icon": "img/ability/Samira-R.png"
+    }
+  ],
+  "icon": "img/champion/Samira.png",
+  "art": "img/champion-splash/Samira_0.jpg",
+  "title": "the Desert Rose",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Blitzcrank-passive",
+  "name": "Mana Barrier",
+  "description": "Blitzcrank gains a shield based on their mana when dropping to low health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Blitzcrank-passive.png",
+  "slot": "passive",
+  "championKey": "Blitzcrank",
+  "championName": "Blitzcrank",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

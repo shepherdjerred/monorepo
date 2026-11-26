@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MonkeyKing-W",
+  "name": "Warrior Trickster",
+  "description": "Wukong dashes and becomes Invisible for 1 second, leaving behind a stationary Clone for 4 seconds. The Clone Attacks nearby enemies Wukong has recently damaged and will mimic his ultimate, each dealing 40/45/50/55/60% of normal damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/55/50/45/40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "275"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MonkeyKing-W.png",
+  "slot": "W",
+  "championKey": "MonkeyKing",
+  "championName": "Wukong",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    21,
+    20,
+    19,
+    18
+  ],
+  "costByRank": [
+    60,
+    55,
+    50,
+    45,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    275,
+    275,
+    275,
+    275,
+    275
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/21/20/19/18 s"
+  }
+}

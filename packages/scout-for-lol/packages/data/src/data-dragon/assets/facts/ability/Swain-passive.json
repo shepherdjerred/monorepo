@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Swain-passive",
+  "name": "Ravenous Flock",
+  "description": "Swain's ravens collect Soul Fragments that heal him and permanently increase his maximum health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Swain-passive.png",
+  "slot": "passive",
+  "championKey": "Swain",
+  "championName": "Swain",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

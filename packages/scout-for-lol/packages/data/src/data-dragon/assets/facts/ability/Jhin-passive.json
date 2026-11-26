@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jhin-passive",
+  "name": "Whisper",
+  "description": "Jhin's hand cannon, Whisper, is a precise instrument designed to deal superior damage. It fires at a fixed rate and carries only four shots.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Jhin-passive.png",
+  "slot": "passive",
+  "championKey": "Jhin",
+  "championName": "Jhin",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773086",
+  "name": "Zeal",
+  "description": "Grants 18% Attack Speed, 10% Critical Strike Chance, 5% Move Speed.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "18%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "10%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "5%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771051",
+      "name": "Brawler's Gloves",
+      "icon": "img/item/771051.png"
+    },
+    {
+      "kind": "item",
+      "key": "771042",
+      "name": "Dagger",
+      "icon": "img/item/771042.png"
+    }
+  ],
+  "icon": "img/item/773086.png",
+  "goldTotal": 1175,
+  "goldCombine": 375,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1175 gold"
+  }
+}

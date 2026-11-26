@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akali-Q",
+  "name": "Five Point Strike",
+  "description": "Akali slings kunai in an arc, dealing 45/70/95/120/145 (+65% AD) (+60% AP) magic damage and Slowing enemies at the tip by 50% for 0.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "110/100/90/80/70 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Akali-Q.png",
+  "slot": "Q",
+  "championKey": "Akali",
+  "championName": "Akali",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+  ],
+  "costByRank": [
+    110,
+    100,
+    90,
+    80,
+    70
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1.5 s"
+  }
+}

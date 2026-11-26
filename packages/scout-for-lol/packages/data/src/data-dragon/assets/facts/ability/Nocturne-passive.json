@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nocturne-passive",
+  "name": "Umbra Blades",
+  "description": "Every few seconds, Nocturne's next attack strikes surrounding enemies for bonus physical damage and heals himself. Nocturne's basic attacks reduce this cooldown.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nocturne-passive.png",
+  "slot": "passive",
+  "championKey": "Nocturne",
+  "championName": "Nocturne",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

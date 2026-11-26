@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "MonkeyKing",
+  "name": "Wukong",
+  "description": "Wukong is a vastayan trickster who uses his strength, agility, and intelligence to confuse his opponents and gain the upper hand.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "MonkeyKing-passive",
+      "name": "Stone Skin",
+      "icon": "img/ability/MonkeyKing-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MonkeyKing-Q",
+      "name": "Crushing Blow",
+      "icon": "img/ability/MonkeyKing-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MonkeyKing-W",
+      "name": "Warrior Trickster",
+      "icon": "img/ability/MonkeyKing-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MonkeyKing-E",
+      "name": "Nimbus Strike",
+      "icon": "img/ability/MonkeyKing-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MonkeyKing-R",
+      "name": "Cyclone",
+      "icon": "img/ability/MonkeyKing-R.png"
+    }
+  ],
+  "icon": "img/champion/MonkeyKing.png",
+  "art": "img/champion-splash/MonkeyKing_0.jpg",
+  "title": "the Monkey King",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

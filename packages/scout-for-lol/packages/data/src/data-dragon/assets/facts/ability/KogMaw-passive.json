@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KogMaw-passive",
+  "name": "Icathian Surprise",
+  "description": "4 seconds after dying, Kogmaw explodes, dealing true damage to surrounding enemies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/KogMaw-passive.png",
+  "slot": "passive",
+  "championKey": "KogMaw",
+  "championName": "Kog'Maw",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

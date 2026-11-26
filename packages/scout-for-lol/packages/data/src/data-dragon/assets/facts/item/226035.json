@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226035",
+  "name": "Silvermere Dawn",
+  "description": "Active -. Quicksilver: Remove all crowd control debuffs and gain Tenacity and Slow Resistance.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226035.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

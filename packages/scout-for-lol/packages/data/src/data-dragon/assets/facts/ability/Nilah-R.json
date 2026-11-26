@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nilah-R",
+  "name": "Apotheosis",
+  "description": "Nilah whirls her whip-blade, dealing 60/100/140 (+40% bonus AD) physical damage over 1 second, then finishes with a burst of 125/225/325 (+100% bonus AD) physical damage that also Pulls nearby enemies toward her.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nilah-R.png",
+  "slot": "R",
+  "championKey": "Nilah",
+  "championName": "Nilah",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    95,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/95/80 s"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773001",
+  "name": "Abyssal Scepter",
+  "description": "Aura - Despair: Reduces the Magic Resist of nearby enemies by 20",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771026",
+      "name": "Blasting Wand",
+      "icon": "img/item/771026.png"
+    },
+    {
+      "kind": "item",
+      "key": "771057",
+      "name": "Negatron Cloak",
+      "icon": "img/item/771057.png"
+    }
+  ],
+  "icon": "img/item/773001.png",
+  "goldTotal": 2560,
+  "goldCombine": 980,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2560 gold"
+  }
+}

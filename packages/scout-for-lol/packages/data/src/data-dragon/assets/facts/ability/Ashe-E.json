@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ashe-E",
+  "name": "Hawkshot",
+  "description": "Ashe sends forth a hawk to grant vision for 5 seconds anywhere on the map. It also reveals the area around it as it flies.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ashe-E.png",
+  "slot": "E",
+  "championKey": "Ashe",
+  "championName": "Ashe",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Teemo-R",
+  "name": "Noxious Trap",
+  "description": "Teemo tosses a mushroom trap that detonates when stepped on. The traps Slow by 30/40/50% and deal 200/325/450 (+50% AP) magic damage over 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75/55/35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600/750/900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Teemo-R.png",
+  "slot": "R",
+  "championKey": "Teemo",
+  "championName": "Teemo",
+  "maxRank": 3,
+  "cooldownByRank": [
+    0.25,
+    0.25,
+    0.25
+  ],
+  "costByRank": [
+    75,
+    55,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    750,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.25 s"
+  }
+}

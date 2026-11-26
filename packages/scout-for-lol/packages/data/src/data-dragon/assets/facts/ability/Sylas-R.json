@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sylas-R",
+  "name": "Hijack",
+  "description": "Sylas hijacks an enemy champion, allowing him to cast a copy of their ultimate Ability, based on his Ultimate level and using his stats.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sylas-R.png",
+  "slot": "R",
+  "championKey": "Sylas",
+  "championName": "Sylas",
+  "maxRank": 3,
+  "cooldownByRank": [
+    80,
+    55,
+    30
+  ],
+  "costByRank": [
+    75,
+    75,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "80/55/30 s"
+  }
+}

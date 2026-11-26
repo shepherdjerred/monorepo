@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sion-W",
+  "name": "Soul Furnace",
+  "description": "Passive: Sion gains 4 max Health when he kills a unit, or 15 for champion takedowns, large minions and large monsters. Active: Sion gains 60/75/90/105/120 (+40% AP) (+8/10/12/14/16% max Health) Shield for 6 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75/80/85/90/95 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sion-W.png",
+  "slot": "W",
+  "championKey": "Sion",
+  "championName": "Sion",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    75,
+    80,
+    85,
+    90,
+    95
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

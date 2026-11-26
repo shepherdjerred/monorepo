@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gwen-R",
+  "name": "Needlework",
+  "description": "First Cast: Hurl a needle that deals 30/50/70 (+10% AP) magic damage, Slows by 40/50/60% for 1.5 seconds, and applies A Thousand Cuts to all enemies hit. Gwen can Recast this ability up to 2 additional times within 6 seconds (1s cooldown between casts).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gwen-R.png",
+  "slot": "R",
+  "championKey": "Gwen",
+  "championName": "Gwen",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

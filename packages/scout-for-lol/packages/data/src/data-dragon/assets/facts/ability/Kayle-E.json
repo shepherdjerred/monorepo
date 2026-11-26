@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayle-E",
+  "name": "Starfire Spellblade",
+  "description": "Passive: Attacks deal an additional 15/20/25/30/35 (+20% AP) (+10% bonus AD) magic damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayle-E.png",
+  "slot": "E",
+  "championKey": "Kayle",
+  "championName": "Kayle",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Mordekaiser",
+  "name": "Mordekaiser",
+  "description": "Twice slain and thrice born, Mordekaiser is a brutal warlord from a foregone epoch who uses his necromantic sorcery to bind souls into an eternity of servitude.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "645"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Mordekaiser-passive",
+      "name": "Darkness Rise",
+      "icon": "img/ability/Mordekaiser-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mordekaiser-Q",
+      "name": "Obliterate",
+      "icon": "img/ability/Mordekaiser-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mordekaiser-W",
+      "name": "Indestructible",
+      "icon": "img/ability/Mordekaiser-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mordekaiser-E",
+      "name": "Death's Grasp",
+      "icon": "img/ability/Mordekaiser-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mordekaiser-R",
+      "name": "Realm of Death",
+      "icon": "img/ability/Mordekaiser-R.png"
+    }
+  ],
+  "icon": "img/champion/Mordekaiser.png",
+  "art": "img/champion-splash/Mordekaiser_0.jpg",
+  "title": "the Iron Revenant",
+  "roles": [
+    "Fighter",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Mage"
+  }
+}

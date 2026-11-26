@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Amumu-E",
+  "name": "Tantrum",
+  "description": "Passive: Amumu takes 5/7/9/11/13 (+3% bonus Armor) (+3% bonus Magic Resist) reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by 0.75 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Amumu-E.png",
+  "slot": "E",
+  "championKey": "Amumu",
+  "championName": "Amumu",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    35,
+    35,
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

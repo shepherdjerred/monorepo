@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Janna-W",
+  "name": "Zephyr",
+  "description": "Janna summons an air elemental that passively increases her Move Speed and enables her to pass through units. She may also activate this ability to deal damage and slow an enemy's Move Speed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "4294967295"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Janna-W.png",
+  "slot": "W",
+  "championKey": "Janna",
+  "championName": "Janna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    4294967295,
+    4294967295,
+    4294967295,
+    4294967295,
+    4294967295
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

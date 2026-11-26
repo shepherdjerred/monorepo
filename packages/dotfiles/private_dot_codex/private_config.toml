@@ -83,6 +83,7 @@ theme = "catppuccin-latte"
 vim_mode_default = true
 screen_reader_detection_done = true
 resume_cwd = "session"
+status_line = ["session-id", "model-with-reasoning", "current-dir"]
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
@@ -189,6 +190,20 @@ GIT_EDITOR = "true"
 PAGER = "cat"
 GIT_PAGER = "cat"
 GIT_CONFIG_GLOBAL = "/Users/jerred/.config/agent/gitconfig"
+
+[[hooks.SessionStart]]
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = 'bun "$HOME/bin/codex_theme_restart_identity.ts"'
+timeout = 3
+
+[[hooks.UserPromptSubmit]]
+
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = 'bun "$HOME/bin/codex_theme_restart_identity.ts"'
+timeout = 3
 
 [hooks.state]
 

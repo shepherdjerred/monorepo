@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zyra-E",
+  "name": "Grasping Roots",
+  "description": "Zyra sends vines forward, Rooting for 1/1.25/1.5/1.75/2 second(s) and dealing 60/95/130/165/200 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zyra-E.png",
+  "slot": "E",
+  "championKey": "Zyra",
+  "championName": "Zyra",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    11,
+    11,
+    11,
+    11
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11 s"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Senna",
+  "name": "Senna",
+  "description": "Cursed from childhood to be haunted by the supernatural Black Mist, Senna joined a sacred order known as the Sentinels of Light, and fiercely fought back—only to be killed, her soul imprisoned in a lantern by the cruel specter Thresh.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "530"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "600"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Senna-passive",
+      "name": "Absolution",
+      "icon": "img/ability/Senna-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Senna-Q",
+      "name": "Piercing Darkness",
+      "icon": "img/ability/Senna-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Senna-W",
+      "name": "Last Embrace",
+      "icon": "img/ability/Senna-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Senna-E",
+      "name": "Curse of the Black Mist",
+      "icon": "img/ability/Senna-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Senna-R",
+      "name": "Dawning Shadow",
+      "icon": "img/ability/Senna-R.png"
+    }
+  ],
+  "icon": "img/champion/Senna.png",
+  "art": "img/champion-splash/Senna_0.jpg",
+  "title": "the Redeemer",
+  "roles": [
+    "Support",
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Marksman"
+  }
+}

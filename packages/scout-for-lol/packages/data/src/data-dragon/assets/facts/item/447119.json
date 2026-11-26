@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447119",
+  "name": "Lightning Rod",
+  "description": "Call Lightning: Every 16 seconds, Autocast summon a stormcloud above you, which after a brief delay fires a lightning bolt, dealing plus 10% max Health magic damage and Slowing by 30% for 2 seconds. Fully Automated: Your Autocast spells benefit from your Ability Haste.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447119.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

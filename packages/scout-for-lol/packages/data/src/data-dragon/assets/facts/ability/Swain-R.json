@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Swain-R",
+  "name": "Demonic Ascension",
+  "description": "Swain frees the demon, which deals 15/25/35 (+4% AP) magic damage and drains 15/30/45 (+5% AP) (+1.5% bonus Health) Health per second from nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Swain-R.png",
+  "slot": "R",
+  "championKey": "Swain",
+  "championName": "Swain",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    120,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120 s"
+  }
+}

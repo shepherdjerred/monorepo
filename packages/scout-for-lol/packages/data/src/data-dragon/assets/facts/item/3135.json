@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3135",
+  "name": "Void Staff",
+  "description": "Grants 95 Ability Power, 40% Magic Penetration.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "95"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "40%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "4630",
+      "name": "Blighting Jewel",
+      "icon": "img/item/4630.png"
+    },
+    {
+      "kind": "item",
+      "key": "1026",
+      "name": "Blasting Wand",
+      "icon": "img/item/1026.png"
+    }
+  ],
+  "icon": "img/item/3135.png",
+  "goldTotal": 3000,
+  "goldCombine": 1050,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viego-E",
+  "name": "Harrowed Path",
+  "description": "Viego sends forth a spectre to haunt the first terrain hit, surrounding it with Mist for 8 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viego-E.png",
+  "slot": "E",
+  "championKey": "Viego",
+  "championName": "Viego",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    12,
+    10,
+    8,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    750,
+    750,
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/12/10/8/6 s"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8429",
+  "name": "Conditioning",
+  "description": "After 12 min gain +8 Armor and +8 Magic Resist and increase your Armor and Magic Resist by 3%.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Conditioning.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

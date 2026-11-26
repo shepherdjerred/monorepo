@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Blitzcrank",
+  "name": "Blitzcrank",
+  "description": "Blitzcrank is an enormous, near-indestructible automaton from Zaun, originally built to dispose of hazardous waste.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Blitzcrank-passive",
+      "name": "Mana Barrier",
+      "icon": "img/ability/Blitzcrank-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Blitzcrank-Q",
+      "name": "Rocket Grab",
+      "icon": "img/ability/Blitzcrank-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Blitzcrank-W",
+      "name": "Overdrive",
+      "icon": "img/ability/Blitzcrank-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Blitzcrank-E",
+      "name": "Power Fist",
+      "icon": "img/ability/Blitzcrank-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Blitzcrank-R",
+      "name": "Static Field",
+      "icon": "img/ability/Blitzcrank-R.png"
+    }
+  ],
+  "icon": "img/champion/Blitzcrank.png",
+  "art": "img/champion-splash/Blitzcrank_0.jpg",
+  "title": "the Great Steam Golem",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

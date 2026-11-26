@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karthus-W",
+  "name": "Wall of Pain",
+  "description": "Karthus creates a wall that lasts for 5 seconds. Enemies that pass through lose 25% Magic Resist for 5 seconds and are Slowed by 40/50/60/70/80% decaying over the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karthus-W.png",
+  "slot": "W",
+  "championKey": "Karthus",
+  "championName": "Karthus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15 s"
+  }
+}

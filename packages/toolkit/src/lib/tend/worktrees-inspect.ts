@@ -153,11 +153,38 @@ export type RepoPullRequests = {
 const OPEN_PR_LIMIT = 1000;
 const RECENT_PR_LIMIT = 500;
 
+/**
+ * What `gh` says when it has no login or its token is refused: exit 4 with a
+ * pointer to `gh auth login`, or `HTTP 401: Bad credentials`.
+ */
+const GH_NOT_AUTHENTICATED =
+  /HTTP 401|bad credentials|gh auth (?:login|refresh)|not logged in|token .*invalid/iu;
+
+/** `gh`'s own first line when the failure is one of authentication. */
+export function ghAuthenticationFailure(result: {
+  readonly exitCode: number;
+  readonly stderr: string;
+}): string | null {
+  const stderr = result.stderr.trim();
+  if (result.exitCode !== 4 && !GH_NOT_AUTHENTICATED.test(stderr)) {
+    return null;
+  }
+  const [firstLine = ""] = stderr.split("\n");
+  return firstLine.trim() || `gh exited ${String(result.exitCode)}`;
+}
+
+type PullRequestListing = {
+  /** `null` when the pull requests could not be listed. */
+  readonly records: Map<string, RepoPrRecord> | null;
+  /** Set when `gh` failed because it has no valid login. */
+  readonly notAuthenticated: string | null;
+};
+
 async function listPullRequests(
   ctx: RepoSweepContext,
   state: "open" | "all",
   limit: number,
-): Promise<Map<string, RepoPrRecord> | null> {
+): Promise<PullRequestListing> {
   const ghArgs = [
     "pr",
     "list",
@@ -172,16 +199,21 @@ async function listPullRequests(
     ctx.platform === "win32"
       ? ["gh", String.raw`C:\Program Files\GitHub CLI\gh.exe`]
       : ["gh"];
+  let notAuthenticated: string | null = null;
   for (const ghBin of ghCandidates) {
     const ghRes = await ctx.runner([ghBin, ...ghArgs], {
       cwd: ctx.repoPath,
       timeoutMs: 30_000,
     });
     if (ghRes.exitCode === 0) {
-      return parsePullRequestList(ghRes.stdout);
+      return {
+        records: parsePullRequestList(ghRes.stdout),
+        notAuthenticated: null,
+      };
     }
+    notAuthenticated ??= ghAuthenticationFailure(ghRes);
   }
-  return null;
+  return { records: null, notAuthenticated };
 }
 
 /**
@@ -199,18 +231,30 @@ export async function fetchRepoPullRequests(
   if (!hasNamedBranches || !ctx.checkPullRequests) {
     return { byBranch: new Map(), openKnown: true };
   }
-  const open = await listPullRequests(ctx, "open", OPEN_PR_LIMIT);
-  const recent = await listPullRequests(ctx, "all", RECENT_PR_LIMIT);
+  const openListing = await listPullRequests(ctx, "open", OPEN_PR_LIMIT);
+  const recentListing = await listPullRequests(ctx, "all", RECENT_PR_LIMIT);
+  const open = openListing.records;
+  const recent = recentListing.records;
   const byBranch = new Map(recent);
   for (const [branch, record] of open ?? []) {
     byBranch.set(branch, record);
+  }
+  const openKnown = open !== null && open.size < OPEN_PR_LIMIT;
+  const notAuthenticated =
+    openListing.notAuthenticated ?? recentListing.notAuthenticated;
+  if (notAuthenticated !== null) {
+    // One cause, named as such: both queries fail for it, and neither
+    // generic line would say which layer to fix.
+    warnings.push(
+      `gh is not authenticated: ${notAuthenticated}; pull requests could not be listed in ${ctx.repoPath}, so every branch worktree with commits ahead of the default branch is kept`,
+    );
+    return { byBranch, openKnown };
   }
   if (recent === null) {
     warnings.push(
       `gh pr list --state all failed in ${ctx.repoPath}; branches are deleted only when they have no commits ahead`,
     );
   }
-  const openKnown = open !== null && open.size < OPEN_PR_LIMIT;
   if (!openKnown) {
     warnings.push(
       `Open pull requests could not be listed in ${ctx.repoPath}; keeping every branch worktree with commits ahead of the default branch`,

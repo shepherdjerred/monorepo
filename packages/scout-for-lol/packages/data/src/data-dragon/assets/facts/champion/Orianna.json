@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Orianna",
+  "name": "Orianna",
+  "description": "Once a curious girl of flesh and blood, Orianna is now a technological marvel comprised entirely of clockwork.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "565"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Orianna-passive",
+      "name": "Clockwork Windup",
+      "icon": "img/ability/Orianna-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Orianna-Q",
+      "name": "Command: Attack",
+      "icon": "img/ability/Orianna-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Orianna-W",
+      "name": "Command: Dissonance",
+      "icon": "img/ability/Orianna-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Orianna-E",
+      "name": "Command: Protect",
+      "icon": "img/ability/Orianna-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Orianna-R",
+      "name": "Command: Shockwave",
+      "icon": "img/ability/Orianna-R.png"
+    }
+  ],
+  "icon": "img/champion/Orianna.png",
+  "art": "img/champion-splash/Orianna_0.jpg",
+  "title": "the Lady of Clockwork",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

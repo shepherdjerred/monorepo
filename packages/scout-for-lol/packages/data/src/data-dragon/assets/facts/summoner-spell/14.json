@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "14",
+  "name": "Ignite",
+  "description": "Deals true damage over time to target enemy champion and reduces healing effects on them for the duration.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 9"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerDot.png",
+  "cooldownSeconds": 180,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "180 s"
+  }
+}

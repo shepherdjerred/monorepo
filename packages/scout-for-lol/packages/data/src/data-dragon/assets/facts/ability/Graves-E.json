@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Graves-E",
+  "name": "Quickdraw",
+  "description": "Graves dashes and reloads one Shell into his shotgun. He also gains a stack for 4 seconds (max 8 stacks) or two stacks if he dashes towards an enemy champion.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "425"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Graves-E.png",
+  "slot": "E",
+  "championKey": "Graves",
+  "championName": "Graves",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15,
+    14,
+    13,
+    12
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    425,
+    425,
+    425,
+    425,
+    425
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15/14/13/12 s"
+  }
+}

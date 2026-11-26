@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771001",
+  "name": "Boots of Speed",
+  "description": "Limited to 1.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/771001.png",
+  "goldTotal": 325,
+  "goldCombine": 325,
+  "keyFact": {
+    "label": "Cost",
+    "value": "325 gold"
+  }
+}

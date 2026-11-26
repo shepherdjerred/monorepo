@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vi-R",
+  "name": "Cease and Desist",
+  "description": "Vi singles out an enemy champion, revealing them and dashing unstoppably towards them. Upon reaching them, Vi Knocks them Up for 1.3 seconds and deals 150/250/350 (+90% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vi-R.png",
+  "slot": "R",
+  "championKey": "Vi",
+  "championName": "Vi",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    115,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/115/90 s"
+  }
+}

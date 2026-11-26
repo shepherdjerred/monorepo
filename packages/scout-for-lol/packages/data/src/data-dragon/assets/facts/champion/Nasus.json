@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nasus",
+  "name": "Nasus",
+  "description": "Nasus is an imposing, jackal-headed Ascended being from ancient Shurima, a heroic figure regarded as a demigod by the people of the desert.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nasus-passive",
+      "name": "Soul Eater",
+      "icon": "img/ability/Nasus-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nasus-Q",
+      "name": "Siphoning Strike",
+      "icon": "img/ability/Nasus-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nasus-W",
+      "name": "Wither",
+      "icon": "img/ability/Nasus-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nasus-E",
+      "name": "Spirit Fire",
+      "icon": "img/ability/Nasus-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nasus-R",
+      "name": "Fury of the Sands",
+      "icon": "img/ability/Nasus-R.png"
+    }
+  ],
+  "icon": "img/champion/Nasus.png",
+  "art": "img/champion-splash/Nasus_0.jpg",
+  "title": "the Curator of the Sands",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

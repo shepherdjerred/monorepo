@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "LeeSin-E",
+  "name": "Tempest / Cripple",
+  "description": "Lee Sin smashes the ground, sending out a shockwave that deals 35/60/85/110/135 (+90% AD) magic damage and reveals them for 4 seconds. If this hits an enemy, Lee Sin can Recast for the next 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/LeeSin-E.png",
+  "slot": "E",
+  "championKey": "LeeSin",
+  "championName": "Lee Sin",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

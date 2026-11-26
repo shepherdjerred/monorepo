@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ryze",
+  "name": "Ryze",
+  "description": "Widely considered one of the most adept sorcerers on Runeterra, Ryze is an ancient, hard-bitten archmage with an impossibly heavy burden to bear.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ryze-passive",
+      "name": "Arcane Mastery",
+      "icon": "img/ability/Ryze-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ryze-Q",
+      "name": "Overload",
+      "icon": "img/ability/Ryze-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ryze-W",
+      "name": "Rune Prison",
+      "icon": "img/ability/Ryze-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ryze-E",
+      "name": "Spell Flux",
+      "icon": "img/ability/Ryze-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ryze-R",
+      "name": "Realm Warp",
+      "icon": "img/ability/Ryze-R.png"
+    }
+  ],
+  "icon": "img/champion/Ryze.png",
+  "art": "img/champion-splash/Ryze_0.jpg",
+  "title": "the Rune Mage",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

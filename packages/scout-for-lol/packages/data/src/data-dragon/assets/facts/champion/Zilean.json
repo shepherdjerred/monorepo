@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zilean",
+  "name": "Zilean",
+  "description": "Once a powerful Icathian mage, Zilean became obsessed with the passage of time after witnessing his homeland's destruction by the Void.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "574"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zilean-passive",
+      "name": "Time In A Bottle",
+      "icon": "img/ability/Zilean-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zilean-Q",
+      "name": "Time Bomb",
+      "icon": "img/ability/Zilean-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zilean-W",
+      "name": "Rewind",
+      "icon": "img/ability/Zilean-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zilean-E",
+      "name": "Time Warp",
+      "icon": "img/ability/Zilean-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zilean-R",
+      "name": "Chronoshift",
+      "icon": "img/ability/Zilean-R.png"
+    }
+  ],
+  "icon": "img/champion/Zilean.png",
+  "art": "img/champion-splash/Zilean_0.jpg",
+  "title": "the Chronokeeper",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

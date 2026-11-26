@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447118",
+  "name": "Pyromancer's Cloak",
+  "description": "Spark: (5s) Cooldown Attack or Ability hits against an enemy champion Burn them for magic damage over 3 seconds. Cleansing Flame: (0s) per champion Applying a Burn to an enemy champion creates a nearby Blaze for 5 seconds.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "85"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447118.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

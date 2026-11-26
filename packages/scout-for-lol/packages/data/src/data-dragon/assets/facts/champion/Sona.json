@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Sona",
+  "name": "Sona",
+  "description": "Sona is Demacia's foremost virtuoso of the stringed etwahl, speaking only through her graceful chords and vibrant arias.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "550"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Sona-passive",
+      "name": "Power Chord",
+      "icon": "img/ability/Sona-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sona-Q",
+      "name": "Hymn of Valor",
+      "icon": "img/ability/Sona-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sona-W",
+      "name": "Aria of Perseverance",
+      "icon": "img/ability/Sona-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sona-E",
+      "name": "Song of Celerity",
+      "icon": "img/ability/Sona-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sona-R",
+      "name": "Crescendo",
+      "icon": "img/ability/Sona-R.png"
+    }
+  ],
+  "icon": "img/champion/Sona.png",
+  "art": "img/champion-splash/Sona_0.jpg",
+  "title": "Maven of the Strings",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

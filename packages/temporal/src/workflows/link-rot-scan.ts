@@ -57,7 +57,7 @@ const { remediateLinkRot } = proxyActivities<LinkRotRemediationActivities>({
   },
 });
 // Delivery and alert publication run on the reports queue, which owns the
-// Postal, report-state S3, and ALERTMANAGER_URL credentials.
+// Mail API, report-state S3, and ALERTMANAGER_URL credentials.
 const deliveryActivities = proxyActivities<ReportDeliveryActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,

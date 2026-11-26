@@ -1,0 +1,42 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Elise-R",
+  "name": "Spider Form",
+  "description": "Human Form: Elise transforms into a menacing spider, becoming melee, gaining access to Spider Form Abilities and summons all dormant Spiderlings.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Elise-R.png",
+  "slot": "R",
+  "championKey": "Elise",
+  "championName": "Elise",
+  "maxRank": 4,
+  "cooldownByRank": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3 s"
+  }
+}

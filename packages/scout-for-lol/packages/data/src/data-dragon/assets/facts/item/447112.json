@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447112",
+  "name": "Flesheater",
+  "description": "Hack the Meat: Dealing damage shreds 3 Armor and Magic Resist for 5 seconds, stacking up to 10 times. Cannibalize: On Champion Takedown, steal 10% of their stats and size for the rest of the round.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "70"
+    },
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447112.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

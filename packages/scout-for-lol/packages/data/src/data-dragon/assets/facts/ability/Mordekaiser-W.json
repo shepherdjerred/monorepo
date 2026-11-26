@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mordekaiser-W",
+  "name": "Indestructible",
+  "description": "Passive: Mordekaiser stores 45% of the damage he deals and 7.5% of the damage he takes. Active: Mordekaiser gains the stored damage as Shield.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Mordekaiser-W.png",
+  "slot": "W",
+  "championKey": "Mordekaiser",
+  "championName": "Mordekaiser",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

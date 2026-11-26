@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "220003",
+  "name": "Legendary Assassin Item",
+  "description": "Active - Consume: Automatically open a semi-random selection for a Legendary Assassin item.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/220003.png",
+  "goldTotal": 2250,
+  "goldCombine": 2250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

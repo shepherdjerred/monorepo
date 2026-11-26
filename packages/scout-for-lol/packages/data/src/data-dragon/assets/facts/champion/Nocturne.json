@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nocturne",
+  "name": "Nocturne",
+  "description": "A demonic amalgamation drawn from the nightmares that haunt every sentient mind, the thing known as Nocturne has become a primordial force of pure evil.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nocturne-passive",
+      "name": "Umbra Blades",
+      "icon": "img/ability/Nocturne-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nocturne-Q",
+      "name": "Duskbringer",
+      "icon": "img/ability/Nocturne-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nocturne-W",
+      "name": "Shroud of Darkness",
+      "icon": "img/ability/Nocturne-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nocturne-E",
+      "name": "Unspeakable Horror",
+      "icon": "img/ability/Nocturne-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nocturne-R",
+      "name": "Paranoia",
+      "icon": "img/ability/Nocturne-R.png"
+    }
+  ],
+  "icon": "img/champion/Nocturne.png",
+  "art": "img/champion-splash/Nocturne_0.jpg",
+  "title": "the Eternal Nightmare",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

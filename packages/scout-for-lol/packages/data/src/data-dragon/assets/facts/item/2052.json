@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2052",
+  "name": "Poro-Snax",
+  "description": "Active - Consume: Serves a scrumptious scoop to a nearby Poro, causing it to grow in size.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2052.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

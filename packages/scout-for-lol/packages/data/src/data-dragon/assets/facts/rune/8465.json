@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8465",
+  "name": "Guardian",
+  "description": "Guard allies you cast spells on and those that are very nearby. If you or a guarded ally would take damage based on level, you're both granted a shield.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Cooldown",
+      "value": "75 - 40 seconds"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Guardian.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

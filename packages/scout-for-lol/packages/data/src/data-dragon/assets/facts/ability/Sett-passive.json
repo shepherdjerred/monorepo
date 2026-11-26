@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sett-passive",
+  "name": "Pit Grit",
+  "description": "Sett's basic attacks alternate between left and right punch. Right punch is slightly stronger and faster.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Sett-passive.png",
+  "slot": "passive",
+  "championKey": "Sett",
+  "championName": "Sett",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ivern-W",
+  "name": "Brushmaker",
+  "description": "Passive: While in brush and for 3 seconds after leaving, Ivern's Attacks deal an additional 20/27.5/35/42.5/50 (+20% AP) magic damage. Nearby allies will gain this effect for 1.5 seconds and deal 10/15/20/25/30 (+10% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ivern-W.png",
+  "slot": "W",
+  "championKey": "Ivern",
+  "championName": "Ivern",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1150,
+    1150,
+    1150,
+    1150,
+    1150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.5 s"
+  }
+}

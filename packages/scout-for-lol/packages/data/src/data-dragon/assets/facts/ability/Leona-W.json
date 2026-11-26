@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leona-W",
+  "name": "Eclipse",
+  "description": "Leona raises her shield, reducing incoming damage by 8/12/16/20/24 and gaining 20/27.5/35/42.5/50 (+20% bonus Armor) Armor and 20/27.5/35/42.5/50 (+20% bonus Magic Resist) Magic Resist for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leona-W.png",
+  "slot": "W",
+  "championKey": "Leona",
+  "championName": "Leona",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

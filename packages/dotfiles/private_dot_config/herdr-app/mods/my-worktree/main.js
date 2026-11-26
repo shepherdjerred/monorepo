@@ -179,8 +179,6 @@ const tilde = (path, userHome) => {
   const [p, h] = [path, userHome].map((s) => s.replace(/\\/g, "/"));
   return p.startsWith(h) ? `~${p.slice(h.length)}` : path;
 };
-const slug = (branch) =>
-  branch.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
 const ago = (s) => {
   const d = Date.now() / 1000 - s;
   return d < 3600
@@ -216,7 +214,11 @@ async function checkouts(repo, on) {
   for (const block of list.out.split(/\n\n+/)) {
     const lines = block.split("\n");
     const path = lines.find((l) => l.startsWith("worktree "))?.slice(9);
-    if (!path || lines.some((l) => l === "bare" || l.startsWith("prunable")))
+    if (
+      !path ||
+      path.replaceAll("\\", "/").includes("/.herdr/worktrees/.pool/") ||
+      lines.some((l) => l === "bare" || l.startsWith("prunable"))
+    )
       continue;
     const branch =
       lines
@@ -532,12 +534,6 @@ export default class Worktree extends View {
 
   go(cx) {
     if (this.busy || !this.repo) return;
-    if (this.messaging) {
-      this.error = this.startInBackground();
-      if (!this.error) this.close();
-      cx.notify();
-      return;
-    }
     cx.spawn(async (cx) => this.work(cx));
   }
 
@@ -548,7 +544,9 @@ export default class Worktree extends View {
     cx.notify();
     try {
       this.error =
-        props().action === "remove" ? await this.remove() : await this.create();
+        props().action === "remove"
+          ? await this.remove()
+          : await this.startInBackground();
     } catch (error) {
       this.error = error instanceof Error ? error.message : String(error);
     }
@@ -634,10 +632,14 @@ export default class Worktree extends View {
   }
 
   // Hands the work to the detached worker; "" once it is started.
-  startInBackground() {
-    const message = this.text.trim();
-    const sendMessage = Boolean(this.sendMessage && this.hasAgentTarget());
-    if (!message)
+  async startInBackground() {
+    const message = this.messaging ? this.text.trim() : "";
+    const branch = this.messaging ? undefined : this.text.trim();
+    const sendMessage = Boolean(
+      this.messaging && this.sendMessage && this.hasAgentTarget(),
+    );
+    if (branch === "") return "Type a branch name.";
+    if (branch === undefined && !message)
       return sendMessage
         ? "Type a first message."
         : "Describe the worktree to name its branch and tab.";
@@ -654,6 +656,7 @@ export default class Worktree extends View {
     }
     const request = {
       message,
+      ...(branch === undefined ? {} : { branch }),
       provider,
       machine: this.on ?? null,
       repoMain: this.repo.main,
@@ -674,7 +677,7 @@ export default class Worktree extends View {
       // Start-Process does not quote arguments, so the request travels in a
       // variable, single-quoted for PowerShell.
       const quoted = (s) => `'${s.replaceAll("'", "''")}'`;
-      exec("powershell.exe", [
+      const result = await exec("powershell.exe", [
         "-NoProfile",
         "-NonInteractive",
         "-Command",
@@ -683,14 +686,20 @@ export default class Worktree extends View {
           `Start-Process -WindowStyle Hidden -WorkingDirectory ${quoted(home())} -FilePath bun -ArgumentList ${quoted(`"${home()}/bin/herdr-new-worktree.ts"`)}, '--request-env'`,
         ].join("; "),
       ]);
-    } else
-      exec("sh", [
+      return result.code === 0
+        ? ""
+        : result.stderr.trim() || "Could not start the worktree worker.";
+    } else {
+      const result = await exec("sh", [
         "-c",
-        'nohup "$0" "$1" >/dev/null 2>&1 &',
+        'test -x "$0" || exit 1; nohup "$0" "$1" >/dev/null 2>&1 &',
         `${home()}/bin/herdr-new-worktree`,
         JSON.stringify(request),
       ]);
-    return "";
+      return result.code === 0
+        ? ""
+        : result.stderr.trim() || "Could not start the worktree worker.";
+    }
   }
 
   // The agent's model list, cached, then refreshed once per window.
@@ -779,51 +788,6 @@ export default class Worktree extends View {
     this.choose(kind, next.id, provider, cx);
   }
 
-  // A given { branch }: checked out when it exists, else started from here.
-  async create() {
-    // The branch is used as written; check-ref-format rejects an invalid one.
-    const branch = this.text.trim();
-    if (!branch) return "Type a branch name.";
-    if (this.picking && !this.agents)
-      return "Still asking Brim for the agents.";
-    const provider = this.provider();
-    const exists = (
-      await git(
-        this.repo.main,
-        ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`],
-        this.on,
-      )
-    ).ok;
-    const valid = await git(
-      this.repo.main,
-      ["check-ref-format", "--branch", branch],
-      this.on,
-    );
-    if (!valid.ok) return valid.err || `git rejects the branch ${branch}.`;
-    const path = `${ROOT(this.userHome)}/${this.repo.name}/${slug(branch)}`;
-    const add = exists
-      ? ["worktree", "add", path, branch]
-      : ["worktree", "add", "-b", branch, path, "HEAD"];
-    const r = await git(this.repo.top, add, this.on);
-    if (!r.ok) return r.err || "git worktree add failed.";
-    const p = props();
-    let argv = p.argv;
-    if (provider) {
-      const { args, safe } = agentArgs(provider, this.choiceFor(provider));
-      argv = [
-        ...(safe ? ["env", "AGENT_SAFE=1"] : []),
-        "brim",
-        "--provider",
-        provider,
-        "--",
-        ...args,
-      ];
-    }
-    // Leave spaces unnamed so they follow the checkout folder and nest under the repo.
-    run("space.new", { folder: path, machine: this.on, tab: p.tab, argv });
-    return "";
-  }
-
   shown() {
     const f = this.text.trim().toLowerCase();
     return (this.list ?? []).filter(
@@ -841,6 +805,7 @@ export default class Worktree extends View {
   }
 
   async remove() {
+    if (!this.repo.linked) return "This folder is not a linked worktree.";
     const s = this.space();
     const status = await git(
       this.repo.top,

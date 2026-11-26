@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Riven",
+  "name": "Riven",
+  "description": "Once a swordmaster in the warhosts of Noxus, Riven is an expatriate in a land she previously tried to conquer.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Riven-passive",
+      "name": "Runic Blade",
+      "icon": "img/ability/Riven-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Riven-Q",
+      "name": "Broken Wings",
+      "icon": "img/ability/Riven-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Riven-W",
+      "name": "Ki Burst",
+      "icon": "img/ability/Riven-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Riven-E",
+      "name": "Valor",
+      "icon": "img/ability/Riven-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Riven-R",
+      "name": "Blade of the Exile",
+      "icon": "img/ability/Riven-R.png"
+    }
+  ],
+  "icon": "img/champion/Riven.png",
+  "art": "img/champion-splash/Riven_0.jpg",
+  "title": "the Exile",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tristana-E",
+  "name": "Explosive Charge",
+  "description": "Passive: Tristana's Attacks that kill enemies deal 45/60/75/90/105 (+25% AP) magic damage to surrounding enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Tristana-E.png",
+  "slot": "E",
+  "championKey": "Tristana",
+  "championName": "Tristana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15.5,
+    15,
+    14.5,
+    14
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15.5/15/14.5/14 s"
+  }
+}

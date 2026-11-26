@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3112",
+  "name": "Guardian's Orb",
+  "description": "Recovery: Restores 10 Mana every 5 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "50"
+    },
+    {
+      "label": "Health",
+      "value": "150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3112.png",
+  "goldTotal": 950,
+  "goldCombine": 950,
+  "keyFact": {
+    "label": "Cost",
+    "value": "950 gold"
+  }
+}

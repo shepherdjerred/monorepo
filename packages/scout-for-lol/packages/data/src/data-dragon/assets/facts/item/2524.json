@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2524",
+  "name": "Bandlepipes",
+  "description": "Fanfare: Slowing or Immobilizing an enemy champion grants Fanfare for seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Armor",
+      "value": "20"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "20"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1029",
+      "name": "Cloth Armor",
+      "icon": "img/item/1029.png"
+    },
+    {
+      "kind": "item",
+      "key": "1033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/1033.png"
+    }
+  ],
+  "icon": "img/item/2524.png",
+  "goldTotal": 2300,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2300 gold"
+  }
+}

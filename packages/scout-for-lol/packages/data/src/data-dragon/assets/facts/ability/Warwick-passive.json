@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Warwick-passive",
+  "name": "Eternal Hunger",
+  "description": "Warwick's basic attacks deal bonus magic damage. If Warwick is below 50% health, he heals the same amount.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Warwick-passive.png",
+  "slot": "passive",
+  "championKey": "Warwick",
+  "championName": "Warwick",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

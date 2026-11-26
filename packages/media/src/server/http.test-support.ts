@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import type { MediaAppDependencies } from "./app.ts";
-import { MediaError } from "#application/errors.ts";
+import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
@@ -60,6 +60,10 @@ const migrationFixture: MediaAppDependencies["migrationAdmin"] = {
   },
   review() {
     return Promise.resolve({ status: "completed" });
+  },
+  importActivity(current, input) {
+    requireOwner(current);
+    return Promise.resolve({ imported: input.events.length, unchanged: 0 });
   },
 };
 
@@ -212,6 +216,10 @@ function mediaFixture() {
     },
     getMedia() {
       return Promise.reject(new MediaError("media_not_found", "Missing", 404));
+    },
+    importedActivity(current) {
+      requireOwner(current);
+      return Promise.resolve({ items: [], nextCursor: null });
     },
     activity() {
       return Promise.resolve([]);

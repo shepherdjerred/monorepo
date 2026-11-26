@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771057",
+  "name": "Negatron Cloak",
+  "description": "Grants 40 Magic Resist.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771057.png",
+  "goldTotal": 720,
+  "goldCombine": 720,
+  "keyFact": {
+    "label": "Cost",
+    "value": "720 gold"
+  }
+}

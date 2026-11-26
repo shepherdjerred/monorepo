@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aurora-passive",
+  "name": "Spirit Abjuration",
+  "description": "Aurora's spells and attacks exorcise spirits from the enemies she damages. Exorcised spirits follow Aurora around and heal her.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Aurora-passive.png",
+  "slot": "passive",
+  "championKey": "Aurora",
+  "championName": "Aurora",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

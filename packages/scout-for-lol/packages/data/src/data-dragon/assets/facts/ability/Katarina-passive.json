@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Katarina-passive",
+  "name": "Voracity",
+  "description": "Whenever an enemy champion dies that Katarina has damaged recently, her remaining ability cooldowns are dramatically reduced. If Katarina picks up a Dagger, she uses it to slash through all nearby enemies, dealing magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Katarina-passive.png",
+  "slot": "passive",
+  "championKey": "Katarina",
+  "championName": "Katarina",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

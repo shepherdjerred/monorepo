@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xayah-R",
+  "name": "Featherstorm",
+  "description": "Xayah leaps into the air becoming Untargetable and Ghosted for 1.5 seconds before raining down daggers that deal 200/300/400 (+100% bonus AD) physical damage and leave behind a line of Feathers.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Xayah-R.png",
+  "slot": "R",
+  "championKey": "Xayah",
+  "championName": "Xayah",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

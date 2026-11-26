@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6694",
+  "name": "Serylda's Grudge",
+  "description": "Bitter Cold: Damaging Abilities Slow enemies below 50% Health by 30% for 1 second.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Armor Penetration",
+      "value": "35%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3133",
+      "name": "Caulfield's Warhammer",
+      "icon": "img/item/3133.png"
+    },
+    {
+      "kind": "item",
+      "key": "3035",
+      "name": "Last Whisper",
+      "icon": "img/item/3035.png"
+    }
+  ],
+  "icon": "img/item/6694.png",
+  "goldTotal": 3000,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

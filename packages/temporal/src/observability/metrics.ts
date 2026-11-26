@@ -112,7 +112,7 @@ export const homelabAuditTokensTotal = new Counter({
 
 export const homelabAuditEmailSentTotal = new Counter({
   name: "homelab_audit_email_sent_total",
-  help: "Homelab-audit emails sent via Postal, by outcome (success | failure)",
+  help: "Homelab-audit emails sent via outbound Mail broker, by outcome (success | failure)",
   labelNames: ["outcome"] as const,
   registers: [register],
 });
@@ -213,7 +213,7 @@ export const agentTaskOutputContractFailuresTotal = new Counter({
 
 export const agentTaskEmailSentTotal = new Counter({
   name: "agent_task_email_sent_total",
-  help: "Generic agent-task emails sent via Postal, by outcome (success | failure)",
+  help: "Generic agent-task emails sent via outbound Mail broker, by outcome (success | failure)",
   labelNames: ["outcome"] as const,
   registers: [register],
 });

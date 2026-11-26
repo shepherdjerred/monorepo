@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Garen-E",
+  "name": "Judgment",
+  "description": "Garen rapidly spins his sword around his body, dealing physical damage to nearby enemies.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Garen-E.png",
+  "slot": "E",
+  "championKey": "Garen",
+  "championName": "Garen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8.25/7.5/6.75/6 s"
+  }
+}

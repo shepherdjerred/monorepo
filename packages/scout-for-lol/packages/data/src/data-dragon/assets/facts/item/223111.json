@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223111",
+  "name": "Mercury's Treads",
+  "description": "Grants 30 Magic Resist, 30 Move Speed, 30% Tenacity.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    },
+    {
+      "label": "Move Speed",
+      "value": "30"
+    },
+    {
+      "label": "Tenacity",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223111.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yunara-E",
+  "name": "Kanmei's Steps | Untouchable Shadow",
+  "description": "Yunara gains 30/35/40/45/50% Move Speed, increased to 45/52.5/60/67.5/75% Move Speed when moving toward an enemy champion, for 1.5 seconds. Transcendent State - Untouchable Shadow: Yunara dashes in a direction.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yunara-E.png",
+  "slot": "E",
+  "championKey": "Yunara",
+  "championName": "Yunara",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    9,
+    9,
+    9,
+    9
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9 s"
+  }
+}

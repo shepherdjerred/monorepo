@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8021",
+  "name": "Fleet Footwork",
+  "description": "Attacking and moving builds Energy stacks. At 100 stacks, your next attack heals you and grants increased MS.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/FleetFootwork.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3363",
+  "name": "Farsight Alteration",
+  "description": "Active: (198 - 99s) Reveals a distant area for 2 seconds and leaves a Ward that expires upon spotting an enemy champion.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/3363.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

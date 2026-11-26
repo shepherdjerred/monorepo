@@ -110,6 +110,7 @@ export class PrismaPersonalMigration extends MediaCommandBase {
       historyOnly: input.historyOnly,
       selectedSeerrRequests: input.selectedSeerrRequests,
       deferUnboundRequesters: input.deferUnboundRequesters,
+      recordHistoryOnly: input.recordHistoryOnly,
     });
     const current = await this.db.mediaUser.findUniqueOrThrow({
       where: { id: actor.id },
@@ -170,9 +171,9 @@ export class PrismaPersonalMigration extends MediaCommandBase {
             "Resolve exact identities and selected scopes, or explicitly retain obsolete requests as history",
             409,
           );
-        const imports = await this.importClaims(tx, actor, {
-          claims: preview.claims,
-        });
+        const imports = input.recordHistoryOnly
+          ? []
+          : await this.importClaims(tx, actor, { claims: preview.claims });
         for (const scope of preview.library)
           await tx.mediaIntent.updateMany({
             where: {
@@ -213,7 +214,9 @@ export class PrismaPersonalMigration extends MediaCommandBase {
         const event = await tx.applicationEvent.create({
           data: {
             actorId: actor.id,
-            kind: "personal_state_imported",
+            kind: input.recordHistoryOnly
+              ? "seerr_request_history_imported"
+              : "personal_state_imported",
             dedupeKey: `personal-import:${input.previewHash}`,
             payload: z.record(z.string(), z.json()).parse({
               schemaVersion: 1,
@@ -231,6 +234,13 @@ export class PrismaPersonalMigration extends MediaCommandBase {
             }),
           },
         });
+        if (input.recordHistoryOnly)
+          return {
+            status: "completed",
+            version: 1,
+            eventId: event.id,
+            next: null,
+          };
         await recordSeerrApprovals(
           tx,
           event.id,

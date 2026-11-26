@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "664011",
+  "name": "Sword of Blossoming Dawn",
+  "description": "Effervescence: Gain +1% Attack Speed for every 1% Heal and Shield Power you have. Peppermint: On-Hit, heal the lowest health ally champion near you for, prioritizing lower health allies.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "35"
+    },
+    {
+      "label": "Health",
+      "value": "150"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/664011.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

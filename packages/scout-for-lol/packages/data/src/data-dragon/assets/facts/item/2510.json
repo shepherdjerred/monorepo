@@ -1,0 +1,58 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2510",
+  "name": "Dusk and Dawn",
+  "description": "Spellblade: (0s) After using an Ability, your next Attack deals bonus magic damage and heals you for On-Hit and then applies On-Hit effects an additional time.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3057",
+      "name": "Sheen",
+      "icon": "img/item/3057.png"
+    },
+    {
+      "kind": "item",
+      "key": "1026",
+      "name": "Blasting Wand",
+      "icon": "img/item/1026.png"
+    },
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1042",
+      "name": "Dagger",
+      "icon": "img/item/1042.png"
+    }
+  ],
+  "icon": "img/item/2510.png",
+  "goldTotal": 3100,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3100 gold"
+  }
+}

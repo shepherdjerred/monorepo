@@ -1,0 +1,54 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773064",
+  "name": "Force of Nature",
+  "description": "Steadfast: Regenerate an additional health per 5 seconds.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "76"
+    },
+    {
+      "label": "Move Speed",
+      "value": "8%"
+    },
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "40"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771006",
+      "name": "Rejuvenation Bead",
+      "icon": "img/item/771006.png"
+    },
+    {
+      "kind": "item",
+      "key": "771006",
+      "name": "Rejuvenation Bead",
+      "icon": "img/item/771006.png"
+    },
+    {
+      "kind": "item",
+      "key": "771033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/771033.png"
+    },
+    {
+      "kind": "item",
+      "key": "771057",
+      "name": "Negatron Cloak",
+      "icon": "img/item/771057.png"
+    }
+  ],
+  "icon": "img/item/773064.png",
+  "goldTotal": 2610,
+  "goldCombine": 1130,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2610 gold"
+  }
+}

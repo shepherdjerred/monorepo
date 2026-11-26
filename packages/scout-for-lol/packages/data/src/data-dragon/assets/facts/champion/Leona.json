@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Leona",
+  "name": "Leona",
+  "description": "Imbued with the fire of the sun, Leona is a holy warrior of the Solari who defends Mount Targon with her Zenith Blade and the Shield of Daybreak.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "646"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Leona-passive",
+      "name": "Sunlight",
+      "icon": "img/ability/Leona-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leona-Q",
+      "name": "Shield of Daybreak",
+      "icon": "img/ability/Leona-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leona-W",
+      "name": "Eclipse",
+      "icon": "img/ability/Leona-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leona-E",
+      "name": "Zenith Blade",
+      "icon": "img/ability/Leona-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leona-R",
+      "name": "Solar Flare",
+      "icon": "img/ability/Leona-R.png"
+    }
+  ],
+  "icon": "img/champion/Leona.png",
+  "art": "img/champion-splash/Leona_0.jpg",
+  "title": "the Radiant Dawn",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

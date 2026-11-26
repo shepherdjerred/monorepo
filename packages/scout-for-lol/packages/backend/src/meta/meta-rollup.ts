@@ -79,8 +79,8 @@ WITH src AS (
 SELECT kind, patch, queue_id, bracket, role, champion_id, key1, key2, games, wins, kind_total
 FROM totalled
 WHERE kind IN ('matches', 'champion', 'ban', 'trait_base')
-  OR (kind = 'matchup' AND games >= ${matchup})
-  OR (kind NOT IN ('matches', 'champion', 'ban', 'trait_base', 'matchup') AND games >= ${entry})
+  OR (kind IN ('matchup', 'matchup_spell') AND games >= ${matchup})
+  OR (kind NOT IN ('matches', 'champion', 'ban', 'trait_base', 'matchup', 'matchup_spell') AND games >= ${entry})
 ORDER BY kind, patch, queue_id, bracket, role, champion_id, key1, key2`;
 }
 

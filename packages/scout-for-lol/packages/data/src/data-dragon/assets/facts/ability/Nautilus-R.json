@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nautilus-R",
+  "name": "Depth Charge",
+  "description": "Nautilus fires a shockwave that chases an enemy champion, dealing 150/275/400 (+80% AP) magic damage, Knocking them Up and Stunning them for 1/1.5/2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nautilus-R.png",
+  "slot": "R",
+  "championKey": "Nautilus",
+  "championName": "Nautilus",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

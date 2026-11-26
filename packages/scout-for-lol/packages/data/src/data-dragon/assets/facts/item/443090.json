@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443090",
+  "name": "Reaper's Toll",
+  "description": "Sow: Increase your Attack Speed from all sources by 15%. Reap: On-Hit, deal max Health true damage, and reduce their Max Health by the damage dealt for the rest of the round.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "40"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "50%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "5%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443090.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

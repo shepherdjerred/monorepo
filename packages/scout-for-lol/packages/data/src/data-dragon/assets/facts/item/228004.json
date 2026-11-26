@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228004",
+  "name": "Adaptive Helm",
+  "description": "Voidborn Resilience: For each second in champion combat gain a stack granting 2 Armor and Magic Resist, up to 8 stacks max. Absorb: Taking magic damage from enemy Champions grants a stack of Steadfast (max 8) for 7 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "800"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/228004.png",
+  "goldTotal": 6000,
+  "goldCombine": 6000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "6000 gold"
+  }
+}

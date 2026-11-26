@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3078",
+  "name": "Trinity Force",
+  "description": "Spellblade: After using an Ability, your next Attack deals bonus physical damage On-Hit. Quicken: Attacking grants 20 Move Speed for 2 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "36"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Health",
+      "value": "333"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3057",
+      "name": "Sheen",
+      "icon": "img/item/3057.png"
+    },
+    {
+      "kind": "item",
+      "key": "3044",
+      "name": "Phage",
+      "icon": "img/item/3044.png"
+    },
+    {
+      "kind": "item",
+      "key": "3051",
+      "name": "Hearthbound Axe",
+      "icon": "img/item/3051.png"
+    }
+  ],
+  "icon": "img/item/3078.png",
+  "goldTotal": 3333,
+  "goldCombine": 133,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3333 gold"
+  }
+}

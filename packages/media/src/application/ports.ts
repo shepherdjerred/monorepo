@@ -1,6 +1,10 @@
 import type { CreateRequest, MediaAction } from "#shared/contract.ts";
 import type { MediaActor } from "./auth.ts";
 import type {
+  LegacyActivityPage,
+  LegacyActivityQuery,
+} from "#shared/legacy-activity/contract.ts";
+import type {
   DefaultCommandV2,
   DefaultCommandResultV2,
 } from "#shared/editions/commands.ts";
@@ -102,6 +106,10 @@ export type MediaApplication = {
   listRequests: (actor: MediaActor) => Promise<RequestList>;
   getMedia: (actor: MediaActor, mediaId: string) => Promise<MediaDetail>;
   activity: (actor: MediaActor) => Promise<OperationList>;
+  importedActivity: (
+    actor: MediaActor,
+    query: LegacyActivityQuery,
+  ) => Promise<LegacyActivityPage>;
   removals: (actor: MediaActor) => Promise<RemovalList>;
   notifications: (actor: MediaActor) => Promise<NotificationList>;
   profiles: (actor: MediaActor) => Promise<ProfileList>;

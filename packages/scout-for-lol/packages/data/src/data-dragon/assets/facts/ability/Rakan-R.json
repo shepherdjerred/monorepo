@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rakan-R",
+  "name": "The Quickness",
+  "description": "Rakan gains 75% Move Speed for 4 seconds. Rakan deals 100/200/300 (+50% AP) magic damage and Charms enemies for 1/1.25/1.5 second(s) the first time he touches them.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rakan-R.png",
+  "slot": "R",
+  "championKey": "Rakan",
+  "championName": "Rakan",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    110,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    150,
+    150,
+    150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/110/90 s"
+  }
+}

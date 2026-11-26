@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viktor-W",
+  "name": "Gravity Field",
+  "description": "Viktor deploys a gravitational imprisonment device for 4 seconds, Slowing enemies inside it by 33/36/39/42/45%. Enemies who remain within its radius for 1.25 seconds are Stunned for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viktor-W.png",
+  "slot": "W",
+  "championKey": "Viktor",
+  "championName": "Viktor",
+  "maxRank": 5,
+  "cooldownByRank": [
+    17,
+    16,
+    15,
+    14,
+    13
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "17/16/15/14/13 s"
+  }
+}

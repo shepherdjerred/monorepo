@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222512",
+  "name": "Fiendhunter Bolts",
+  "description": "Night Vigil: Gain 30 Ultimate Ability Haste. Opening Barrage: (0s) After casting your Ultimate, your next 3 basic attacks within 8 seconds gain 50% Attack Speed and Critically Strike for 75% of your normal Critical Strike damage.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222512.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

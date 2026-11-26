@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kindred-passive",
+  "name": "Mark of the Kindred",
+  "description": "Kindred can mark targets to Hunt. Successfully completing a Hunt permanently empowers Kindred's basic abilities.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kindred-passive.png",
+  "slot": "passive",
+  "championKey": "Kindred",
+  "championName": "Kindred",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

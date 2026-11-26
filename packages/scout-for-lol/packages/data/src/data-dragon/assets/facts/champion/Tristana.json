@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Tristana",
+  "name": "Tristana",
+  "description": "While many other yordles channel their energy into discovery, invention, or just plain mischief-making, Tristana was always inspired by the adventures of great warriors.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Tristana-passive",
+      "name": "Draw a Bead",
+      "icon": "img/ability/Tristana-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tristana-Q",
+      "name": "Rapid Fire",
+      "icon": "img/ability/Tristana-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tristana-W",
+      "name": "Rocket Jump",
+      "icon": "img/ability/Tristana-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tristana-E",
+      "name": "Explosive Charge",
+      "icon": "img/ability/Tristana-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tristana-R",
+      "name": "Buster Shot",
+      "icon": "img/ability/Tristana-R.png"
+    }
+  ],
+  "icon": "img/champion/Tristana.png",
+  "art": "img/champion-splash/Tristana_0.jpg",
+  "title": "the Yordle Gunner",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

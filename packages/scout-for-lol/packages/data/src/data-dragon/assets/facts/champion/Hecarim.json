@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Hecarim",
+  "name": "Hecarim",
+  "description": "Hecarim is a spectral fusion of man and beast, cursed to ride down the souls of the living for all eternity.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "625"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Hecarim-passive",
+      "name": "Warpath",
+      "icon": "img/ability/Hecarim-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hecarim-Q",
+      "name": "Rampage",
+      "icon": "img/ability/Hecarim-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hecarim-W",
+      "name": "Spirit of Dread",
+      "icon": "img/ability/Hecarim-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hecarim-E",
+      "name": "Devastating Charge",
+      "icon": "img/ability/Hecarim-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Hecarim-R",
+      "name": "Onslaught of Shadows",
+      "icon": "img/ability/Hecarim-R.png"
+    }
+  ],
+  "icon": "img/champion/Hecarim.png",
+  "art": "img/champion-splash/Hecarim_0.jpg",
+  "title": "the Shadow of War",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

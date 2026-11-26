@@ -1,0 +1,40 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3870",
+  "name": "Dream Maker",
+  "description": "Dream Maker: Healing or Shielding another ally blows Dream Bubbles to them for 3 seconds. Active: (4 charges) Places an Invisible Stealth Ward that grants vision.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "9"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3867",
+      "name": "Bounty of Worlds",
+      "icon": "img/item/3867.png"
+    }
+  ],
+  "icon": "img/item/3870.png",
+  "goldTotal": 400,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

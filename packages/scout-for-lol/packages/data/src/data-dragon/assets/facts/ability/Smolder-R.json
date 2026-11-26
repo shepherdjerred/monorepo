@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Smolder-R",
+  "name": "MMOOOMMMM!",
+  "description": "Smolder's mom breathes fire from above, dealing 150/250/350 (+100% bonus AD) (+100% AP) physical damage. Enemies in the center take 225/375/525 (+150% bonus AD) (+150% AP) physical damage instead and are Slowed by 40% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "4200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Smolder-R.png",
+  "slot": "R",
+  "championKey": "Smolder",
+  "championName": "Smolder",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    4200,
+    4200,
+    4200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}

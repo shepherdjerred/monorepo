@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jinx-W",
+  "name": "Zap!",
+  "description": "Jinx fires a shock blast that deals 10/60/110/160/210 (+140% AD) physical damage to the first enemy hit, Slows them by 40/50/60/70/80%, and reveals them for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jinx-W.png",
+  "slot": "W",
+  "championKey": "Jinx",
+  "championName": "Jinx",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7,
+    6,
+    5,
+    4
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1450,
+    1450,
+    1450,
+    1450,
+    1450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7/6/5/4 s"
+  }
+}

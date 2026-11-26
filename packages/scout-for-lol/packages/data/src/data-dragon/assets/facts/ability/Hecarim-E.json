@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hecarim-E",
+  "name": "Devastating Charge",
+  "description": "Hecarim becomes Ghosted and gains 25% Move Speed increasing to 65% over 4 seconds. His next Attack Knocks Back and deals between 30/45/60/75/90 (+50% bonus AD) and 60/90/120/150/180 (+100% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hecarim-E.png",
+  "slot": "E",
+  "championKey": "Hecarim",
+  "championName": "Hecarim",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    19,
+    18,
+    17,
+    16
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/19/18/17/16 s"
+  }
+}

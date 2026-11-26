@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8224",
+  "name": "Axiom Arcanist",
+  "description": "Your Ultimate has increased damage, healing, and shielding. Scoring a takedown on an enemy champion reduces your Ultimate's current cooldown.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Axiom_Arcanist.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

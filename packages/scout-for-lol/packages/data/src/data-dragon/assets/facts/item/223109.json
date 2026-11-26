@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223109",
+  "name": "Knight's Vow",
+  "description": "Sacrifice: While near your Worthy ally, take 12% of the damage they receive and heal for 12% of the damage they deal to Champions. ACTIVE: (0s)",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223109.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

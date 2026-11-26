@@ -59,7 +59,7 @@ ready (`Why`, `What`, `Demo`, and `Verification` in the PR body):
 
 ```bash
 toolkit git-spice branch submit --draft --no-prompt --no-web --title "type(scope): outcome" --body-file /tmp/pr-body.md
-toolkit pr asset before.png after.png --profile seaweedfs --markdown
+toolkit pr asset before.png after.png --markdown
 # Embed printed markdown in ## Demo of /tmp/pr-body.md, then mark ready:
 toolkit git-spice branch submit --no-draft --no-prompt --no-web --body-file /tmp/pr-body.md
 toolkit ci wait --json
@@ -119,7 +119,7 @@ whole branch, not the latest commit.
 - Never change a real gate, skip a test, or suppress an error merely to make a
   PR green.
 
-Upload `Demo` media with `toolkit pr asset [PR] <path...> --profile seaweedfs --markdown`
+Upload `Demo` media with `toolkit pr asset [PR] <path...> --markdown`
 (omitting `PR` infers the current branch's open PR) and embed the printed
 markdown in the PR body's `## Demo` section before marking ready. A `.cast`
 renders as an inline GIF linked to the full player; a directory with root

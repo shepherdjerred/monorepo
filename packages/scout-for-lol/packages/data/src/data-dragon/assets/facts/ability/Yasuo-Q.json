@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yasuo-Q",
+  "name": "Steel Tempest",
+  "description": "Yasuo thrusts, dealing 20/45/70/95/120 (+100% AD) physical damage. If he hits, he gains a stack for 6 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yasuo-Q.png",
+  "slot": "Q",
+  "championKey": "Yasuo",
+  "championName": "Yasuo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

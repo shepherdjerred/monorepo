@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ahri",
+  "name": "Ahri",
+  "description": "Innately connected to the magic of the spirit realm, Ahri is a fox-like vastaya who can manipulate her prey's emotions and consume their essence—receiving flashes of their memory and insight from each soul she consumes.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ahri-passive",
+      "name": "Essence Theft",
+      "icon": "img/ability/Ahri-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ahri-Q",
+      "name": "Orb of Deception",
+      "icon": "img/ability/Ahri-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ahri-W",
+      "name": "Fox-Fire",
+      "icon": "img/ability/Ahri-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ahri-E",
+      "name": "Charm",
+      "icon": "img/ability/Ahri-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ahri-R",
+      "name": "Spirit Rush",
+      "icon": "img/ability/Ahri-R.png"
+    }
+  ],
+  "icon": "img/champion/Ahri.png",
+  "art": "img/champion-splash/Ahri_0.jpg",
+  "title": "the Nine-Tailed Fox",
+  "roles": [
+    "Mage",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Assassin"
+  }
+}
