@@ -112,5 +112,23 @@ describe("MonorepoPage", () => {
     });
     expect(cooldownHtml).toContain("Cooldown · 19:45 UTC");
     expect(cooldownHtml).toContain("2 provider(s) cooling down");
+
+    const unavailableHtml = renderMonorepoPage("/monorepo", {
+      ...monorepo,
+      codeReview: {
+        ...baseCodeReview,
+        coordinatorObserved: false,
+        coordinatorRunning: false,
+        coordinatorProcessedCount: 0,
+        readyProvidersCount: 0,
+        coolingDownProvidersCount: 0,
+        providers: baseCodeReview.providers.map((p) =>
+          p.configuredWeight > 0 ? { ...p, status: "unknown" } : p,
+        ),
+      },
+    });
+    expect(unavailableHtml).toContain("— / 2");
+    expect(unavailableHtml).toContain("Coordinator state unavailable");
+    expect(unavailableHtml).toContain("Unknown");
   });
 });

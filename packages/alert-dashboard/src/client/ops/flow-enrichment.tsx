@@ -230,7 +230,11 @@ function GitHubStacksPanel({
         <div className="eng-throughput-strip eng-flow-code-review-strip">
           <Chip
             label="Review pool ready"
-            value={`${String(codeReview.readyProvidersCount)}/${String(codeReview.activeProvidersCount)}`}
+            value={
+              codeReview.coordinatorObserved
+                ? `${String(codeReview.readyProvidersCount)}/${String(codeReview.activeProvidersCount)}`
+                : "unavailable"
+            }
           />
           <Chip
             label="Re-reviews saved 7d"

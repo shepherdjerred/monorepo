@@ -720,6 +720,55 @@ describe("Hub 2.0 OpsFacets schemas", () => {
         ],
       },
     });
+    expect(withCodeReview.codeReview?.coordinatorObserved).toBe(true);
     expect(withCodeReview.codeReview?.providers[0]?.status).toBe("cooldown");
+
+    const unavailableCoordinator = MonorepoFacetSchema.parse({
+      ...sampleDeliveryFacets().monorepo,
+      codeReview: {
+        enabled: true,
+        coordinatorObserved: false,
+        coordinatorRunning: false,
+        coordinatorProcessedCount: 0,
+        activeProvidersCount: 1,
+        readyProvidersCount: 0,
+        coolingDownProvidersCount: 0,
+        outcomes7d: {
+          clean: 0,
+          priorRound: 0,
+          threadsResolved: 0,
+          quotaExempt: 0,
+          providerTimeout: 0,
+          allSkipped: 0,
+          blockingFindings: 0,
+          p0Veto: 0,
+          reviewWithdrawn: 0,
+        },
+        medianDurationSeconds7d: null,
+        p95DurationSeconds7d: null,
+        providers: [
+          {
+            id: "coderabbit",
+            displayName: "CodeRabbit",
+            tier: "free",
+            configuredWeight: 3,
+            targetShareRatio: 1,
+            currentSmoothWeight: 0,
+            status: "unknown",
+            cooldownUntil: null,
+            assignments7d: 0,
+            completed7d: 0,
+            usageLimited7d: 0,
+            timedOut7d: 0,
+            skipped7d: 0,
+            cooldowns7d: 0,
+          },
+        ],
+      },
+    });
+    expect(unavailableCoordinator.codeReview?.coordinatorObserved).toBe(false);
+    expect(unavailableCoordinator.codeReview?.providers[0]?.status).toBe(
+      "unknown",
+    );
   });
 });

@@ -13,6 +13,7 @@ const CodeReviewProviderPoolStatusInternalSchema = z.enum([
   "cooldown",
   "standby",
   "disabled",
+  "unknown",
 ]);
 
 export const monorepoCodeReviewProviderShape = {
@@ -34,6 +35,7 @@ export const monorepoCodeReviewProviderShape = {
 
 export const monorepoCodeReviewShape = {
   enabled: z.boolean(),
+  coordinatorObserved: z.boolean().default(true),
   coordinatorRunning: z.boolean(),
   coordinatorProcessedCount: z.number().int().nonnegative(),
   activeProvidersCount: z.number().int().nonnegative(),

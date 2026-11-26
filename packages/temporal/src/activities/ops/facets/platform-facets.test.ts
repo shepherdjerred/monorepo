@@ -1,3 +1,4 @@
+import { WorkflowNotFoundError } from "@temporalio/client";
 import { describe, expect, test } from "vitest";
 import { LokiClient } from "@shepherdjerred/ops-clients/loki.ts";
 import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
@@ -9,6 +10,12 @@ import {
   TemporalFacetSchema,
 } from "@shepherdjerred/ops-model/facets.ts";
 import { collectClusterFacet } from "./cluster-facet.ts";
+import {
+  buildCodeReviewPoolAudit,
+  collectMonorepoCodeReview,
+  describeCodeReviewCoordinatorMemo,
+  readProdCodeReviewCoordinator,
+} from "./monorepo-code-review.ts";
 import {
   compactVerifyDiagnosticsJson,
   summarizeDiagnosticsRuns,
@@ -223,6 +230,7 @@ describe("monorepo facet", () => {
           }),
         readCoordinator: () =>
           Promise.resolve({
+            observed: true,
             running: true,
             processedCount: 195,
             currentWeights: { coderabbit: 2, codex: -2 },
@@ -235,6 +243,7 @@ describe("monorepo facet", () => {
     expect(() => MonorepoFacetSchema.parse(facet)).not.toThrow();
     expect(facet.packageCount).toBeGreaterThan(20);
     expect(facet.catalogPinsCount).toBeGreaterThan(0);
+    expect(facet.codeReview?.coordinatorObserved).toBe(true);
     expect(facet.codeReview?.coordinatorProcessedCount).toBe(195);
     expect(facet.codeReview?.activeProvidersCount).toBe(2);
     expect(facet.codeReview?.readyProvidersCount).toBe(1);
@@ -271,6 +280,91 @@ describe("monorepo facet", () => {
         detail: "1/2 active providers ready",
       },
     );
+  });
+});
+
+describe("monorepo code-review collector", () => {
+  test("propagates runtime configuration validation failures instead of inventing default weights", async () => {
+    await expect(
+      collectMonorepoCodeReview({
+        now,
+        loadRuntimeConfig: () =>
+          Promise.reject(new Error("Invalid temporal-code-review-settings")),
+        readCoordinator: () =>
+          Promise.resolve({
+            observed: true,
+            running: true,
+            processedCount: 10,
+            currentWeights: {},
+            cooldownUntilMs: {},
+          }),
+      }),
+    ).rejects.toThrow("Invalid temporal-code-review-settings");
+  });
+
+  test("distinguishes unstarted coordinator from failed coordinator reads and suppresses readiness claims", async () => {
+    const unstarted = await describeCodeReviewCoordinatorMemo(() =>
+      Promise.reject(
+        new WorkflowNotFoundError("not found", "code-review-coordinator", ""),
+      ),
+    );
+    expect(unstarted).toEqual({
+      observed: true,
+      running: false,
+      processedCount: 0,
+      currentWeights: {},
+      cooldownUntilMs: {},
+    });
+
+    const prevAddress = Bun.env["TEMPORAL_ADDRESS"];
+    Bun.env["TEMPORAL_ADDRESS"] = "temporal.prod:7233";
+    let failedRead;
+    try {
+      failedRead = await readProdCodeReviewCoordinator(() =>
+        Promise.reject(new Error("Temporal RPC unavailable")),
+      );
+    } finally {
+      if (prevAddress === undefined) {
+        delete Bun.env["TEMPORAL_ADDRESS"];
+      } else {
+        Bun.env["TEMPORAL_ADDRESS"] = prevAddress;
+      }
+    }
+    expect(failedRead.observed).toBe(false);
+
+    const codeReview = await collectMonorepoCodeReview({
+      now,
+      loadRuntimeConfig: () =>
+        Promise.resolve({
+          enabled: true,
+          settings: {
+            weights: { coderabbit: 3, codex: 1, cubic: 0 },
+            quotaCooldownSeconds: 3600,
+            timeoutCooldownSeconds: 900,
+            requestRetrySeconds: 720,
+            providerTimeoutSeconds: 1500,
+          },
+        }),
+      readCoordinator: () => Promise.resolve(failedRead),
+    });
+
+    expect(codeReview.coordinatorObserved).toBe(false);
+    expect(codeReview.activeProvidersCount).toBe(2);
+    expect(codeReview.readyProvidersCount).toBe(0);
+    expect(codeReview.coolingDownProvidersCount).toBe(0);
+    expect(
+      codeReview.providers.find((p) => p.id === "coderabbit")?.status,
+    ).toBe("unknown");
+    expect(codeReview.providers.find((p) => p.id === "cubic")?.status).toBe(
+      "standby",
+    );
+    expect(buildCodeReviewPoolAudit(codeReview, now.toISOString())).toEqual({
+      id: "code-review-pool",
+      label: "PR code-review provider pool",
+      status: "unknown",
+      lastRunAt: now.toISOString(),
+      detail: "Coordinator state unavailable; pool readiness not observed",
+    });
   });
 });
 

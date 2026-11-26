@@ -46,6 +46,7 @@ const CoordinatorMemoSchema = z.object({
 });
 
 export type CoordinatorObservation = {
+  observed: boolean;
   running: boolean;
   processedCount: number;
   currentWeights: Readonly<Record<string, number>>;
@@ -53,6 +54,15 @@ export type CoordinatorObservation = {
 };
 
 const EMPTY_COORDINATOR: CoordinatorObservation = {
+  observed: true,
+  running: false,
+  processedCount: 0,
+  currentWeights: {},
+  cooldownUntilMs: {},
+};
+
+const UNAVAILABLE_COORDINATOR: CoordinatorObservation = {
+  observed: false,
   running: false,
   processedCount: 0,
   currentWeights: {},
@@ -76,14 +86,18 @@ export async function describeCodeReviewCoordinatorMemo(
   try {
     const description = await describeWorkflow();
     const raw = description.memo?.["codeReviewCoordinator"];
-    const parsed = CoordinatorMemoSchema.safeParse(raw);
     const running =
       description.status?.name === undefined ||
       description.status.name === "RUNNING";
-    if (!parsed.success) {
+    if (raw === undefined) {
       return { ...EMPTY_COORDINATOR, running };
     }
+    const parsed = CoordinatorMemoSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { ...UNAVAILABLE_COORDINATOR, running };
+    }
     return {
+      observed: true,
       running,
       processedCount: parsed.data.processedCount,
       currentWeights: parsed.data.weighted.currentWeights,
@@ -101,7 +115,7 @@ export async function readProdCodeReviewCoordinator(
   getClient: () => Promise<Client> = () => createTemporalReadClient("prod"),
 ): Promise<CoordinatorObservation> {
   if ((Bun.env["TEMPORAL_ADDRESS"] ?? "").trim() === "") {
-    return EMPTY_COORDINATOR;
+    return UNAVAILABLE_COORDINATOR;
   }
   const signal = activityCancellationSignal();
   try {
@@ -123,24 +137,19 @@ export async function readProdCodeReviewCoordinator(
       signal === undefined ? {} : { signal },
     );
   } catch {
-    return EMPTY_COORDINATOR;
+    return UNAVAILABLE_COORDINATOR;
   }
 }
 
-async function loadSafeRuntimeConfig(
+async function loadRuntimeConfig(
   loader?: () => Promise<CodeReviewRuntimeConfig>,
 ): Promise<CodeReviewRuntimeConfig> {
   if (loader !== undefined) {
     return await loader();
   }
-  if ((Bun.env["FEATURE_FLAGS_MODE"] ?? "").trim() === "") {
-    return { enabled: true, settings: DEFAULT_CODE_REVIEW_SETTINGS };
-  }
-  try {
-    return await codeReviewConfig();
-  } catch {
-    return { enabled: true, settings: DEFAULT_CODE_REVIEW_SETTINGS };
-  }
+  return (Bun.env["FEATURE_FLAGS_MODE"] ?? "").trim() === ""
+    ? { enabled: true, settings: DEFAULT_CODE_REVIEW_SETTINGS }
+    : await codeReviewConfig();
 }
 
 type PromSample = Awaited<ReturnType<PrometheusClient["query"]>>[number];
@@ -271,6 +280,7 @@ async function queryCodeReviewPrometheus(
 function resolvePoolStatus(args: {
   enabled: boolean;
   configuredWeight: number;
+  coordinatorObserved: boolean;
   inCooldown: boolean;
 }): CodeReviewProviderPoolStatus {
   if (!args.enabled) {
@@ -278,6 +288,9 @@ function resolvePoolStatus(args: {
   }
   if (args.configuredWeight <= 0) {
     return "standby";
+  }
+  if (!args.coordinatorObserved) {
+    return "unknown";
   }
   return args.inCooldown ? "cooldown" : "ready";
 }
@@ -294,10 +307,13 @@ function buildProviderRow(args: {
   const configuredWeight = runtime.settings.weights[id] ?? 0;
   const rawCooldownUntilMs = coordinator.cooldownUntilMs[id];
   const inCooldown =
-    rawCooldownUntilMs !== undefined && rawCooldownUntilMs > nowMs;
+    coordinator.observed &&
+    rawCooldownUntilMs !== undefined &&
+    rawCooldownUntilMs > nowMs;
   const status = resolvePoolStatus({
     enabled: runtime.enabled,
     configuredWeight,
+    coordinatorObserved: coordinator.observed,
     inCooldown,
   });
   const byOutcome = prom.outcomesByProvider.get(id);
@@ -337,7 +353,7 @@ export async function collectMonorepoCodeReview(
 ): Promise<MonorepoCodeReview> {
   const nowMs = options.now.getTime();
   const [runtime, coordinator, prom] = await Promise.all([
-    loadSafeRuntimeConfig(options.loadRuntimeConfig),
+    loadRuntimeConfig(options.loadRuntimeConfig),
     (options.readCoordinator ?? readProdCodeReviewCoordinator)(),
     queryCodeReviewPrometheus(options.prometheus),
   ]);
@@ -369,12 +385,15 @@ export async function collectMonorepoCodeReview(
   const coolingDownProvidersCount = providers.filter(
     (p) => p.status === "cooldown",
   ).length;
-  const activeProvidersCount = readyProvidersCount + coolingDownProvidersCount;
+  const activeProvidersCount = providers.filter(
+    (p) => runtime.enabled && p.configuredWeight > 0,
+  ).length;
   const reason = (key: string): number =>
     prom.gateOutcomesByReason.get(key) ?? 0;
 
   return {
     enabled: runtime.enabled,
+    coordinatorObserved: coordinator.observed,
     coordinatorRunning: coordinator.running,
     coordinatorProcessedCount: coordinator.processedCount,
     activeProvidersCount,
@@ -417,6 +436,15 @@ export function buildCodeReviewPoolAudit(
       status: "warning",
       lastRunAt: nowIso,
       detail: "No weighted code-review providers configured",
+    };
+  }
+  if (!codeReview.coordinatorObserved) {
+    return {
+      id: "code-review-pool",
+      label: "PR code-review provider pool",
+      status: "unknown",
+      lastRunAt: nowIso,
+      detail: "Coordinator state unavailable; pool readiness not observed",
     };
   }
   if (codeReview.readyProvidersCount === 0) {

@@ -32,6 +32,7 @@ function poolStatusSeverity(
       return "ok";
     case "cooldown":
     case "disabled":
+    case "unknown":
       return "warning";
     case "standby":
       return "info";
@@ -53,6 +54,8 @@ function poolStatusLabel(row: MonorepoCodeReviewProvider): string {
       return "Standby";
     case "disabled":
       return "Disabled";
+    case "unknown":
+      return "Unknown";
   }
 }
 
@@ -177,6 +180,56 @@ function buildProviderColumns(
   ];
 }
 
+function resolvePoolCardState(codeReview: MonorepoCodeReview): {
+  severity: Severity;
+  value: string;
+  hint: string;
+} {
+  if (!codeReview.enabled) {
+    return {
+      severity: "warning",
+      value: `${String(codeReview.readyProvidersCount)} / ${String(codeReview.activeProvidersCount)}`,
+      hint: "Gate disabled in Flags",
+    };
+  }
+  if (!codeReview.coordinatorObserved) {
+    return {
+      severity: "unknown",
+      value: `— / ${String(codeReview.activeProvidersCount)}`,
+      hint: "Coordinator state unavailable",
+    };
+  }
+  const severity: Severity =
+    codeReview.activeProvidersCount === 0 ||
+    codeReview.readyProvidersCount === 0
+      ? "warning"
+      : "ok";
+  const hint =
+    codeReview.coolingDownProvidersCount > 0
+      ? `${String(codeReview.coolingDownProvidersCount)} provider(s) cooling down`
+      : "Weighted round-robin ready";
+  return {
+    severity,
+    value: `${String(codeReview.readyProvidersCount)} / ${String(codeReview.activeProvidersCount)}`,
+    hint,
+  };
+}
+
+function resolveCoordinatorCardState(codeReview: MonorepoCodeReview): {
+  value: string;
+  hint: string;
+} {
+  if (!codeReview.coordinatorObserved) {
+    return { value: "—", hint: "Coordinator state unavailable" };
+  }
+  return {
+    value: formatValue(codeReview.coordinatorProcessedCount, "count"),
+    hint: codeReview.coordinatorRunning
+      ? "Singleton workflow running"
+      : "Coordinator idle",
+  };
+}
+
 export function MonorepoCodeReviewSection({
   codeReview,
   range,
@@ -197,12 +250,8 @@ export function MonorepoCodeReviewSection({
   const savedPct =
     totalOutcomes > 0 ? Math.round((o.priorRound / totalOutcomes) * 100) : 0;
 
-  const poolSeverity: Severity =
-    !codeReview.enabled ||
-    codeReview.activeProvidersCount === 0 ||
-    codeReview.readyProvidersCount === 0
-      ? "warning"
-      : "ok";
+  const poolCard = resolvePoolCardState(codeReview);
+  const coordinatorCard = resolveCoordinatorCardState(codeReview);
 
   const totalAssignments7d = useMemo(
     () => codeReview.providers.reduce((sum, row) => sum + row.assignments7d, 0),
@@ -319,23 +368,15 @@ export function MonorepoCodeReviewSection({
             gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
           }}
         >
-          <div className="eng-kpi-card" data-sev={poolSeverity}>
+          <div className="eng-kpi-card" data-sev={poolCard.severity}>
             <div className="eng-kpi-top">
               <span className="eng-kpi-label">Active review pool</span>
-              {poolSeverity === "ok" ? null : (
-                <StatusGlyph severity={poolSeverity} />
+              {poolCard.severity === "ok" ? null : (
+                <StatusGlyph severity={poolCard.severity} />
               )}
             </div>
-            <strong className="eng-kpi-value">
-              {`${String(codeReview.readyProvidersCount)} / ${String(codeReview.activeProvidersCount)}`}
-            </strong>
-            <span className="eng-kpi-hint">
-              {codeReview.enabled
-                ? codeReview.coolingDownProvidersCount > 0
-                  ? `${String(codeReview.coolingDownProvidersCount)} provider(s) cooling down`
-                  : "Weighted round-robin ready"
-                : "Gate disabled in Flags"}
-            </span>
+            <strong className="eng-kpi-value">{poolCard.value}</strong>
+            <span className="eng-kpi-hint">{poolCard.hint}</span>
           </div>
 
           <div className="eng-kpi-card">
@@ -360,14 +401,8 @@ export function MonorepoCodeReviewSection({
 
           <div className="eng-kpi-card">
             <span className="eng-kpi-label">Coordinator events</span>
-            <strong className="eng-kpi-value">
-              {formatValue(codeReview.coordinatorProcessedCount, "count")}
-            </strong>
-            <span className="eng-kpi-hint">
-              {codeReview.coordinatorRunning
-                ? "Singleton workflow running"
-                : "Coordinator idle"}
-            </span>
+            <strong className="eng-kpi-value">{coordinatorCard.value}</strong>
+            <span className="eng-kpi-hint">{coordinatorCard.hint}</span>
           </div>
         </div>
       </div>

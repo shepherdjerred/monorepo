@@ -246,6 +246,7 @@ export const CodeReviewProviderPoolStatusSchema = z.enum([
   "cooldown",
   "standby",
   "disabled",
+  "unknown",
 ]);
 export type CodeReviewProviderPoolStatus = z.infer<
   typeof CodeReviewProviderPoolStatusSchema

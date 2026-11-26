@@ -345,6 +345,7 @@ export const PLATFORM_FIXTURE_FACETS = {
     ],
     codeReview: {
       enabled: true,
+      coordinatorObserved: true,
       coordinatorRunning: true,
       coordinatorProcessedCount: 195,
       activeProvidersCount: 2,
