@@ -119,6 +119,29 @@ test.describe("canvas", () => {
     expect(dragged.x - moved.x).toBeCloseTo(-50, 0);
   });
 
+  test("the tool pill shows the active tool: V select, H hand, C comment", async ({
+    page,
+  }) => {
+    await openBoard(page, "concepts");
+    const select = page.getByRole("button", { name: "Select tool" });
+    const hand = page.getByRole("button", { name: "Hand tool" });
+    const comment = page.getByRole("button", { name: "Comment mode" });
+    await expect(select).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("h");
+    await expect(hand).toHaveAttribute("aria-pressed", "true");
+    await expect(select).toHaveAttribute("aria-pressed", "false");
+    await page.keyboard.press("c");
+    await expect(comment).toHaveAttribute("aria-pressed", "true");
+    await expect(hand).toHaveAttribute("aria-pressed", "false");
+    await page.keyboard.press("v");
+    await expect(select).toHaveAttribute("aria-pressed", "true");
+    await expect(comment).toHaveAttribute("aria-pressed", "false");
+    // Zoom and fit live in their own pill.
+    await expect(
+      page.getByRole("toolbar", { name: "Zoom" }).getByTestId("zoom-readout"),
+    ).toBeVisible();
+  });
+
   test("1 fits all, 2 fits the selection, 0 is 100 %", async ({ page }) => {
     await openBoard(page, "concepts");
     await page.keyboard.press("0");

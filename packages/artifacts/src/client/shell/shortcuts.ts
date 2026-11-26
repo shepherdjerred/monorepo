@@ -93,8 +93,8 @@ export const SHORTCUT_SHEET: readonly {
   { keys: "1 / 2 / 0", does: "Canvas: fit all, fit the selection, 100 %" },
   { keys: "+ / -", does: "Canvas: zoom in and out" },
   {
-    keys: "H, Space",
-    does: "Canvas: hand tool, or hold Space and drag to pan",
+    keys: "V / H / Space",
+    does: "Canvas: select tool, hand tool, or hold Space and drag to pan",
   },
   { keys: "Arrows", does: "Canvas: nudge the selection 1 px (Shift: 10 px)" },
   { keys: "[ / ]", does: "Canvas: send the selection back or forward" },

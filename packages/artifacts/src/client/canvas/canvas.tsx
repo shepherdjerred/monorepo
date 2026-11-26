@@ -16,15 +16,16 @@ import { useArrangeKeys } from "./arrange/use-keys.ts";
 import { useArrangeSessions } from "./arrange/use-sessions.ts";
 import { screenToWorld, type WorldRect } from "./camera.ts";
 import { CanvasFrame } from "./canvas-frame.tsx";
-import type { Tap, Tool } from "./gestures.ts";
+import type { Tap } from "./gestures.ts";
 import { readingOrder, type CanvasPin } from "./model.ts";
 import { ExitChip, FrameChip, SelectionRing } from "./overlay.tsx";
 import { PinsLayer } from "./pins-layer.tsx";
-import { CanvasToolbar } from "./toolbar.tsx";
+import { commentTool, pointerTools, ToolPill, ZoomPill } from "./toolbar.tsx";
 import { useCanvasCamera } from "./use-camera.ts";
 import { useCanvasKeys } from "./use-canvas-keys.ts";
 import { useCanvasInput } from "./use-input.ts";
 import { useFrameTiers } from "./use-tiers.ts";
+import { useToolModes } from "./use-tools.ts";
 
 /** Rounds a placed pin to a tenth of a pixel so the stored anchor is tidy. */
 function tidy(value: number): number {
@@ -73,9 +74,22 @@ export function Canvas({
   const only = selectedFrames.length === 1 ? selectedFrames[0] : undefined;
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [tool, setTool] = useState<Tool>("select");
-  const [commentMode, setCommentMode] = useState(false);
   const [placement, setPlacement] = useState<CanvasPlacement | null>(null);
+  const dropPlacement = useCallback(() => {
+    setPlacement(null);
+  }, []);
+  const dropLive = useCallback(() => {
+    setActiveId(null);
+  }, []);
+  const {
+    tool,
+    commentMode,
+    selectTool,
+    handTool,
+    toggleHand,
+    toggleComment,
+    leaveComment,
+  } = useToolModes({ placement: dropPlacement, live: dropLive });
   const [marquee, setMarquee] = useState<WorldRect | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [tick, setTick] = useState(0);
@@ -93,6 +107,8 @@ export function Canvas({
     activeId,
   });
 
+  const leaveCommentRef = useRef(leaveComment);
+  leaveCommentRef.current = leaveComment;
   const latest = useRef({ commentMode, activeId, byId });
   latest.current = { commentMode, activeId, byId };
 
@@ -102,7 +118,7 @@ export function Canvas({
       if (frame === undefined || frame.summary.kind === "file") return;
       setSelection(new Set([id]));
       setActiveId(id);
-      setCommentMode(false);
+      leaveCommentRef.current();
       setPlacement(null);
       reveal(frame.rect);
       // The same iframe element gains focus; nothing remounts.
@@ -211,7 +227,7 @@ export function Canvas({
       {
         onSuccess: (thread) => {
           setPlacement(null);
-          setCommentMode(false);
+          leaveComment();
           onSelectThread(thread.id);
         },
       },
@@ -250,6 +266,13 @@ export function Canvas({
       if (activeId === null && selection.size > 0) setConfirmRemove(true);
     },
   });
+  const toolGroups = pointerTools({
+    tool,
+    commenting: commentMode,
+    onSelect: selectTool,
+    onHand: handTool,
+  });
+
   useCanvasKeys({
     camera,
     onlyId: only?.id ?? null,
@@ -257,20 +280,15 @@ export function Canvas({
     activeId,
     commentMode,
     tool,
-    setTool,
-    toggleComment: () => {
-      setCommentMode((on) => !on);
-      setActiveId(null);
-      setPlacement(null);
-    },
+    selectTool,
+    toggleHand,
+    toggleComment,
     activate,
     cancelPlacement: () => {
       setPlacement(null);
     },
     deactivate,
-    leaveComment: () => {
-      setCommentMode(false);
-    },
+    leaveComment,
     clearSelection: () => {
       setSelection(new Set());
     },
@@ -356,21 +374,24 @@ export function Canvas({
             selectedId={selectedThreadId}
             onSelect={onSelectThread}
           />
-          <CanvasToolbar
+          <ToolPill
+            groups={[
+              toolGroups.pointer,
+              [
+                commentTool({
+                  commenting: commentMode,
+                  onToggle: toggleComment,
+                }),
+              ],
+            ]}
+          />
+          <ZoomPill
             controller={controller}
-            tool={tool}
-            commenting={commentMode}
             hasSelection={selection.size > 0}
             onZoom={camera.zoomBy}
             onReset={camera.reset}
             onFitAll={camera.fitAll}
             onFitSelection={camera.fitSelection}
-            onTool={setTool}
-            onComment={(on) => {
-              setCommentMode(on);
-              setPlacement(null);
-              if (on) setActiveId(null);
-            }}
           />
         </div>
         <div

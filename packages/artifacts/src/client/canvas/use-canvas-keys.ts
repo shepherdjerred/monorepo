@@ -12,7 +12,8 @@ type Keys = {
   readonly activeId: string | null;
   readonly commentMode: boolean;
   readonly tool: Tool;
-  readonly setTool: (update: (current: Tool) => Tool) => void;
+  readonly selectTool: () => void;
+  readonly toggleHand: () => void;
   readonly toggleComment: () => void;
   readonly activate: (id: string) => void;
   readonly cancelPlacement: () => void;
@@ -21,7 +22,7 @@ type Keys = {
   readonly clearSelection: () => void;
 };
 
-/** The canvas's own keys: 1 2 0 + - fit and zoom, H hand, C comment, F focus, Enter live, Esc back out. */
+/** The canvas's own keys: 1 2 0 + - fit and zoom, V select, H hand, C comment, F focus, Enter live, Esc back out. */
 export function useCanvasKeys(keys: Keys): void {
   const navigate = useNavigate();
   const { camera } = keys;
@@ -47,12 +48,8 @@ export function useCanvasKeys(keys: Keys): void {
         camera.zoomBy(1 / ZOOM_STEP);
       },
     },
-    {
-      key: "h",
-      run: () => {
-        keys.setTool((current) => (current === "hand" ? "select" : "hand"));
-      },
-    },
+    { key: "v", run: keys.selectTool },
+    { key: "h", run: keys.toggleHand },
     { key: "c", run: keys.toggleComment },
     {
       key: "f",
@@ -74,7 +71,7 @@ export function useCanvasKeys(keys: Keys): void {
         if (keys.placing) keys.cancelPlacement();
         else if (keys.activeId !== null) keys.deactivate();
         else if (keys.commentMode) keys.leaveComment();
-        else if (keys.tool === "hand") keys.setTool(() => "select");
+        else if (keys.tool === "hand") keys.selectTool();
         else keys.clearSelection();
       },
     },

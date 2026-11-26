@@ -180,31 +180,70 @@
   pointer-events: none;
 }
 
-.ar-cv-toolbar {
+/* Tool pill: a white rounded pill at the bottom centre; zoom has its own at the right. */
+.ar-cv-toolbar,
+.ar-cv-zoompill {
   position: absolute;
-  bottom: 12px;
-  left: 50%;
+  bottom: 14px;
+  z-index: 11;
   display: flex;
   align-items: center;
   gap: 2px;
   padding: 4px;
   border: 1px solid var(--ui-line);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--ui-panel);
-  box-shadow: 0 2px 10px color-mix(in srgb, black 16%, transparent);
-  transform: translateX(-50%);
+  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
   pointer-events: auto;
 }
-.ar-cv-toolbar .ar-icon-button[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--ui-accent) 18%, transparent);
+.ar-cv-toolbar {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ar-cv-zoompill {
+  right: 14px;
+}
+.ar-cv-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.ar-cv-tool {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+.ar-cv-tool:hover:not(:disabled) {
+  background: var(--ui-head);
+}
+.ar-cv-tool:disabled {
+  color: var(--ui-muted);
+  cursor: default;
+  opacity: 0.5;
+}
+.ar-cv-tool[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ui-accent) 16%, transparent);
   color: var(--ui-accent);
+}
+@media (pointer: coarse) {
+  .ar-cv-tool {
+    width: 44px;
+    height: 44px;
+  }
 }
 .ar-cv-zoom {
   min-width: 52px;
-  height: 28px;
+  height: 40px;
   padding: 0 6px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 10px;
   background: transparent;
   color: var(--ui-ink);
   font-size: 12.5px;
@@ -214,14 +253,20 @@
 .ar-cv-zoom:hover {
   background: var(--ui-head);
 }
+@media (pointer: coarse) {
+  .ar-cv-zoom {
+    min-height: 44px;
+  }
+}
 .ar-cv-sep {
   width: 1px;
-  height: 18px;
+  height: 22px;
   margin: 0 4px;
   background: var(--ui-line);
 }
+/* Above the tool pill. */
 .ar-cv .ar-mode-hint {
-  bottom: 64px;
+  bottom: 74px;
 }
 
 @media (max-width: 900px) {
