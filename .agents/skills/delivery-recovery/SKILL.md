@@ -22,7 +22,8 @@ better active owner), `claim` or post a `notice` (`--owner me`, scope, reason,
 exit condition) first, update at milestones, and resolve with evidence.
 
 ```bash
-toolkit deploy status --json | jq -r '.deployments[] | select(.status=="queued" or .status=="running" or .recoveryRequired) | [.id,.environmentId,.status,.recoveryRequired] | @tsv'
+toolkit deploy list --status running --json
+toolkit deploy approvals --json
 toolkit deploy recovery --pending --json
 ```
 
@@ -121,11 +122,11 @@ the ArgoCD API, return to read-only, and audit `environment.break_glass`.
 ## 6. Operator-run releases
 
 `delivery-data`, `temporal-data` and `cluster-admission` are `operator-run`:
-after `toolkit deploy start`, an operator attests every stage the recipe
-lists, in order. Follow
-`packages/docs/wiki/src/content/docs/how-to/release-cluster-admission.md`
-exactly; for the data layers, substitute the Application name and skip its
-`admission-canary` stage, which only `cluster-admission` declares.
+after `toolkit deploy start`, `delivery-dispatch` claims the target once any
+self-hosted barrier clears (`toolkit deploy attest` waits up to `--timeout`
+while `queued`), and an operator attests each stage in `pendingAttestationStages`
+in order. Follow `packages/docs/wiki/src/content/docs/how-to/release-cluster-admission.md`;
+for the data layers, substitute the Application name and skip `admission-canary`.
 
 The checked sequence, with the `operator-run` ArgoCD account (1Password item
 `delivery-argocd-operator-run-token`, read through

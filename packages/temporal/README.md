@@ -468,13 +468,20 @@ the original owned finished Argo operation. No failed release becomes accepted.
 
 The same verifier runs without a healthy Workflow or Activity worker, while
 Delivery API, PostgreSQL, Kubernetes and the Temporal server remain reachable.
-From the repository root, create and inspect the intent using the brokered admin
-identity, then run the bounded operator command:
+On a workstation or macOS host without an exported server API key, open a
+loopback-only Temporal port-forward first:
+
+```bash
+kubectl --context admin@torvalds -n temporal port-forward service/temporal-temporal-server-service 7233:7233 --address 127.0.0.1
+```
+
+From the repository root in a second terminal, create and inspect the intent
+using the brokered admin identity, then run the bounded operator command:
 
 ```bash
 toolkit deploy platform recover DEPLOYMENT_ID --machine --expected-generation GENERATION --reason 'Independently settle this exact failed platform operation'
 toolkit deploy platform recovery RECOVERY_INTENT_ID
-bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action inspect
+env -u OP_SERVICE_ACCOUNT_TOKEN -u TEMPORAL_API_KEY TEMPORAL_ADDRESS=127.0.0.1:7233 TEMPORAL_TLS=false bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action inspect
 ```
 
 If a root release is partial, `--action apply` reruns the existing guarded

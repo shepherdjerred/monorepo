@@ -126,11 +126,15 @@ export async function heldPlatformRecovery(
   const global = await tx.platformLock.findUnique({
     where: { deploymentId: row.id },
   });
+  const requiresGlobal =
+    model === null
+      ? row.kind !== "tofu-plan"
+      : row.stages.some((stage) => stage.key === stepStageKey("step", "apply"));
   if (
     target === null ||
     env.activeDeploymentId !== row.id ||
     env.generation !== input.expectedEnvironmentGeneration ||
-    (global === null && row.kind !== "tofu-plan")
+    (global === null && requiresGlobal)
   )
     throw new DeliveryError(
       "CONFLICT",

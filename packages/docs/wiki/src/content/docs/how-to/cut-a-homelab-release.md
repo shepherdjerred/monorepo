@@ -163,11 +163,17 @@ npm only; a channel on another store fails without an effect.
 Use this after merging a change to services, environments, edges, recipes or
 configurations.
 
-1. From the repository root at the merged commit, post the catalog document:
+1. From the repository root at the merged commit, post the committed catalog:
 
    ```bash
-   toolkit deploy catalog reconcile --file CATALOG_DOCUMENT_JSON --machine --json
+   toolkit deploy catalog reconcile --machine --json
    ```
+
+   Omitting `--file` assembles the complete catalog document from
+   `packages/ops-model/catalog-document.json` and
+   `packages/delivery/registrations/v2/` (`--file` expects a standalone
+   `CatalogDocument` JSON, so passing `packages/ops-model/catalog-document.json`
+   alone fails validation).
 
    Prepare an external `delivery-ownership-handover/v1` descriptor with the
    exact reviewed `sourceRevision`, the `catalogRevision` that
@@ -196,27 +202,34 @@ configurations.
 Registration changes nothing that runs
 ([C3](packages/delivery/docs/model.md#41-catalog)). A new automatic environment
 with no promotion source receives the live set on the next dispatch
-([E0](packages/delivery/docs/model.md#410-environment)).
+([E0](packages/delivery/docs/model.md#410-environment)), and an automatic
+environment with an accepted release whose declared recipe or configuration
+revision changed schedules an automatic `rebind` on the next dispatch.
 
 ## Change a recipe or configuration
 
 Every new deployment or promotion takes the environment's declared recipe and
-configuration, so a catalog change ships with the next set revision. To apply it
-without a new set revision, request a rebind: a deployment that keeps the
-accepted set revision.
+configuration, so a catalog change ships with the next set revision. When no new
+set revision is produced (such as a `desired-state.json`-only change on an
+OpenTofu stack), a `rebind` keeps the accepted set revision and applies the new
+recipe or configuration revision.
 
 1. Merge the catalog change that adds the new recipe or configuration
    revision and binds the environment to it.
 2. [Register the catalog change](#register-a-catalog-change). The
    environment's declared binding now names the new revision.
-3. Request the rebind. Name only the revision that changes; Delivery refuses a
-   revision the catalog does not declare for the environment:
+3. For an `automatic: true` environment with an accepted release, wait for the
+   next dispatch tick to schedule the `rebind` automatically. For a manual
+   environment, request the rebind and name only the revision that changes:
 
    ```bash
    toolkit deploy rebind ENVIRONMENT --recipe RECIPE_REVISION --configuration CONFIGURATION_REVISION --json
    ```
 
-4. Approve if required, then wait and watch the monitor as in
+   Delivery refuses a revision the catalog does not declare for the environment.
+
+4. Approve if required (or decide the saved plan for an OpenTofu stack), then
+   wait and watch the monitor as in
    [Deploy a set revision](#deploy-a-set-revision).
 
 ## Roll back an environment
@@ -420,8 +433,13 @@ stops every self-hosted deployment, including `delivery-control-plane`.
    toolkit deploy status --json | jq -r '.deployments[] | select(.recoveryRequired) | [.id, .environmentId] | @tsv'
    ```
 
-   The overview lists the newest 100 deployments. For an older holder, open
-   the alert's environment in the Delivery web app, which lists its deployments.
+   The overview lists the newest 100 deployments. For an older holder or a
+   parked approval, filter by environment or inspect the approval queue:
+
+   ```bash
+   toolkit deploy list ENVIRONMENT --json
+   toolkit deploy approvals --json
+   ```
 
 2. Recover each one with
    [Recover a deployment that requires recovery](#recover-a-deployment-that-requires-recovery).
@@ -489,15 +507,42 @@ operator-only OpenTofu stacks, node upgrades and bootstrap
    toolkit deploy start ENVIRONMENT SET_REVISION --json
    ```
 
-2. List the stages awaiting attestation:
+2. Read `pendingAttestationStages` for the stage names the recipe expects:
 
    ```bash
    toolkit deploy status DEPLOYMENT_ID --json
    ```
 
-3. Perform the first stage's procedure by hand. For a node, follow the
-   [Talos upgrade](packages/homelab/README.md#upgrade-talos) or
-   [Kubernetes upgrade](packages/homelab/README.md#upgrade-kubernetes) steps.
+   Once claimed, `step-attestation` also lists the remaining `--stage` names in
+   its message. Never pass `--stage step-attestation`; that is the executor's
+   step key, not an attestable stage.
+
+3. Run the first stage's procedure for the target kind:
+
+   | Target                                     | Procedure                                                                                                                                                                |
+   | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+   | `cluster-admission/prod`                   | Follow [Release cluster admission](/how-to/release-cluster-admission/) (`apply-safety`, `sync`, `admission-canary`)                                                      |
+   | `delivery-data/prod`, `temporal-data/prod` | Run steps 1–3 of [Release cluster admission](/how-to/release-cluster-admission/) for that Application and `chart:<service>`, omitting `admission-canary` (details below) |
+   | `torvalds`, `liskov`                       | Follow the [Talos upgrade](packages/homelab/README.md#upgrade-talos) or [Kubernetes upgrade](packages/homelab/README.md#upgrade-kubernetes) steps                        |
+   | Operator-only OpenTofu stacks              | Plan and apply with [`tofu-stack.ts`](packages/homelab/scripts/tofu/tofu-stack.ts) under the owner's credentials after plan approval                                     |
+
+   For `delivery-data` and `temporal-data`, authenticate as the `operator-run`
+   ArgoCD account (1Password item `delivery-argocd-operator-run-token` via
+   `scripts/onepassword/with-service-account.sh`), run
+   `packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <app> --revision <chart>`,
+   attest `apply-safety`, then run `argocd app set <app> --revision <chart> --grpc-web`
+   and `argocd.ts sync-managed <app> --revision <chart> --request-id <uuid>` before
+   attesting `sync`. Direct `kubectl patch` is refused by
+   [`argocd-application-admission.ts`](packages/homelab/src/cdk8s/src/resources/argocd-application-admission.ts),
+   and `argocd app diff` is refused because `operator-run` lacks `projects, get`
+   in [`delivery-rbac.ts`](packages/homelab/src/cdk8s/src/resources/argo-applications/platform/delivery-rbac.ts).
+
+   :::caution
+   Syncing `delivery-data` or `temporal-data` restarts its single PostgreSQL pod,
+   causing roughly 15 seconds of API errors and reconnects before automatic
+   recovery. Diff the chart tarballs before syncing.
+   :::
+
 4. Write the evidence as a JSON array of `attestation` entries. Each entry has
    a `summary` and may add a `url` to the log or receipt
    ([evidence contract](packages/delivery/src/shared/evidence-contract.ts)):
@@ -514,7 +559,8 @@ operator-only OpenTofu stacks, node upgrades and bootstrap
 5. Attest the stage. With `--machine`, `attest` uses the attestor credential
    `DELIVERY_ATTEST_TOKEN`, a distinct identity with the `attest` scope that
    the executor never holds
-   ([X13](packages/delivery/docs/model.md#9-decisions)):
+   ([X13](packages/delivery/docs/model.md#9-decisions)), and waits up to
+   `--timeout` (default 120 seconds) if the deployment is still `queued`:
 
    ```bash
    toolkit deploy attest DEPLOYMENT_ID --stage STAGE --evidence /private/evidence.json --machine
@@ -524,7 +570,8 @@ operator-only OpenTofu stacks, node upgrades and bootstrap
    scope, or from an identity that claimed or renewed the deployment.
 
 6. Repeat steps 3 to 5 for each remaining stage, then wait for acceptance with
-   `toolkit deploy wait`.
+   `toolkit deploy wait` and verify the accepted selection with
+   `toolkit deploy selected ENVIRONMENT --json`.
 
 ## Retire a service
 

@@ -16,8 +16,6 @@ export async function awaitAttestations(
   record: typeof recordStage = recordStage,
 ): Promise<{ waiting: boolean }> {
   const operationId = deliveryOperationId(current.deployment.id);
-  if (stageOf(current, key) === undefined)
-    await record(current, key, "running", { operationId });
   const attested = new Set(
     current.stages
       .filter((stage) => stage.status === "succeeded")
@@ -26,7 +24,13 @@ export async function awaitAttestations(
   const missing = recipe.stages.filter(
     (stage) => !attested.has(attestationStageKey(stage)),
   );
-  if (missing.length > 0) return { waiting: true };
+  if (missing.length > 0) {
+    const message = `Awaiting operator attestation (--stage): ${missing.join(", ")}`;
+    const existing = stageOf(current, key);
+    if (existing?.message !== message)
+      await record(current, key, "running", { operationId, message });
+    return { waiting: true };
+  }
   await record(current, key, "succeeded", {
     operationId,
     evidence: [

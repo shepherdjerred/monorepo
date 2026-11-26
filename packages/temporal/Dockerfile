@@ -606,6 +606,7 @@ ENV GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 LABEL red.sjer.delivery.control-plane="delivery-control-plane/v2"
+LABEL red.sjer.delivery.feature-flags-modes="flags,static,disabled"
 
 # Point Bun's runtime install cache at a writable path — the runtime user may
 # not be able to write the default root-owned cache location.

@@ -228,3 +228,63 @@ export function versionCatalogMap(
     catalog.entries.map((entry) => [entry.name, entry.value]),
   );
 }
+
+export type MutatedComponentTagDigest = {
+  name: string;
+  upstream: string;
+  tag: string;
+  baseDigest: string;
+  headDigest: string;
+};
+
+function pinnedComponentTag(entry: VersionCatalogEntry) {
+  if (!entry.management.managed || entry.management.registryUrl === undefined)
+    return null;
+  const separator = entry.value.indexOf("@");
+  if (separator === -1) return null;
+  const tag = entry.value.slice(0, separator);
+  const digest = entry.value.slice(separator + 1);
+  const upstream = upstreamName(entry);
+  return {
+    key: `${entry.artifactType}\0${entry.management.registryUrl}\0${upstream}\0${tag}`,
+    name: entry.name,
+    upstream,
+    tag,
+    digest,
+  };
+}
+
+/**
+ * Finds `component: true` digest-pinned entries whose upstream package and tag
+ * match `base` while changing their `@sha256:...` digest, which Delivery's
+ * immutable upstream origin check rejects with 409 CONFLICT on `main`.
+ */
+export function findMutatedComponentTagDigests(
+  base: VersionCatalog,
+  head: VersionCatalog,
+): MutatedComponentTagDigest[] {
+  const registered = new Map<
+    string,
+    { name: string; upstream: string; tag: string; digest: string }
+  >();
+  for (const entry of componentEntries(base)) {
+    const pinned = pinnedComponentTag(entry);
+    if (pinned !== null) registered.set(pinned.key, pinned);
+  }
+  const mutated: MutatedComponentTagDigest[] = [];
+  for (const entry of componentEntries(head)) {
+    const pinned = pinnedComponentTag(entry);
+    if (pinned === null) continue;
+    const prior = registered.get(pinned.key);
+    if (prior !== undefined && prior.digest !== pinned.digest) {
+      mutated.push({
+        name: pinned.name,
+        upstream: pinned.upstream,
+        tag: pinned.tag,
+        baseDigest: prior.digest,
+        headDigest: pinned.digest,
+      });
+    }
+  }
+  return mutated;
+}

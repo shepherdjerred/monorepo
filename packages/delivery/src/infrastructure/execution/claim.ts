@@ -35,6 +35,7 @@ import {
   admissionTargets,
   freezeAdmission,
   recheckAdmission,
+  requireDependentWorkerRolloutsIdle,
   requireDispatchBarrier,
 } from "#infrastructure/execution/admission.ts";
 import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
@@ -180,10 +181,18 @@ async function admitQueued(
     env.application,
   );
   await requireFreeInstances(tx, deploymentId, instances);
+  await requireDependentWorkerRolloutsIdle(tx, row);
   // Prerequisite edges, runners and accepted-elsewhere artifacts are frozen
   // before any lock is taken; an unmet one keeps the deployment queued (Z1).
   const admissionSnapshot = await freezeAdmission(tx, row, pipeline.definition);
-  if (shared) await holdPlatformLock(tx, deploymentId, false);
+  const service = await tx.service.findUniqueOrThrow({
+    where: { id: row.serviceId },
+    select: { selfHosted: true },
+  });
+  if (shared)
+    await holdPlatformLock(tx, deploymentId, false, {
+      selfHosted: service.selfHosted,
+    });
   await admitPlatformDeployment(tx, row, this.catalog, { actor: input.actor });
   await admitControlPlaneUpgrade(tx, row, this.catalog);
   await admitRetirement(tx, row, input);

@@ -19,6 +19,7 @@ import { credentialSyncPrunes } from "#lib/delivery/credential-prune.ts";
 import { workerSyncPrunes } from "#lib/delivery/workers/worker-prune.ts";
 import { alertDashboardSyncPrunes } from "#lib/delivery/alert-dashboard/prune.ts";
 import { serviceProbesSyncPrunes } from "#lib/delivery/service-probes/prune.ts";
+import { clusterObservabilitySyncPrunes } from "#lib/delivery/cluster-observability/prune.ts";
 import { renderedRelease } from "#lib/delivery/retired-route-prune.ts";
 import { recordStage } from "./stages.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
@@ -120,6 +121,7 @@ export async function syncPruneDecision(
   return (
     (await alertDashboardSyncPrunes(release, argoRequest)) ||
     (await serviceProbesSyncPrunes(release, argoRequest)) ||
+    (await clusterObservabilitySyncPrunes(release, argoRequest)) ||
     (await workerSyncPrunes(current, rendered, argoRequest))
   );
 }

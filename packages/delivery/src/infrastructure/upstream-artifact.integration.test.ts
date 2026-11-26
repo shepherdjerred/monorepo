@@ -384,6 +384,7 @@ test("acquisition and exact lookup use real HTTP auth, the committed catalog all
     transport,
     components,
   });
+  const collidingDigest = `sha256:${"f".repeat(64)}`;
   await expect(
     context.delivery.acquireUpstreamArtifact(
       {
@@ -391,21 +392,26 @@ test("acquisition and exact lookup use real HTTP auth, the committed catalog all
         requestId: "upstream/conflict",
         artifact: {
           ...input.artifact,
-          digest: `sha256:${"f".repeat(64)}`,
+          digest: collidingDigest,
           origin: {
             ...input.artifact.origin,
             kind: "upstream",
             repository: REPOSITORY,
             name: "minecraft",
             version: "4.0.0",
-            checksum: `sha256:${"f".repeat(64)}`,
+            checksum: collidingDigest,
           },
         },
       },
       testPublisher,
       { transport, components },
     ),
-  ).rejects.toMatchObject({ code: "CONFLICT" });
+  ).rejects.toMatchObject({
+    code: "CONFLICT",
+    message: expect.stringContaining(
+      `existing minecraft chart:minecraft 4.0.0@${digest} [${input.artifact.uri}] vs incoming minecraft chart:minecraft 4.0.0@${collidingDigest} [${input.artifact.uri}]`,
+    ),
+  });
 });
 
 test("independent verification rejects corrupt bytes and transient read failures remain honestly pending", async () => {

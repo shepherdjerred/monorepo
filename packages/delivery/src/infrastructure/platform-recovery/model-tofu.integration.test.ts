@@ -144,7 +144,8 @@ test("a failed model tofu deployment settles through platform recovery at its fr
       testExecutor,
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  expect(await context.cluster.database.platformLock.count()).toBe(1);
+  // A plan-only failure never started step-apply, so it holds only its stack target lock (AI-907).
+  expect(await context.cluster.database.platformLock.count()).toBe(0);
   await context.delivery.completePlatformRecovery(
     intent.id,
     proof,

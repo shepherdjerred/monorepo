@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { RecipeDefinitionSchema } from "./recipe-contract.ts";
-import { specializedStageKey, targetWithoutRemoval } from "./recipe-view.ts";
 import {
+  siteReleaseOf,
+  specializedStageKey,
+  targetWithoutRemoval,
+} from "./recipe-view.ts";
+import {
+  ARCHIVE_ALONE,
   ONE_CONTENT_TARGET,
   ONE_FORUM_BUNDLE,
   ONE_SITE_STEP,
@@ -49,21 +54,20 @@ describe("specializedStageKey (T3)", () => {
         { instance: "application:one", definition: application("one") },
       ],
     });
-    // An archive step's release deploys no other Application, so its
-    // compound's other members are not Applications.
+    // An archive step's release deploys no other Application or static site,
+    // so its compound's other member is a channel.
     const plugins = RecipeDefinitionSchema.parse({
       kind: "compound",
       subRecipes: [
         {
-          instance: "bucket:trmnl-docs",
+          instance: "channel:npm/@shepherdjerred/trmnl",
           definition: {
-            kind: "static-site",
-            archiveComponent: "archive:trmnl-docs",
-            bucket: "trmnl-docs",
-            verification: {
-              url: "https://trmnl.sjer.red/",
-              expectedStatus: 200,
-            },
+            kind: "channel",
+            store: "npm",
+            name: "@shepherdjerred/trmnl",
+            pointer: "latest",
+            forwardOnly: false,
+            artifactComponent: "archive:trmnl-package",
           },
         },
         {
@@ -72,10 +76,32 @@ describe("specializedStageKey (T3)", () => {
         },
       ],
     });
+    const standaloneSiteCompound = RecipeDefinitionSchema.parse({
+      kind: "compound",
+      subRecipes: [
+        { instance: "application:one", definition: application("one") },
+        {
+          instance: "bucket:arcade-docs",
+          definition: {
+            kind: "static-site",
+            archiveComponent: "archive:arcade-docs",
+            bucket: "arcade-docs",
+            verification: {
+              url: "https://arcade.sjer.red/docs",
+              expectedStatus: 200,
+            },
+          },
+        },
+      ],
+    });
     // The executor's keys: `sub<position>-<step key>` (lib/delivery/model/recipe.ts).
     expect(specializedStageKey(sites, "static-site")).toBe(
       "sub1-step-static-site",
     );
+    expect(specializedStageKey(standaloneSiteCompound, "static-site")).toBe(
+      "sub2-step-static-site",
+    );
+    expect(siteReleaseOf(standaloneSiteCompound)?.bucket).toBe("arcade-docs");
     expect(specializedStageKey(plugins, "archive")).toBe("sub2-step-archive");
   });
 
@@ -187,7 +213,13 @@ describe("one recoverable content target per release (4.15)", () => {
     ).toEqual([ONE_CONTENT_TARGET]);
   });
 
-  test("a compound recipe does not hold both across its Applications", () => {
+  test("a compound recipe does not hold both across its Applications or standalone site sub-recipes", () => {
+    const standaloneSite = {
+      kind: "static-site",
+      archiveComponent: "archive:docs",
+      bucket: "docs",
+      verification: { url: "https://docs.sjer.red/", expectedStatus: 200 },
+    };
     expect(
       refusal({
         kind: "compound",
@@ -203,12 +235,68 @@ describe("one recoverable content target per release (4.15)", () => {
         ],
       }),
     ).toEqual([ONE_CONTENT_TARGET]);
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          { instance: "bucket:docs", definition: standaloneSite },
+          {
+            instance: "bucket:other-docs",
+            definition: {
+              ...standaloneSite,
+              bucket: "other-docs",
+              archiveComponent: "archive:other-docs",
+            },
+          },
+        ],
+      }),
+    ).toEqual([ONE_SITE_STEP]);
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          { instance: "bucket:docs", definition: standaloneSite },
+          {
+            instance: "application:scout",
+            definition: application("scout", siteStep),
+          },
+        ],
+      }),
+    ).toEqual([ONE_SITE_STEP]);
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          { instance: "bucket:docs", definition: standaloneSite },
+          {
+            instance: "application:storm-forum",
+            definition: forumApplication("storm-forum", [forumStep]),
+          },
+        ],
+      }),
+    ).toEqual([ONE_CONTENT_TARGET]);
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          { instance: "bucket:docs", definition: standaloneSite },
+          {
+            instance: "application:trmnl",
+            definition: application("trmnl", archiveStep),
+          },
+        ],
+      }),
+    ).toEqual([ARCHIVE_ALONE]);
   });
 });
 
-test("an Application's site step keeps its bucket past removal, so removal waits for an adapter (4.10)", () => {
+test("an Application's site or archive step keeps external state past removal, so removal waits for an adapter (4.10)", () => {
   const withSite = RecipeDefinitionSchema.parse(application("wiki", siteStep));
+  const withArchive = RecipeDefinitionSchema.parse(
+    application("trmnl-dashboard", archiveStep),
+  );
   expect(targetWithoutRemoval(withSite)).toBe("static-site step");
+  expect(targetWithoutRemoval(withArchive)).toBe("archive step");
   expect(
     targetWithoutRemoval(
       RecipeDefinitionSchema.parse({

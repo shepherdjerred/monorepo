@@ -1,6 +1,7 @@
 import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery } from "#testing/seed.ts";
 import { workerFixture } from "#testing/worker-fixture.ts";
+import { environmentSelection } from "#infrastructure/selection/views.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { testPublisher } from "#testing/seed.ts";
 import { declareAcquisitions } from "#testing/services.ts";
@@ -50,6 +51,8 @@ async function startHarness() {
   const scoutPool = await scout.acceptedPool();
   const central = await workerFixture(delivery);
   await central.requestedBaseline();
+  await environmentSelection(cluster.database, scout.environmentId);
+  await environmentSelection(cluster.database, central.environmentId);
   // The catalog document names the Minecraft chart's acquiring service.
   await declareAcquisitions(cluster.database, "minecraft", ["chart:minecraft"]);
   const chart = new TextEncoder().encode(

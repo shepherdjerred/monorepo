@@ -2,7 +2,12 @@ import { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
+import {
+  PLATFORM_LOCK,
+  audit,
+  fingerprint,
+  lock,
+} from "#infrastructure/delivery-records.ts";
 import type { Principal } from "#shared/contract.ts";
 import {
   CompletePlatformRecoverySchema,
@@ -115,8 +120,18 @@ export async function admitPlatformRecoveryApply(
   const input = AdmitPlatformRecoveryApplySchema.parse(raw);
   const context = await freshOwnershipProof(this, input, id, true);
   return this.database.$transaction(async (tx) => {
-    const { intent, row } = await pendingRecovery(tx, id);
+    const { intent, row, global } = await pendingRecovery(tx, id);
     requireRecoveryEffectOwner(this, row.kind);
+    if (global === null) {
+      const heldLock = await tx.platformLock.findUnique({
+        where: { id: PLATFORM_LOCK },
+      });
+      if (heldLock !== null && heldLock.deploymentId !== row.id)
+        throw new DeliveryError(
+          "BUSY",
+          "Shared platform resources are owned by another state apply or shared-lock operation",
+        );
+    }
     if (
       fingerprint(intent.nativeReceipts) !==
       fingerprint(context.intent.nativeReceipts)

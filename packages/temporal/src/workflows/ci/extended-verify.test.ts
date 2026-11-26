@@ -77,10 +77,12 @@ const scenarios: Scenario[] = [
     described: 1,
   },
   {
-    name: "a red pipeline fails the Workflow with the pipeline URL",
+    name: "a red pipeline fails the Workflow with the selected source SHA and pipeline URL",
     submissions: [{ kind: "submitted", receipt: receipt("running") }],
     polls: [receipt("failure")],
-    expected: { failure: `verify-extended=failure): ${url}` },
+    expected: {
+      failure: `ended failure at ${"a".repeat(12)} (verify-extended=failure): ${url}`,
+    },
     submitted: 1,
     described: 1,
   },

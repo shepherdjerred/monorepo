@@ -12,6 +12,7 @@ import {
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
 import { required, wire } from "#infrastructure/delivery-records.ts";
+import { selectionOf } from "./views.ts";
 
 /** Kinds whose success moved the accepted selection (V1). */
 export const ACCEPTING_KINDS = [
@@ -77,6 +78,7 @@ async function loweredForwardOnly(
 
 type AcceptedRow = {
   id: string;
+  kind: string;
   versionSetRevisionId: string;
   pipelineRevisionId: string;
   configurationId: string;
@@ -149,6 +151,7 @@ export async function rollbackCandidates(
     },
     select: {
       id: true,
+      kind: true,
       versionSetRevisionId: true,
       pipelineRevisionId: true,
       configurationId: true,
@@ -161,6 +164,11 @@ export async function rollbackCandidates(
   );
   const candidates: RollbackCandidate[] = [];
   for (const [index, row] of accepted.entries()) {
+    // Retired v1 platform history and pre-revision legacy rows froze no model
+    // Selection (4.9); omit them while keeping every accepted row in `later`
+    // so pointOfNoReturn crossings remain enforced (D9).
+    const selection = selectionOf(row);
+    if (selection === null) continue;
     // The accepted selection is itself a rollback source: restoring it
     // re-asserts the frozen inputs after a failed or drifted target.
     const reason = await exclusion(tx, {
@@ -170,11 +178,7 @@ export async function rollbackCandidates(
     });
     candidates.push({
       deploymentId: row.id,
-      selection: {
-        versionSetRevisionId: row.versionSetRevisionId,
-        recipeRevisionId: row.pipelineRevisionId,
-        configurationRevisionId: row.configurationId,
-      },
+      selection,
       acceptedAt: (row.finishedAt ?? new Date(0)).toISOString(),
       eligible: reason === null,
       reason,
