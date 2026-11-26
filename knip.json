@@ -458,7 +458,8 @@
         "src/**/*.test.ts",
         "scripts/**/*.ts",
         "src/workflows/media/fixtures/cleanup-before-input.ts",
-        "src/workflows/media/fixtures/cleanup-before-observation.ts"
+        "src/workflows/media/fixtures/cleanup-before-observation.ts",
+        "src/workflows/infra/fixtures/bugsink-before-retirement.ts"
       ],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
       "ignoreBinaries": ["op"]
