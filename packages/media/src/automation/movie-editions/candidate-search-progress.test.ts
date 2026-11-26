@@ -122,6 +122,44 @@ test("reassesses changed availability from a repeated page without counting the 
   expect(progress.results(Date.now()).candidates).toEqual([]);
 });
 
+test("prefers the better-seeded equal release after resuming a search", async () => {
+  const progress = new MovieCandidateSearchProgress(criterion);
+  const singleSeed = "00000000-0000-4000-8000-000000000001";
+  const multipleSeeds = "00000000-0000-4000-8000-000000000002";
+  const lowerScore = "00000000-0000-4000-8000-000000000003";
+  const rank = (source: ProviderCandidate) =>
+    Promise.resolve({
+      candidate: {
+        releaseId: source.providerReleaseId,
+        assessment: { id: crypto.randomUUID(), hash: criterion },
+        rank: 1,
+        score: source.providerReleaseId === lowerScore ? 0 : 1,
+        priority: 25,
+      },
+    });
+  await progress.recordPage(
+    "knaben",
+    {
+      candidates: [
+        { ...first, providerReleaseId: singleSeed, seeders: 1 },
+        { ...first, providerReleaseId: multipleSeeds, seeders: 3 },
+        { ...first, providerReleaseId: lowerScore, seeders: 100 },
+      ],
+      listingIds: [singleSeed, multipleSeeds, lowerScore],
+      nextPage: null,
+    },
+    cipher,
+    rank,
+  );
+  const restored = new MovieCandidateSearchProgress(
+    criterion,
+    MovieProviderSearchProgressV4Schema.parse(progress.checkpoint()),
+  );
+  expect(
+    restored.results(Date.now()).candidates.map(({ releaseId }) => releaseId),
+  ).toEqual([multipleSeeds, singleSeed, lowerScore]);
+});
+
 test.each([
   { pages: 10, pageSize: 100, listings: MOVIE_DISCOVERY_LISTINGS },
   {
