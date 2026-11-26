@@ -15,6 +15,7 @@ import {
   type ViewerAssets,
 } from "./assets.ts";
 import { operatorLogin } from "./auth.ts";
+import { watchStream } from "./stream-errors.ts";
 
 const IMMUTABLE = "private, max-age=31536000, immutable";
 const TOKEN_PATH = /^\/_t\/([^/]+)(\/.*)?$/u;
@@ -145,7 +146,9 @@ export function createContentHandler(options: ContentHostOptions) {
         options.bridge.src,
         headers,
       );
-      return new Response(stream, { headers });
+      return new Response(watchStream(stream, { versionId, op: "html" }), {
+        headers,
+      });
     }
     headers.set("Accept-Ranges", "bytes");
     const range = ifRangeMatches(request.headers.get("If-Range"), etag)
@@ -164,14 +167,23 @@ export function createContentHandler(options: ContentHostOptions) {
       return new Response(
         head
           ? null
-          : options.store.readRange(file.storageKey, range.start, range.end),
+          : watchStream(
+              options.store.readRange(file.storageKey, range.start, range.end),
+              { versionId, op: "range" },
+            ),
         { status: 206, headers },
       );
     }
     headers.set("Content-Length", String(size));
-    return new Response(head ? null : options.store.read(file.storageKey), {
-      headers,
-    });
+    return new Response(
+      head
+        ? null
+        : watchStream(options.store.read(file.storageKey), {
+            versionId,
+            op: "file",
+          }),
+      { headers },
+    );
   }
 
   async function route(

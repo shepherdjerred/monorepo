@@ -10,6 +10,7 @@ const SESSION_BATCH = 200;
 const BOARD_BATCH = 20;
 const BLOB_BATCH = 200;
 const EVENT_BATCH = 5000;
+const ORPHAN_PAGE = 500;
 
 export const SYSTEM_ACTOR = {
   key: "runner:artifacts-maintenance",
@@ -20,6 +21,8 @@ export const CLEANUP_EVENT = "maintenance.cleanup";
 
 export function createMaintenance(deps: Deps) {
   const { db } = deps;
+  /** Where the next orphan sweep resumes; null starts over. */
+  let orphanCursor: string | null = null;
 
   async function systemActorId() {
     const actor = await db.actor.upsert({
@@ -160,6 +163,35 @@ export function createMaintenance(deps: Deps) {
     return { count, more: unreferenced.length === BLOB_BATCH };
   }
 
+  /**
+   * Deletes objects no `Blob` row names: an upload that died mid-body leaves
+   * one. Only objects older than the blob grace are touched, so a body still
+   * being written is never swept. Pages through `objects/` across runs.
+   */
+  async function sweepOrphans(): Promise<{ count: number; more: boolean }> {
+    const grace = await deps.settings.value("blobGraceHours");
+    const cutoff = new Date(deps.now().getTime() - grace * HOUR_MS);
+    const page = await deps.store.list("objects/", orphanCursor, ORPHAN_PAGE);
+    const old = page.objects.filter((entry) => entry.lastModified < cutoff);
+    const known = await db.blob.findMany({
+      where: { storageKey: { in: old.map((entry) => entry.key) } },
+      select: { storageKey: true },
+    });
+    const referenced = new Set(known.map((blob) => blob.storageKey));
+    let count = 0;
+    for (const entry of old) {
+      if (referenced.has(entry.key)) continue;
+      try {
+        await deps.store.delete(entry.key);
+        count += 1;
+      } catch (error) {
+        reportError(error, "artifacts_orphan_object_delete_failed");
+      }
+    }
+    orphanCursor = page.truncated ? (page.objects.at(-1)?.key ?? null) : null;
+    return { count, more: page.truncated };
+  }
+
   async function pruneEvents(): Promise<{ count: number; more: boolean }> {
     const days = await deps.settings.value("eventRetentionDays");
     const cutoff = new Date(deps.now().getTime() - days * DAY_MS);
@@ -185,14 +217,20 @@ export function createMaintenance(deps: Deps) {
       const sessions = await expireSessions();
       const boards = await purgeBoards(actorId);
       const blobs = await deleteBlobs();
+      const orphans = await sweepOrphans();
       const events = await pruneEvents();
       const result: MaintenanceCleanupOutput = {
         status: "ok",
         expiredSessions: sessions.count,
         purgedBoards: boards.count,
-        deletedBlobs: blobs.count,
+        deletedBlobs: blobs.count + orphans.count,
         prunedEvents: events.count,
-        more: sessions.more || boards.more || blobs.more || events.more,
+        more:
+          sessions.more ||
+          boards.more ||
+          blobs.more ||
+          orphans.more ||
+          events.more,
       };
       // The scrape reads this row, so the gauge survives a restart.
       await db.event.create({

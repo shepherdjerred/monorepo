@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ArtifactsError } from "#application/errors.ts";
 import { memoryObjectStore } from "#testing/memory-object-store.ts";
 import { sha256Hex } from "#testing/client.ts";
+import { watchStream } from "./stream-errors.ts";
 import { receiveBlob, type BlobSink } from "./uploads-route.ts";
 
 const text = (value: string) => new TextEncoder().encode(value);
@@ -18,6 +19,7 @@ function streamOf(...chunks: Uint8Array[]): ReadableStream<Uint8Array> {
 function sinkOf(store = memoryObjectStore(), recorded = true) {
   const bytes: number[] = [];
   const sink: BlobSink = {
+    uploadId: "upload-1",
     store,
     recordBlob: () => Promise.resolve(recorded),
     onBytes: (count) => {
@@ -115,5 +117,44 @@ describe("receiveBlob", () => {
       status: "stored",
     });
     expect(store.keys()).toHaveLength(1);
+  });
+});
+
+describe("failure logs", () => {
+  it("names the upload and digest when a blob fails, and nothing secret", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    try {
+      const { sink } = sinkOf();
+      await rejection(
+        receiveBlob(sink, streamOf(text("short")), "a".repeat(64), 99),
+      );
+      const logged = error.mock.calls.flat().join("\n");
+      expect(logged).toContain("artifacts_blob_upload_failed");
+      expect(logged).toContain('"uploadId":"upload-1"');
+      expect(logged).toContain('"declaredSize":99');
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it("reports a failing content stream with the version, then fails the stream", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    try {
+      const broken = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.error(new Error("rewriter exploded"));
+        },
+      });
+      const watched = watchStream(broken, { versionId: "v-1", op: "html" });
+      await expect(new Response(watched).text()).rejects.toThrow(
+        "rewriter exploded",
+      );
+      const logged = error.mock.calls.flat().join("\n");
+      expect(logged).toContain("artifacts_content_stream_failed");
+      expect(logged).toContain('"versionId":"v-1"');
+      expect(logged).toContain('"op":"html"');
+    } finally {
+      error.mockRestore();
+    }
   });
 });

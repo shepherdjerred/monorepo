@@ -204,6 +204,44 @@ describe("cleanup", () => {
   });
 });
 
+describe("orphan object sweep", () => {
+  it("deletes old objects no Blob row names, and only those", async () => {
+    const orphan = await publish(agent, page("referenced"), { board: "sweep" });
+    const file = await database.db.versionFile.findFirstOrThrow({
+      where: { versionId: orphan.committed.versionId },
+      include: { blob: true },
+    });
+    runtime.store.setModified(file.blob.storageKey, old(5));
+    runtime.store.put("objects/dead-upload-old", new Uint8Array([1]));
+    runtime.store.setModified("objects/dead-upload-old", old(2));
+    runtime.store.put("objects/in-flight-upload", new Uint8Array([2]));
+    const result = await cleanup();
+    expect(result.deletedBlobs).toBeGreaterThanOrEqual(1);
+    const keys = runtime.store.keys();
+    expect(keys).not.toContain("objects/dead-upload-old");
+    expect(keys).toContain("objects/in-flight-upload");
+    expect(keys).toContain(file.blob.storageKey);
+  });
+
+  it("pages through a large bucket across runs", async () => {
+    for (let index = 0; index < 1100; index += 1) {
+      const key = `objects/bulk-${String(index).padStart(5, "0")}`;
+      runtime.store.put(key, new Uint8Array([1]));
+      runtime.store.setModified(key, old(3));
+    }
+    let runs = 0;
+    for (;;) {
+      runs += 1;
+      const result = await cleanup();
+      if (!result.more || runs > 10) break;
+    }
+    expect(runs).toBeGreaterThan(1);
+    expect(
+      runtime.store.keys().filter((key) => key.startsWith("objects/bulk-")),
+    ).toEqual([]);
+  });
+});
+
 describe("cleanup of blobs and events", () => {
   it("deletes unreferenced blobs after the grace period, row first and then the object", async () => {
     const orphan = await publish(agent, page("orphan"), {

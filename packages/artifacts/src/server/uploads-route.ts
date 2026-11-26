@@ -24,6 +24,8 @@ async function deleteQuietly(store: ObjectStore, key: string) {
 }
 
 export type BlobSink = {
+  /** Named in failure logs; never a content token. */
+  uploadId: string;
   store: ObjectStore;
   /** False when another upload recorded the same digest first. */
   recordBlob: (sha256: string, key: string, size: number) => Promise<boolean>;
@@ -67,6 +69,12 @@ export async function receiveBlob(
     return { status: "exists" };
   } catch (error) {
     // The object may be partial or lost the race; either way it is ours to remove.
+    reportError(error, "artifacts_blob_upload_failed", {
+      uploadId: sink.uploadId,
+      sha256,
+      received,
+      declaredSize,
+    });
     await deleteQuietly(sink.store, key);
     throw error;
   }
@@ -111,6 +119,7 @@ export function registerUploadRoutes(
     return c.json(
       await receiveBlob(
         {
+          uploadId: c.req.param("id"),
           store: options.store,
           recordBlob: (digest, key, bytes) =>
             services.uploads.recordBlob(digest, key, bytes),

@@ -5,6 +5,8 @@ import type { Bootstrap } from "./config.ts";
 export const PART_SIZE = 8 * 1024 * 1024;
 export const QUEUE_SIZE = 2;
 
+export type StoredObject = { key: string; lastModified: Date };
+
 /** Streams bytes into one object; `end` completes the upload. */
 export type ObjectWriter = {
   write: (chunk: Uint8Array) => Promise<void>;
@@ -25,6 +27,12 @@ export type ObjectStore = {
   ) => ReadableStream<Uint8Array>;
   openWriter: (key: string) => ObjectWriter;
   delete: (key: string) => Promise<void>;
+  /** One page of keys under `prefix`, in key order, after `startAfter`. */
+  list: (
+    prefix: string,
+    startAfter: string | null,
+    limit: number,
+  ) => Promise<{ objects: StoredObject[]; truncated: boolean }>;
   exists: (key: string) => Promise<boolean>;
 };
 
@@ -66,6 +74,20 @@ export function createObjectStore(config: Bootstrap): ObjectStore {
     delete: async (key) => {
       await client.file(key).delete();
     },
+    list: async (prefix, startAfter, limit) => {
+      const page = await client.list({
+        prefix,
+        maxKeys: limit,
+        ...(startAfter === null ? {} : { startAfter }),
+      });
+      return {
+        objects: (page.contents ?? []).map((entry) => ({
+          key: entry.key,
+          lastModified: new Date(entry.lastModified ?? 0),
+        })),
+        truncated: page.isTruncated ?? false,
+      };
+    },
     exists: (key) => client.file(key).exists(),
   };
 }
@@ -94,6 +116,8 @@ export function meterObjectStore(
       };
     },
     delete: (key) => counted("delete", () => store.delete(key)),
+    list: (prefix, startAfter, limit) =>
+      counted("list", () => store.list(prefix, startAfter, limit)),
     exists: (key) => counted("head", () => store.exists(key)),
   };
 }
