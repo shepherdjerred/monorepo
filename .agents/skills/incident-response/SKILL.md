@@ -47,8 +47,8 @@ signal clears and nobody ever took command.
 ## Commanding an incident
 
 You command an incident you declared with `--take`, took with `take`, or were
-spawned for. A spawned session first redeems its token, exactly as its first
-message says: `toolkit incident claim INC-N --dispatch-token <T>`.
+spawned for. A spawned session first redeems its dispatch handle, exactly as
+its first message says: `toolkit incident claim INC-N --dispatch-handle <H>`.
 
 1. Read the record: `toolkit incident view INC-N --json` (signals, suspect,
    links, affected agents, timeline). Check the Forum for related threads.

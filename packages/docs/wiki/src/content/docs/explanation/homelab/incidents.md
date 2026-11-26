@@ -16,7 +16,7 @@ is fixing it. If nobody is, exactly one of them arranges for someone to.
 ```mermaid
 flowchart TD
   accTitle: How a blocked agent reaches an incident commander
-  accDescr: A signal or an agent opens one incident per system. A blocked agent checks it. If its own change is the suspect it takes command. Otherwise it waits. Once the takeover grace passes with nobody in command, waiters race for a dispatch lease; one wins and spawns a commander session, which claims command with a one-time token. The others keep waiting until the incident resolves.
+  accDescr: A signal or an agent opens one incident per system. A blocked agent checks it. If its own change is the suspect it takes command. Otherwise it waits. Once the takeover grace passes with nobody in command, waiters race for a dispatch lease; one wins and spawns a commander session, which claims command by redeeming a one-time handle. The others keep waiting until the incident resolves.
 
   SIG[Alertmanager or main-ci signal] --> INC[(One open incident per system)]
   DECL[Agent declares] --> INC
@@ -26,7 +26,7 @@ flowchart TD
   WAIT -->|grace passed, nobody commands| LEASE{Dispatch lease}
   LEASE -->|one winner| SPAWN[Spawns a commander session]
   LEASE -->|everyone else| WAIT
-  SPAWN -->|one-time token| TAKE
+  SPAWN -->|one-time handle| TAKE
   TAKE --> RES[Resolves with evidence]
   RES -->|waiters resume| DONE[Blocked work continues]
 ```
@@ -68,8 +68,9 @@ already watching, and they are the ones who need progress.
 When the grace passes, every waiting agent tries to take a dispatch lease. The
 server decides with one compare-and-set on the incident's revision: one write
 wins and every other write is refused. The waiter that wins starts a new
-worktree and agent session through Herdr. The session's first message carries
-a one-time token, which becomes command when the session claims it
+worktree and agent session through Herdr. The one-time token stays in a private
+file on that machine. The session's first message carries only a handle to it,
+which the session redeems to become command
 ([`wait`](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/incidents/wait.ts),
 [spawn](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/incidents/spawn.ts)).
 
