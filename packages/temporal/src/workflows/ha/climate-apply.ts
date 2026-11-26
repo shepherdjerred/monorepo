@@ -2,12 +2,17 @@ import {
   ActivityFailure,
   ApplicationFailure,
   log,
+  patched,
   proxyActivities,
 } from "@temporalio/workflow";
 import { z } from "zod";
 import type { WeatherActivities } from "#activities/weather.ts";
 import { OUTDOOR_WEATHER_UNAVAILABLE_ERROR_TYPE } from "#shared/infra/ha-errors.ts";
-import { isConfirmedAway } from "#shared/infra/presence.ts";
+import {
+  HOUSEHOLD_JERRED_ONLY_PATCH,
+  householdResidents,
+  isConfirmedAway,
+} from "#shared/infra/presence.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   climatePhase,
@@ -31,7 +36,6 @@ const weatherActivities = proxyActivities<WeatherActivities>({
 const BEDROOM = "climate.bedroom" as const;
 const LIVING_ROOM = "climate.living_room" as const;
 const HOME_ZONE = "zone.home" as const;
-const PEOPLE = ["person.jerred", "person.shuxin"] as const;
 
 const ROOMS = [
   { room: "bedroom", entityId: BEDROOM },
@@ -142,7 +146,9 @@ async function applyRoom(
 export async function applyHomeClimate(): Promise<void> {
   const phase = climatePhase(losAngelesHour(new Date()));
   const people = await Promise.all(
-    PEOPLE.map((person) => getEntityState(person)),
+    householdResidents(patched(HOUSEHOLD_JERRED_ONLY_PATCH)).map((person) =>
+      getEntityState(person),
+    ),
   );
   const occupied = people.some((person) => person.state === "home");
   const everyoneConfirmedAway = people.every((person) =>

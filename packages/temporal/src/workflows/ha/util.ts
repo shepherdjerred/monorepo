@@ -20,7 +20,11 @@ import type {
   WorkflowOutcome,
 } from "#activities/outcome.ts";
 import type { HaSchema } from "#generated/ha-schema.ts";
-import { isConfirmedAway } from "#shared/infra/presence.ts";
+import {
+  HOUSEHOLD_JERRED_ONLY_PATCH,
+  householdResidents,
+  isConfirmedAway,
+} from "#shared/infra/presence.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // Home Assistant is unreachable for most of a minute while its pod restarts.
@@ -449,21 +453,23 @@ export function matchExact(expected: string): (state: string) => boolean {
 export const PRESENCE_NAMED_ZONES_PATCH = "presence-named-zones-away-v1";
 
 export async function everyoneAway(): Promise<boolean> {
-  const [jerred, shuxin] = await Promise.all([
-    getEntityState("person.jerred"),
-    getEntityState("person.shuxin"),
-  ]);
+  const states = await Promise.all(
+    householdResidents(patched(HOUSEHOLD_JERRED_ONLY_PATCH)).map((person) =>
+      getEntityState(person),
+    ),
+  );
   return patched(PRESENCE_NAMED_ZONES_PATCH)
-    ? isConfirmedAway(jerred.state) && isConfirmedAway(shuxin.state)
-    : jerred.state === "not_home" && shuxin.state === "not_home";
+    ? states.every((person) => isConfirmedAway(person.state))
+    : states.every((person) => person.state === "not_home");
 }
 
 export async function anyoneHome(): Promise<boolean> {
-  const [jerred, shuxin] = await Promise.all([
-    getEntityState("person.jerred"),
-    getEntityState("person.shuxin"),
-  ]);
-  return jerred.state === "home" || shuxin.state === "home";
+  const states = await Promise.all(
+    householdResidents(patched(HOUSEHOLD_JERRED_ONLY_PATCH)).map((person) =>
+      getEntityState(person),
+    ),
+  );
+  return states.some((person) => person.state === "home");
 }
 
 export async function volumeUpBy(
