@@ -4,21 +4,28 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import {
+  collectPostGreenCandidateCommits,
   evaluateThresholds,
-  formatImpactMarkdown,
   NOV_10_23_BASELINE,
   parseReceiptsContent,
   summarizeMainPipelines,
   summarizePrPipelines,
   summarizeReceipts,
   WoodpeckerPipelineItemSchema,
+  type ImpactReceipt,
   type ImpactScorecard,
   type WoodpeckerPipelineItem,
 } from "./impact-model.ts";
 
 const DEFAULT_WOODPECKER_URL = "https://woodpecker.sjer.red";
+const DEFAULT_GITHUB_REPO = "shepherdjerred/monorepo";
+const CompareMergeBaseSchema = z.object({
+  merge_base_commit: z.object({
+    sha: z.string(),
+  }),
+});
 
-const USAGE = `Usage: toolkit run --env WOODPECKER_TOKEN -- bun scripts/ci/merge-guard/measure-merge-guard-impact.ts --since <ISO> [--until <ISO>] [--receipts <path>] [--json]
+const USAGE = `Usage: toolkit run --env WOODPECKER_TOKEN --env GH_TOKEN -- bun scripts/ci/merge-guard/measure-merge-guard-impact.ts --since <ISO> [--until <ISO>] [--receipts <path>] [--json]
 
 Measures post-rollout impact of the AI-542 merge-time stale-base overlap guard
 across Woodpecker push-main + pull_request pipelines and optional pr-land.ndjson
@@ -143,6 +150,90 @@ async function hydrateFailedMainWorkflows(
   return hydrated;
 }
 
+function gitMergeBaseWithMain(commitSha: string): string | null {
+  if (!/^[0-9a-f]{7,40}$/iu.test(commitSha)) {
+    return null;
+  }
+  const proc = Bun.spawnSync(["git", "merge-base", commitSha, "origin/main"], {
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  if (proc.exitCode !== 0) {
+    return null;
+  }
+  const sha = proc.stdout.toString().trim();
+  return sha.length > 0 ? sha : null;
+}
+
+async function resolveCommitMergeBase(
+  commitSha: string,
+  options: {
+    readonly environment: Readonly<Record<string, string | undefined>>;
+    readonly fetcher: typeof fetch;
+  },
+): Promise<string | null> {
+  const local = gitMergeBaseWithMain(commitSha);
+  if (local !== null) {
+    return local;
+  }
+  const ghToken = options.environment["GH_TOKEN"]?.trim();
+  if (ghToken === undefined || ghToken === "") {
+    return null;
+  }
+  const githubRepo =
+    options.environment["GITHUB_REPOSITORY"]?.trim() ?? DEFAULT_GITHUB_REPO;
+  const compareUrl = new URL(
+    `https://api.github.com/repos/${githubRepo}/compare/main...${encodeURIComponent(commitSha)}`,
+  );
+  try {
+    const response = await options.fetcher(compareUrl, {
+      headers: {
+        authorization: `Bearer ${ghToken}`,
+        accept: "application/vnd.github+json",
+      },
+      redirect: "error",
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const parsed = CompareMergeBaseSchema.safeParse(await response.json());
+    return parsed.success ? parsed.data.merge_base_commit.sha : null;
+  } catch {
+    return null;
+  }
+}
+
+async function hydrateCandidateMergeBases(
+  prPipelines: readonly WoodpeckerPipelineItem[],
+  receiptItems: readonly ImpactReceipt[],
+  options: {
+    readonly environment: Readonly<Record<string, string | undefined>>;
+    readonly fetcher: typeof fetch;
+    readonly resolveMergeBase?:
+      | ((commitSha: string) => Promise<string | null> | string | null)
+      | undefined;
+  },
+): Promise<Map<string, string>> {
+  const mergeBaseByCommit = new Map<string, string>();
+  for (const receipt of receiptItems) {
+    mergeBaseByCommit.set(receipt.headSha, receipt.mergeBaseSha);
+  }
+  const candidates = collectPostGreenCandidateCommits(prPipelines).filter(
+    (sha) => !mergeBaseByCommit.has(sha),
+  );
+  for (const sha of candidates) {
+    const resolved =
+      options.resolveMergeBase === undefined
+        ? await resolveCommitMergeBase(sha, options)
+        : await options.resolveMergeBase(sha);
+    if (resolved !== null) {
+      mergeBaseByCommit.set(sha, resolved);
+    }
+  }
+  return mergeBaseByCommit;
+}
+
 export async function buildImpactScorecard(options: {
   readonly sinceIso: string;
   readonly untilIso: string;
@@ -150,6 +241,8 @@ export async function buildImpactScorecard(options: {
   readonly environment?:
     Readonly<Record<string, string | undefined>> | undefined;
   readonly fetcher?: typeof fetch | undefined;
+  readonly resolveMergeBase?:
+    ((commitSha: string) => Promise<string | null> | string | null) | undefined;
 }): Promise<ImpactScorecard> {
   const sinceMs = Date.parse(options.sinceIso);
   const untilMs = Date.parse(options.untilIso);
@@ -161,7 +254,8 @@ export async function buildImpactScorecard(options: {
   if (untilMs < sinceMs) {
     throw new Error("--until must not precede --since");
   }
-  const conn = resolveWoodpeckerConnection(options.environment ?? Bun.env);
+  const env = options.environment ?? Bun.env;
+  const conn = resolveWoodpeckerConnection(env);
   const fetcher = options.fetcher ?? fetch;
   const sinceSec = Math.floor(sinceMs / 1000);
   const untilSec = Math.ceil(untilMs / 1000);
@@ -194,10 +288,22 @@ export async function buildImpactScorecard(options: {
   const receiptItems = receiptsAvailable
     ? parseReceiptsContent(await receiptFile.text(), sinceMs, untilMs)
     : [];
+  const mergeBaseByCommit = await hydrateCandidateMergeBases(
+    prPipelines,
+    receiptItems,
+    {
+      environment: env,
+      fetcher,
+      resolveMergeBase: options.resolveMergeBase,
+    },
+  );
 
   const days = Math.max((untilMs - sinceMs) / 86_400_000, 1 / 24);
   const main = summarizeMainPipelines(mainPipelines, days);
-  const pullRequests = summarizePrPipelines(prPipelines);
+  const pullRequests = summarizePrPipelines(prPipelines, {
+    mergeBaseByCommit,
+    receipts: receiptItems,
+  });
   const receipts = summarizeReceipts(
     receiptItems,
     receiptsAvailable,
@@ -217,6 +323,38 @@ export async function buildImpactScorecard(options: {
     baseline: NOV_10_23_BASELINE,
     decision,
   };
+}
+
+function pct(rate: number): string {
+  return `${(rate * 100).toFixed(1)}%`;
+}
+
+export function formatImpactMarkdown(scorecard: ImpactScorecard): string {
+  const lines = [
+    `## Merge-Guard Impact Scorecard (${scorecard.window.since} .. ${scorecard.window.until})`,
+    "",
+    `**Window:** ${scorecard.window.days.toFixed(2)} day(s) | **Verdict:** **${scorecard.decision.verdict}**`,
+    "",
+    "| Metric | Nov 10–23 Baseline (14d) | Observed Window | Keep Threshold | Rollback Trigger |",
+    "| --- | ---: | ---: | ---: | ---: |",
+    `| \`main\` \`verify\` failure onsets / day | ${scorecard.baseline.verifyOnsetsPerDay.toFixed(2)} (${scorecard.baseline.staleSkewIncidentsPerDay.toFixed(2)} skew) | ${scorecard.main.verifyOnsetsPerDay.toFixed(2)} (${String(scorecard.main.verifyFailureOnsets)} onsets / ${String(scorecard.main.completedVerifyPipelines)} runs) | <= 0.50 / day | — |`,
+    `| Post-green PR restack rate (Woodpecker) | ${pct(scorecard.baseline.postGreenRestackRate)} | ${pct(scorecard.pullRequests.postGreenRestackRate)} (${String(scorecard.pullRequests.postGreenRestackedPrs)} / ${String(scorecard.pullRequests.prsWithGreenHead)} PRs) | < 25.0% | > 35.0% |`,
+    `| \`pr-land.ndjson\` stale block rate | 0.0% | ${scorecard.receipts.available ? `${pct(scorecard.receipts.staleBlockRate)} (${String(scorecard.receipts.staleBlocked)} / ${String(scorecard.receipts.totalEvaluations)})` : "n/a (no local file)"} | < 25.0% | > 35.0% |`,
+    `| \`>= 2\` post-green restack rate | ${pct(scorecard.baseline.twoPlusRestackRate)} | ${pct(scorecard.pullRequests.twoPlusRestackRate)} (${String(scorecard.pullRequests.twoPlusRestackedPrs)} / ${String(scorecard.pullRequests.prsWithGreenHead)} PRs) | < 3.0% | >= 5.0% |`,
+    `| Disjoint behind-\`main\` merges allowed | — | ${scorecard.receipts.available ? String(scorecard.receipts.disjointClean) : "n/a"} | — | — |`,
+    `| Skews caught on post-green restack | 0 | ${String(scorecard.pullRequests.skewsCaughtOnRestack)} | — | — |`,
+    "",
+    "### Rationale",
+    ...scorecard.decision.reasons.map((reason) => `- ${reason}`),
+  ];
+  if (scorecard.decision.rollbackActions.length > 0) {
+    lines.push(
+      "",
+      "### Rollback Actions",
+      ...scorecard.decision.rollbackActions.map((action) => `- ${action}`),
+    );
+  }
+  return lines.join("\n");
 }
 
 export async function runMeasureMergeGuardCli(

@@ -121,102 +121,117 @@ const EXTRA_WORKSPACE_REVERSE_EDGES: Readonly<
 
 const EXTRA_PATH_REVERSE_TARGETS: readonly {
   readonly prefix: string;
-  readonly targetWorkspace: string;
+  readonly targetWorkspaces: readonly string[];
 }[] = [
   {
     prefix: "packages/ts-mc-docs/src/content/docs/",
-    targetWorkspace: "@shepherdjerred/storm-theme",
+    targetWorkspaces: ["@shepherdjerred/storm-theme"],
   },
   {
     prefix: "packages/scout-for-lol/scripts/contract-hash.ts",
-    targetWorkspace: "@scout-for-lol/backend",
+    targetWorkspaces: ["@scout-for-lol/backend"],
   },
   {
     prefix: "packages/scout-for-lol/tsconfig.base.json",
-    targetWorkspace: "@scout-for-lol/backend",
+    targetWorkspaces: [
+      "scout-for-lol",
+      "@scout-for-lol/app",
+      "@scout-for-lol/backend",
+      "@scout-for-lol/data",
+      "@scout-for-lol/design-audit",
+      "@scout-for-lol/design-system",
+      "@scout-for-lol/domain",
+      "@scout-for-lol/frontend",
+      "@scout-for-lol/report",
+      "@scout-for-lol/temporal",
+      "@shepherdjerred/temporal",
+    ],
+  },
+  {
+    prefix: "packages/homelab/tsconfig.base.json",
+    targetWorkspaces: [
+      "homelab",
+      "@homelab/cdk8s",
+      "@shepherdjerred/helm-types",
+    ],
   },
   {
     prefix: "packages/toolkit/",
-    targetWorkspace: "@shepherdjerred/temporal",
+    targetWorkspaces: ["@shepherdjerred/temporal"],
   },
   {
     prefix: "ci/scripts/images/harden-codex-launcher.ts",
-    targetWorkspace: "@shepherdjerred/temporal",
+    targetWorkspaces: ["@shepherdjerred/temporal"],
   },
   {
     prefix: "packages/discord-plays-mario-kart/Dockerfile",
-    targetWorkspace: "@arcade/backend",
+    targetWorkspaces: ["@arcade/backend"],
   },
   {
     prefix: "packages/discord-plays-mario-kart/spaghetti-src/",
-    targetWorkspace: "@arcade/backend",
+    targetWorkspaces: ["@arcade/backend"],
   },
   {
     prefix: "packages/discord-plays-pokemon/Dockerfile",
-    targetWorkspace: "@arcade/backend",
+    targetWorkspaces: ["@arcade/backend"],
   },
   {
     prefix: "packages/discord-plays-pokemon/wasm-src/",
-    targetWorkspace: "@arcade/backend",
+    targetWorkspaces: ["@arcade/backend"],
   },
   {
     prefix: "packages/the-storm/package.json",
-    targetWorkspace: "@shepherdjerred/storm-forum",
+    targetWorkspaces: [
+      "@shepherdjerred/storm-forum",
+      "@shepherdjerred/temporal",
+    ],
   },
   {
     prefix: "packages/the-storm/public-status.json",
-    targetWorkspace: "@shepherdjerred/storm-forum",
-  },
-  {
-    prefix: "packages/the-storm/package.json",
-    targetWorkspace: "@shepherdjerred/temporal",
+    targetWorkspaces: ["@shepherdjerred/storm-forum", "homelab"],
   },
   {
     prefix: "packages/the-storm/maintenance-status.json",
-    targetWorkspace: "@shepherdjerred/temporal",
+    targetWorkspaces: ["@shepherdjerred/temporal"],
   },
   {
     prefix:
       "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
-    targetWorkspace: "@shepherdjerred/temporal",
+    targetWorkspaces: ["@shepherdjerred/temporal"],
   },
   {
     prefix: "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
-    targetWorkspace: "@shepherdjerred/temporal",
+    targetWorkspaces: ["@shepherdjerred/temporal"],
   },
-  { prefix: "packages/the-storm/plugin/", targetWorkspace: "homelab" },
-  { prefix: "packages/the-storm/server/", targetWorkspace: "homelab" },
-  {
-    prefix: "packages/the-storm/public-status.json",
-    targetWorkspace: "homelab",
-  },
+  { prefix: "packages/the-storm/plugin/", targetWorkspaces: ["homelab"] },
+  { prefix: "packages/the-storm/server/", targetWorkspaces: ["homelab"] },
   {
     prefix: "packages/feature-flags/src/managed-flag-inventory.json",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
   {
     prefix: "packages/storm-brain/contracts/companion-chat.json",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
   {
     prefix: "packages/glitter-boys-launcher/.dockerignore",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
   {
     prefix: "packages/glitter-boys-launcher/Cargo.lock",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
   {
     prefix: "packages/glitter-boys-launcher/Cargo.toml",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
   {
     prefix: "packages/glitter-boys-launcher/Dockerfile",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
   {
     prefix: "packages/glitter-boys-launcher/crates/",
-    targetWorkspace: "homelab",
+    targetWorkspaces: ["homelab"],
   },
 ];
 
@@ -429,11 +444,13 @@ function collectExtraPathTargets(
 ): void {
   for (const filePath of paths) {
     for (const rule of EXTRA_PATH_REVERSE_TARGETS) {
-      if (
-        pathMatchesInput(filePath, rule.prefix) &&
-        graph.packages.has(rule.targetWorkspace)
-      ) {
-        seeds.add(rule.targetWorkspace);
+      if (!pathMatchesInput(filePath, rule.prefix)) {
+        continue;
+      }
+      for (const targetWorkspace of rule.targetWorkspaces) {
+        if (graph.packages.has(targetWorkspace)) {
+          seeds.add(targetWorkspace);
+        }
       }
     }
   }

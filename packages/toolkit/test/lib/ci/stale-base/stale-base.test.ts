@@ -465,6 +465,24 @@ describe("computeStaleBaseOverlap edge cases", () => {
     expect(toolkitTemporal.reasons.join("\n")).toContain(
       "@shepherdjerred/temporal",
     );
+
+    const scoutSharedTsconfigFrontend = computeStaleBaseOverlap({
+      headSha: HEAD_SHA,
+      mergeBaseSha: BASE_SHA,
+      mainHeadSha: MAIN_SHA,
+      behindBy: 1,
+      prFiles: [
+        modified(
+          "packages/scout-for-lol/packages/frontend/src/pages/index.astro",
+        ),
+      ],
+      mainFiles: [modified("packages/scout-for-lol/tsconfig.base.json")],
+      graph,
+    });
+    expect(scoutSharedTsconfigFrontend.stale).toBe(true);
+    expect(scoutSharedTsconfigFrontend.reasons.join("\n")).toContain(
+      "@scout-for-lol/frontend",
+    );
   });
 
   test("catches shared synthesis group touches and same-directory renames/additions", async () => {

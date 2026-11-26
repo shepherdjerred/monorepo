@@ -21,6 +21,7 @@ export const WoodpeckerWorkflowSummarySchema = z.object({
 export const WoodpeckerPipelineItemSchema = z.object({
   number: z.number().int().positive(),
   commit: z.string(),
+  mergeBaseSha: z.string().optional(),
   status: z.string(),
   event: z.string(),
   event_reason: z.array(z.string()).nullish(),
@@ -119,6 +120,21 @@ function isVerifyFailure(pipeline: WoodpeckerPipelineItem): boolean {
       );
 }
 
+function isVerifySuccess(pipeline: WoodpeckerPipelineItem): boolean {
+  if (isVerifyFailure(pipeline)) {
+    return false;
+  }
+  if (pipeline.workflows.length === 0) {
+    return pipeline.status.toLowerCase() === "success";
+  }
+  const verifyWorkflows = pipeline.workflows.filter(
+    (wf) => wf.name === "verify" || wf.name === "playwright-e2e",
+  );
+  return verifyWorkflows.length === 0
+    ? pipeline.status.toLowerCase() === "success"
+    : verifyWorkflows.every((wf) => wf.state.toLowerCase() === "success");
+}
+
 function isVerifyCompleted(pipeline: WoodpeckerPipelineItem): boolean {
   return ["success", "failure", "error"].includes(
     pipeline.status.toLowerCase(),
@@ -146,7 +162,7 @@ export function summarizeMainPipelines(
         verifyFailureOnsets += 1;
         inFailureStreak = true;
       }
-    } else if (pipeline.status.toLowerCase() === "success") {
+    } else if (isVerifySuccess(pipeline)) {
       inFailureStreak = false;
     }
   }
@@ -180,60 +196,176 @@ function groupReadyPipelinesByPr(
   return byPr;
 }
 
-function analyzeSinglePrRuns(runs: readonly WoodpeckerPipelineItem[]): {
-  readonly sawGreen: boolean;
-  readonly postGreenCommitCount: number;
-  readonly caughtFailureAfterGreen: boolean;
-} {
-  const ordered = [...runs].sort((a, b) => a.number - b.number);
-  let sawGreen = false;
-  let firstGreenCommit = "";
-  const postGreenCommits = new Set<string>();
-  let caughtFailureAfterGreen = false;
+export function collectPostGreenCandidateCommits(
+  pipelines: readonly WoodpeckerPipelineItem[],
+): string[] {
+  const candidateCommits = new Set<string>();
+  for (const runs of groupReadyPipelinesByPr(pipelines).values()) {
+    const ordered = [...runs].sort((a, b) => a.number - b.number);
+    const firstGreenIdx = ordered.findIndex(
+      (run) => run.status.toLowerCase() === "success",
+    );
+    const firstGreen = ordered[firstGreenIdx];
+    if (firstGreenIdx === -1 || firstGreen === undefined) continue;
+    const afterGreen = ordered
+      .slice(firstGreenIdx + 1)
+      .filter((run) => run.commit !== firstGreen.commit);
+    if (afterGreen.length === 0) continue;
+    candidateCommits.add(firstGreen.commit);
+    for (const run of afterGreen) candidateCommits.add(run.commit);
+  }
+  return [...candidateCommits];
+}
 
-  for (const run of ordered) {
-    const status = run.status.toLowerCase();
-    if (!sawGreen && status === "success") {
-      sawGreen = true;
-      firstGreenCommit = run.commit;
-    } else if (sawGreen && run.commit !== firstGreenCommit) {
-      postGreenCommits.add(run.commit);
-      if (status === "failure" || status === "error") {
-        caughtFailureAfterGreen = true;
-      }
+export type SummarizePrOptions = {
+  readonly mergeBaseByCommit?: ReadonlyMap<string, string> | undefined;
+  readonly receipts?: readonly ImpactReceipt[] | undefined;
+};
+
+type PrRestackEvidence = {
+  readonly mergeBases: ReadonlyMap<string, string>;
+  readonly staleBlockedByPr: ReadonlyMap<number, ReadonlySet<string>>;
+};
+
+function buildPrRestackEvidence(
+  options?: SummarizePrOptions,
+): PrRestackEvidence {
+  const mergeBases = new Map<string, string>();
+  const staleBlockedMutable = new Map<number, Set<string>>();
+  for (const receipt of options?.receipts ?? []) {
+    mergeBases.set(receipt.headSha, receipt.mergeBaseSha);
+    if (receipt.verdict === "stale_overlap" && !receipt.bypassed) {
+      const blocked = staleBlockedMutable.get(receipt.pr) ?? new Set<string>();
+      blocked.add(receipt.headSha);
+      staleBlockedMutable.set(receipt.pr, blocked);
     }
   }
+  for (const [commit, base] of options?.mergeBaseByCommit ?? []) {
+    mergeBases.set(commit, base);
+  }
+  return { mergeBases, staleBlockedByPr: staleBlockedMutable };
+}
+
+function isConfirmedRestackAdvance(options: {
+  readonly prevHead: string;
+  readonly prevBase: string | null;
+  readonly nextBase: string | null;
+  readonly staleBlockedHeads: ReadonlySet<string>;
+  readonly consumedBlockedHeads: Set<string>;
+}): boolean {
+  if (options.prevBase !== null && options.nextBase !== null) {
+    return options.nextBase !== options.prevBase;
+  }
+  if (
+    options.staleBlockedHeads.has(options.prevHead) &&
+    !options.consumedBlockedHeads.has(options.prevHead)
+  ) {
+    options.consumedBlockedHeads.add(options.prevHead);
+    return true;
+  }
+  return false;
+}
+
+function isFailedRunStatus(status: string): boolean {
+  const normalized = status.toLowerCase();
+  return normalized === "failure" || normalized === "error";
+}
+
+function analyzeAfterFirstGreen(
+  firstGreen: WoodpeckerPipelineItem,
+  laterRuns: readonly WoodpeckerPipelineItem[],
+  staleBlockedHeads: ReadonlySet<string>,
+  resolveBase: (run: WoodpeckerPipelineItem) => string | null,
+): {
+  readonly confirmedRestackCount: number;
+  readonly caughtFailureOnRestack: boolean;
+} {
+  const consumedBlockedHeads = new Set<string>();
+  let currentHead = firstGreen.commit;
+  let currentBase = resolveBase(firstGreen);
+  let currentHeadIsRestack = false;
+  let confirmedRestackCount = 0;
+  let caughtFailureOnRestack = false;
+
+  for (const run of laterRuns) {
+    if (run.commit === currentHead) {
+      caughtFailureOnRestack ||=
+        currentHeadIsRestack && isFailedRunStatus(run.status);
+      continue;
+    }
+    const nextBase = resolveBase(run);
+    const isRestack = isConfirmedRestackAdvance({
+      prevHead: currentHead,
+      prevBase: currentBase,
+      nextBase,
+      staleBlockedHeads,
+      consumedBlockedHeads,
+    });
+    currentHead = run.commit;
+    currentBase = nextBase ?? (isRestack ? null : currentBase);
+    currentHeadIsRestack = isRestack;
+    if (isRestack) {
+      confirmedRestackCount += 1;
+      caughtFailureOnRestack ||= isFailedRunStatus(run.status);
+    }
+  }
+  return { confirmedRestackCount, caughtFailureOnRestack };
+}
+
+function analyzeSinglePrRuns(
+  pr: number,
+  runs: readonly WoodpeckerPipelineItem[],
+  evidence: PrRestackEvidence,
+): {
+  readonly sawGreen: boolean;
+  readonly confirmedRestackCount: number;
+  readonly caughtFailureOnRestack: boolean;
+} {
+  const ordered = [...runs].sort((a, b) => a.number - b.number);
+  const firstGreenIdx = ordered.findIndex(
+    (run) => run.status.toLowerCase() === "success",
+  );
+  const firstGreen = ordered[firstGreenIdx];
+  if (firstGreenIdx === -1 || firstGreen === undefined) {
+    return {
+      sawGreen: false,
+      confirmedRestackCount: 0,
+      caughtFailureOnRestack: false,
+    };
+  }
+  const staleBlockedHeads =
+    evidence.staleBlockedByPr.get(pr) ?? new Set<string>();
+  const resolveBase = (run: WoodpeckerPipelineItem): string | null =>
+    run.mergeBaseSha ?? evidence.mergeBases.get(run.commit) ?? null;
   return {
-    sawGreen,
-    postGreenCommitCount: postGreenCommits.size,
-    caughtFailureAfterGreen,
+    sawGreen: true,
+    ...analyzeAfterFirstGreen(
+      firstGreen,
+      ordered.slice(firstGreenIdx + 1),
+      staleBlockedHeads,
+      resolveBase,
+    ),
   };
 }
 
 export function summarizePrPipelines(
   pipelines: readonly WoodpeckerPipelineItem[],
+  options?: SummarizePrOptions,
 ): ImpactScorecard["pullRequests"] {
   const byPr = groupReadyPipelinesByPr(pipelines);
+  const evidence = buildPrRestackEvidence(options);
   let prsWithGreenHead = 0;
   let postGreenRestackedPrs = 0;
   let twoPlusRestackedPrs = 0;
   let skewsCaughtOnRestack = 0;
 
-  for (const runs of byPr.values()) {
-    const outcome = analyzeSinglePrRuns(runs);
-    if (!outcome.sawGreen) {
-      continue;
-    }
+  for (const [pr, runs] of byPr.entries()) {
+    const outcome = analyzeSinglePrRuns(pr, runs, evidence);
+    if (!outcome.sawGreen) continue;
     prsWithGreenHead += 1;
-    if (outcome.postGreenCommitCount > 0) {
-      postGreenRestackedPrs += 1;
-    }
-    if (outcome.postGreenCommitCount >= 2) {
-      twoPlusRestackedPrs += 1;
-    }
-    if (outcome.caughtFailureAfterGreen) {
-      skewsCaughtOnRestack += 1;
-    }
+    if (outcome.confirmedRestackCount > 0) postGreenRestackedPrs += 1;
+    if (outcome.confirmedRestackCount >= 2) twoPlusRestackedPrs += 1;
+    if (outcome.caughtFailureOnRestack) skewsCaughtOnRestack += 1;
   }
 
   return {
@@ -257,13 +389,9 @@ export function parseReceiptsContent(
   const results: ImpactReceipt[] = [];
   for (const rawLine of content.split("\n")) {
     const trimmed = rawLine.trim();
-    if (trimmed === "") {
-      continue;
-    }
+    if (trimmed === "") continue;
     const parsed = ImpactReceiptSchema.safeParse(JSON.parse(trimmed));
-    if (!parsed.success) {
-      continue;
-    }
+    if (!parsed.success) continue;
     const ts = Date.parse(parsed.data.timestamp);
     if (Number.isFinite(ts) && ts >= sinceMs && ts <= untilMs) {
       results.push(parsed.data);
@@ -284,21 +412,12 @@ export function summarizeReceipts(
   const blocksByPr = new Map<number, number>();
 
   for (const item of receipts) {
-    switch (item.verdict) {
-      case "up_to_date":
-        upToDate += 1;
-        break;
-      case "disjoint_clean":
-        disjointClean += 1;
-        break;
-      case "stale_overlap":
-        if (item.bypassed) {
-          staleBypassed += 1;
-        } else {
-          staleBlocked += 1;
-          blocksByPr.set(item.pr, (blocksByPr.get(item.pr) ?? 0) + 1);
-        }
-        break;
+    if (item.verdict === "up_to_date") upToDate += 1;
+    else if (item.verdict === "disjoint_clean") disjointClean += 1;
+    else if (item.bypassed) staleBypassed += 1;
+    else {
+      staleBlocked += 1;
+      blocksByPr.set(item.pr, (blocksByPr.get(item.pr) ?? 0) + 1);
     }
   }
 
@@ -352,13 +471,11 @@ export function evaluateThresholds(input: {
       ],
     };
   }
-
   const keepMet =
     effectiveRestackRate < THRESHOLDS.keepMaxPostGreenRestackRate &&
     input.pullRequests.twoPlusRestackRate <
       THRESHOLDS.keepMaxTwoPlusRestackRate &&
     input.main.verifyOnsetsPerDay <= THRESHOLDS.keepMaxVerifyOnsetsPerDay;
-
   if (keepMet && input.pullRequests.prsWithGreenHead >= 5) {
     return {
       verdict: "KEEP",
@@ -370,7 +487,6 @@ export function evaluateThresholds(input: {
       rollbackActions: [],
     };
   }
-
   return {
     verdict: "MONITOR",
     reasons: [
@@ -378,36 +494,4 @@ export function evaluateThresholds(input: {
     ],
     rollbackActions: [],
   };
-}
-
-function pct(rate: number): string {
-  return `${(rate * 100).toFixed(1)}%`;
-}
-
-export function formatImpactMarkdown(scorecard: ImpactScorecard): string {
-  const lines = [
-    `## Merge-Guard Impact Scorecard (${scorecard.window.since} .. ${scorecard.window.until})`,
-    "",
-    `**Window:** ${scorecard.window.days.toFixed(2)} day(s) | **Verdict:** **${scorecard.decision.verdict}**`,
-    "",
-    "| Metric | Nov 10–23 Baseline (14d) | Observed Window | Keep Threshold | Rollback Trigger |",
-    "| --- | ---: | ---: | ---: | ---: |",
-    `| \`main\` \`verify\` failure onsets / day | ${scorecard.baseline.verifyOnsetsPerDay.toFixed(2)} (${scorecard.baseline.staleSkewIncidentsPerDay.toFixed(2)} skew) | ${scorecard.main.verifyOnsetsPerDay.toFixed(2)} (${String(scorecard.main.verifyFailureOnsets)} onsets / ${String(scorecard.main.completedVerifyPipelines)} runs) | <= 0.50 / day | — |`,
-    `| Post-green PR restack rate (Woodpecker) | ${pct(scorecard.baseline.postGreenRestackRate)} | ${pct(scorecard.pullRequests.postGreenRestackRate)} (${String(scorecard.pullRequests.postGreenRestackedPrs)} / ${String(scorecard.pullRequests.prsWithGreenHead)} PRs) | < 25.0% | > 35.0% |`,
-    `| \`pr-land.ndjson\` stale block rate | 0.0% | ${scorecard.receipts.available ? `${pct(scorecard.receipts.staleBlockRate)} (${String(scorecard.receipts.staleBlocked)} / ${String(scorecard.receipts.totalEvaluations)})` : "n/a (no local file)"} | < 25.0% | > 35.0% |`,
-    `| \`>= 2\` post-green restack rate | ${pct(scorecard.baseline.twoPlusRestackRate)} | ${pct(scorecard.pullRequests.twoPlusRestackRate)} (${String(scorecard.pullRequests.twoPlusRestackedPrs)} / ${String(scorecard.pullRequests.prsWithGreenHead)} PRs) | < 3.0% | >= 5.0% |`,
-    `| Disjoint behind-\`main\` merges allowed | — | ${scorecard.receipts.available ? String(scorecard.receipts.disjointClean) : "n/a"} | — | — |`,
-    `| Skews caught on post-green restack | 0 | ${String(scorecard.pullRequests.skewsCaughtOnRestack)} | — | — |`,
-    "",
-    "### Rationale",
-    ...scorecard.decision.reasons.map((reason) => `- ${reason}`),
-  ];
-  if (scorecard.decision.rollbackActions.length > 0) {
-    lines.push(
-      "",
-      "### Rollback Actions",
-      ...scorecard.decision.rollbackActions.map((action) => `- ${action}`),
-    );
-  }
-  return lines.join("\n");
 }

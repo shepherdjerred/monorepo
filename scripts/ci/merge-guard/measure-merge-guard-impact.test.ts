@@ -17,7 +17,27 @@ afterEach(async () => {
   }
 });
 
-describe("merge-guard impact model", () => {
+function makePrRun(options: {
+  readonly number: number;
+  readonly pr: number;
+  readonly commitLabel: string;
+  readonly status: string;
+  readonly mergeBaseSha?: string | undefined;
+}) {
+  return {
+    number: options.number,
+    commit: options.commitLabel.padEnd(40, "0"),
+    ...(options.mergeBaseSha === undefined
+      ? {}
+      : { mergeBaseSha: options.mergeBaseSha }),
+    status: options.status,
+    event: "pull_request",
+    ref: `refs/pull/${String(options.pr)}/head`,
+    workflows: [],
+  };
+}
+
+describe("merge-guard main verify onset and threshold model", () => {
   test("counts verify failure onset streaks separately from image-only main failures", () => {
     const summary = summarizeMainPipelines(
       [
@@ -45,13 +65,6 @@ describe("merge-guard impact model", () => {
         {
           number: 103,
           commit: "d".repeat(40),
-          status: "success",
-          event: "push",
-          workflows: [{ name: "verify", state: "success" }],
-        },
-        {
-          number: 104,
-          commit: "e".repeat(40),
           status: "failure",
           event: "push",
           workflows: [
@@ -59,73 +72,22 @@ describe("merge-guard impact model", () => {
             { name: "images", state: "failure" },
           ],
         },
+        {
+          number: 104,
+          commit: "e".repeat(40),
+          status: "failure",
+          event: "push",
+          workflows: [{ name: "verify", state: "failure" }],
+        },
       ],
       7,
     );
     expect(summary).toEqual({
       pushPipelines: 5,
       completedVerifyPipelines: 5,
-      verifyFailedPipelines: 2,
-      verifyFailureOnsets: 1,
-      verifyOnsetsPerDay: 1 / 7,
-    });
-  });
-
-  test("measures post-green PR restacks, >=2 restacks, and skews caught on restack", () => {
-    const prSummary = summarizePrPipelines([
-      // PR #10: green once, never restacked
-      {
-        number: 1,
-        commit: "1".repeat(40),
-        status: "success",
-        event: "pull_request",
-        ref: "refs/pull/10/head",
-        workflows: [],
-      },
-      // PR #11: green on head A, restacked onto head B which caught a verify failure, then fixed on head C
-      {
-        number: 2,
-        commit: "a".repeat(40),
-        status: "success",
-        event: "pull_request",
-        ref: "refs/pull/11/head",
-        workflows: [],
-      },
-      {
-        number: 3,
-        commit: "b".repeat(40),
-        status: "failure",
-        event: "pull_request",
-        ref: "refs/pull/11/head",
-        workflows: [],
-      },
-      {
-        number: 4,
-        commit: "c".repeat(40),
-        status: "success",
-        event: "pull_request",
-        ref: "refs/pull/11/head",
-        workflows: [],
-      },
-      // Draft PR #12 ignored
-      {
-        number: 5,
-        commit: "d".repeat(40),
-        status: "success",
-        event: "pull_request",
-        pr_draft: true,
-        ref: "refs/pull/12/head",
-        workflows: [],
-      },
-    ]);
-    expect(prSummary).toEqual({
-      evaluatedPrs: 2,
-      prsWithGreenHead: 2,
-      postGreenRestackedPrs: 1,
-      postGreenRestackRate: 0.5,
-      twoPlusRestackedPrs: 1,
-      twoPlusRestackRate: 0.5,
-      skewsCaughtOnRestack: 1,
+      verifyFailedPipelines: 3,
+      verifyFailureOnsets: 2,
+      verifyOnsetsPerDay: 2 / 7,
     });
   });
 
@@ -174,6 +136,138 @@ describe("merge-guard impact model", () => {
     expect(rollbackDecision.rollbackActions.join("\n")).toContain(
       "--allow-stale-base",
     );
+  });
+});
+
+describe("summarizePrPipelines restack correlation", () => {
+  test("distinguishes confirmed restacks from ordinary post-green review fixes and repair commits", () => {
+    const base1 = "1".repeat(40);
+    const base2 = "2".repeat(40);
+    const base3 = "3".repeat(40);
+
+    const prSummary = summarizePrPipelines(
+      [
+        // PR #10: green on A, ordinary review fix on B (same base) fails, C passes — 0 restacks, 0 skews
+        makePrRun({
+          number: 1,
+          pr: 10,
+          commitLabel: "10a",
+          status: "success",
+          mergeBaseSha: base1,
+        }),
+        makePrRun({
+          number: 2,
+          pr: 10,
+          commitLabel: "10b",
+          status: "failure",
+          mergeBaseSha: base1,
+        }),
+        makePrRun({
+          number: 3,
+          pr: 10,
+          commitLabel: "10c",
+          status: "success",
+          mergeBaseSha: base1,
+        }),
+        // PR #11: green on A (base1), restacked onto base2 (B) catching verify failure, fixed on C (base2) — 1 restack, 1 skew
+        makePrRun({
+          number: 4,
+          pr: 11,
+          commitLabel: "11a",
+          status: "success",
+          mergeBaseSha: base1,
+        }),
+        makePrRun({
+          number: 5,
+          pr: 11,
+          commitLabel: "11b",
+          status: "failure",
+          mergeBaseSha: base2,
+        }),
+        makePrRun({
+          number: 6,
+          pr: 11,
+          commitLabel: "11c",
+          status: "success",
+          mergeBaseSha: base2,
+        }),
+        // PR #13: two genuine restacks (base1 -> base2 -> base3)
+        makePrRun({
+          number: 7,
+          pr: 13,
+          commitLabel: "13a",
+          status: "success",
+          mergeBaseSha: base1,
+        }),
+        makePrRun({
+          number: 8,
+          pr: 13,
+          commitLabel: "13b",
+          status: "success",
+          mergeBaseSha: base2,
+        }),
+        makePrRun({
+          number: 9,
+          pr: 13,
+          commitLabel: "13c",
+          status: "success",
+          mergeBaseSha: base3,
+        }),
+        // PR #14: restack evidenced via pr-land stale_overlap receipt when mergeBaseSha is absent, followed by repair commit
+        makePrRun({
+          number: 10,
+          pr: 14,
+          commitLabel: "14a",
+          status: "success",
+        }),
+        makePrRun({
+          number: 11,
+          pr: 14,
+          commitLabel: "14b",
+          status: "failure",
+        }),
+        makePrRun({
+          number: 12,
+          pr: 14,
+          commitLabel: "14c",
+          status: "success",
+        }),
+        // Draft PR #12 ignored
+        {
+          ...makePrRun({
+            number: 13,
+            pr: 12,
+            commitLabel: "12d",
+            status: "success",
+          }),
+          pr_draft: true,
+        },
+      ],
+      {
+        receipts: [
+          {
+            timestamp: "2026-11-25T14:00:00.000Z",
+            pr: 14,
+            headSha: "14a".padEnd(40, "0"),
+            mergeBaseSha: base1,
+            mainHeadSha: base2,
+            behindBy: 3,
+            verdict: "stale_overlap",
+            bypassed: false,
+            reasons: ["workspace dependency overlap: @shepherdjerred/toolkit"],
+          },
+        ],
+      },
+    );
+    expect(prSummary).toEqual({
+      evaluatedPrs: 4,
+      prsWithGreenHead: 4,
+      postGreenRestackedPrs: 3,
+      postGreenRestackRate: 3 / 4,
+      twoPlusRestackedPrs: 1,
+      twoPlusRestackRate: 1 / 4,
+      skewsCaughtOnRestack: 2,
+    });
   });
 });
 
