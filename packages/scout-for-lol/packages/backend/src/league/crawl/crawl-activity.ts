@@ -12,7 +12,6 @@ import {
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { writeCrawlInboxSegment } from "#src/report-lake/crawl/crawl-inbox.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { crawlHardDisabledIn } from "./crawl-config.ts";
 import { createS3CrawlObjectStore } from "./crawl-object-store.ts";
 import { createPrismaCrawlStore } from "./crawl-prisma-store.ts";
 import { createCrawlRiotClient } from "./crawl-riot-client.ts";
@@ -40,11 +39,9 @@ function crawlRiotClient() {
   return crawlRiot;
 }
 
-/** Whether the crawl runs here: the flag, and never in production before gate 3. */
+/** Whether the crawl runs here: the `scout-participant-crawl-enabled` flag alone decides, in every environment. */
 export function crawlEnabledHere(): boolean {
-  return (
-    participantCrawlEnabled() && !crawlHardDisabledIn(configuration.environment)
-  );
+  return participantCrawlEnabled();
 }
 
 /** One scheduled crawl tick, wired to PostgreSQL, S3 and the crawl Riot client. */

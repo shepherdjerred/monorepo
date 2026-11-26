@@ -21,11 +21,17 @@ const CATCHUP_LIVE = "1 minute";
 const INITIAL_PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
+// The text is persisted in live schedule state, which is how reconciliation
+// recognises the pause as its own; do not reword it.
 const CRAWL_PAUSE_NOTE =
   "Paused until the Scout beta worker bundle exports scoutParticipantCrawlWorkflow and the crawl is enabled";
 
-// The crawl's pause is retired on beta only: its worker bundle is live and the
-// crawl flag is on. Production keeps it paused.
+// Reconciliation clears the crawl's created pause in both stages: both worker
+// bundles export the workflow, and the activity is a no-op until the
+// `scout-participant-crawl-enabled` flag is on for that stage.
+const CRAWL_RETIRED_PAUSE_NOTES = [CRAWL_PAUSE_NOTE];
+
+// Every other Scout schedule's migration pauses are retired on beta only.
 const BETA_RETIRED_PAUSE_NOTES = [
   CRAWL_PAUSE_NOTE,
   INITIAL_PAUSE_NOTE,
@@ -51,8 +57,10 @@ type ScoutIntervalSchedule = ScoutSchedule & {
   readonly catchupWindow?: "1 minute" | "5 minutes" | "1 hour";
   readonly offset?: "5 minutes";
   readonly initiallyActive?: true;
-  /** Created paused in every stage, with this note, until an enablement PR clears it. */
+  /** Created paused in every stage, with this note. */
   readonly pauseNote?: string;
+  /** Reconciliation clears `pauseNote` in every stage, not on beta only. */
+  readonly clearsPauseInEveryStage?: true;
 };
 
 type ScoutCronSchedule = ScoutSchedule & {
@@ -85,7 +93,9 @@ function intervalSchedule(
     memo: `Scout ${stage} ${schedule.name}`,
     ...(stage === "beta"
       ? { retiredPauseNotes: BETA_RETIRED_PAUSE_NOTES }
-      : {}),
+      : schedule.clearsPauseInEveryStage === true
+        ? { retiredPauseNotes: CRAWL_RETIRED_PAUSE_NOTES }
+        : {}),
     ...(schedule.pauseNote === undefined
       ? stage === "beta" || schedule.initiallyActive
         ? {}
@@ -142,12 +152,13 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       catchupWindow: CATCHUP_TIGHT,
     }),
     intervalSchedule(stage, {
-      // The participant crawl ships dark. Schedules deploy with the central
-      // worker, independently of the Scout images, so nothing orders this
-      // schedule's first tick after the routed beta bundle exports the
-      // workflow. It is created paused in both stages; reconciliation clears
-      // the pause on beta, where that bundle is live and the crawl is enabled.
+      // Schedules deploy with the central worker, independently of the Scout
+      // images, so nothing orders this schedule's first tick after the routed
+      // bundle exports the workflow. It is created paused in both stages and
+      // reconciliation clears the pause in both. The crawl itself stays a
+      // no-op in a stage until its flag is on there.
       pauseNote: CRAWL_PAUSE_NOTE,
+      clearsPauseInEveryStage: true,
       name: "participant-crawl",
       workflowType: SCOUT_WORKFLOW_NAMES.participantCrawl,
       args: [{ stage, trigger: "schedule" }],
