@@ -53,7 +53,7 @@ export function FocusedHeader({
     <header className="ar-focus-head">
       <div className="ar-focus-title">
         <p className="ar-crumbs">
-          <Link to={`/b/${boardSlug}?grid=1`}>{boardTitle}</Link>
+          <Link to={`/b/${boardSlug}?view=canvas`}>{boardTitle}</Link>
         </p>
         <h1>{title}</h1>
         <p className="ar-focus-meta">

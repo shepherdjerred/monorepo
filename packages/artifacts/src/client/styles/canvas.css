@@ -1,0 +1,213 @@
+/*
+ * The board canvas. Three layers share the viewport: the world (scaled by the
+ * camera), the unscaled overlay (chips, selection, pins, tools) and the pan
+ * blanket. Nothing here transitions or animates, so reduced motion has nothing
+ * to turn off: the camera jumps, and chips and pins follow it exactly.
+ */
+.ar-cv {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ui-track);
+}
+.ar-cv-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ar-cv[data-tool="hand"] .ar-cv-viewport,
+.ar-cv-viewport[data-pan="true"] {
+  cursor: grab;
+}
+.ar-cv[data-commenting="true"] .ar-cv-viewport {
+  cursor: crosshair;
+}
+.ar-cv-blanket {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  cursor: grabbing;
+}
+
+/* World: scaled by `translate() scale()`; `will-change` is set only while moving. */
+.ar-cv-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+.ar-cf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--ui-panel);
+  box-shadow:
+    0 0 0 1px var(--ui-line),
+    0 2px 14px color-mix(in srgb, black 14%, transparent);
+  transform-origin: 0 0;
+}
+.ar-cf-body {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Overlay: constant size whatever the zoom. */
+.ar-cv-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ar-cv-chips,
+.ar-cv-pins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ar-cv-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 2px 0 8px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  font-size: 12.5px;
+  pointer-events: auto;
+}
+.ar-cv-chip[data-selected="true"] {
+  border-color: var(--ui-accent);
+}
+.ar-cv-chip-main {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ui-ink);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.ar-cv-chip-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-cv-chip[data-compact="true"] .ar-tag,
+.ar-cv-chip[data-compact="true"] .ar-icon-button {
+  display: none;
+}
+.ar-cv-chip[data-compact="true"][data-selected="true"] .ar-icon-button {
+  display: inline-grid;
+}
+.ar-cv-chip .ar-icon-button {
+  flex: none;
+  min-width: 24px;
+  min-height: 24px;
+}
+.ar-cv-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--ui-accent);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.ar-cv-ring[data-active="true"] {
+  border-width: 3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ui-accent) 25%, transparent);
+}
+.ar-cv-exit,
+.ar-cv-pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+}
+.ar-cv-exit .ar-exit-chip {
+  top: 0;
+  right: 0;
+  pointer-events: auto;
+}
+.ar-cv-pin .ar-pin {
+  top: 0;
+  left: 0;
+}
+.ar-cv-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  color: var(--ui-muted);
+  pointer-events: none;
+}
+
+.ar-cv-toolbar {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  box-shadow: 0 2px 10px color-mix(in srgb, black 16%, transparent);
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+.ar-cv-toolbar .ar-icon-button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ui-accent) 18%, transparent);
+  color: var(--ui-accent);
+}
+.ar-cv-zoom {
+  min-width: 52px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.ar-cv-zoom:hover {
+  background: var(--ui-head);
+}
+.ar-cv-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--ui-line);
+}
+.ar-cv .ar-mode-hint {
+  bottom: 64px;
+}
+
+@media (max-width: 900px) {
+  .ar-cv {
+    height: 70dvh;
+  }
+}

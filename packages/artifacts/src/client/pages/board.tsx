@@ -1,98 +1,48 @@
-import { noop } from "#client/lib/noop.ts";
 import { useMemo, useState } from "react";
-import {
-  Link,
-  Navigate,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router";
+import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { useCreateThread } from "#client/data/mutations.ts";
 import { useLiveUpdates } from "#client/data/live.ts";
-import {
-  useArtifactDetails,
-  useBoard,
-  useBoardThreads,
-} from "#client/data/queries.ts";
-import { selectLiveFrames } from "#client/lib/budget.ts";
-import { useShortcuts } from "#client/shell/shortcuts.ts";
+import { useBoard, useBoardThreads } from "#client/data/queries.ts";
+import { Canvas } from "#client/canvas/canvas.tsx";
+import { canvasPins, frameModels } from "#client/canvas/model.ts";
 import { Composer } from "#client/threads/composer.tsx";
 import {
   ThreadList,
   WaitingHeader,
   useThreadFilter,
 } from "#client/threads/thread-panel.tsx";
-import { BoardFrame } from "./board-frame.tsx";
 
 /**
- * The board as a grid of frames in `order`. The body is one component so the
- * free canvas can replace it later; the sidebar and page shell stay.
+ * The board as a free canvas of frames, with the board's threads beside it.
+ * The outline route is the keyboard and screen-reader path to the same data.
  */
 export function BoardPage(): React.JSX.Element {
   const { slug = "" } = useParams();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   useLiveUpdates(slug);
   const board = useBoard(slug);
   const threads = useBoardThreads(slug);
   const create = useCreateThread();
   const [filter, setFilter] = useThreadFilter();
-  const [loaded, setLoaded] = useState<readonly string[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
 
-  const index = board.data?.index;
-  const summaries = useMemo(() => {
-    if (board.data === undefined) return [];
-    const byId = new Map(
-      board.data.artifacts.map((artifact) => [artifact.id, artifact]),
-    );
-    return board.data.index.order.flatMap((id) => {
-      const summary = byId.get(id);
-      const frame = board.data.index.frames[id];
-      return summary === undefined || frame === undefined
-        ? []
-        : [{ summary, frame }];
-    });
-  }, [board.data]);
-
-  const live = selectLiveFrames(
-    summaries.map(({ summary }) => ({ id: summary.id, kind: summary.kind })),
-    loaded,
+  const frames = useMemo(
+    () => (board.data === undefined ? [] : frameModels(board.data)),
+    [board.data],
   );
-  const liveIds = summaries
-    .filter(({ summary }) => live.has(summary.id))
-    .map(({ summary }) => summary.id);
-  const details = useArtifactDetails(liveIds);
-  const detailById = new Map(
-    liveIds.flatMap((id, position) => {
-      const data = details[position]?.data;
-      return data === undefined ? [] : [[id, data] as const];
-    }),
+  const all = useMemo(() => threads.data ?? [], [threads.data]);
+  const pins = useMemo(
+    () => canvasPins(all, new Map(frames.map((frame) => [frame.id, frame]))),
+    [all, frames],
   );
-
-  useShortcuts([
-    {
-      key: "f",
-      run: () => {
-        if (selectedId !== null) void navigate(`/a/${selectedId}`);
-      },
-    },
-    {
-      key: "Enter",
-      run: (event) => {
-        if (selectedId === null || !live.has(selectedId)) return;
-        event.preventDefault();
-        setActiveId(selectedId);
-      },
-    },
-    {
-      key: "Escape",
-      run: () => {
-        setActiveId(null);
-      },
-    },
-  ]);
+  const titles = useMemo(
+    () => new Map(frames.map((frame) => [frame.id, frame.summary.title])),
+    [frames],
+  );
+  const pinNumber = useMemo(
+    () => new Map(pins.map((pin) => [pin.id, pin.index])),
+    [pins],
+  );
 
   if (board.isError)
     return (
@@ -102,7 +52,7 @@ export function BoardPage(): React.JSX.Element {
         <Link to="/">Back to the inbox</Link>
       </main>
     );
-  if (index === undefined || board.data === undefined)
+  if (board.data === undefined)
     return (
       <main className="ar-page" id="content" tabIndex={-1}>
         <p className="ar-empty" role="status">
@@ -111,18 +61,14 @@ export function BoardPage(): React.JSX.Element {
       </main>
     );
 
-  // A board launched on one artifact opens on it; `?grid=1` shows the grid.
-  const { launch } = index;
+  // A board launched on one artifact opens on it; `?view=canvas` shows the canvas.
+  const { launch } = board.data.index;
   if (
     launch.view === "focused" &&
     launch.artifactId !== undefined &&
-    !params.has("grid")
+    params.get("view") !== "canvas"
   )
     return <Navigate replace to={`/a/${launch.artifactId}`} />;
-
-  const boardThreads = (threads.data ?? []).filter(
-    (thread) => thread.anchor.type === "board",
-  );
 
   return (
     <main className="ar-board" id="content" tabIndex={-1}>
@@ -134,48 +80,32 @@ export function BoardPage(): React.JSX.Element {
           List view
         </Link>
       </header>
-      <div className="ar-focus-body">
-        <section className="ar-board-body" aria-label="Frames">
-          {summaries.length === 0 ? (
-            <p className="ar-empty">Nothing on this board yet.</p>
-          ) : (
-            <ul className="ar-grid" data-testid="board-grid">
-              {summaries.map(({ summary, frame }) => (
-                <BoardFrame
-                  key={summary.id}
-                  summary={summary}
-                  detail={detailById.get(summary.id)}
-                  live={live.has(summary.id)}
-                  aspect={frame.w / frame.h}
-                  active={activeId === summary.id}
-                  selected={selectedId === summary.id}
-                  onActiveChange={(on) => {
-                    setActiveId(on ? summary.id : null);
-                  }}
-                  onSelect={setSelectedId}
-                  onLoad={() => {
-                    setLoaded((current) => [
-                      ...current.filter((id) => id !== summary.id),
-                      summary.id,
-                    ]);
-                  }}
-                />
-              ))}
-            </ul>
-          )}
-        </section>
+      <div className="ar-focus-body ar-board-body">
+        <Canvas
+          key={slug}
+          slug={slug}
+          frames={frames}
+          pins={pins}
+          selectedThreadId={selectedThreadId}
+          onSelectThread={setSelectedThreadId}
+        />
         <aside className="ar-sidebar" aria-label="Board threads">
           <WaitingHeader scope={{ type: "board", board: slug }} />
-          <h2 className="ar-side-title">Board comments</h2>
+          <h2 className="ar-side-title">Comments</h2>
           <ThreadList
-            threads={boardThreads}
+            threads={all}
             filter={filter}
             onFilter={setFilter}
-            selectedId={null}
-            onSelect={noop}
+            selectedId={selectedThreadId}
+            onSelect={setSelectedThreadId}
             currentVersion={null}
-            indexOf={() => null}
-            empty="No board comments. Comments on a frame are on its full-size view."
+            indexOf={(thread) => pinNumber.get(thread.id) ?? null}
+            contextOf={(thread) =>
+              thread.artifactId === null
+                ? null
+                : (titles.get(thread.artifactId) ?? null)
+            }
+            empty="No comments yet. Press C and click the canvas to pin one."
           />
           <Composer
             label="Comment on the board"

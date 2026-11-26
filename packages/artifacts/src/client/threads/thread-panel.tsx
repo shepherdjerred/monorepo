@@ -61,6 +61,7 @@ export function ThreadList({
   viewedVersion,
   indexOf,
   onViewVersion,
+  contextOf,
   empty,
 }: {
   readonly threads: readonly ThreadView[];
@@ -72,6 +73,8 @@ export function ThreadList({
   readonly viewedVersion?: number | null;
   readonly indexOf: (thread: ThreadView) => number | null;
   readonly onViewVersion?: ((number: number) => void) | undefined;
+  /** Names the place of a thread when the list spans several artifacts. */
+  readonly contextOf?: ((thread: ThreadView) => string | null) | undefined;
   readonly empty: string;
 }): React.JSX.Element {
   const shown = filterThreads(threads, filter);
@@ -103,6 +106,7 @@ export function ThreadList({
               selected={thread.id === selectedId}
               currentVersion={currentVersion}
               viewedVersion={viewedVersion ?? currentVersion}
+              context={contextOf?.(thread) ?? null}
               onSelect={onSelect}
               onViewVersion={onViewVersion}
             />

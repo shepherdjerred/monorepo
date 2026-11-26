@@ -201,10 +201,13 @@ export function ThreadCard({
   selected,
   currentVersion,
   viewedVersion = currentVersion,
+  context = null,
   onSelect,
   onViewVersion,
 }: {
   readonly thread: ThreadView;
+  /** Where the thread is when the list mixes several places (an artifact's title). */
+  readonly context?: string | null;
   readonly index: number | null;
   readonly selected: boolean;
   readonly currentVersion: number | null;
@@ -244,7 +247,10 @@ export function ThreadCard({
               {index}
             </span>
           )}
-          <span>{anchorLabel(thread.anchor)}</span>
+          <span>
+            {context === null ? "" : `${context} · `}
+            {anchorLabel(thread.anchor)}
+          </span>
         </button>
         {stale && thread.versionNumber !== null ? (
           <>
