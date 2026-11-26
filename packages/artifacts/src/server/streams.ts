@@ -43,22 +43,28 @@ const EventPayloadSchema = z.looseObject({
 
 type Notice = Extract<HubMessage, { type: "event" }>;
 
-/** Resolves `idle` on the next `wake` or after one heartbeat; leaves no timer. */
+/**
+ * `idle` settles on the next `wake` or after one heartbeat, and leaves no
+ * timer behind. A `wake` while nothing is idle is dropped: the loop re-reads
+ * its queue before it idles again.
+ */
 function createWaiter(heartbeatMs: number) {
-  let wakeUp: (() => void) | undefined;
+  let idling: PromiseWithResolvers<undefined> | undefined;
   return {
-    wake: () => wakeUp?.(),
-    idle: () =>
-      new Promise<void>((resolve) => {
-        const timer = setTimeout(() => {
-          wakeUp?.();
-        }, heartbeatMs);
-        wakeUp = () => {
-          clearTimeout(timer);
-          wakeUp = undefined;
-          resolve();
-        };
-      }),
+    wake: () => idling?.resolve(undefined),
+    async idle() {
+      const current = Promise.withResolvers<undefined>();
+      idling = current;
+      const timer = setTimeout(() => {
+        current.resolve(undefined);
+      }, heartbeatMs);
+      try {
+        await current.promise;
+      } finally {
+        clearTimeout(timer);
+        idling = undefined;
+      }
+    },
   };
 }
 

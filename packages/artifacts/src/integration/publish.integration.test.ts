@@ -68,6 +68,25 @@ async function expectHttp(work: Promise<unknown>, status: number) {
   throw new Error(`expected HTTP ${String(status)}`);
 }
 
+/** Opens an upload session for a one-file board and returns it with its request. */
+async function openSinglePage(
+  board: string,
+  page: { body: string; mediaType: string },
+) {
+  const request = {
+    board,
+    title: "Concept",
+    entryPath: "index.html",
+    idempotencyKey: crypto.randomUUID(),
+    expectedCurrentVersionId: null,
+    files: await manifest({ "index.html": page }),
+  };
+  const created = z
+    .object({ uploadId: z.string() })
+    .parse(await agent.json("/api/uploads", { body: request }));
+  return { request, created };
+}
+
 describe("publish", () => {
   it("uploads, commits, places a frame and serves the version from a token URL", async () => {
     const { committed } = await publish(
@@ -282,18 +301,10 @@ describe("retries and board titles", () => {
 
 describe("blob uploads", () => {
   it("refuses a commit with missing blobs and lists them", async () => {
-    const page = unique("missing");
-    const request = {
-      board: "missing",
-      title: "Concept",
-      entryPath: "index.html",
-      idempotencyKey: crypto.randomUUID(),
-      expectedCurrentVersionId: null,
-      files: await manifest({ "index.html": page }),
-    };
-    const created = z
-      .object({ uploadId: z.string() })
-      .parse(await agent.json("/api/uploads", { body: request }));
+    const { request, created } = await openSinglePage(
+      "missing",
+      unique("missing"),
+    );
     const body = await expectHttp(
       agent.json(`/api/uploads/${created.uploadId}/commit`),
       409,
@@ -303,17 +314,7 @@ describe("blob uploads", () => {
 
   it("deletes the object and answers 422 on a sha256 or size mismatch", async () => {
     const page = unique("mismatch");
-    const request = {
-      board: "mismatch",
-      title: "Concept",
-      entryPath: "index.html",
-      idempotencyKey: crypto.randomUUID(),
-      expectedCurrentVersionId: null,
-      files: await manifest({ "index.html": page }),
-    };
-    const created = z
-      .object({ uploadId: z.string() })
-      .parse(await agent.json("/api/uploads", { body: request }));
+    const { request, created } = await openSinglePage("mismatch", page);
     const digest = request.files[0]?.sha256 ?? "";
     const before = runtime.store.keys().length;
     await expectHttp(

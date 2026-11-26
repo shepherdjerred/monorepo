@@ -1,49 +1,20 @@
-import path from "node:path";
-import { PrismaPg } from "@prisma/adapter-pg";
-import {
-  createEmptyTestDatabase,
-  ensureSharedPostgres,
-  envWithPostgresBin,
-  runCommandAsync,
-  type OwnedTestDatabaseHandle,
-} from "@shepherdjerred/test-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { PrismaClient } from "#generated/prisma/client.ts";
+import type { PrismaClient } from "#generated/prisma/client.ts";
+import { createMigratedDatabase } from "#testing/database.ts";
 
-const packageRoot = path.resolve(import.meta.dir, "../..");
 const SHA = "a".repeat(64);
 
-let dbHandle: OwnedTestDatabaseHandle | undefined;
-let databaseUrl = "";
+let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
 let prisma: PrismaClient;
 
 beforeAll(async () => {
-  const shared = ensureSharedPostgres();
-  dbHandle = await createEmptyTestDatabase({
-    prefix: "tracker",
-    kind: "test",
-    adminUrl: shared.superUrl,
-  });
-  databaseUrl = dbHandle.url;
-
-  const migrate = await runCommandAsync(["bun", "run", "migrate:deploy"], {
-    cwd: packageRoot,
-    env: envWithPostgresBin({ DATABASE_URL: databaseUrl }),
-  });
-  if (migrate.exitCode !== 0) {
-    throw new Error(
-      `artifacts prisma migrate deploy failed: ${migrate.stderr || migrate.stdout}`,
-    );
-  }
-  prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: databaseUrl }),
-  });
+  database = await createMigratedDatabase();
+  prisma = database.db;
 });
 
 afterAll(async () => {
-  await prisma.$disconnect();
-  await dbHandle?.drop();
+  await database.close();
 });
 
 async function seedActor() {
@@ -97,7 +68,7 @@ async function constraintViolation(work: Promise<unknown>): Promise<string> {
 describe("artifacts migration", () => {
   it("notifies artifacts_events with ids only when an Event row commits", async () => {
     const actor = await seedActor();
-    const listener = new pg.Client({ connectionString: databaseUrl });
+    const listener = new pg.Client({ connectionString: database.url });
     await listener.connect();
     try {
       const received = new Promise<pg.Notification>((resolve) => {
@@ -129,7 +100,7 @@ describe("artifacts migration", () => {
 
   it("does not notify for an Event row that rolls back", async () => {
     const actor = await seedActor();
-    const listener = new pg.Client({ connectionString: databaseUrl });
+    const listener = new pg.Client({ connectionString: database.url });
     await listener.connect();
     try {
       const seen: pg.Notification[] = [];
@@ -256,18 +227,17 @@ describe("artifacts migration", () => {
       prisma.blob.delete({ where: { sha256 } }),
     );
     expect(message.toLowerCase()).toContain("foreign key");
-    expect(
-      await constraintViolation(
-        prisma.versionFile.create({
-          data: {
-            versionId: version.id,
-            path: "missing.js",
-            sha256: "d".repeat(64),
-            mediaType: "text/javascript",
-          },
-        }),
-      ),
-    ).toBeTruthy();
+    const missing = await constraintViolation(
+      prisma.versionFile.create({
+        data: {
+          versionId: version.id,
+          path: "missing.js",
+          sha256: "d".repeat(64),
+          mediaType: "text/javascript",
+        },
+      }),
+    );
+    expect(missing.toLowerCase()).toContain("foreign key");
   });
 
   it("indexes only unhandled deliveries", async () => {

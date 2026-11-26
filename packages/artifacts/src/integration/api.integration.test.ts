@@ -189,7 +189,7 @@ describe("threads", () => {
   });
 
   it("never delivers an agent's own comment", async () => {
-    const thread = z.object({ id: z.string() }).parse(
+    const thread = z.object({ id: z.uuid() }).parse(
       await agent.mutate("threads.create", {
         board: scene.slug,
         artifactId: scene.artifactId,
@@ -198,7 +198,7 @@ describe("threads", () => {
         body: "a note from the agent",
       }),
     );
-    expect(thread.id).toBeTruthy();
+    expect(thread.id).toHaveLength(36);
     const claim = z
       .object({
         items: z.array(z.object({ comment: z.object({ body: z.string() }) })),

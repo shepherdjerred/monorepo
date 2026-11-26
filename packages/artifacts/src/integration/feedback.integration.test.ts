@@ -287,14 +287,14 @@ describe("delivery", () => {
 
   it("includes board-level threads on boards holding the caller's artifacts", async () => {
     const scene = await scenario("pins:/work/board");
-    const thread = z.object({ id: z.string() }).parse(
+    const thread = z.object({ id: z.uuid() }).parse(
       await human.mutate("threads.create", {
         board: scene.slug,
         anchor: { type: "board", page: 0, x: 10, y: 20 },
         body: "whole board note",
       }),
     );
-    expect(thread.id).toBeTruthy();
+    expect(thread.id).toHaveLength(36);
     const items = await claim(make(fast, "board-owner", "pins:/work/board"));
     expect(items.items.map((item) => item.comment.body)).toEqual([
       "whole board note",
