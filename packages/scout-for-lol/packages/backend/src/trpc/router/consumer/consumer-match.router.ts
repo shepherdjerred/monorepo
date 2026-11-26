@@ -22,12 +22,12 @@ import {
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-  fetchTimelineFramesAtTime,
+  fetchTimelineCheckpointFrames,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   buildRoleMatchups,
-  LANE_DELTA_MINUTE,
+  LANE_DELTA_CHECKPOINT_MS,
 } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   fetchMatchTimelineEvents,
@@ -283,9 +283,9 @@ export const consumerMatchRouter = router({
         limit: 40,
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
-      fetchTimelineFramesAtTime({
+      fetchTimelineCheckpointFrames({
         matchId: input.matchId,
-        timestampMs: LANE_DELTA_MINUTE * 60_000,
+        checkpointMs: LANE_DELTA_CHECKPOINT_MS,
       }),
     ]);
     return {
@@ -293,7 +293,6 @@ export const consumerMatchRouter = router({
         ...matchView(authorized),
         roleMatchups: buildRoleMatchups({
           rows: authorized.rows,
-          coverage,
           frames: laneDeltaFrames,
         }),
       },

@@ -1,13 +1,12 @@
 import { LANE_ORDER, parseLane, type Lane } from "@scout-for-lol/data";
 import type {
   LakeMatchParticipantRow,
-  LakeTimelineCoverage,
   LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
 export const LANE_DELTA_MINUTE = 15;
-const LANE_DELTA_TIMESTAMP_MS = LANE_DELTA_MINUTE * 60_000;
+export const LANE_DELTA_CHECKPOINT_MS = LANE_DELTA_MINUTE * 60_000;
 
 export type RoleMatchup = {
   role: Lane;
@@ -42,9 +41,13 @@ function uniqueRoleParticipant(
   return candidates.length === 1 ? (candidates[0] ?? null) : null;
 }
 
+/**
+ * `frames` are the participants' frames at the 15:00 checkpoint
+ * (`fetchTimelineCheckpointFrames`). No frame means the game ended first or the
+ * frame is missing, so the pairing carries no lane result.
+ */
 export function buildRoleMatchups(options: {
   rows: LakeMatchParticipantRow[];
-  coverage: LakeTimelineCoverage | null;
   frames: LaneDeltaFrame[];
 }): RoleMatchup[] | null {
   if (options.rows[0] === undefined || !isStandardRiftGame(options.rows[0])) {
@@ -57,10 +60,7 @@ export function buildRoleMatchups(options: {
   if (options.rows.length !== 10 || blue.length !== 5 || red.length !== 5) {
     return null;
   }
-  const hasAt15 =
-    options.coverage?.last_frame_timestamp_ms !== null &&
-    options.coverage?.last_frame_timestamp_ms !== undefined &&
-    options.coverage.last_frame_timestamp_ms >= LANE_DELTA_TIMESTAMP_MS;
+  const hasAt15 = options.frames.length > 0;
   const framesByParticipant = new Map(
     options.frames.map((frame) => [frame.participant_id, frame] as const),
   );

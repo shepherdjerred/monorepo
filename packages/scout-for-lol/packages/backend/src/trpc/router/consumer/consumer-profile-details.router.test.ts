@@ -12,7 +12,6 @@ import {
 } from "@scout-for-lol/data";
 import type {
   LakeMatchParticipantRow,
-  LakeTimelineCoverage,
   LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
@@ -520,7 +519,8 @@ function matchupFrame(
   xp: number,
 ): LaneDeltaFrame {
   return {
-    frame_timestamp_ms: 900_000,
+    // Riot stamps the 15:00 frame just after the minute.
+    frame_timestamp_ms: 900_303,
     participant_id: participantId,
     total_gold: totalGold,
     minions_killed: creepScore,
@@ -528,17 +528,6 @@ function matchupFrame(
     xp,
   };
 }
-
-const completeAt15Coverage: LakeTimelineCoverage = {
-  coverage_state: "complete",
-  data_version: "2",
-  frame_interval_ms: 60_000,
-  frame_count: 16,
-  event_count: 0,
-  participant_count: 10,
-  first_frame_timestamp_ms: 0,
-  last_frame_timestamp_ms: 900_000,
-};
 
 describe("role-paired match scoreboards", () => {
   const positions = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
@@ -560,18 +549,14 @@ describe("role-paired match scoreboards", () => {
   ]);
 
   test("pairs every standard role and computes blue-minus-red 15-minute deltas", () => {
-    const matchups = buildRoleMatchups({
-      rows,
-      coverage: completeAt15Coverage,
-      frames,
-    });
+    const matchups = buildRoleMatchups({ rows, frames });
     expect(matchups).toHaveLength(5);
     expect(matchups?.[0]).toEqual({
       role: "top",
       blueParticipantId: 1,
       redParticipantId: 6,
       at15: {
-        timestampMs: 900_000,
+        timestampMs: 900_303,
         goldDelta: 500,
         creepScoreDelta: 10,
         xpDelta: 300,
@@ -583,7 +568,6 @@ describe("role-paired match scoreboards", () => {
     expect(
       buildRoleMatchups({
         rows: rows.slice(0, -1),
-        coverage: completeAt15Coverage,
         frames,
       }),
     ).toBeNull();
@@ -598,7 +582,6 @@ describe("role-paired match scoreboards", () => {
       expect(
         buildRoleMatchups({
           rows: rows.map((row) => ({ ...row, ...context })),
-          coverage: completeAt15Coverage,
           frames,
         }),
       ).toBeNull();
@@ -615,7 +598,6 @@ describe("role-paired match scoreboards", () => {
           ...row,
           ...context,
         })),
-        coverage: null,
         frames: [],
       });
       expect(matchups).toHaveLength(5);
@@ -623,11 +605,23 @@ describe("role-paired match scoreboards", () => {
     }
   });
 
-  test("fails when complete coverage omits a required 15-minute frame", () => {
+  test("pairs roles with no lane result when no frame falls at the 15:00 checkpoint", () => {
+    // A game that ended at 14:30, or one missing its 15:00 frame, reads no frames.
+    const matchups = buildRoleMatchups({ rows, frames: [] });
+    expect(matchups).toHaveLength(5);
+    expect(matchups?.map((matchup) => matchup.at15)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  test("fails when the checkpoint frame omits a participant", () => {
     expect(() =>
       buildRoleMatchups({
         rows,
-        coverage: completeAt15Coverage,
         frames: frames.slice(0, -1),
       }),
     ).toThrow(/missing a 15-minute lane frame/);
