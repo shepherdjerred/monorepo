@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/tasknotes-web",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ]
+}
