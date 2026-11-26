@@ -46,7 +46,10 @@ export async function lstatRegularFile(
   }
 }
 
-function sameFile(left: FileIdentity | null, right: FileIdentity): boolean {
+export function isSameFile(
+  left: FileIdentity | null,
+  right: FileIdentity,
+): boolean {
   return (
     left !== null &&
     left.dev === right.dev &&
@@ -191,13 +194,13 @@ export async function replaceWithClone(options: {
     }
     // The clone is a snapshot; it is the checked content only if the source
     // is still the file that was checked.
-    if (!sameFile(await lstatRegularFile(sourcePath), source)) {
+    if (!isSameFile(await lstatRegularFile(sourcePath), source)) {
       return { kind: "changed" };
     }
     const permissions = target.mode & 0o7777;
     await chmod(temporaryPath, permissions);
     await utimes(temporaryPath, target.atimeMs / 1000, target.mtimeMs / 1000);
-    if (!sameFile(await lstatRegularFile(targetPath), target)) {
+    if (!isSameFile(await lstatRegularFile(targetPath), target)) {
       return { kind: "changed" };
     }
     await rename(temporaryPath, targetPath);

@@ -4,16 +4,16 @@ import {
   type CloneFile,
   cloneFileCopyOnWrite,
   directoryDevice,
-} from "./dedupe-clone.ts";
-import {
-  type DedupeContext,
-  type DedupePassResult,
-  type DedupeRefresh,
-  type DedupeRegistry,
-  type DedupeWorktree,
-  dedupeWorktreePass,
-} from "./dedupe-plan.ts";
-import { pruneDedupeState } from "./dedupe-state.ts";
+} from "./dedupe/clone.ts";
+import { dedupeWorktreePass } from "./dedupe/plan.ts";
+import type {
+  DedupeContext,
+  DedupePassResult,
+  DedupeRefresh,
+  DedupeRegistry,
+  DedupeWorktree,
+} from "./dedupe/types.ts";
+import { pruneDedupeState } from "./dedupe/state.ts";
 import {
   canonicalizeExistingPath,
   isPathInside,
@@ -230,6 +230,8 @@ function toAction(
       replacedFiles: pass.replacedFiles,
       replacedBytes: pass.replacedBytes,
       refresh: pass.refresh,
+      filteredFiles: pass.filteredFiles,
+      staleSourceFiles: pass.staleSourceFiles,
     },
   };
   if (!apply) {
@@ -248,6 +250,8 @@ function toAction(
 type DedupeTally = {
   inspectedCount: number;
   matchedWorktree: boolean;
+  filteredFiles: number;
+  staleSourceFiles: number;
   readonly actions: TendActionOutcome[];
   readonly warnings: string[];
 };
@@ -266,6 +270,8 @@ async function dedupeRepository(
   for (const wt of worktrees) {
     const pass = await dedupeWorktreePass(wt, registry, ctx);
     tally.warnings.push(...pass.warnings);
+    tally.filteredFiles += pass.filteredFiles;
+    tally.staleSourceFiles += pass.staleSourceFiles;
     if (!wt.isTarget) {
       continue;
     }
@@ -275,6 +281,27 @@ async function dedupeRepository(
       tally.actions.push(action);
     }
   }
+}
+
+/** What the whole run left alone, and why, as one line per reason. */
+function summaryWarnings(tally: DedupeTally, ctx: DedupeContext): string[] {
+  const warnings: string[] = [];
+  if (tally.filteredFiles > 0) {
+    warnings.push(
+      `${String(tally.filteredFiles)} file(s) left alone: a filter, ident or working-tree-encoding attribute means equal blobs do not prove equal files`,
+    );
+  }
+  if (tally.staleSourceFiles > 0) {
+    warnings.push(
+      `${String(tally.staleSourceFiles)} file(s) left alone: the copy they would be cloned from was no longer the blob its worktree listed; a later run takes them`,
+    );
+  }
+  for (const [device, detail] of ctx.unsupportedDevices) {
+    warnings.push(
+      `Copy-on-write clones are not supported on device ${String(device)} (${detail}); nothing there was replaced`,
+    );
+  }
+  return warnings;
 }
 
 /**
@@ -331,6 +358,8 @@ export async function sweepDedupe(
   const tally: DedupeTally = {
     inspectedCount: 0,
     matchedWorktree: false,
+    filteredFiles: 0,
+    staleSourceFiles: 0,
     actions: [],
     warnings: [],
   };
@@ -354,11 +383,7 @@ export async function sweepDedupe(
       `${options.worktree} is not a worktree that can be deduplicated: it must belong to a repository under ${gitDirs.join(", ")}, not be mid rebase or merge, and not be named by a Forum notice`,
     );
   }
-  for (const [device, detail] of ctx.unsupportedDevices) {
-    tally.warnings.push(
-      `Copy-on-write clones are not supported on device ${String(device)} (${detail}); nothing there was replaced`,
-    );
-  }
+  tally.warnings.push(...summaryWarnings(tally, ctx));
   if (options.apply) {
     await pruneDedupeState(ctx.stateDir);
   }

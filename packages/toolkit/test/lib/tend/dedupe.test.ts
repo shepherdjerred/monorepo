@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import {
   appendFile,
   chmod,
@@ -19,7 +19,8 @@ import {
   type CloneFile,
   cloneFileCopyOnWrite,
   directoryDevice,
-} from "#lib/tend/dedupe-clone.ts";
+} from "#lib/tend/dedupe/clone.ts";
+import { parseAttributedPaths } from "#lib/tend/dedupe/verify.ts";
 import { parseByteSize, resolveTendPaths } from "#lib/tend/paths.ts";
 import { defaultCommandRunner } from "#lib/tend/process-probe.ts";
 import { runTend } from "#lib/tend/runner.ts";
@@ -123,7 +124,9 @@ type Fixture = {
  * `a` then gets one file rewritten at the same size, one grown, and one
  * untracked file; `b` stays clean.
  */
-async function buildFixture(): Promise<Fixture> {
+async function buildFixture(
+  beforeFirstCommit?: (main: string) => Promise<void>,
+): Promise<Fixture> {
   const root = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "tend-dedupe-test-")),
   );
@@ -141,6 +144,7 @@ async function buildFixture(): Promise<Fixture> {
   await Bun.write(path.join(main, "modified.bin"), randomBytes(120_000));
   await Bun.write(path.join(main, "grown.bin"), randomBytes(90_000));
   await Bun.write(path.join(main, "small.txt"), randomBytes(1500));
+  await beforeFirstCommit?.(main);
   await git(main, "add", "-A");
   await git(main, "commit", "-q", "-m", "initial");
   await git(main, "worktree", "add", "-q", "-b", "feat/a", a);
@@ -195,6 +199,21 @@ async function stagingDir(worktree: string): Promise<string> {
   return path.join(gitDir, "tend-dedupe");
 }
 
+/**
+ * A file's content as a short digest. Comparing digests keeps a failed
+ * assertion from diffing hundreds of kilobytes.
+ */
+async function digest(file: string): Promise<string> {
+  const hash = createHash("sha256");
+  hash.update(await Bun.file(file).bytes());
+  return hash.digest("hex");
+}
+
+async function startOf(file: string): Promise<string> {
+  const text = await Bun.file(file).text();
+  return text.slice(0, 3);
+}
+
 async function inodes(dir: string, names: readonly string[]) {
   const result: Record<string, number> = {};
   for (const name of names) {
@@ -229,7 +248,7 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
         rootDir: await lstat(fx.a),
         shared: await inodes(fx.a, SHARED),
         untouched: await inodes(fx.a, UNTOUCHED_IN_A),
-        content: await Bun.file(path.join(fx.a, "big.bin")).bytes(),
+        content: await digest(path.join(fx.a, "big.bin")),
       };
       const copies = [fx.main, fx.a, fx.b].map((wt) =>
         path.join(wt, "big.bin"),
@@ -268,9 +287,7 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
       for (const name of SHARED) {
         expect(after.shared[name]).not.toBe(before.shared[name]);
       }
-      expect(await Bun.file(path.join(fx.a, "big.bin")).bytes()).toEqual(
-        before.content,
-      );
+      expect(await digest(path.join(fx.a, "big.bin"))).toEqual(before.content);
       expect(Math.abs(after.big.mtimeMs - before.big.mtimeMs)).toBeLessThan(
         0.001,
       );
@@ -383,6 +400,154 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
   );
 });
 
+describe.skipIf(!onApfs)(
+  "sweepDedupe and bytes the index cannot vouch for",
+  () => {
+    it(
+      "does not clone from a worktree that switched commits after its index was read",
+      async () => {
+        const fx = await buildFixture();
+        // A second commit where big.bin has other content of the same size.
+        await git(fx.main, "checkout", "-q", "-b", "next");
+        await Bun.write(path.join(fx.main, "big.bin"), randomBytes(200_000));
+        await git(fx.main, "commit", "-q", "-am", "next");
+        await git(fx.main, "checkout", "-q", "main");
+        const original = await digest(path.join(fx.a, "big.bin"));
+        const statusA = await git(fx.a, "status", "--porcelain");
+        let switched = false;
+        // The seam: the main checkout moves on right after its pass listed it.
+        const switching: CommandRunner = async (argv, options = {}) => {
+          const result = await fx.runner(argv, options);
+          const listsWholeIndex =
+            argv.includes("ls-files") && !argv.includes("--");
+          if (!switched && listsWholeIndex && options.cwd === fx.main) {
+            switched = true;
+            await git(fx.main, "checkout", "-q", "next");
+          }
+          return result;
+        };
+
+        const result = await fx.sweep({ runner: switching });
+
+        expect(switched).toBe(true);
+        const next = await digest(path.join(fx.main, "big.bin"));
+        expect(next).not.toEqual(original);
+        // Both targets still hold the content their own index names.
+        expect(await digest(path.join(fx.a, "big.bin"))).toEqual(original);
+        expect(await digest(path.join(fx.b, "big.bin"))).toEqual(original);
+        expect(await git(fx.a, "status", "--porcelain")).toBe(statusA);
+        expect(await git(fx.b, "status", "--porcelain")).toBe(
+          "?? untracked.bin",
+        );
+        expect(result.warnings).toEqual([
+          "1 file(s) left alone: the copy they would be cloned from was no longer the blob its worktree listed; a later run takes them",
+        ]);
+        // The two worktrees share their copy with each other, not with main.
+        const [main, a, b] = await physicalOffsets(
+          [fx.main, fx.a, fx.b].map((wt) => path.join(wt, "big.bin")),
+        );
+        expect(a).toBe(b);
+        expect(main).not.toBe(a);
+        // Files the switch did not change are still shared with main.
+        const tool = await physicalOffsets(
+          [fx.main, fx.b].map((wt) => path.join(wt, "tool.sh")),
+        );
+        expect(tool[0]).toBe(tool[1]);
+      },
+      REAL_GIT_TIMEOUT_MS,
+    );
+
+    it(
+      "leaves a path with a clean or smudge filter alone, though every copy is clean",
+      async () => {
+        // A filter that stores upper case: the blob says nothing about the
+        // case of the bytes a worktree holds.
+        const fx = await buildFixture(async (main) => {
+          await git(main, "config", "filter.upper.clean", "tr a-z A-Z");
+          await git(main, "config", "filter.upper.smudge", "cat");
+          await Bun.write(
+            path.join(main, ".gitattributes"),
+            "*.dat filter=upper\n",
+          );
+          await Bun.write(path.join(main, "data.dat"), "a".repeat(100_000));
+        });
+        const copies = [fx.main, fx.a, fx.b].map((wt) =>
+          path.join(wt, "data.dat"),
+        );
+        // main kept what was written; a checked out the stored upper case; b
+        // is put back to lower case. All three are clean and the same size.
+        await Bun.write(path.join(fx.b, "data.dat"), "a".repeat(100_000));
+        expect(await Promise.all(copies.map((file) => startOf(file)))).toEqual([
+          "aaa",
+          "AAA",
+          "aaa",
+        ]);
+        const before = await Promise.all(copies.map((file) => digest(file)));
+        for (const wt of [fx.main, fx.a, fx.b]) {
+          expect(await git(wt, "status", "--porcelain", "--", "data.dat")).toBe(
+            "",
+          );
+        }
+        const inodesBefore = await Promise.all(
+          [fx.main, fx.a, fx.b].map((wt) => inodes(wt, ["data.dat"])),
+        );
+
+        const result = await fx.sweep();
+
+        expect(await Promise.all(copies.map((file) => digest(file)))).toEqual(
+          before,
+        );
+        expect(await Promise.all(copies.map((file) => startOf(file)))).toEqual([
+          "aaa",
+          "AAA",
+          "aaa",
+        ]);
+        expect(
+          await Promise.all(
+            [fx.main, fx.a, fx.b].map((wt) => inodes(wt, ["data.dat"])),
+          ),
+        ).toEqual(inodesBefore);
+        expect(new Set(await physicalOffsets(copies)).size).toBe(3);
+        expect(result.warnings).toEqual([
+          "2 file(s) left alone: a filter, ident or working-tree-encoding attribute means equal blobs do not prove equal files",
+        ]);
+        expect(actionFor(result, fx.b)?.candidate.metadata).toMatchObject({
+          replacedFiles: 5,
+          filteredFiles: 1,
+        });
+        // Unfiltered files are shared as before.
+        const big = await physicalOffsets(
+          [fx.main, fx.b].map((wt) => path.join(wt, "big.bin")),
+        );
+        expect(big[0]).toBe(big[1]);
+      },
+      REAL_GIT_TIMEOUT_MS,
+    );
+  },
+);
+
+describe("dedupe attribute parsing", () => {
+  it("picks out paths with a filter, ident or working-tree-encoding in effect", () => {
+    const records = [
+      ["plain.bin", "filter", "unspecified"],
+      ["plain.bin", "ident", "unspecified"],
+      ["plain.bin", "working-tree-encoding", "unspecified"],
+      ["off.bin", "filter", "unset"],
+      ["off.bin", "ident", "unset"],
+      ["lfs.bin", "filter", "lfs"],
+      ["stamp.c", "ident", "set"],
+      ["wide.txt", "working-tree-encoding", "UTF-16"],
+    ];
+    const output = records.map((record) => `${record.join("\0")}\0`).join("");
+    expect([...parseAttributedPaths(output)].sort()).toEqual([
+      "lfs.bin",
+      "stamp.c",
+      "wide.txt",
+    ]);
+    expect(parseAttributedPaths("").size).toBe(0);
+  });
+});
+
 describe.skipIf(!onApfs)("sweepDedupe scope", () => {
   it(
     "limits replacement to --worktree while every worktree still lends files",
@@ -418,7 +583,7 @@ describe.skipIf(!onApfs)("sweepDedupe scope", () => {
     async () => {
       const fx = await buildFixture();
       await Bun.write(path.join(fx.main, "big.bin"), randomBytes(200_000));
-      const mainBefore = await Bun.file(path.join(fx.main, "big.bin")).bytes();
+      const mainBefore = await digest(path.join(fx.main, "big.bin"));
 
       await fx.sweep();
 
@@ -427,9 +592,7 @@ describe.skipIf(!onApfs)("sweepDedupe scope", () => {
       );
       expect(a).toBe(b);
       expect(main).not.toBe(a);
-      expect(await Bun.file(path.join(fx.main, "big.bin")).bytes()).toEqual(
-        mainBefore,
-      );
+      expect(await digest(path.join(fx.main, "big.bin"))).toEqual(mainBefore);
       expect(await git(fx.b, "status", "--porcelain")).toBe("?? untracked.bin");
     },
     REAL_GIT_TIMEOUT_MS,

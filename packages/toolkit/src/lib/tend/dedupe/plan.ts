@@ -1,99 +1,34 @@
 import path from "node:path";
 import {
-  type CloneFile,
   type FileIdentity,
   lstatRegularFile,
   prepareTemporaryCloneDir,
   removeTemporaryCloneDirIfEmpty,
   replaceWithClone,
   temporaryCloneDir,
-} from "./dedupe-clone.ts";
+} from "./clone.ts";
 import {
   type DedupeFileRecord,
   readDedupeState,
   writeDedupeState,
-} from "./dedupe-state.ts";
-import type { CommandRunner } from "./types.ts";
-import { readWorktreeStatus } from "./worktrees-status.ts";
-
-export type DedupeContext = {
-  readonly runner: CommandRunner;
-  readonly apply: boolean;
-  readonly minSizeBytes: number;
-  readonly stateDir: string;
-  readonly cloneFile: CloneFile;
-  /** `false` leaves every index alone (`--no-refresh`). */
-  readonly refreshIndex: boolean;
-  readonly isPidAlive: (pid: number) => boolean;
-  /** Device a directory is on, or `null` when it is not a directory. */
-  readonly deviceOf: (directory: string) => Promise<number | null>;
-  /** Devices where a clone was refused, with the refusal. */
-  readonly unsupportedDevices: Map<number, string>;
-};
-
-/**
- * What `git status` says is not the committed content, read once per
- * worktree and only when a file there is about to be used.
- */
-type CleanCheck =
-  | {
-      readonly ok: true;
-      /** Taken before status ran: a file untouched since then is as reported. */
-      readonly startedMs: number;
-      readonly changed: ReadonlySet<string>;
-    }
-  | { readonly ok: false; readonly reason: string };
-
-/** Where a worktree's clones are staged, and the volume that is on. */
-type TemporaryPlace = {
-  readonly dir: string;
-  readonly dev: number | null;
-};
-
-export type DedupeWorktree = {
-  readonly path: string;
-  /** Files here may be replaced; otherwise the worktree only lends its own. */
-  readonly isTarget: boolean;
-  /** The worktree's own git directory, where its clones are staged. */
-  readonly gitDir: string;
-  /** What marks the worktree as in use right now, if anything does. */
-  readonly liveReason?: string | undefined;
-  temporary?: Promise<TemporaryPlace> | undefined;
-  clean?: Promise<CleanCheck> | undefined;
-};
-
-/** The copy every later holder of the same index entry is cloned from. */
-type CanonicalCopy = {
-  readonly worktree: DedupeWorktree;
-  /** `undefined` until looked at; `null` when it is not a usable file. */
-  file?: FileIdentity | null | undefined;
-};
-
-/**
- * Canonical copies for one repository, keyed by the `git ls-files -s` line
- * (mode, blob, path), so equal keys mean equal committed content at the same
- * path. Worktrees are added main checkout first.
- */
-export type DedupeRegistry = Map<string, CanonicalCopy>;
-
-type IndexEntry = { readonly sha: string; readonly path: string };
-
-/**
- * `H <mode> <sha> <stage>\t<path>` from `git ls-files -s -v`. Only a plain
- * cached entry (`H`) for a regular file at stage 0 qualifies: `git status`
- * does not report changes to assume-unchanged or skip-worktree entries, so
- * their content cannot be vouched for.
- */
-function parseIndexLine(line: string): IndexEntry | null {
-  const tab = line.indexOf("\t");
-  if (tab === -1 || !line.startsWith("H 100") || line[tab - 1] !== "0") {
-    return null;
-  }
-  const mode = line.slice(2, 8);
-  return mode === "100644" || mode === "100755"
-    ? { sha: line.slice(9, tab - 2), path: line.slice(tab + 1) }
-    : null;
-}
+} from "./state.ts";
+import type {
+  CanonicalCopy,
+  CleanCheck,
+  DedupeContext,
+  DedupePassResult,
+  DedupeRegistry,
+  DedupeWorktree,
+  IndexEntry,
+  PendingReplacement,
+  TemporaryPlace,
+} from "./types.ts";
+import {
+  confirmTargets,
+  parseIndexLine,
+  verifyCanonicalCopies,
+} from "./verify.ts";
+import { readWorktreeStatus } from "#lib/tend/worktrees-status.ts";
 
 function cleanCheck(
   wt: DedupeWorktree,
@@ -140,66 +75,69 @@ function temporaryPlace(
   return wt.temporary;
 }
 
-/** True when `file` is the committed content `check` vouches for. */
-function isVouchedFor(
-  check: CleanCheck,
-  relativePath: string,
-  file: FileIdentity,
-): boolean {
-  return (
-    check.ok &&
-    !check.changed.has(relativePath) &&
-    file.ctimeMs < check.startedMs
-  );
-}
+type PassState = {
+  readonly wt: DedupeWorktree;
+  readonly registry: DedupeRegistry;
+  readonly ctx: DedupeContext;
+  readonly state: Map<string, DedupeFileRecord>;
+  readonly result: DedupePassResult;
+  /** Taken before the index was listed. */
+  readonly listedMs: number;
+  stateChanged: boolean;
+};
 
 type Verdict =
   | { readonly kind: "skip" }
   | { readonly kind: "already-shared" }
-  /** The canonical copy cannot be used; this worktree's becomes canonical. */
-  | { readonly kind: "promote"; readonly file: FileIdentity }
+  /** There is no canonical file; this worktree's copy takes its place. */
+  | { readonly kind: "promote"; readonly size: number }
   | { readonly kind: "abort"; readonly reason: string }
-  | {
-      readonly kind: "replace";
-      readonly sourcePath: string;
-      readonly targetPath: string;
-      readonly source: FileIdentity;
-      readonly target: FileIdentity;
-      readonly temporaryDir: string;
-    };
+  | { readonly kind: "pending"; readonly item: PendingReplacement };
 
-async function judgeCandidate(options: {
-  readonly wt: DedupeWorktree;
-  readonly entry: IndexEntry;
-  readonly canonical: CanonicalCopy;
-  readonly recorded: DedupeFileRecord | undefined;
-  readonly ctx: DedupeContext;
-}): Promise<Verdict> {
-  const { wt, entry, canonical, recorded, ctx } = options;
+/**
+ * True when the target file is the content its listed index entry names:
+ * `git status` does not report it changed, and it has not been touched since
+ * before the index was listed, so neither a checkout nor an edit can have
+ * slipped in between the listing and the status.
+ */
+function isVouchedFor(
+  check: CleanCheck,
+  relativePath: string,
+  file: FileIdentity,
+  listedMs: number,
+): boolean {
+  return (
+    check.ok &&
+    !check.changed.has(relativePath) &&
+    file.ctimeMs < Math.min(check.startedMs, listedMs)
+  );
+}
+
+/** Weigh one target file against everything its own worktree can say. */
+async function judgeTarget(
+  line: string,
+  entry: IndexEntry,
+  canonical: CanonicalCopy,
+  pass: PassState,
+): Promise<Verdict> {
+  const { wt, ctx } = pass;
   const sourcePath = path.join(canonical.worktree.path, entry.path);
-  if (canonical.file === undefined) {
-    canonical.file = await lstatRegularFile(sourcePath);
+  if (canonical.seen === undefined) {
+    canonical.seen = await lstatRegularFile(sourcePath);
   }
-  const source = canonical.file;
-  if (source !== null && source.size < ctx.minSizeBytes) {
+  const seen = canonical.seen;
+  if (seen !== null && seen.size < ctx.minSizeBytes) {
     return { kind: "skip" };
   }
   const targetPath = path.join(wt.path, entry.path);
   const target = await lstatRegularFile(targetPath);
-  if (target === null) {
+  if (target === null || ctx.unsupportedDevices.has(target.dev)) {
     return { kind: "skip" };
   }
-  if (source === null) {
-    return { kind: "promote", file: target };
+  if (seen === null) {
+    return { kind: "promote", size: target.size };
   }
-  if (
-    target.size !== source.size ||
-    target.dev !== source.dev ||
-    target.ino === source.ino ||
-    ctx.unsupportedDevices.has(target.dev)
-  ) {
-    return { kind: "skip" };
-  }
+  const recorded = pass.state.get(entry.path);
   if (
     recorded?.sha === entry.sha &&
     recorded.ino === target.ino &&
@@ -223,45 +161,24 @@ async function judgeCandidate(options: {
   if (!targetCheck.ok) {
     return { kind: "abort", reason: targetCheck.reason };
   }
-  if (!isVouchedFor(targetCheck, entry.path, target)) {
-    return { kind: "skip" };
-  }
-  const sourceCheck = await cleanCheck(canonical.worktree, ctx);
-  return isVouchedFor(sourceCheck, entry.path, source)
+  return isVouchedFor(targetCheck, entry.path, target, pass.listedMs)
     ? {
-        kind: "replace",
-        sourcePath,
-        targetPath,
-        source,
-        target,
-        temporaryDir: place.dir,
+        kind: "pending",
+        item: {
+          line,
+          entry,
+          canonical,
+          sourcePath,
+          targetPath,
+          target,
+          temporaryDir: place.dir,
+        },
       }
-    : { kind: "promote", file: target };
+    : { kind: "skip" };
 }
 
-/**
- * What became of the index after files were replaced. `refreshed` and
- * `failed` are outcomes; in a dry run `refreshed` means it would be.
- */
-export type DedupeRefresh =
-  "not-needed" | "refreshed" | "live" | "disabled" | "failed";
-
-export type DedupePassResult = {
-  /** Files that qualify: replaced in an applied run, counted in a dry run. */
-  plannedFiles: number;
-  plannedBytes: number;
-  replacedFiles: number;
-  replacedBytes: number;
-  /** Changed between the check and the rename, so left alone. */
-  changedFiles: number;
-  failedFiles: number;
-  firstFailure?: string | undefined;
-  refresh: DedupeRefresh;
-  readonly warnings: string[];
-};
-
 async function applyReplacement(
-  verdict: Extract<Verdict, { kind: "replace" }>,
+  verdict: PendingReplacement & { readonly source: FileIdentity },
   result: DedupePassResult,
   ctx: DedupeContext,
 ): Promise<{ readonly ino: number; readonly size: number } | null> {
@@ -335,15 +252,6 @@ async function finishWorktree(
   await writeDedupeState(ctx.stateDir, wt.path, state);
 }
 
-type PassState = {
-  readonly wt: DedupeWorktree;
-  readonly registry: DedupeRegistry;
-  readonly ctx: DedupeContext;
-  readonly state: Map<string, DedupeFileRecord>;
-  readonly result: DedupePassResult;
-  stateChanged: boolean;
-};
-
 /**
  * Claim an entry nobody holds yet, or return the canonical copy this
  * worktree's file should be weighed against. Nearly every entry is settled
@@ -365,60 +273,103 @@ function claimOrFindCanonical(
   if (!pass.wt.isTarget || canonical.worktree === pass.wt) {
     return null;
   }
-  const known = canonical.file;
+  const { seen } = canonical;
   const tooSmall =
-    known !== undefined && known !== null && known.size < pass.ctx.minSizeBytes;
+    seen !== undefined && seen !== null && seen.size < pass.ctx.minSizeBytes;
   return tooSmall && !pass.state.has(entry.path) ? null : canonical;
 }
 
-/** Returns false when the rest of the worktree must be left alone. */
-async function settleCandidate(
-  line: string,
-  entry: IndexEntry,
-  canonical: CanonicalCopy,
+/**
+ * Make this worktree's copy the canonical one for later worktrees. It is not
+ * trusted for that: like every canonical copy it is verified when first used.
+ */
+function promote(line: string, pass: PassState): void {
+  pass.registry.set(line, { worktree: pass.wt });
+}
+
+/**
+ * Collect the worktree's candidates. Returns `null` when the worktree must
+ * be left alone altogether.
+ */
+async function collectCandidates(
+  listing: string,
   pass: PassState,
-): Promise<boolean> {
-  const { wt, ctx, state, result } = pass;
-  const recorded = state.get(entry.path);
-  const verdict = await judgeCandidate({ wt, entry, canonical, recorded, ctx });
-  if (verdict.kind === "abort") {
-    result.warnings.push(`Skipped ${wt.path}: ${verdict.reason}`);
-    return false;
+): Promise<PendingReplacement[] | null> {
+  const pending: PendingReplacement[] = [];
+  for (const line of listing.split("\0")) {
+    const entry = parseIndexLine(line);
+    const canonical =
+      entry === null ? null : claimOrFindCanonical(line, entry, pass);
+    if (entry === null || canonical === null) {
+      continue;
+    }
+    const verdict = await judgeTarget(line, entry, canonical, pass);
+    if (verdict.kind === "abort") {
+      pass.result.warnings.push(`Skipped ${pass.wt.path}: ${verdict.reason}`);
+      return null;
+    }
+    if (verdict.kind === "already-shared") {
+      continue;
+    }
+    // Whatever was recorded for the path no longer describes it.
+    pass.stateChanged = pass.state.delete(entry.path) || pass.stateChanged;
+    if (verdict.kind === "pending") {
+      pending.push(verdict.item);
+    } else if (verdict.kind === "promote") {
+      promote(line, pass);
+      pass.result.staleSourceFiles +=
+        verdict.size >= pass.ctx.minSizeBytes ? 1 : 0;
+    }
   }
-  if (verdict.kind === "already-shared") {
-    return true;
+  return pending;
+}
+
+/** Replace one confirmed target, or count why it is left alone. */
+async function settleReplacement(
+  item: PendingReplacement,
+  pass: PassState,
+): Promise<void> {
+  const { ctx, state, result } = pass;
+  const check = item.canonical.verified;
+  if (check === undefined || check.state === "stale") {
+    result.staleSourceFiles += 1;
+    promote(item.line, pass);
+    return;
   }
-  if (recorded !== undefined) {
-    state.delete(entry.path);
-    pass.stateChanged = true;
+  if (check.state === "filtered") {
+    result.filteredFiles += 1;
+    return;
   }
-  if (verdict.kind === "promote") {
-    pass.registry.set(line, { worktree: wt, file: verdict.file });
-  }
-  if (verdict.kind !== "replace") {
-    return true;
+  const { file: source } = check;
+  if (
+    item.target.size !== source.size ||
+    item.target.dev !== source.dev ||
+    item.target.ino === source.ino ||
+    ctx.unsupportedDevices.has(item.target.dev)
+  ) {
+    return;
   }
   result.plannedFiles += 1;
-  result.plannedBytes += verdict.target.size;
+  result.plannedBytes += item.target.size;
   const replaced = ctx.apply
-    ? await applyReplacement(verdict, result, ctx)
+    ? await applyReplacement({ ...item, source }, result, ctx)
     : null;
   if (replaced !== null) {
-    state.set(entry.path, {
+    state.set(item.entry.path, {
       ino: replaced.ino,
       size: replaced.size,
-      sha: entry.sha,
+      sha: item.entry.sha,
     });
     pass.stateChanged = true;
   }
-  return true;
 }
 
 /**
  * Read one worktree's index. Entries nobody has claimed yet make this
- * worktree their canonical copy; every other entry of a target worktree is
- * weighed against the canonical copy and, when applying, replaced by a clone
- * of it.
+ * worktree their canonical copy. Every other entry of a target worktree is
+ * weighed against what its own worktree can vouch for, then against the
+ * canonical copy, which is verified to still be that blob before, when
+ * applying, the file is replaced by a clone of it.
  */
 export async function dedupeWorktreePass(
   wt: DedupeWorktree,
@@ -432,9 +383,12 @@ export async function dedupeWorktreePass(
     replacedBytes: 0,
     changedFiles: 0,
     failedFiles: 0,
+    filteredFiles: 0,
+    staleSourceFiles: 0,
     refresh: "not-needed",
     warnings: [],
   };
+  const listedMs = Date.now();
   const listed = await ctx.runner(["git", "ls-files", "-s", "-v", "-z"], {
     cwd: wt.path,
     timeoutMs: 60_000,
@@ -453,19 +407,15 @@ export async function dedupeWorktreePass(
       ? await readDedupeState(ctx.stateDir, wt.path)
       : new Map<string, DedupeFileRecord>(),
     result,
+    listedMs,
     stateChanged: false,
   };
 
-  for (const line of listed.stdout.split("\0")) {
-    const entry = parseIndexLine(line);
-    const canonical =
-      entry === null ? null : claimOrFindCanonical(line, entry, pass);
-    if (entry === null || canonical === null) {
-      continue;
-    }
-    if (!(await settleCandidate(line, entry, canonical, pass))) {
-      break;
-    }
+  const candidates = await collectCandidates(listed.stdout, pass);
+  const confirmed = await confirmTargets(wt, candidates ?? [], result, ctx);
+  await verifyCanonicalCopies(confirmed, ctx);
+  for (const item of confirmed) {
+    await settleReplacement(item, pass);
   }
 
   if (wt.temporary !== undefined && ctx.apply) {

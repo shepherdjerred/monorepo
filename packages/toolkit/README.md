@@ -1965,12 +1965,26 @@ only when all of this holds:
 - both index entries are plain entries for a regular file with the same blob
   and mode (`git ls-files -s -v`; assume-unchanged and skip-worktree entries
   are left out, because `git status` does not report changes to them);
-- `git status` reports the path as changed or untracked in neither worktree,
-  and neither file has been touched since that status started;
+- in the worktree being changed, `git status` does not report the path as
+  changed, the file has not been touched since before that worktree's index
+  was read, and the index still lists the path the same way afterwards;
+- the copy being cloned from still is that blob: before a copy is used it is
+  hashed with `git hash-object` and its index entry is read again, because
+  its worktree's index was read earlier in the run and the worktree may have
+  switched commits since. A copy that no longer matches is passed over, and
+  the next worktree with a matching copy takes its place;
+- the path has no `filter`, `ident` or `working-tree-encoding` attribute in
+  either worktree. With one of those, two worktrees can hold different bytes
+  for the same blob and both be clean, so equal index entries prove nothing
+  about the files. Line-ending conversion is the same in every worktree of a
+  repository and does not exclude a path;
 - neither worktree is mid rebase, merge, cherry-pick or bisect, and the one
   being changed is not named by an open Forum notice for this host;
 - both are regular files of the same size, at least `--dedupe-min-size`, on
   the same device.
+
+Files left alone because of an attribute, or because the copy to clone from
+had changed, are counted in the report.
 
 The clone source is the main checkout's copy when it qualifies, otherwise the
 first worktree whose copy does. `--worktree` limits which worktree has files

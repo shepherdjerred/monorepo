@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { directoryExists } from "./worktrees-git.ts";
+import { directoryExists } from "#lib/tend/worktrees-git.ts";
 
 /**
  * Which files of a worktree are already clones, so a later pass does not
