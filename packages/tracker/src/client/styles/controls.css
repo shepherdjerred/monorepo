@@ -1,5 +1,7 @@
 /* Pickers: one look for the customizable select, the Base UI fallback, the
-   searchable picker, menus and the filter and display popovers. */
+   searchable picker, menus and the filter and display popovers. Popups are
+   console-ui menus (.ui-menu): 8px panel, --ui-line border, a tight shadow,
+   30px rows with the --ui-hover highlight. */
 @supports (appearance: base-select) {
   select.picker,
   select.picker::picker(select) {
@@ -10,28 +12,32 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  min-height: 30px;
+  min-height: 28px;
   min-width: 0;
-  padding: 4px 9px;
-  border: 1px solid var(--ui-line);
+  padding: 3px 9px;
+  border: 1px solid var(--ui-btn-edge);
   border-radius: 6px;
   background: var(--ui-panel);
+  box-shadow: none;
   color: var(--ui-ink);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
   text-align: left;
 }
 .picker:hover:not(:disabled) {
   background: var(--ui-hover);
 }
+/* The customizable select's inner button: the select is the control. */
 .picker-button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
+  min-height: 0;
   padding: 0;
   border: 0;
   background: transparent;
+  box-shadow: none;
   color: inherit;
   font: inherit;
 }
@@ -147,9 +153,8 @@ select.picker-icon::picker-icon {
   border-radius: 10px;
   background: var(--ui-head);
   color: var(--ui-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 [data-picker="effort"].picker-icon selectedcontent .option-label,
@@ -181,7 +186,8 @@ select.picker-action::picker-icon {
   .picker-number,
   .palette-results kbd,
   .toolbar-button kbd,
-  .modal-footer kbd {
+  .modal-footer kbd,
+  .modal-keys {
     display: none;
   }
 }
@@ -195,10 +201,10 @@ select.picker-action::picker-icon {
   overflow-y: auto;
   padding: 4px;
   border: 1px solid var(--ui-line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: var(--shadow);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
 }
 select.picker::picker(select) {
   min-width: 200px;
@@ -207,26 +213,29 @@ select.picker::picker(select) {
   overflow-y: auto;
   padding: 4px;
   border: 1px solid var(--ui-line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: var(--shadow);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
   margin-block: 4px;
 }
+/* Rows are flat menu items, whatever element renders them. */
 select.picker option,
 .picker-item,
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 32px;
-  padding: 5px 8px;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
+  box-shadow: none;
+  transform: none;
   color: var(--ui-ink);
-  font-size: 12px;
-  font-weight: 450;
+  font-size: 12.5px;
+  font-weight: 500;
   text-align: left;
   cursor: default;
   outline: none;
@@ -278,22 +287,22 @@ select.picker option[hidden] {
 .picker-detail {
   color: var(--ui-muted);
   font-size: 11px;
+  font-weight: 400;
   font-family: var(--ui-font-mono);
   white-space: nowrap;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Key hints: console mono in muted ink, no keycap. */
 .picker-number,
 .menu-item kbd,
 .palette-results kbd {
   margin-left: auto;
-  padding: 0 5px;
-  border: 1px solid var(--ui-line);
-  border-radius: 4px;
+  padding-left: 8px;
   color: var(--ui-muted);
-  font-size: 10px;
-  line-height: 16px;
+  font: 400 11px/16px var(--ui-font-mono);
+  white-space: nowrap;
 }
 .picker-item .picker-detail + .picker-number,
 .picker-item .picker-check + .picker-number {
@@ -314,31 +323,35 @@ select.picker option[hidden] {
   border-color: var(--ui-accent);
   background: var(--ui-accent);
 }
+/* The popup's search line: the popup is the field, so no box or ring. */
+.picker-search,
+.picker-search:focus-visible {
+  border: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+}
 .picker-search {
   display: block;
-  width: 100%;
-  margin-bottom: 4px;
-  padding: 8px 9px;
-  border: 0;
-  border-bottom: 1px solid var(--ui-line);
-  border-radius: 6px 6px 0 0;
+  width: calc(100% + 8px);
+  min-height: 36px;
+  margin: -4px -4px 4px;
+  padding: 0 12px;
   background: transparent;
-  font-size: 13px;
-}
-.picker-search:focus-visible {
-  outline: none;
+  font-size: 12.5px;
 }
 .picker-group + .picker-group {
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid var(--ui-line);
+  border-top: 1px solid var(--ui-line-soft);
 }
 .picker-group-label,
 .menu-heading {
-  padding: 6px 8px 3px;
+  padding: 4px 8px;
   color: var(--ui-muted);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
 }
 .menu-heading {
   max-width: 280px;
@@ -366,10 +379,10 @@ select.picker option[hidden] {
   min-width: 220px;
   padding: 4px;
   border: 1px solid var(--ui-line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: var(--shadow);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
   outline: none;
   max-height: var(--available-height);
   overflow-y: auto;
@@ -386,8 +399,8 @@ select.picker option[hidden] {
 }
 .menu-separator {
   height: 1px;
-  margin: 4px 2px;
-  background: var(--ui-line);
+  margin: 4px -4px;
+  background: var(--ui-line-soft);
 }
 /* Rows and cards: their properties are buttons that open pickers. */
 .row-control {
@@ -524,11 +537,11 @@ select.picker option[hidden] {
   gap: 2px;
   max-width: calc(100vw - 232px - 32px);
   overflow-x: auto;
-  padding: 5px 6px 5px 14px;
+  padding: 4px 4px 4px 12px;
   border: 1px solid var(--ui-line);
-  border-radius: 11px;
+  border-radius: 8px;
   background: var(--ui-panel);
-  box-shadow: var(--shadow);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
   transform: translateX(-50%);
 }
 .bulk-count {
@@ -545,17 +558,23 @@ select.picker option[hidden] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 30px;
-  padding: 4px 9px;
+  min-height: 28px;
+  padding: 0 9px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
+  box-shadow: none;
   color: var(--ui-ink);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
   white-space: nowrap;
 }
-.bulk-danger {
+.bulk-action svg,
+.bulk-bar .picker-action .option-icon {
+  color: var(--ui-muted);
+}
+.bulk-danger,
+.bulk-danger svg {
   color: var(--ui-sev-error-text);
 }
 .bulk-action:hover,
@@ -571,7 +590,7 @@ body:has(.bulk-bar) .toast-viewport {
   color: var(--ui-muted);
 }
 .toolbar-button kbd {
-  font-size: 10px;
+  font-size: 11px;
 }
 .toolbar-button[data-popup-open] {
   background: var(--ui-hover);
@@ -644,19 +663,23 @@ body:has(.bulk-bar) .toast-viewport {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px;
-  border-bottom: 1px solid var(--ui-line);
+  min-height: 36px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-line-soft);
   color: var(--ui-muted);
+}
+.command-search input,
+.command-search input:focus-visible {
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
 }
 .command-search input {
   flex: 1;
-  padding: 10px 0;
-  border: 0;
+  padding: 8px 0;
   background: transparent;
-  font-size: 13px;
-}
-.command-search input:focus-visible {
-  outline: none;
+  font-size: 12.5px;
 }
 .command-items {
   max-height: 300px;
@@ -669,18 +692,20 @@ body:has(.bulk-bar) .toast-viewport {
 }
 .popover-title {
   margin-bottom: 10px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
 }
+/* A row may be a label or a div (Ordering holds two controls). */
 .display-row {
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
   color: var(--ui-muted);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 400;
 }
 .display-row .picker {
   width: 160px;
@@ -715,7 +740,8 @@ body:has(.bulk-bar) .toast-viewport {
 .display-properties legend {
   margin: 6px 0 8px;
   color: var(--ui-muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 400;
 }
 .display-properties > div {
   display: flex;
@@ -723,15 +749,18 @@ body:has(.bulk-bar) .toast-viewport {
   gap: 6px;
 }
 .toggle-chip {
-  min-height: 28px;
-  padding: 3px 10px;
+  min-height: 26px;
+  padding: 0 9px;
+  border-color: var(--ui-line);
+  border-radius: 5px;
   font-size: 12px;
   color: var(--ui-muted);
 }
+/* On reads as a pressed chip (sidebar's active fill), not an accent block. */
 .toggle-chip[aria-pressed="true"] {
-  border-color: var(--ui-accent);
-  background: var(--accent-soft);
-  color: var(--ui-accent);
+  border-color: var(--ui-btn-edge);
+  background: var(--ui-active);
+  color: var(--ui-ink);
 }
 /* The issue's properties panel and the New issue dialog. */
 .properties label {
@@ -751,8 +780,8 @@ body:has(.bulk-bar) .toast-viewport {
 }
 .property-name {
   color: var(--ui-muted);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
 }
 .priority-mode,
 .priority-mode-reset {
@@ -803,13 +832,18 @@ body:has(.bulk-bar) .toast-viewport {
   flex-wrap: wrap;
   gap: 6px;
 }
+/* Unset properties under the New issue form: console chips. */
 .property-chip {
   max-width: 240px;
-  min-height: 28px;
-  padding: 3px 10px;
-  border-radius: 14px;
+  min-height: 26px;
+  padding: 0 9px;
+  border-color: var(--ui-line);
+  border-radius: 5px;
   color: var(--ui-muted);
   font-size: 12px;
+}
+.property-chip:hover:not(:disabled) {
+  color: var(--ui-ink);
 }
 .property-chip > span {
   overflow: hidden;
@@ -830,7 +864,16 @@ body:has(.bulk-bar) .toast-viewport {
 .palette-back {
   width: 26px;
   height: 26px;
+  min-height: 26px;
   padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ui-muted);
+}
+.palette-back:hover {
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 .palette-step-title {
   font-weight: 600;
@@ -846,8 +889,8 @@ body:has(.bulk-bar) .toast-viewport {
 .shortcut-sheet h3 {
   margin: 14px 0 4px;
   color: var(--ui-muted);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
 }
 @media (max-width: 767px) {
   select.picker option,
@@ -855,6 +898,11 @@ body:has(.bulk-bar) .toast-viewport {
   .menu-item {
     min-height: 44px;
     font-size: 14px;
+  }
+  .palette-back {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
   }
   .picker-popup,
   .menu-popup {
@@ -870,6 +918,7 @@ body:has(.bulk-bar) .toast-viewport {
   }
   .picker-search,
   .command-search input {
+    min-height: 44px;
     font-size: 16px;
   }
   .picker {

@@ -318,9 +318,17 @@ export function Palette({
         </p>
       )}
       <div className="palette-footer">
-        <span>↑ ↓ navigate</span>
-        <span>↵ {step === undefined ? "open" : "choose"}</span>
-        <span>Esc {step === undefined ? "close" : "back"}</span>
+        <span>
+          <kbd>↑↓</kbd>navigate
+        </span>
+        <span>
+          <kbd>↵</kbd>
+          {step === undefined ? "open" : "choose"}
+        </span>
+        <span>
+          <kbd>Esc</kbd>
+          {step === undefined ? "close" : "back"}
+        </span>
       </div>
     </Modal>
   );
