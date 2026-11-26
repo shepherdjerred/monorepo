@@ -103,8 +103,48 @@ document. While another deployment loads, the previous table stays on screen,
 dimmed and `aria-busy`, under the new deployment's header. The tab title names
 the open flag and deployment, e.g. `dares_enabled · scout/prod · Flags`.
 
-"Review save" opens a dialog with the stored flag before and the draft after;
-Save writes that revision. A conflicting write is left unchanged: a warning
-above the form shows the other value beside the draft, with a button to load it.
+### Editing modes
+
+The editor has a Form / JSON toggle over one draft. Switching modes never loses
+an edit: the JSON text is rebuilt from the draft only when the form changed it,
+so text that does not parse yet is still there when you switch back.
+
+- **Form** shows typed controls: a boolean flag's default and segments; a
+  variant's stored string in a number field (`number` encoding), a wrapping
+  text area (`json` encoding), or a text field (`string` encoding).
+- **JSON** edits in Monaco. A boolean flag is edited as its whole object, with
+  `type` and `key` fixed by the schema. A `json`-encoded variant is edited as
+  its decoded value, pretty-printed (an array, not a one-line string), and
+  saved compactly with object defaults filled in. `number` and `string`
+  variants are edited as a JSON number or string literal.
+
+`json`-encoded variants open in JSON mode; everything else opens in Form mode.
+A variant whose key is not in the value registry is shown as plain text with a
+notice that the server rejects writes to unmanaged keys.
+
+Monaco is bundled locally with only its JSON language and loads, with its two
+workers, the first time an editor or diff is shown. The flag table never loads
+it. Its colours and monospace font come from the `console-ui` tokens of the
+current theme.
+
+### Validation
+
+JSON mode validates as you type against a JSON Schema. For variants this is
+`flag-value-schemas.generated.json` from `@shepherdjerred/feature-flags`. For
+boolean flags it is the flag schema (`src/schema.ts`). Schema errors show as
+squiggles with hover messages. The draft is also checked against the registry's
+Zod schema, the same check the server runs. Its issues are listed under the
+editor by JSON Pointer path. Review stays disabled while the JSON does not parse
+or the value fails the registry. If the server still refuses a save with
+`400 invalid flag values`, its issues are listed the same way until the draft
+changes.
+
+### Saving
+
+"Review save" opens a dialog with a read-only Monaco diff of the stored value
+against the draft: side by side when there is room, inline when narrow.
+`json`-encoded variants are diffed as their decoded values. Save writes that
+revision. A conflicting write is left unchanged: a warning above the form diffs
+their flag against the draft, with a button to load theirs.
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.
