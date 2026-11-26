@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Panel } from "#src/components/surfaces/panel.tsx";
 import { ChampionFace } from "./champion-face.tsx";
+import { NameText } from "./name-text.tsx";
 import { WinRateBar } from "./win-rate-bar.tsx";
 
 const meta = {
@@ -91,7 +92,7 @@ export const FriendsRanking: Story = {
           key={friend.name}
           style={{
             display: "grid",
-            gridTemplateColumns: "46px minmax(0, 1fr) 11rem",
+            gridTemplateColumns: "46px minmax(0, 1fr) 7.5rem",
             alignItems: "center",
             gap: "0.875rem",
             padding: "0.4rem 0.75rem",
@@ -100,7 +101,9 @@ export const FriendsRanking: Story = {
           }}
         >
           <ChampionFace champion={friend.champion} alt="" />
-          <b style={{ overflowWrap: "anywhere" }}>{friend.name}</b>
+          <b style={{ minWidth: 0 }}>
+            <NameText>{friend.name}</NameText>
+          </b>
           <WinRateBar value={friend.rate} you={friend.you} />
         </li>
       ))}
