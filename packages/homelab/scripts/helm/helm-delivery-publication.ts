@@ -32,7 +32,7 @@ import {
 } from "./helm-oci-bootstrap.ts";
 
 const BUILD_REVISION_RE = /^2\.0\.0-[1-9]\d*$/u;
-export const CHARTMUSEUM_ORIGIN = "https://chartmuseum.tailnet-1a49.ts.net";
+export const CHARTMUSEUM_ORIGIN = "https://charts.tailnet-1a49.ts.net";
 export const CHARTMUSEUM_API = `${CHARTMUSEUM_ORIGIN}/api/charts`;
 
 export type ChartMuseumRelease = NonNullable<

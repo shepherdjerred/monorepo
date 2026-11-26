@@ -145,15 +145,15 @@ describe("unreadyApplicationSummaries", () => {
       {
         // The build 6322 shape: sync succeeded but an orphaned resource keeps
         // the app OutOfSync forever.
-        metadata: { name: "turbo-cache" },
+        metadata: { name: "ci-cache" },
         status: {
           sync: { status: "OutOfSync" },
           health: { status: "Healthy" },
           resources: [
-            { kind: "Deployment", name: "turbo-cache", status: "Synced" },
+            { kind: "Deployment", name: "ci-cache", status: "Synced" },
             {
               kind: "OnePasswordItem",
-              name: "turbo-cache-r2",
+              name: "ci-cache-r2",
               status: "OutOfSync",
             },
           ],
@@ -196,7 +196,7 @@ describe("unreadyApplicationSummaries", () => {
   test("names each app failing the gate with its offending resources", () => {
     const lines = unreadyApplicationSummaries(list, true);
     expect(lines).toEqual([
-      "turbo-cache: Sync=OutOfSync Health=Healthy — OnePasswordItem/turbo-cache-r2",
+      "ci-cache: Sync=OutOfSync Health=Healthy — OnePasswordItem/ci-cache-r2",
       "mario-kart: Sync=Synced Health=Progressing — Deployment/mario-kart (waiting for rollout)",
     ]);
   });

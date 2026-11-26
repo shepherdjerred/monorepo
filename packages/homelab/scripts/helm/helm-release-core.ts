@@ -11,8 +11,6 @@ const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
 const REPOSITORY_CHART_URLS = new Set([
   "https://charts.tailnet-1a49.ts.net",
   "registry-1.docker.io/shepherdjerred",
-  "https://chartmuseum.tailnet-1a49.ts.net",
-  "https://chartmuseum.sjer.red",
 ]);
 // Charts whose release sync is allowed to remove live resources the chart no
 // longer declares. Deliberately an allowlist: pruning is off for every other
@@ -67,7 +65,6 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "storm-forum",
   "temporal",
   "trmnl-dashboard",
-  "turbo-cache",
   "woodpecker",
 ]);
 

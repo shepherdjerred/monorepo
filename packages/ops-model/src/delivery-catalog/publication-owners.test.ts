@@ -28,7 +28,7 @@ test("v1 names services.json groups until the window's catalog flip", () => {
 test("v2 names the catalog's first-party owners and no longer registers apps", () => {
   const owners = publicationOwners("v2");
   expect(owners.chart("woodpecker")).toBe("woodpecker");
-  expect(owners.chart("chartmuseum-companion")).toBe("chartmuseum");
+  expect(owners.chart("velero-companion")).toBe("velero");
   expect(owners.chart("storm-forum-beta")).toBe("storm-forum");
   expect(owners.chart("apps")).toBeUndefined();
   expect(owners.image("woodpecker-config-extension")).toBe("woodpecker");

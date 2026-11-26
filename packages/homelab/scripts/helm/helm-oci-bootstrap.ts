@@ -13,12 +13,13 @@ const CHARTS_BOOTSTRAP_OCI_LOCATION = registryLocation(
 const HELM_CHART_CONFIG_MEDIA_TYPE = "application/vnd.cncf.helm.config.v1+json";
 
 /**
- * Staged rollout gate: remains `false` until `woodpecker/prod` rolls out the
- * `DOCKERHUB_PUBLISH` grant on `helm-push` and `tofu-dockerhub/prod` creates
- * `shepherdjerred/charts-bootstrap`, then flips to `true` before retiring
+ * Rollout gate for `charts-bootstrap` OCI publication: enabled now that
+ * `woodpecker/prod` grants `DOCKERHUB_PUBLISH` on `helm-push` and
+ * `tofu-dockerhub/prod` manages public `shepherdjerred/charts-bootstrap`,
+ * allowing `charts` to self-bootstrap from Docker Hub OCI before retiring
  * `chartmuseum`.
  */
-export const CHARTS_BOOTSTRAP_OCI_ENABLED = false;
+export const CHARTS_BOOTSTRAP_OCI_ENABLED = true;
 
 const OciHelmManifestSchema = z.looseObject({
   config: z.looseObject({ mediaType: z.literal(HELM_CHART_CONFIG_MEDIA_TYPE) }),
@@ -270,7 +271,6 @@ export function chartsBootstrapRetainOptions(
 }
 
 const FIRST_PARTY_CHARTS_ORIGIN = "https://charts.tailnet-1a49.ts.net";
-const FIRST_PARTY_CHARTS_API = `${FIRST_PARTY_CHARTS_ORIGIN}/api/charts`;
 
 export function isRetainableChartOrigin(
   name: string,
@@ -311,20 +311,4 @@ export async function pushChartArchive(options: {
     );
   }
   console.log(`${options.chart}: pushed (HTTP ${response.status.toString()})`);
-  if (options.primaryApi !== FIRST_PARTY_CHARTS_API) {
-    const mirror = await transport(FIRST_PARTY_CHARTS_API, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/octet-stream",
-      },
-      body: Bun.file(options.archive),
-    });
-    if (!mirror.ok && mirror.status !== 409) {
-      const body = (await mirror.text()).slice(0, 1024);
-      throw new Error(
-        `${options.chart}: charts mirror push failed (HTTP ${mirror.status.toString()}): ${body}`,
-      );
-    }
-  }
 }

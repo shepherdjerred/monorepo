@@ -52,11 +52,6 @@
       "service": "bugsink-bugsink-service"
     },
     {
-      "hostname": "chartmuseum.sjer.red",
-      "namespace": "chartmuseum",
-      "service": "chartmuseum"
-    },
-    {
       "hostname": "feeds.sjer.red",
       "namespace": "feeds",
       "service": "feeds-reader-service"
@@ -262,11 +257,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "chartmuseum",
-      "namespace": "chartmuseum",
-      "exposure": "ingress"
-    },
-    {
       "host": "charts",
       "namespace": "charts",
       "exposure": "ingress"
@@ -307,11 +297,6 @@
       "namespace": "golink",
       "exposure": "tsnet",
       "tags": ["tag:k8s"]
-    },
-    {
-      "host": "gradle-build-cache",
-      "namespace": "gradle-build-cache",
-      "exposure": "ingress"
     },
     {
       "host": "grafana",
@@ -471,11 +456,6 @@
     {
       "host": "tracker",
       "namespace": "tracker",
-      "exposure": "ingress"
-    },
-    {
-      "host": "turbo-cache",
-      "namespace": "turbo-cache",
       "exposure": "ingress"
     },
     {

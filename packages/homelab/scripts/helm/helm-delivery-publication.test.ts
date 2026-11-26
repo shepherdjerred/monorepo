@@ -363,7 +363,7 @@ function qualified(
     serviceId: new ServiceIndex().byChart(name)?.id,
     component: `chart:${name}`,
     kind: "chart",
-    uri: `https://chartmuseum.sjer.red/charts/${name}-${qualifiedVersion}.tgz`,
+    uri: `https://charts.tailnet-1a49.ts.net/charts/${name}-${qualifiedVersion}.tgz`,
     digest,
     version: qualifiedVersion,
     sourceRevision: "b".repeat(40),
@@ -799,6 +799,13 @@ test("switching expected chart origin to charts invalidates legacy chartmuseum b
     isRetainableChartOrigin(
       "arcade",
       `https://chartmuseum.sjer.red/charts/arcade-${qualifiedVersion}.tgz`,
+      "https://charts.tailnet-1a49.ts.net",
+    ),
+  ).toBe(false);
+  expect(
+    isRetainableChartOrigin(
+      "arcade",
+      `https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-${qualifiedVersion}.tgz`,
       "https://charts.tailnet-1a49.ts.net",
     ),
   ).toBe(false);

@@ -62,16 +62,14 @@ export async function downloadChartArtifact(
 }
 
 /**
- * Staged rollout gates matching `helm-delivery-publication.ts` and
- * `helm-oci-bootstrap.ts`: `FIRST_PARTY_CHART_PUBLICATION_ORIGIN` stays on
- * `chartmuseum` until live `delivery/prod` deploys `STORE_PREFIXES` support for
- * `https://charts.tailnet-1a49.ts.net/`, and `CHARTS_BOOTSTRAP_OCI_ENABLED`
- * stays `false` until `woodpecker/prod` deploys `DOCKERHUB_PUBLISH` on
- * `helm-push` and `tofu-dockerhub/prod` creates `shepherdjerred/charts-bootstrap`.
+ * Canonical chart publication origins matching `helm-delivery-publication.ts`
+ * and `helm-oci-bootstrap.ts`: ordinary first-party charts publish to
+ * `charts.tailnet-1a49.ts.net`, while `charts-bootstrap` resolves from public
+ * Docker Hub OCI (`shepherdjerred/charts-bootstrap`).
  */
 export const FIRST_PARTY_CHART_PUBLICATION_ORIGIN =
-  "https://chartmuseum.tailnet-1a49.ts.net";
-export const CHARTS_BOOTSTRAP_OCI_ENABLED = false;
+  "https://charts.tailnet-1a49.ts.net";
+export const CHARTS_BOOTSTRAP_OCI_ENABLED = true;
 
 export async function resolvePublishedChartArtifact(
   name: string,

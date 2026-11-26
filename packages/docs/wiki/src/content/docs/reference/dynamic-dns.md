@@ -1,29 +1,30 @@
 ---
 title: Dynamic home DNS
-description: Hostname ownership, address families, and credential inputs for the home DDNS deployment.
+description: Hostname ownership, address families, and credential inputs for the Temporal home DDNS sync.
 ---
 
-The [DDNS deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/ddns.ts)
-maintains home-address records in Cloudflare.
+The `ddns-sync` Temporal schedule runs
+[`syncDdnsRecords`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/infra/ddns.ts)
+on `temporal-infra-worker` to maintain home-address records in Cloudflare.
 Application CNAME records belong to the
 [Cloudflare stack](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab-cdktn/src/stacks/cloudflare).
 
-| Hostname             | Address families  | Configuration                                                |
-| -------------------- | ----------------- | ------------------------------------------------------------ |
-| `ddns.sjer.red`      | Secret-configured | Existing `config.json` in the Cloudflare DDNS 1Password item |
-| `ipv4.ddns.sjer.red` | IPv4 only         | `ipv4-ddns` container in the DDNS chart                      |
+| Hostname             | Address families                          | Record policy                               |
+| -------------------- | ----------------------------------------- | ------------------------------------------- |
+| `ddns.sjer.red`      | IPv4 (`A`) and IPv6 (`AAAA` when present) | DNS-only (`proxied: false`), 300-second TTL |
+| `ipv4.ddns.sjer.red` | IPv4 (`A`) only                           | DNS-only (`proxied: false`), 300-second TTL |
 
-The deployment defines the IPv4-only target as DNS-only with a 300-second TTL.
-Its IPv6 provider is disabled.
-Both containers use the image pinned in the
-[version catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/catalog.json).
+`ipv4.ddns.sjer.red` omits `AAAA` records so CNAME targets backed by IPv4-only
+router forwards never resolve over IPv6.
 
-The deployment projects the `api_token` field of the same
-1Password item used by the existing updater. Its Secret projection exposes
-only that field as a file to the IPv4 updater.
+[`temporal-infra-worker`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts)
+projects only the `api_token` field from `Secret/temporal-ddns-api-token` in
+namespace `temporal` to `/run/secrets/ddns/api-token`
+(`CLOUDFLARE_DDNS_API_TOKEN_FILE`).
 Credential replacement is covered by
 [Rotate the DDNS credential](/how-to/rotate-ddns-credentials/).
 
 ## Related
 
 - [Homelab networking](/explanation/homelab/overview/)
+- [Temporal workflow inventory](/reference/temporal-workflows/)

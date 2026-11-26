@@ -1475,35 +1475,6 @@
       }
     },
     {
-      "id": "chartmuseum",
-      "title": "ChartMuseum",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "gitops",
-      "components": [
-        {
-          "name": "chart:chartmuseum",
-          "producer": "acquisition"
-        },
-        {
-          "name": "chart:chartmuseum-companion",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["chartmuseum"],
-        "argoApps": ["chartmuseum"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "chartmuseum": "upstream",
-          "chartmuseum-companion": "inactive"
-        },
-        "charts": ["chartmuseum-companion"]
-      }
-    },
-    {
       "id": "tofu-application-secrets",
       "title": "OpenTofu application-secrets stack",
       "package": "homelab",
@@ -2180,44 +2151,6 @@
       }
     },
     {
-      "id": "turbo-cache",
-      "title": "Turborepo cache",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "ci",
-      "components": [
-        {
-          "name": "chart:turbo-cache",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["turbo-cache"],
-        "argoApps": ["turbo-cache"]
-      }
-    },
-    {
-      "id": "gradle-build-cache",
-      "title": "Gradle build cache",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "ci",
-      "components": [
-        {
-          "name": "chart:gradle-build-cache",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["gradle-build-cache"],
-        "argoApps": ["gradle-build-cache"]
-      }
-    },
-    {
       "id": "kueue",
       "title": "Kueue",
       "lifecycle": "active",
@@ -2420,26 +2353,6 @@
       }
     },
     {
-      "id": "gickup",
-      "title": "Gickup",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "storage",
-      "components": [
-        {
-          "name": "chart:gickup",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["gickup"],
-        "argoApps": ["gickup"],
-        "grafanaDashboards": ["gitckup-dashboard"]
-      }
-    },
-    {
       "id": "tailscale",
       "title": "Tailscale operator",
       "lifecycle": "active",
@@ -2542,25 +2455,6 @@
         "rootReleaseExclusions": {
           "cert-manager": "upstream"
         }
-      }
-    },
-    {
-      "id": "ddns",
-      "title": "Dynamic DNS",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "networking",
-      "components": [
-        {
-          "name": "chart:ddns",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["ddns"],
-        "argoApps": ["ddns"]
       }
     },
     {
@@ -3112,7 +3006,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/10",
+      "recipeRevisionId": "minecraft-tsmc/11",
       "configurationRevisionId": "minecraft-tsmc/11"
     },
     {
@@ -3337,15 +3231,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/2",
-      "configurationRevisionId": "argocd/prod/19"
-    },
-    {
-      "id": "chartmuseum/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "chartmuseum/prod/2",
-      "configurationRevisionId": "chartmuseum/prod/3"
+      "configurationRevisionId": "argocd/prod/20"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3604,22 +3490,6 @@
       "configurationRevisionId": "buildkitd/prod/1"
     },
     {
-      "id": "turbo-cache/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "turbo-cache/prod/2",
-      "configurationRevisionId": "turbo-cache/prod/1"
-    },
-    {
-      "id": "gradle-build-cache/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "gradle-build-cache/prod/2",
-      "configurationRevisionId": "gradle-build-cache/prod/1"
-    },
-    {
       "id": "openebs/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3650,14 +3520,6 @@
       "automatic": true,
       "recipeRevisionId": "postgres-operator/prod/1",
       "configurationRevisionId": "postgres-operator/prod/2"
-    },
-    {
-      "id": "gickup/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "gickup/prod/2",
-      "configurationRevisionId": "gickup/prod/1"
     },
     {
       "id": "tailscale/prod",
@@ -3700,14 +3562,6 @@
       "configurationRevisionId": "kueue/prod/2"
     },
     {
-      "id": "ddns/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "ddns/prod/2",
-      "configurationRevisionId": "ddns/prod/1"
-    },
-    {
       "id": "1password/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3744,7 +3598,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "charts/prod/4",
+      "recipeRevisionId": "charts/prod/5",
       "configurationRevisionId": "charts/prod/1"
     },
     {
@@ -3958,36 +3812,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "charts/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -4130,21 +3954,6 @@
     {
       "dependent": "cross-compilers/prod",
       "prerequisite": "tofu-seaweedfs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "ddns/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "ddns/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "ddns/prod",
-      "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
@@ -4373,36 +4182,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "gickup/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "glitter-boys-launcher/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -4470,31 +4249,6 @@
     {
       "dependent": "golink/prod",
       "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },
     {
@@ -5559,11 +5313,6 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "chartmuseum/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "cloudflare-operator/prod",
       "rule": "any-accepted"
     },
@@ -5710,31 +5459,6 @@
     {
       "dependent": "ts-mc-docs/prod",
       "prerequisite": "tofu-seaweedfs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },
     {

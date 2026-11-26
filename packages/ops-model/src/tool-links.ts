@@ -12,7 +12,6 @@ export const TOOL_HOSTS = {
   grafana: "https://grafana.tailnet-1a49.ts.net",
   temporal: "https://temporal-ui.tailnet-1a49.ts.net",
   bugsink: "https://bugsink.sjer.red",
-  chartmuseum: "https://chartmuseum.tailnet-1a49.ts.net",
   phoenix: "https://phoenix.tailnet-1a49.ts.net",
   posthog: "https://us.posthog.com",
   prometheus: "https://prometheus.tailnet-1a49.ts.net",

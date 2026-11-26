@@ -24,10 +24,10 @@ export const PERIODICALLY_PRUNED_PVCS = [
     prunedBy: "ci-uv-cache-prune-weekly",
   },
   {
-    namespace: "turbo-cache",
-    claim: "turbo-cache-liskov",
-    // packages/temporal/src/schedules/schedule-definitions-early.ts
-    prunedBy: "turbo-cache-clean-daily",
+    namespace: "ci-cache",
+    claim: "ci-cache-liskov",
+    // packages/ci-cache/src/eviction.rs + packages/temporal/src/schedules/schedule-definitions-early.ts
+    prunedBy: "ci-cache-evictor-and-turbo-cache-clean-daily",
   },
   {
     namespace: "buildkitd",

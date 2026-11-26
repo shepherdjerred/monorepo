@@ -22,9 +22,9 @@ export const UV_CACHE = {
  * Toolchain caches that otherwise land in the container's home directory --
  * the writable layer on the CI node's OS disk -- and are rebuilt by every
  * step. Each claim is a separate ZFS dataset with its own quota, so one tool
- * filling its cache cannot starve another. None has a collector: Cargo, Go
- * and sccache bound or expire their own caches, and the homelab's
- * per-claim usage alert covers the rest.
+ * filling its cache cannot starve another. None has a collector: Cargo and Go
+ * bound or expire their own caches (sccache uses remote WebDAV on `ci-cache`),
+ * and the homelab's per-claim usage alert covers the rest.
  */
 
 /** Cargo's crate registry and Git checkouts (`~/.cargo/{registry,git}`). */

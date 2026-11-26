@@ -26,7 +26,7 @@ const RepositoryApplication = JSON.stringify({
   metadata: { name: "worker" },
   spec: {
     source: {
-      repoURL: "https://chartmuseum.sjer.red",
+      repoURL: "https://charts.tailnet-1a49.ts.net",
       chart: "worker",
       targetRevision: "~2.0.0-0",
     },
@@ -527,7 +527,7 @@ describe("Argo CD child reconciliation identity", () => {
 
   test("adopts an operation carrying its exact declared source", async () => {
     const source = {
-      repoURL: "https://chartmuseum.sjer.red",
+      repoURL: "https://charts.tailnet-1a49.ts.net",
       chart: "worker",
       targetRevision: "~2.0.0-0",
     };
@@ -557,7 +557,7 @@ describe("Argo CD child reconciliation identity", () => {
       await reconcileAgainstActiveChildOperation(
         activeChildOperation({
           source: {
-            repoURL: "https://chartmuseum.sjer.red",
+            repoURL: "https://charts.tailnet-1a49.ts.net",
             chart: "worker",
             targetRevision: "~2.0.0-0",
           },
@@ -565,7 +565,7 @@ describe("Argo CD child reconciliation identity", () => {
         {
           spec: {
             source: {
-              repoURL: "https://chartmuseum.sjer.red",
+              repoURL: "https://charts.tailnet-1a49.ts.net",
               chart: "worker",
               targetRevision: "~2.0.1-0",
             },

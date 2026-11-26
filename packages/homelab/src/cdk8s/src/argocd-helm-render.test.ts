@@ -45,8 +45,6 @@ const APPS_YAML = path.join(DIST_DIR, "apps.k8s.yaml");
 const INTERNAL_REPOS = [
   "charts.tailnet-1a49.ts.net",
   "registry-1.docker.io/shepherdjerred",
-  "chartmuseum.tailnet-1a49.ts.net",
-  "chartmuseum.sjer.red",
 ];
 
 // Git repos (not Helm chart repos) — skip

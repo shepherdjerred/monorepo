@@ -50,7 +50,7 @@ const WOODPECKER_PIPES_PROMQL =
   'sum by (label_ci_sjer_red_step_key) (max by (namespace, pod) (kube_pod_status_phase{namespace="woodpecker-ci",phase="Running"} == 1) * on (namespace, pod) group_left (label_ci_sjer_red_step_key) max by (namespace, pod, label_ci_sjer_red_step_key) (kube_pod_labels{namespace="woodpecker-ci",label_ci_sjer_red_step_key!=""}))';
 
 const TURBO_HIT_PROMQL =
-  'sum(rate(container_network_transmit_bytes_total{namespace="turbo-cache"}[{window}])) / clamp_min(sum(rate(container_network_transmit_bytes_total{namespace="turbo-cache"}[{window}])) + sum(rate(container_network_receive_bytes_total{namespace="turbo-cache"}[{window}])), 1e-9)';
+  'sum(rate(container_network_transmit_bytes_total{namespace="ci-cache"}[{window}])) / clamp_min(sum(rate(container_network_transmit_bytes_total{namespace="ci-cache"}[{window}])) + sum(rate(container_network_receive_bytes_total{namespace="ci-cache"}[{window}])), 1e-9)';
 
 /**
  * Named PromQL presets. The browser picks a preset id and a range; it never
@@ -182,14 +182,14 @@ export const SERIES_PRESETS: Record<SeriesPresetId, SeriesPreset> = {
     TURBO_HIT_PROMQL,
     { name: "egress share" },
   ),
-  "turbo-network-bps": multi("Turborepo cache network throughput", "bps", [
+  "turbo-network-bps": multi("CI cache network throughput", "bps", [
     [
       "egress (hits)",
-      'sum(rate(container_network_transmit_bytes_total{namespace="turbo-cache"}[{window}]))',
+      'sum(rate(container_network_transmit_bytes_total{namespace="ci-cache"}[{window}]))',
     ],
     [
       "ingress (puts)",
-      'sum(rate(container_network_receive_bytes_total{namespace="turbo-cache"}[{window}]))',
+      'sum(rate(container_network_receive_bytes_total{namespace="ci-cache"}[{window}]))',
     ],
   ]),
   "delivery-active": single(

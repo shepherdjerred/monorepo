@@ -3,7 +3,6 @@ import type { App } from "cdk8s";
 import { createAppsChart } from "./cdk8s-charts/apps.ts";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "./cdk8s-charts/starlight-karma-bot.ts";
-import { createDdnsChart } from "./cdk8s-charts/ddns.ts";
 import { createRedlibChart } from "./cdk8s-charts/media/redlib.ts";
 import { createBirmelChart } from "./cdk8s-charts/birmel.ts";
 import { createCloudflareTunnelChart } from "./cdk8s-charts/platform/cloudflare-tunnel.ts";
@@ -14,7 +13,6 @@ import { createGolinkChart } from "./cdk8s-charts/platform/golink.ts";
 import { createFreshRssChart } from "./cdk8s-charts/media/freshrss.ts";
 import { createPinchtabChart } from "./cdk8s-charts/pinchtab.ts";
 import { createArcadeChart } from "./cdk8s-charts/games/arcade.ts";
-import { createGickupChart } from "./cdk8s-charts/gickup.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
 import { createBugsinkChart } from "./cdk8s-charts/platform/bugsink.ts";
@@ -23,8 +21,6 @@ import { createPhoenixChart } from "./cdk8s-charts/platform/phoenix.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
-import { createTurboCacheChart } from "./cdk8s-charts/platform/turbo-cache.ts";
-import { createGradleBuildCacheChart } from "./cdk8s-charts/platform/gradle-build-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/platform/buildkitd.ts";
 import { createAlertDashboardChart } from "./cdk8s-charts/platform/alert-dashboard.ts";
 import { createStashChart } from "./cdk8s-charts/media/stash.ts";
@@ -95,7 +91,6 @@ export async function setupCharts(app: App): Promise<void> {
   createStarlightKarmaBotChart(app, "prod");
 
   // Per-service charts
-  createDdnsChart(app);
   createRedlibChart(app);
 
   // S3-backed static sites
@@ -114,7 +109,6 @@ export async function setupCharts(app: App): Promise<void> {
   await createFreshRssChart(app);
   createPinchtabChart(app);
   createArcadeChart(app);
-  await createGickupChart(app);
   createGrafanaDbChart(app);
   createBugsinkChart(app);
   createWoodpeckerChart(app);
@@ -124,8 +118,6 @@ export async function setupCharts(app: App): Promise<void> {
   createTemporalChart(app);
   createDeliveryControlPlaneChart(app);
   createTrmnlDashboardChart(app);
-  createTurboCacheChart(app);
-  createGradleBuildCacheChart(app);
   createBuildkitdChart(app);
   createStashChart(app);
   createStormBrainChart(app);

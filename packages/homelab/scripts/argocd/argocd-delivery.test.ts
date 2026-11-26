@@ -25,7 +25,7 @@ function application() {
     },
     spec: {
       source: {
-        repoURL: "https://chartmuseum.sjer.red",
+        repoURL: "https://charts.tailnet-1a49.ts.net",
         chart: "arcade",
         targetRevision: "2.0.0-old",
         helm: { values: "environment: prod" },
@@ -38,7 +38,7 @@ function application() {
 const selection = {
   application: "arcade",
   environmentId: "arcade/prod",
-  repository: "https://chartmuseum.sjer.red",
+  repository: "https://charts.tailnet-1a49.ts.net",
   chart: "arcade",
   revision: "2.0.0-123",
   parameters: {
