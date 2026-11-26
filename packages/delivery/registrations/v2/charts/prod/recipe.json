@@ -1,5 +1,5 @@
 {
-  "id": "charts/prod/3",
+  "id": "charts/prod/4",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "charts"
       },
       "source": {
-        "repoURL": "registry-1.docker.io/shepherdjerred",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "charts-bootstrap"
       },
       "syncOptions": ["CreateNamespace=true"],

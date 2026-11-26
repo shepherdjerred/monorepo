@@ -125,10 +125,6 @@ describe("dockerhub", () => {
     });
     expect(dockerhub.import).toEqual([
       {
-        id: "shepherdjerred/charts-bootstrap",
-        to: "docker_hub_repository.charts_bootstrap",
-      },
-      {
         id: "shepherdjerred/delivery",
         to: 'docker_hub_repository.image["delivery"]',
       },

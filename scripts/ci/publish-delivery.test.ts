@@ -809,6 +809,7 @@ describe("published chart artifact verification", () => {
       "charts-bootstrap",
       "2.0.0-42",
       {
+        ociBootstrapEnabled: true,
         fetch: async (url) => {
           ociRequests.push(requestUrl(url));
           return new Response(manifest, {

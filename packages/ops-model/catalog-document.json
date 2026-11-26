@@ -3744,7 +3744,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "charts/prod/3",
+      "recipeRevisionId": "charts/prod/4",
       "configurationRevisionId": "charts/prod/1"
     },
     {

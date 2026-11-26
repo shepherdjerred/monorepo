@@ -15,8 +15,8 @@ import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { createDeliveryClient } from "@shepherdjerred/delivery/client";
 import {
-  ensureOciBootstrapChart,
-  publishOciBootstrapChart,
+  chartsBootstrapRetainOptions,
+  publishedChartReceiptDigest,
 } from "./helm-oci-bootstrap.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
@@ -326,16 +326,13 @@ async function publishPlannedCharts(
     const archiveDigest = `sha256:${createHash("sha256")
       .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
       .digest("hex")}`;
-    const digest =
-      name === "charts-bootstrap"
-        ? await publishOciBootstrapChart(
-            chart.archive,
-            version,
-            runCommand,
-            fetch,
-            archiveDigest,
-          )
-        : archiveDigest;
+    const digest = await publishedChartReceiptDigest({
+      name,
+      archivePath: chart.archive,
+      archiveDigest,
+      version,
+      runCommand,
+    });
     publication.charts.push({
       name,
       revision: version,
@@ -484,16 +481,12 @@ async function main(): Promise<void> {
         "Actual chart publication requires its original CI identity",
       );
     }
-    await retainCurrentProducerArchives(publication, planningBase, plan, {
-      version,
-      ensureOciBootstrap: ({ archivePath, archiveDigest }) =>
-        ensureOciBootstrapChart({
-          archivePath,
-          archiveDigest,
-          version,
-          runCommand,
-        }),
-    });
+    await retainCurrentProducerArchives(
+      publication,
+      planningBase,
+      plan,
+      chartsBootstrapRetainOptions(version, runCommand),
+    );
     if (plan.publishOrder.length === 0) {
       console.log("No chart content changed; publishing zero charts");
     } else {
