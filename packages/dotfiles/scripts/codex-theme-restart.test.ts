@@ -405,6 +405,31 @@ test("queued theme changes wait for the same session to become idle", async () =
   ).toBe(false);
 });
 
+test("a queued restart outlasts an unreadable identity but not a changed conversation", async () => {
+  const mock = fixture({ status: "working" });
+  const target = await targetOf(mock);
+  let reads = 0;
+  const runtime: Runtime = {
+    ...mock.runtime,
+    identity: (snapshot) => {
+      reads++;
+      return reads <= 3
+        ? Promise.resolve(undefined)
+        : mock.runtime.identity(snapshot);
+    },
+  };
+  expect(
+    await waitForReadiness(runtime, target, () => Promise.resolve(false)),
+  ).toBe(true);
+  expect(reads).toBeGreaterThan(3);
+  const changed = fixture({ status: "working", changesThread: true });
+  expect(
+    await waitForReadiness(changed.runtime, await targetOf(changed), () =>
+      Promise.resolve(false),
+    ),
+  ).toBe(false);
+});
+
 test("refuses stale identity and rejects a replacement reporting another thread", async () => {
   const stale = fixture({ changesThread: true });
   expect(await restart(stale.runtime, await targetOf(stale))).toMatchObject({

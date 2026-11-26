@@ -45,6 +45,14 @@ function sameTerminal(next: Snapshot, original: Snapshot): boolean {
   return next.shell === original.shell && next.created === original.created;
 }
 
+/** The terminal's conversation could not be read right now, as with a tall draft. */
+export class IdentityUnavailableError extends Error {
+  constructor() {
+    super("Terminal conversation changed before restart");
+    this.name = "IdentityUnavailableError";
+  }
+}
+
 export async function verifiedSnapshot(
   runtime: Runtime,
   target: Target,
@@ -56,7 +64,9 @@ export async function verifiedSnapshot(
     current.foreground.pid !== snapshot.foreground.pid
   )
     throw new Error("Terminal process changed before restart");
-  if ((await runtime.identity(current)) !== thread)
+  const identity = await runtime.identity(current);
+  if (identity === undefined) throw new IdentityUnavailableError();
+  if (identity !== thread)
     throw new Error("Terminal conversation changed before restart");
   return current;
 }
@@ -309,7 +319,13 @@ export async function waitForReadiness(
     let current;
     try {
       current = await verifiedSnapshot(runtime, target);
-    } catch {
+    } catch (error) {
+      if (error instanceof IdentityUnavailableError) {
+        // A multiline draft can hide the status line; restart only once the
+        // conversation verifies again.
+        await runtime.sleep(2500);
+        continue;
+      }
       return false; // The terminal closed or changed before it was eligible.
     }
     if (await cancelled(current)) return false;
