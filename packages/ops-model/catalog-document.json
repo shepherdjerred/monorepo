@@ -4332,6 +4332,11 @@
     },
     {
       "dependent": "ops-dashboard/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },

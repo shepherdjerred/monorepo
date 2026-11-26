@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
+import { buildPostgresUrlExpr } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 
 const SecurityContextSchema = z
   .object({
@@ -151,7 +152,12 @@ describe("Alert Dashboard deployment", () => {
       "alert-dashboard-data",
     );
 
-    const ledgerContainers = [...podSpec.initContainers, ...podSpec.containers];
+    const ledgerContainers = [
+      ...podSpec.initContainers.filter(
+        (container) => container.name !== "incidents-prisma-migrate",
+      ),
+      ...podSpec.containers,
+    ];
     expect(ledgerContainers.map((container) => container.name)).toEqual([
       "prisma-migrate",
       "alert-dashboard",
@@ -172,11 +178,12 @@ describe("Alert Dashboard deployment", () => {
     ]);
   });
 
-  test("keeps the main-branch container hardening on the SQLite deployment", () => {
+  test("keeps the main-branch container hardening on every container", () => {
     const podSpec = synthesizeDeployment().spec.template.spec;
-    const ledgerContainers = [...podSpec.initContainers, ...podSpec.containers];
+    const allContainers = [...podSpec.initContainers, ...podSpec.containers];
+    expect(allContainers).toHaveLength(3);
 
-    for (const container of ledgerContainers) {
+    for (const container of allContainers) {
       expect(container.securityContext).toMatchObject({
         allowPrivilegeEscalation: false,
         capabilities: { drop: ["ALL"] },
@@ -188,6 +195,52 @@ describe("Alert Dashboard deployment", () => {
         seccompProfile: { type: "RuntimeDefault" },
       });
     }
+  });
+
+  test("migrates and connects Incidents to its own PostgreSQL without touching Hub's SQLite URL", () => {
+    const podSpec = synthesizeDeployment().spec.template.spec;
+    const migrate = podSpec.initContainers.find(
+      (container) => container.name === "incidents-prisma-migrate",
+    );
+    const server = podSpec.containers.find(
+      (container) => container.name === "alert-dashboard",
+    );
+    expect(podSpec.initContainers.map((container) => container.name)).toEqual([
+      "prisma-migrate",
+      "incidents-prisma-migrate",
+    ]);
+    expect(migrate?.args).toEqual([
+      "cd /app/packages/incidents && bunx --no-install prisma migrate deploy",
+    ]);
+    const credentials =
+      "incidents.incidents-postgresql.credentials.postgresql.acid.zalan.do";
+    for (const container of [migrate, server]) {
+      const env = container?.env ?? [];
+      const names = env.map((entry) => entry.name);
+      // kubelet expands `$(DB_USER)` only from variables declared earlier.
+      expect(names.indexOf("DB_USER")).toBeLessThan(
+        names.indexOf("INCIDENTS_DATABASE_URL"),
+      );
+      expect(names.indexOf("DB_PASSWORD")).toBeLessThan(
+        names.indexOf("INCIDENTS_DATABASE_URL"),
+      );
+      expect(names.indexOf("DB_USER")).toBeGreaterThanOrEqual(0);
+      expect(
+        env.find((entry) => entry.name === "INCIDENTS_DATABASE_URL")?.value,
+      ).toBe(buildPostgresUrlExpr("incidents-postgresql:5432", "incidents_db"));
+      for (const key of ["DB_USER", "DB_PASSWORD"]) {
+        const ref = env.find((entry) => entry.name === key)?.valueFrom
+          ?.secretKeyRef;
+        expect(ref).toMatchObject({ name: credentials });
+        expect(ref?.optional).not.toBe(true);
+      }
+    }
+    expect(
+      server?.env?.find((entry) => entry.name === "DATABASE_URL")?.value,
+    ).toBe(DATABASE_URL);
+    expect(migrate?.env?.some((entry) => entry.name === "DATABASE_URL")).toBe(
+      false,
+    );
   });
 
   test("uses the outbound mail broker HTTP API for email delivery", () => {

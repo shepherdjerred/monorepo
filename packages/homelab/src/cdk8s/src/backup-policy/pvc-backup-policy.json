@@ -604,5 +604,11 @@
     "name": "pgdata-errors-postgresql-0",
     "backup": "enabled",
     "reason": "Errors PostgreSQL database"
+  },
+  {
+    "namespace": "alert-dashboard",
+    "name": "pgdata-incidents-postgresql-0",
+    "backup": "enabled",
+    "reason": "Hub Incidents PostgreSQL database"
   }
 ]
