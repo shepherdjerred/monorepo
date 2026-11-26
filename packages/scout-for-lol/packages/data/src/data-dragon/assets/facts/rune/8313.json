@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8313",
+  "name": "Triple Tonic",
+  "description": "Upon reaching level 3, gain an Elixir of Avarice. Upon reaching level 6, gain an Elixir of Force.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/AlchemistCabinet.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771004",
+  "name": "Faerie Charm",
+  "description": "Grants 3 Mana Regen per 5 seconds.",
+  "facts": [
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "3"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771004.png",
+  "goldTotal": 180,
+  "goldCombine": 180,
+  "keyFact": {
+    "label": "Cost",
+    "value": "180 gold"
+  }
+}

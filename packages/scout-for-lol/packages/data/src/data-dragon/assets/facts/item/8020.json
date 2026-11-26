@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "8020",
+  "name": "Abyssal Mask",
+  "description": "Unmake: Nearby enemy champions take 12% more magic damage.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "45"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1057",
+      "name": "Negatron Cloak",
+      "icon": "img/item/1057.png"
+    }
+  ],
+  "icon": "img/item/8020.png",
+  "goldTotal": 2650,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2650 gold"
+  }
+}

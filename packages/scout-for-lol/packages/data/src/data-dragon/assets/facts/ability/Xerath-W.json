@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xerath-W",
+  "name": "Eye of Destruction",
+  "description": "Xerath calls down a blast of arcane energy, dealing 50/85/120/155/190 (+65% AP) magic damage and Slowing them by 25% for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/90/100/110/120 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Xerath-W.png",
+  "slot": "W",
+  "championKey": "Xerath",
+  "championName": "Xerath",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    80,
+    90,
+    100,
+    110,
+    120
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

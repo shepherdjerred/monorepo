@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8229",
+  "name": "Arcane Comet",
+  "description": "Damaging a champion with an ability hurls a damaging comet at their location.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20 - 8s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/ArcaneComet.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

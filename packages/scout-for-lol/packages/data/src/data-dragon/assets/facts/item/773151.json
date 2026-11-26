@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773151",
+  "name": "Liandry's Torment",
+  "description": "Eyes of Pain: 15 Magic Penetration Mana Burn: Dealing spell damage applies a damage-over-time effect for 3 seconds that deals bonus magic damage equal to 2% of the target's current Health per second.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "50"
+    },
+    {
+      "label": "Health",
+      "value": "300"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773136",
+      "name": "Haunting Guise",
+      "icon": "img/item/773136.png"
+    },
+    {
+      "kind": "item",
+      "key": "771052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/771052.png"
+    }
+  ],
+  "icon": "img/item/773151.png",
+  "goldTotal": 2900,
+  "goldCombine": 980,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

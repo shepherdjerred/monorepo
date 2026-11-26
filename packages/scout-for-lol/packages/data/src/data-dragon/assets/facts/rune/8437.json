@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8437",
+  "name": "Grasp of the Undying",
+  "description": "Every 4s your next attack on a champion deals bonus magic damage, heals you, and permanently increases your health.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/GraspOfTheUndying.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

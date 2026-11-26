@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3302",
+  "name": "Terminus",
+  "description": "Shadow: Attacks deal bonus magic damage On-Hit. Juxtaposition: Alternate between Light and Dark Attacks against champions: Light Attacks grant Armor and Magic Resist for 5s.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "30"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "35%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3051",
+      "name": "Hearthbound Axe",
+      "icon": "img/item/3051.png"
+    },
+    {
+      "kind": "item",
+      "key": "1043",
+      "name": "Recurve Bow",
+      "icon": "img/item/1043.png"
+    }
+  ],
+  "icon": "img/item/3302.png",
+  "goldTotal": 3000,
+  "goldCombine": 1100,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

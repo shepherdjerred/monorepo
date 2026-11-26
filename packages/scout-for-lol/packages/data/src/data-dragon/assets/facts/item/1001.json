@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1001",
+  "name": "Boots",
+  "description": "Grants 25 Move Speed.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1001.png",
+  "goldTotal": 300,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}

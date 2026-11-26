@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MasterYi-R",
+  "name": "Highlander",
+  "description": "Passive: Champion takedowns reduce the remaining Cooldown of Master Yi's basic Abilities by 70%. Active: Master Yi enters a trance, gaining 40/50/60% Move Speed, 25/45/65% Attack Speed, and immunity to Slows for 7 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MasterYi-R.png",
+  "slot": "R",
+  "championKey": "MasterYi",
+  "championName": "Master Yi",
+  "maxRank": 3,
+  "cooldownByRank": [
+    85,
+    85,
+    85
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "85 s"
+  }
+}

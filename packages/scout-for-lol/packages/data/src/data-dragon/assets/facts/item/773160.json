@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773160",
+  "name": "Feral Flare",
+  "description": "Feral Mark: Gain a Feral stack for each champion takedown scored and large monster killed.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Armor",
+      "value": "25"
+    },
+    {
+      "label": "Life Steal",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/773160.png",
+  "goldTotal": 2000,
+  "goldCombine": 2000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2000 gold"
+  }
+}

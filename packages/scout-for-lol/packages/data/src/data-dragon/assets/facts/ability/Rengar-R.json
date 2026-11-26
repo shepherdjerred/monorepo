@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rengar-R",
+  "name": "Thrill of the Hunt",
+  "description": "Passive: Rengar will also leap Attack when Camouflaged. Active: Rengar gains 40/50/60% Move Speed and True Sight in a small area around the nearest enemy champion for 12/16/20 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "2500/3000/3500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rengar-R.png",
+  "slot": "R",
+  "championKey": "Rengar",
+  "championName": "Rengar",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    90,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    2500,
+    3000,
+    3500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/90/80 s"
+  }
+}

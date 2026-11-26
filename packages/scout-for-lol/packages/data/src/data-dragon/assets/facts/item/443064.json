@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443064",
+  "name": "Talisman Of Ascension",
+  "description": "? ACTIVE.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/443064.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pyke-E",
+  "name": "Phantom Undertow",
+  "description": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom Stuns for 1.25 (+1% Lethality) seconds and deals 100/150/200/250/300 (+100% bonus AD) physical damage to champions.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Pyke-E.png",
+  "slot": "E",
+  "championKey": "Pyke",
+  "championName": "Pyke",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

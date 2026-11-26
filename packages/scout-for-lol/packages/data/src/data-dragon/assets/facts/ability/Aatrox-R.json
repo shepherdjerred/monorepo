@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aatrox-R",
+  "name": "World Ender",
+  "description": "Aatrox reveals his true demonic form, Fearing nearby minions for 3 seconds and gaining 60/80/100% Move Speed decaying over 10 seconds. He also gains 20/30/40% Attack Damage and increases self-healing by 50/75/100% for the duration.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aatrox-R.png",
+  "slot": "R",
+  "championKey": "Aatrox",
+  "championName": "Aatrox",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

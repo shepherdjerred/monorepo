@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Irelia-passive",
+  "name": "Ionian Fervor",
+  "description": "When Irelia strikes enemies with spells she gains stacking bonus Attack Speed. At maximum stacks she also gains bonus damage on hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Irelia-passive.png",
+  "slot": "passive",
+  "championKey": "Irelia",
+  "championName": "Irelia",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

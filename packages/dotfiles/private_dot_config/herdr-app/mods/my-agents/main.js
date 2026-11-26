@@ -387,6 +387,8 @@ export default class Agents extends View {
         const r = await exec("hostname", []);
         if (r.code === 0) {
           this.hostName = r.stdout.trim();
+          if (shared("herdr.local-host") !== this.hostName)
+            setShared("herdr.local-host", this.hostName);
           cx.notify();
         }
       } catch {}
@@ -807,7 +809,13 @@ export default class Agents extends View {
           .min_w(0)
           .truncate()
           .text_color(on ? t.foreground : t.muted)
-          .child(k.name || k.template || k.program?.name || k.address),
+          .child(
+            k.labels?.["herdr.agent-name"] ||
+              k.name ||
+              k.template ||
+              k.program?.name ||
+              k.address,
+          ),
       )
       .child(
         div()
@@ -914,7 +922,12 @@ export default class Agents extends View {
     // Compute row labels/details before sorting so Name sort matches displayed text.
     const tabs = spaces().flatMap((s) => s.tabs);
     const allPanes = panes();
+    const namedAgents = new Map(
+      all.map((term) => [term.address, term.labels?.["herdr.agent-name"]]),
+    );
     const label = (a) => {
+      const name = namedAgents.get(a.address);
+      if (name) return name;
       const tab = tabs.find((tab) => tab.id === a.tab);
       return tab
         ? title(tab, lead(tab, allPanes))

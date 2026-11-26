@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Trundle-Q",
+  "name": "Chomp",
+  "description": "Trundle's next Attack deals 10/30/50/70/90 (+115/125/135/145/155% AD) physical damage and briefly Slows by 75%, then Trundle gains 20/25/30/35/40 Attack Damage for 5 seconds and the enemy loses 10/12.5/15/17.5/20 Attack Damage for the same duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Trundle-Q.png",
+  "slot": "Q",
+  "championKey": "Trundle",
+  "championName": "Trundle",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3.5 s"
+  }
+}

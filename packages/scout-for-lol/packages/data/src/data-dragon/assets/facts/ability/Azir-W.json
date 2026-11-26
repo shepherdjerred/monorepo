@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Azir-W",
+  "name": "Arise!",
+  "description": "Azir summons a Sand Soldier for 10 seconds. When Azir Attacks an enemy near a Sand Soldier, he instead orders the soldiers to stab, dealing 50/65/80/95/110 (+0-72 based on level) (+35/42.5/50/57.5/65% AP) magic damage in their direction.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/35/30/25/20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "525"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Azir-W.png",
+  "slot": "W",
+  "championKey": "Azir",
+  "championName": "Azir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+  ],
+  "costByRank": [
+    40,
+    35,
+    30,
+    25,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    525,
+    525,
+    525,
+    525,
+    525
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1.5 s"
+  }
+}

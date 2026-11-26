@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Neeko-Q",
+  "name": "Blooming Burst",
+  "description": "Neeko throws a seed that blooms to deal 60/110/160/210/260 (+60% AP) magic damage. If it kills a unit or hits a champion or large monster, it will bloom again, dealing 35/60/85/110/135 (+25% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Neeko-Q.png",
+  "slot": "Q",
+  "championKey": "Neeko",
+  "championName": "Neeko",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8.5,
+    8,
+    7.5,
+    7
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8.5/8/7.5/7 s"
+  }
+}

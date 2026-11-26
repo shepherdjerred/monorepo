@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "RekSai-passive",
+  "name": "Fury of the Xer'Sai",
+  "description": "Rek'Sai generates Fury by Attacking and hitting with basic Abilities. She consumes this Fury while Burrowed to restore health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/RekSai-passive.png",
+  "slot": "passive",
+  "championKey": "RekSai",
+  "championName": "Rek'Sai",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

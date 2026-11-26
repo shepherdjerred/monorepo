@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sona-W",
+  "name": "Aria of Perseverance",
+  "description": "Active: Sona restores 30/45/60/75/90 (+30% AP) Health to herself and a nearby allied champion, prioritizing the most wounded. She then begins a new Melody.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/85/90/95/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sona-W.png",
+  "slot": "W",
+  "championKey": "Sona",
+  "championName": "Sona",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    80,
+    85,
+    90,
+    95,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

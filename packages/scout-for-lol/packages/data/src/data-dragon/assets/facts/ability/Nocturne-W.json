@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nocturne-W",
+  "name": "Shroud of Darkness",
+  "description": "Passive: Nocturne gains 30/35/40/45/50% Attack Speed. Active: Nocturne creates a shadow barrier for 1.5 seconds that blocks the next enemy Ability.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nocturne-W.png",
+  "slot": "W",
+  "championKey": "Nocturne",
+  "championName": "Nocturne",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    18,
+    16,
+    14,
+    12
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18/16/14/12 s"
+  }
+}

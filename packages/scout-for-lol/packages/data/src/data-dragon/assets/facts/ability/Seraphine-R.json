@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Seraphine-R",
+  "name": "Encore",
+  "description": "Seraphine takes the stage, projecting a captivating force that Charms for 1.25/1.5/1.75 seconds and deals 150/200/250 (+40% AP) magic damage. Any champions struck (including allies) become part of the performance, extending the range of this Ability.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Seraphine-R.png",
+  "slot": "R",
+  "championKey": "Seraphine",
+  "championName": "Seraphine",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    140,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/140/120 s"
+  }
+}

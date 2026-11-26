@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vex-W",
+  "name": "Personal Space",
+  "description": "Vex gains 50/75/100/125/150 (+75% AP) Shield for 2.5 seconds and emits a shockwave that deals 80/120/160/200/240 (+30% AP) magic damage. Consumes Gloom on enemies hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vex-W.png",
+  "slot": "W",
+  "championKey": "Vex",
+  "championName": "Vex",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15,
+    14,
+    13,
+    12
+  ],
+  "costByRank": [
+    75,
+    75,
+    75,
+    75,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15/14/13/12 s"
+  }
+}

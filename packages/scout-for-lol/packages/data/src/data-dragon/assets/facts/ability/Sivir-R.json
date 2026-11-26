@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sivir-R",
+  "name": "On The Hunt",
+  "description": "Sivir rallies her nearby allies, granting them 20/25/30% Move Speed for 8/10/12 seconds. Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by 0.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sivir-R.png",
+  "slot": "R",
+  "championKey": "Sivir",
+  "championName": "Sivir",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

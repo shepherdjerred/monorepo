@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3853",
+  "name": "Shard of True Ice",
+  "description": "This item grants reduced gold from minions if anyone on your team with this item kill excessive numbers of them. ACTIVE.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "40"
+    },
+    {
+      "label": "Health",
+      "value": "75"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "3"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3853.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

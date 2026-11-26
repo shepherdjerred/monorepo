@@ -23,6 +23,7 @@ import {
 } from "@scout-for-lol/data/meta/meta-serving.ts";
 import {
   entriesOf,
+  matchupSpellsOf,
   type RollupRow,
   type SliceRows,
 } from "#src/meta/meta-entries.ts";
@@ -128,6 +129,11 @@ function indexRows(rows: readonly RollupRow[]): RowIndex {
       case "matchup":
       case "trait_base":
       case "item_trait":
+      case "duration":
+      case "boots":
+      case "keystone":
+      case "spell_single":
+      case "matchup_spell":
         addDetailRow(index, row);
         break;
     }
@@ -237,6 +243,7 @@ function assembleSlices(
       pickRate: slice.pickRate,
       banRate: slice.banRate,
     });
+    const spellsByOpponent = matchupSpellsOf(rows);
     const opponents = (rows.get("matchup") ?? [])
       .map((entry) => ({
         championId: Number(entry.key1),
@@ -244,6 +251,7 @@ function assembleSlices(
         games: entry.games,
         wins: entry.wins,
         winRate: wilsonInterval(entry.wins, entry.games),
+        spells: spellsByOpponent.get(entry.key1) ?? [],
       }))
       .toSorted(
         (left, right) =>

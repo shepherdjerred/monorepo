@@ -38,6 +38,10 @@ reference.
   never treats old conversation as current system truth.
 - `pr asset` uploads only explicit files/directories and applies the documented
   retention/content-type behavior. Never upload private logs or secrets.
+- `pr asset` and `share` share one upload core (`src/lib/s3/upload.ts`) and
+  default to the `agent-share` AWS profile, which can write only the public and
+  private share buckets. `share public` is world-readable: use it only when
+  the user asked for public sharing, otherwise `share private` (tailnet-only).
 - `pr review` resolves provider findings with a visible audited reason; it must
   not silently edit review state.
 

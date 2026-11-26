@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "221031",
+  "name": "Chain Vest",
+  "description": "Grants 40 Armor.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/221031.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

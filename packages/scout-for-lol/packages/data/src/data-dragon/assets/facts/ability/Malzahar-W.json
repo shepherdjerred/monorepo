@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Malzahar-W",
+  "name": "Void Swarm",
+  "description": "Passive: Malzahar's other Abilities give him a stack when cast (max 2). Active: Malzahar summons a Voidling plus an additional Voidling per stack.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Malzahar-W.png",
+  "slot": "W",
+  "championKey": "Malzahar",
+  "championName": "Malzahar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    150,
+    150,
+    150,
+    150,
+    150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

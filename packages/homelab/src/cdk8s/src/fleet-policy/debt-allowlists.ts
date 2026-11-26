@@ -147,7 +147,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "buildkitd/buildkitd/buildkitd",
   "delivery/delivery/delivery",
   "delivery/delivery/migrate",
-  "freshrss/freshrss/main",
   "home/home-eufy-security-ws/main",
   "home/home-homeassistant/install-adaptive-lighting",
   "home/home-homeassistant/install-custom-brand-icons",

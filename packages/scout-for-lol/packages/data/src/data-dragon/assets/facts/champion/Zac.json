@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zac",
+  "name": "Zac",
+  "description": "Zac is the product of a toxic spill that ran through a chemtech seam and pooled in an isolated cavern deep in Zaun's Sump.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "685"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zac-passive",
+      "name": "Cell Division",
+      "icon": "img/ability/Zac-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zac-Q",
+      "name": "Stretching Strikes",
+      "icon": "img/ability/Zac-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zac-W",
+      "name": "Unstable Matter",
+      "icon": "img/ability/Zac-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zac-E",
+      "name": "Elastic Slingshot",
+      "icon": "img/ability/Zac-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zac-R",
+      "name": "Let's Bounce!",
+      "icon": "img/ability/Zac-R.png"
+    }
+  ],
+  "icon": "img/champion/Zac.png",
+  "art": "img/champion-splash/Zac_0.jpg",
+  "title": "the Secret Weapon",
+  "roles": [
+    "Tank",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Fighter"
+  }
+}

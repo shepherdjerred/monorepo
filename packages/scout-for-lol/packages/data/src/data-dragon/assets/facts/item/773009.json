@@ -1,0 +1,23 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773009",
+  "name": "Boots of Swiftness",
+  "description": "Enhanced Movement: 60 Move Speed Slow Resist: Movement slowing effects are reduced by 25%.",
+  "facts": [],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771001",
+      "name": "Boots of Speed",
+      "icon": "img/item/771001.png"
+    }
+  ],
+  "icon": "img/item/773009.png",
+  "goldTotal": 1000,
+  "goldCombine": 675,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

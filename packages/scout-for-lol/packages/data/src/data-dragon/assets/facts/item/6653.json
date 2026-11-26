@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6653",
+  "name": "Liandry's Torment",
+  "description": "Torment: Damaging Abilities burn enemies for 2% max Health magic damage per second for 3 seconds. Suffering: For each second in combat with enemy champions, deal 2% bonus damage, up to 6%.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Health",
+      "value": "300"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3147",
+      "name": "Haunting Guise",
+      "icon": "img/item/3147.png"
+    },
+    {
+      "kind": "item",
+      "key": "2508",
+      "name": "Fated Ashes",
+      "icon": "img/item/2508.png"
+    }
+  ],
+  "icon": "img/item/6653.png",
+  "goldTotal": 3000,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Morgana",
+  "name": "Morgana",
+  "description": "Conflicted between her celestial and mortal natures, Morgana bound her wings to embrace humanity, and inflicts her pain and bitterness upon the dishonest and the corrupt.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "450"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Morgana-passive",
+      "name": "Soul Siphon",
+      "icon": "img/ability/Morgana-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Morgana-Q",
+      "name": "Dark Binding",
+      "icon": "img/ability/Morgana-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Morgana-W",
+      "name": "Tormented Shadow",
+      "icon": "img/ability/Morgana-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Morgana-E",
+      "name": "Black Shield",
+      "icon": "img/ability/Morgana-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Morgana-R",
+      "name": "Soul Shackles",
+      "icon": "img/ability/Morgana-R.png"
+    }
+  ],
+  "icon": "img/champion/Morgana.png",
+  "art": "img/champion-splash/Morgana_0.jpg",
+  "title": "the Fallen",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

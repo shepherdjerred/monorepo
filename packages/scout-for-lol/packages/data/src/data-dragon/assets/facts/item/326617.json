@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "326617",
+  "name": "Moonstone Renewer",
+  "description": "Starlit Grace: Healing or shielding an ally chains the effect to another ally (excluding yourself), healing 30% or shielding 35% of the original amount.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "35"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    },
+    {
+      "kind": "item",
+      "key": "4642",
+      "name": "Bandleglass Mirror",
+      "icon": "img/item/4642.png"
+    }
+  ],
+  "icon": "img/item/326617.png",
+  "goldTotal": 2900,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xayah-E",
+  "name": "Bladecaller",
+  "description": "Xayah calls back all her dropped Feathers dealing damage and rooting enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Xayah-E.png",
+  "slot": "E",
+  "championKey": "Xayah",
+  "championName": "Xayah",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2000,
+    2000,
+    2000,
+    2000,
+    2000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

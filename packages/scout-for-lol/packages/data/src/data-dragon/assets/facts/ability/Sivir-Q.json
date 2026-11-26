@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sivir-Q",
+  "name": "Boomerang Blade",
+  "description": "Sivir hurls her crossblade like a boomerang, dealing damage each way.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sivir-Q.png",
+  "slot": "Q",
+  "championKey": "Sivir",
+  "championName": "Sivir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

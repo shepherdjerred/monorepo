@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3040",
+  "name": "Seraph's Embrace",
+  "description": "Awe: Gain Ability Power. Lifeline: (0s) Taking damage that would reduce your Health below 30% grants a Shield for 3 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3040.png",
+  "goldTotal": 2900,
+  "goldCombine": 2900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

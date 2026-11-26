@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Locke-Q",
+  "name": "Ritual Nails",
+  "description": "Locke readies a set of Soul Nails to throw, dealing 40/48/56/64/72 (+20% AP) magic damage and marking enemies hit. Nails apply a 25/25/60% Slow for 1/1/2 seconds, stacking with the amount of nails hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Locke-Q.png",
+  "slot": "Q",
+  "championKey": "Locke",
+  "championName": "Locke",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

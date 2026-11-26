@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TwistedFate-Q",
+  "name": "Wild Cards",
+  "description": "Twisted Fate throws three cards that deal 60/105/150/195/240 (+50% bonus AD) (+85% AP) magic damage each.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "10000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TwistedFate-Q.png",
+  "slot": "Q",
+  "championKey": "TwistedFate",
+  "championName": "Twisted Fate",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5.75,
+    5.5,
+    5.25,
+    5
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    10000,
+    10000,
+    10000,
+    10000,
+    10000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5.75/5.5/5.25/5 s"
+  }
+}

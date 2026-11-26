@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taliyah-R",
+  "name": "Weaver's Wall",
+  "description": "Taliyah creates a massive earthen wall for 4 seconds. If she immediately Recasts, she will ride along the wall as it unravels.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2500/4500/6500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Taliyah-R.png",
+  "slot": "R",
+  "championKey": "Taliyah",
+  "championName": "Taliyah",
+  "maxRank": 3,
+  "cooldownByRank": [
+    180,
+    150,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2500,
+    4500,
+    6500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "180/150/120 s"
+  }
+}

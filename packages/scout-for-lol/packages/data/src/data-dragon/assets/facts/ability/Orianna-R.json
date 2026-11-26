@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Orianna-R",
+  "name": "Command: Shockwave",
+  "description": "Orianna commands her Ball to unleash a shockwave, dealing 225/350/475 (+110% AP) magic damage to nearby enemies and Knocking them in the direction of the Ball.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "410"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Orianna-R.png",
+  "slot": "R",
+  "championKey": "Orianna",
+  "championName": "Orianna",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    95,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    410,
+    410,
+    410
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/95/80 s"
+  }
+}

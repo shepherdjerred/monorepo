@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2056",
+  "name": "Stealth Ward",
+  "description": "Active - Consume: Places a Stealth Ward on the ground that lasts 60 seconds, is Invisible to enemies but grants your team vision of the surrounding area.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2056.png",
+  "goldTotal": 40,
+  "goldCombine": 40,
+  "keyFact": {
+    "label": "Cost",
+    "value": "40 gold"
+  }
+}

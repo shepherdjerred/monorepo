@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772041",
+  "name": "Crystalline Flask",
+  "description": "Replenishment: Holds 3 charges and refills upon visiting the shop.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772041.png",
+  "goldTotal": 345,
+  "goldCombine": 345,
+  "keyFact": {
+    "label": "Cost",
+    "value": "345 gold"
+  }
+}

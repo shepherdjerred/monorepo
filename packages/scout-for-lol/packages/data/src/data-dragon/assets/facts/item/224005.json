@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "224005",
+  "name": "Imperial Mandate",
+  "description": "Control: Gain 15 Ability Haste for your abilities with Immobilizing effects. Command: On Immobilizing an enemy champion, mark them as 6% Vulnerable for 4 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/224005.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

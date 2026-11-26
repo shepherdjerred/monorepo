@@ -49,6 +49,11 @@ import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
  * | matchup       | picked        | opposing champion id       | -                   |
  * | trait_base    | picked        | -                          | enemy trait         |
  * | item_trait    | picked        | item id                    | enemy trait         |
+ * | duration      | picked        | `lt25`, `25to35`, `gt35`   | -                   |
+ * | boots         | picked        | boots item id (final)      | -                   |
+ * | keystone      | picked        | primary rune 0 id          | -                   |
+ * | spell_single  | picked        | one summoner spell id      | -                   |
+ * | matchup_spell | picked        | opposing champion id       | `4,12` (own pair)   |
  *
  * `games` is the number of participants (matches, for `matches` and `ban`)
  * and `wins` how many of them won. A match is counted only when it is a
@@ -60,7 +65,13 @@ import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
  */
 
 export const META_PARTIALS_TABLE = "meta_partials_crawl";
-export const META_PARTIALS_VERSION = 1;
+/**
+ * 2 added `duration`, `boots`, `keystone`, `spell_single` and `matchup_spell`.
+ * Bumping it makes every retained day's v1 file count as missing, so the next
+ * nightly rebuild re-derives each completed day (`compactCrawlDay`) before the
+ * roll-up, which only reads files at this version.
+ */
+export const META_PARTIALS_VERSION = 2;
 
 export const META_ROLES = [
   "TOP",
@@ -81,6 +92,20 @@ const START_WINDOW_MS = 90_000;
 export const NON_CORE_ITEM_IDS: readonly number[] = [
   2003, 2010, 2031, 2033, 2055, 2138, 2139, 2140, 3340, 3363, 3364,
 ];
+
+/**
+ * Summoner's Rift boots, from the Data Dragon items tagged `Boots` on map 11
+ * (`meta-pipeline.test.ts` pins this list to it): base boots, the tier-two
+ * boots, their tier-three upgrades and Slightly Magical Footwear.
+ */
+export const BOOTS_ITEM_IDS: readonly number[] = [
+  1001, 2422, 3006, 3008, 3009, 3010, 3013, 3020, 3047, 3111, 3117, 3158, 3168,
+  3170, 3171, 3173, 3174, 3175, 3176,
+];
+
+/** Game length buckets: under 25 minutes, 25 to 35 inclusive, over 35. */
+const SHORT_GAME_SECONDS = 25 * 60;
+const LONG_GAME_SECONDS = 35 * 60;
 
 /** Enemy damage-profile traits, from the enemy team's magic damage share. */
 export const ENEMY_TRAITS = [
@@ -104,6 +129,11 @@ export const MetaPartialKindSchema = z.enum([
   "matchup",
   "trait_base",
   "item_trait",
+  "duration",
+  "boots",
+  "keystone",
+  "spell_single",
+  "matchup_spell",
 ]);
 export type MetaPartialKind = z.infer<typeof MetaPartialKindSchema>;
 
@@ -129,6 +159,7 @@ const PARTIALS_TIMEOUT_MS = 30 * 60 * 1000;
 const sqlQueues = CRAWL_QUEUE_IDS.map((id) => id.toString()).join(", ");
 const sqlRoles = META_ROLES.map((role) => `'${role}'`).join(", ");
 const sqlNonCore = NON_CORE_ITEM_IDS.map((id) => id.toString()).join(", ");
+const sqlBoots = BOOTS_ITEM_IDS.map((id) => id.toString()).join(", ");
 
 export function metaPartialsDayDir(buildDir: string, day: string): string {
   return path.join(buildDir, META_PARTIALS_TABLE, ingestDayDirName(day));
@@ -212,7 +243,7 @@ SELECT match_id, participant_id, team_id, champion_id, champion_name,
   queue_id,
   lower(coalesce(bracket_tier, 'unranked')) AS tier,
   [item0, item1, item2, item3, item4, item5] AS items,
-  summoner_spell_1_id, summoner_spell_2_id,
+  summoner_spell_1_id, summoner_spell_2_id, game_duration_seconds,
   primary_rune_style_id, primary_rune_0_id, primary_rune_1_id,
   primary_rune_2_id, primary_rune_3_id,
   secondary_rune_style_id, secondary_rune_0_id, secondary_rune_1_id,
@@ -295,6 +326,31 @@ function partialQueries(): string[] {
        CAST(least(summoner_spell_1_id, summoner_spell_2_id) AS VARCHAR) || ',' || CAST(greatest(summoner_spell_1_id, summoner_spell_2_id) AS VARCHAR),
        '', count(*), ${wins}
      FROM meta_p GROUP BY ${GROUP}, least(summoner_spell_1_id, summoner_spell_2_id), greatest(summoner_spell_1_id, summoner_spell_2_id)`,
+    `SELECT 'duration', patch, queue_id, tier, role, champion_id, length_bucket, '', count(*), ${wins}
+     FROM (
+       SELECT *, CASE WHEN game_duration_seconds < ${SHORT_GAME_SECONDS.toString()} THEN 'lt25'
+                      WHEN game_duration_seconds <= ${LONG_GAME_SECONDS.toString()} THEN '25to35'
+                      ELSE 'gt35' END AS length_bucket
+       FROM meta_p WHERE game_duration_seconds IS NOT NULL
+     ) GROUP BY ${GROUP}, length_bucket`,
+    `SELECT 'boots', patch, queue_id, tier, role, champion_id, CAST(item AS VARCHAR), '', count(*), ${wins}
+     FROM meta_pi WHERE item IN (${sqlBoots})
+     GROUP BY ${GROUP}, item`,
+    `SELECT 'keystone', patch, queue_id, tier, role, champion_id, CAST(primary_rune_0_id AS VARCHAR), '', count(*), ${wins}
+     FROM meta_p WHERE primary_rune_0_id IS NOT NULL
+     GROUP BY ${GROUP}, primary_rune_0_id`,
+    `SELECT 'spell_single', patch, queue_id, tier, role, champion_id, CAST(spell AS VARCHAR), '', count(*), ${wins}
+     FROM (SELECT *, unnest([summoner_spell_1_id, summoner_spell_2_id]) AS spell FROM meta_p
+           WHERE summoner_spell_1_id IS NOT NULL AND summoner_spell_2_id IS NOT NULL)
+     GROUP BY ${GROUP}, spell`,
+    `SELECT 'matchup_spell', a.patch, a.queue_id, a.tier, a.role, a.champion_id, CAST(b.champion_id AS VARCHAR),
+       CAST(least(a.summoner_spell_1_id, a.summoner_spell_2_id) AS VARCHAR) || ',' || CAST(greatest(a.summoner_spell_1_id, a.summoner_spell_2_id) AS VARCHAR),
+       count(*), sum(CAST(a.win AS INTEGER))
+     FROM meta_p a JOIN meta_p b
+       ON a.match_id = b.match_id AND a.role = b.role AND a.team_id <> b.team_id AND a.champion_id <> b.champion_id
+     WHERE a.summoner_spell_1_id IS NOT NULL AND a.summoner_spell_2_id IS NOT NULL
+     GROUP BY a.patch, a.queue_id, a.tier, a.role, a.champion_id, b.champion_id,
+       least(a.summoner_spell_1_id, a.summoner_spell_2_id), greatest(a.summoner_spell_1_id, a.summoner_spell_2_id)`,
     `SELECT 'matchup', a.patch, a.queue_id, a.tier, a.role, a.champion_id, CAST(b.champion_id AS VARCHAR), '', count(*), sum(CAST(a.win AS INTEGER))
      FROM meta_p a JOIN meta_p b
        ON a.match_id = b.match_id AND a.role = b.role AND a.team_id <> b.team_id AND a.champion_id <> b.champion_id

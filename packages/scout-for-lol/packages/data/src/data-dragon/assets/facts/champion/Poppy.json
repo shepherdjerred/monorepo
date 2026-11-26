@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Poppy",
+  "name": "Poppy",
+  "description": "Runeterra has no shortage of valiant champions, but few are as tenacious as Poppy.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Poppy-passive",
+      "name": "Iron Ambassador",
+      "icon": "img/ability/Poppy-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Poppy-Q",
+      "name": "Hammer Shock",
+      "icon": "img/ability/Poppy-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Poppy-W",
+      "name": "Steadfast Presence",
+      "icon": "img/ability/Poppy-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Poppy-E",
+      "name": "Heroic Charge",
+      "icon": "img/ability/Poppy-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Poppy-R",
+      "name": "Keeper's Verdict",
+      "icon": "img/ability/Poppy-R.png"
+    }
+  ],
+  "icon": "img/champion/Poppy.png",
+  "art": "img/champion-splash/Poppy_0.jpg",
+  "title": "Keeper of the Hammer",
+  "roles": [
+    "Tank",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Fighter"
+  }
+}

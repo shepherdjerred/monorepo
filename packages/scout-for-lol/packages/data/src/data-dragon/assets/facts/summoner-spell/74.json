@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "74",
+  "name": "Flash",
+  "description": "Teleports you a short distance toward your cursor. Summoner's Insight: Reduces Flash's Cooldown by 15 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "425"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerFlash_Jade.png",
+  "cooldownSeconds": 300,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "300 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Smolder-passive",
+  "name": "Dragon Practice",
+  "description": "Hitting champions with Abilities and killing enemies with Super Scorcher Breath grants a stack of Dragon Practice. Stacks increase the damage of Smolders basic Abilities.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Smolder-passive.png",
+  "slot": "passive",
+  "championKey": "Smolder",
+  "championName": "Smolder",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

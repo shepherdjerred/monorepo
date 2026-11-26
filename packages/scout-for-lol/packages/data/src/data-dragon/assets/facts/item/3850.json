@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3850",
+  "name": "Spellthief's Edge",
+  "description": "Tribute: While nearby an ally champion, damaging Abilities and Attacks against champions or buildings grant 20 gold. Quest: Earn 500 gold from this item to transform it into Frostfang, gaining",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "10"
+    },
+    {
+      "label": "Health",
+      "value": "25"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "25%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "2"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3850.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

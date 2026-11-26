@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taliyah-passive",
+  "name": "Rock Surfing",
+  "description": "Taliyah gains Move Speed near walls.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Taliyah-passive.png",
+  "slot": "passive",
+  "championKey": "Taliyah",
+  "championName": "Taliyah",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

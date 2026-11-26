@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443055",
+  "name": "Fulmination",
+  "description": "Polarity: On Attack, if the target is different from the target you most recently triggered an Energized Attack on, ready Energize. Dynamo: Energized Attacks deal an additional magic damage based on the Target's Current Health.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "45%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443055.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

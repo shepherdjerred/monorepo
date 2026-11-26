@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Pyke",
+  "name": "Pyke",
+  "description": "A renowned harpooner from the slaughter docks of Bilgewater, Pyke should have met his death in the belly of a gigantic jaull-fish… and yet, he returned.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "670"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Pyke-passive",
+      "name": "Gift of the Drowned Ones",
+      "icon": "img/ability/Pyke-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pyke-Q",
+      "name": "Bone Skewer",
+      "icon": "img/ability/Pyke-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pyke-W",
+      "name": "Ghostwater Dive",
+      "icon": "img/ability/Pyke-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pyke-E",
+      "name": "Phantom Undertow",
+      "icon": "img/ability/Pyke-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pyke-R",
+      "name": "Death From Below",
+      "icon": "img/ability/Pyke-R.png"
+    }
+  ],
+  "icon": "img/champion/Pyke.png",
+  "art": "img/champion-splash/Pyke_0.jpg",
+  "title": "the Bloodharbor Ripper",
+  "roles": [
+    "Support",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Assassin"
+  }
+}

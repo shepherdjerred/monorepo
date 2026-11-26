@@ -5,6 +5,7 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { visibilityFixture } from "./test-fixture.ts";
 import { recordCleanupEvaluation } from "./seeding.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
+import { LEGACY_ACTIVITY_EVENT_KIND } from "#shared/legacy-activity/contract.ts";
 import { withTvVisibility } from "./tv.test-support.ts";
 
 const h = automationTestHarness();
@@ -229,7 +230,15 @@ test("a member's detail withholds acquisition history, seeding figures, the assi
       rules: { schemaVersion: 1, targets: [], protectedReasons: [] },
     },
   });
+  const imported = await f.db.applicationEvent.create({
+    data: {
+      kind: LEGACY_ACTIVITY_EVENT_KIND,
+      mediaId: f.media.id,
+      payload: {},
+    },
+  });
   const owner = await f.app.getMedia(f.owner, f.media.id);
+  expect(owner.events.some((event) => event.id === imported.id)).toBe(true);
   expect(owner.intent).toMatchObject({
     profileId: profile.id,
     monitoring: true,
@@ -251,6 +260,7 @@ test("a member's detail withholds acquisition history, seeding figures, the assi
   ]);
   expect(owner.visibility.torrents[0]?.observedAt).toEqual(expect.any(String));
   const member = await f.app.getMedia(f.member, f.media.id);
+  expect(member.events.some((event) => event.id === imported.id)).toBe(false);
   expect(member.intent).toEqual({ ...owner.intent, profileId: null });
   expect(member.subtitlePolicies).toEqual([]);
   expect(member.visibility.attempts).toEqual([]);
@@ -280,6 +290,7 @@ test("a member's detail withholds acquisition history, seeding figures, the assi
     data: { role: "member" },
   });
   const demoted = await f.app.getMedia(f.owner, f.media.id);
+  expect(demoted.events.some((event) => event.id === imported.id)).toBe(false);
   expect(demoted.intent?.profileId).toBeNull();
   expect(demoted.subtitlePolicies).toEqual([]);
   expect(demoted.visibility.attempts).toEqual([]);

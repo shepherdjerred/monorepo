@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Alistar",
+  "name": "Alistar",
+  "description": "Always a mighty warrior with a fearsome reputation, Alistar seeks revenge for the death of his clan at the hands of the Noxian empire.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "685"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Alistar-passive",
+      "name": "Triumphant Roar",
+      "icon": "img/ability/Alistar-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Alistar-Q",
+      "name": "Pulverize",
+      "icon": "img/ability/Alistar-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Alistar-W",
+      "name": "Headbutt",
+      "icon": "img/ability/Alistar-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Alistar-E",
+      "name": "Trample",
+      "icon": "img/ability/Alistar-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Alistar-R",
+      "name": "Unbreakable Will",
+      "icon": "img/ability/Alistar-R.png"
+    }
+  ],
+  "icon": "img/champion/Alistar.png",
+  "art": "img/champion-splash/Alistar_0.jpg",
+  "title": "the Minotaur",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

@@ -271,7 +271,7 @@ async function archiveNotification(
 /**
  * Serialize every family decision with CAS. A takeover first settles the recorded
  * pending report through the existing per-run delivery lease/receipt path.
- * This repairs a crash after Postal acceptance without advancing the family
+ * This repairs a crash after Mail broker acceptance without advancing the family
  * optimistically or treating an ambiguous send as an unchanged report.
  */
 export async function deliverDailyNotification<T extends AcceptedDelivery>(

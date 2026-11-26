@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nocturne-Q",
+  "name": "Duskbringer",
+  "description": "Nocturne throws a shadow blade, dealing 65/105/145/185/225 (+85% bonus AD) physical damage and leaving a dusk trail for 5 seconds. Enemy champions hit also leave a trail.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1125"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nocturne-Q.png",
+  "slot": "Q",
+  "championKey": "Nocturne",
+  "championName": "Nocturne",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1125,
+    1125,
+    1125,
+    1125,
+    1125
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renekton-E",
+  "name": "Slice and Dice",
+  "description": "Renekton dashes, dealing 40/70/100/130/160 (+90% bonus AD) physical damage. He generates 2 Fury per non-champion and 10 Fury per champion hit.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renekton-E.png",
+  "slot": "E",
+  "championKey": "Renekton",
+  "championName": "Renekton",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14.5,
+    13,
+    11.5,
+    10
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14.5/13/11.5/10 s"
+  }
+}

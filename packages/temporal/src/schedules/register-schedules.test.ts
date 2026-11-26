@@ -323,17 +323,17 @@ test("dependency summary timeout covers every retried report phase", () => {
   );
 });
 
-test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
-  const schedule = findScheduleById("freshrss-sync-hourly");
-  expect(schedule.workflowType).toBe("runFreshRssSyncWorkflow");
+test("Feeds refresh runs every 30 minutes on the shared Workflow queue", () => {
+  const schedule = findScheduleById("feeds-refresh");
+  expect(schedule.workflowType).toBe("runFeedsRefreshWorkflow");
   expect(schedule.timing).toEqual({
     kind: "cron",
-    expression: "7 * * * *",
+    expression: "13,43 * * * *",
     timezone: "America/Los_Angeles",
   });
   expect(schedule.taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
   expect(schedule.catchupWindow).toBe("5 minutes");
-  expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
+  expect(schedule.workflowExecutionTimeout).toBe("5 minutes");
 });
 
 test("Flags inventory sync starts on the shared Workflow queue", () => {
@@ -580,7 +580,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "deliveryDispatchWorkflow",
   "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
-  "runFreshRssSyncWorkflow",
   "runFeedsRefreshWorkflow",
   "runFlagInventorySync",
   "runLlmBilledCostReconciliation",

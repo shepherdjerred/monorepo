@@ -127,6 +127,38 @@ ${keepAlive}${interval}${calendar}${environment}  <key>ProcessType</key>
 `;
 }
 
+function xmlUnescape(value: string): string {
+  return value
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'")
+    .replaceAll("&amp;", "&");
+}
+
+/**
+ * The `EnvironmentVariables` of a plist written by `renderLaunchAgentPlist`:
+ * what the job is started with, beyond launchd's own minimal environment.
+ */
+export function parseLaunchAgentEnvironment(
+  plist: string,
+): Record<string, string> {
+  const block =
+    /<key>EnvironmentVariables<\/key>\s*<dict>(?<entries>[\s\S]*?)<\/dict>/u.exec(
+      plist,
+    )?.groups?.["entries"] ?? "";
+  const environment: Record<string, string> = {};
+  for (const entry of block.matchAll(
+    /<key>(?<key>[^<]*)<\/key>\s*<string>(?<value>[^<]*)<\/string>/gu,
+  )) {
+    const { key, value } = entry.groups ?? {};
+    if (key !== undefined && value !== undefined) {
+      environment[xmlUnescape(key)] = xmlUnescape(value);
+    }
+  }
+  return environment;
+}
+
 async function launchctl(args: string[]): Promise<string> {
   const processHandle = Bun.spawn(["launchctl", ...args], {
     stdout: "pipe",

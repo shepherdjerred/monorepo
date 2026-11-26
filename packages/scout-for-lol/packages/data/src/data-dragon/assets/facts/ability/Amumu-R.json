@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Amumu-R",
+  "name": "Curse of the Sad Mummy",
+  "description": "Amumu flares out his bandages, Stunning for 1.5 seconds, dealing 200/300/400 (+80% AP) magic damage and applying Curse.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100/150/200 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Amumu-R.png",
+  "slot": "R",
+  "championKey": "Amumu",
+  "championName": "Amumu",
+  "maxRank": 3,
+  "cooldownByRank": [
+    150,
+    125,
+    100
+  ],
+  "costByRank": [
+    100,
+    150,
+    200
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "150/125/100 s"
+  }
+}

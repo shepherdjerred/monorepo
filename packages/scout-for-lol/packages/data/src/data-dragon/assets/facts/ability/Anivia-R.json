@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Anivia-R",
+  "name": "Glacial Storm",
+  "description": "Toggle: Anivia calls forth a driving rain of ice and hail that Slows enemies by 20/30/40% and deals 30/45/60 (+12.5% AP) magic damage per second. The storm increases in size over 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 + 35/45/55 Mana per second"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Anivia-R.png",
+  "slot": "R",
+  "championKey": "Anivia",
+  "championName": "Anivia",
+  "maxRank": 3,
+  "cooldownByRank": [
+    4,
+    3,
+    2
+  ],
+  "costByRank": [
+    60,
+    60,
+    60
+  ],
+  "costType": "+ 35/45/55 Mana per second",
+  "rangeByRank": [
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4/3/2 s"
+  }
+}

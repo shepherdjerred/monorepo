@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773044",
+  "name": "Phage",
+  "description": "Rage: Basic Attacks grant 20 Move Speed for 2 seconds On-Hit.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Attack Damage",
+      "value": "20"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    },
+    {
+      "kind": "item",
+      "key": "771036",
+      "name": "Long Sword",
+      "icon": "img/item/771036.png"
+    }
+  ],
+  "icon": "img/item/773044.png",
+  "goldTotal": 1250,
+  "goldCombine": 375,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1250 gold"
+  }
+}

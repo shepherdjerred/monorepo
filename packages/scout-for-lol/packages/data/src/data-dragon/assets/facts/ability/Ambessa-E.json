@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ambessa-E",
+  "name": "Lacerate",
+  "description": "Ambessa whips her chains around, dealing 40/60/80/100/120 (+50% bonus AD) physical damage and Slowing enemies by 99%, which decays over 1 second. Initiating Drakehound's Step from this Ability will trigger an additional strike.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ambessa-E.png",
+  "slot": "E",
+  "championKey": "Ambessa",
+  "championName": "Ambessa",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

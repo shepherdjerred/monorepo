@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fizz-R",
+  "name": "Chum the Waters",
+  "description": "Fizz launches a fish that attaches to the first champion hit. The victim is afflicted with True Sight and Slowed by between 40% to 80% based on how far the fish travelled before attaching.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fizz-R.png",
+  "slot": "R",
+  "championKey": "Fizz",
+  "championName": "Fizz",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1300,
+    1300,
+    1300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

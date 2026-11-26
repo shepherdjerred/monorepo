@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Rell",
+  "name": "Rell",
+  "description": "The product of brutal experimentation at the hands of the Black Rose, Rell is a defiant, living weapon determined to topple Noxus.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "315"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Rell-passive",
+      "name": "Break the Mold",
+      "icon": "img/ability/Rell-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rell-Q",
+      "name": "Shattering Strike",
+      "icon": "img/ability/Rell-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rell-W",
+      "name": "Ferromancy: Crash Down",
+      "icon": "img/ability/Rell-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rell-E",
+      "name": "Full Tilt",
+      "icon": "img/ability/Rell-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rell-R",
+      "name": "Magnet Storm",
+      "icon": "img/ability/Rell-R.png"
+    }
+  ],
+  "icon": "img/champion/Rell.png",
+  "art": "img/champion-splash/Rell_0.jpg",
+  "title": "the Iron Maiden",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

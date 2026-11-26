@@ -182,5 +182,6 @@
   },
   "titlebar": "none",
   "terminal_menu": "my-menu",
+  "toast": "my-toast",
   "traffic_lights": [12, 16]
 }

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773157",
+  "name": "Zhonya's Hourglass",
+  "description": "Active 90s Champion becomes Invulnerable and Untargetable for 2.5 seconds, but is unable to move, attack, cast spells, or use items during this time.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "120"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773191",
+      "name": "Seeker's Armguard",
+      "icon": "img/item/773191.png"
+    },
+    {
+      "kind": "item",
+      "key": "771058",
+      "name": "Needlessly Large Rod",
+      "icon": "img/item/771058.png"
+    }
+  ],
+  "icon": "img/item/773157.png",
+  "goldTotal": 3260,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3260 gold"
+  }
+}

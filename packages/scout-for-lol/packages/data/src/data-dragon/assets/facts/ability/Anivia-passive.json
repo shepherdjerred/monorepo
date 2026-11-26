@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Anivia-passive",
+  "name": "Rebirth",
+  "description": "Upon taking fatal damage, Anivia reverts to an egg and is reborn with full health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Anivia-passive.png",
+  "slot": "passive",
+  "championKey": "Anivia",
+  "championName": "Anivia",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

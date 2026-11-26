@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Olaf-R",
+  "name": "Ragnarok",
+  "description": "Passive: Olaf gains 10/15/20 Armor and 10/15/20 Magic Resist. Active: Olaf cleanses all Immobilizing and Disabling effects on himself and becomes immune to them for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Olaf-R.png",
+  "slot": "R",
+  "championKey": "Olaf",
+  "championName": "Olaf",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    90,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/90/80 s"
+  }
+}

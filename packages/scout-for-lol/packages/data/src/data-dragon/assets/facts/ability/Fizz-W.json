@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fizz-W",
+  "name": "Seastone Trident",
+  "description": "Passive: Fizz's Attacks cause his enemies to bleed, dealing 30/45/60/75/90 (+25% AP) magic damage over 3 seconds. Active: Fizz's next Attack deals an additional 50/75/100/125/150 (+45% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/40/50/60/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fizz-W.png",
+  "slot": "W",
+  "championKey": "Fizz",
+  "championName": "Fizz",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6,
+    5,
+    4,
+    3
+  ],
+  "costByRank": [
+    30,
+    40,
+    50,
+    60,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6/5/4/3 s"
+  }
+}

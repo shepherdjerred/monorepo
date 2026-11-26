@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Sivir",
+  "name": "Sivir",
+  "description": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Sivir-passive",
+      "name": "Fleet of Foot",
+      "icon": "img/ability/Sivir-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sivir-Q",
+      "name": "Boomerang Blade",
+      "icon": "img/ability/Sivir-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sivir-W",
+      "name": "Ricochet",
+      "icon": "img/ability/Sivir-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sivir-E",
+      "name": "Spell Shield",
+      "icon": "img/ability/Sivir-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sivir-R",
+      "name": "On The Hunt",
+      "icon": "img/ability/Sivir-R.png"
+    }
+  ],
+  "icon": "img/champion/Sivir.png",
+  "art": "img/champion-splash/Sivir_0.jpg",
+  "title": "the Battle Mistress",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

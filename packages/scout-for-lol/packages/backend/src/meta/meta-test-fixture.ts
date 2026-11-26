@@ -51,6 +51,9 @@ export const FIXTURE_ROWS: readonly RollupRow[] = [
   row("ban", 2, "", { games: 100, wins: 0 }),
   row("item", 2, "MIDDLE", { key1: "6655", games: 300, wins: 190 }),
   row("item", 2, "MIDDLE", { key1: "3020", games: 450, wins: 270 }),
+  row("item", 2, "MIDDLE", { key1: "3089", games: 280, wins: 180 }),
+  row("item", 2, "MIDDLE", { key1: "3157", games: 120, wins: 70 }),
+  row("item", 2, "MIDDLE", { key1: "4645", games: 160, wins: 90 }),
   row("build_path", 2, "MIDDLE", {
     key1: "6655>3020>3089",
     games: 40,
@@ -93,7 +96,57 @@ export const FIXTURE_ROWS: readonly RollupRow[] = [
     games: 90,
     wins: 70,
   }),
+  row("duration", 2, "MIDDLE", {
+    key1: "lt25",
+    games: 90,
+    wins: 60,
+    kind_total: 500,
+  }),
+  row("duration", 2, "MIDDLE", {
+    key1: "25to35",
+    games: 300,
+    wins: 180,
+    kind_total: 500,
+  }),
+  row("duration", 2, "MIDDLE", {
+    key1: "gt35",
+    games: 110,
+    wins: 60,
+    kind_total: 500,
+  }),
+  row("boots", 2, "MIDDLE", {
+    key1: "3020",
+    games: 450,
+    wins: 270,
+    kind_total: 490,
+  }),
+  row("boots", 2, "MIDDLE", {
+    key1: "3158",
+    games: 40,
+    wins: 20,
+    kind_total: 490,
+  }),
+  row("keystone", 2, "MIDDLE", {
+    key1: "8112",
+    games: 400,
+    wins: 250,
+    kind_total: 500,
+  }),
+  row("spell_single", 2, "MIDDLE", { key1: "4", games: 490, wins: 295 }),
+  row("spell_single", 2, "MIDDLE", { key1: "14", games: 480, wins: 290 }),
   row("matchup", 2, "MIDDLE", { key1: "3", games: 80, wins: 50 }),
+  row("matchup_spell", 2, "MIDDLE", {
+    key1: "3",
+    key2: "4,14",
+    games: 50,
+    wins: 34,
+  }),
+  row("matchup_spell", 2, "MIDDLE", {
+    key1: "3",
+    key2: "4,12",
+    games: 30,
+    wins: 16,
+  }),
   row("matchup", 3, "MIDDLE", { key1: "2", games: 80, wins: 30 }),
 ];
 

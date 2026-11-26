@@ -1,0 +1,40 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Garen-W",
+  "name": "Courage",
+  "description": "Garen passively increases his Armor and Magic Resist by killing enemies. He may also activate this ability to give him a shield and tenacity for a brief moment followed by a lesser amount of damage reduction for a longer duration.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Garen-W.png",
+  "slot": "W",
+  "championKey": "Garen",
+  "championName": "Garen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    19.5,
+    17,
+    14.5,
+    12
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/19.5/17/14.5/12 s"
+  }
+}

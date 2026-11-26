@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kassadin-W",
+  "name": "Nether Blade",
+  "description": "Passive: Kassadin's Attacks deal an additional 25 (+10% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "1 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kassadin-W.png",
+  "slot": "W",
+  "championKey": "Kassadin",
+  "championName": "Kassadin",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

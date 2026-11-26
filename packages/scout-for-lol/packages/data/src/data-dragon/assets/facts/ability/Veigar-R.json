@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Veigar-R",
+  "name": "Primordial Burst",
+  "description": "Veigar blasts an enemy champion with primal magic to deal between 175/250/325 (+65/70/75% AP) and 350/500/650 (+130/140/150% AP) magic damage, increasing with the target's missing Health. Damage is maximized against enemies below 33% Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Veigar-R.png",
+  "slot": "R",
+  "championKey": "Veigar",
+  "championName": "Veigar",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    90,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/90/60 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lillia-W",
+  "name": "Watch Out! Eep!",
+  "description": "Lillia winds up a huge strike, dealing 80/100/120/140/160 (+35% AP) magic damage. Enemies in the center take 240/300/360/420/480 (+105% AP) damage instead.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lillia-W.png",
+  "slot": "W",
+  "championKey": "Lillia",
+  "championName": "Lillia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

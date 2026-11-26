@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zac-R",
+  "name": "Let's Bounce!",
+  "description": "Zac bounces 4 times. The first bounce to hit each enemy Knocks them back and deals 120/190/260 (+40% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zac-R.png",
+  "slot": "R",
+  "championKey": "Zac",
+  "championName": "Zac",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    105,
+    90
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/105/90 s"
+  }
+}

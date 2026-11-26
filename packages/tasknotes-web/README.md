@@ -25,10 +25,14 @@ token or an `fct_*` token. "Remember on this browser" stores that token in
 `localStorage` on this machine.
 
 Dev and preview allow hosts ending in `.ts.net`. Tailscale Serve can publish
-port 4187 on the tailnet. Leave the server origin at `http://127.0.0.1:3000`
-so the browser calls `/api` on that host and Vite proxies it locally.
+port 4187 on the tailnet. Leave the server field blank so the browser calls
+`/api` on that host. Local Vite proxies that to `http://127.0.0.1:3000`.
+
+The cluster image builds this package and `tasknotes-server` serves it at
+`https://tasknotes.tailnet-1a49.ts.net/`. Leave the server field blank there
+too, and paste the owner token. The API is the same host.
 
 ## Not in this package
 
 Kanban, recurrence editing, comments, attachments, reminders, saved filters,
-offline sync, and homelab hosting.
+and offline sync.

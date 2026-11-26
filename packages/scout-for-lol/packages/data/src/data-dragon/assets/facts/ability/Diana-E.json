@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Diana-E",
+  "name": "Lunar Rush",
+  "description": "Diana becomes as the vengeful moon, dashing to an enemy and dealing 50/70/90/110/130 (+60% AP) magic damage. If the target is afflicted with Moonlight, this Ability's Cooldown is refreshed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Diana-E.png",
+  "slot": "E",
+  "championKey": "Diana",
+  "championName": "Diana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    20,
+    18,
+    16,
+    14
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/20/18/16/14 s"
+  }
+}

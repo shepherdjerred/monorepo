@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ashe-R",
+  "name": "Enchanted Crystal Arrow",
+  "description": "Ashe launches a crystal arrow of ice that Stuns the first champion hit and deals 200/400/600 (+120% AP) magic damage. The Stun duration increases with distance travelled, up to 3.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ashe-R.png",
+  "slot": "R",
+  "championKey": "Ashe",
+  "championName": "Ashe",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    80,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/80/60 s"
+  }
+}

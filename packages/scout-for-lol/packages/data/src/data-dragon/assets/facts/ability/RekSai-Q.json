@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "RekSai-Q",
+  "name": "Queen's Wrath / Prey Seeker",
+  "description": "Unburrowed: Rek'Sai's next 3 Attacks within 3 seconds gain 35% Attack Speed and deal an additional 30/35/40/45/50% AD physical damage to nearby enemies. Attacks refresh the duration of this Ability.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/RekSai-Q.png",
+  "slot": "Q",
+  "championKey": "RekSai",
+  "championName": "Rek'Sai",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    3.5,
+    3,
+    2.5,
+    2
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4/3.5/3/2.5/2 s"
+  }
+}

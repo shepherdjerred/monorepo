@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zaahen-R",
+  "name": "Grim Deliverance",
+  "description": "Passive: Zaahen gains 10/20/30% Armor Penetration. Active: Zaahen rises, gaining 50% Damage Reduction while casting.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zaahen-R.png",
+  "slot": "R",
+  "championKey": "Zaahen",
+  "championName": "Zaahen",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    95,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/95/80 s"
+  }
+}

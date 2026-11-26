@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Evelynn-E",
+  "name": "Whiplash",
+  "description": "Evelynn whips her target with her Lasher, dealing damage. She then gains Move Speed for a short duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "210"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Evelynn-E.png",
+  "slot": "E",
+  "championKey": "Evelynn",
+  "championName": "Evelynn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    210,
+    210,
+    210,
+    210,
+    210
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

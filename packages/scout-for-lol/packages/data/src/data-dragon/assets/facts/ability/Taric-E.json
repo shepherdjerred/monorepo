@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taric-E",
+  "name": "Dazzle",
+  "description": "Taric projects a beam of starlight, bursting after 1 second to deal 90/130/170/210/250 (+50% AP) (+50% bonus Armor) magic damage and Stun enemies for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "610"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Taric-E.png",
+  "slot": "E",
+  "championKey": "Taric",
+  "championName": "Taric",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15,
+    14,
+    13,
+    12
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    610,
+    610,
+    610,
+    610,
+    610
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15/14/13/12 s"
+  }
+}

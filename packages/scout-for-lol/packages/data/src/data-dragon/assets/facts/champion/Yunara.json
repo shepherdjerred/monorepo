@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Yunara",
+  "name": "Yunara",
+  "description": "Unwavering in her devotion to Ionia, Yunara has spent centuries cloistered away in the spirit realm honing her skills with the Aion Er'na, a legendary Kinkou relic.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "575"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Yunara-passive",
+      "name": "Vow of the First Lands",
+      "icon": "img/ability/Yunara-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yunara-Q",
+      "name": "Cultivation of Spirit",
+      "icon": "img/ability/Yunara-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yunara-W",
+      "name": "Arc of Judgment | Arc of Ruin",
+      "icon": "img/ability/Yunara-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yunara-E",
+      "name": "Kanmei's Steps | Untouchable Shadow",
+      "icon": "img/ability/Yunara-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yunara-R",
+      "name": "Transcend One's Self",
+      "icon": "img/ability/Yunara-R.png"
+    }
+  ],
+  "icon": "img/champion/Yunara.png",
+  "art": "img/champion-splash/Yunara_0.jpg",
+  "title": "the Unbroken Faith",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

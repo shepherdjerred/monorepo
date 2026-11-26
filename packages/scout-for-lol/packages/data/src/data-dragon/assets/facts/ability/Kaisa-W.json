@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kaisa-W",
+  "name": "Void Seeker",
+  "description": "Kai'Sa fires a void blast that deals 30/55/80/105/130 (+130% AD) (+45% AP) magic damage, applies 2 stacks of Plasma, and grants True Sight of the first enemy hit for 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kaisa-W.png",
+  "slot": "W",
+  "championKey": "Kaisa",
+  "championName": "Kai'Sa",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    18.5,
+    17,
+    15.5,
+    14
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3000,
+    3000,
+    3000,
+    3000,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18.5/17/15.5/14 s"
+  }
+}

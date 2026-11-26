@@ -33,7 +33,7 @@ import { feedback } from "#client/feedback/index.ts";
 
 const phone = "(max-width: 767px)";
 /** A row's usual height under `list.css`, used until it has been measured. */
-const usualRowHeight = () => (globalThis.matchMedia(phone).matches ? 64 : 36);
+const usualRowHeight = () => (globalThis.matchMedia(phone).matches ? 56 : 36);
 const headerHeight = 32;
 /** A grouped list loads this many pages at once so groups fill in early. */
 const eagerPages = 10;

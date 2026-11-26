@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Yorick",
+  "name": "Yorick",
+  "description": "The last survivor of a long-forgotten religious order, Yorick is both blessed and cursed with power over the dead. Trapped on the Shadow Isles, his only companions are the rotting corpses and shrieking wraiths that he gathers to him.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Yorick-passive",
+      "name": "Shepherd of Souls",
+      "icon": "img/ability/Yorick-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yorick-Q",
+      "name": "Last Rites",
+      "icon": "img/ability/Yorick-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yorick-W",
+      "name": "Dark Procession",
+      "icon": "img/ability/Yorick-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yorick-E",
+      "name": "Mourning Mist",
+      "icon": "img/ability/Yorick-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yorick-R",
+      "name": "Eulogy of the Isles",
+      "icon": "img/ability/Yorick-R.png"
+    }
+  ],
+  "icon": "img/champion/Yorick.png",
+  "art": "img/champion-splash/Yorick_0.jpg",
+  "title": "Shepherd of Souls",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

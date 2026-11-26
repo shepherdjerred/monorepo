@@ -28,8 +28,16 @@ const CONTENT_TYPES: Record<string, string> = {
   ".webm": "video/webm",
   ".mov": "video/quicktime",
   ".wav": "audio/wav",
+  ".mp3": "audio/mpeg",
+  ".m4a": "audio/mp4",
+  ".ogg": "audio/ogg",
   ".txt": "text/plain; charset=utf-8",
   ".log": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".csv": "text/csv; charset=utf-8",
+  ".tsv": "text/tab-separated-values; charset=utf-8",
+  ".yaml": "text/plain; charset=utf-8",
+  ".yml": "text/plain; charset=utf-8",
   ".json": "application/json",
   ".html": "text/html; charset=utf-8",
   ".cast": "application/x-asciicast",
@@ -42,6 +50,8 @@ const CONTENT_TYPES: Record<string, string> = {
   ".ttf": "font/ttf",
   ".map": "application/json",
   ".xml": "application/xml",
+  ".zip": "application/zip",
+  ".gz": "application/gzip",
   ".webmanifest": "application/manifest+json",
 };
 
@@ -97,13 +107,18 @@ export function dirFileKey(
   return `pr/assets/${String(prNumber)}/${dirName}/${relativePath}`;
 }
 
-/** Public URL for an object key, with every path segment URL-encoded. */
-export function publicUrlForKey(key: string): string {
+/** URL for an object key under `host`, with every path segment URL-encoded. */
+export function urlForKey(host: string, key: string): string {
   const encoded = key
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `${PUBLIC_HOST}/${encoded}`;
+  return `${host}/${encoded}`;
+}
+
+/** Public URL for an object key, with every path segment URL-encoded. */
+export function publicUrlForKey(key: string): string {
+  return urlForKey(PUBLIC_HOST, key);
 }
 
 /** Public URL for a PR asset, with the filename segment URL-encoded. */

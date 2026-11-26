@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nidalee",
+  "name": "Nidalee",
+  "description": "Raised in the deepest jungle, Nidalee is a master tracker who can shapeshift into a ferocious cougar at will.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nidalee-passive",
+      "name": "Prowl",
+      "icon": "img/ability/Nidalee-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nidalee-Q",
+      "name": "Javelin Toss / Takedown",
+      "icon": "img/ability/Nidalee-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nidalee-W",
+      "name": "Bushwhack / Pounce",
+      "icon": "img/ability/Nidalee-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nidalee-E",
+      "name": "Primal Surge / Swipe",
+      "icon": "img/ability/Nidalee-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nidalee-R",
+      "name": "Aspect Of The Cougar",
+      "icon": "img/ability/Nidalee-R.png"
+    }
+  ],
+  "icon": "img/champion/Nidalee.png",
+  "art": "img/champion-splash/Nidalee_0.jpg",
+  "title": "the Bestial Huntress",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

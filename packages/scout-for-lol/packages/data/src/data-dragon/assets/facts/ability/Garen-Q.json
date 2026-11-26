@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Garen-Q",
+  "name": "Decisive Strike",
+  "description": "Garen removes all Slowing effects on him and gains 35% Move Speed for 1.4/1.95/2.5/3.05/3.6 second(s). His next Attack Silences for 1.5 seconds and does 30/60/90/120/150 (+150% AD) physical damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Garen-Q.png",
+  "slot": "Q",
+  "championKey": "Garen",
+  "championName": "Garen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

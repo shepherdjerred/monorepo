@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443063",
+  "name": "Eleisa's Miracle",
+  "description": "Enduring Vitality: Gain +2.5% Heal and Shield Power per 100 Missing Health, up to 60%.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443063.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228003",
+  "name": "Deathblade",
+  "description": "Death and Taxes: Dealing damage that would leave an enemy champion below 7% Health executes them.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "150"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "20%"
+    },
+    {
+      "label": "Critical Strike Damage",
+      "value": "45%"
+    },
+    {
+      "label": "Lethality",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/228003.png",
+  "goldTotal": 9000,
+  "goldCombine": 9000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "9000 gold"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ahri-passive",
+  "name": "Essence Theft",
+  "description": "After killing 9 minions or monsters, Ahri heals. After taking down an enemy champion, Ahri heals for a greater amount.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ahri-passive.png",
+  "slot": "passive",
+  "championKey": "Ahri",
+  "championName": "Ahri",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

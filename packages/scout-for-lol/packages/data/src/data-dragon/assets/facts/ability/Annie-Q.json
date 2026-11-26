@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Annie-Q",
+  "name": "Disintegrate",
+  "description": "Annie hurls a fireball, dealing 80/125/170/215/260 (+80% AP) magic damage. If the target dies, Annie refunds the Mana cost and reduces the Cooldown by 50%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Annie-Q.png",
+  "slot": "Q",
+  "championKey": "Annie",
+  "championName": "Annie",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    625,
+    625,
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

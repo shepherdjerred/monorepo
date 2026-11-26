@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Varus-E",
+  "name": "Hail of Arrows",
+  "description": "Varus fires a hail of arrows that deals 60/90/120/150/180 (+90% bonus AD) physical damage and desecrates the ground for 4 seconds, Slowing enemies by 30/35/40/45/50% and applying 40% Grievous Wounds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "925"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Varus-E.png",
+  "slot": "E",
+  "championKey": "Varus",
+  "championName": "Varus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    16,
+    14,
+    12,
+    10
+  ],
+  "costByRank": [
+    90,
+    90,
+    90,
+    90,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    925,
+    925,
+    925,
+    925,
+    925
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/16/14/12/10 s"
+  }
+}

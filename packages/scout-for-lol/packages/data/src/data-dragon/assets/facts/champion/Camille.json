@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Camille",
+  "name": "Camille",
+  "description": "Weaponized to operate outside the boundaries of the law, Camille is the Principal Intelligencer of Clan Ferros—an elegant and elite agent who ensures the Piltover machine and its Zaunite underbelly runs smoothly.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Camille-passive",
+      "name": "Adaptive Defenses",
+      "icon": "img/ability/Camille-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Camille-Q",
+      "name": "Precision Protocol",
+      "icon": "img/ability/Camille-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Camille-W",
+      "name": "Tactical Sweep",
+      "icon": "img/ability/Camille-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Camille-E",
+      "name": "Hookshot",
+      "icon": "img/ability/Camille-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Camille-R",
+      "name": "The Hextech Ultimatum",
+      "icon": "img/ability/Camille-R.png"
+    }
+  ],
+  "icon": "img/champion/Camille.png",
+  "art": "img/champion-splash/Camille_0.jpg",
+  "title": "the Steel Shadow",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

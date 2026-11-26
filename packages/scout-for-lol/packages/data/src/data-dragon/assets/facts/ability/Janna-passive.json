@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Janna-passive",
+  "name": "Tailwind",
+  "description": "Janna's allies gain Move Speed moving towards her. Janna deals a portion of bonus Move Speed as bonus magic damage on hit and with Zephyr.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Janna-passive.png",
+  "slot": "passive",
+  "championKey": "Janna",
+  "championName": "Janna",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3070",
+  "name": "Tear of the Goddess",
+  "description": "Manaflow: (8s, max 4 charges) Landing Abilities grants 3 max Mana (doubled vs. champions), up to 360. Helping Hand: Attacks deal an additional 5 physical damage to minions.",
+  "facts": [
+    {
+      "label": "Mana",
+      "value": "240"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3070.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773139",
+  "name": "Mercurial Scimitar",
+  "description": "Active 90s Removes all debuffs, and if champion is melee, also grants 50% bonus Move Speed for 1 second.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "60"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773140",
+      "name": "Quicksilver Sash",
+      "icon": "img/item/773140.png"
+    },
+    {
+      "kind": "item",
+      "key": "771038",
+      "name": "B. F. Sword",
+      "icon": "img/item/771038.png"
+    }
+  ],
+  "icon": "img/item/773139.png",
+  "goldTotal": 3700,
+  "goldCombine": 600,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3700 gold"
+  }
+}

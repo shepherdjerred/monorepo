@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773108",
+  "name": "Fiendish Codex",
+  "description": "Fiendish Recall: 10% Cooldown Reduction",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "30"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/771052.png"
+    }
+  ],
+  "icon": "img/item/773108.png",
+  "goldTotal": 820,
+  "goldCombine": 385,
+  "keyFact": {
+    "label": "Cost",
+    "value": "820 gold"
+  }
+}

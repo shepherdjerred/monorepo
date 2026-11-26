@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ekko-W",
+  "name": "Parallel Convergence",
+  "description": "Ekko's basic attacks deal bonus magic damage to low health enemies. He can cast Parallel Convergence to split the timeline, creating an anomaly after a few seconds that slows enemies caught inside.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/35/40/45/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ekko-W.png",
+  "slot": "W",
+  "championKey": "Ekko",
+  "championName": "Ekko",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    20,
+    18,
+    16,
+    14
+  ],
+  "costByRank": [
+    30,
+    35,
+    40,
+    45,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1600,
+    1600,
+    1600,
+    1600,
+    1600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/20/18/16/14 s"
+  }
+}

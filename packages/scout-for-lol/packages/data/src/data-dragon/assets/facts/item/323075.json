@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "323075",
+  "name": "Thornmail",
+  "description": "Thorns: When struck by an Attack, deal magic damage to the attacker and apply 40% Wounds for 3 seconds if they are a champion.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Armor",
+      "value": "85"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3076",
+      "name": "Bramble Vest",
+      "icon": "img/item/3076.png"
+    },
+    {
+      "kind": "item",
+      "key": "1031",
+      "name": "Chain Vest",
+      "icon": "img/item/1031.png"
+    },
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    }
+  ],
+  "icon": "img/item/323075.png",
+  "goldTotal": 2650,
+  "goldCombine": 650,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2650 gold"
+  }
+}

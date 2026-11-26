@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Malzahar-E",
+  "name": "Malefic Visions",
+  "description": "Malzahar inflicts terrible visions, dealing 80/115/150/185/220 (+80% AP) magic damage over 4 seconds. Applying Call of the Void or Nether Grasp to the victim during this time refreshes the visions.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Malzahar-E.png",
+  "slot": "E",
+  "championKey": "Malzahar",
+  "championName": "Malzahar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

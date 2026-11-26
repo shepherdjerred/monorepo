@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jinx-E",
+  "name": "Flame Chompers!",
+  "description": "Jinx tosses out 3 chompers that last for 5 seconds. They explode on contact with enemy champions, Rooting them for 1.5 seconds and dealing 90/140/190/240/290 (+100% AP) magic damage to nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "925"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jinx-E.png",
+  "slot": "E",
+  "championKey": "Jinx",
+  "championName": "Jinx",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    20.5,
+    17,
+    13.5,
+    10
+  ],
+  "costByRank": [
+    90,
+    90,
+    90,
+    90,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    925,
+    925,
+    925,
+    925,
+    925
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/20.5/17/13.5/10 s"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Swain",
+  "name": "Swain",
+  "description": "Jericho Swain is the visionary ruler of Noxus, an expansionist nation that reveres only strength.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "595"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Swain-passive",
+      "name": "Ravenous Flock",
+      "icon": "img/ability/Swain-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Swain-Q",
+      "name": "Death's Hand",
+      "icon": "img/ability/Swain-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Swain-W",
+      "name": "Vision of Empire",
+      "icon": "img/ability/Swain-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Swain-E",
+      "name": "Nevermove",
+      "icon": "img/ability/Swain-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Swain-R",
+      "name": "Demonic Ascension",
+      "icon": "img/ability/Swain-R.png"
+    }
+  ],
+  "icon": "img/champion/Swain.png",
+  "art": "img/champion-splash/Swain_0.jpg",
+  "title": "the Noxian Grand General",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

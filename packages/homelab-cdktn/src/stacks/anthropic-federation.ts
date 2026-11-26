@@ -23,7 +23,7 @@ export class AnthropicFederationStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "anthropic-federation", {
       requiredVersion: ">= 1.9.0",
-      providerConstraints: { anthropic: "1.95.1", onepassword: "~> 3.0" },
+      providerConstraints: { anthropic: "1.96.0", onepassword: "~> 3.0" },
     });
     encryptStateAndPlans(this, {
       description:

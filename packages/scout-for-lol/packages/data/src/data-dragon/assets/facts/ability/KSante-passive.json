@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KSante-passive",
+  "name": "Dauntless Instinct",
+  "description": "K'Sante's Abilities mark targets to take more damage on his next Attack. When All Out, K'Sante deals more damage with all Attacks and Abilities.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/KSante-passive.png",
+  "slot": "passive",
+  "championKey": "KSante",
+  "championName": "K'Sante",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

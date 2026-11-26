@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ryze-passive",
+  "name": "Arcane Mastery",
+  "description": "Ryze's spells deal extra damage based on his Bonus Mana, and he gains a percentage increase to his maximum Mana based on his Ability Power.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ryze-passive.png",
+  "slot": "passive",
+  "championKey": "Ryze",
+  "championName": "Ryze",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

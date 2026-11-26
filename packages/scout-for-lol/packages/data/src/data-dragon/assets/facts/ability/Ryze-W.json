@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ryze-W",
+  "name": "Rune Prison",
+  "description": "Ryze traps a target in a cage of runes, damaging them and slowing their movement. If the target has Flux on it, they are instead rooted.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "615"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ryze-W.png",
+  "slot": "W",
+  "championKey": "Ryze",
+  "championName": "Ryze",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10.5,
+    10,
+    9.5,
+    9
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    615,
+    615,
+    615,
+    615,
+    615
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10.5/10/9.5/9 s"
+  }
+}

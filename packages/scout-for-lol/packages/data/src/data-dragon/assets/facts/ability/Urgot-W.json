@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Urgot-W",
+  "name": "Purge",
+  "description": "Passive: Urgot's other Abilities mark the last champion hit for 5 seconds. Active: Urgot begins firing his chain gun at the closest enemy, prioritizing marked enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/30/20/10/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "490"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Urgot-W.png",
+  "slot": "W",
+  "championKey": "Urgot",
+  "championName": "Urgot",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    9,
+    6,
+    3,
+    0
+  ],
+  "costByRank": [
+    40,
+    30,
+    20,
+    10,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    490,
+    490,
+    490,
+    490,
+    490
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/9/6/3/0 s"
+  }
+}

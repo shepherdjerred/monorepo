@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lucian-Q",
+  "name": "Piercing Light",
+  "description": "Lucian shoots a bolt of piercing light, dealing 90/130/170/210/250 (+100% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "48/56/64/72/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lucian-Q.png",
+  "slot": "Q",
+  "championKey": "Lucian",
+  "championName": "Lucian",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    48,
+    56,
+    64,
+    72,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

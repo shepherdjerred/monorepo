@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Draven-W",
+  "name": "Blood Rush",
+  "description": "Draven becomes Ghosted, gains 50/55/60/65/70% Move Speed decaying over 1.5 seconds and 20/25/30/35/40% Attack Speed for 3 seconds. When Draven catches a Spinning Axe, this Ability's Cooldown is refreshed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/35/30/25/20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Draven-W.png",
+  "slot": "W",
+  "championKey": "Draven",
+  "championName": "Draven",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    40,
+    35,
+    30,
+    25,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

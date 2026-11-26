@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akshan-passive",
+  "name": "Dirty Fighting",
+  "description": "Every three hits from Akshan's Attacks and Abilities deals bonus damage and grants him a Shield if the target was a champion. When Akshan Attacks, he fires an additional Attack for reduced damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Akshan-passive.png",
+  "slot": "passive",
+  "championKey": "Akshan",
+  "championName": "Akshan",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

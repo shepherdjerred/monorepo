@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3010",
+  "name": "Symbiotic Soles",
+  "description": "Synchrony: Gain 10 Move Speed when out of combat. Symbiosis: After traveling 150000 units of distance, transform into Synchronized Souls.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "40"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1001",
+      "name": "Boots",
+      "icon": "img/item/1001.png"
+    }
+  ],
+  "icon": "img/item/3010.png",
+  "goldTotal": 900,
+  "goldCombine": 600,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

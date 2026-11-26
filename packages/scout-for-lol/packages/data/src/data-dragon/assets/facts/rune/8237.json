@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8237",
+  "name": "Scorch",
+  "description": "Your first damaging ability hit every 10s burns champions.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    },
+    {
+      "label": "Cooldown",
+      "value": "10s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Scorch.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

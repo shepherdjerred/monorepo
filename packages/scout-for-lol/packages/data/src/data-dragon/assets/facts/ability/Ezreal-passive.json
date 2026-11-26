@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ezreal-passive",
+  "name": "Rising Spell Force",
+  "description": "Ezreal gains increasing Attack Speed each time he successfully hits a spell, stacking up to 5 times.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ezreal-passive.png",
+  "slot": "passive",
+  "championKey": "Ezreal",
+  "championName": "Ezreal",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

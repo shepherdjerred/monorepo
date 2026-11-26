@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Vi",
+  "name": "Vi",
+  "description": "Raised on the mean streets of Zaun, Vi is a hotheaded, impulsive, and fearsome woman with very little respect for authority.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "655"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Vi-passive",
+      "name": "Blast Shield",
+      "icon": "img/ability/Vi-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vi-Q",
+      "name": "Vault Breaker",
+      "icon": "img/ability/Vi-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vi-W",
+      "name": "Denting Blows",
+      "icon": "img/ability/Vi-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vi-E",
+      "name": "Relentless Force",
+      "icon": "img/ability/Vi-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vi-R",
+      "name": "Cease and Desist",
+      "icon": "img/ability/Vi-R.png"
+    }
+  ],
+  "icon": "img/champion/Vi.png",
+  "art": "img/champion-splash/Vi_0.jpg",
+  "title": "the Piltover Enforcer",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kalista-W",
+  "name": "Sentinel",
+  "description": "Passive: When Kalista and her Oathsworn both Attack the same target, she deals 10/12/14/16/18% max Health magic damage. This effect has a 10 second Cooldown per target and a cap of 100/125/150/175/200 to non-champions.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "5000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kalista-W.png",
+  "slot": "W",
+  "championKey": "Kalista",
+  "championName": "Kalista",
+  "maxRank": 5,
+  "cooldownByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    5000,
+    5000,
+    5000,
+    5000,
+    5000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "30 s"
+  }
+}

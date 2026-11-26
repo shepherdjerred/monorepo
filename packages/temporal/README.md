@@ -1451,6 +1451,9 @@ daily promotion spending ledger.
 The schedule starts paused for a signed-in preview. A workflow input of
 `{ "preview": true }` uses a separate discovery checkpoint and returns drafts
 without submitting replies. Run it again to verify incremental scanning.
+To test an additional community, pass
+`{ "preview": true, "subreddits": ["BedrockMultiplayer"] }` to the same
+workflow. This uses only the named feeds for that preview.
 Sweep audits include listing pages, thread reads, total page opens, elapsed
 sweep time, decisions, drafts, and the stop reason.
 
@@ -1465,6 +1468,28 @@ link, fit score when available, outcome, and recorded reason.
 A PinchTab content block on an individual thread records the blocked page and
 selector in the audit. The thread is skipped without a score or reply, and the
 sweep continues with the remaining posts.
+
+The private SeaweedFS Reddit dataset is rooted at
+`s3://llm-archive/storm/promotion/v1/prod/reddit-outreach/dataset/v1/`.
+Each partition uses `day=YYYY-MM-DD/mode=live/run=<encoded-occurrence-id>/`
+or `mode=preview`. Listing objects contain every row returned by an existing
+listing read. Thread objects add the body and comments already loaded when the
+sweep opens that thread. Decision objects carry model answers keyed by post ID.
+Join the observations to sweep audits by occurrence and post ID. The archive
+retains repeat observations and inherits the bucket's 365-day retention.
+
+To replay a Pacific day, download its live partition under
+`observations/` in a local snapshot directory and the matching individual
+`reddit-outreach/sweeps/<encoded-occurrence-id>.json` objects under `audits/`.
+The corresponding `reddit-outreach/sweep-days/YYYY-MM-DD.json` lists its
+occurrences. The replay also accepts historical snapshot JSONL files, optional
+review labels for known outcomes and cross-posts, and saved draft inputs and
+outputs. It uses archived model answers and makes zero network calls.
+
+```bash
+bun packages/temporal/scripts/promotion/reddit-eval/replay.ts \
+  --snapshot /path/to/snapshot --day 2026-11-25
+```
 
 Per-post claims and Pacific daily reservations are conditional object-store
 writes. Uncertain submissions and filtered replies consume allowance and cannot

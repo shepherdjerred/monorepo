@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ahri-W",
+  "name": "Fox-Fire",
+  "description": "Ahri releases 3 fox-fires that seek nearby enemies and deal 40/60/80/100/120 (+40% AP) magic damage, reduced to 16/24/32/40/48 (+16% AP) damage beyond the first. She also gains 40% Move Speed decaying over 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ahri-W.png",
+  "slot": "W",
+  "championKey": "Ahri",
+  "championName": "Ahri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

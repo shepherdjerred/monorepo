@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Cassiopeia-R",
+  "name": "Petrifying Gaze",
+  "description": "Cassiopeia unleashes a petrifying gaze, dealing 125/225/325 (+75% AP) magic damage and Stunning enemies facing her for 2 seconds. Enemies facing away are Slowed by 40% decaying over the same duration instead.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Cassiopeia-R.png",
+  "slot": "R",
+  "championKey": "Cassiopeia",
+  "championName": "Cassiopeia",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

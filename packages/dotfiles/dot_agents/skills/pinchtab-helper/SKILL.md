@@ -59,7 +59,7 @@ export PINCHTAB_SESSION
 PINCHTAB_TAB="$(pinchtab nav http://localhost:5180/app/ --new-tab)" || exit 1
 pinchtab snap --tab "$PINCHTAB_TAB"
 pinchtab screenshot --tab "$PINCHTAB_TAB" -o /tmp/foo.png
-toolkit pr asset <PR> /tmp/foo.png --markdown --profile seaweedfs
+toolkit pr asset <PR> /tmp/foo.png --markdown
 ```
 
 See "Capturing UI work" below for the rest of the verbs and for driving this

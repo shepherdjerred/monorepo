@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "XinZhao-Q",
+  "name": "Three Talon Strike",
+  "description": "Xin Zhao's next 3 Attacks deal an additional 15/30/45/60/75 (+45% bonus AD) physical damage and reduces his other Ability's Cooldowns by 1 second. The third Attack also Knocks Up for 0.75 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "375"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/XinZhao-Q.png",
+  "slot": "Q",
+  "championKey": "XinZhao",
+  "championName": "Xin Zhao",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.5,
+    6,
+    5.5,
+    5
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    375,
+    375,
+    375,
+    375,
+    375
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.5/6/5.5/5 s"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "6",
+  "name": "Ghost",
+  "description": "Gain Move Speed and ignore unit collision for the duration.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "200"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerHaste.png",
+  "cooldownSeconds": 240,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "240 s"
+  }
+}

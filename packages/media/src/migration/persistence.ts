@@ -24,6 +24,8 @@ import type { MigrationCatalogDiscovery } from "./catalog-discovery.ts";
 import type { DiscoverMigrationCatalogSchema } from "#shared/migration-catalog.ts";
 import type { MediaCommandSettings } from "#infrastructure/command-base.ts";
 import { PrismaPersonalMigration } from "./personal-state/service.ts";
+import { importLegacyActivity } from "#infrastructure/legacy-activity/persistence.ts";
+import type { LegacyActivityImport } from "#shared/legacy-activity/contract.ts";
 function proposal(row: {
   id: string;
   captureId: string;
@@ -240,6 +242,9 @@ export class PrismaMigrationAdministration extends MediaCommandBase {
       }
     }
     throw new Error("Capture transaction retry limit was not enforced");
+  }
+  importActivity(actor: MediaActor, input: LegacyActivityImport) {
+    return importLegacyActivity(this.db, actor, input);
   }
   async review(
     actor: MediaActor,

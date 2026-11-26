@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Milio-passive",
+  "name": "Fired Up!",
+  "description": "Milio's abilities enchant allies on touch, making their next damage deal a burst of extra damage and burn the target.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Milio-passive.png",
+  "slot": "passive",
+  "championKey": "Milio",
+  "championName": "Milio",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

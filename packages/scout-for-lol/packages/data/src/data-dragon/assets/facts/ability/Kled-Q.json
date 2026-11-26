@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kled-Q",
+  "name": "Bear Trap on a Rope",
+  "description": "Mounted: Kled throws a bear trap that deals 30/55/80/105/130 (+60% bonus AD) physical damage and hooks onto the first enemy champion or large jungle monster hit.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kled-Q.png",
+  "slot": "Q",
+  "championKey": "Kled",
+  "championName": "Kled",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

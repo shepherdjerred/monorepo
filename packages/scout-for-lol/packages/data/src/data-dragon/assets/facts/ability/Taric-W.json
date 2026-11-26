@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taric-W",
+  "name": "Bastion",
+  "description": "Passive: Taric gains 6/7/8/9/10% Armor Armor and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains 6/7/8/9/10% Armor Armor and Taric casts all his Abilities from both himself and his linked ally.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Taric-W.png",
+  "slot": "W",
+  "championKey": "Taric",
+  "championName": "Taric",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15 s"
+  }
+}

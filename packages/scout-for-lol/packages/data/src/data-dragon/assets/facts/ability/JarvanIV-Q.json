@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "JarvanIV-Q",
+  "name": "Dragon Strike",
+  "description": "Jarvan extends his lance, dealing 90/130/170/210/250 (+145% bonus AD) physical damage and removing 10/14/18/22/26% Armor for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45/50/55/60/65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "770"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/JarvanIV-Q.png",
+  "slot": "Q",
+  "championKey": "JarvanIV",
+  "championName": "Jarvan IV",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    45,
+    50,
+    55,
+    60,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    770,
+    770,
+    770,
+    770,
+    770
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

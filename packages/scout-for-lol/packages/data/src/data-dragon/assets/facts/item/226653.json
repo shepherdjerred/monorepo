@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226653",
+  "name": "Liandry's Anguish",
+  "description": "Torment: Damaging Abilities Burn enemies for 2% max Health magic damage per second for 3 seconds. Suffering: For each second in combat with enemy champions, deal 2% bonus damage, up to 6%.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "50"
+    },
+    {
+      "label": "Health",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226653.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

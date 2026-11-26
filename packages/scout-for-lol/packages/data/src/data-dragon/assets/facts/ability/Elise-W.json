@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Elise-W",
+  "name": "Volatile Spiderling / Skittering Frenzy",
+  "description": "Human Form: Elise summons an explosive spider that moves to a location and explodes when it nears an enemy or after 3 seconds. The spider deals 60/100/140/180/220 (+75% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Elise-W.png",
+  "slot": "W",
+  "championKey": "Elise",
+  "championName": "Elise",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

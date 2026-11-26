@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443062",
+  "name": "Sanguine Gift",
+  "description": "Patronage: Store 15% of the total damage you've dealt to enemies.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "80"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443062.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}
