@@ -47,7 +47,11 @@ function HomeRow({
           </span>
         )}
       </div>
-      <CommandState command={incident.command} nowMs={nowMs} />
+      <CommandState
+        command={incident.command}
+        kind={incident.kind}
+        nowMs={nowMs}
+      />
     </li>
   );
 }

@@ -135,6 +135,19 @@ describe("command panel", () => {
     expect(html).toContain("Force take");
   });
 
+  it("shows maintenance as owned or not, without takeover language", () => {
+    const html = panelFor({
+      kind: "maintenance",
+      status: "scheduled",
+      systems: ["databases"],
+      command: unowned(8),
+    });
+    expect(html).toContain("No owner");
+    expect(html).toContain("Take ownership");
+    expect(html).not.toContain("eligible");
+    expect(html).not.toContain("Force take");
+  });
+
   it("gives the commander Hand off and Release", () => {
     const html = panelFor({
       command: owned(actorRecord(VIEWER_KEY, { name: "Hub browser" })),

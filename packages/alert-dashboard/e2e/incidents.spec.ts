@@ -9,9 +9,9 @@ import {
 } from "./helpers.ts";
 
 // The fixture server seeds, through the incidents service: INC-1 resolved
-// (Tracker), INC-2 scheduled database maintenance (unowned, eligible),
-// INC-3 red main owned by its suspect, INC-4 sev1 Delivery under a live
-// dispatch lease.
+// (Tracker), INC-2 scheduled database maintenance (no owner), INC-3 red main
+// owned by its suspect, INC-4 sev1 Delivery under a live dispatch lease, and
+// INC-5 an unowned observability incident past its takeover grace.
 
 test("lists the seeded open incidents, most severe first, with command state", async ({
   page,
@@ -21,7 +21,7 @@ test("lists the seeded open incidents, most severe first, with command state", a
   await expect(page).toHaveTitle("Open incidents · Hub");
   const table = page.getByRole("table", { name: "Open incidents" });
   const rows = table.locator("tbody tr");
-  await expect(rows).toHaveCount(3);
+  await expect(rows).toHaveCount(4);
   await expect(rows.nth(0)).toContainText("INC-4");
   await expect(rows.nth(0)).toContainText("SEV1");
   await expect(rows.nth(0)).toContainText("Dispatching to new session until");
@@ -29,7 +29,11 @@ test("lists the seeded open incidents, most severe first, with command state", a
   await expect(rows.nth(1)).toContainText(
     "Owned by claude-code · temporal-schedule-split",
   );
-  await expect(rows.nth(2)).toContainText("PostgreSQL minor upgrade");
+  await expect(rows.nth(2)).toContainText("INC-5");
+  await expect(rows.nth(3)).toContainText("PostgreSQL minor upgrade");
+  // Maintenance has an owner or not; takeover language is for incidents.
+  await expect(rows.nth(3)).toContainText("No owner");
+  await expect(rows.nth(3)).not.toContainText("eligible");
   await expect(table).not.toContainText("Tracker API returned 502s");
 
   await page.getByLabel("System", { exact: true }).selectOption("main-ci");
@@ -86,13 +90,13 @@ test("Take on an unowned, eligible incident makes the viewer commander", async (
   page,
 }) => {
   await page.setViewportSize(DESKTOP);
-  await gotoLoadedPage(page, "/incidents/INC-2");
+  await gotoLoadedPage(page, "/incidents/INC-5");
   const command = page.locator(".inc-command-panel");
   await expect(command).toContainText("Unowned — takeover eligible now");
 
   await command.getByRole("button", { name: "Take command" }).click();
   await expect(page.getByRole("alert")).toHaveText(
-    "You hold command of INC-2.",
+    "You hold command of INC-5.",
   );
   await expect(command).toContainText("Owned by Hub browser");
   await expect(
@@ -101,12 +105,26 @@ test("Take on an unowned, eligible incident makes the viewer commander", async (
 
   // Release again through the dialog, so the shared fixture stays unowned.
   await command.getByRole("button", { name: "Release" }).click();
-  const dialog = page.getByRole("dialog", { name: "Release INC-2" });
+  const dialog = page.getByRole("dialog", { name: "Release INC-5" });
   await expect(dialog.getByLabel("Release note")).toBeFocused();
-  await dialog.getByLabel("Release note").fill("Prep is done.");
+  await dialog.getByLabel("Release note").fill("Handing back.");
   await dialog.getByRole("button", { name: "Release command" }).click();
   await expect(dialog).toBeHidden();
   await expect(command).toContainText("Unowned — takeover eligible now");
+});
+
+test("maintenance shows its owner without takeover language", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/incidents/INC-2");
+  const owner = page.locator(".inc-command-panel");
+  await expect(owner.getByRole("heading", { name: "Owner" })).toBeVisible();
+  await expect(owner).toContainText("No owner");
+  await expect(owner).not.toContainText("eligible");
+  await expect(
+    owner.getByRole("button", { name: "Take ownership" }),
+  ).toBeVisible();
 });
 
 test("declaring onto a held system offers to join the existing incident", async ({

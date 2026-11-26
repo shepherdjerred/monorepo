@@ -228,7 +228,25 @@ async function seedDelivery(service: IncidentsService, at: At) {
   );
 }
 
-/** Seed the four fixture incidents, moving the service clock through their history. */
+/** An incident nobody has claimed, past its takeover grace: anyone may take it. */
+async function seedUnowned(service: IncidentsService, at: At) {
+  at(-30);
+  await service.declare(
+    DeclareIncidentInputSchema.parse({
+      actor: FIXTURE_ACTORS.tracker,
+      title: "Loki queries time out; Grafana log panels are empty",
+      summary:
+        "Log panels across dashboards time out after 30 s since the Loki compactor restarted.",
+      severity: "sev3",
+      systems: ["observability"],
+      components: ["loki"],
+      exitCondition:
+        "Grafana log panels load the last hour of logs in under 10 seconds.",
+    }),
+  );
+}
+
+/** Seed the five fixture incidents, moving the service clock through their history. */
 export async function seedFixtureIncidents(
   service: IncidentsService,
   clock: SeedClock,
@@ -242,4 +260,5 @@ export async function seedFixtureIncidents(
   await seedMaintenance(service, clock, at);
   await seedMainCi(service, at);
   await seedDelivery(service, at);
+  await seedUnowned(service, at);
 }

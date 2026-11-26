@@ -41,8 +41,9 @@ Hub's adapter checks the object with `satisfies`.
 `createIncidentsFixtureHubServer()` returns the same object over an in-memory
 repository seeded through the service: an open sev1 Delivery incident under
 an active dispatch lease (opened by `DeliveryRecoveryRequired`, two affected
-agents), an owned main-ci incident with a suspect, a scheduled database
-maintenance, and a resolved Tracker incident. Its fixture tokens are
+agents), an owned main-ci incident with a suspect, an unowned observability
+incident past its takeover grace, a scheduled database maintenance, and a
+resolved Tracker incident. Its fixture tokens are
 `fixture-webhook-token` and `fixture-ops-ingest-token`, and the seeded lease
 lasts six hours so it stays live during UI work.
 
@@ -92,17 +93,19 @@ Command has one owner. Its state is `none`, `dispatching`, or `owned`.
 
 - **Takeover grace.** `takeoverEligibleAt = declaredAt + grace` (flag, 600 s),
   fixed on the record at declaration. Before it, only the creator or the
-  suspect may `take`. An actor is the suspect when its metadata `sessionId`
-  or `sessionLink` names the suspect's session (a `Claude-Session:` URL and
-  its trailing `session_…` segment match), or its `branch` equals the
-  suspect's branch. Anyone else gets `outcome: "taken", reason: "not-eligible-yet"`.
+  suspect may `take` an incident; maintenance has no grace. An actor is the
+  suspect when its metadata `sessionId` or `sessionLink` names the suspect's
+  session (a `Claude-Session:` URL and its trailing `session_…` segment
+  match), or its `branch` equals the suspect's branch. Anyone else gets
+  `outcome: "taken", reason: "not-eligible-yet"`.
 - **take.** Succeeds when nobody owns it; `owned-by-other` and
   `dispatch-in-progress` are answered as `outcome: "taken"`, not errors.
   `force` bypasses the grace and displaces a current commander or dispatcher;
   the timeline records `forced` and what it overrode.
-- **Dispatch lease.** `take` with `dispatch: true` (needs the spawn flag)
-  holds `dispatching` for the lease time (flag, 600 s) and returns a one-time
-  `dispatchToken` and the `provider` to spawn. Only the token's SHA-256 is
+- **Dispatch lease.** Incidents only; maintenance answers `BAD_REQUEST`.
+  `take` with `dispatch: true` (needs the spawn flag) holds `dispatching`
+  for the lease time (flag, 600 s) and returns a one-time `dispatchToken`
+  and the `provider` to spawn. Only the token's SHA-256 is
   stored. The spawned session calls `claimDispatch` with the token to become
   commander; a spawn failure calls `releaseDispatch`.
 - **Lazy expiry.** A lapsed lease reads as `none` immediately, without a

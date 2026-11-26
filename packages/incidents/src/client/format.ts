@@ -145,19 +145,31 @@ export function formatInstant(iso: string, nowMs: number): string {
 }
 
 export type CommandView = {
-  readonly state: "owned" | "dispatching" | "eligible" | "waiting";
+  /** `unowned` is maintenance without an owner: it has no takeover grace. */
+  readonly state: "owned" | "dispatching" | "eligible" | "waiting" | "unowned";
   readonly tone: Severity;
   readonly label: string;
   readonly detail: string | null;
 };
 
-/** The one-line answer to "who is handling this?" at `nowMs`. */
-export function describeCommand(command: Command, nowMs: number): CommandView {
+/**
+ * The one-line answer to "who is handling this?" at `nowMs`. Takeover and
+ * dispatch exist for broken shared systems, so maintenance reads only as
+ * "Owner: X" or "No owner", never in eligibility terms.
+ */
+export function describeCommand(
+  command: Command,
+  nowMs: number,
+  kind: IncidentKind,
+): CommandView {
   if (command.state === "owned" && command.commander !== null)
     return {
       state: "owned",
       tone: "ok",
-      label: `Owned by ${actorLabel(command.commander)}`,
+      label:
+        kind === "maintenance"
+          ? `Owner: ${actorLabel(command.commander)}`
+          : `Owned by ${actorLabel(command.commander)}`,
       detail: command.commander.key,
     };
   if (command.state === "dispatching" && command.leaseExpiresAt !== null)
@@ -169,6 +181,13 @@ export function describeCommand(command: Command, nowMs: number): CommandView {
         command.dispatcher === null
           ? null
           : `Lease held by ${actorLabel(command.dispatcher)}; ${formatSpan(Date.parse(command.leaseExpiresAt) - nowMs)} left`,
+    };
+  if (kind === "maintenance")
+    return {
+      state: "unowned",
+      tone: "unknown",
+      label: "No owner",
+      detail: null,
     };
   const eligibleAt = Date.parse(command.takeoverEligibleAt);
   if (eligibleAt <= nowMs)
@@ -234,10 +253,14 @@ export function commandActions(
   const { command } = incident;
   const isCommander =
     command.state === "owned" && command.commander?.key === viewerKey;
-  const view = describeCommand(command, nowMs);
+  const view = describeCommand(command, nowMs, incident.kind);
   const isCreator = incident.creator?.key === viewerKey;
-  const unowned = view.state === "eligible" || view.state === "waiting";
-  const canTake = open && unowned && (view.state === "eligible" || isCreator);
+  // Mirrors the domain's `mayTakeNow`: maintenance has no takeover grace.
+  const canTake =
+    open &&
+    (view.state === "eligible" ||
+      view.state === "unowned" ||
+      (view.state === "waiting" && isCreator));
   return {
     isCommander,
     canTake,

@@ -8,6 +8,7 @@ import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import type {
   ActorInput,
   Command,
+  IncidentKind,
   IncidentSeverity,
   IncidentStatus,
   IncidentSystem,
@@ -48,14 +49,16 @@ export function StatusBadge({
 
 export function CommandState({
   command,
+  kind,
   nowMs,
   withDetail = false,
 }: {
   readonly command: Command;
+  readonly kind: IncidentKind;
   readonly nowMs: number;
   readonly withDetail?: boolean;
 }): React.JSX.Element {
-  const view = describeCommand(command, nowMs);
+  const view = describeCommand(command, nowMs, kind);
   return (
     <span className="inc-command" data-state={view.state}>
       <StatusGlyph severity={view.tone} label={view.label} />

@@ -84,8 +84,10 @@ export function listFilter(
 function figures(incidents: readonly IncidentSummary[]): Figure[] {
   const open = incidents.filter((incident) => isOpenStatus(incident.status));
   const sev1 = open.filter((incident) => incident.severity === "sev1").length;
+  // Takeover is for broken shared systems: unowned maintenance is not news.
   const unowned = open.filter(
-    (incident) => incident.command.state === "none",
+    (incident) =>
+      incident.kind === "incident" && incident.command.state === "none",
   ).length;
   const firing = open.reduce(
     (sum, incident) => sum + incident.firingSignals,
@@ -105,7 +107,7 @@ function figures(incidents: readonly IncidentSummary[]): Figure[] {
     {
       label: "Unowned",
       value: unowned,
-      hint: "No commander or dispatch lease",
+      hint: "Incidents with no commander or dispatch lease",
       ...(unowned > 0 ? { severity: "warning" as const } : {}),
     },
     { label: "Firing signals", value: firing },
@@ -210,7 +212,11 @@ export function IncidentTable({
                 <SystemList systems={incident.systems} />
               </td>
               <td data-label="Command">
-                <CommandState command={incident.command} nowMs={nowMs} />
+                <CommandState
+                  command={incident.command}
+                  kind={incident.kind}
+                  nowMs={nowMs}
+                />
               </td>
               <td data-label="Firing signals" className="ui-num">
                 {incident.firingSignals}

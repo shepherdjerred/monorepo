@@ -54,13 +54,19 @@ export function takeOutcome(
 ): PageNotice {
   const id = result.incident.identifier;
   if (result.outcome === "owned")
-    return { tone: "ok", text: `You hold command of ${id}.` };
+    return {
+      tone: "ok",
+      text:
+        result.incident.kind === "maintenance"
+          ? `You own ${id}.`
+          : `You hold command of ${id}.`,
+    };
   if (result.outcome === "dispatching")
     return { tone: "ok", text: `Dispatch lease taken for ${id}.` };
   if (result.reason === "owned-by-other")
     return {
       tone: "warning",
-      text: `${id} already has a commander. Use Force take to displace them.`,
+      text: `${id} already has ${result.incident.kind === "maintenance" ? "an owner" : "a commander"}. Use Force take to displace them.`,
     };
   if (result.reason === "dispatch-in-progress")
     return {
@@ -89,6 +95,7 @@ export function CommandPanel({
   const actions = commandActions(incident, actor.key, nowMs);
   const [pending, setPending] = useState(false);
   const ref = incident.identifier;
+  const maintenance = incident.kind === "maintenance";
 
   const take = async () => {
     setPending(true);
@@ -108,17 +115,24 @@ export function CommandPanel({
       aria-labelledby="inc-command-title"
     >
       <h2 className="ui-section-title inc-panel-title" id="inc-command-title">
-        Command
+        {maintenance ? "Owner" : "Command"}
       </h2>
       <div className="inc-command-body">
-        <CommandState command={incident.command} nowMs={nowMs} withDetail />
-        <p className="ui-muted">
-          Takeover eligible{" "}
-          <time dateTime={incident.command.takeoverEligibleAt}>
-            {formatInstant(incident.command.takeoverEligibleAt, nowMs)}
-          </time>
-          .
-        </p>
+        <CommandState
+          command={incident.command}
+          kind={incident.kind}
+          nowMs={nowMs}
+          withDetail
+        />
+        {maintenance ? null : (
+          <p className="ui-muted">
+            Takeover eligible{" "}
+            <time dateTime={incident.command.takeoverEligibleAt}>
+              {formatInstant(incident.command.takeoverEligibleAt, nowMs)}
+            </time>
+            .
+          </p>
+        )}
       </div>
       <div className="ui-toolbar inc-actions">
         {actions.canTake ? (
@@ -128,7 +142,7 @@ export function CommandPanel({
             onClick={() => void take()}
           >
             <HandIcon aria-hidden="true" />
-            Take command
+            {maintenance ? "Take ownership" : "Take command"}
           </Button>
         ) : null}
         {actions.canForce ? (
@@ -136,8 +150,14 @@ export function CommandPanel({
             label="Force take"
             icon={ShieldAlertIcon}
             title={`Force take ${ref}`}
-            description="Force bypasses the takeover grace and displaces any commander or dispatch lease. The timeline records what it overrode."
-            submitLabel="Force take command"
+            description={
+              maintenance
+                ? "Force displaces the current owner. The timeline records it."
+                : "Force bypasses the takeover grace and displaces any commander or dispatch lease. The timeline records what it overrode."
+            }
+            submitLabel={
+              maintenance ? "Force take ownership" : "Force take command"
+            }
             noteLabel="Why you are overriding"
             noteRequired
             onSubmit={async (form) => {

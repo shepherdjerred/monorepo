@@ -53,13 +53,18 @@ export function isSuspect(
   );
 }
 
-/** Before `takeoverEligibleAt` only the suspect or the creator is expected to take command. */
+/**
+ * Before `takeoverEligibleAt` only the suspect or the creator is expected to
+ * take command of an incident. The grace protects whoever broke a shared
+ * system; planned maintenance has no culprit, so anyone may own it at once.
+ */
 export function mayTakeNow(
   record: IncidentRecord,
   actor: ActorRef,
   now: Date,
 ): boolean {
   return (
+    record.kind === "maintenance" ||
     now.getTime() >= record.takeoverEligibleAt.getTime() ||
     record.creatorId === actor.id ||
     isSuspect(record.suspect, actor.metadata)
@@ -157,6 +162,13 @@ export function take(
 ): TakeDecision {
   assertOpen(record);
   const actor = requireActor(context);
+  // Takeover and dispatch exist for broken shared systems. A maintenance
+  // window is planned work with an owner; nobody spawns a commander for it.
+  if (request.dispatch && record.kind === "maintenance")
+    throw new IncidentError(
+      "BAD_REQUEST",
+      `${incidentLabel(record)} is maintenance; only incidents dispatch a commander session`,
+    );
   if (request.dispatch && !settings.takeoverSpawnEnabled)
     throw new IncidentError(
       "PRECONDITION_FAILED",

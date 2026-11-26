@@ -130,7 +130,11 @@ export function DuplicateNotice({
           <StatusBadge status={existing.status} />
           <SystemList systems={existing.systems} />
         </div>
-        <CommandState command={existing.command} nowMs={nowMs} />
+        <CommandState
+          command={existing.command}
+          kind={existing.kind}
+          nowMs={nowMs}
+        />
       </div>
       <div className="inc-form-actions">
         <Button variant="primary" disabled={pending} onClick={onJoin}>

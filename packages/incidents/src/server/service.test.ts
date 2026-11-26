@@ -419,12 +419,12 @@ describe("incidents-enabled flag", () => {
 });
 
 describe("fixture server", () => {
-  it("seeds the four documented incidents", async () => {
+  it("seeds the five documented incidents", async () => {
     const now = new Date("2026-11-25T18:00:00.000Z");
     const server = await createIncidentsFixtureHubServer({ clock: () => now });
     const all = await server.service.list({ state: "all", limit: 50 });
     const open = await server.service.list({ state: "open", limit: 50 });
-    expect(all).toHaveLength(4);
+    expect(all).toHaveLength(5);
     expect(
       open.map((incident) => [
         incident.kind,
@@ -435,8 +435,15 @@ describe("fixture server", () => {
     ).toEqual([
       ["incident", "sev1", "delivery", "dispatching"],
       ["incident", "sev2", "main-ci", "owned"],
+      ["incident", "sev3", "observability", "none"],
       ["maintenance", "sev3", "databases", "none"],
     ]);
+    const unowned = open[2];
+    expect(
+      unowned !== undefined &&
+        z.iso.datetime().parse(unowned.command.takeoverEligibleAt) <=
+          now.toISOString(),
+    ).toBe(true);
     const delivery = await server.service.byRef(open[0]?.identifier ?? "");
     expect(delivery.affected).toHaveLength(2);
     expect(

@@ -21,14 +21,14 @@ import {
 
 describe("describeCommand", () => {
   it("names the commander when command is owned", () => {
-    const view = describeCommand(owned(FIXER), NOW_MS);
+    const view = describeCommand(owned(FIXER), NOW_MS, "incident");
     expect(view.state).toBe("owned");
     expect(view.label).toBe("Owned by claude-code · temporal-schedule-split");
     expect(view.tone).toBe("ok");
   });
 
   it("shows the dispatch lease deadline and who holds it", () => {
-    const view = describeCommand(dispatching(90), NOW_MS);
+    const view = describeCommand(dispatching(90), NOW_MS, "incident");
     expect(view.state).toBe("dispatching");
     expect(view.label).toMatch(/^Dispatching to new session until /u);
     expect(view.detail).toBe(
@@ -37,11 +37,11 @@ describe("describeCommand", () => {
   });
 
   it("separates an unowned incident that is eligible now from one that is not yet", () => {
-    expect(describeCommand(unowned(-1), NOW_MS)).toMatchObject({
+    expect(describeCommand(unowned(-1), NOW_MS, "incident")).toMatchObject({
       state: "eligible",
       label: "Unowned — takeover eligible now",
     });
-    const waiting = describeCommand(unowned(6), NOW_MS);
+    const waiting = describeCommand(unowned(6), NOW_MS, "incident");
     expect(waiting.state).toBe("waiting");
     expect(waiting.label).toMatch(/^Unowned — takeover eligible at /u);
     expect(waiting.detail).toContain("(6m)");
@@ -51,6 +51,24 @@ describe("describeCommand", () => {
 function actions(overrides: Parameters<typeof detail>[0], viewer = VIEWER_KEY) {
   return commandActions(detail(overrides), viewer, NOW_MS);
 }
+
+describe("describeCommand for maintenance", () => {
+  it("names an owner or says there is none, with no takeover language", () => {
+    expect(describeCommand(owned(FIXER), NOW_MS, "maintenance")).toMatchObject({
+      state: "owned",
+      label: "Owner: claude-code · temporal-schedule-split",
+    });
+    for (const eligibleIn of [-5, 5])
+      expect(
+        describeCommand(unowned(eligibleIn), NOW_MS, "maintenance"),
+      ).toEqual({
+        state: "unowned",
+        tone: "unknown",
+        label: "No owner",
+        detail: null,
+      });
+  });
+});
 
 describe("commandActions", () => {
   it("offers Take on an unowned incident past its takeover grace", () => {
@@ -90,6 +108,17 @@ describe("commandActions", () => {
       canForce: false,
       canRelease: true,
     });
+  });
+
+  it("lets anyone take unowned maintenance at once, like the domain", () => {
+    expect(
+      actions({
+        kind: "maintenance",
+        status: "scheduled",
+        systems: ["databases"],
+        command: unowned(5),
+      }),
+    ).toMatchObject({ canTake: true, canForce: false });
   });
 
   it("follows the lifecycle for resolve and reopen", () => {
