@@ -101,11 +101,8 @@ export const IncidentStatusSchema = z.enum([
 ]);
 export type IncidentStatus = z.infer<typeof IncidentStatusSchema>;
 
-export const TERMINAL_STATUSES: ReadonlySet<IncidentStatus> = new Set([
-  "resolved",
-  "completed",
-  "canceled",
-]);
+export const TERMINAL_STATUSES: ReadonlySet<IncidentStatus> =
+  new Set<IncidentStatus>(["resolved", "completed", "canceled"]);
 
 export function isOpenStatus(status: IncidentStatus): boolean {
   return !TERMINAL_STATUSES.has(status);
