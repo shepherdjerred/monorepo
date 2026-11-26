@@ -18,6 +18,7 @@ const Cleanup = z.object({
   expiredSessions: z.number(),
   purgedBoards: z.number(),
   deletedBlobs: z.number(),
+  deletedOrphans: z.number(),
   prunedEvents: z.number(),
   more: z.boolean(),
 });
@@ -216,7 +217,7 @@ describe("orphan object sweep", () => {
     runtime.store.setModified("objects/dead-upload-old", old(2));
     runtime.store.put("objects/in-flight-upload", new Uint8Array([2]));
     const result = await cleanup();
-    expect(result.deletedBlobs).toBeGreaterThanOrEqual(1);
+    expect(result.deletedOrphans).toBe(1);
     const keys = runtime.store.keys();
     expect(keys).not.toContain("objects/dead-upload-old");
     expect(keys).toContain("objects/in-flight-upload");
@@ -373,6 +374,7 @@ describe("cleanup of blobs and events", () => {
       expiredSessions: 0,
       purgedBoards: 0,
       deletedBlobs: 0,
+      deletedOrphans: 0,
       prunedEvents: 0,
       more: false,
     });
