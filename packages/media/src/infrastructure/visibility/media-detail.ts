@@ -5,6 +5,7 @@ import type { MediaItem } from "#generated/prisma/client.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { MediaDetailSchema } from "#shared/api.ts";
+import { LEGACY_ACTIVITY_EVENT_KIND } from "#shared/legacy-activity/contract.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
@@ -160,7 +161,10 @@ export function readMediaDetail(
         mediaId,
         ...(reader.owner
           ? {}
-          : { OR: [{ actorId: actor.id }, { actorId: null }] }),
+          : {
+              kind: { not: LEGACY_ACTIVITY_EVENT_KIND },
+              OR: [{ actorId: actor.id }, { actorId: null }],
+            }),
       },
       orderBy: { createdAt: "desc" },
       take: 100,

@@ -33,6 +33,73 @@ test("capacity route is registered behind normal session authentication", async 
   });
 });
 
+test("imported activity uses the authenticated activity and migration endpoints", async () => {
+  const { dependencies } = fixture();
+  const memberApp = createMediaApp(dependencies);
+  const activity = "/api/v1/activity?source=sonarr";
+  const signedOut = await memberApp.request(activity);
+  expect(signedOut.status).toBe(401);
+  const memberDenied = await memberApp.request(activity, { headers });
+  expect(memberDenied.status).toBe(403);
+  const ordinary = await memberApp.request("/api/v1/activity", { headers });
+  expect(await ordinary.json()).toEqual([]);
+
+  const { dependencies: ownerDependencies } = fixture();
+  const session = ownerDependencies.auth.authenticate;
+  ownerDependencies.auth.authenticate = async (token) => {
+    const current = await session(token);
+    return { ...current, actor: { ...current.actor, role: "owner" } };
+  };
+  const ownerApp = createMediaApp(ownerDependencies);
+  const filtered = await ownerApp.request(activity, { headers });
+  expect(filtered.status).toBe(200);
+  expect(await filtered.json()).toEqual({ items: [], nextCursor: null });
+  const invalid = await ownerApp.request("/api/v1/activity?source=unknown", {
+    headers,
+  });
+  expect(invalid.status).toBe(400);
+
+  const url = "/api/v1/admin/migration";
+  const body = JSON.stringify({
+    kind: "legacy_activity",
+    events: [
+      {
+        source: "radarr",
+        sourceInstanceId: "31b72d44-11fc-4411-9bc8-6304a2c588a4",
+        table: "history",
+        originalId: 1,
+        sourceDate: "2026-09-28T22:18:01Z",
+        action: "grabbed",
+        actionCode: null,
+        fileId: null,
+        movieId: 50,
+        qualityId: null,
+        customFormatScore: null,
+        provider: null,
+      },
+    ],
+  });
+  const memberWrite = await memberApp.request(url, {
+    method: "POST",
+    headers,
+    body,
+  });
+  expect(memberWrite.status).toBe(403);
+  const denied = await ownerApp.request(url, {
+    method: "POST",
+    headers: { ...headers, "X-CSRF-Token": "wrong" },
+    body,
+  });
+  expect(denied.status).toBe(403);
+  const imported = await ownerApp.request(url, {
+    method: "POST",
+    headers,
+    body,
+  });
+  expect(imported.status).toBe(200);
+  expect(await imported.json()).toEqual({ imported: 1, unchanged: 0 });
+});
+
 function unusedInterestRead() {
   return Promise.reject(new Error("Unused interest fixture"));
 }

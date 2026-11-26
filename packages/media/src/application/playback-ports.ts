@@ -6,6 +6,8 @@ import type {
   PlaybackHistorySchema,
   PlaybackQuery,
   PlaybackStatisticsSchema,
+  PlaybackTimelineQuery,
+  PlaybackTimelineSchema,
   SealPlaybackHandoff,
   PlaybackHandoffStatusSchema,
 } from "#shared/household/playback.ts";
@@ -16,6 +18,10 @@ export type PlaybackHistoryApplication = {
     actor: MediaActor,
     query: PlaybackQuery,
   ) => Promise<z.infer<typeof PlaybackHistorySchema>>;
+  timeline: (
+    actor: MediaActor,
+    query: PlaybackTimelineQuery,
+  ) => Promise<z.infer<typeof PlaybackTimelineSchema>>;
   nowPlaying: (actor: MediaActor) => Promise<z.infer<typeof NowPlayingSchema>>;
   statistics: (
     actor: MediaActor,
