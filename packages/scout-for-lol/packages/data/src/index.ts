@@ -32,6 +32,17 @@ export * from "./lane-priors/inference.ts";
 export * from "./lane-priors/current.ts";
 export * from "./lane-priors/build.ts";
 export * from "./lane-priors/eval.ts";
+export * from "./tips/schema.ts";
+export * from "./tips/plan.ts";
+export * from "./tips/plan-sources.ts";
+export {
+  createTipReader,
+  getChampionLaneTips,
+  getMatchupTips,
+  type ConsumerTip,
+  type ConsumerTips,
+  type TipReader,
+} from "./tips/load.ts";
 export { getExampleMatch, type AnyMatch } from "./example/example.ts";
 export * from "./data-dragon/version.ts";
 export * from "./data-dragon/summoner.ts";

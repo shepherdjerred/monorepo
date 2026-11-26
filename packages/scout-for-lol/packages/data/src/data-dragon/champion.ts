@@ -49,6 +49,10 @@ const ChampionDataSchema = z.object({
         name: z.string(),
         description: z.string(),
       }),
+      /** Riot's short advice for playing the champion. */
+      allytips: z.array(z.string()),
+      /** Riot's short advice for playing against the champion. */
+      enemytips: z.array(z.string()),
     }),
   ),
 });
@@ -57,6 +61,8 @@ export type ChampionInfo = {
   spells: ChampionSpell[];
   passive: { name: string; description: string };
   tags: ChampionTag[];
+  allytips: string[];
+  enemytips: string[];
 };
 
 // Cache champion data to avoid repeated reads
@@ -133,6 +139,8 @@ export async function getChampionInfo(
       spells: championData.spells,
       passive: championData.passive,
       tags: championData.tags,
+      allytips: championData.allytips,
+      enemytips: championData.enemytips,
     };
 
     // Cache the result

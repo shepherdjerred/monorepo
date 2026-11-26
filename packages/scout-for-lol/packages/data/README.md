@@ -111,3 +111,33 @@ The generator exits non-zero if any champion's bin fails to fetch or parse and
 prints a coverage summary (champions processed, abilities fully resolved,
 abilities with unresolved tokens). The full refresh regenerates these files as
 part of every run.
+
+## Generated tips (`src/tips/`)
+
+Tips are short advice written ahead of time by a model, never by users:
+matchup tips for each ordered (champion, opponent, lane), three to six general
+tips per (champion, lane), and keyword glossary entries for tooltips. Every tip
+cites the facts it leans on; ability cites drive the icons beside a tip.
+
+- `schema.ts` defines the sets and the files under `src/tips/generated/`:
+  `matchup/<lane>/<ChampionKey>.json` (every opponent of one champion in one
+  lane), `general/<lane>.json` and `glossary.json`.
+- `plan.ts` prunes the matrix. A (champion, lane) is viable when the lane holds
+  at least 10% of the champion's games and the champion is at least 0.5% of the
+  lane's picks; each keeps opponents, most played first, until they cover 60%
+  of its lane games, at most 15. One unordered pair is one generation unit that
+  writes both directions. `plan-sources.ts` reads the counts from lane priors
+  (opponents estimated from lane shares) or from meta serving slices.
+- `validate.ts` checks a tip against the committed ability facts and Data
+  Dragon: every ability name belongs to the unit's champions and is cited,
+  every number is a cited ability value or a level, a percentage is allowed
+  only when it matches a cited ability value ("slows by 65%"), no statistics
+  such as win rates or game counts, at most two sentences, no explanatory lead-ins, and no near-duplicates across the two
+  directions of a pair or against the general tips.
+- `input-hash.ts` hashes the prompt version with a stable projection of the
+  unit's grounding (ability facts, tags, Riot's ally and enemy tips). A set
+  whose hash no longer matches the current facts is stale.
+- `getChampionLaneTips` and `getMatchupTips` (`load.ts`) return a set's tips
+  and the patch they agree with, or null when the pruned matrix has no set or
+  the set is stale. A stale set is hidden, never a build failure; a file that
+  fails its schema throws.
