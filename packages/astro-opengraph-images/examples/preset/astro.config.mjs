@@ -18,6 +18,14 @@ export default defineConfig({
               "node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff",
             ),
           },
+          {
+            name: "Roboto",
+            weight: 700,
+            style: "normal",
+            data: fs.readFileSync(
+              "node_modules/@fontsource/roboto/files/roboto-latin-700-normal.woff",
+            ),
+          },
         ],
       },
       render: presets.blackAndWhite,
