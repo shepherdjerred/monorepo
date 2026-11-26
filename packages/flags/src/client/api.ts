@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { z } from "zod";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { FlagValueSchema } from "@shepherdjerred/flags/schema.ts";
@@ -52,6 +58,22 @@ async function getJson<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   return schema.parse(body);
 }
 
+/**
+ * The page's query client. Documents change only through this UI, which
+ * invalidates what it writes, so nothing refetches on its own.
+ */
+export function createQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        refetchOnWindowFocus: false,
+        staleTime: Number.POSITIVE_INFINITY,
+      },
+    },
+  });
+}
+
 export function useDeployments() {
   return useQuery({
     queryKey: ["deployments"],
@@ -65,9 +87,15 @@ export function useDeployments() {
   });
 }
 
+/**
+ * One deployment's document. While another deployment loads, `data` stays the
+ * previous document and `isPlaceholderData` is true, so the table does not
+ * blank out between deployments.
+ */
 export function useDocument(catalog: string, stage: string) {
   return useQuery({
     queryKey: ["document", catalog, stage],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       getJson(
         `/v1/deployments/${encodeURIComponent(catalog)}/${encodeURIComponent(stage)}`,

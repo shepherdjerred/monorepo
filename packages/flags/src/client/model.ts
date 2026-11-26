@@ -27,20 +27,15 @@ export type SidebarEntry =
       }[];
     };
 
-export function parseRoute(pathname: string): Route | undefined {
-  const parts = pathname.split("/").filter((part) => part.length > 0);
-  const catalog = parts[0];
-  const stage = parts[1];
-  if (catalog === undefined || stage === undefined || parts.length > 3)
-    return undefined;
-  const key = parts[2];
-  return key === undefined
-    ? { catalog: decodeURIComponent(catalog), stage: decodeURIComponent(stage) }
-    : {
-        catalog: decodeURIComponent(catalog),
-        stage: decodeURIComponent(stage),
-        key: decodeURIComponent(key),
-      };
+/** Splits a deployment id the API returns (`catalog/stage`). */
+export function splitDeploymentId(id: string): Route {
+  const slash = id.indexOf("/");
+  const catalog = id.slice(0, slash);
+  const stage = id.slice(slash + 1);
+  if (slash <= 0 || stage.length === 0 || stage.includes("/")) {
+    throw new Error(`deployment id ${id} is not catalog/stage`);
+  }
+  return { catalog, stage };
 }
 
 export function deploymentPath(catalog: string, stage: string): string {
@@ -51,6 +46,15 @@ export function flagPath(catalog: string, stage: string, key: string): string {
   return `${deploymentPath(catalog, stage)}/${encodeURIComponent(key)}`;
 }
 
+/** The browser tab title for a page, most specific part first. */
+export function pageTitle(route: Route | undefined): string {
+  if (route === undefined) return "Flags";
+  const deployment = `${route.catalog}/${route.stage}`;
+  return route.key === undefined
+    ? `${deployment} · Flags`
+    : `${route.key} · ${deployment} · Flags`;
+}
+
 export function stageLabel(stage: string): string {
   return STAGE_LABELS[stage] ?? stage;
 }
@@ -58,12 +62,7 @@ export function stageLabel(stage: string): string {
 export function sidebarEntries(ids: readonly string[]): SidebarEntry[] {
   const groups = new Map<string, { id: string; stage: string }[]>();
   for (const id of [...ids].sort()) {
-    const slash = id.indexOf("/");
-    const catalog = id.slice(0, slash);
-    const stage = id.slice(slash + 1);
-    if (slash <= 0 || stage.length === 0 || stage.includes("/")) {
-      throw new Error(`deployment id ${id} is not catalog/stage`);
-    }
+    const { catalog, stage } = splitDeploymentId(id);
     const list = groups.get(catalog) ?? [];
     list.push({ id, stage });
     groups.set(catalog, list);
@@ -284,9 +283,18 @@ export function searchSuffix(query: string): string {
   return needle.length === 0 ? "" : `?q=${encodeURIComponent(needle)}`;
 }
 
-/** The search text a page URL carries, e.g. `?q=dares`. */
-export function parseSearch(search: string): string {
-  return new URLSearchParams(search).get("q") ?? "";
+/**
+ * The page's search params with `q` set to the text as typed (spaces kept, so
+ * the field can hold "a " on the way to "a b"), or removed when it is empty.
+ */
+export function withQuery(
+  params: URLSearchParams,
+  query: string,
+): URLSearchParams {
+  const next = new URLSearchParams(params);
+  if (query.length === 0) next.delete("q");
+  else next.set("q", query);
+  return next;
 }
 
 export type FlagState = {

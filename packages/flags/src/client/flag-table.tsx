@@ -4,6 +4,7 @@ import {
   CrosshairIcon,
   type LucideIcon,
 } from "lucide-react";
+import { Link } from "react-router";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { flagPath, flagState, searchSuffix, type FlagState } from "./model.ts";
 
@@ -85,13 +86,13 @@ export function FlagTable({
             return (
               <tr key={flag.key} data-current={selected ? "" : undefined}>
                 <th scope="row">
-                  <a
+                  <Link
                     className="ui-mono fl-key"
-                    href={`${flagPath(catalog, stage, flag.key)}${searchSuffix(query)}`}
+                    to={`${flagPath(catalog, stage, flag.key)}${searchSuffix(query)}`}
                     aria-current={selected ? "page" : undefined}
                   >
                     {flag.key}
-                  </a>
+                  </Link>
                 </th>
                 <td>
                   <FlagStateCell flag={flag} />
