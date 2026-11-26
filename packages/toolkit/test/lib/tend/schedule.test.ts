@@ -81,9 +81,13 @@ describe("tend LaunchAgent", () => {
 
     const plist = renderLaunchAgentPlist(spec);
     expect(plist).toContain("<string>com.jerred.toolkit-tend</string>");
+    // A calendar time survives sleep; an interval firing would be missed.
+    expect(spec.startCalendarInterval).toEqual({ hour: 4, minute: 30 });
+    expect(spec.startIntervalSeconds).toBeUndefined();
     expect(plist).toContain(
-      "<key>StartInterval</key>\n  <integer>86400</integer>",
+      "<key>StartCalendarInterval</key>\n  <dict>\n    <key>Hour</key>\n    <integer>4</integer>\n    <key>Minute</key>\n    <integer>30</integer>\n  </dict>",
     );
+    expect(plist).not.toContain("<key>StartInterval</key>");
     expect(plist).not.toContain("<key>KeepAlive</key>");
     // Loading the agent must not start a sweep.
     expect(spec.runAtLoad).toBe(false);
@@ -126,7 +130,7 @@ describe("toolkit tend schedule", () => {
     expect(calls[1]?.[1]).toEqual(tendLaunchAgent(paths, HOME));
     expect(output()).toContain(`Tend LaunchAgent installed: ${PLIST}`);
     expect(output()).toContain(
-      "Nothing runs now; the first sweep is 24 hours after the agent loads.",
+      "Nothing runs now; the first sweep is the next 04:30, or the next wake after it.",
     );
     expect(output()).toContain(
       "`toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`",
@@ -156,7 +160,7 @@ describe("toolkit tend schedule", () => {
       plistPath: PLIST,
       installed: false,
       loaded: false,
-      intervalSeconds: 86_400,
+      dailyAt: "04:30",
       logs: { stdout: `${HOME}/.toolkit/tend/logs/launchd.stdout.log` },
     });
   });

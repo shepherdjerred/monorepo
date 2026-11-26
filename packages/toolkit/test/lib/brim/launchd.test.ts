@@ -21,15 +21,15 @@ describe("LaunchAgent plists", () => {
   });
 
   test("a job that does not say otherwise runs at load, byte for byte as before", () => {
-    const spec = {
+    const unscheduled = {
       label: "com.example.job",
       plistPath: "/tmp/job.plist",
       programArguments: ["/bin/tool", "sync & run"],
       logsDir: "/tmp/logs",
       keepAlive: false,
-      startIntervalSeconds: 300,
       environment: { PATH: "/usr/bin" },
     };
+    const spec = { ...unscheduled, startIntervalSeconds: 300 };
     const expected = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -65,6 +65,17 @@ describe("LaunchAgent plists", () => {
       expected.replace(
         "<key>RunAtLoad</key>\n  <true/>",
         "<key>RunAtLoad</key>\n  <false/>",
+      ),
+    );
+    expect(
+      renderLaunchAgentPlist({
+        ...unscheduled,
+        startCalendarInterval: { hour: 4, minute: 30 },
+      }),
+    ).toBe(
+      expected.replace(
+        "<key>StartInterval</key>\n  <integer>300</integer>",
+        "<key>StartCalendarInterval</key>\n  <dict>\n    <key>Hour</key>\n    <integer>4</integer>\n    <key>Minute</key>\n    <integer>30</integer>\n  </dict>",
       ),
     );
     expect(

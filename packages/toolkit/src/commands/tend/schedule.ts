@@ -14,7 +14,9 @@ import {
 import { resolveTendPaths, type TendPaths } from "#lib/tend/paths.ts";
 
 export const TEND_LAUNCH_AGENT_LABEL = "com.jerred.toolkit-tend";
-const INTERVAL_SECONDS = 24 * 60 * 60;
+/** Daily at 04:30 local time, when a workstation is least likely in use. */
+const DAILY_AT = { hour: 4, minute: 30 } as const;
+const DAILY_AT_TEXT = "04:30";
 
 /** What the daily job runs: `toolkit tend run --apply --only worktrees`. */
 const TEND_SCHEDULE_ARGS = [
@@ -45,9 +47,12 @@ export function tendLaunchAgent(
     programArguments: selfArgv([...TEND_SCHEDULE_ARGS]),
     logsDir: path.join(paths.rootDir, "logs"),
     keepAlive: false,
-    startIntervalSeconds: INTERVAL_SECONDS,
-    // Loading the agent must not remove anything: the first sweep is one
-    // interval later, after the candidates have been looked at by hand.
+    // A calendar time, not an interval: launchd drops an interval firing that
+    // falls while the machine sleeps, but runs a missed calendar firing at
+    // the next wake.
+    startCalendarInterval: DAILY_AT,
+    // Loading the agent must not remove anything: the first sweep is the
+    // next scheduled one, after the candidates have been looked at by hand.
     runAtLoad: false,
     // launchd's own PATH has neither `gh` (Homebrew) nor `hc` (~/.local/bin),
     // and a sweep that cannot see Herdr sessions holds itself.
@@ -98,8 +103,8 @@ export async function handleTendScheduleCommand(
       console.log(
         [
           `Tend LaunchAgent installed: ${spec.plistPath}`,
-          `Runs every 24 hours: ${spec.programArguments.join(" ")}`,
-          "Nothing runs now; the first sweep is 24 hours after the agent loads.",
+          `Runs daily at ${DAILY_AT_TEXT}: ${spec.programArguments.join(" ")}`,
+          `Nothing runs now; the first sweep is the next ${DAILY_AT_TEXT}, or the next wake after it.`,
           "To sweep by hand: `toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`.",
           `Logs: ${logs.stdout}`,
         ].join("\n"),
@@ -120,7 +125,7 @@ export async function handleTendScheduleCommand(
               plistPath: spec.plistPath,
               installed: state.installed,
               loaded: state.loaded,
-              intervalSeconds: INTERVAL_SECONDS,
+              dailyAt: DAILY_AT_TEXT,
               programArguments: spec.programArguments,
               logs,
             },

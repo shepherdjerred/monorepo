@@ -59,9 +59,9 @@ Notes:
     under refs/tend/rescue/ first; unmerged branches are kept.
   - --summary prints the per-reason keep counts without the item lists;
     --verbose also lists every kept worktree with its reason.
-  - "schedule install" loads a daily macOS LaunchAgent that runs
-    "tend run --apply --only worktrees". Installing removes nothing: the
-    first sweep is 24 hours after the agent loads. To sweep by hand, read
+  - "schedule install" loads a macOS LaunchAgent that runs
+    "tend run --apply --only worktrees" daily at 04:30 local time (or at the
+    next wake after it). Installing removes nothing. To sweep by hand, read
     "tend worktrees" (dry run), then run "tend worktrees --apply".
   - Open Forum notices scoped to host/<thisHost> protect referenced paths, and
     notices with "databases" or "testing" hold postgres + processes sweeps.

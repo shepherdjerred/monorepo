@@ -1896,11 +1896,12 @@ git update-ref -d refs/tend/rescue/<name>              # discard it for good
 
 `toolkit tend schedule install` loads the per-user macOS LaunchAgent
 `com.jerred.toolkit-tend`, which runs
-`toolkit tend run --apply --only worktrees` every 24 hours with `~/.local/bin`
+`toolkit tend run --apply --only worktrees` daily at 04:30 local time with `~/.local/bin`
 and Homebrew on `PATH` (for `hc` and `gh`) and logs to
 `~/.toolkit/tend/logs/`. Installing removes nothing: the agent does not run
-at load, so the first sweep is 24 hours after it is loaded (at install, and
-again at each login). To sweep by hand, read the candidates from the dry run
+at load, so the first sweep is the next 04:30. The schedule is a calendar time
+rather than an interval because launchd drops an interval firing that falls
+while the machine sleeps, and runs a missed calendar firing at the next wake. To sweep by hand, read the candidates from the dry run
 and then apply:
 
 ```bash
