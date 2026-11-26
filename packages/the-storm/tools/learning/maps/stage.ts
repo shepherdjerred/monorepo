@@ -9,6 +9,7 @@ import {
   type MapScenario as Scenario,
 } from "./scenario.ts";
 import { trainingScenarioFor } from "./training-scenarios.ts";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 
 /** Remap just the disposable match's roster; region and schematic identity stay original. */
 export function controlledMap(raw: unknown, scenario: Scenario): MapContent {
@@ -62,6 +63,8 @@ export async function stageMap(
 ) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(mapId))
     throw new Error("Invalid map selection");
+  // Bots need the map's and the lobby's baked nav meshes, which a checkout only has once fetched.
+  await ensureNavMeshes(source);
   const folder = path.join(source, "rwf/maps", mapId);
   const map = MapContent.parse(
     Bun.YAML.parse(await Bun.file(path.join(folder, "map.yml")).text()),

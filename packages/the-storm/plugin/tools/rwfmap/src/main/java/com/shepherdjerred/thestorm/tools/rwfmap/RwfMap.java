@@ -17,8 +17,10 @@ import java.util.Optional;
  * it); {@code rwfmap verify <mapDir>} re-bakes in memory and fails when the committed files differ.
  * {@code rwfmap bake-lobby <lobbyDir>} bakes the lobby's nav files once {@code lobby.yml} declares
  * the hash of its {@code blocks.schem}; {@code rwfmap verify-lobby <lobbyDir>} fails when the
- * lobby's hash, places or nav files are not what its schematic and a fresh bake produce. Exit
- * codes: 0 success, 1 usage, 2 the map or its artifacts are wrong.
+ * lobby's hash, places or nav files are not what its schematic and a fresh bake produce. {@code
+ * rwfmap manifest <rwfDir>} records the baked artifacts' hashes in {@code nav-manifest.json}, and
+ * {@code rwfmap fetch <rwfDir>} materialises the artifacts that manifest names. Exit codes: 0
+ * success, 1 usage, 2 the map or its artifacts are wrong.
  */
 public final class RwfMap {
 
@@ -37,6 +39,8 @@ public final class RwfMap {
         rwfmap close-starts <mapDir>           find grounded close-combat starts on original terrain
         rwfmap bake-lobby <lobbyDir>           bake the lobby's nav files
         rwfmap verify-lobby <lobbyDir>         fail if the committed lobby files are stale
+        rwfmap manifest <rwfDir>               record the baked nav files in nav-manifest.json
+        rwfmap fetch <rwfDir>                  fetch the nav files nav-manifest.json names
       """;
 
   private RwfMap() {}
@@ -63,6 +67,8 @@ public final class RwfMap {
         case "close-starts" -> closeStarts(Path.of(args[1]), out);
         case "bake-lobby" -> bakeLobby(Path.of(args[1]), out, err);
         case "verify-lobby" -> verifyLobby(Path.of(args[1]), out, err);
+        case "manifest" -> manifest(Path.of(args[1]), out);
+        case "fetch" -> fetch(Path.of(args[1]), out);
         default -> usage(err);
       };
     } catch (IllegalArgumentException | IllegalStateException | UncheckedIOException e) {
@@ -196,6 +202,37 @@ public final class RwfMap {
     err.println("rwfmap: the lobby failed verification:");
     failures.forEach(failure -> err.println("  " + failure));
     return FAILED;
+  }
+
+  private static int manifest(Path rwfRoot, PrintStream out) {
+    var manifest = NavManifest.refreshed(rwfRoot);
+    manifest.write(rwfRoot);
+    out.println(
+        "recorded "
+            + manifest.objects().size()
+            + " nav files in "
+            + NavManifest.file(rwfRoot)
+            + "; publish them with bun run maps:publish-nav before committing it");
+    return OK;
+  }
+
+  private static int fetch(Path rwfRoot, PrintStream out) {
+    var cache =
+        NavFetch.cacheDirectory(
+            Optional.ofNullable(System.getenv(NavFetch.CACHE_VARIABLE)),
+            Optional.ofNullable(System.getenv(NavFetch.CACHE_HOME_VARIABLE)));
+    var report = NavFetch.standard(cache).fetch(rwfRoot);
+    out.println(
+        "nav files under "
+            + rwfRoot
+            + ": "
+            + report.present()
+            + " already present, "
+            + report.cached()
+            + " from the cache, "
+            + report.downloaded()
+            + " downloaded");
+    return OK;
   }
 
   /** The {@code --out <file>} option, when it is the only option. */

@@ -331,4 +331,17 @@ if (args.values.install) {
       registry.file,
       JSON.stringify(registry.value, null, 2) + "\n",
     );
+  // The installed meshes are new bytes: record them, ready for `maps:publish-nav`.
+  if (installs.length > 0)
+    await run(
+      [
+        "mise",
+        "exec",
+        "--",
+        path.join(inputs.mapTool, "bin/rwfmap"),
+        "manifest",
+        path.dirname(maps),
+      ],
+      path.join(output, "nav-manifest.log"),
+    );
 }

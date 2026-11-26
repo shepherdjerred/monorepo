@@ -1,7 +1,9 @@
 // rwfmap: the offline map analysis for Search and Destroy bots. It bakes every
 // rwf map (map.yml + blocks.schem) into the nav.rwfnav artifact rwfbots loads
-// and verifies the committed artifacts byte for byte when verifyRwfMaps is run.
+// and verifies the shipped artifacts byte for byte when verifyRwfMaps is run.
 // It also bakes the lobby (rwf/lobby) and verifies it the same way.
+// The artifacts are not in Git: rwf/nav-manifest.json names each one by sha256,
+// a bake records it there, and fetchRwfNavs materialises what the manifest names.
 // It is a tool, not a gameplay module: dist never
 // shades it and the architecture project never puts it on its classpath.
 plugins {
@@ -27,14 +29,48 @@ val mainClassName = "com.shepherdjerred.thestorm.tools.rwfmap.RwfMap"
 
 application { mainClass = mainClassName }
 
+/** The shipped rwf content: nav-manifest.json, the lobby and every map. */
+val rwfRoot = rootProject.file("../server/owned/plugins/TheStorm/rwf")
+
 /** The maps the server ships, each in its own `<id>/` folder. */
-val mapsRoot = rootProject.file("../server/owned/plugins/TheStorm/rwf/maps")
+val mapsRoot = rwfRoot.resolve("maps")
 
 /** The lobby: lobby.yml, blocks.schem and its nav files. */
-val lobbyFolder = rootProject.file("../server/owned/plugins/TheStorm/rwf/lobby")
+val lobbyFolder = rwfRoot.resolve("lobby")
 
 val mapFolders =
     (mapsRoot.listFiles { file -> file.isDirectory } ?: emptyArray()).sortedBy { it.name }
+
+// A bake changes an artifact's bytes, so every bake ends by recording them. The task reads
+// whichever artifacts are on disk and keeps the entry of one this checkout has not fetched.
+val writeRwfNavManifest =
+    tasks.register<JavaExec>("writeRwfNavManifest") {
+      group = "rwf"
+      description = "Records the sha256 and size of every baked nav.rwfnav in nav-manifest.json."
+      classpath = sourceSets.main.get().runtimeClasspath
+      mainClass = mainClassName
+      args("manifest", rwfRoot.absolutePath)
+    }
+
+// Everything that reads a shipped nav.rwfnav depends on this task: the files are ignored by Git
+// and exist in a checkout only once fetched. A missing or altered object fails the build.
+val fetchRwfNavs =
+    tasks.register<JavaExec>("fetchRwfNavs") {
+      group = "rwf"
+      description = "Fetches every nav.rwfnav that nav-manifest.json names, verified by sha256."
+      classpath = sourceSets.main.get().runtimeClasspath
+      mainClass = mainClassName
+      args("fetch", rwfRoot.absolutePath)
+      inputs
+          .file(rwfRoot.resolve("nav-manifest.json"))
+          .withPropertyName("navManifest")
+          .withPathSensitivity(PathSensitivity.NONE)
+      outputs
+          .files((mapFolders + lobbyFolder).map { it.resolve("nav.rwfnav") })
+          .withPropertyName("navFiles")
+      // A rebake in the same invocation wins: its bytes are already what the manifest names.
+      mustRunAfter(writeRwfNavManifest)
+    }
 
 fun taskSuffix(mapId: String) =
     mapId.split('-').joinToString("") { part -> part.replaceFirstChar(Char::uppercaseChar) }
@@ -62,6 +98,7 @@ mapFolders.forEach { folder ->
         args("bake", folder.absolutePath)
         inputs.files(folder.resolve("map.yml"), folder.resolve("blocks.schem"))
         outputs.files(folder.resolve("nav.rwfnav"), folder.resolve("nav.summary.json"))
+        finalizedBy(writeRwfNavManifest)
       }
   val verify =
       tasks.register<JavaExec>("verifyRwfMap$suffix") {
@@ -71,6 +108,7 @@ mapFolders.forEach { folder ->
         mainClass = mainClassName
         args("verify", folder.absolutePath)
         inputs.dir(folder)
+        dependsOn(fetchRwfNavs)
         mustRunAfter(bake)
       }
   val verifyDetails =
@@ -85,6 +123,8 @@ mapFolders.forEach { folder ->
   bakeRwfMaps { dependsOn(bake) }
   verifyRwfMaps { dependsOn(verify, verifyDetails) }
   tasks.test { mustRunAfter(bake) }
+  writeRwfNavManifest { mustRunAfter(bake) }
+  fetchRwfNavs { mustRunAfter(bake) }
 }
 
 val bakeRwfLobby =
@@ -96,7 +136,12 @@ val bakeRwfLobby =
       args("bake-lobby", lobbyFolder.absolutePath)
       inputs.files(lobbyFolder.resolve("lobby.yml"), lobbyFolder.resolve("blocks.schem"))
       outputs.files(lobbyFolder.resolve("nav.rwfnav"), lobbyFolder.resolve("nav.summary.json"))
+      finalizedBy(writeRwfNavManifest)
     }
+
+writeRwfNavManifest { mustRunAfter(bakeRwfLobby) }
+
+fetchRwfNavs { mustRunAfter(bakeRwfLobby) }
 
 val verifyRwfLobby =
     tasks.register<JavaExec>("verifyRwfLobby") {
@@ -106,6 +151,7 @@ val verifyRwfLobby =
       mainClass = mainClassName
       args("verify-lobby", lobbyFolder.absolutePath)
       inputs.dir(lobbyFolder)
+      dependsOn(fetchRwfNavs)
       mustRunAfter(bakeRwfLobby)
     }
 
@@ -115,7 +161,7 @@ bakeRwfMaps { dependsOn(bakeRwfLobby) }
 // requests a rebake and tests in one invocation, finish generation before reading those inputs.
 listOf(":rwf", ":rwfbots").forEach { consumer ->
   rootProject.project(consumer).tasks.named("test") {
-    mustRunAfter(bakeRwfMaps, bakeRwfLobby)
+    mustRunAfter(bakeRwfMaps, bakeRwfLobby, writeRwfNavManifest)
   }
 }
 
@@ -123,17 +169,24 @@ verifyRwfMaps { dependsOn(verifyRwfLobby) }
 
 tasks.check { dependsOn(verifyRwfMaps) }
 
-// CI decodes every committed artifact and checks it against shipped map metadata. Full deterministic
-// rebakes stay in verifyRwfMaps, which is available to the operator and local extended suites.
+// CI fetches and decodes every shipped artifact and checks it against the manifest and the shipped
+// map metadata. Full deterministic rebakes stay in verifyRwfMaps, which is available to the
+// operator and local extended suites.
 tasks.test {
-  // The largest committed navigation artifact expands to over 200 MiB before its graph is decoded.
+  // The largest shipped navigation artifact expands to over 200 MiB before its graph is decoded.
   maxHeapSize = "2g"
-  mustRunAfter(bakeRwfLobby)
+  dependsOn(fetchRwfNavs)
+  mustRunAfter(bakeRwfLobby, writeRwfNavManifest)
   inputs.dir(mapsRoot).withPropertyName("shippedMaps").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
       .dir(lobbyFolder)
       .withPropertyName("shippedLobby")
       .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs
+      .file(rwfRoot.resolve("nav-manifest.json"))
+      .withPropertyName("navManifest")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+  systemProperty("thestorm.rwf.root", rwfRoot.absolutePath)
   systemProperty("thestorm.rwf.maps", mapsRoot.absolutePath)
   systemProperty("thestorm.rwf.lobby", lobbyFolder.absolutePath)
 }

@@ -75,6 +75,8 @@ tasks.test {
 val runServerDirectory = rootProject.file("run")
 val prepareRunServerContent =
     tasks.register<Copy>("prepareRunServerContent") {
+      // rwfbots loads the nav artifacts, which exist in a checkout only once fetched.
+      dependsOn(":rwfmap:fetchRwfNavs")
       from(rootProject.file("../server/owned/plugins/TheStorm"))
       into(runServerDirectory.resolve("plugins/TheStorm"))
     }

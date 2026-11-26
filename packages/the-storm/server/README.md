@@ -266,18 +266,27 @@ LWC exception. Their old data is archived during the one-time cutover.
 
 Configuration belongs in these places:
 
-| Location                                                   | Ownership                                                                     |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `owned/plugins/TheStorm/*.yml`                             | Strict, typed gameplay configuration                                          |
-| `owned/plugins/TheStorm/{npcs,quests,shops,arena/arenas}/` | Content trees mirrored exactly on every boot                                  |
-| `owned/plugins/Geyser-Spigot/config.yml`                   | Floodgate authentication and Bedrock ports from the first boot                |
-| `owned/plugins/BlueMap/core.conf`                          | Map bootstrap configuration                                                   |
-| `owned/plugins/Citizens/config.yml`                        | NPC tab-list and player-list defaults, overwritten on every boot              |
-| `owned/plugins/GrimAC/`                                    | Pinned upstream config and evidence-only punishment commands                  |
-| `world-protection/`                                        | Per-dimension anti-xray profiles applied before Paper boots                   |
-| `patches/`                                                 | Selected Bukkit, Paper, Spigot, and Chunky settings forced on every boot      |
-| Homelab chart                                              | Server identity, credentials, and service bootstrap                           |
-| Persistent volume                                          | Worlds, vanilla inventories, permissions, plugin databases, and runtime state |
+| Location                                                   | Ownership                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `owned/plugins/TheStorm/*.yml`                             | Strict, typed gameplay configuration                                           |
+| `owned/plugins/TheStorm/{npcs,quests,shops,arena/arenas}/` | Content trees mirrored exactly on every boot                                   |
+| `owned/plugins/TheStorm/rwf/nav-manifest.json`             | Names each baked rwf navigation mesh by sha256; the image build downloads them |
+| `owned/plugins/Geyser-Spigot/config.yml`                   | Floodgate authentication and Bedrock ports from the first boot                 |
+| `owned/plugins/BlueMap/core.conf`                          | Map bootstrap configuration                                                    |
+| `owned/plugins/Citizens/config.yml`                        | NPC tab-list and player-list defaults, overwritten on every boot               |
+| `owned/plugins/GrimAC/`                                    | Pinned upstream config and evidence-only punishment commands                   |
+| `world-protection/`                                        | Per-dimension anti-xray profiles applied before Paper boots                    |
+| `patches/`                                                 | Selected Bukkit, Paper, Spigot, and Chunky settings forced on every boot       |
+| Homelab chart                                              | Server identity, credentials, and service bootstrap                            |
+| Persistent volume                                          | Worlds, vanilla inventories, permissions, plugin databases, and runtime state  |
+
+The rwf bots' `nav.rwfnav` meshes are not in Git and never enter the image from
+the build context (`Dockerfile.dockerignore`). The `fetch` stage runs
+`fetch.sh nav` over `nav-manifest.json`, downloading each mesh by sha256 with
+the same verified download as the jars, and the release stage copies them
+beside each map's files. The `smoke` stage checks every mesh's bytes and that
+the lobby and each map folder has one. The package README's Navigation meshes
+section covers baking and publishing.
 
 The patches keep survival mechanics vanilla where Spigot and Paper defaults
 diverge. Hunger and thunder use vanilla values. Entity activation throttling is
