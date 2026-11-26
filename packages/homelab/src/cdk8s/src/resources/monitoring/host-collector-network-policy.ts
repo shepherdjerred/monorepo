@@ -7,7 +7,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /**
- * The NetworkPolicy of one host metrics collector DaemonSet.
+ * The NetworkPolicy of each host metrics collector DaemonSet.
  *
  * A collector writes a `.prom` file into node-exporter's textfile directory on
  * the host and listens on nothing, so no Ingress rule is needed: Prometheus
@@ -16,18 +16,20 @@ import {
  * and PyPI over HTTPS. The pods use the pod network, not the host's, so the
  * policy binds them.
  */
-export function createHostCollectorNetworkPolicy(
+export function createHostCollectorNetworkPolicies(
   chart: Chart,
-  daemonSet: DaemonSet,
+  daemonSets: readonly DaemonSet[],
 ) {
-  const name = `${daemonSet.name}-netpol`;
-  return new KubeNetworkPolicy(chart, name, {
-    metadata: { name, namespace: "prometheus" },
-    spec: {
-      podSelector: { matchLabels: daemonSet.matchLabels },
-      policyTypes: ["Ingress", "Egress"],
-      ingress: [],
-      egress: [dnsEgressRule(), externalHttpsEgressRule()],
-    },
+  return daemonSets.map((daemonSet) => {
+    const name = `${daemonSet.name}-netpol`;
+    return new KubeNetworkPolicy(chart, name, {
+      metadata: { name, namespace: "prometheus" },
+      spec: {
+        podSelector: { matchLabels: daemonSet.matchLabels },
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [],
+        egress: [dnsEgressRule(), externalHttpsEgressRule()],
+      },
+    });
   });
 }

@@ -11,7 +11,6 @@ import {
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { createHostCollectorNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/host-collector-network-policy.ts";
 import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
@@ -181,8 +180,6 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
     "/host/var/lib/node_exporter/textfile_collector",
     textfileCollectorVolume,
   );
-
-  createHostCollectorNetworkPolicy(chart, nvmeMetricsDaemonSet);
 
   return { serviceAccount, nvmeMetricsScript, nvmeMetricsDaemonSet };
 }
