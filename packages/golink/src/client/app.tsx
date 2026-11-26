@@ -1,11 +1,14 @@
+import { useCallback, useMemo, useRef, useState } from "react";
+import { PlusIcon } from "lucide-react";
 import {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react";
-import { ShellFrame, type ThemeStore } from "@shepherdjerred/console-ui";
+  Button,
+  PageBody,
+  PageHeading,
+  ShellFrame,
+  SummaryGrid,
+  Tag,
+  type ThemeStore,
+} from "@shepherdjerred/console-ui";
 import {
   normalizeShortSlug,
   type LinkItem,
@@ -20,7 +23,7 @@ import {
   clearUrlPathToRoot,
   computeKindCounts,
   extractInitialMissingSlug,
-  isEditableElement,
+  isSearchShortcut,
   matchesSearchAndKind,
 } from "./directory-filters.ts";
 import { ShortcutsSection, type KindFilter } from "./directory-sections.tsx";
@@ -31,8 +34,8 @@ import {
   showModalFromFocus,
   type FormMode,
 } from "./link-dialogs.tsx";
-import { LinksTable } from "./links-table.tsx";
-import { GolinkHeader, MobileBar, SourcesSidebar } from "./shell.tsx";
+import { LinksCard, summaryItems } from "./links-card.tsx";
+import { GolinkSidebar, GolinkTopBar } from "./shell.tsx";
 import {
   bindFormValidation,
   focusFirstInvalidField,
@@ -43,65 +46,6 @@ import {
 
 const INITIAL_SHORT_ERROR = "Enter a short link name, such as docs or ha.";
 const INITIAL_TARGET_ERROR = "Enter an http:// or https:// destination URL.";
-
-function DirectoryBody({
-  loadError,
-  isInitialLoading,
-  items,
-  totalCount,
-  writesEnabled,
-  copiedShort,
-  deletingShort,
-  onRetry,
-  onCopy,
-  onEdit,
-  onOverride,
-  onDelete,
-}: {
-  loadError: string | null;
-  isInitialLoading: boolean;
-  items: readonly LinkItem[];
-  totalCount: number;
-  writesEnabled: boolean;
-  copiedShort: string | null;
-  deletingShort: string | null;
-  onRetry: () => void;
-  onCopy: (short: string) => void;
-  onEdit: (item: LinkItem) => void;
-  onOverride: (item: LinkItem) => void;
-  onDelete: (item: LinkItem) => void;
-}) {
-  if (loadError !== null) {
-    return (
-      <div className="golink-banner" data-sev="error" role="alert">
-        <span>{loadError}</span>
-        <button type="button" className="ui-btn" onClick={onRetry}>
-          Retry
-        </button>
-      </div>
-    );
-  }
-  if (isInitialLoading) {
-    return (
-      <p className="golink-loading ui-muted" role="status" aria-live="polite">
-        Loading shortlink directory…
-      </p>
-    );
-  }
-  return (
-    <LinksTable
-      items={items}
-      totalCount={totalCount}
-      writesEnabled={writesEnabled}
-      copiedShort={copiedShort}
-      deletingShort={deletingShort}
-      onCopy={onCopy}
-      onEdit={onEdit}
-      onOverride={onOverride}
-      onDelete={onDelete}
-    />
-  );
-}
 
 export function App({ theme }: { theme: ThemeStore }) {
   const initialMissing = useMemo(() => extractInitialMissingSlug(), []);
@@ -165,9 +109,20 @@ export function App({ theme }: { theme: ThemeStore }) {
       }
       const controller = new AbortController();
       void reloadDirectory(controller.signal);
+      // On the document, so `/` works while focus is on the page body too.
+      const onKeyDown = (event: KeyboardEvent): void => {
+        if (!isSearchShortcut(event)) {
+          return;
+        }
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      };
+      document.addEventListener("keydown", onKeyDown);
 
       return () => {
         controller.abort();
+        document.removeEventListener("keydown", onKeyDown);
         if (copyResetTimerRef.current !== undefined) {
           globalThis.clearTimeout(copyResetTimerRef.current);
         }
@@ -251,22 +206,7 @@ export function App({ theme }: { theme: ThemeStore }) {
     );
   };
 
-  const handleShellKeyDown = (
-    event: ReactKeyboardEvent<HTMLDivElement>,
-  ): void => {
-    const shouldIgnore =
-      event.key !== "/" ||
-      event.nativeEvent.isComposing ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.altKey ||
-      isEditableElement(event.target) ||
-      (event.target instanceof Element &&
-        event.target.closest("dialog") !== null);
-    if (shouldIgnore) {
-      return;
-    }
-    event.preventDefault();
+  const focusSearch = (): void => {
     searchInputRef.current?.focus();
     searchInputRef.current?.select();
   };
@@ -354,36 +294,45 @@ export function App({ theme }: { theme: ThemeStore }) {
   };
 
   return (
-    <div ref={shellRef} onKeyDownCapture={handleShellKeyDown}>
+    <div ref={shellRef}>
+      <GolinkTopBar
+        linkCount={links.length}
+        shortcutCount={shortcuts.length}
+        theme={theme}
+        onSearch={focusSearch}
+      />
       <ShellFrame
         sidebar={
-          <SourcesSidebar
-            counts={counts}
+          <GolinkSidebar
+            linkCount={links.length}
             shortcutCount={shortcuts.length}
-            kindFilter={kindFilter}
             theme={theme}
-            onKindFilterChange={setKindFilter}
+            onSearch={focusSearch}
           />
         }
       >
-        <MobileBar
-          kindFilter={kindFilter}
-          counts={counts}
-          theme={theme}
-          onKindFilterChange={setKindFilter}
-        />
+        <PageBody>
+          <PageHeading
+            eyebrow="Shortlink directory"
+            title="Go links"
+            description="Where every go/ name points: manual links, tailnet ingresses and public sites."
+            actions={
+              writesEnabled ? (
+                <Button
+                  size="page"
+                  onClick={() => {
+                    handleNewLink();
+                  }}
+                >
+                  <PlusIcon aria-hidden />
+                  New link
+                </Button>
+              ) : (
+                <Tag>Read-only</Tag>
+              )
+            }
+          />
 
-        <GolinkHeader
-          query={query}
-          searchInputRef={searchInputRef}
-          viewerLogin={directory?.viewer.login ?? null}
-          writesEnabled={writesEnabled}
-          onQueryChange={setQuery}
-          onNewLink={() => {
-            handleNewLink();
-          }}
-        />
-        <main>
           {activeMissingSlug !== null && (
             <MissingSlugBanner
               slug={activeMissingSlug}
@@ -399,20 +348,31 @@ export function App({ theme }: { theme: ThemeStore }) {
           )}
 
           {actionError !== null && (
-            <p className="golink-banner" data-sev="error" role="alert">
+            <p className="ui-banner" data-sev="error" role="alert">
               {actionError}
             </p>
           )}
           <p
             role="status"
             aria-live="polite"
-            className={statusMessage === null ? "ui-sr-only" : "golink-banner"}
+            className={statusMessage === null ? "ui-sr-only" : "ui-banner"}
             data-sev={statusMessage === null ? undefined : "ok"}
           >
             {statusMessage ?? ""}
           </p>
 
-          <DirectoryBody
+          <SummaryGrid
+            label="Link summary"
+            items={summaryItems(counts, links, directory !== null)}
+          />
+
+          <LinksCard
+            searchInputRef={searchInputRef}
+            query={query}
+            kindFilter={kindFilter}
+            counts={counts}
+            onQueryChange={setQuery}
+            onKindFilterChange={setKindFilter}
             loadError={loadError}
             isInitialLoading={isLoading && directory === null}
             items={filteredLinks}
@@ -436,7 +396,7 @@ export function App({ theme }: { theme: ThemeStore }) {
           />
 
           <ShortcutsSection shortcuts={shortcuts} />
-        </main>
+        </PageBody>
       </ShellFrame>
 
       <LinkFormDialog

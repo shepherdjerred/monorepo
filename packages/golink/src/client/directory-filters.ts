@@ -31,12 +31,27 @@ export function extractInitialMissingSlug(): string | null {
     : candidate;
 }
 
-export function isEditableElement(target: EventTarget | null): boolean {
+function isEditableElement(target: EventTarget | null): boolean {
   return (
     target instanceof Element &&
     target.closest(
       'input:not([type="radio"]):not([type="checkbox"]), textarea, select, [contenteditable="true"]',
     ) !== null
+  );
+}
+
+/** `/` outside text fields and dialogs moves focus to the search field. */
+export function isSearchShortcut(event: KeyboardEvent): boolean {
+  return (
+    event.key === "/" &&
+    !event.isComposing &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !isEditableElement(event.target) &&
+    !(
+      event.target instanceof Element && event.target.closest("dialog") !== null
+    )
   );
 }
 
