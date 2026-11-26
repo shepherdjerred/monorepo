@@ -435,27 +435,23 @@ wire-only compatibility fields. Folds and rebuilds reject an incompatible
 published fingerprint before creating a candidate build; schema changes require
 an explicit migration rather than mixing old and new Parquet columns.
 
-A migration is one declared predecessor, never a bridge. The current one adds
-`matches.participant_kind` and `matches.coverage`:
+A migration is one declared predecessor, never a bridge. No migration is in
+flight: the build accepts only its own fingerprint. A migration declares the
+one older fingerprint it accepts, and while it is in flight:
 
-- `LAKE_PREDECESSOR_SCHEMA_FINGERPRINT` (`report-lake/schema.ts`) names the
-  one older schema this build accepts. A test pins it to the current schema
-  minus the new columns.
 - A fold that finds that schema published runs a full rebuild instead, so no
   fold mixes layouts. The rebuild accepts the predecessor as the build it
   replaces, and any other fingerprint still throws.
 - Only the scheduled lake job runs that rebuild, under its heartbeats. The
   boot fold and initial-history publishing skip their inline fold while the
-  migration is pending (`reportLakeMigrationPending`). Otherwise the single
-  application pod, which uses a Recreate rollout, would stay unready for the
-  whole rebuild.
-- Until both stages publish, no read names the new columns
-  (`MATCH_MIGRATION_GATED_COLUMNS` in `data/src/model/reports/`). Reports,
-  ScoutQL, Dares and raw-document analysis keep reading the predecessor build
-  and staging while the rebuild runs, so the lake stays available.
+  migration is pending. Otherwise the single application pod, which uses a
+  Recreate rollout, would stay unready for the whole rebuild.
+- No read names the new columns, so Reports, ScoutQL, Dares and raw-document
+  analysis keep reading the predecessor build and staging while the rebuild
+  runs, and the lake stays available.
 - After Beta and Prod each publish a build at the current fingerprint, one
-  follow-up deletes the predecessor constant and the gate together. The
-  columns then become ordinary reads and ScoutQL catalog columns.
+  follow-up deletes the predecessor and the gate together. The columns then
+  become ordinary reads and ScoutQL catalog columns.
 
 Every participant has a `matches` row. `puuid` is non-null exactly when the row
 names a player; a bot or an unresolved player has a `NULL` `puuid` and its
@@ -467,10 +463,9 @@ Rift Herald count are nullable for the end-of-game record. Readers handle a
 `NULL` `puuid` as follows:
 
 - Tracked scopes join `accounts` on `puuid`, which drops non-players.
-- Global ScoutQL aggregates keep only players unless the query names the
-  column that tells them apart (`participant_kind`, or `bot` on prematch).
-  While `participant_kind` is gated, a player is recognized by its non-null
-  `puuid`, which also leaves out unresolved players.
+- Global ScoutQL aggregates leave out bots unless the query names the column
+  that tells them apart (`participant_kind`, or `bot` on prematch). An
+  unresolved player still counts.
 - Participant and prematch dedupe keys add the slot, team and champion, and
   timeline frames join their participant by `puuid`, else slot. A bot's gold
   still counts toward its team.
