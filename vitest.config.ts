@@ -221,7 +221,7 @@ function replaceBunImportMetaDir(code: string, filename: string): string {
   return output;
 }
 
-export default function createVitestConfig(
+function createVitestConfig(
   overridesOrConfigEnv?: VitestConfigTestOverrides | ViteConfigEnvLike,
 ) {
   const custom =
@@ -437,3 +437,13 @@ export default function createVitestConfig(
     },
   };
 }
+
+const defaultVitestConfig = Object.assign(
+  createVitestConfig({
+    mode: env["NODE_ENV"] ?? "test",
+    command: "serve",
+  }),
+  { createVitestConfig },
+);
+
+export default defaultVitestConfig;

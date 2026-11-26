@@ -3,7 +3,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { minimatch } from "minimatch";
 import { afterEach, describe, expect, test } from "vitest";
-import createVitestConfig from "../../vitest.config.ts";
+import { z } from "zod";
+import defaultVitestConfig from "../../vitest.config.ts";
+
+const { createVitestConfig } = defaultVitestConfig;
 
 describe("vitest.config.ts", () => {
   let directory = "";
@@ -168,5 +171,36 @@ describe("vitest.config.ts", () => {
     expect(afterConfig.test.fsModuleCachePath).not.toBe(
       beforeConfig.test.fsModuleCachePath,
     );
+  });
+
+  test("exports a plain config object as default so packages/the-storm/vitest.e2e.config.ts loads cleanly", async () => {
+    expect(typeof defaultVitestConfig).toBe("object");
+    expect(defaultVitestConfig).not.toBeNull();
+
+    const stormConfigPath = path.join(
+      import.meta.dirname,
+      "..",
+      "..",
+      "packages",
+      "the-storm",
+      "vitest.e2e.config.ts",
+    );
+    const StormConfigModuleSchema = z.object({
+      default: z.object({
+        cacheDir: z.string(),
+        test: z.object({
+          include: z.array(z.string()),
+          fsModuleCachePath: z.string(),
+          fileParallelism: z.boolean(),
+        }),
+      }),
+    });
+
+    const stormModule: unknown = await import(stormConfigPath);
+    const parsed = StormConfigModuleSchema.parse(stormModule);
+    expect(parsed.default.test.include).toContain("tests/e2e/**/*.e2e.test.ts");
+    expect(parsed.default.test.fileParallelism).toBe(false);
+    expect(parsed.default.cacheDir.length).toBeGreaterThan(0);
+    expect(parsed.default.test.fsModuleCachePath.length).toBeGreaterThan(0);
   });
 });
