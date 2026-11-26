@@ -10,10 +10,15 @@ export function logEvent(
 }
 
 /** Reports an unexpected failure without the request, which could carry a token. */
-export function reportError(error: unknown, context = "unexpected_error") {
+export function reportError(
+  error: unknown,
+  context = "unexpected_error",
+  fields: Record<string, string | number> = {},
+) {
   console.error(
     JSON.stringify({
       message: context,
+      ...fields,
       errorType: error instanceof Error ? error.name : typeof error,
       error: error instanceof Error ? error.message : String(error),
     }),

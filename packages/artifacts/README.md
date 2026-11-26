@@ -82,6 +82,14 @@ token), `PUT /api/uploads/:id/blobs/:sha256` (raw body streamed through a
 counting sha256 into the object store; a mismatch deletes the object) and
 `POST /api/uploads/:id/commit` (one transaction: lock, check, mint the content
 token, insert the version and its files, place the frame, record the event).
+A retry after a successful commit returns the original result with
+`deduplicated: true`: the request digest covers the artifact target and the
+manifest, not the compare-and-set token, the note or `boardTitle`. The hourly
+cleanup also sweeps objects under `objects/` that no `Blob` row names (an
+upload that died mid-body) once they are older than the blob grace.
+`@shepherdjerred/artifacts/testing` boots the whole service in process for
+other packages' tests.
+
 A feedback stream (`/api/feedback/stream`) only wakes an agent; the CLI then
 calls `feedback.claim`, prints, and calls `feedback.ack`.
 
