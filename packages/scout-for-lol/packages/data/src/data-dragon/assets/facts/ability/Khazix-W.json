@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Khazix-W",
+  "name": "Void Spike",
+  "description": "Kha'Zix fires a spike dealing 75/105/135/165/195 (+100% bonus AD) physical damage to the first enemy hit in a small area. If Kha'Zix is inside the area, he restores 55/75/95/115/135 (+50% AP) Health",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Khazix-W.png",
+  "slot": "W",
+  "championKey": "Khazix",
+  "championName": "Kha'Zix",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    9,
+    9,
+    9,
+    9
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9 s"
+  }
+}

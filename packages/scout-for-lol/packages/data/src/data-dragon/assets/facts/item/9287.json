@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9287",
+  "name": "T.I.B.B.E.R.S (B.E.E.G Edition)",
+  "description": "Summons Enraged Robo-Tibbers.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9287.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

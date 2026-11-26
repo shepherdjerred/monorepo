@@ -99,9 +99,11 @@ export function createQBitTorrentDeployment(
   // password (logged) on a fresh start, which is then reset.
   const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {
     metadata: {
-      // The first 5.3 rollout must load the corrected seed and guard together.
-      // A distinct name keeps the new pod from mounting the old projection.
-      name: "qbittorrent-config-v53",
+      // Keep this name stable. Delivery's media prune guard does not authorize
+      // retiring this ConfigMap, so a rename blocks every media release. The
+      // Recreate strategy stops the old pod first, and Argo applies ConfigMaps
+      // before Deployments, so the new pod always starts on updated content.
+      name: "qbittorrent-config",
     },
   });
   // addDirectory reads the committed dir synchronously at synth time and adds

@@ -48,7 +48,7 @@ const NPM = `react react-dom react-router hono zod vite vitest typescript eslint
 const DOCKER = `postgres redis grafana/grafana grafana/loki grafana/tempo
   prom/prometheus temporalio/server woodpeckerci/woodpecker-server moby/buildkit
   itzg/minecraft-server linuxserver/plex linuxserver/sonarr linuxserver/radarr
-  linuxserver/prowlarr linuxserver/qbittorrent freshrss/freshrss
+  linuxserver/prowlarr linuxserver/qbittorrent oven/bun
   homeassistant/home-assistant chrislusf/seaweedfs velero/velero
   bugsink/bugsink`.split(/\s+/u);
 const HELM =
@@ -193,7 +193,7 @@ function renovateSignals(
   ];
 }
 
-const RESTORE_WORKLOADS = `plex sonarr radarr freshrss golink home-assistant
+const RESTORE_WORKLOADS = `plex sonarr radarr feeds golink home-assistant
   tasknotes scout-beta birmel grafana`.split(/\s+/u);
 
 /** Ten unclassified Velero Restore failures, 30 to 42 days old. */

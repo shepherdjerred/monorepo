@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Mel",
+  "name": "Mel",
+  "description": "Mel Medarda is the presumed heir of the Medarda family, once one of the most powerful in Noxus.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Mel-passive",
+      "name": "Searing Brilliance",
+      "icon": "img/ability/Mel-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mel-Q",
+      "name": "Radiant Barrage",
+      "icon": "img/ability/Mel-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mel-W",
+      "name": "Rebuttal",
+      "icon": "img/ability/Mel-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mel-E",
+      "name": "Solar Snare",
+      "icon": "img/ability/Mel-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Mel-R",
+      "name": "Golden Eclipse",
+      "icon": "img/ability/Mel-R.png"
+    }
+  ],
+  "icon": "img/champion/Mel.png",
+  "art": "img/champion-splash/Mel_0.jpg",
+  "title": "the Soul's Reflection",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

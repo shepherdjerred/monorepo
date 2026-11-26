@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Annie-E",
+  "name": "Molten Shield",
+  "description": "Annie grants an ally champion 60/95/130/165/200 (+40% AP) Shield for 3 seconds and 20-50% (based on level) Decaying Move Speed for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Annie-E.png",
+  "slot": "E",
+  "championKey": "Annie",
+  "championName": "Annie",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

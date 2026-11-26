@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Quinn-E",
+  "name": "Vault",
+  "description": "Quinn dashes to an enemy, dealing 40/65/90/115/140 (+20% bonus AD) physical damage and marking them with Harrier. Quinn then leaps backwards from the target, slightly Knocking them Back and Slowing them by 50%, decaying over 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "675"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Quinn-E.png",
+  "slot": "E",
+  "championKey": "Quinn",
+  "championName": "Quinn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    675,
+    675,
+    675,
+    675,
+    675
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

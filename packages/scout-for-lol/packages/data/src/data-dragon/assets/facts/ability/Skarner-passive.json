@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Skarner-passive",
+  "name": "Threads of Vibration",
+  "description": "Skarner's Attacks, Shattered Earth, Upheaval, and Impale, apply Quaking. At max stacks of Quaking, enemies take max Health magic damage over its duration.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Skarner-passive.png",
+  "slot": "passive",
+  "championKey": "Skarner",
+  "championName": "Skarner",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

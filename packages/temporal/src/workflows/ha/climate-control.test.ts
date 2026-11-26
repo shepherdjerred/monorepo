@@ -167,10 +167,8 @@ async function expectedCalls(world: Scenario): Promise<ServiceCall[]> {
   const phase = climatePhase(
     losAngelesHour(new Date(await testEnv.currentTimeMs())),
   );
-  const occupied = world.jerred === "home" || world.shuxin === "home";
-  const everyoneConfirmedAway = [world.jerred, world.shuxin].every((state) =>
-    isConfirmedAway(state),
-  );
+  const occupied = world.jerred === "home";
+  const everyoneConfirmedAway = isConfirmedAway(world.jerred);
   const calls: ServiceCall[] = [];
   for (const [room, entityId, fixture] of [
     ["bedroom", "climate.bedroom", world.bedroom],
@@ -327,12 +325,12 @@ describe("applyClimateSchedule", () => {
 
 describe("reconcileClimate", () => {
   test(
-    "turns heat off after the presence window when everyone is away",
+    "turns heat off when Jerred is away even if the old tracker says home",
     async () => {
       await advanceToHour(15);
       const world = scenario({
         jerred: "not_home",
-        shuxin: "Work",
+        shuxin: "home",
         bedroom: { mode: "heat", targetC: 21, currentC: 21 },
         livingRoom: { mode: "heat", targetC: 21, currentC: 21 },
       });

@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "77",
+  "name": "Heal",
+  "description": "Restores Health to your champion and to nearby allies. Summoner's Resolve: Gain 5 Health per level.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerHeal_Jade.png",
+  "cooldownSeconds": 300,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "300 s"
+  }
+}

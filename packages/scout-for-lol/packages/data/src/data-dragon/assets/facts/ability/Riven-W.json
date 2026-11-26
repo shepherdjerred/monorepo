@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Riven-W",
+  "name": "Ki Burst",
+  "description": "Riven's sword emits a burst of runic energy, dealing 65/95/125/155/185 (+100% bonus AD) physical damage and Stunning for 0.75 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "260"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Riven-W.png",
+  "slot": "W",
+  "championKey": "Riven",
+  "championName": "Riven",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    260,
+    260,
+    260,
+    260,
+    260
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

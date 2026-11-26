@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lulu-Q",
+  "name": "Glitterlance",
+  "description": "Lulu and Pix each fire a piercing bolt dealing 60/95/130/165/200 (+50% AP) magic damage and Slowing by 80%, decaying over 2 seconds. Enemies take 30/47.5/65/82.5/100 (+25% AP) magic damage from additional bolts.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "925"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lulu-Q.png",
+  "slot": "Q",
+  "championKey": "Lulu",
+  "championName": "Lulu",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    925,
+    925,
+    925,
+    925,
+    925
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

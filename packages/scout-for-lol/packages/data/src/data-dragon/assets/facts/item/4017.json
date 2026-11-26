@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4017",
+  "name": "Hellfire Hatchet",
+  "description": "Char: (0s) per target Your next Ability hit Burns enemies for to current Health physical damage over 4 seconds, based on how much more max Health they have than you.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Lethality",
+      "value": "12"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/4017.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

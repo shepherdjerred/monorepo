@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223137",
+  "name": "Cryptbloom",
+  "description": "Life from Death: When a champion that you damaged within 3 seconds dies, a nova spreads from their corpse that heals.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "30%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223137.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

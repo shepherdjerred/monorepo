@@ -98,10 +98,9 @@ function Totals({ data }: { data: Statistics }) {
         </div>
       </dl>
       <p className={cx("note")}>
-        A play shorter than {watchTime(data.minimumPlayMs)} is not counted. A
-        play counts as finished once {String(data.completionPercent)}% of the
-        title has been watched, which is the mark this history uses and not the
-        watched tick in Plex.
+        Totals use timed Plex and Tautulli sessions of at least{" "}
+        {watchTime(data.minimumPlayMs)}. A play counts as finished at{" "}
+        {String(data.completionPercent)}% watched.
       </p>
     </>
   );

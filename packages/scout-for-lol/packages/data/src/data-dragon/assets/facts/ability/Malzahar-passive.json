@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Malzahar-passive",
+  "name": "Void Shift",
+  "description": "When he hasn't recently taken damage or been crowd controlled, Malzahar gains massive damage reduction and crowd control immunity, lingering for a short period after taking damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Malzahar-passive.png",
+  "slot": "passive",
+  "championKey": "Malzahar",
+  "championName": "Malzahar",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

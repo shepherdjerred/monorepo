@@ -2,6 +2,10 @@ import type { z } from "zod";
 import {
   PlaybackDecisionSchema,
   PlaybackQuerySchema,
+  PlaybackTimelineQuerySchema,
+  type PlaybackQuery,
+  type PlaybackTimelineSchema,
+  type PlaybackTimelineItem,
   type NowPlayingSchema,
   type PlaybackHistorySchema,
   type PlaybackPeopleSchema,
@@ -12,6 +16,7 @@ import {
   HOUSEHOLD,
   KIDS,
   MEMBER,
+  OWNER,
   personaUser,
   type Persona,
 } from "#testing/fixture-api/personas.ts";
@@ -24,11 +29,14 @@ import {
   fixtureId,
   pick,
 } from "#testing/fixture-api/support.ts";
+import type { FixtureRequest } from "#testing/fixture-api/endpoint.ts";
+import { plexRequestHistory } from "./migration/plex-history.ts";
 import { mediaReference } from "./artwork.ts";
 import { TITLES, episodeItem, titleItem } from "./titles.ts";
 
 type Session = z.input<typeof PlaybackSessionViewSchema>;
 type History = z.input<typeof PlaybackHistorySchema>;
+type Timeline = z.input<typeof PlaybackTimelineSchema>;
 type Statistics = z.input<typeof PlaybackStatisticsSchema>;
 type Ranking = Statistics["topTitles"][number];
 type People = z.input<typeof PlaybackPeopleSchema>;
@@ -162,9 +170,8 @@ function historyRow(index: number, persona: Persona): Session {
 
 type Reader = { persona: Persona; scenario: FixtureScenario };
 
-function matchingRows(parameters: URLSearchParams, reader: Reader) {
+function matchingRows(query: Omit<PlaybackQuery, "cursor">, reader: Reader) {
   const { persona } = reader;
-  const query = PlaybackQuerySchema.parse(Object.fromEntries(parameters));
   const search = (query.search ?? "").toLowerCase();
   // A household that has watched nothing has no history to match.
   const length = reader.scenario === "new-household" ? 0 : HISTORY_ROWS;
@@ -174,19 +181,22 @@ function matchingRows(parameters: URLSearchParams, reader: Reader) {
     (row) =>
       `${row.seriesTitle ?? ""} ${row.title}`.toLowerCase().includes(search) &&
       (query.userId === undefined || row.userId === query.userId) &&
+      (query.source === undefined || row.source === query.source) &&
       (query.from === undefined || row.startedAt >= query.from) &&
       (query.to === undefined || row.startedAt < query.to),
   );
-  return { rows, cursor: query.cursor ?? null, limit: query.limit };
+  return rows;
 }
 
 export function playbackHistory(
   parameters: URLSearchParams,
   reader: Reader,
 ): History {
-  const { rows, cursor, limit } = matchingRows(parameters, reader);
+  const query = PlaybackQuerySchema.parse(Object.fromEntries(parameters));
+  const { cursor, limit } = query;
+  const rows = matchingRows(query, reader);
   let start = 0;
-  if (cursor !== null) {
+  if (cursor !== undefined) {
     const position = rows.findIndex((row) => row.id === cursor);
     if (position === -1) {
       throw new Error(`Playback cursor names an unknown play ${cursor}`);
@@ -199,6 +209,87 @@ export function playbackHistory(
     items,
     nextCursor:
       last !== undefined && start + limit < rows.length ? last.id : null,
+  };
+}
+
+function fixtureViews(request: FixtureRequest): (Extract<
+  PlaybackTimelineItem,
+  { kind: "plex_view" }
+> & {
+  userId: string;
+})[] {
+  if (request.scenario === "new-household") return [];
+  const people = request.persona === "owner" ? [OWNER, MEMBER] : [MEMBER];
+  return people.flatMap((person) => {
+    const copy = {
+      ...request,
+      query: new URLSearchParams(),
+      persona:
+        person.id === OWNER.id ? ("owner" as const) : ("member" as const),
+    };
+    const first = plexRequestHistory(copy);
+    const last =
+      first.nextCursor === null
+        ? { items: [] }
+        : plexRequestHistory({
+            ...copy,
+            query: new URLSearchParams({ cursor: first.nextCursor }),
+          });
+    return [...first.items, ...last.items].map(
+      ({ sourceViewId, kind: mediaKind, ...view }) => ({
+        ...view,
+        kind: "plex_view" as const,
+        mediaKind,
+        id: `${view.source}:${String(sourceViewId)}`,
+        userId: person.id,
+        userName: person.displayName,
+      }),
+    );
+  });
+}
+
+export function playbackTimeline(request: FixtureRequest): Timeline {
+  const query = PlaybackTimelineQuerySchema.parse(
+    Object.fromEntries(request.query),
+  );
+  const search = (query.search ?? "").toLowerCase();
+  const sessions = matchingRows(query, request).map((session) => ({
+    at: session.startedAt,
+    id: `session:${session.id}`,
+    item: { kind: "session" as const, session },
+  }));
+  const markers =
+    query.source === "tautulli"
+      ? []
+      : fixtureViews(request)
+          .filter(
+            (row) =>
+              (query.userId === undefined || row.userId === query.userId) &&
+              (query.from === undefined || row.viewedAt >= query.from) &&
+              (query.to === undefined || row.viewedAt < query.to) &&
+              `${row.seriesTitle ?? ""} ${row.title}`
+                .toLowerCase()
+                .includes(search),
+          )
+          .map(({ userId: _userId, ...item }) => ({
+            at: item.viewedAt,
+            id: item.id,
+            item,
+          }));
+  const rows = [...sessions, ...markers].sort(
+    (left, right) =>
+      right.at.localeCompare(left.at) || right.id.localeCompare(left.id),
+  );
+  const cursor = request.query.get("cursor");
+  const start =
+    cursor === null ? 0 : rows.findIndex((row) => row.id === cursor) + 1;
+  if (cursor !== null && start === 0)
+    throw new Error(`Unknown fixture playback cursor ${cursor}`);
+  const page = rows.slice(start, start + query.limit);
+  return {
+    items: page.map((row) => row.item),
+    nextCursor:
+      start + page.length < rows.length ? (page.at(-1)?.id ?? null) : null,
   };
 }
 
@@ -232,7 +323,8 @@ export function playbackStatistics(
   reader: Reader,
 ): Statistics {
   const minimumPlayMs = 120_000;
-  const rows = matchingRows(parameters, reader).rows.filter(
+  const query = PlaybackQuerySchema.parse(Object.fromEntries(parameters));
+  const rows = matchingRows(query, reader).filter(
     (row) => row.watchedMs >= minimumPlayMs,
   );
   return {

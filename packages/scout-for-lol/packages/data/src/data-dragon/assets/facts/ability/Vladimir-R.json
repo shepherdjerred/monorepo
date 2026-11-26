@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vladimir-R",
+  "name": "Hemoplague",
+  "description": "Vladimir creates a virulent plague, causing its victims to take 10% increased damage from all sources for 4 seconds. After it expires, Vladimir deals 150/250/350 (+70% AP) magic damage to all infected targets.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vladimir-R.png",
+  "slot": "R",
+  "championKey": "Vladimir",
+  "championName": "Vladimir",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    120,
+    120
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120 s"
+  }
+}

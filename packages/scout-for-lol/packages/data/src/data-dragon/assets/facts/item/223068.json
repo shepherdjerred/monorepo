@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223068",
+  "name": "Sunfire Aegis",
+  "description": "Immolate: After taking or dealing damage, deal magic damage per second to nearby enemies for 3 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Armor",
+      "value": "40"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223068.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

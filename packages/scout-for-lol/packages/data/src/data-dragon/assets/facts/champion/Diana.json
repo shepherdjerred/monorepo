@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Diana",
+  "name": "Diana",
+  "description": "Bearing her crescent moonblade, Diana fights as a warrior of the Lunari—a faith all but quashed in the lands around Mount Targon. Clad in shimmering armor the color of winter snow at night, she is a living embodiment of the silver moon's power.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Diana-passive",
+      "name": "Moonsilver Blade",
+      "icon": "img/ability/Diana-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Diana-Q",
+      "name": "Crescent Strike",
+      "icon": "img/ability/Diana-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Diana-W",
+      "name": "Pale Cascade",
+      "icon": "img/ability/Diana-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Diana-E",
+      "name": "Lunar Rush",
+      "icon": "img/ability/Diana-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Diana-R",
+      "name": "Moonfall",
+      "icon": "img/ability/Diana-R.png"
+    }
+  ],
+  "icon": "img/champion/Diana.png",
+  "art": "img/champion-splash/Diana_0.jpg",
+  "title": "Scorn of the Moon",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

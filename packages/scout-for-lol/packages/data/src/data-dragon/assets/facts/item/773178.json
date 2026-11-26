@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773178",
+  "name": "Ionic Spark",
+  "description": "Ionic Charge: Every 4th Basic Attack unleases a chain of lightning, dealing 125 magic damage to up to 4 targets in a 400 radius of each other.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "50%"
+    },
+    {
+      "label": "Health",
+      "value": "250"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771043",
+      "name": "Recurve Bow",
+      "icon": "img/item/771043.png"
+    },
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    }
+  ],
+  "icon": "img/item/773178.png",
+  "goldTotal": 1950,
+  "goldCombine": 575,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1950 gold"
+  }
+}

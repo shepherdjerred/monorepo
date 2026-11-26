@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Corki-W",
+  "name": "Valkyrie",
+  "description": "Corki flies over and scorches a path, burning it for 2.5 seconds. Enemies in the fire take up to 150/225/300/375/450 (+150% AP) (+200% bonus AD) magic damage over the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/85/90/95/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Corki-W.png",
+  "slot": "W",
+  "championKey": "Corki",
+  "championName": "Corki",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    18,
+    16,
+    14,
+    12
+  ],
+  "costByRank": [
+    80,
+    85,
+    90,
+    95,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18/16/14/12 s"
+  }
+}

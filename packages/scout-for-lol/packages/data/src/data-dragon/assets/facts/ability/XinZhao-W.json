@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "XinZhao-W",
+  "name": "Wind Becomes Lightning",
+  "description": "Xin Zhao slashes in front of himself with his spear, then thrusts it forward, slowing affected enemies and marking them as Challenged.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/XinZhao-W.png",
+  "slot": "W",
+  "championKey": "XinZhao",
+  "championName": "Xin Zhao",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

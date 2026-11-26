@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Syndra-passive",
+  "name": "Transcendent",
+  "description": "Syndra collects Splinters of Wrath from gaining levels and damaging enemies which upgrade her abilities. Dark Sphere: Syndra can hold an additional charge Force of Will: Bonus true damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Syndra-passive.png",
+  "slot": "passive",
+  "championKey": "Syndra",
+  "championName": "Syndra",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

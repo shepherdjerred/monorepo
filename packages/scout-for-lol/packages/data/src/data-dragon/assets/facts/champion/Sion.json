@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Sion",
+  "name": "Sion",
+  "description": "A war hero from a bygone era, Sion was revered in Noxus for choking the life out of a Demacian king with his bare hands—but, denied oblivion, he was resurrected to serve his empire even in death.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "655"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Sion-passive",
+      "name": "Glory in Death",
+      "icon": "img/ability/Sion-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sion-Q",
+      "name": "Decimating Smash",
+      "icon": "img/ability/Sion-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sion-W",
+      "name": "Soul Furnace",
+      "icon": "img/ability/Sion-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sion-E",
+      "name": "Roar of the Slayer",
+      "icon": "img/ability/Sion-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sion-R",
+      "name": "Unstoppable Onslaught",
+      "icon": "img/ability/Sion-R.png"
+    }
+  ],
+  "icon": "img/champion/Sion.png",
+  "art": "img/champion-splash/Sion_0.jpg",
+  "title": "The Undead Juggernaut",
+  "roles": [
+    "Tank",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Fighter"
+  }
+}

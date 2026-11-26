@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nami-R",
+  "name": "Tidal Wave",
+  "description": "Nami summons a tidal wave, Knocking Up for 0.5 seconds, Slowing by 70%, and dealing 150/250/350 (+60% AP) magic damage. The duration of the Slow increases based on distance the wave traveled, up to 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nami-R.png",
+  "slot": "R",
+  "championKey": "Nami",
+  "championName": "Nami",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2550,
+    2550,
+    2550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}

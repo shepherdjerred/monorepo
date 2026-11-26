@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sion-E",
+  "name": "Roar of the Slayer",
+  "description": "Sion fires a shockwave, dealing 65/100/135/170/205 (+55% AP) magic damage, Slowing them by 40/45/50/55/60% for 2.5 seconds and removing 25% Armor for 4 seconds. Non-champions hit are Knocked Back.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35/40/45/50/55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sion-E.png",
+  "slot": "E",
+  "championKey": "Sion",
+  "championName": "Sion",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    35,
+    40,
+    45,
+    50,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3035",
+  "name": "Last Whisper",
+  "description": "Grants 20 Attack Damage, 18% Armor Penetration.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "20"
+    },
+    {
+      "label": "Armor Penetration",
+      "value": "18%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    },
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/3035.png",
+  "goldTotal": 1450,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1450 gold"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "75",
+  "name": "Clairvoyance",
+  "description": "Reveals a small area of the map for your team for a short duration. Summoner's Insight: Retain sight on units revealed by Clairvoyance for 5 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerClairvoyance_Jade.png",
+  "cooldownSeconds": 60,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "60 s"
+  }
+}

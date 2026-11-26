@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zaahen-Q",
+  "name": "The Darkin Glaive",
+  "description": "Zaahen slashes twice on his next Attack, dealing 15/30/45/60/75 (+20/25/30/35/40% bonus AD) bonus physical damage and restoring 5/6/7/8/9% of his max Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "25 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zaahen-Q.png",
+  "slot": "Q",
+  "championKey": "Zaahen",
+  "championName": "Zaahen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    25,
+    25,
+    25,
+    25,
+    25
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

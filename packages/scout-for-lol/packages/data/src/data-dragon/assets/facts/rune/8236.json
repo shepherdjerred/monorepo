@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8236",
+  "name": "Gathering Storm",
+  "description": "Gain increasing amounts of AD or AP, adaptive over the course of the game.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/GatheringStorm.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

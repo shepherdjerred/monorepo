@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Olaf-Q",
+  "name": "Undertow",
+  "description": "Olaf throws an axe, dealing 70/120/170/220/270 (+100% bonus AD) physical damage and Slowing by 30/35/40/45/50% for up to 3 seconds (based on distance travelled). Champions hit lose 20% Armor for 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Olaf-Q.png",
+  "slot": "Q",
+  "championKey": "Olaf",
+  "championName": "Olaf",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    9,
+    9,
+    9,
+    9
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9 s"
+  }
+}

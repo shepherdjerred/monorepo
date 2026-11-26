@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222022",
+  "name": "Glowing Mote",
+  "description": "Grants 5 Ability Haste.",
+  "facts": [
+    {
+      "label": "Ability Haste",
+      "value": "5"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222022.png",
+  "goldTotal": 250,
+  "goldCombine": 250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "250 gold"
+  }
+}

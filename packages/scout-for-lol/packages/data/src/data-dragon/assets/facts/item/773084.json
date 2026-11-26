@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773084",
+  "name": "Innervating Locket",
+  "description": "Innervation: Restore 60 Health and 25 Mana over 2 seconds to the lowest-Health nearby allied Champion whenever you use an Ability.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Mana",
+      "value": "450"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773096",
+      "name": "Philosopher's Stone",
+      "icon": "img/item/773096.png"
+    },
+    {
+      "kind": "item",
+      "key": "773010",
+      "name": "Catalyst the Protector",
+      "icon": "img/item/773010.png"
+    }
+  ],
+  "icon": "img/item/773084.png",
+  "goldTotal": 2250,
+  "goldCombine": 350,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

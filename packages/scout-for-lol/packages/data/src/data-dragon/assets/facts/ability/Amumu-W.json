@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Amumu-W",
+  "name": "Despair",
+  "description": "Toggle: Amumu begins crying, dealing 10 plus 1/1.25/1.5/1.75/2% (+0.5% AP) max Health magic damage to nearby enemies every second and refreshing Curse.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "8 Mana per Second"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Amumu-W.png",
+  "slot": "W",
+  "championKey": "Amumu",
+  "championName": "Amumu",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "costByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costType": "Mana per Second",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1 s"
+  }
+}

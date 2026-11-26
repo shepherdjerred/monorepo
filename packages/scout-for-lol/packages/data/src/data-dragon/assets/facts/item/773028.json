@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773028",
+  "name": "Chalice of Harmony",
+  "description": "Mana Font: Increases Mana Regen by 1% per 1% of missing Mana.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "7"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771004",
+      "name": "Faerie Charm",
+      "icon": "img/item/771004.png"
+    },
+    {
+      "kind": "item",
+      "key": "771033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/771033.png"
+    },
+    {
+      "kind": "item",
+      "key": "771004",
+      "name": "Faerie Charm",
+      "icon": "img/item/771004.png"
+    }
+  ],
+  "icon": "img/item/773028.png",
+  "goldTotal": 880,
+  "goldCombine": 120,
+  "keyFact": {
+    "label": "Cost",
+    "value": "880 gold"
+  }
+}

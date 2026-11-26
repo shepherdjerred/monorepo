@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "RekSai-W",
+  "name": "Burrow / Un-burrow",
+  "description": "Unburrowed: Rek'Sai burrows into the ground, gaining access to new Abilities but cannot Attack.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/RekSai-W.png",
+  "slot": "W",
+  "championKey": "RekSai",
+  "championName": "Rek'Sai",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1650,
+    1650,
+    1650,
+    1650,
+    1650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

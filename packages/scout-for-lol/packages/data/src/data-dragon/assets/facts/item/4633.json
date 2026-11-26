@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4633",
+  "name": "Riftmaker",
+  "description": "Void Corruption: For each second in combat with enemy champions, deal 2% bonus damage, up to 8%. Void Infusion: Gain 2% of your bonus Health as Ability Power.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3147",
+      "name": "Haunting Guise",
+      "icon": "img/item/3147.png"
+    },
+    {
+      "kind": "item",
+      "key": "3108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/3108.png"
+    }
+  ],
+  "icon": "img/item/4633.png",
+  "goldTotal": 3100,
+  "goldCombine": 950,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3100 gold"
+  }
+}

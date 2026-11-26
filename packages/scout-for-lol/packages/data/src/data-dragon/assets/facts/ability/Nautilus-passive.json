@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nautilus-passive",
+  "name": "Staggering Blow",
+  "description": "Nautilus' first Attack against a target deals increased physical damage and roots them briefly.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nautilus-passive.png",
+  "slot": "passive",
+  "championKey": "Nautilus",
+  "championName": "Nautilus",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

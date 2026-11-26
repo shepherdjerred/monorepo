@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223032",
+  "name": "Yun Tal Wildarrows",
+  "description": "Practice Makes Lethal: On-Attack, gain Critical Strike Chance permanently up to 25%. Flurry: On-Attacking an enemy champion, gain 30% Attack Speed for 6 seconds (30 second cooldown).",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "45%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "0%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223032.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

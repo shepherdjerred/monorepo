@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karthus-E",
+  "name": "Defile",
+  "description": "Passive: When Karthus kills a unit, he restores 10/20/30/40/50 Mana. Toggle: Karthus creates a necrotic aura, dealing 30/50/70/90/110 (+20% AP) magic damage per second to nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/42/54/66/78 Mana per Second"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karthus-E.png",
+  "slot": "E",
+  "championKey": "Karthus",
+  "championName": "Karthus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "costByRank": [
+    30,
+    42,
+    54,
+    66,
+    78
+  ],
+  "costType": "Mana per Second",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.5 s"
+  }
+}

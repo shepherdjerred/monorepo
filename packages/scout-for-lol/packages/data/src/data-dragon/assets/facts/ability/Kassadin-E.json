@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kassadin-E",
+  "name": "Force Pulse",
+  "description": "Passive: Force Pulse's Cooldown is reduced by 0.75 second whenever any Ability is used near Kassadin. Active: Kassadin unleashes a void pulse, dealing 70/100/130/160/190 (+70% AP) magic damage and Slowing by 50/55/60/65/70% for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kassadin-E.png",
+  "slot": "E",
+  "championKey": "Kassadin",
+  "championName": "Kassadin",
+  "maxRank": 5,
+  "cooldownByRank": [
+    21,
+    20,
+    19,
+    18,
+    17
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "21/20/19/18/17 s"
+  }
+}

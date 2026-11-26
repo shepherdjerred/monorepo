@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ornn-R",
+  "name": "Call of the Forge God",
+  "description": "Ornn summons a massive lava elemental, which stampedes towards him, dealing 125/175/225 (+20% AP) magic damage, applying Brittle to, and Slowing enemies hit by 40/50/60% for 3 seconds. Ornn can Recast to dash with a headbutt.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ornn-R.png",
+  "slot": "R",
+  "championKey": "Ornn",
+  "championName": "Ornn",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2500,
+    2500,
+    2500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

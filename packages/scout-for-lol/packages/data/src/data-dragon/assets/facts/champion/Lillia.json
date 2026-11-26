@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Lillia",
+  "name": "Lillia",
+  "description": "Intensely shy, the fae fawn Lillia skittishly wanders Ionia's forests.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "605"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "325"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Lillia-passive",
+      "name": "Dream-Laden Bough",
+      "icon": "img/ability/Lillia-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lillia-Q",
+      "name": "Blooming Blows",
+      "icon": "img/ability/Lillia-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lillia-W",
+      "name": "Watch Out! Eep!",
+      "icon": "img/ability/Lillia-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lillia-E",
+      "name": "Swirlseed",
+      "icon": "img/ability/Lillia-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lillia-R",
+      "name": "Lilting Lullaby",
+      "icon": "img/ability/Lillia-R.png"
+    }
+  ],
+  "icon": "img/champion/Lillia.png",
+  "art": "img/champion-splash/Lillia_0.jpg",
+  "title": "the Bashful Bloom",
+  "roles": [
+    "Fighter",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Mage"
+  }
+}

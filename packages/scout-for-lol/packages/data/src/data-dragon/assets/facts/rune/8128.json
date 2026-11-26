@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8128",
+  "name": "Dark Harvest",
+  "description": "Damaging a low health champion inflicts adaptive damage and harvests a soul from the victim.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Cooldown",
+      "value": "35s (resets to 1.0s on takedown)"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/DarkHarvest.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

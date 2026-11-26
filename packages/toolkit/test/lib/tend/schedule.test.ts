@@ -2,6 +2,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   handleTendScheduleCommand,
+  resolveScheduleGhConfigDir,
   TEND_LAUNCH_AGENT_LABEL,
   tendLaunchAgent,
   type TendScheduleDeps,
@@ -10,6 +11,7 @@ import { handleTendCommand } from "#commands/tend/tend.ts";
 import { formatTendReport } from "#commands/tend/tend-format.ts";
 import {
   HOMEBREW_JOB_PATH,
+  parseLaunchAgentEnvironment,
   renderLaunchAgentPlist,
   type LaunchAgentSpec,
 } from "#lib/launchd.ts";
@@ -39,6 +41,16 @@ function fakeDeps(
     deps: {
       paths,
       homeDir: HOME,
+      // No GH_CONFIG_DIR in the installing shell and no agent login on disk.
+      env: {},
+      fileExists: () => Promise.resolve(false),
+      // An installed job is one installed with these defaults.
+      readPlist: () =>
+        Promise.resolve(
+          installed
+            ? renderLaunchAgentPlist(tendLaunchAgent(paths, HOME))
+            : null,
+        ),
       assertSupported: (action) => {
         calls.push([`supported:${action}`, tendLaunchAgent(paths, HOME)]);
       },
@@ -119,6 +131,77 @@ describe("tend LaunchAgent", () => {
   });
 });
 
+describe("the GitHub config the tend job carries", () => {
+  const AGENT_LOGIN = `${HOME}/.config/gh-agent/hosts.yml`;
+  const resolve = (env: Record<string, string>, present: readonly string[]) =>
+    resolveScheduleGhConfigDir({
+      homeDir: HOME,
+      env,
+      fileExists: (filePath) => Promise.resolve(present.includes(filePath)),
+    });
+
+  it("is the installing shell's GH_CONFIG_DIR when that is set", async () => {
+    expect(await resolve({ GH_CONFIG_DIR: "/opt/gh-ci" }, [AGENT_LOGIN])).toBe(
+      "/opt/gh-ci",
+    );
+  });
+
+  it("falls back to the agents' config directory when it holds a login", async () => {
+    expect(await resolve({}, [AGENT_LOGIN])).toBe(`${HOME}/.config/gh-agent`);
+    expect(await resolve({ GH_CONFIG_DIR: "" }, [AGENT_LOGIN])).toBe(
+      `${HOME}/.config/gh-agent`,
+    );
+  });
+
+  it("is nothing when the shell names none and there is no agent login", async () => {
+    // The directory alone is not a login.
+    expect(
+      await resolve({}, [`${HOME}/.config/gh-agent/config.yml`]),
+    ).toBeUndefined();
+    expect(Object.keys(tendLaunchAgent(paths, HOME).environment ?? {})).toEqual(
+      ["PATH"],
+    );
+  });
+
+  it("reaches the job as a path and nothing else", () => {
+    const spec = tendLaunchAgent(paths, HOME, `${HOME}/.config/gh-agent`);
+    const environment = parseLaunchAgentEnvironment(
+      renderLaunchAgentPlist(spec),
+    );
+    expect(environment).toEqual({
+      PATH: `${HOME}/.local/bin:${HOMEBREW_JOB_PATH}`,
+      GH_CONFIG_DIR: `${HOME}/.config/gh-agent`,
+    });
+  });
+
+  it("is never a token, whatever the installing shell exports", async () => {
+    const output = captureLog();
+    const { deps, calls } = fakeDeps();
+    await handleTendScheduleCommand(["install"], {
+      ...deps,
+      env: {
+        GH_CONFIG_DIR: "/opt/gh & co",
+        GH_TOKEN: "not-carried",
+        GH_ENTERPRISE_TOKEN: "not-carried",
+      },
+    });
+    const installed = calls.find(([action]) => action === "install")?.[1];
+    expect(installed?.environment).toEqual({
+      PATH: `${HOME}/.local/bin:${HOMEBREW_JOB_PATH}`,
+      GH_CONFIG_DIR: "/opt/gh & co",
+    });
+    const plist = renderLaunchAgentPlist(
+      installed ?? tendLaunchAgent(paths, HOME),
+    );
+    expect(plist).not.toContain("not-carried");
+    expect(parseLaunchAgentEnvironment(plist)["GH_CONFIG_DIR"]).toBe(
+      "/opt/gh & co",
+    );
+    expect(output()).toContain("GitHub config: /opt/gh & co");
+    expect(output()).not.toContain("not-carried");
+  });
+});
+
 describe("toolkit tend schedule", () => {
   it("installs and uninstalls the agent it describes", async () => {
     const output = captureLog();
@@ -140,7 +223,59 @@ describe("toolkit tend schedule", () => {
       "`toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`",
     );
     expect(output()).not.toContain("once now");
+    expect(output()).toContain(
+      "GitHub config: gh's default (no GH_CONFIG_DIR carried)",
+    );
     expect(output()).toContain(`Tend LaunchAgent removed: ${PLIST}`);
+  });
+
+  it("installs with the agents' GitHub config when the shell names none", async () => {
+    const output = captureLog();
+    const { deps, calls } = fakeDeps();
+    await handleTendScheduleCommand(["install"], {
+      ...deps,
+      fileExists: (filePath) =>
+        Promise.resolve(filePath === `${HOME}/.config/gh-agent/hosts.yml`),
+    });
+    expect(calls[1]?.[1].environment).toMatchObject({
+      GH_CONFIG_DIR: `${HOME}/.config/gh-agent`,
+    });
+    expect(output()).toContain(`GitHub config: ${HOME}/.config/gh-agent`);
+  });
+
+  it("reports the GitHub config the installed job carries, not this shell's", async () => {
+    const installedPlist = renderLaunchAgentPlist(
+      tendLaunchAgent(paths, HOME, `${HOME}/.config/gh-agent`),
+    );
+    const { deps } = fakeDeps(true, true);
+    const fromOtherShell = {
+      ...deps,
+      env: { GH_CONFIG_DIR: "/somewhere/else" },
+      readPlist: (plistPath: string) =>
+        Promise.resolve(plistPath === PLIST ? installedPlist : null),
+    };
+    const text = captureLog();
+    await handleTendScheduleCommand(["status"], fromOtherShell);
+    expect(text()).toContain(`GitHub config: ${HOME}/.config/gh-agent`);
+    vi.restoreAllMocks();
+
+    const json = captureLog();
+    await handleTendScheduleCommand(["status", "--json"], fromOtherShell);
+    expect(JSON.parse(json())).toMatchObject({
+      ghConfigDir: `${HOME}/.config/gh-agent`,
+    });
+    vi.restoreAllMocks();
+
+    // A job installed before this existed carries none.
+    const older = captureLog();
+    await handleTendScheduleCommand(["status"], {
+      ...fromOtherShell,
+      readPlist: () =>
+        Promise.resolve(renderLaunchAgentPlist(tendLaunchAgent(paths, HOME))),
+    });
+    expect(older()).toContain(
+      "GitHub config: gh's default (no GH_CONFIG_DIR carried)",
+    );
   });
 
   it("reports whether the plist exists and is loaded", async () => {
@@ -150,6 +285,9 @@ describe("toolkit tend schedule", () => {
       "Tend LaunchAgent com.jerred.toolkit-tend: installed (not loaded)",
     );
     expect(output()).toContain(`Plist: ${PLIST}`);
+    expect(output()).toContain(
+      "GitHub config: gh's default (no GH_CONFIG_DIR carried)",
+    );
   });
 
   it("prints machine-readable status through the tend dispatcher", async () => {
@@ -165,6 +303,7 @@ describe("toolkit tend schedule", () => {
       installed: false,
       loaded: false,
       dailyAt: "04:30",
+      ghConfigDir: null,
       logs: { stdout: `${HOME}/.toolkit/tend/logs/launchd.stdout.log` },
     });
   });

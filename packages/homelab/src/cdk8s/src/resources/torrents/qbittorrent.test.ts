@@ -219,7 +219,7 @@ describe("qBittorrent deployment", () => {
       deployment.spec.template.spec.volumes.flatMap((volume) =>
         volume.configMap?.name ? [volume.configMap.name] : [],
       ),
-    ).toEqual(["qbittorrent-config-v53"]);
+    ).toEqual(["qbittorrent-config"]);
   });
 
   it("establishes the AirVPN tunnel in Vancouver before starting qBittorrent", () => {

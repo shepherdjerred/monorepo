@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Cassiopeia",
+  "name": "Cassiopeia",
+  "description": "Cassiopeia is a deadly creature bent on manipulating others to her sinister will. Youngest and most beautiful daughter of the noble Du Couteau family of Noxus, she ventured deep into the crypts beneath Shurima in search of ancient power.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Cassiopeia-passive",
+      "name": "Serpentine Grace",
+      "icon": "img/ability/Cassiopeia-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Cassiopeia-Q",
+      "name": "Noxious Blast",
+      "icon": "img/ability/Cassiopeia-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Cassiopeia-W",
+      "name": "Miasma",
+      "icon": "img/ability/Cassiopeia-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Cassiopeia-E",
+      "name": "Twin Fang",
+      "icon": "img/ability/Cassiopeia-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Cassiopeia-R",
+      "name": "Petrifying Gaze",
+      "icon": "img/ability/Cassiopeia-R.png"
+    }
+  ],
+  "icon": "img/champion/Cassiopeia.png",
+  "art": "img/champion-splash/Cassiopeia_0.jpg",
+  "title": "the Serpent's Embrace",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

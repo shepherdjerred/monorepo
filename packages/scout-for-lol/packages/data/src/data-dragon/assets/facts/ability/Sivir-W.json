@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sivir-W",
+  "name": "Ricochet",
+  "description": "For the next 4 seconds, Sivir gains 20/25/30/35/40% Attack Speed and her auto attacks are empowered to bounce to additional surrounding enemies dealing 40/42.5/45/47.5/50% AD physical damage each bounce for up to 8 bounces.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sivir-W.png",
+  "slot": "W",
+  "championKey": "Sivir",
+  "championName": "Sivir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

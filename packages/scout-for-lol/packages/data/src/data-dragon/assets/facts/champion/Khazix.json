@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Khazix",
+  "name": "Kha'Zix",
+  "description": "The Void grows, and the Void adapts—in none of its myriad spawn are these truths more apparent than Kha'Zix. Evolution drives the core of this mutating horror, born to survive and to slay the strong.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "643"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Khazix-passive",
+      "name": "Unseen Threat",
+      "icon": "img/ability/Khazix-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Khazix-Q",
+      "name": "Taste Their Fear",
+      "icon": "img/ability/Khazix-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Khazix-W",
+      "name": "Void Spike",
+      "icon": "img/ability/Khazix-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Khazix-E",
+      "name": "Leap",
+      "icon": "img/ability/Khazix-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Khazix-R",
+      "name": "Void Assault",
+      "icon": "img/ability/Khazix-R.png"
+    }
+  ],
+  "icon": "img/champion/Khazix.png",
+  "art": "img/champion-splash/Khazix_0.jpg",
+  "title": "the Voidreaver",
+  "roles": [
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin"
+  }
+}

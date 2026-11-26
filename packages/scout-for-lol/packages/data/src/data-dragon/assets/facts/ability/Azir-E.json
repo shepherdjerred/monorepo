@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Azir-E",
+  "name": "Shifting Sands",
+  "description": "Azir grants himself 70/110/150/190/230 (+60% AP) Shield for 1.5 seconds and dashes to one of his Sand Soldiers, dealing 70/110/150/190/230 (+60% AP) magic damage to enemies he passes through.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Azir-E.png",
+  "slot": "E",
+  "championKey": "Azir",
+  "championName": "Azir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    20.5,
+    19,
+    17.5,
+    16
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/20.5/19/17.5/16 s"
+  }
+}

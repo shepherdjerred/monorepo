@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Bard-R",
+  "name": "Tempered Fate",
+  "description": "Bard hurls magical protective energy to an area, placing all units and structures hit into Stasis for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Bard-R.png",
+  "slot": "R",
+  "championKey": "Bard",
+  "championName": "Bard",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    95,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3400,
+    3400,
+    3400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/95/80 s"
+  }
+}

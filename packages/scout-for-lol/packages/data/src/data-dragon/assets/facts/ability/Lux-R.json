@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lux-R",
+  "name": "Final Spark",
+  "description": "Lux fires a dazzling ray of light, dealing 300/400/500 (+120% AP) magic damage to all enemies in a line.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3340"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lux-R.png",
+  "slot": "R",
+  "championKey": "Lux",
+  "championName": "Lux",
+  "maxRank": 3,
+  "cooldownByRank": [
+    60,
+    50,
+    40
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3340,
+    3340,
+    3340
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "60/50/40 s"
+  }
+}

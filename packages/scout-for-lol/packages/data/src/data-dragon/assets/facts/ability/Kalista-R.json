@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kalista-R",
+  "name": "Fate's Call",
+  "description": "Kalista puts her Oathsworn into Stasis and draws them to herself for up to 4 seconds. The Oathsworn can click to launch themselves, stopping at the first champion hit and Knocking Back all nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kalista-R.png",
+  "slot": "R",
+  "championKey": "Kalista",
+  "championName": "Kalista",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    140,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/140/120 s"
+  }
+}

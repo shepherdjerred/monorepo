@@ -53,10 +53,12 @@ export async function readJson<T>(
   store: ReportReceiptStore,
   key: string,
   schema: z.ZodType<T>,
+  abortSignal?: AbortSignal,
 ): Promise<{ value: T; etag: string } | undefined> {
   try {
     const response = await store.client.send(
       new GetObjectCommand({ Bucket: store.bucket, Key: key }),
+      abortSignal === undefined ? undefined : { abortSignal },
     );
     if (response.Body === undefined || response.ETag === undefined) {
       throw new Error(`Report object ${key} has no body or entity tag`);
@@ -75,7 +77,7 @@ export async function writeJson(
   store: ReportReceiptStore,
   key: string,
   value: unknown,
-  condition?: { expectedEtag: string | undefined },
+  condition?: { expectedEtag: string | undefined; abortSignal?: AbortSignal },
 ): Promise<void> {
   await store.client.send(
     new PutObjectCommand({
@@ -89,6 +91,9 @@ export async function writeJson(
           ? { IfNoneMatch: "*" }
           : { IfMatch: condition.expectedEtag }),
     }),
+    condition?.abortSignal === undefined
+      ? undefined
+      : { abortSignal: condition.abortSignal },
   );
 }
 

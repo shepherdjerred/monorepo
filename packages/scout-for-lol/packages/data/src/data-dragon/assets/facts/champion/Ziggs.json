@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ziggs",
+  "name": "Ziggs",
+  "description": "With a love of big bombs and short fuses, the yordle Ziggs is an explosive force of nature. As an inventor's assistant in Piltover, he was bored by his predictable life and befriended a mad, blue-haired bomber named Jinx.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "606"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ziggs-passive",
+      "name": "Short Fuse",
+      "icon": "img/ability/Ziggs-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ziggs-Q",
+      "name": "Bouncing Bomb",
+      "icon": "img/ability/Ziggs-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ziggs-W",
+      "name": "Satchel Charge",
+      "icon": "img/ability/Ziggs-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ziggs-E",
+      "name": "Hexplosive Minefield",
+      "icon": "img/ability/Ziggs-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ziggs-R",
+      "name": "Mega Inferno Bomb",
+      "icon": "img/ability/Ziggs-R.png"
+    }
+  ],
+  "icon": "img/champion/Ziggs.png",
+  "art": "img/champion-splash/Ziggs_0.jpg",
+  "title": "the Hexplosives Expert",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MasterYi-W",
+  "name": "Meditate",
+  "description": "Master Yi channels, restoring 120/200/280/360/440 (+100% AP) Health over 4 seconds. This healing is increased by up to 100% based on Master Yi's missing Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana (+6% Max Mana per second)"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MasterYi-W.png",
+  "slot": "W",
+  "championKey": "MasterYi",
+  "championName": "Master Yi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana (+6% Max Mana per second)",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

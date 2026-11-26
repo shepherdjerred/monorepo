@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222502",
+  "name": "Unending Despair",
+  "description": "Anguish: Every 4 seconds while in combat with champions, deal magic damage to nearby enemy champions and heal for 250% of the damage dealt.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222502.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

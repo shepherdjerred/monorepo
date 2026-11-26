@@ -248,6 +248,7 @@ Subcommands:
                              branch's open PR. Dirs need a root index.html;
                              .cast files get a generated HTML player page and an
                              agg-rendered GIF preview (requires agg).
+                             Uses the agent-share AWS profile unless --profile.
 
   review list [PR]    Current feedback from every reviewer, including author,
                        priority, contents, source handles, and raw API command

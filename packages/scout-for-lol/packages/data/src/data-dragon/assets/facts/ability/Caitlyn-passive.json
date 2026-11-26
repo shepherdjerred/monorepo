@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Caitlyn-passive",
+  "name": "Headshot",
+  "description": "Every few basic attacks, or against a target she has trapped or netted, Caitlyn will fire a headshot dealing bonus damage that scales with her critical strike chance. On trapped or netted targets, Caitlyn's Headshot attack range is doubled.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Caitlyn-passive.png",
+  "slot": "passive",
+  "championKey": "Caitlyn",
+  "championName": "Caitlyn",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

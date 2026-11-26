@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renata-Q",
+  "name": "Handshake",
+  "description": "Renata sends out a missile from her arm, Rooting the first enemy hit for 1 second and dealing 80/125/170/215/260 (+80% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renata-Q.png",
+  "slot": "Q",
+  "championKey": "Renata",
+  "championName": "Renata Glasc",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Corki-R",
+  "name": "Missile Barrage",
+  "description": "Corki fires a missile that explodes on the first enemy hit, dealing 100/190/280 (+90% bonus AD) physical damage to surrounding enemies. Every third missile instead deals 200/380/560 (+180% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1225"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Corki-R.png",
+  "slot": "R",
+  "championKey": "Corki",
+  "championName": "Corki",
+  "maxRank": 3,
+  "cooldownByRank": [
+    2,
+    2,
+    2
+  ],
+  "costByRank": [
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1225,
+    1225,
+    1225
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "2 s"
+  }
+}

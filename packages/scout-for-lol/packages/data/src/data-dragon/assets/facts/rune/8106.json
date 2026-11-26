@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8106",
+  "name": "Ultimate Hunter",
+  "description": "Unique takedowns grant permanent cooldown reduction on your Ultimate.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/UltimateHunter.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

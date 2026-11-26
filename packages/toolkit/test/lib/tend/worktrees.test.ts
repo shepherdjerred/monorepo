@@ -15,6 +15,7 @@ import {
   parsePorcelainWorktrees,
   parsePullRequestList,
 } from "#lib/tend/worktrees-git.ts";
+import { ghAuthenticationFailure } from "#lib/tend/worktrees-inspect.ts";
 import { parseStatusPorcelainZ } from "#lib/tend/worktrees-status.ts";
 import {
   buildRepoFixture,
@@ -752,6 +753,55 @@ describe("sweepWorktrees pull requests", () => {
     ]);
     expect(result.warnings.join("\n")).toContain(
       "Open pull requests could not be listed",
+    );
+  });
+
+  it.each([
+    [
+      "a refused token",
+      1,
+      "HTTP 401: Bad credentials (https://api.github.com/graphql)\nTry authenticating with:  gh auth refresh -h github.com\n",
+      "HTTP 401: Bad credentials (https://api.github.com/graphql)",
+    ],
+    [
+      "no login at all",
+      4,
+      "To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
+      "To get started with GitHub CLI, please run:  gh auth login",
+    ],
+  ])(
+    "names authentication as the failure when gh has %s",
+    async (_case, exitCode, stderr, firstLine) => {
+      const { repo, result, keepCategory } = await runSweep([stale], {
+        override: (command) =>
+          command.argv[0] === "gh"
+            ? { exitCode, stdout: "", stderr }
+            : undefined,
+      });
+      // Still fails closed, and says which layer to fix, once.
+      expect(keepCategory("old-pr")).toBe("pull request state unknown");
+      expect(result.warnings).toEqual([
+        `gh is not authenticated: ${firstLine}; pull requests could not be listed in ${repo.repoPath}, so every branch worktree with commits ahead of the default branch is kept`,
+      ]);
+    },
+  );
+
+  it("does not call another gh failure an authentication failure", () => {
+    expect(
+      ghAuthenticationFailure({
+        exitCode: 1,
+        stderr:
+          "error connecting to api.github.com\ncheck your internet connection or https://githubstatus.com",
+      }),
+    ).toBeNull();
+    expect(
+      ghAuthenticationFailure({
+        exitCode: 1,
+        stderr: "The token in /Users/x/.config/gh/hosts.yml is invalid.",
+      }),
+    ).toBe("The token in /Users/x/.config/gh/hosts.yml is invalid.");
+    expect(ghAuthenticationFailure({ exitCode: 4, stderr: "" })).toBe(
+      "gh exited 4",
     );
   });
 

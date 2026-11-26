@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TahmKench-passive",
+  "name": "An Acquired Taste",
+  "description": "Tahm Kench puts the heft of his immense body behind his attacks, gaining extra damage based on his total health. Damaging enemy champions builds stacks of An Acquired Taste.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/TahmKench-passive.png",
+  "slot": "passive",
+  "championKey": "TahmKench",
+  "championName": "Tahm Kench",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1083",
+  "name": "Cull",
+  "description": "Reap: Restore 3 Health On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "7"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1083.png",
+  "goldTotal": 450,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "450 gold"
+  }
+}

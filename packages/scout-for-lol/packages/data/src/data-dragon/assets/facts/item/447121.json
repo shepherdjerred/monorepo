@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447121",
+  "name": "Twilight's Edge",
+  "description": "The Path Between: Threshold 100 bonus AD and 140 AP: Chakram orbit you, dealing continuous damage to enemies they strike.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "70"
+    },
+    {
+      "label": "Ability Power",
+      "value": "100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447121.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

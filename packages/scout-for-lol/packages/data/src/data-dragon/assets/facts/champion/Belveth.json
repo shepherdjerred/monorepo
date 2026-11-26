@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Belveth",
+  "name": "Bel'Veth",
+  "description": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Belveth-passive",
+      "name": "Death in Lavender ",
+      "icon": "img/ability/Belveth-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Belveth-Q",
+      "name": "Void Surge",
+      "icon": "img/ability/Belveth-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Belveth-W",
+      "name": "Above and Below",
+      "icon": "img/ability/Belveth-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Belveth-E",
+      "name": "Royal Maelstrom",
+      "icon": "img/ability/Belveth-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Belveth-R",
+      "name": "Endless Banquet",
+      "icon": "img/ability/Belveth-R.png"
+    }
+  ],
+  "icon": "img/champion/Belveth.png",
+  "art": "img/champion-splash/Belveth_0.jpg",
+  "title": "the Empress of the Void",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

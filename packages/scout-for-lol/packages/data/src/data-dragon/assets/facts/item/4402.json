@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4402",
+  "name": "Innervating Locket",
+  "description": "Eternity: Restore Mana equal to 15% of premitigation damage taken from champions, and Health equal to 25% of Mana spent, up to 20 Health per cast, per second. Innervate: After using an ability, restore 3% missing Health and 3% missing Mana over 3 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "30"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Mana",
+      "value": "300"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3803",
+      "name": "Catalyst of Aeons",
+      "icon": "img/item/3803.png"
+    },
+    {
+      "kind": "item",
+      "key": "3133",
+      "name": "Caulfield's Warhammer",
+      "icon": "img/item/3133.png"
+    }
+  ],
+  "icon": "img/item/4402.png",
+  "goldTotal": 2950,
+  "goldCombine": 600,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2950 gold"
+  }
+}

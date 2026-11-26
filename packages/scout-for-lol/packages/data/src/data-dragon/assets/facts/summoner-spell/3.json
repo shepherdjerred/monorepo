@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "3",
+  "name": "Exhaust",
+  "description": "Slows target enemy champion and reduces their damage dealt.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "650"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 4"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerExhaust.png",
+  "cooldownSeconds": 240,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "240 s"
+  }
+}

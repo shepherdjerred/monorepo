@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9174",
+  "name": "Statikk Sword",
+  "description": "Fires lightning that bounces between enemies with the highest health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9174.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

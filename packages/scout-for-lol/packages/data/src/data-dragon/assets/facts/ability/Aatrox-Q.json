@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aatrox-Q",
+  "name": "The Darkin Blade",
+  "description": "Aatrox slams his greatsword, dealing 10/25/40/55/70 (+60/67.5/75/82.5/90% AD) physical damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aatrox-Q.png",
+  "slot": "Q",
+  "championKey": "Aatrox",
+  "championName": "Aatrox",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    12,
+    10,
+    8,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/12/10/8/6 s"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773211",
+  "name": "Spectre's Cowl",
+  "description": "Shadow Mending: Grants 15 Health Regen per 5 seconds for up to 10 seconds after taking damage from an enemy champion.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    },
+    {
+      "kind": "item",
+      "key": "771057",
+      "name": "Negatron Cloak",
+      "icon": "img/item/771057.png"
+    }
+  ],
+  "icon": "img/item/773211.png",
+  "goldTotal": 1400,
+  "goldCombine": 205,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1400 gold"
+  }
+}

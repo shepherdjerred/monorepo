@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3057",
+  "name": "Sheen",
+  "description": "Spellblade: After using an Ability, your next Attack deals bonus physical damage On-Hit.",
+  "facts": [
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "2022",
+      "name": "Glowing Mote",
+      "icon": "img/item/2022.png"
+    }
+  ],
+  "icon": "img/item/3057.png",
+  "goldTotal": 900,
+  "goldCombine": 650,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

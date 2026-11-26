@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223002",
+  "name": "Trailblazer",
+  "description": "Lead the Way: While moving, build up to 20 bonus Move Speed.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "45"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223002.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

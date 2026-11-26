@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Singed-Q",
+  "name": "Poison Trail",
+  "description": "Toggle: Singed lays a poisonous trail that deals 20/30/40/50/60 (+42.5% AP) magic damage per second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "13 Mana per Second"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Singed-Q.png",
+  "slot": "Q",
+  "championKey": "Singed",
+  "championName": "Singed",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    13,
+    13,
+    13,
+    13,
+    13
+  ],
+  "costType": "Mana per Second",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

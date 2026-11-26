@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shen-W",
+  "name": "Spirit's Refuge",
+  "description": "Shen creates a defensive zone at his Spirit Blade for 1.75 seconds. Attacks against allied champions in the zone are blocked.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shen-W.png",
+  "slot": "W",
+  "championKey": "Shen",
+  "championName": "Shen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14.5,
+    13,
+    11.5,
+    10
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14.5/13/11.5/10 s"
+  }
+}

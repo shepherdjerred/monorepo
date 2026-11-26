@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "DrMundo-R",
+  "name": "Maximum Dosage",
+  "description": "Dr. Mundo pumps himself with chemicals, gaining 15/20/25% of his missing Health as max Health, 15/25/35% Move Speed, and regenerating 20/40/60% max Health over 10 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/DrMundo-R.png",
+  "slot": "R",
+  "championKey": "DrMundo",
+  "championName": "Dr. Mundo",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    120,
+    120
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120 s"
+  }
+}

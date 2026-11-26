@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hecarim-R",
+  "name": "Onslaught of Shadows",
+  "description": "Hecarim summons spectral riders and charges forward, dealing 150/250/350 (+100% AP) magic damage. Hecarim unleashes a shockwave at the end of the charge that Fears for between 0.75 to 1.5 seconds, increased by charge distance.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "50000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hecarim-R.png",
+  "slot": "R",
+  "championKey": "Hecarim",
+  "championName": "Hecarim",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    50000,
+    50000,
+    50000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

@@ -22,7 +22,7 @@ const reportDeliveryActivities = proxyActivities<
 /**
  * Fixed credential boundary for reports assembled on any workflow queue.
  *
- * Postal and report-state S3 credentials remain confined to the reports worker.
+ * Mail API and report-state S3 credentials remain confined to the reports worker.
  */
 export async function deliverReportWorkflow(
   report: ReportEnvelopeV1,

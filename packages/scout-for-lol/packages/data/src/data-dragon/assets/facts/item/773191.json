@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773191",
+  "name": "Seeker's Armguard",
+  "description": "Seeker's Insight: Killing a unit grants 0.5 bonus Armor and Ability Power.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Ability Power",
+      "value": "20"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771029",
+      "name": "Cloth Armor",
+      "icon": "img/item/771029.png"
+    },
+    {
+      "kind": "item",
+      "key": "771052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/771052.png"
+    },
+    {
+      "kind": "item",
+      "key": "771029",
+      "name": "Cloth Armor",
+      "icon": "img/item/771029.png"
+    }
+  ],
+  "icon": "img/item/773191.png",
+  "goldTotal": 1160,
+  "goldCombine": 125,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1160 gold"
+  }
+}

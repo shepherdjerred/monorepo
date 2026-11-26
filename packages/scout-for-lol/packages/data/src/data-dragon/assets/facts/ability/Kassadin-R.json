@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kassadin-R",
+  "name": "Riftwalk",
+  "description": "Kassadin teleports to a nearby location dealing damage to nearby enemy units. Multiple Riftwalks in a short period of time cost additional Mana but also deal additional damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kassadin-R.png",
+  "slot": "R",
+  "championKey": "Kassadin",
+  "championName": "Kassadin",
+  "maxRank": 3,
+  "cooldownByRank": [
+    5,
+    3.5,
+    2
+  ],
+  "costByRank": [
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5/3.5/2 s"
+  }
+}

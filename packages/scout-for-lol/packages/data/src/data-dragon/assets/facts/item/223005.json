@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223005",
+  "name": "Ghostcrawlers",
+  "description": "Wall Walk: (0s) Gain the ability to walk through walls for 6 seconds.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "70"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223005.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Neeko-W",
+  "name": "Shapesplitter",
+  "description": "Passive: Every 3rd Attack deals an additional 30/65/100/135/170 (+60% AP) bonus magic damage and increases Neeko's Move Speed by 10/17.5/25/32.5/40% for 1 second. Active: Neeko becomes invisible for 0.5 seconds and projects a clone that lasts 3 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Neeko-W.png",
+  "slot": "W",
+  "championKey": "Neeko",
+  "championName": "Neeko",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15,
+    14,
+    13,
+    12
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15/14/13/12 s"
+  }
+}

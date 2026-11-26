@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Riven-R",
+  "name": "Blade of the Exile",
+  "description": "Riven's weapon surges with spiritual energy, granting her 20% AD Attack Damage and increased range on damaging Abilities and Attacks for 15 seconds. While active, she can Recast.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Riven-R.png",
+  "slot": "R",
+  "championKey": "Riven",
+  "championName": "Riven",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    90,
+    60
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    200,
+    200,
+    200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/90/60 s"
+  }
+}

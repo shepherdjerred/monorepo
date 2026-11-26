@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Velkoz-passive",
+  "name": "Organic Deconstruction",
+  "description": "Vel'Koz's abilities apply Organic Deconstruction to enemies on hit. If 3 stacks are accumulated, the enemy will take a burst of true damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Velkoz-passive.png",
+  "slot": "passive",
+  "championKey": "Velkoz",
+  "championName": "Vel'Koz",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

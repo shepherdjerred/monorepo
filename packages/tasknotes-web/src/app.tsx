@@ -151,7 +151,7 @@ export function App() {
   if (session === null) {
     return (
       <ConnectScreen
-        initialOrigin="http://127.0.0.1:3000"
+        initialOrigin=""
         initialToken=""
         initialRemember={false}
         error={error}

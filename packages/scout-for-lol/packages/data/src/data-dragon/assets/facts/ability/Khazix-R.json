@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Khazix-R",
+  "name": "Void Assault",
+  "description": "Active: Kha'Zix becomes Invisible for 1.25 seconds and gains 40% Move Speed. Kha'zix may Recast this Ability once within 12 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Khazix-R.png",
+  "slot": "R",
+  "championKey": "Khazix",
+  "championName": "Kha'Zix",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    85,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/85/70 s"
+  }
+}

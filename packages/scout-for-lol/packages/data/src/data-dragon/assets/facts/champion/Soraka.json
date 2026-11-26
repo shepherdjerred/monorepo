@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Soraka",
+  "name": "Soraka",
+  "description": "A wanderer from the celestial dimensions beyond Mount Targon, Soraka gave up her immortality to protect the mortal races from their own more violent instincts.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "605"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Soraka-passive",
+      "name": "Salvation",
+      "icon": "img/ability/Soraka-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Soraka-Q",
+      "name": "Starcall",
+      "icon": "img/ability/Soraka-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Soraka-W",
+      "name": "Astral Infusion",
+      "icon": "img/ability/Soraka-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Soraka-E",
+      "name": "Equinox",
+      "icon": "img/ability/Soraka-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Soraka-R",
+      "name": "Wish",
+      "icon": "img/ability/Soraka-R.png"
+    }
+  ],
+  "icon": "img/champion/Soraka.png",
+  "art": "img/champion-splash/Soraka_0.jpg",
+  "title": "the Starchild",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

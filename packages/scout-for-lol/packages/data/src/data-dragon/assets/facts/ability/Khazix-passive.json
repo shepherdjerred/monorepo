@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Khazix-passive",
+  "name": "Unseen Threat",
+  "description": "Nearby enemies that are Isolated from their allies are marked. Kha'Zix's abilities have interactions with Isolated targets.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Khazix-passive.png",
+  "slot": "passive",
+  "championKey": "Khazix",
+  "championName": "Kha'Zix",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

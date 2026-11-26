@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6620",
+  "name": "Echoes of Helia",
+  "description": "Soul Siphon: Gain 30% of pre-mitigation damage dealt to champions as Soul Charges. Soul Charges: to restore Health.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "35"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "125%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "4642",
+      "name": "Bandleglass Mirror",
+      "icon": "img/item/4642.png"
+    }
+  ],
+  "icon": "img/item/6620.png",
+  "goldTotal": 2200,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2200 gold"
+  }
+}

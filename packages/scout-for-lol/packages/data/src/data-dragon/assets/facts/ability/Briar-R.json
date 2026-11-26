@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Briar-R",
+  "name": "Certain Death",
+  "description": "Briar kicks her pillory's hemolith gemstone and flies to the location of the first champion it hits, marking them as her prey.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "12000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Briar-R.png",
+  "slot": "R",
+  "championKey": "Briar",
+  "championName": "Briar",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    12000,
+    12000,
+    12000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

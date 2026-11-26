@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Varus",
+  "name": "Varus",
+  "description": "One of the ancient darkin, Varus was a deadly killer who loved to torment his foes, driving them almost to insanity before delivering the killing arrow.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "575"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Varus-passive",
+      "name": "Living Vengeance",
+      "icon": "img/ability/Varus-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Varus-Q",
+      "name": "Piercing Arrow",
+      "icon": "img/ability/Varus-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Varus-W",
+      "name": "Blighted Quiver",
+      "icon": "img/ability/Varus-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Varus-E",
+      "name": "Hail of Arrows",
+      "icon": "img/ability/Varus-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Varus-R",
+      "name": "Chain of Corruption",
+      "icon": "img/ability/Varus-R.png"
+    }
+  ],
+  "icon": "img/champion/Varus.png",
+  "art": "img/champion-splash/Varus_0.jpg",
+  "title": "the Arrow of Retribution",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

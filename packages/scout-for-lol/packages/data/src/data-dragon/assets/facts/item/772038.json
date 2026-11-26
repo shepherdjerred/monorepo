@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772038",
+  "name": "Elixir of Agility",
+  "description": "Click to Consume: Grants Attack Speed and 15% Critical Strike Chance for 180 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772038.png",
+  "goldTotal": 250,
+  "goldCombine": 250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "250 gold"
+  }
+}

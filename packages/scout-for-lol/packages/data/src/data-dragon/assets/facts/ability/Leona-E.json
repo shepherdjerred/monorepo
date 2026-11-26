@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leona-E",
+  "name": "Zenith Blade",
+  "description": "Leona thrusts with a sword of light, dealing 50/90/130/170/210 (+40% AP) magic damage. The last champion struck will be Rooted for 0.5 seconds and Leona will dash to them.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "875"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leona-E.png",
+  "slot": "E",
+  "championKey": "Leona",
+  "championName": "Leona",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    10.5,
+    9,
+    7.5,
+    6
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    875,
+    875,
+    875,
+    875,
+    875
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/10.5/9/7.5/6 s"
+  }
+}

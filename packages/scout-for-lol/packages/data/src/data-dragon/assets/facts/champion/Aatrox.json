@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Aatrox",
+  "name": "Aatrox",
+  "description": "Once honored defenders of Shurima against the Void, Aatrox and his brethren would eventually become an even greater threat to Runeterra, and were defeated only by cunning mortal sorcery.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Aatrox-passive",
+      "name": "Deathbringer Stance",
+      "icon": "img/ability/Aatrox-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aatrox-Q",
+      "name": "The Darkin Blade",
+      "icon": "img/ability/Aatrox-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aatrox-W",
+      "name": "Infernal Chains",
+      "icon": "img/ability/Aatrox-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aatrox-E",
+      "name": "Umbral Dash",
+      "icon": "img/ability/Aatrox-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aatrox-R",
+      "name": "World Ender",
+      "icon": "img/ability/Aatrox-R.png"
+    }
+  ],
+  "icon": "img/champion/Aatrox.png",
+  "art": "img/champion-splash/Aatrox_0.jpg",
+  "title": "the Darkin Blade",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

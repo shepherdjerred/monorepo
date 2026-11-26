@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226671",
+  "name": "Galeforce",
+  "description": "Mythic Passive: Grants all other Legendary items 5 Attack Damage. Active -.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "15%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "20%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "7%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226671.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

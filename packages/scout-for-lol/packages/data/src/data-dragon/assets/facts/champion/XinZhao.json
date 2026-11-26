@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "XinZhao",
+  "name": "Xin Zhao",
+  "description": "Xin Zhao is a resolute warrior loyal to the ruling Lightshield dynasty.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "XinZhao-passive",
+      "name": "Determination",
+      "icon": "img/ability/XinZhao-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "XinZhao-Q",
+      "name": "Three Talon Strike",
+      "icon": "img/ability/XinZhao-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "XinZhao-W",
+      "name": "Wind Becomes Lightning",
+      "icon": "img/ability/XinZhao-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "XinZhao-E",
+      "name": "Audacious Charge",
+      "icon": "img/ability/XinZhao-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "XinZhao-R",
+      "name": "Crescent Guard",
+      "icon": "img/ability/XinZhao-R.png"
+    }
+  ],
+  "icon": "img/champion/XinZhao.png",
+  "art": "img/champion-splash/XinZhao_0.jpg",
+  "title": "the Seneschal of Demacia",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

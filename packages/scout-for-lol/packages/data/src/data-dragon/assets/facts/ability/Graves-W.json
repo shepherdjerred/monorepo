@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Graves-W",
+  "name": "Smoke Screen",
+  "description": "Graves creates a cloud of black smoke for 4 seconds, Slowing enemies inside by 50% and blocking their vision outside the area. The initial impact deals 60/110/160/210/260 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Graves-W.png",
+  "slot": "W",
+  "championKey": "Graves",
+  "championName": "Graves",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    24,
+    22,
+    20,
+    18
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/24/22/20/18 s"
+  }
+}

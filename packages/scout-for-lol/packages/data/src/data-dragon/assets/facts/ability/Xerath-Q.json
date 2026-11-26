@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xerath-Q",
+  "name": "Arcanopulse",
+  "description": "Begin Charging: Xerath begins charging an arcane beam, Slowing himself gradually up to 50%. Release: Xerath fires the beam, dealing 70/110/150/190/230 (+90% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/90/100/110/120 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Xerath-Q.png",
+  "slot": "Q",
+  "championKey": "Xerath",
+  "championName": "Xerath",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    80,
+    90,
+    100,
+    110,
+    120
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    750,
+    750,
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

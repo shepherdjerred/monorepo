@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3051",
+  "name": "Hearthbound Axe",
+  "description": "Grants 20 Attack Damage, 20% Attack Speed.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "20"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    },
+    {
+      "kind": "item",
+      "key": "1042",
+      "name": "Dagger",
+      "icon": "img/item/1042.png"
+    },
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/3051.png",
+  "goldTotal": 1200,
+  "goldCombine": 250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1200 gold"
+  }
+}

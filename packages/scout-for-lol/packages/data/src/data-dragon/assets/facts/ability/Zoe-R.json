@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zoe-R",
+  "name": "Portal Jump",
+  "description": "Zoe teleports to a nearby position for 1 second. Afterwards, she teleports back.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "575"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zoe-R.png",
+  "slot": "R",
+  "championKey": "Zoe",
+  "championName": "Zoe",
+  "maxRank": 3,
+  "cooldownByRank": [
+    11,
+    8,
+    5
+  ],
+  "costByRank": [
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    575,
+    575,
+    575
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/8/5 s"
+  }
+}

@@ -2738,10 +2738,19 @@ stored per UTC day.
     (`report-lake/crawl/meta-partials.ts`): additive `games`/`wins` counts per
     patch, queue, rank tier and role for champion, ban, core item, starting
     items, build path, rune, spell, skill order, matchup and item-versus-enemy
-    damage-profile. It is a sibling of the crawl tables, not one of them, so
+    damage-profile, plus the public champion-page figures: `duration` (win
+    rate under 25, 25 to 35 and over 35 minutes), `boots` (final-inventory
+    boots), `keystone`, `spell_single` (each summoner spell on its own) and
+    `matchup_spell` (the player's spell pair against one same-role opponent).
+    It is a sibling of the crawl tables, not one of them, so
     retention, hardlink carry-over and erasure treat it as part of its day and
     it is outside the crawl schema fingerprint; the version in the file name
-    makes a day at an older definition count as missing. Only Summoner's Rift
+    (`META_PARTIALS_VERSION`, 2) makes a day at an older definition count as
+    missing: the nightly rebuild carries the previous build's files by
+    hardlink, finds no file at the current version, re-derives every completed
+    retained day from its crawl files (`compactCrawlDay`) and unlinks the old
+    file in the new build only. The roll-up reads only current-version files,
+    so a day is never summed at a mixed definition. Only Summoner's Rift
     ranked solo, flex and normal draft count: Arena, Brawl, League Classic,
     ARAM Mayhem and any augment game are excluded by the queue allowlist and
     again by the augment columns. The rank is the visited player's.
@@ -2757,7 +2766,16 @@ stored per UTC day.
     `meta/v1` wholesale: a second run over the same partials writes identical
     files. It adds no schedule; it rides the existing lake Workflows.
     Rates are Wilson 95% intervals; a (champion, role) slice needs 100 games,
-    a build or rune entry 20, a matchup 30. Tier grades use the win-rate
+    a build, rune, boots, keystone, spell, game-length or item entry 20, a
+    matchup 30. A spell pair inside a matchup follows the matchup floor (30)
+    and is listed only under a matchup that is itself listed.
+    The `meta/v1` schemas gained optional, additive fields, so files written
+    before them still parse: per slice `durations`, `boots`, `keystones`,
+    `singleSpells` and `itemsAfterCore`, per matchup opponent `spells`. Each
+    entry carries games, wins, the win-rate interval and its share with the
+    denominator named. `itemsAfterCore` is derived in `meta-assemble.ts`
+    from the core-item entries minus the items of the most-played build path
+    and the boots; a slice with no build path above the floor serves none. Tier grades use the win-rate
     interval's lower bound, and every slice states its patch, queue, bracket
     and sample.
   - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Pantheon",
+  "name": "Pantheon",
+  "description": "Once an unwilling host to the Aspect of War, Atreus survived when the celestial power within him was slain, refusing to succumb to a blow that tore stars from the heavens.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Pantheon-passive",
+      "name": "Mortal Will",
+      "icon": "img/ability/Pantheon-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pantheon-Q",
+      "name": "Comet Spear",
+      "icon": "img/ability/Pantheon-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pantheon-W",
+      "name": "Shield Vault",
+      "icon": "img/ability/Pantheon-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pantheon-E",
+      "name": "Aegis Assault",
+      "icon": "img/ability/Pantheon-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Pantheon-R",
+      "name": "Grand Starfall",
+      "icon": "img/ability/Pantheon-R.png"
+    }
+  ],
+  "icon": "img/champion/Pantheon.png",
+  "art": "img/champion-splash/Pantheon_0.jpg",
+  "title": "the Unbreakable Spear",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

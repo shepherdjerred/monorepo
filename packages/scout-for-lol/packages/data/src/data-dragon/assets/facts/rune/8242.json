@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8242",
+  "name": "Unflinching",
+  "description": "Gain Armor and Magic Resist when receiving crowd control.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Unflinching.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

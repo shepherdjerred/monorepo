@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ashe-passive",
+  "name": "Frost Shot",
+  "description": "Ashe's attacks slow their target, causing her to deal increased damage to these targets. Ashe's critical strikes deal no bonus damage but apply an empowered slow to the target.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ashe-passive.png",
+  "slot": "passive",
+  "championKey": "Ashe",
+  "championName": "Ashe",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,15 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readdir, rm, stat } from "node:fs/promises";
+import { mkdir, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
   assetKey,
-  castGifKey,
-  castPlayerKey,
-  contentTypeForFile,
   dirFileKey,
   firstDuplicateKey,
-  isCastFile,
   markdownForAsset,
   markdownForCast,
   PUBLIC_BUCKET,
@@ -21,32 +17,31 @@ import {
   CastGifRenderError,
   renderCastGifWithAgg,
 } from "#lib/s3/cast-gif.ts";
-import { renderCastPlayerHtml } from "#lib/s3/cast-player.ts";
-import { createS3Client, putObject } from "#lib/s3/client.ts";
+import type { ObjectStore } from "#lib/s3/object-store.ts";
+import {
+  AGENT_SHARE_PROFILE,
+  createUploadClient,
+  planDirectoryObjects,
+  planFileObjects,
+  type PlannedGifRender,
+  type PlannedUpload,
+  renderGifs,
+  uploadObject,
+  UploadSetupError,
+  walkDirectoryFiles,
+} from "#lib/s3/upload.ts";
 import { resolvePrNumber } from "#lib/ci/github.ts";
 
 export type AssetOptions = {
   markdown?: boolean | undefined;
   profile?: string | undefined;
   resolvePr?: (() => Promise<number>) | undefined;
+  /** Test seam: builds the S3 client for the resolved profile. */
+  createClient?: ((profile: string) => Promise<ObjectStore>) | undefined;
 };
 
 const USAGE =
-  "Usage: toolkit pr asset [pr-number] <file|dir...> [--markdown] [--profile <name>]";
-
-export type PlannedUpload = {
-  key: string;
-  contentType: string;
-  /** Human-readable origin, used in collision error messages. */
-  source: string;
-  body: () => Promise<Uint8Array>;
-};
-
-/** A `.cast` recording to render to a GIF before anything is uploaded. */
-export type PlannedGifRender = {
-  castPath: string;
-  gifPath: string;
-};
+  "Usage: toolkit pr asset [pr-number] <file|dir...> [--markdown] [--profile <name>] (default profile: agent-share)";
 
 export type PlannedInput = {
   uploads: PlannedUpload[];
@@ -56,28 +51,6 @@ export type PlannedInput = {
   url: string;
   markdown: string;
 };
-
-/**
- * List every regular file in a directory, as sorted POSIX-style relative
- * paths. Dotfiles and dot-directories (`.git`, `.DS_Store`, …) are skipped;
- * symlinks inside the directory are skipped to avoid cycles.
- */
-async function walkDirectoryFiles(dir: string): Promise<string[]> {
-  const entries = await readdir(dir, { recursive: true, withFileTypes: true });
-  const files: string[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile()) {
-      continue;
-    }
-    const absolute = path.join(entry.parentPath, entry.name);
-    const segments = path.relative(dir, absolute).split(path.sep);
-    if (segments.some((segment) => segment.startsWith("."))) {
-      continue;
-    }
-    files.push(segments.join("/"));
-  }
-  return files.toSorted();
-}
 
 /**
  * Plan the uploads for one file argument. A `.cast` recording also gets a
@@ -90,49 +63,16 @@ export function planFile(
   gifPath: string,
 ): PlannedInput {
   const base = path.basename(file);
-  const key = assetKey(prNumber, file);
-  const upload: PlannedUpload = {
-    key,
-    contentType: contentTypeForFile(base),
-    source: file,
-    body: async () => new Uint8Array(await Bun.file(file).arrayBuffer()),
-  };
-
-  if (isCastFile(base)) {
-    // Pair the recording with a self-contained player page and link that —
-    // a raw .cast URL just downloads NDJSON, which no reviewer can watch.
-    // GitHub cannot embed the player, so a GIF preview renders inline and
-    // clicks through to it.
-    const playerKey = castPlayerKey(key);
-    const playerUpload: PlannedUpload = {
-      key: playerKey,
-      contentType: "text/html; charset=utf-8",
-      source: `${file} (generated player page)`,
-      body: () =>
-        Promise.resolve(new TextEncoder().encode(renderCastPlayerHtml(base))),
-    };
-    const gifKey = castGifKey(key);
-    const gifUpload: PlannedUpload = {
-      key: gifKey,
-      contentType: contentTypeForFile(gifKey),
-      source: `${file} (generated GIF preview)`,
-      body: async () => new Uint8Array(await Bun.file(gifPath).arrayBuffer()),
-    };
-    const url = publicUrlForKey(playerKey);
-    return {
-      uploads: [upload, playerUpload, gifUpload],
-      gifRenders: [{ castPath: file, gifPath }],
-      url,
-      markdown: markdownForCast(base, publicUrlForKey(gifKey), url),
-    };
-  }
-
-  const url = publicUrlForKey(key);
+  const planned = planFileObjects(file, assetKey(prNumber, file), gifPath);
+  const url = publicUrlForKey(planned.primaryKey);
   return {
-    uploads: [upload],
-    gifRenders: [],
+    uploads: planned.uploads,
+    gifRenders: planned.gifRenders,
     url,
-    markdown: markdownForAsset(base, url),
+    markdown:
+      planned.gifKey === undefined
+        ? markdownForAsset(base, url)
+        : markdownForCast(base, publicUrlForKey(planned.gifKey), url),
   };
 }
 
@@ -142,18 +82,11 @@ function planDirectory(
   relativeFiles: string[],
 ): PlannedInput {
   const dirName = path.basename(path.resolve(dir));
-  const uploads = relativeFiles.map((relative): PlannedUpload => {
-    const localPath = path.join(dir, ...relative.split("/"));
-    return {
-      key: dirFileKey(prNumber, dirName, relative),
-      contentType: contentTypeForFile(relative),
-      source: localPath,
-      body: async () => new Uint8Array(await Bun.file(localPath).arrayBuffer()),
-    };
-  });
   const url = publicUrlForKey(dirFileKey(prNumber, dirName, "index.html"));
   return {
-    uploads,
+    uploads: planDirectoryObjects(dir, relativeFiles, (relative) =>
+      dirFileKey(prNumber, dirName, relative),
+    ),
     gifRenders: [],
     url,
     markdown: `[${dirName} (demo site)](${url})`,
@@ -169,11 +102,10 @@ export async function renderPlannedGifs(
   inputs: PlannedInput[],
   renderer: CastGifRenderer,
 ): Promise<void> {
-  for (const input of inputs) {
-    for (const render of input.gifRenders) {
-      await renderer(render.castPath, render.gifPath);
-    }
-  }
+  await renderGifs(
+    inputs.flatMap((input) => input.gifRenders),
+    renderer,
+  );
 }
 
 /**
@@ -328,16 +260,24 @@ export async function assetCommand(
       return;
     }
 
-    const client = await createS3Client(options.profile);
+    const profile = options.profile ?? AGENT_SHARE_PROFILE;
+    let client: ObjectStore;
+    try {
+      client = await (options.createClient ?? createUploadClient)(profile);
+    } catch (error) {
+      if (!(error instanceof UploadSetupError)) {
+        throw error;
+      }
+      console.error(
+        `Error: ${error.message}. Run 'chezmoi apply ~/.aws/config' to render the '${AGENT_SHARE_PROFILE}' profile. Nothing was uploaded.`,
+      );
+      process.exitCode = 1;
+      return;
+    }
 
     for (const input of inputs) {
       for (const upload of input.uploads) {
-        await putObject(client, {
-          bucket: PUBLIC_BUCKET,
-          key: upload.key,
-          body: await upload.body(),
-          contentType: upload.contentType,
-        });
+        await uploadObject(client, PUBLIC_BUCKET, upload);
       }
       console.log(options.markdown === true ? input.markdown : input.url);
     }

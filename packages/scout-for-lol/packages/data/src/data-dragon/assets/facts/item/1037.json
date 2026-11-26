@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1037",
+  "name": "Pickaxe",
+  "description": "Grants 25 Attack Damage.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1037.png",
+  "goldTotal": 875,
+  "goldCombine": 875,
+  "keyFact": {
+    "label": "Cost",
+    "value": "875 gold"
+  }
+}

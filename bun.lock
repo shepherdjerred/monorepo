@@ -1336,7 +1336,6 @@
         "cdk8s-plus-31": "^2.6.43",
         "constructs": "^10.6.0",
         "cron-parser": "^5.5.0",
-        "fast-xml-parser": "5.11.1",
         "homelab": "workspace:*",
         "lodash": "4.18.1",
         "remeda": "^2.33.7",

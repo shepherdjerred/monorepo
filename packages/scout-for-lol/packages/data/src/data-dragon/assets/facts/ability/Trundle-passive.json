@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Trundle-passive",
+  "name": "King's Tribute",
+  "description": "When an enemy unit dies near Trundle, he heals for a percent of its maximum Health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Trundle-passive.png",
+  "slot": "passive",
+  "championKey": "Trundle",
+  "championName": "Trundle",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

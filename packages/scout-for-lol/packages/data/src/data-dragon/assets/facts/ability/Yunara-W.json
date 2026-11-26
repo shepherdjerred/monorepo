@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yunara-W",
+  "name": "Arc of Judgment | Arc of Ruin",
+  "description": "Yunara lets rip a prayer bead that deals 55/95/135/175/215 (+85% bonus AD) (+50% AP) magic damage and Slows by 99% decaying over 1.5 seconds. It deals an additional 33/57/81/105/129 (+51% bonus AD) (+30% AP) magic damage per second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yunara-W.png",
+  "slot": "W",
+  "championKey": "Yunara",
+  "championName": "Yunara",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1150,
+    1150,
+    1150,
+    1150,
+    1150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

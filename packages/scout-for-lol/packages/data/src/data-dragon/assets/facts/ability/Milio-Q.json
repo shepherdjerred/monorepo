@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Milio-Q",
+  "name": "Ultra Mega Fire Kick",
+  "description": "Milio kicks a fireball, Knocking Back the first enemy hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Milio-Q.png",
+  "slot": "Q",
+  "championKey": "Milio",
+  "championName": "Milio",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

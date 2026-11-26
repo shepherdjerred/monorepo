@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renekton-Q",
+  "name": "Cull the Meek",
+  "description": "Renekton swings his blade, dealing 60/90/120/150/180 (+100% bonus AD) physical damage and restoring 2/3/4/5/6 (+2% bonus AD) Health per non-champion and 12/20/28/36/44 (+17% bonus AD) per champion hit.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renekton-Q.png",
+  "slot": "Q",
+  "championKey": "Renekton",
+  "championName": "Renekton",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

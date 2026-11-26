@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayn-Q",
+  "name": "Reaping Slash",
+  "description": "Kayn dashes then spins his scythe, dealing 75/105/135/165/195 (+85% bonus AD) physical damage to enemies he passes through, then deals the damage again to nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayn-Q.png",
+  "slot": "Q",
+  "championKey": "Kayn",
+  "championName": "Kayn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.5,
+    6,
+    5.5,
+    5
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.5/6/5.5/5 s"
+  }
+}

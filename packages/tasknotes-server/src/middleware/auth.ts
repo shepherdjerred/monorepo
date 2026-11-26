@@ -15,6 +15,7 @@ import {
   REQUEST_ID_HEADER,
 } from "../v1/request-context.ts";
 import type { FacetStore } from "../v1/types.ts";
+import { isDocumentRequest } from "../web-ui.ts";
 
 export type AuthMiddlewareOptions = {
   store: FacetStore;
@@ -87,7 +88,11 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions) {
     c.set("requestId", reqIdResult.requestId);
     c.header(REQUEST_ID_HEADER, reqIdResult.requestId);
 
-    if (c.req.path === "/api/health" || c.req.path === "/metrics") {
+    if (
+      c.req.path === "/api/health" ||
+      c.req.path === "/metrics" ||
+      isDocumentRequest(c.req.method, c.req.path)
+    ) {
       await next();
       return undefined;
     }

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kled-E",
+  "name": "Jousting",
+  "description": "Kled dashes, dealing 35/60/85/110/135 (+55% bonus AD) physical damage to enemies he passes through, pulling minions and small monsters towards him.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kled-E.png",
+  "slot": "E",
+  "championKey": "Kled",
+  "championName": "Kled",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

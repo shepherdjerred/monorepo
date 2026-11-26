@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1055",
+  "name": "Doran's Blade",
+  "description": "Grants 10 Attack Damage, 80 Health, 2.5% Omnivamp.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "10"
+    },
+    {
+      "label": "Health",
+      "value": "80"
+    },
+    {
+      "label": "Omnivamp",
+      "value": "2.5%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1055.png",
+  "goldTotal": 450,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "450 gold"
+  }
+}

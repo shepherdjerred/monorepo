@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zeri-Q",
+  "name": "Burst Fire",
+  "description": "Zeri fires a burst of 7 rounds that deals 22/26/30/34/38 (+102/104/106/108/110% AD) physical damage to the first enemy hit. This Ability is treated as an Attack.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zeri-Q.png",
+  "slot": "Q",
+  "championKey": "Zeri",
+  "championName": "Zeri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

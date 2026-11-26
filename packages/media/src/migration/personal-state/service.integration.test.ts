@@ -350,6 +350,75 @@ test("declined source requests remain visible history and never create active na
   );
 });
 
+test("recording Seerr history does not grant retention or recovery authority", async () => {
+  const f = await fixture();
+  await establishCurrentMovieTarget(f);
+  await holdCurrentLibrary(
+    f,
+    true,
+    "migration_household_intent_review_required",
+  );
+  const scope = { mediaId_edition: defaultScope(f.movie.id) };
+  const holdBefore = await f.db.recoveryHold.findUniqueOrThrow({
+    where: scope,
+  });
+  const intentBefore = await f.db.mediaIntent.findUniqueOrThrow({
+    where: scope,
+  });
+  const baseline = await f.service.preview(f.owner, f.selection);
+  const claim = baseline.claims[0];
+  if (claim === undefined) throw new Error("Missing source request");
+  const selectedSeerrRequests = [
+    { captureId: claim.captureId, provenanceKey: claim.provenanceKey },
+  ];
+  const selection = {
+    ...f.selection,
+    movieEditions: [],
+    recordHistoryOnly: true as const,
+    selectedSeerrRequests,
+  };
+  await expect(f.service.preview(f.owner, selection)).rejects.toMatchObject({
+    code: "invalid_input",
+  });
+  const history = { ...selection, historyOnly: [claim.provenanceKey] };
+  const preview = await f.service.preview(f.owner, history);
+  expect(preview).toMatchObject({
+    recordHistoryOnly: true,
+    library: [],
+    blocked: false,
+  });
+  const key = crypto.randomUUID();
+  const input = {
+    ...history,
+    previewHash: preview.previewHash,
+    acknowledgeExistingLibraryKeep: true as const,
+    acknowledgeTemporaryFollowingClaims: true as const,
+  };
+  const result = await f.service.apply(f.owner, key, input);
+  expect(result.next).toBeNull();
+  expect(await f.service.apply(f.owner, key, input)).toEqual(result);
+  expect(await f.service.importedHistory(f.owner)).toContainEqual(
+    expect.objectContaining({ id: claim.provenanceKey, sourceStatus: 5 }),
+  );
+  expect(await currentMovieRecoveryClaims(f)).toMatchObject({
+    claims: [expect.objectContaining({ captureId: claim.captureId })],
+  });
+  expect(await f.db.recoveryHold.findUniqueOrThrow({ where: scope })).toEqual(
+    holdBefore,
+  );
+  expect(await f.db.mediaIntent.findUniqueOrThrow({ where: scope })).toEqual(
+    intentBefore,
+  );
+  expect(
+    await f.db.mediaRequest.count({ where: { mediaId: f.movie.id } }),
+  ).toBe(0);
+  expect(
+    await f.db.seerrRequestApproval.count({
+      where: { provenanceKey: claim.provenanceKey },
+    }),
+  ).toBe(0);
+});
+
 test("imported history shows exact prior requests to their verified member or the owner without creating an active request", async () => {
   const f = await harness.setup();
   const serverMachineId = "binding-fixture-server";

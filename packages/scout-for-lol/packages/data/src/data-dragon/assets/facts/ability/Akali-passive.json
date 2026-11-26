@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akali-passive",
+  "name": "Assassin's Mark",
+  "description": "Dealing spell damage to a champion creates a ring of energy around them. Exiting that ring empowers Akali's next Attack with bonus range and damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Akali-passive.png",
+  "slot": "passive",
+  "championKey": "Akali",
+  "championName": "Akali",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

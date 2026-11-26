@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zed-R",
+  "name": "Death Mark",
+  "description": "Zed becomes Untargetable and dashes to an enemy champion, marking them. After 3 seconds, the mark triggers, dealing 100% AD physical damage and repeating 25/40/55% of all damage dealt to the target by Zed while the mark was active.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zed-R.png",
+  "slot": "R",
+  "championKey": "Zed",
+  "championName": "Zed",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}

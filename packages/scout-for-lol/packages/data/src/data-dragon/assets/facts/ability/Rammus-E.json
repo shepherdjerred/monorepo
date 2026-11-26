@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rammus-E",
+  "name": "Frenzying Taunt",
+  "description": "Rammus Taunts an enemy champion or monster for 1.2/1.4/1.6/1.8/2 seconds. Monsters are dealt 80/100/120/140/160 (+70% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rammus-E.png",
+  "slot": "E",
+  "championKey": "Rammus",
+  "championName": "Rammus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

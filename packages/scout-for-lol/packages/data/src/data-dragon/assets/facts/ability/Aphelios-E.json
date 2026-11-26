@@ -1,0 +1,48 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aphelios-E",
+  "name": "Weapon Queue System",
+  "description": "Aphelios has no third ability. This slot shows the next weapon Alune will give him.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aphelios-E.png",
+  "slot": "E",
+  "championKey": "Aphelios",
+  "championName": "Aphelios",
+  "maxRank": 6,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

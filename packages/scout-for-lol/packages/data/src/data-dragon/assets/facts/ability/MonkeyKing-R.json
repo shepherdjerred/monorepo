@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MonkeyKing-R",
+  "name": "Cyclone",
+  "description": "Wukong gains 20% Move Speed and spins his staff, Knocking Up nearby enemies for 0.6 seconds and take 275% AD plus 8/12/16% max Health physical damage over 2 seconds. This Ability can be cast a second time within 8 seconds before going on cooldown.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "315"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MonkeyKing-R.png",
+  "slot": "R",
+  "championKey": "MonkeyKing",
+  "championName": "Wukong",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    110,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    315,
+    315,
+    315
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/110/90 s"
+  }
+}

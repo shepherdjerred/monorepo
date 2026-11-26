@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ekko-R",
+  "name": "Chronobreak",
+  "description": "Ekko turns back time, entering Stasis while teleporting to where he was 4 seconds ago and dealing 200/350/500 (+175% AP) magic damage to nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ekko-R.png",
+  "slot": "R",
+  "championKey": "Ekko",
+  "championName": "Ekko",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    80,
+    50
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/80/50 s"
+  }
+}

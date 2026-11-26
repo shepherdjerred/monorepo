@@ -20,6 +20,11 @@ import { z } from "zod";
  *
  * Every statistic is a count pair plus a Wilson interval, and every slice
  * states its patch, queue, bracket and sample size.
+ *
+ * Additive fields (game length, boots, keystones, single summoner spells,
+ * items after the core, per-matchup spells) are optional in the schemas: a
+ * `v1` file written before they existed still parses, and a reader that does
+ * not know them ignores them. Entries below the sample floors are omitted.
  */
 
 export const META_SERVING_VERSION = 1;
@@ -119,6 +124,15 @@ const CountedSchema = z.object({
   share: RateSchema,
 });
 
+export const META_DURATION_BUCKETS = ["lt25", "25to35", "gt35"] as const;
+export const MetaDurationBucketSchema = z.enum(META_DURATION_BUCKETS);
+export type MetaDurationBucket = z.infer<typeof MetaDurationBucketSchema>;
+
+const CoreItemSchema = CountedSchema.extend({
+  itemId: z.number().int(),
+  denominator: z.literal("slice_games"),
+});
+
 export const ChampionSliceSchema = z.object({
   context: MetaContextSchema.extend({ role: MetaRoleSchema }),
   sample: z.object({
@@ -133,12 +147,7 @@ export const ChampionSliceSchema = z.object({
   /** Share of the champion's games in this role. */
   roleShare: RateSchema,
   tier: MetaTierGradeSchema,
-  coreItems: z.array(
-    CountedSchema.extend({
-      itemId: z.number().int(),
-      denominator: z.literal("slice_games"),
-    }),
-  ),
+  coreItems: z.array(CoreItemSchema),
   buildPaths: z.array(
     CountedSchema.extend({
       itemIds: z.array(z.number().int()),
@@ -175,6 +184,43 @@ export const ChampionSliceSchema = z.object({
       denominator: z.literal("games_with_timeline"),
     }),
   ),
+  /** Win rate by game length: under 25, 25 to 35 and over 35 minutes. */
+  durations: z
+    .array(
+      CountedSchema.extend({
+        bucket: MetaDurationBucketSchema,
+        denominator: z.literal("games_with_duration"),
+      }),
+    )
+    .optional(),
+  /** Final-inventory boots. */
+  boots: z
+    .array(
+      CountedSchema.extend({
+        itemId: z.number().int(),
+        denominator: z.literal("games_with_boots"),
+      }),
+    )
+    .optional(),
+  keystones: z
+    .array(
+      CountedSchema.extend({
+        perkId: z.number().int(),
+        denominator: z.literal("games_with_keystone"),
+      }),
+    )
+    .optional(),
+  /** Each summoner spell on its own, in either slot. */
+  singleSpells: z
+    .array(
+      CountedSchema.extend({
+        spellId: z.number().int(),
+        denominator: z.literal("slice_games"),
+      }),
+    )
+    .optional(),
+  /** Core items minus the most-played build path and the boots. */
+  itemsAfterCore: z.array(CoreItemSchema).optional(),
   itemLift: z.array(
     z.object({
       trait: z.string(),
@@ -243,9 +289,25 @@ export const MatchupSliceSchema = z.object({
       games: z.number().int(),
       wins: z.number().int(),
       winRate: RateSchema,
+      /** Spell pairs this champion played in the matchup, with their own results. */
+      spells: z
+        .array(
+          z.object({
+            spellIds: z.array(z.number().int()),
+            games: z.number().int(),
+            wins: z.number().int(),
+            winRate: RateSchema,
+            /** Share of the matchup's games. */
+            share: RateSchema,
+            denominator: z.literal("matchup_games"),
+          }),
+        )
+        .optional(),
     }),
   ),
 });
+
+export type MatchupSlice = z.infer<typeof MatchupSliceSchema>;
 
 export const MatchupFileSchema = z.object({
   schemaVersion: z.literal(META_SERVING_VERSION),

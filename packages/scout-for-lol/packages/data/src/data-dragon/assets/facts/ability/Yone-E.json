@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yone-E",
+  "name": "Soul Unbound",
+  "description": "Yone enters a spirit form for 5 seconds, leaving his body behind for the duration and gaining 10% to 30% ramping Move Speed.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yone-E.png",
+  "slot": "E",
+  "championKey": "Yone",
+  "championName": "Yone",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    19,
+    16,
+    13,
+    10
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/19/16/13/10 s"
+  }
+}

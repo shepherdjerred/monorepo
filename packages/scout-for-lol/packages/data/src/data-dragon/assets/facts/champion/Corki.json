@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Corki",
+  "name": "Corki",
+  "description": "The yordle pilot Corki loves two things above all others: flying, and his glamorous mustache... though not necessarily in that order. After leaving Bandle City, he settled in Piltover and fell in love with the wondrous machines he found there.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Corki-passive",
+      "name": "Hextech Munitions",
+      "icon": "img/ability/Corki-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Corki-Q",
+      "name": "Phosphorus Bomb",
+      "icon": "img/ability/Corki-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Corki-W",
+      "name": "Valkyrie",
+      "icon": "img/ability/Corki-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Corki-E",
+      "name": "Gatling Gun",
+      "icon": "img/ability/Corki-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Corki-R",
+      "name": "Missile Barrage",
+      "icon": "img/ability/Corki-R.png"
+    }
+  ],
+  "icon": "img/champion/Corki.png",
+  "art": "img/champion-splash/Corki_0.jpg",
+  "title": "the Daring Bombardier",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zed-E",
+  "name": "Shadow Slash",
+  "description": "Zed and his Shadows slash, dealing 70/92.5/115/137.5/160 (+70% bonus AD) physical damage to nearby enemies. Each enemy champion hit by Zed's slash reduces Living Shadow's Cooldown by 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "290"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zed-E.png",
+  "slot": "E",
+  "championKey": "Zed",
+  "championName": "Zed",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    4.5,
+    4,
+    3.5,
+    3
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    290,
+    290,
+    290,
+    290,
+    290
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5/4.5/4/3.5/3 s"
+  }
+}

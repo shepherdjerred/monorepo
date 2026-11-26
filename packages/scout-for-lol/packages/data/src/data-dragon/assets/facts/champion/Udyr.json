@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Udyr",
+  "name": "Udyr",
+  "description": "The most powerful spirit walker alive, Udyr communes with all the spirits of the Freljord, whether by empathically understanding their needs, or by channeling and transforming their ethereal energy into his own primal fighting style.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "664"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Udyr-passive",
+      "name": "Bridge Between",
+      "icon": "img/ability/Udyr-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Udyr-Q",
+      "name": "Wilding Claw",
+      "icon": "img/ability/Udyr-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Udyr-W",
+      "name": "Iron Mantle",
+      "icon": "img/ability/Udyr-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Udyr-E",
+      "name": "Blazing Stampede",
+      "icon": "img/ability/Udyr-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Udyr-R",
+      "name": "Wingborne Storm",
+      "icon": "img/ability/Udyr-R.png"
+    }
+  ],
+  "icon": "img/champion/Udyr.png",
+  "art": "img/champion-splash/Udyr_0.jpg",
+  "title": "the Spirit Walker",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3134",
+  "name": "Serrated Dirk",
+  "description": "Grants 20 Attack Damage, 10 Lethality.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "20"
+    },
+    {
+      "label": "Lethality",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    },
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/3134.png",
+  "goldTotal": 1000,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

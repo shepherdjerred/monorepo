@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rumble-Q",
+  "name": "Flamespitter",
+  "description": "Rumble ignites his flamethrower, dealing 50/75/100/125/150 (+105% AP) plus 6/6.5/7/7.5/8% max Health magic damage over 3 seconds, reduced to 70% against minions.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rumble-Q.png",
+  "slot": "Q",
+  "championKey": "Rumble",
+  "championName": "Rumble",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772044",
+  "name": "Sight Ward",
+  "description": "Click to Consume: Places an invisible ward that reveals the surrounding area for 3 minutes.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772044.png",
+  "goldTotal": 75,
+  "goldCombine": 75,
+  "keyFact": {
+    "label": "Cost",
+    "value": "75 gold"
+  }
+}

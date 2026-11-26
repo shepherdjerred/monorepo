@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447123",
+  "name": "Puppeteer",
+  "description": "Pull Their Strings: (0s) Attacking a champion adds a stack for 15 seconds.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "15%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "40"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447123.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Qiyana-passive",
+  "name": "Royal Privilege",
+  "description": "Qiyana's first basic attack or ability against each enemy deals bonus damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Qiyana-passive.png",
+  "slot": "passive",
+  "championKey": "Qiyana",
+  "championName": "Qiyana",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

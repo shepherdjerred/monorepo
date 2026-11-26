@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zeri-passive",
+  "name": "Living Battery",
+  "description": "Zeri's Attacks deal magic damage and are treated as Abilities. Moving and casting Burst Fire stores up energy in Zeri's Sparkpack.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zeri-passive.png",
+  "slot": "passive",
+  "championKey": "Zeri",
+  "championName": "Zeri",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

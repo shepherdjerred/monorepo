@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8275",
+  "name": "Nimbus Cloak",
+  "description": "After casting a Summoner Spell, gain a short Move Speed increase that allows you to pass through units.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/6361.png",
+  "tree": "Sorcery",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Sorcery"
+  }
+}

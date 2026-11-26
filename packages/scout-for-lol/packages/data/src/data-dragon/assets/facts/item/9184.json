@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9184",
+  "name": "Bunny Mega-Blast",
+  "description": "Fires orbital strikes with bonus crit chance at random enemies, dealing high damage in a small area.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9184.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

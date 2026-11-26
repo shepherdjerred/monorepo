@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Samira-Q",
+  "name": "Flair",
+  "description": "Samira fires a shot, dealing 0/5/10/15/20 (+110% AD) physical damage to the first enemy hit. If this Ability is cast towards an enemy in melee range, Samira will instead slash with her sword, dealing 0/5/10/15/20 (+110% AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Samira-Q.png",
+  "slot": "Q",
+  "championKey": "Samira",
+  "championName": "Samira",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5,
+    4,
+    3,
+    2
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5/4/3/2 s"
+  }
+}

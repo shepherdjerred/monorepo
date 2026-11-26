@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3156",
+  "name": "Maw of Malmortius",
+  "description": "Lifeline: Taking magic damage that would reduce your Health below 30% grants a magic damage Shield for 3 seconds and 10% Omnivamp until end of combat.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "60"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3155",
+      "name": "Hexdrinker",
+      "icon": "img/item/3155.png"
+    },
+    {
+      "kind": "item",
+      "key": "3133",
+      "name": "Caulfield's Warhammer",
+      "icon": "img/item/3133.png"
+    }
+  ],
+  "icon": "img/item/3156.png",
+  "goldTotal": 3100,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3100 gold"
+  }
+}

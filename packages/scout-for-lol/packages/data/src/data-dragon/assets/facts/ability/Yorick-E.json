@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yorick-E",
+  "name": "Mourning Mist",
+  "description": "Yorick throws a globule of Black Mist that reduces armor, damages, slows and marks enemies. Summoned units gain move speed when moving towards marked targets.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yorick-E.png",
+  "slot": "E",
+  "championKey": "Yorick",
+  "championName": "Yorick",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

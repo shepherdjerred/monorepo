@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ornn-passive",
+  "name": "Living Forge",
+  "description": "Ornn gains an additional bonus Armor and Magic Resist from all sources. Ornn can spend gold to forge non-consumable items anywhere.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ornn-passive.png",
+  "slot": "passive",
+  "championKey": "Ornn",
+  "championName": "Ornn",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yunara-passive",
+  "name": "Vow of the First Lands",
+  "description": "Yunara's Critical Strikes deal bonus magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Yunara-passive.png",
+  "slot": "passive",
+  "championKey": "Yunara",
+  "championName": "Yunara",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

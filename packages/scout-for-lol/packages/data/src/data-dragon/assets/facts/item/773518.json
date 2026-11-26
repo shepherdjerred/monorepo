@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773518",
+  "name": "Bag of Tea",
+  "description": "Click to Consume: Restores 150 Health over 15 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/773518.png",
+  "goldTotal": 35,
+  "goldCombine": 35,
+  "keyFact": {
+    "label": "Cost",
+    "value": "35 gold"
+  }
+}

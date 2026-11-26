@@ -82,7 +82,7 @@ describe("anthropic", () => {
     expect(terraform.required_providers).toEqual({
       anthropic: {
         source: "registry.terraform.io/ippontech/anthropic",
-        version: "1.95.1",
+        version: "1.96.0",
       },
     });
     expect(terraform.encryption).toMatchObject({
