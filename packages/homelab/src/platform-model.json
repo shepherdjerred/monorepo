@@ -374,6 +374,11 @@
       "exposure": "ingress"
     },
     {
+      "host": "private",
+      "namespace": "s3-static-sites",
+      "exposure": "ingress"
+    },
+    {
       "host": "prometheus",
       "namespace": "prometheus",
       "exposure": "ingress"
@@ -599,6 +604,11 @@
       "bucket": "llm-archive",
       "namespace": "temporal",
       "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "private-sjer-red",
+      "namespace": "s3-static-sites",
+      "env": "S3_BUCKET"
     },
     {
       "bucket": "scout-beta",
