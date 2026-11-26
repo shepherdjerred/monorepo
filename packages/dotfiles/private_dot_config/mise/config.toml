@@ -1,5 +1,5 @@
 [tools]
-bun = "1.4.2"
+bun = "1.4.5"
 go = "latest"
 java = "lts"
 maven = "3.9.14"
