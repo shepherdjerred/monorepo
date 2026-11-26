@@ -1,4 +1,5 @@
 import type { Server } from "bun";
+import { reportError } from "#infrastructure/log.ts";
 import type { ChangeHub } from "#infrastructure/change-hub.ts";
 import type { Bootstrap, Settings } from "#infrastructure/config.ts";
 import type { Database } from "#infrastructure/database.ts";
@@ -32,6 +33,11 @@ export async function startServer(options: {
     maxRequestBodySize: await options.settings.value("maxFileBytes"),
     idleTimeout: IDLE_TIMEOUT_SECONDS,
     fetch: runtime.fetch,
+    // The last resort: a failure outside every host's own handler.
+    error: (error) => {
+      reportError(error, "artifacts_unhandled_error");
+      return new Response("Internal Server Error", { status: 500 });
+    },
   });
   return { server };
 }
