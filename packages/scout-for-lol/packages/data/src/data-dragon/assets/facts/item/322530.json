@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "322530",
+  "name": "Diadem of Songs",
+  "description": "Harmony: Gain % Heal and Shield Power. Consonance: While you or any ally you've healed or shielded in the last 3 seconds is in combat with champions, each second, heal the lowest health nearby ally champion.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "8%"
+    },
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/322530.png",
+  "goldTotal": 2250,
+  "goldCombine": 2250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

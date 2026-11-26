@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hwei-R",
+  "name": "Spiraling Despair",
+  "description": "Hwei launches a vision of pure despair that sticks to an enemy champion for 3 seconds. The vision expands over time applying a Slow to enemies for 10% stacking every 0.25 seconds, and dealing 10/20/30 (+5% AP) magic damage per second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hwei-R.png",
+  "slot": "R",
+  "championKey": "Hwei",
+  "championName": "Hwei",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1300,
+    1300,
+    1300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

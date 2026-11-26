@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447101",
+  "name": "Gambler's Blade",
+  "description": "Money In The Bank: Your Attacks and Abilities have a 12% chance to bank between 30 and 245 Gold when they hit an enemy.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "70%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "40"
+    },
+    {
+      "label": "Move Speed",
+      "value": "8%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447101.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

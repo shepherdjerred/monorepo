@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nasus-E",
+  "name": "Spirit Fire",
+  "description": "Nasus ignites a spirit flame, dealing 50/80/110/140/170 (+60% AP) magic damage. Enemies in the area lose 30/35/40/45/50% Armor and take 50/80/110/140/170 (+60% AP) magic damage over 5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nasus-E.png",
+  "slot": "E",
+  "championKey": "Nasus",
+  "championName": "Nasus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

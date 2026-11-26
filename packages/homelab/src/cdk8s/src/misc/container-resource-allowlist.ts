@@ -16,7 +16,6 @@ export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([
   "media-recyclarr/render-config",
   // Metrics/sidecar helpers — tiny, lose nothing on eviction.
   // Non-critical apps, evictable by design.
-  "freshrss/main",
   "media-prowlarr/main",
   "media-recyclarr/main",
   "media-tautulli/main",

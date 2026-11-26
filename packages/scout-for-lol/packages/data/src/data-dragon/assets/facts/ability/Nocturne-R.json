@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nocturne-R",
+  "name": "Paranoia",
+  "description": "Nocturne darkens the map, reducing the sight radius of all enemy champions and removing their vision of allies for 6 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2500/3250/4000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nocturne-R.png",
+  "slot": "R",
+  "championKey": "Nocturne",
+  "championName": "Nocturne",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    130,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2500,
+    3250,
+    4000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/130/100 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karthus-R",
+  "name": "Requiem",
+  "description": "Karthus channels for 3 seconds, then deals 200/350/500 (+70% AP) magic damage to enemy champions, regardless of distance.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "10000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karthus-R.png",
+  "slot": "R",
+  "championKey": "Karthus",
+  "championName": "Karthus",
+  "maxRank": 3,
+  "cooldownByRank": [
+    200,
+    180,
+    160
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    10000,
+    10000,
+    10000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "200/180/160 s"
+  }
+}

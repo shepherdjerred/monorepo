@@ -1,6 +1,6 @@
 import os from "node:os";
 import path from "node:path";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 
 /**
  * Thin wrapper over the AWS SDK S3 client for SeaweedFS uploads. Credentials
@@ -70,26 +70,4 @@ export async function createS3Client(
     ...(endpoint === undefined ? {} : { endpoint }),
     ...auth,
   });
-}
-
-export type PutObjectParams = {
-  bucket: string;
-  key: string;
-  body: Uint8Array;
-  contentType: string;
-};
-
-/** Upload a single object. The SDK signs the request via SigV4. */
-export async function putObject(
-  client: S3Client,
-  params: PutObjectParams,
-): Promise<void> {
-  await client.send(
-    new PutObjectCommand({
-      Bucket: params.bucket,
-      Key: params.key,
-      Body: params.body,
-      ContentType: params.contentType,
-    }),
-  );
 }

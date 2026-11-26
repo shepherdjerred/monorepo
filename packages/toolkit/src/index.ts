@@ -58,6 +58,8 @@ Monorepo workflows:
   pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr land [PR]                 Wait for exact-head readiness, then squash-merge
   pr asset [PR] <FILE|DIR...>  Upload review media to public.sjer.red
+  share <public|private> <PATH...>  Share files by URL (private = tailnet-only;
+                               public = world-readable, only when asked)
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
   deploy <COMMAND>            Select, promote, approve, and inspect releases
@@ -90,6 +92,7 @@ Examples:
   toolkit prom query 'up == 0'
   toolkit loki query '{namespace="temporal"}'
   toolkit pr health
+  toolkit share private report.pdf
   toolkit brim --dry-run
   toolkit deployed scout/prod
   toolkit ops summary --needs-me
@@ -153,6 +156,11 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     () => import("./handlers/discord.ts").then((m) => m.handleDiscordCommand),
   ],
   ["mc", () => import("./handlers/mc.ts").then((m) => m.handleMcCommand)],
+  [
+    "share",
+    () =>
+      import("./commands/share/handler.ts").then((m) => m.handleShareCommand),
+  ],
   [
     "history",
     () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),

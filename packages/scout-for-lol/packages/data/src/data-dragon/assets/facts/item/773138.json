@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773138",
+  "name": "Leviathan",
+  "description": "Juggernaut: Grants 32 Health per stack.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "180"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    }
+  ],
+  "icon": "img/item/773138.png",
+  "goldTotal": 1275,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1275 gold"
+  }
+}

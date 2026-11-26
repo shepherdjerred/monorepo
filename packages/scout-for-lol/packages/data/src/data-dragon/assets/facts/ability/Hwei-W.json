@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hwei-W",
+  "name": "Subject: Serenity",
+  "description": "Hwei paints visions of serenity that provide utility for himself and allied champions.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90/95/100/105/110 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hwei-W.png",
+  "slot": "W",
+  "championKey": "Hwei",
+  "championName": "Hwei",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17.5,
+    17,
+    16.5,
+    16
+  ],
+  "costByRank": [
+    90,
+    95,
+    100,
+    105,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17.5/17/16.5/16 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Blitzcrank-Q",
+  "name": "Rocket Grab",
+  "description": "Blitzcrank fires their right hand, Pulling the first enemy hit towards them and dealing 110/160/210/260/310 (+120% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1079"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Blitzcrank-Q.png",
+  "slot": "Q",
+  "championKey": "Blitzcrank",
+  "championName": "Blitzcrank",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    19,
+    18,
+    17,
+    16
+  ],
+  "costByRank": [
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1079,
+    1079,
+    1079,
+    1079,
+    1079
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/19/18/17/16 s"
+  }
+}

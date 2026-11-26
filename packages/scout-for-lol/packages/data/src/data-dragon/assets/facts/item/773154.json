@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773154",
+  "name": "Wriggle's Lantern",
+  "description": "Passive: Basic Attacks have a 25% chance to deal 500 bonus magic damage to minions and monsters On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Armor",
+      "value": "25"
+    },
+    {
+      "label": "Life Steal",
+      "value": "15%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773106",
+      "name": "Madred's Razors",
+      "icon": "img/item/773106.png"
+    },
+    {
+      "kind": "item",
+      "key": "771043",
+      "name": "Recurve Bow",
+      "icon": "img/item/771043.png"
+    }
+  ],
+  "icon": "img/item/773154.png",
+  "goldTotal": 2000,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2000 gold"
+  }
+}

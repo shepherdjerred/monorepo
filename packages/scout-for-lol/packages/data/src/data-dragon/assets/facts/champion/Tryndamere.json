@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Tryndamere",
+  "name": "Tryndamere",
+  "description": "Fueled by unbridled fury and rage, Tryndamere once carved his way through the Freljord, openly challenging the greatest warriors of the north to prepare himself for even darker days ahead.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "696"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Tryndamere-passive",
+      "name": "Battle Fury",
+      "icon": "img/ability/Tryndamere-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tryndamere-Q",
+      "name": "Bloodlust",
+      "icon": "img/ability/Tryndamere-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tryndamere-W",
+      "name": "Mocking Shout",
+      "icon": "img/ability/Tryndamere-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tryndamere-E",
+      "name": "Spinning Slash",
+      "icon": "img/ability/Tryndamere-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Tryndamere-R",
+      "name": "Undying Rage",
+      "icon": "img/ability/Tryndamere-R.png"
+    }
+  ],
+  "icon": "img/champion/Tryndamere.png",
+  "art": "img/champion-splash/Tryndamere_0.jpg",
+  "title": "the Barbarian King",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

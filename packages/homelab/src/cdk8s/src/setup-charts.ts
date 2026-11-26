@@ -10,7 +10,6 @@ import { createMediaChart } from "./cdk8s-charts/media/media.ts";
 import { createHomeChart } from "./cdk8s-charts/home.ts";
 import { createSyncthingChart } from "./cdk8s-charts/media/syncthing.ts";
 import { createGolinkChart } from "./cdk8s-charts/platform/golink.ts";
-import { createFreshRssChart } from "./cdk8s-charts/media/freshrss.ts";
 import { createPinchtabChart } from "./cdk8s-charts/pinchtab.ts";
 import { createArcadeChart } from "./cdk8s-charts/games/arcade.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
@@ -106,7 +105,6 @@ export async function setupCharts(app: App): Promise<void> {
   await createHomeChart(app);
   createSyncthingChart(app);
   createGolinkChart(app, { image: firstPartyImageRecipe("golink") });
-  await createFreshRssChart(app);
   createPinchtabChart(app);
   createArcadeChart(app);
   createGrafanaDbChart(app);

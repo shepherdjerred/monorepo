@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lissandra-Q",
+  "name": "Ice Shard",
+  "description": "Lissandra throws a spear of ice that shatters on the first enemy hit, dealing 80/115/150/185/220 (+75% AP) magic damage, Slowing them by 20/24/28/32/36% for 1.5 seconds, and also damaging and slowing the enemies behind them.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "725"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lissandra-Q.png",
+  "slot": "Q",
+  "championKey": "Lissandra",
+  "championName": "Lissandra",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6,
+    5,
+    4,
+    3
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    725,
+    725,
+    725,
+    725,
+    725
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6/5/4/3 s"
+  }
+}

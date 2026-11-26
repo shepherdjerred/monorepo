@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "54",
+  "name": "Placeholder",
+  "description": "This slot will be replaced by another champion's ultimate selected at the start of the game. There will be 30 seconds to select an ultimate.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/Summoner_UltBookPlaceholder.png",
+  "cooldownSeconds": 0,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

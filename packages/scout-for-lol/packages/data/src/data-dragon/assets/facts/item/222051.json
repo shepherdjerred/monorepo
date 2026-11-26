@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222051",
+  "name": "Guardian's Horn",
+  "description": "Recovery: Restores 20 Health every 5 seconds. Undaunted: Blocks 12 damage from attacks and spells from champions (25% effectiveness vs. damage over time abilities).",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222051.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9308",
+  "name": "Bunny Hop",
+  "description": "Riven passively gains Move Speed and gains charge as she moves.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9308.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

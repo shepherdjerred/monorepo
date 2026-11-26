@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "AurelionSol",
+  "name": "Aurelion Sol",
+  "description": "Aurelion Sol once graced the vast emptiness of the cosmos with celestial wonders of his own devising. Now, he is forced to wield his awesome power at the behest of a space-faring empire that tricked him into servitude.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "AurelionSol-passive",
+      "name": "Cosmic Creator",
+      "icon": "img/ability/AurelionSol-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "AurelionSol-Q",
+      "name": "Breath of Light",
+      "icon": "img/ability/AurelionSol-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "AurelionSol-W",
+      "name": "Astral Flight",
+      "icon": "img/ability/AurelionSol-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "AurelionSol-E",
+      "name": "Singularity",
+      "icon": "img/ability/AurelionSol-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "AurelionSol-R",
+      "name": "Falling Star / The Skies Descend",
+      "icon": "img/ability/AurelionSol-R.png"
+    }
+  ],
+  "icon": "img/champion/AurelionSol.png",
+  "art": "img/champion-splash/AurelionSol_0.jpg",
+  "title": "The Star Forger",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

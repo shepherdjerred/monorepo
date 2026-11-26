@@ -57,11 +57,6 @@
       "service": "feeds-reader-service"
     },
     {
-      "hostname": "freshrss.sjer.red",
-      "namespace": "freshrss",
-      "service": "freshrss-service"
-    },
-    {
       "hostname": "homeassistant.sjer.red",
       "namespace": "home",
       "service": "home-homeassistant-service"
@@ -285,11 +280,6 @@
     {
       "host": "flags",
       "namespace": "flags",
-      "exposure": "ingress"
-    },
-    {
-      "host": "freshrss",
-      "namespace": "freshrss",
       "exposure": "ingress"
     },
     {

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1004",
+  "name": "Faerie Charm",
+  "description": "Grants 50% Base Mana Regen.",
+  "facts": [
+    {
+      "label": "Base Mana Regen",
+      "value": "50%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1004.png",
+  "goldTotal": 200,
+  "goldCombine": 200,
+  "keyFact": {
+    "label": "Cost",
+    "value": "200 gold"
+  }
+}

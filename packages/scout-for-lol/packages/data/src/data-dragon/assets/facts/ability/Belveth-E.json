@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Belveth-E",
+  "name": "Royal Maelstrom",
+  "description": "Bel'Veth roots herself in place, channeling a storm of slashes around her that targets the lowest-health enemy and grants her lifesteal and damage reduction.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Belveth-E.png",
+  "slot": "E",
+  "championKey": "Belveth",
+  "championName": "Bel'Veth",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    21,
+    18,
+    15,
+    12
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/21/18/15/12 s"
+  }
+}

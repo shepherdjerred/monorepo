@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1106",
+  "name": "Gustwalker Hatchling",
+  "description": "Jungle Companions: Summon a Gustwalker that assists you against monsters.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/1106.png",
+  "goldTotal": 450,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "450 gold"
+  }
+}

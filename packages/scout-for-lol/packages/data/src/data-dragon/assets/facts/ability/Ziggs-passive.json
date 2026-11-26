@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ziggs-passive",
+  "name": "Short Fuse",
+  "description": "Periodically, Ziggs' next basic attack deals bonus magic damage. This cooldown is reduced whenever Ziggs uses an ability.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ziggs-passive.png",
+  "slot": "passive",
+  "championKey": "Ziggs",
+  "championName": "Ziggs",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3042",
+  "name": "Muramana",
+  "description": "Awe: Gain 2% max Mana as bonus Attack Damage. Shock: Attacks against champions deal 1.2% max Mana as bonus physical damage On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "35"
+    },
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3042.png",
+  "goldTotal": 2900,
+  "goldCombine": 2900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

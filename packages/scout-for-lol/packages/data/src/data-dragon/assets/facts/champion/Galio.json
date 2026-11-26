@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Galio",
+  "name": "Galio",
+  "description": "Outside the gleaming city of Demacia, the stone colossus Galio keeps vigilant watch. Built as a bulwark against enemy mages, he often stands motionless for decades until the presence of powerful magic stirs him to life.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Galio-passive",
+      "name": "Colossal Smash",
+      "icon": "img/ability/Galio-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Galio-Q",
+      "name": "Winds of War",
+      "icon": "img/ability/Galio-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Galio-W",
+      "name": "Shield of Durand",
+      "icon": "img/ability/Galio-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Galio-E",
+      "name": "Justice Punch",
+      "icon": "img/ability/Galio-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Galio-R",
+      "name": "Hero's Entrance",
+      "icon": "img/ability/Galio-R.png"
+    }
+  ],
+  "icon": "img/champion/Galio.png",
+  "art": "img/champion-splash/Galio_0.jpg",
+  "title": "the Colossus",
+  "roles": [
+    "Tank",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Mage"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Volibear-W",
+  "name": "Frenzied Maul",
+  "description": "Volibear mauls an enemy, dealing 5/30/55/80/105 (+110% AD) (+6% bonus Health) physical damage and marking them for 8 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20/25/30/35/40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Volibear-W.png",
+  "slot": "W",
+  "championKey": "Volibear",
+  "championName": "Volibear",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    20,
+    25,
+    30,
+    35,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

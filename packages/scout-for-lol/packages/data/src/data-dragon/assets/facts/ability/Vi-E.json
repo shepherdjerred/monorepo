@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vi-E",
+  "name": "Relentless Force",
+  "description": "Vi's next Attack deals 10/35/60/85/110 (+110% AD) (+100% AP) physical damage to the target and enemies behind them.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "26/32/38/44/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vi-E.png",
+  "slot": "E",
+  "championKey": "Vi",
+  "championName": "Vi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "costByRank": [
+    26,
+    32,
+    38,
+    44,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1 s"
+  }
+}

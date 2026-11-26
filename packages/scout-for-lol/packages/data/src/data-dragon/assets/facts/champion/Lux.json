@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Lux",
+  "name": "Lux",
+  "description": "Luxanna Crownguard hails from Demacia, an insular realm where magical abilities are viewed with fear and suspicion.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Lux-passive",
+      "name": "Illumination",
+      "icon": "img/ability/Lux-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lux-Q",
+      "name": "Light Binding",
+      "icon": "img/ability/Lux-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lux-W",
+      "name": "Prismatic Barrier",
+      "icon": "img/ability/Lux-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lux-E",
+      "name": "Lucent Singularity",
+      "icon": "img/ability/Lux-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Lux-R",
+      "name": "Final Spark",
+      "icon": "img/ability/Lux-R.png"
+    }
+  ],
+  "icon": "img/champion/Lux.png",
+  "art": "img/champion-splash/Lux_0.jpg",
+  "title": "the Lady of Luminosity",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Cassiopeia-W",
+  "name": "Miasma",
+  "description": "Cassiopeia spews venom, leaving toxic clouds for 5 seconds. Enemies in the clouds take 20/25/30/35/40 (+10% AP) magic damage per second, are Poisoned, Grounded, and Slowed by 40/50/60/70/80%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Cassiopeia-W.png",
+  "slot": "W",
+  "championKey": "Cassiopeia",
+  "championName": "Cassiopeia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    22,
+    20,
+    18,
+    16
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/22/20/18/16 s"
+  }
+}

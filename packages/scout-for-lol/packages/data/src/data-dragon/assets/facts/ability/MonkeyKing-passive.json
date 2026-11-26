@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MonkeyKing-passive",
+  "name": "Stone Skin",
+  "description": "Wukong gains stacking armor and max health regeneration while fighting champions and monsters.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/MonkeyKing-passive.png",
+  "slot": "passive",
+  "championKey": "MonkeyKing",
+  "championName": "Wukong",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aphelios-R",
+  "name": "Moonlight Vigil",
+  "description": "Aphelios fires a concentrated blast of moonlight that explodes when it hits a champion, dealing 125/175/225 (+20% bonus AD) (+100% AP) physical damage to surrounding enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aphelios-R.png",
+  "slot": "R",
+  "championKey": "Aphelios",
+  "championName": "Aphelios",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1300,
+    1300,
+    1300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}

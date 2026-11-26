@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Akshan",
+  "name": "Akshan",
+  "description": "Raising an eyebrow in the face of danger, Akshan fights evil with dashing charisma, righteous vengeance, and a conspicuous lack of shirts.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Akshan-passive",
+      "name": "Dirty Fighting",
+      "icon": "img/ability/Akshan-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akshan-Q",
+      "name": "Avengerang",
+      "icon": "img/ability/Akshan-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akshan-W",
+      "name": "Going Rogue",
+      "icon": "img/ability/Akshan-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akshan-E",
+      "name": "Heroic Swing",
+      "icon": "img/ability/Akshan-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akshan-R",
+      "name": "Comeuppance",
+      "icon": "img/ability/Akshan-R.png"
+    }
+  ],
+  "icon": "img/champion/Akshan.png",
+  "art": "img/champion-splash/Akshan_0.jpg",
+  "title": "the Rogue Sentinel",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

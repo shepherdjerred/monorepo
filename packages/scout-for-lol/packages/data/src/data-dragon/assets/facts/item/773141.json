@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773141",
+  "name": "Sword of the Occult",
+  "description": "Demonic Pact: Grants 5 Attack Damage per stack.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771036",
+      "name": "Long Sword",
+      "icon": "img/item/771036.png"
+    }
+  ],
+  "icon": "img/item/773141.png",
+  "goldTotal": 1200,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1200 gold"
+  }
+}

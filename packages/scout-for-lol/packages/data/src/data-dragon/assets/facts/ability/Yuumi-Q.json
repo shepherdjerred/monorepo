@@ -1,0 +1,52 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yuumi-Q",
+  "name": "Prowling Projectile",
+  "description": "Yuumi summons an errant missile that deals 60/95/130/165/200/235 (+20% AP) magic damage to the first enemy and Slows the target for 20%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yuumi-Q.png",
+  "slot": "Q",
+  "championKey": "Yuumi",
+  "championName": "Yuumi",
+  "maxRank": 6,
+  "cooldownByRank": [
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5,
+    6.5
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6.5 s"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2143",
+  "name": "Juice of Vitality",
+  "description": "Juices do not stack with themselves, but you can have multiple different ones active. Active - Consume: Automatically activates on Combat Start.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2143.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

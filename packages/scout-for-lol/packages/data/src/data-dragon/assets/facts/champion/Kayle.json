@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kayle",
+  "name": "Kayle",
+  "description": "Born to a Targonian Aspect at the height of the Rune Wars, Kayle honored her mother's legacy by fighting for justice on wings of divine flame.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "670"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kayle-passive",
+      "name": "Divine Ascent",
+      "icon": "img/ability/Kayle-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayle-Q",
+      "name": "Radiant Blast",
+      "icon": "img/ability/Kayle-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayle-W",
+      "name": "Celestial Blessing",
+      "icon": "img/ability/Kayle-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayle-E",
+      "name": "Starfire Spellblade",
+      "icon": "img/ability/Kayle-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayle-R",
+      "name": "Divine Judgment",
+      "icon": "img/ability/Kayle-R.png"
+    }
+  ],
+  "icon": "img/champion/Kayle.png",
+  "art": "img/champion-splash/Kayle_0.jpg",
+  "title": "the Righteous",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

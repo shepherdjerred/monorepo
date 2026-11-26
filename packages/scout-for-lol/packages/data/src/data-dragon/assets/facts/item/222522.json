@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "222522",
+  "name": "Actualizer",
+  "description": "Mana Made Real: (0s) For 8 seconds, your mana is Empowered.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "90"
+    },
+    {
+      "label": "Mana",
+      "value": "300"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/222522.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

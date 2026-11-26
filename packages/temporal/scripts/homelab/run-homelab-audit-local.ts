@@ -71,7 +71,7 @@ async function main(): Promise<void> {
   console.warn(
     JSON.stringify({
       level: "info",
-      message: "Report accepted by Postal through shared delivery",
+      message: "Report accepted by Mail broker through shared delivery",
       subject: result.subject,
       messageId: result.messageId,
       deduplicated: result.deduplicated,

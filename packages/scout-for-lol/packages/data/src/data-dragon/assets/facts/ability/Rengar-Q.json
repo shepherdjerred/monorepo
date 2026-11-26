@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rengar-Q",
+  "name": "Savagery",
+  "description": "Rengar's next 2 Attacks gain 40% Attack Speed. The first Attack deals 20/55/90/125/160 (+100% AD) (+5% AD) physical damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rengar-Q.png",
+  "slot": "Q",
+  "championKey": "Rengar",
+  "championName": "Rengar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.25 s"
+  }
+}

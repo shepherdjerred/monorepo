@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "705",
+  "name": "Fortify",
+  "description": "Grants invulnerability to all Allied Turrets and causes them to attack 100% faster for 6 seconds. Summoner's Resolve: Turrets deal splash damage around their target.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerFortify_Jade.png",
+  "cooldownSeconds": 180,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "180 s"
+  }
+}

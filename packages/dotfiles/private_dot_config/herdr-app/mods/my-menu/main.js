@@ -4,7 +4,7 @@
 // "worktree" opens my-worktree, "takeover"/"migrate" opens my-takeover, and "priority" opens an inline priority list.
 
 import { View, div, svg } from "gpui-kit";
-import { v_flex, h_flex } from "gpui-base";
+import { v_flex, h_flex, Input, InputState, ScrollHandle } from "gpui-base";
 import {
   run,
   props,
@@ -21,6 +21,10 @@ import {
   setShared,
   checking,
   exec,
+  hc,
+  home,
+  notify,
+  window,
 } from "herdr";
 
 const PROVIDER = {
@@ -115,27 +119,17 @@ function writePriority(address, level) {
   setShared("agents.priorities", marks);
 }
 
-// Where a space is now: its first terminal's live folder, else where it was made.
-function place(s) {
-  const tabs = new Set((s.tabs ?? []).map((c) => c.id));
-  return panes().find((p) => tabs.has(p.tab) && p.cwd)?.cwd || s.folder;
-}
-
-// A space's checkout: "main" (a repo's own), "linked" (a worktree), or null.
-async function checkout(folder, on) {
-  const top = await exec("git", ["rev-parse", "--show-toplevel"], {
-    cwd: folder,
-    on,
-  });
-  const common = await exec(
-    "git",
-    ["rev-parse", "--path-format=absolute", "--git-common-dir"],
-    { cwd: folder, on },
+function spaceCheckout(id) {
+  const space = spaces().find((s) => s.id === id);
+  if (!space) return null;
+  const tabs = new Set((space.tabs ?? []).map((tab) => tab.id));
+  const folder =
+    panes().find((pane) => tabs.has(pane.tab) && pane.cwd)?.cwd || space.folder;
+  return (
+    shared("worktree.checkouts")?.[
+      JSON.stringify([space.machine ?? null, folder])
+    ] ?? null
   );
-  if (top.code !== 0 || common.code !== 0) return null;
-  return common.stdout.trim() === `${top.stdout.trim()}/.git`
-    ? "main"
-    : "linked";
 }
 
 function isPinned(address) {
@@ -155,6 +149,30 @@ const takeoverItems = (targetProps) => [
     ? [["Move to machine…", "migrate", { ...targetProps, pickMachine: true }]]
     : []),
 ];
+
+function agentName(term) {
+  return (
+    term?.labels?.["herdr.agent-name"] ||
+    term?.name ||
+    term?.template ||
+    term?.program?.name ||
+    term?.address
+  );
+}
+
+function restartItems(address, all = terminals()) {
+  if (!address || (!address.includes("/") && window()?.platform !== "macos"))
+    return [];
+  const term = all.find((k) => k.address === address);
+  if (/^(?:[a-z]:[/\\]|\\\\)/i.test(term?.cwd ?? "")) return [];
+  const provider =
+    PROVIDER[term?.report?.app] ??
+    PROVIDER[term?.program?.key] ??
+    fromArgv(term?.argv);
+  return term?.state === "live" && provider === "codex"
+    ? [["Restart Codex session", "agent.restart", { address }]]
+    : [];
+}
 
 function items(p, git) {
   p = p ?? {};
@@ -198,6 +216,7 @@ function items(p, git) {
         ...(isAgent
           ? takeoverItems({ terminal: term.address, pane: tg.pane })
           : []),
+        ...restartItems(tg.terminal, all),
         ...(term
           ? [
               toProgram
@@ -302,7 +321,10 @@ function items(p, git) {
           tab: tg.tab,
           space: tg.space,
         }),
-        ...(tg.tab ? [["Rename tab", "tab.rename", { id: tg.tab }]] : []),
+        ...restartItems(tg.address),
+        ...(tg.tab
+          ? [["Rename tab", "tab.rename", { id: tg.tab }]]
+          : [["Rename agent", "agent.rename", { address: tg.address }]]),
         ...(tg.space
           ? [["Rename space", "space.rename", { id: tg.space }]]
           : []),
@@ -331,19 +353,21 @@ function items(p, git) {
             ]
           : []),
         ...(tabPanes > 1 && tg.pane
-          ? [
-              ["Close pane", "pane.close", { pane: tg.pane }],
-              ["Close tab", "tab.close", { id: tg.tab }],
-            ]
-          : tg.tab
-            ? [["Close", "tab.close", { id: tg.tab }]]
-            : [["Close", "terminal.kill", { terminal: tg.address }]]),
+          ? [["Close pane", "pane.close", { pane: tg.pane }]]
+          : []),
+        ...(tg.tab
+          ? [["Close tab", "tab.close", { id: tg.tab }]]
+          : [["Close agent", "terminal.kill", { terminal: tg.address }]]),
         ...(spaceTabs > 1 && tg.space
           ? [["Close space", "space.close", { id: tg.space }]]
           : []),
       ];
     }
-    case "subagent":
+    case "subagent": {
+      const pane = panes().find((p) => p.terminal === tg.address);
+      const space = pane?.tab
+        ? spaces().find((s) => s.tabs.some((tab) => tab.id === pane.tab))
+        : null;
       return [
         ...(tg.hasPane
           ? [
@@ -355,8 +379,14 @@ function items(p, git) {
               ["Peek", "terminal.peek", { terminal: tg.address }],
               ["Keep as tab", "terminal.keep", { terminal: tg.address }],
             ]),
-        ["Close", "terminal.kill", { terminal: tg.address }],
+        ...restartItems(tg.address),
+        ...(pane?.tab
+          ? [["Rename tab", "tab.rename", { id: pane.tab }]]
+          : [["Rename agent", "agent.rename", { address: tg.address }]]),
+        ...(space ? [["Rename space", "space.rename", { id: space.id }]] : []),
+        ["Close agent", "terminal.kill", { terminal: tg.address }],
       ];
+    }
     default:
       return [
         ["New space", "space.new", {}],
@@ -397,6 +427,52 @@ function menuIcon(command, args) {
 }
 
 const isCloseCmd = (cmd) => cmd.endsWith(".close") || cmd === "terminal.kill";
+const separates = (list, i) =>
+  i > 0 &&
+  ((isCloseCmd(list[i][1]) && !isCloseCmd(list[i - 1][1])) ||
+    list[i][1] === "app.help" ||
+    (list[i][1] === "app.theme" && list[i - 1][1] !== "app.theme"));
+const menuHeight = (p) =>
+  p?.viewport ??
+  { agent: 390, subagent: 250, space: 330, tab: 290 }[p?.tab] ??
+  260;
+
+function confirmClose(command, args, address, label) {
+  const term = terminals().find((k) => k.address === address);
+  if (term?.state !== "live") {
+    notify({ title: "Agent already closed", level: "info" });
+    return;
+  }
+  const all = spaces();
+  const target =
+    command === "space.close"
+      ? all.find((s) => s.id === args.id)?.name
+      : command === "tab.close"
+        ? all.flatMap((s) => s.tabs).find((tab) => tab.id === args.id)?.name
+        : agentName(term);
+  const name = target || address;
+  const detail =
+    command === "space.close" || command === "tab.close"
+      ? `This ends all terminals and their agents in “${name}”.`
+      : `This ends “${name}” and its sub-agents.`;
+  openOverlay({
+    mod: "confirm",
+    kind: "dialog",
+    width: 420,
+    height: 160,
+    props: {
+      title: `${label}?`,
+      detail,
+      command: {
+        name: command,
+        args:
+          command === "space.close" || command === "tab.close"
+            ? { ...args, confirmed: true }
+            : args,
+      },
+    },
+  });
+}
 
 // The key bound to a command, for the hint on the right.
 function shortcut(name, args) {
@@ -422,22 +498,33 @@ export default class Menu extends View {
     this.sub = null;
     this.git = null;
     this.handle = cx.focus_handle();
+    this.scroll = ScrollHandle.new();
+    this.priorityScroll = ScrollHandle.new();
+    this.action = null;
+    this.busy = false;
+    this.error = null;
     if (checking()) return;
+    if (props()?.tab === "rename-agent") {
+      this.input = InputState.new({ value: props().value });
+      this.input.set_selected_range({ start: 0, end: props().value.length });
+      this.input.on("submit", (_e, cx) => this.rename(cx));
+      this.input.focus();
+      return;
+    }
     this.handle.focus();
     const p = props();
+    if (p?.tab === "restart-agent" && p.immediate) {
+      cx.spawn((cx) => this.restart(p, "wait", cx));
+      return;
+    }
     const spaceId =
       p?.tab === "space"
         ? p.target?.id
         : p?.tab === "agent"
           ? p.target?.space
           : null;
-    const space = spaceId && spaces().find((s) => s.id === spaceId);
-    const folder = space && place(space);
-    if (folder)
-      cx.spawn(async (cx) => {
-        this.git = await checkout(folder, space.machine).catch(() => null);
-        cx.notify();
-      });
+    // Keep the checkout actions stable until the next menu opens.
+    this.git = spaceId ? spaceCheckout(spaceId) : null;
   }
 
   priorityChoices() {
@@ -453,19 +540,43 @@ export default class Menu extends View {
     closeOverlay(props()?.overlay);
   }
 
-  choose(i, cx) {
-    const it = items(props(), this.git)[i];
+  choose(it, cx) {
+    const p = props();
     if (!it) return;
     if (it[1] === "priority") {
       const current = priorityOf(it[2].address);
       const idx = this.priorityChoices().findIndex((p) => p.id === current);
       this.sub = "priority";
       this.at = Math.max(0, idx);
+      this.priorityScroll.scroll_to_item(this.at + 1);
       cx.notify();
       return;
     }
-    closeOverlay(props()?.overlay);
-    if (it[1] === "worktree")
+    closeOverlay(p?.overlay);
+    if (isCloseCmd(it[1]) && (p?.tab === "agent" || p?.tab === "subagent"))
+      confirmClose(it[1], it[2], p.target.address, it[0]);
+    else if (it[1] === "agent.rename" || it[1] === "agent.restart") {
+      const term = terminals().find((k) => k.address === it[2].address);
+      if (term?.state !== "live") {
+        notify({ title: "Agent already closed", level: "info" });
+        return;
+      }
+      const rename = it[1] === "agent.rename";
+      openOverlay({
+        mod: "my-menu",
+        kind: "dialog",
+        modal: true,
+        width: 430,
+        height: rename ? 172 : 194,
+        props: {
+          tab: rename ? "rename-agent" : "restart-agent",
+          address: term.address,
+          value: agentName(term),
+          immediate:
+            !rename && (term.status === "idle" || term.status === "done"),
+        },
+      });
+    } else if (it[1] === "worktree")
       openOverlay({
         mod: "my-worktree",
         kind: "dialog",
@@ -487,6 +598,239 @@ export default class Menu extends View {
     else run(it[1], it[2]);
   }
 
+  async rename(cx) {
+    const p = props();
+    if (this.busy || !this.input) return;
+    this.busy = true;
+    this.error = null;
+    cx.notify();
+    try {
+      const name = this.input.value().trim();
+      if (name.length > 120) throw new Error("Use 120 characters or fewer.");
+      const result = await hc(["label", p.address, `herdr.agent-name=${name}`]);
+      if (result.code !== 0)
+        throw new Error("Herdr could not rename this agent.");
+      closeOverlay(p.overlay);
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : String(error);
+      this.busy = false;
+      cx.notify();
+    }
+  }
+
+  async restart(p, option, cx) {
+    if (this.busy) return;
+    this.busy = true;
+    this.error = null;
+    cx.notify();
+    try {
+      const term = terminals().find((k) => k.address === p.address);
+      if (term?.state !== "live") throw new Error("This session has closed.");
+      if (
+        option === "interrupt" &&
+        (term.status !== "working" || term.turn !== this.interruptTurn)
+      ) {
+        this.action = null;
+        throw new Error(
+          "The active turn changed. Choose how to restart again.",
+        );
+      }
+      const parts = p.address.split("/");
+      const terminal = parts.pop();
+      const on = parts[0] ?? null;
+      let folder = home();
+      if (on) {
+        const result = await exec(
+          "sh",
+          ["-c", 'printf "%s\\n%s\\n" "$(uname -s)" "$HOME"'],
+          { on },
+        );
+        const [platform, remoteHome] = result.stdout.trim().split("\n");
+        if (result.code !== 0 || platform !== "Darwin" || !remoteHome) {
+          throw new Error("Codex restart is available on macOS agent hosts.");
+        }
+        folder = remoteHome;
+      } else if (window()?.platform !== "macos") {
+        throw new Error("Codex restart is available on macOS agent hosts.");
+      }
+      const latest = terminals().find((k) => k.address === p.address);
+      if (
+        latest?.state !== "live" ||
+        (option === "interrupt" && latest.turn !== this.interruptTurn)
+      ) {
+        this.action = null;
+        throw new Error("This session changed. Open its menu to retry.");
+      }
+      const result = await exec(
+        `${folder}/bin/restart-codex-panes`,
+        [
+          "--terminal",
+          terminal,
+          "--worker",
+          ...(option === "interrupt"
+            ? [
+                "--interrupt-working",
+                ...(Number.isSafeInteger(this.interruptTurn)
+                  ? ["--expected-turn", String(this.interruptTurn)]
+                  : []),
+              ]
+            : []),
+          ...(option === "wait" ? ["--wait"] : []),
+        ],
+        { on, timeout: 90_000 },
+      );
+      const line = result.stdout
+        .trim()
+        .split("\n")
+        .find((entry) =>
+          /^(?:(restarted|skipped|failed):|Queued restart for )/.test(entry),
+        );
+      if (result.code !== 0 || /^(skipped|failed):/.test(line ?? "")) {
+        const failure = line ?? result.stderr.trim().split("\n")[0];
+        throw new Error(failure || "Codex could not restart this session.");
+      }
+      notify({
+        title: "Codex restart",
+        body: line ?? "Restart request accepted.",
+        level: "success",
+        action: { name: "agent.focus", args: { terminal: p.address } },
+      });
+      closeOverlay(p.overlay);
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : String(error);
+      this.busy = false;
+      cx.notify();
+    }
+  }
+
+  renderAgentAction(t, p) {
+    const rename = p.tab === "rename-agent";
+    const term = terminals().find((k) => k.address === p.address);
+    const working = term?.status === "working";
+    const interrupt = this.action === "confirm-interrupt" && working;
+    const button = (id, label, tone, action) =>
+      h_flex()
+        .id(id)
+        .h(32)
+        .px(12)
+        .items_center()
+        .rounded(8)
+        .bg(t.raised)
+        .text_color(t[tone])
+        .cursor_pointer()
+        .hover((s) => s.bg(t.hover))
+        .on_click((_e, cx) => action(cx))
+        .child(label);
+    const confirm = (cx) => {
+      if (this.busy || term?.state !== "live") return;
+      if (rename) void this.rename(cx);
+      else void this.restart(p, interrupt ? "interrupt" : "wait", cx);
+    };
+    const detail =
+      this.error ??
+      (this.busy
+        ? rename
+          ? "Saving…"
+          : "Requesting restart…"
+        : interrupt
+          ? `Interrupt the current turn in “${p.value}” and resume the same conversation?`
+          : working
+            ? `“${p.value}” is working. You can wait for this turn to finish.`
+            : `Resume “${p.value}” in the same terminal.`);
+    return v_flex()
+      .id("agent-action")
+      .track_focus(this.handle)
+      .size_full()
+      .min_h(0)
+      .p(18)
+      .gap(12)
+      .rounded(8)
+      .bg(t.popover)
+      .text_size(13)
+      .text_color(t.foreground)
+      .on_key_down((e, cx) => {
+        if (e.key === "escape") closeOverlay(p.overlay);
+        else if (e.key === "enter" && !rename) confirm(cx);
+        else return;
+        cx.stop_propagation();
+      })
+      .child(
+        div()
+          .text_size(15)
+          .font_semibold()
+          .child(
+            rename
+              ? "Rename agent"
+              : interrupt
+                ? "Interrupt current turn?"
+                : "Restart Codex session",
+          ),
+      )
+      .when(rename && this.input, (el) =>
+        el.child(
+          Input.new(this.input)
+            .h(36)
+            .px(10)
+            .rounded(9)
+            .border_1()
+            .border_color(t.input)
+            .bg(t.background),
+        ),
+      )
+      .when(!rename || this.error || this.busy, (el) =>
+        el.child(
+          div()
+            .flex_1()
+            .min_h(0)
+            .overflow_y_scrollbar()
+            .text_color(this.error ? t.blocked : t.muted)
+            .child(detail),
+        ),
+      )
+      .child(
+        h_flex()
+          .justify_end()
+          .gap(8)
+          .mt_auto()
+          .child(
+            button("action-cancel", "Cancel", "foreground", () =>
+              closeOverlay(p.overlay),
+            ),
+          )
+          .when(
+            !this.busy &&
+              working &&
+              Number.isSafeInteger(term.turn) &&
+              !rename &&
+              !interrupt,
+            (el) =>
+              el.child(
+                button("action-interrupt", "Interrupt…", "blocked", (cx) => {
+                  this.interruptTurn = term.turn;
+                  this.action = "confirm-interrupt";
+                  cx.notify();
+                }),
+              ),
+          )
+          .when(!this.busy && term?.state === "live", (el) =>
+            el.child(
+              button(
+                "action-confirm",
+                rename
+                  ? "Save"
+                  : interrupt
+                    ? "Interrupt and restart"
+                    : working
+                      ? "Wait until idle"
+                      : "Restart",
+                interrupt ? "blocked" : "accent",
+                confirm,
+              ),
+            ),
+          ),
+      );
+  }
+
   renderPriority(t) {
     const address = props()?.target?.address;
     const current = priorityOf(address);
@@ -495,7 +839,10 @@ export default class Menu extends View {
       .id("menu")
       .track_focus(this.handle)
       .w_full()
+      .h(Math.min(menuHeight(props()), choices.length * 30 + 36))
       .min_h(0)
+      .overflow_y_scrollbar()
+      .track_scroll(this.priorityScroll)
       .p(5)
       .bg(t.popover)
       .text_size(12.8)
@@ -508,6 +855,8 @@ export default class Menu extends View {
           this.sub = null;
           this.at = 0;
         } else return;
+        this.priorityScroll.scroll_to_item(this.at + 1);
+        cx.stop_propagation();
         cx.notify();
       })
       .child(
@@ -535,6 +884,7 @@ export default class Menu extends View {
           h_flex()
             .id(`pri-${p.id ?? "none"}`)
             .h(30)
+            .flex_none()
             .px(8)
             .gap(9)
             .rounded(7)
@@ -558,39 +908,49 @@ export default class Menu extends View {
 
   render() {
     const t = theme();
+    const p = props();
+    if (p?.tab === "rename-agent" || p?.tab === "restart-agent")
+      return this.renderAgentAction(t, p);
     if (this.sub === "priority") return this.renderPriority(t);
-    const list = items(props(), this.git);
+    const list = items(p, this.git);
+    const separators = list.filter((_item, i) => separates(list, i)).length;
     return v_flex()
       .id("menu")
       .track_focus(this.handle)
       .w_full()
+      .h(Math.min(menuHeight(p), list.length * 31 + separators * 9 + 10))
       .min_h(0)
+      .overflow_y_scrollbar()
+      .track_scroll(this.scroll)
       .p(5)
       .bg(t.popover)
       .text_size(12.8)
       .on_key_down((e, cx) => {
-        if (e.key === "down") this.at = (this.at + 1) % list.length;
+        if (e.key === "escape") closeOverlay(p.overlay);
+        else if (!list.length) return;
+        else if (e.key === "down") this.at = (this.at + 1) % list.length;
         else if (e.key === "up")
           this.at = (this.at + list.length - 1) % list.length;
-        else if (e.key === "enter") this.choose(this.at, cx);
-        else if (e.key === "escape") closeOverlay(props().overlay);
+        else if (e.key === "home") this.at = 0;
+        else if (e.key === "end") this.at = list.length - 1;
+        else if (e.key === "enter") this.choose(list[this.at], cx);
         else return;
+        this.scroll.scroll_to_item(this.at);
+        cx.stop_propagation();
         cx.notify();
       })
       .children(
         list.map((it, i) =>
           v_flex()
-            .when(
-              i > 0 &&
-                ((isCloseCmd(it[1]) && !isCloseCmd(list[i - 1][1])) ||
-                  it[1] === "app.help" ||
-                  (it[1] === "app.theme" && list[i - 1][1] !== "app.theme")),
-              (el) => el.child(div().mx(7).my(4).h(1).bg(t.border)),
+            .flex_none()
+            .when(separates(list, i), (el) =>
+              el.child(div().mx(7).my(4).h(1).bg(t.border)),
             )
             .child(
               h_flex()
                 .id(`mi-${i}`)
                 .h(31)
+                .flex_none()
                 .px(8)
                 .gap(9)
                 .rounded(7)
@@ -599,7 +959,7 @@ export default class Menu extends View {
                 .text_color(isCloseCmd(it[1]) ? t.blocked : t.foreground)
                 .when(i === this.at, (el) => el.bg(t.selected))
                 .hover((s) => s.bg(t.hover))
-                .on_click((_e, cx) => this.choose(i, cx))
+                .on_click((_e, cx) => this.choose(it, cx))
                 .child(
                   svg(menuIcon(it[1], it[2]))
                     .size(14)

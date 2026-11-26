@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "221043",
+  "name": "Recurve Bow",
+  "description": "Sting: Attacks deal 15 bonus physical damage On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/221043.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

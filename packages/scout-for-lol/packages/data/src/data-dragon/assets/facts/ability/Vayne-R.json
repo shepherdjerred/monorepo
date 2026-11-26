@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vayne-R",
+  "name": "Final Hour",
+  "description": "Vayne gains 35/50/65 Attack Damage for 8/10/12 seconds, extended by 4 seconds whenever a champion damaged by Vayne dies within 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vayne-R.png",
+  "slot": "R",
+  "championKey": "Vayne",
+  "championName": "Vayne",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    85,
+    70
+  ],
+  "costByRank": [
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/85/70 s"
+  }
+}

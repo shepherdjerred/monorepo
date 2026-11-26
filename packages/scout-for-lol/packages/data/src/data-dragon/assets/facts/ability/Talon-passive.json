@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Talon-passive",
+  "name": "Blade's End",
+  "description": "Talon's spells Wound champions and large monsters, stacking up to 3 times. When Talon attacks a champion with 3 stacks of Wound, they bleed for heavy damage over time.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Talon-passive.png",
+  "slot": "passive",
+  "championKey": "Talon",
+  "championName": "Talon",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

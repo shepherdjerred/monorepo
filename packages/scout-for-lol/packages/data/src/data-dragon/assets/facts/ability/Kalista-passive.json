@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kalista-passive",
+  "name": "Martial Poise",
+  "description": "Enter a movement command while winding up Kalista's basic attack or Pierce to lunge a short distance when she launches her attack.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kalista-passive.png",
+  "slot": "passive",
+  "championKey": "Kalista",
+  "championName": "Kalista",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

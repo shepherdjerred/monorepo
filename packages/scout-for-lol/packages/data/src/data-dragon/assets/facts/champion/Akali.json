@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Akali",
+  "name": "Akali",
+  "description": "Abandoning the Kinkou Order and her title of the Fist of Shadow, Akali now strikes alone, ready to be the deadly weapon her people need.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Akali-passive",
+      "name": "Assassin's Mark",
+      "icon": "img/ability/Akali-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akali-Q",
+      "name": "Five Point Strike",
+      "icon": "img/ability/Akali-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akali-W",
+      "name": "Twilight Shroud",
+      "icon": "img/ability/Akali-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akali-E",
+      "name": "Shuriken Flip",
+      "icon": "img/ability/Akali-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Akali-R",
+      "name": "Perfect Execution",
+      "icon": "img/ability/Akali-R.png"
+    }
+  ],
+  "icon": "img/champion/Akali.png",
+  "art": "img/champion-splash/Akali_0.jpg",
+  "title": "the Rogue Assassin",
+  "roles": [
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin"
+  }
+}

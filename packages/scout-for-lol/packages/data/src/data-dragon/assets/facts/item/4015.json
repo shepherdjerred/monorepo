@@ -1,0 +1,37 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4015",
+  "name": "Perplexity",
+  "description": "Giant Slayer: Deal up to 15% bonus damage against champions with greater max Health than you.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Move Speed",
+      "value": "5%"
+    },
+    {
+      "label": "Armor Penetration",
+      "value": "22%"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "30%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "500%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/4015.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

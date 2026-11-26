@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Thresh-R",
+  "name": "The Box",
+  "description": "Thresh creates a prison of spectral walls, Slowing champions by 99% for 2 seconds and dealing 200/350/500 (+100% AP) magic damage. Walls break after one collision, and after one is broken, the rest deal no damage and Slow for half duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Thresh-R.png",
+  "slot": "R",
+  "championKey": "Thresh",
+  "championName": "Thresh",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3858",
+  "name": "Relic Shield",
+  "description": "Grants 7 Ability Power, 50 Health, 50% Base Health Regen, 2 Gold Per 10 Seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "7"
+    },
+    {
+      "label": "Health",
+      "value": "50"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "50%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "2"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3858.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

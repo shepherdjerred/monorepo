@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Janna",
+  "name": "Janna",
+  "description": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "570"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Janna-passive",
+      "name": "Tailwind",
+      "icon": "img/ability/Janna-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Janna-Q",
+      "name": "Howling Gale",
+      "icon": "img/ability/Janna-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Janna-W",
+      "name": "Zephyr",
+      "icon": "img/ability/Janna-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Janna-E",
+      "name": "Eye Of The Storm",
+      "icon": "img/ability/Janna-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Janna-R",
+      "name": "Monsoon",
+      "icon": "img/ability/Janna-R.png"
+    }
+  ],
+  "icon": "img/champion/Janna.png",
+  "art": "img/champion-splash/Janna_0.jpg",
+  "title": "the Storm's Fury",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

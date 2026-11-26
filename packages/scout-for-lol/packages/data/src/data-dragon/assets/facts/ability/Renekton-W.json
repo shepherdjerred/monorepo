@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renekton-W",
+  "name": "Ruthless Predator",
+  "description": "Renekton's next Attack strikes twice, Stunning for 0.75 seconds and dealing a total of 10/40/70/100/130 (+150% AD) physical damage. Hitting a champion generates an additional 10 Fury.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renekton-W.png",
+  "slot": "W",
+  "championKey": "Renekton",
+  "championName": "Renekton",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14,
+    12,
+    10,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14/12/10/8 s"
+  }
+}

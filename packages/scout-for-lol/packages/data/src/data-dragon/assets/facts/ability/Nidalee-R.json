@@ -1,0 +1,42 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nidalee-R",
+  "name": "Aspect Of The Cougar",
+  "description": "Passive: While in Human Form, applying Hunted refreshes this Ability's Cooldown. Human Form: Nidalee transforms into Cougar Form, gaining melee Attacks and replacing her Active Abilities.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nidalee-R.png",
+  "slot": "R",
+  "championKey": "Nidalee",
+  "championName": "Nidalee",
+  "maxRank": 4,
+  "cooldownByRank": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3 s"
+  }
+}

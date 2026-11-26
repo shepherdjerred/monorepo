@@ -252,18 +252,6 @@
     "reason": "Rebuildable vulnerability database cache"
   },
   {
-    "namespace": "freshrss",
-    "name": "freshrss-data",
-    "backup": "enabled",
-    "reason": "FreshRSS application and subscription state"
-  },
-  {
-    "namespace": "freshrss",
-    "name": "freshrss-extensions",
-    "backup": "enabled",
-    "reason": "FreshRSS extension state"
-  },
-  {
     "namespace": "golink",
     "name": "pgdata-golink-postgresql-0",
     "backup": "enabled",

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vladimir-Q",
+  "name": "Transfusion",
+  "description": "Vladimir drains his target's lifeforce, dealing 80/100/120/140/160 (+60% AP) magic damage and restoring 20/25/30/35/40 (+35% AP) Health.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vladimir-Q.png",
+  "slot": "Q",
+  "championKey": "Vladimir",
+  "championName": "Vladimir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    7.9,
+    6.8,
+    5.7,
+    4.6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/7.9/6.8/5.7/4.6 s"
+  }
+}

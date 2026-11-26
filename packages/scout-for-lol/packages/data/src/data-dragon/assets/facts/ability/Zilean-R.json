@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zilean-R",
+  "name": "Chronoshift",
+  "description": "Zilean grants a protective time rune to an allied champion for 5 seconds. If the target would die, the rune rewinds their timeline, putting them into Stasis for 3 seconds, then reviving them and restoring 600/850/1100 (+200% AP) Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "125/150/175 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zilean-R.png",
+  "slot": "R",
+  "championKey": "Zilean",
+  "championName": "Zilean",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    90,
+    60
+  ],
+  "costByRank": [
+    125,
+    150,
+    175
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/90/60 s"
+  }
+}

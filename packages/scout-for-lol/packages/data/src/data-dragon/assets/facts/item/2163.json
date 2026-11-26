@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2163",
+  "name": "Bandle Juice of Haste",
+  "description": "Drink to permanently gain 10+ 5% Ability Haste.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2163.png",
+  "goldTotal": 1000,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Bard",
+  "name": "Bard",
+  "description": "A traveler from beyond the stars, Bard is an agent of serendipity who fights to maintain a balance where life can endure the indifference of chaos.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Bard-passive",
+      "name": "Traveler's Call",
+      "icon": "img/ability/Bard-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Bard-Q",
+      "name": "Cosmic Binding",
+      "icon": "img/ability/Bard-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Bard-W",
+      "name": "Caretaker's Shrine",
+      "icon": "img/ability/Bard-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Bard-E",
+      "name": "Magical Journey",
+      "icon": "img/ability/Bard-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Bard-R",
+      "name": "Tempered Fate",
+      "icon": "img/ability/Bard-R.png"
+    }
+  ],
+  "icon": "img/champion/Bard.png",
+  "art": "img/champion-splash/Bard_0.jpg",
+  "title": "the Wandering Caretaker",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hwei-E",
+  "name": "Subject: Torment",
+  "description": "Hwei paints visions of torment that control enemies. Grim Visage Hwei launches a terrifying face that causes the first enemy hit to Flee for 1/1.125/1.25/1.375/1.5 second(s) and take 70/110/150/190/230 (+65% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hwei-E.png",
+  "slot": "E",
+  "championKey": "Hwei",
+  "championName": "Hwei",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiddlesticks-Q",
+  "name": "Terrify",
+  "description": "Passive: While unseen and out of combat or impersonating an Effigy, damaging an enemy with an ability Fears them for 1.2/1.4/1.6/1.8/2 second(s).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "575"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiddlesticks-Q.png",
+  "slot": "Q",
+  "championKey": "Fiddlesticks",
+  "championName": "Fiddlesticks",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14.5,
+    14,
+    13.5,
+    13
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    575,
+    575,
+    575,
+    575,
+    575
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14.5/14/13.5/13 s"
+  }
+}

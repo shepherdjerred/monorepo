@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kennen-E",
+  "name": "Lightning Rush",
+  "description": "Kennen turns into a ball of lightning, gaining 100% Move Speed, dealing 80/120/160/200/240 (+80% AP) magic damage to enemies he passes through, and becoming Ghosted for 2 seconds. If Kennen damages at least one enemy, he gains 40 Energy.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "170"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kennen-E.png",
+  "slot": "E",
+  "championKey": "Kennen",
+  "championName": "Kennen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    170,
+    170,
+    170,
+    170,
+    170
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

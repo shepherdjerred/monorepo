@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Viego",
+  "name": "Viego",
+  "description": "Once ruler of a long-lost kingdom, Viego perished over a thousand years ago when his attempt to bring his wife back from the dead triggered the magical catastrophe known as the Ruination.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "200"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Viego-passive",
+      "name": "Sovereign's Domination",
+      "icon": "img/ability/Viego-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viego-Q",
+      "name": "Blade of the Ruined King",
+      "icon": "img/ability/Viego-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viego-W",
+      "name": "Spectral Maw",
+      "icon": "img/ability/Viego-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viego-E",
+      "name": "Harrowed Path",
+      "icon": "img/ability/Viego-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Viego-R",
+      "name": "Heartbreaker",
+      "icon": "img/ability/Viego-R.png"
+    }
+  ],
+  "icon": "img/champion/Viego.png",
+  "art": "img/champion-splash/Viego_0.jpg",
+  "title": "The Ruined King",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mel-E",
+  "name": "Solar Snare",
+  "description": "Mel fires a radiating orb, Rooting enemies at its center for 0.8/0.85/0.9/0.95/1 to 1.6/1.75/1.9/2.05/2.2 seconds (based on distance travelled) and dealing 60/105/150/195/240 (+70% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/50/60/70/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Mel-E.png",
+  "slot": "E",
+  "championKey": "Mel",
+  "championName": "Mel",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10.5,
+    10,
+    9.5,
+    9
+  ],
+  "costByRank": [
+    40,
+    50,
+    60,
+    70,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10.5/10/9.5/9 s"
+  }
+}

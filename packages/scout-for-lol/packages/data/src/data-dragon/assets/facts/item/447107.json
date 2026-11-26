@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447107",
+  "name": "Decapitator",
+  "description": "Attacks and Non-Ultimate Abilities grant stacks.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "80"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "50%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "8%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447107.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

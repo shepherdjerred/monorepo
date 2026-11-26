@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Neeko-R",
+  "name": "Pop Blossom",
+  "description": "After a delay Neeko leaps into the air, Knocking Up all nearby enemies for 0.6 seconds. She then crashes down, dealing 150/350/550 (+120% AP) magic damage to all nearby enemies and Stunning them for 0.75 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Neeko-R.png",
+  "slot": "R",
+  "championKey": "Neeko",
+  "championName": "Neeko",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    105,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/105/90 s"
+  }
+}

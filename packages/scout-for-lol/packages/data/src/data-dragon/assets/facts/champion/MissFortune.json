@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "MissFortune",
+  "name": "Miss Fortune",
+  "description": "A Bilgewater captain famed for her looks but feared for her ruthlessness, Sarah Fortune paints a stark figure among the hardened criminals of the port city.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "625"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "MissFortune-passive",
+      "name": "Love Tap",
+      "icon": "img/ability/MissFortune-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MissFortune-Q",
+      "name": "Double Up",
+      "icon": "img/ability/MissFortune-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MissFortune-W",
+      "name": "Strut",
+      "icon": "img/ability/MissFortune-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MissFortune-E",
+      "name": "Make It Rain",
+      "icon": "img/ability/MissFortune-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MissFortune-R",
+      "name": "Bullet Time",
+      "icon": "img/ability/MissFortune-R.png"
+    }
+  ],
+  "icon": "img/champion/MissFortune.png",
+  "art": "img/champion-splash/MissFortune_0.jpg",
+  "title": "the Bounty Hunter",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

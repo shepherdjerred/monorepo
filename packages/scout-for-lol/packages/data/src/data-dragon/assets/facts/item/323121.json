@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "323121",
+  "name": "Fimbulwinter",
+  "description": "Awe: Gain Health. Everlasting: (0s) Immobilizing or Slowing (Melee only) an enemy champion grants a Shield for 3 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "550"
+    },
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/323121.png",
+  "goldTotal": 2400,
+  "goldCombine": 2400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2400 gold"
+  }
+}

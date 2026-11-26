@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Syndra-E",
+  "name": "Scatter the Weak",
+  "description": "Syndra projects a wave of force, Knocking Back enemies and Dark Spheres and dealing 60/95/130/165/200 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Syndra-E.png",
+  "slot": "E",
+  "championKey": "Syndra",
+  "championName": "Syndra",
+  "maxRank": 5,
+  "cooldownByRank": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "17/16.5/16/15.5/15 s"
+  }
+}

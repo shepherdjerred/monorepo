@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Thresh",
+  "name": "Thresh",
+  "description": "Sadistic and cunning, Thresh is an ambitious and restless specter of the Shadow Isles.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "450"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Thresh-passive",
+      "name": "Damnation",
+      "icon": "img/ability/Thresh-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Thresh-Q",
+      "name": "Death Sentence",
+      "icon": "img/ability/Thresh-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Thresh-W",
+      "name": "Dark Passage",
+      "icon": "img/ability/Thresh-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Thresh-E",
+      "name": "Flay",
+      "icon": "img/ability/Thresh-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Thresh-R",
+      "name": "The Box",
+      "icon": "img/ability/Thresh-R.png"
+    }
+  ],
+  "icon": "img/champion/Thresh.png",
+  "art": "img/champion-splash/Thresh_0.jpg",
+  "title": "the Chain Warden",
+  "roles": [
+    "Support",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Tank"
+  }
+}

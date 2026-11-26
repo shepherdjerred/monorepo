@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9300",
+  "name": "Meow Meow",
+  "description": "Jinx shoots out a barrage of bullets in a target direction.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9300.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

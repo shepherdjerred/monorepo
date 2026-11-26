@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sejuani-R",
+  "name": "Glacial Prison",
+  "description": "Sejuani throws her True Ice bola, Stunning and revealing the first enemy champion hit for 1 second and dealing 125/150/175 (+40% AP) magic damage. If the bola travels at least 25% of its range, it Stuns and reveals for 1.5 seconds instead.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sejuani-R.png",
+  "slot": "R",
+  "championKey": "Sejuani",
+  "championName": "Sejuani",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    105,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1300,
+    1300,
+    1300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/105/90 s"
+  }
+}

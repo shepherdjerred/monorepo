@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Janna-R",
+  "name": "Monsoon",
+  "description": "Janna summons a magical monsoon, Knocking Back nearby enemies then healing nearby allies for 300/450/600 (+150% AP) Health over 3 seconds. Moving or using an Ability ends the monsoon early.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "725"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Janna-R.png",
+  "slot": "R",
+  "championKey": "Janna",
+  "championName": "Janna",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    115,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    725,
+    725,
+    725
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/115/100 s"
+  }
+}

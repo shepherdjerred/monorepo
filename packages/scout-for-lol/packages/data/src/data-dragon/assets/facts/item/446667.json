@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "446667",
+  "name": "Radiant Virtue",
+  "description": "Judgement: Gain 30 Ultimate Haste. Guiding Light: Upon casting your Ultimate you Transcend, increasing your Max Health by for 9 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Armor",
+      "value": "35"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "35"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "12%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/446667.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

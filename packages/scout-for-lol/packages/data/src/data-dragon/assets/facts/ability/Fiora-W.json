@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiora-W",
+  "name": "Riposte",
+  "description": "Fiora parries all incoming damage, disables, and negative effects for 0.75 seconds, then stabs. The stab deals 110/150/190/230/270 (+100% AP) magic damage to the first champion hit and Slows Move Speed by 50% and Attack Speed by 25% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiora-W.png",
+  "slot": "W",
+  "championKey": "Fiora",
+  "championName": "Fiora",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    22,
+    20,
+    18,
+    16
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    750,
+    750,
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/22/20/18/16 s"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rengar-E",
+  "name": "Bola Strike",
+  "description": "Rengar throws a bola, dealing 55/100/145/190/235 (+80% bonus AD) physical damage to the first enemy hit, revealing and Slowing them by 30/45/60/75/90% for 1.75 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rengar-E.png",
+  "slot": "E",
+  "championKey": "Rengar",
+  "championName": "Rengar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.25 s"
+  }
+}

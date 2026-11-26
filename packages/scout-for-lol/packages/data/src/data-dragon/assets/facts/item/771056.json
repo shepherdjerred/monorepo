@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771056",
+  "name": "Doran's Ring",
+  "description": "Passive: Restores 4 Mana upon killing a unit.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "60"
+    },
+    {
+      "label": "Ability Power",
+      "value": "15"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "3"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771056.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

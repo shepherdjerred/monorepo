@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ivern-R",
+  "name": "Daisy!",
+  "description": "Ivern summons his sentinel friend Daisy to leap into the fray for 45 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ivern-R.png",
+  "slot": "R",
+  "championKey": "Ivern",
+  "championName": "Ivern",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    130,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/130/120 s"
+  }
+}

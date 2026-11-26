@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1521",
+  "name": "Fortification",
+  "description": "",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/1521.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

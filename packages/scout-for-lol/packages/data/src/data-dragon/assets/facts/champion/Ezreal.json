@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ezreal",
+  "name": "Ezreal",
+  "description": "A dashing adventurer, unknowingly gifted in the magical arts, Ezreal raids long-lost catacombs, tangles with ancient curses, and overcomes seemingly impossible odds with ease.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ezreal-passive",
+      "name": "Rising Spell Force",
+      "icon": "img/ability/Ezreal-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ezreal-Q",
+      "name": "Mystic Shot",
+      "icon": "img/ability/Ezreal-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ezreal-W",
+      "name": "Essence Flux",
+      "icon": "img/ability/Ezreal-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ezreal-E",
+      "name": "Arcane Shift",
+      "icon": "img/ability/Ezreal-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ezreal-R",
+      "name": "Trueshot Barrage",
+      "icon": "img/ability/Ezreal-R.png"
+    }
+  ],
+  "icon": "img/champion/Ezreal.png",
+  "art": "img/champion-splash/Ezreal_0.jpg",
+  "title": "the Prodigal Explorer",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

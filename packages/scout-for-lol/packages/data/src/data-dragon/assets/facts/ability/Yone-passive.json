@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yone-passive",
+  "name": "Way of the Hunter",
+  "description": "Yone deals magic damage with every second Attack. In addition, his critical strike chance is increased.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Yone-passive.png",
+  "slot": "passive",
+  "championKey": "Yone",
+  "championName": "Yone",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

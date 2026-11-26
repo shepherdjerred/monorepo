@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiddlesticks-passive",
+  "name": "A Harmless Scarecrow",
+  "description": "Fiddlesticks' trinket is replaced by scarecrow effigies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Fiddlesticks-passive.png",
+  "slot": "passive",
+  "championKey": "Fiddlesticks",
+  "championName": "Fiddlesticks",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

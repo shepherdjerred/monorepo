@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773050",
+  "name": "Stark's Fervor",
+  "description": "Aura - Triumph: Grants nearby allied champions 10% Life Steal and 20 Attack Damage.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773067",
+      "name": "Kindlegem",
+      "icon": "img/item/773067.png"
+    },
+    {
+      "kind": "item",
+      "key": "771053",
+      "name": "Vampiric Scepter",
+      "icon": "img/item/771053.png"
+    }
+  ],
+  "icon": "img/item/773050.png",
+  "goldTotal": 2550,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2550 gold"
+  }
+}

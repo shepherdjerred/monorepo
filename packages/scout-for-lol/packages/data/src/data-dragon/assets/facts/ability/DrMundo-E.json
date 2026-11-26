@@ -1,0 +1,40 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "DrMundo-E",
+  "name": "Blunt Force Trauma",
+  "description": "Passive: Dr Mundo gains 2/2.3/2.6/2.9/3.2% max Health Attack Damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/DrMundo-E.png",
+  "slot": "E",
+  "championKey": "DrMundo",
+  "championName": "Dr. Mundo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8.25,
+    7.5,
+    6.75,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8.25/7.5/6.75/6 s"
+  }
+}

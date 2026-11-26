@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Malphite-passive",
+  "name": "Granite Shield",
+  "description": "Malphite is shielded by a layer of rock which absorbs damage up to 10% of his maximum Health. If Malphite has not been hit for a few seconds, this effect recharges.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Malphite-passive.png",
+  "slot": "passive",
+  "championKey": "Malphite",
+  "championName": "Malphite",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

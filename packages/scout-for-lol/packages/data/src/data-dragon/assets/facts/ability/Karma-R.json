@@ -1,0 +1,42 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karma-R",
+  "name": "Mantra",
+  "description": "Karma empowers her next Ability used within 8 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karma-R.png",
+  "slot": "R",
+  "championKey": "Karma",
+  "championName": "Karma",
+  "maxRank": 4,
+  "cooldownByRank": [
+    40,
+    38,
+    36,
+    34
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "40/38/36/34 s"
+  }
+}

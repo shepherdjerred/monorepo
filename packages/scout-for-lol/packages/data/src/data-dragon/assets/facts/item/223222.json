@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223222",
+  "name": "Mikael's Blessing",
+  "description": "ACTIVE: (0s) Purify: Restore Health and Remove all crowd control debuffs (except Knockups and Suppression) from an ally champion.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "12%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223222.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

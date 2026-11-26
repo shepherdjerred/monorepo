@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "709",
+  "name": "Rally",
+  "description": "Summons a temporary beacon which increases allied Attack damage in an area. Summoner's Wrath: Rally additionally gives Ability Power.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerRally_Jade.png",
+  "cooldownSeconds": 270,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "270 s"
+  }
+}

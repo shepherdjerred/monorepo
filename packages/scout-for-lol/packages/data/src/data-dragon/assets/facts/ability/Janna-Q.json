@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Janna-Q",
+  "name": "Howling Gale",
+  "description": "Janna summons a tornado that grows stronger over 3 seconds then blows along its path.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90/95/100/105/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1075"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Janna-Q.png",
+  "slot": "Q",
+  "championKey": "Janna",
+  "championName": "Janna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    14,
+    14,
+    14,
+    14
+  ],
+  "costByRank": [
+    90,
+    95,
+    100,
+    105,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1075,
+    1075,
+    1075,
+    1075,
+    1075
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14 s"
+  }
+}

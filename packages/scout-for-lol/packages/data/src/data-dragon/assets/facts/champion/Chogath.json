@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Chogath",
+  "name": "Cho'Gath",
+  "description": "From the moment Cho'Gath first emerged into the harsh light of Runeterra's sun, the beast was driven by the most pure and insatiable hunger.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "644"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Chogath-passive",
+      "name": "Carnivore",
+      "icon": "img/ability/Chogath-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Chogath-Q",
+      "name": "Rupture",
+      "icon": "img/ability/Chogath-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Chogath-W",
+      "name": "Feral Scream",
+      "icon": "img/ability/Chogath-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Chogath-E",
+      "name": "Vorpal Spikes",
+      "icon": "img/ability/Chogath-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Chogath-R",
+      "name": "Feast",
+      "icon": "img/ability/Chogath-R.png"
+    }
+  ],
+  "icon": "img/champion/Chogath.png",
+  "art": "img/champion-splash/Chogath_0.jpg",
+  "title": "the Terror of the Void",
+  "roles": [
+    "Tank",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Mage"
+  }
+}

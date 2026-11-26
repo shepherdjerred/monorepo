@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ekko",
+  "name": "Ekko",
+  "description": "A prodigy from the rough streets of Zaun, Ekko is able to manipulate time to twist any situation to his advantage.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "655"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ekko-passive",
+      "name": "Z-Drive Resonance",
+      "icon": "img/ability/Ekko-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ekko-Q",
+      "name": "Timewinder",
+      "icon": "img/ability/Ekko-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ekko-W",
+      "name": "Parallel Convergence",
+      "icon": "img/ability/Ekko-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ekko-E",
+      "name": "Phase Dive",
+      "icon": "img/ability/Ekko-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ekko-R",
+      "name": "Chronobreak",
+      "icon": "img/ability/Ekko-R.png"
+    }
+  ],
+  "icon": "img/champion/Ekko.png",
+  "art": "img/champion-splash/Ekko_0.jpg",
+  "title": "the Boy Who Shattered Time",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

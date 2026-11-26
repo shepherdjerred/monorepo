@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3157",
+  "name": "Zhonya's Hourglass",
+  "description": "Time Stop: Enter Stasis for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "105"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1058",
+      "name": "Needlessly Large Rod",
+      "icon": "img/item/1058.png"
+    },
+    {
+      "kind": "item",
+      "key": "2420",
+      "name": "Seeker's Armguard",
+      "icon": "img/item/2420.png"
+    }
+  ],
+  "icon": "img/item/3157.png",
+  "goldTotal": 3250,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3250 gold"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9279",
+  "name": "Bunny Prime Ballista",
+  "description": "Fires a cone of projectiles with bonus crit chance in a random direction.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9279.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

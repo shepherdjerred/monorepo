@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KogMaw-Q",
+  "name": "Caustic Spittle",
+  "description": "Passive: Kog'Maw gains 5/10/15/20/25% Attack Speed. Active: Kog'Maw vomits a corrosive projectile that deals 80/125/170/215/260 (+90% AP) magic damage to the first enemy hit and shreds 16/20/24/28/32% Armor and Magic Resist for 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1175"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KogMaw-Q.png",
+  "slot": "Q",
+  "championKey": "KogMaw",
+  "championName": "Kog'Maw",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1175,
+    1175,
+    1175,
+    1175,
+    1175
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

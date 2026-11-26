@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773072",
+  "name": "The Bloodthirster",
+  "description": "Bloodthirst: Grants 1 Attack Damage and 0.2% Life Steal per stack (max 30 Attack Damage and 6% Life Steal).",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "70"
+    },
+    {
+      "label": "Life Steal",
+      "value": "12%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771038",
+      "name": "B. F. Sword",
+      "icon": "img/item/771038.png"
+    },
+    {
+      "kind": "item",
+      "key": "771053",
+      "name": "Vampiric Scepter",
+      "icon": "img/item/771053.png"
+    }
+  ],
+  "icon": "img/item/773072.png",
+  "goldTotal": 3200,
+  "goldCombine": 850,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3200 gold"
+  }
+}

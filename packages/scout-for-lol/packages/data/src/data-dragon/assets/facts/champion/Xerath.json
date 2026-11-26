@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Xerath",
+  "name": "Xerath",
+  "description": "Xerath is an Ascended Magus of ancient Shurima, a being of arcane energy writhing in the broken shards of a magical sarcophagus. For millennia, he was trapped beneath the desert sands, but the rise of Shurima freed him from his ancient prison.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "575"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Xerath-passive",
+      "name": "Mana Surge",
+      "icon": "img/ability/Xerath-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xerath-Q",
+      "name": "Arcanopulse",
+      "icon": "img/ability/Xerath-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xerath-W",
+      "name": "Eye of Destruction",
+      "icon": "img/ability/Xerath-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xerath-E",
+      "name": "Shocking Orb",
+      "icon": "img/ability/Xerath-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xerath-R",
+      "name": "Rite of the Arcane",
+      "icon": "img/ability/Xerath-R.png"
+    }
+  ],
+  "icon": "img/champion/Xerath.png",
+  "art": "img/champion-splash/Xerath_0.jpg",
+  "title": "the Magus Ascendant",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

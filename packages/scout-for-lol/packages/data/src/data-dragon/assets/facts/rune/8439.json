@@ -1,0 +1,28 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8439",
+  "name": "Aftershock",
+  "description": "After immobilizing an enemy champion gain defenses and later deal a burst of magic damage around you.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Damage",
+      "value": "25 - 120 (+8% of your bonus health)"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/VeteranAftershock.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

@@ -1,18 +1,22 @@
 import { useEffect } from "react";
 import {
   Outlet,
+  useLocation,
   useParams,
   useRoutes,
   useSearchParams,
   type RouteObject,
 } from "react-router";
 import {
-  Field,
-  HeaderBar,
+  Card,
+  CardToolbar,
+  PageBody,
+  SearchField,
   ShellFrame,
   type ThemeStore,
 } from "@shepherdjerred/console-ui";
 import { useDeployments, useDocument } from "./api.ts";
+import { DeploymentHeading } from "./deployment-heading.tsx";
 import { Editor } from "./editor.tsx";
 import { FlagTable } from "./flag-table.tsx";
 import {
@@ -24,8 +28,15 @@ import {
   withQuery,
   type Route,
 } from "./model.ts";
-import { DeploymentPicker, DeploymentSidebar } from "./sidebar.tsx";
+import { viewOf, viewTitle } from "./nav.ts";
+import { FlagsPalette } from "./palette.tsx";
+import { DeploymentSidebar, FlagsTopBar } from "./sidebar.tsx";
 import { ThemeContext } from "./theme-context.ts";
+import { ComparePage } from "./views/compare-page.tsx";
+import { itemCount, totalCounts } from "./views/drift-model.ts";
+import { DriftPage } from "./views/drift-page.tsx";
+import { HomePage } from "./views/home-page.tsx";
+import { useDrift, useSummaryRefresh } from "./views/views-api.ts";
 
 /** The deployment and flag the URL names; undefined on pages outside a deployment. */
 function useDeploymentRoute(): Route | undefined {
@@ -34,52 +45,44 @@ function useDeploymentRoute(): Route | undefined {
   return key === undefined ? { catalog, stage } : { catalog, stage, key };
 }
 
-/** The sidebar, the narrow-width picker and the tab title around every page. */
+/** The navigation, the palette and the tab title around every page. */
 function Shell({ theme }: { theme: ThemeStore }) {
   const route = useDeploymentRoute();
+  const view = viewOf(useLocation().pathname);
   const deployments = useDeployments();
+  const drift = useDrift();
+  useSummaryRefresh();
   const ids = deployments.data?.map((deployment) => deployment.id);
   const counts = new Map(
     (deployments.data ?? []).map(
       (deployment) => [deployment.id, deployment.flagCount] as const,
     ),
   );
-  const title = pageTitle(route);
+  const title = view === undefined ? pageTitle(route) : viewTitle(view);
   useEffect(() => {
     globalThis.document.title = title;
   }, [title]);
+  const navigation = {
+    ids,
+    counts,
+    route,
+    view,
+    driftCount:
+      drift.data === undefined
+        ? undefined
+        : itemCount(totalCounts(drift.data.deployments)),
+    status: deployments.isPending ? "Loading deployments…" : undefined,
+    failure: deployments.isError ? deployments.error.message : undefined,
+    theme,
+  };
 
-  return (
-    <ShellFrame
-      sidebar={
-        <DeploymentSidebar
-          ids={ids}
-          counts={counts}
-          route={route}
-          theme={theme}
-          status={deployments.isPending ? "Loading deployments…" : undefined}
-          failure={deployments.isError ? deployments.error.message : undefined}
-        />
-      }
-    >
-      <main
-        className="fl-workspace"
-        data-flag={route?.key === undefined ? undefined : ""}
-      >
-        {ids === undefined ? null : (
-          <DeploymentPicker ids={ids} route={route} />
-        )}
-        <Outlet />
-      </main>
-    </ShellFrame>
-  );
-}
-
-function Home() {
   return (
     <>
-      <HeaderBar title="Flags" />
-      <p className="fl-empty">Choose a deployment.</p>
+      <FlagsTopBar {...navigation} />
+      <ShellFrame sidebar={<DeploymentSidebar {...navigation} />}>
+        <Outlet />
+      </ShellFrame>
+      <FlagsPalette />
     </>
   );
 }
@@ -112,20 +115,22 @@ function Deployment({
   const title = `${catalog} / ${stage}`;
   if (document.isPending) {
     return (
-      <>
-        <HeaderBar title={title} />
-        <p className="fl-empty">Loading flags…</p>
-      </>
+      <PageBody>
+        <DeploymentHeading catalog={catalog} stage={stage} />
+        <p className="ui-state" role="status">
+          Loading flags…
+        </p>
+      </PageBody>
     );
   }
   if (document.isError) {
     return (
-      <>
-        <HeaderBar title={title} />
-        <p className="fl-empty" role="alert">
+      <PageBody>
+        <DeploymentHeading catalog={catalog} stage={stage} />
+        <p className="ui-state" role="alert">
           {document.error.message}
         </p>
-      </>
+      </PageBody>
     );
   }
   // While the next deployment loads, the previous table stays on screen,
@@ -142,51 +147,49 @@ function Deployment({
   }
 
   return (
-    <>
-      <HeaderBar
-        title={title}
+    <PageBody>
+      <DeploymentHeading
+        catalog={catalog}
+        stage={stage}
         meta={
           loading ? "Loading…" : `Revision ${String(document.data.revision)}`
         }
       />
-      <div className="fl-body" aria-busy={loading ? true : undefined}>
-        <section
-          className="fl-list"
-          aria-label={`${title} flags`}
-          inert={loading}
-        >
-          <div className="ui-toolbar">
-            <Field label="Search" layout="inline">
-              {(control) => (
-                <input
-                  {...control}
-                  type="search"
-                  value={query}
-                  placeholder="Filter flags by key"
-                  autoComplete="off"
-                  spellCheck={false}
-                  onChange={(event) => {
-                    search(event.target.value);
-                  }}
-                />
-              )}
-            </Field>
-            <span className="ui-count" aria-live="polite">
-              {shown.length} of {flags.length}
-            </span>
-          </div>
-          {shown.length === 0 ? (
-            <p className="fl-empty">No flags match “{query.trim()}”.</p>
-          ) : (
-            <FlagTable
-              catalog={listed.catalog}
-              stage={listed.stage}
-              flags={shown}
-              selectedKey={loading ? undefined : flagKey}
-              query={query}
-            />
-          )}
-        </section>
+      <div
+        className="fl-body"
+        data-flag={flagKey === undefined ? undefined : ""}
+        aria-busy={loading ? true : undefined}
+      >
+        <div className="fl-list" inert={loading}>
+          <Card label={`${title} flags`}>
+            <CardToolbar>
+              <SearchField
+                label="Search"
+                value={query}
+                placeholder="Filter flags by key"
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => {
+                  search(event.target.value);
+                }}
+              />
+              <span className="ui-count" aria-live="polite">
+                {shown.length} of {flags.length}
+              </span>
+            </CardToolbar>
+            {shown.length === 0 ? (
+              <p className="ui-state">No flags match “{query.trim()}”.</p>
+            ) : (
+              <FlagTable
+                catalog={listed.catalog}
+                stage={listed.stage}
+                flags={shown}
+                selectedKey={loading ? undefined : flagKey}
+                query={query}
+              />
+            )}
+          </Card>
+        </div>
         {flagKey === undefined ? (
           <p className="fl-detail fl-empty">Select a flag.</p>
         ) : loading ? (
@@ -202,22 +205,24 @@ function Deployment({
           />
         )}
       </div>
-    </>
+    </PageBody>
   );
 }
 
 /**
- * The pages inside the shell. A new page such as `/compare` or `/drift` is
- * one more entry here; static paths outrank the `:catalog/:stage` patterns.
+ * The pages inside the shell. Static paths such as `/compare` outrank the
+ * `:catalog/:stage` patterns.
  */
 const PAGES: RouteObject[] = [
-  { index: true, element: <Home /> },
+  { index: true, element: <HomePage /> },
+  { path: "compare", element: <ComparePage /> },
+  { path: "drift", element: <DriftPage /> },
   { path: ":catalog/:stage", element: <DeploymentPage /> },
   { path: ":catalog/:stage/:key", element: <DeploymentPage /> },
-  { path: "*", element: <Home /> },
+  { path: "*", element: <HomePage /> },
 ];
 
-/** Client-side routes: links and the picker navigate without reloading the page. */
+/** Client-side routes: links navigate without reloading the page. */
 export function App({ theme }: { theme: ThemeStore }) {
   const page = useRoutes([
     { element: <Shell theme={theme} />, children: PAGES },

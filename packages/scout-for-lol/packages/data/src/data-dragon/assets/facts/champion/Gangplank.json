@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Gangplank",
+  "name": "Gangplank",
+  "description": "As unpredictable as he is brutal, the dethroned reaver king Gangplank is feared far and wide. Once, he ruled the port city of Bilgewater, and while his reign is over, there are those who believe this has only made him more dangerous.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Gangplank-passive",
+      "name": "Trial by Fire",
+      "icon": "img/ability/Gangplank-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gangplank-Q",
+      "name": "Parrrley",
+      "icon": "img/ability/Gangplank-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gangplank-W",
+      "name": "Remove Scurvy",
+      "icon": "img/ability/Gangplank-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gangplank-E",
+      "name": "Powder Keg",
+      "icon": "img/ability/Gangplank-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gangplank-R",
+      "name": "Cannon Barrage",
+      "icon": "img/ability/Gangplank-R.png"
+    }
+  ],
+  "icon": "img/champion/Gangplank.png",
+  "art": "img/champion-splash/Gangplank_0.jpg",
+  "title": "the Saltwater Scourge",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

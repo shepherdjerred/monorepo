@@ -140,6 +140,9 @@ bin/git_cleanup
 bin/git_cleanup*.ts
 bin/herdr-new-worktree
 bin/herdr_new_worktree*.ts
+bin/herdr-worktree-pool
+bin/herdr_worktree_pool*.ts
+Library/LaunchAgents/com.jerred.herdr-worktree-pool.plist
 bin/restart-codex-panes
 bin/restart_codex_panes.ts
 bin/update.ts

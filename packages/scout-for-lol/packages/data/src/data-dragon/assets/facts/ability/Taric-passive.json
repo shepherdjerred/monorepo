@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taric-passive",
+  "name": "Bravado",
+  "description": "Spellcasts empower Taric's next 2 basic attacks to deal bonus magic damage, reduce his spell cooldowns, and attack in quick succession.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Taric-passive.png",
+  "slot": "passive",
+  "championKey": "Taric",
+  "championName": "Taric",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

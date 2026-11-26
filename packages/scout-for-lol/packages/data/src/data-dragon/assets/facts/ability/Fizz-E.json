@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fizz-E",
+  "name": "Playful / Trickster",
+  "description": "Fizz hops onto his trident, becoming Untargetable for 0.75 seconds, after which he deals 80/130/180/230/280 (+95% AP) magic damage to nearby enemies and Slows them by 40/45/50/55/60% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75/80/85/90/95 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fizz-E.png",
+  "slot": "E",
+  "championKey": "Fizz",
+  "championName": "Fizz",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14,
+    12,
+    10,
+    8
+  ],
+  "costByRank": [
+    75,
+    80,
+    85,
+    90,
+    95
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14/12/10/8 s"
+  }
+}

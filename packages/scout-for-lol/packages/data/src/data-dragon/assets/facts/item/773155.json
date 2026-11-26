@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773155",
+  "name": "Hexdrinker",
+  "description": "Lifeline: Upon taking magic damage that would reduce Health below 30%, grants a Shield that absorbs 250 magic damage for 5 seconds (90 second cooldown).",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771036",
+      "name": "Long Sword",
+      "icon": "img/item/771036.png"
+    },
+    {
+      "kind": "item",
+      "key": "771033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/771033.png"
+    }
+  ],
+  "icon": "img/item/773155.png",
+  "goldTotal": 1350,
+  "goldCombine": 550,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1350 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Twitch-E",
+  "name": "Contaminate",
+  "description": "Deals 20/30/40/50/60 physical damage to all nearby enemies affected by Deadly Venom, plus an additional 15/20/25/30/35 (+35% bonus AD) physical damage and 35% AP magical damage per stack of Deadly Venom.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Twitch-E.png",
+  "slot": "E",
+  "championKey": "Twitch",
+  "championName": "Twitch",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

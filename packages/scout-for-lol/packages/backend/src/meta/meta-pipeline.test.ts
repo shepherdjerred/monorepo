@@ -1,4 +1,12 @@
-import { mkdir, mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  stat,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -16,10 +24,16 @@ import {
   writeCrawlManifest,
 } from "#src/report-lake/crawl/crawl-manifest.ts";
 import {
+  BOOTS_ITEM_IDS,
+  currentDayPartialFiles,
+  hasAnyPartials,
   hasCurrentPartials,
   META_PARTIALS_TABLE,
+  META_PARTIALS_VERSION,
+  metaPartialsDayDir,
   writeDayPartials,
 } from "#src/report-lake/crawl/meta-partials.ts";
+import { items } from "@scout-for-lol/data/data-dragon/item.ts";
 import { createLakeMetaReader } from "#src/meta/meta-reader.ts";
 import { rollUpMeta } from "#src/meta/meta-rollup.ts";
 import { wilsonInterval } from "#src/meta/wilson.ts";
@@ -536,5 +550,279 @@ describe("roll-up", () => {
     await writeDayPartials({ buildDir, buildId: "r5-erase", day: DAY });
     await rollUpMeta({ buildDir, buildId: "r5b", now: NOW, thresholds: SMALL });
     expect(await tierMatches()).toBe(1);
+  });
+});
+
+const TWO = ["NA1_9700000100", "NA1_9700000101"];
+
+async function partialsFor(id: string, matchIds: string[]) {
+  const buildDir = await buildWithDay(id, DAY, [
+    await crawlSegment(DAY, matchIds),
+  ]);
+  const rows = await partialRows(buildDir);
+  const champions = new Map(
+    rows
+      .filter((row) => row.kind === "champion")
+      .map((row) => [row.key1, row.champion_id]),
+  );
+  const of = (kind: string, name: string) =>
+    rows.filter(
+      (row) => row.kind === kind && row.champion_id === champions.get(name),
+    );
+  return { rows, of, champions };
+}
+
+describe("partials version", () => {
+  test("the partials definition is version 2 and its files say so", async () => {
+    expect(META_PARTIALS_VERSION).toBe(2);
+    const buildDir = await buildWithDay("v2", DAY, [
+      await crawlSegment(DAY, TWO),
+    ]);
+    const names = [
+      ...new Bun.Glob(
+        `${META_PARTIALS_TABLE}/ingest_day=${DAY}/*.parquet`,
+      ).scanSync({ cwd: buildDir }),
+    ];
+    expect(names).toHaveLength(1);
+    expect(path.basename(names[0] ?? "")).toMatch(/^partials-v2-/u);
+  });
+
+  test("a retained day at version 1 counts as missing and the nightly step re-derives it", async () => {
+    const previous = await buildWithDay("v1", DAY, [
+      await crawlSegment(DAY, TWO),
+    ]);
+    const directory = metaPartialsDayDir(previous, DAY);
+    const [current = "missing"] = await currentDayPartialFiles(previous, DAY);
+    await rename(current, path.join(directory, "partials-v1-old.parquet"));
+    expect(await hasCurrentPartials(previous, DAY)).toBe(false);
+    expect(await hasAnyPartials(previous, DAY)).toBe(true);
+    // A roll-up reads only current files: the v1 day contributes nothing.
+    expect(
+      await rollUpMeta({
+        buildDir: previous,
+        buildId: "v1",
+        now: NOW,
+        thresholds: SMALL,
+      }),
+    ).toMatchObject({ written: false });
+
+    const next = await newBuild("v1-next");
+    const summary = await maintainCrawlTables({
+      previousDir: previous,
+      buildDir: next,
+      buildId: "v1-next",
+      source: memoryCrawlSegmentSource([await crawlSegment(DAY, TWO)]),
+      erased: NO_ERASURES,
+      now: NOW,
+    });
+    expect(summary.partialDays).toEqual([DAY]);
+    expect(await hasCurrentPartials(next, DAY)).toBe(true);
+    // The v1 file is gone from the new build and untouched in the published one.
+    expect(await readdir(metaPartialsDayDir(next, DAY))).toHaveLength(1);
+    expect(await readdir(directory)).toContain("partials-v1-old.parquet");
+    const rolled = await rollUpMeta({
+      buildDir: next,
+      buildId: "v1-next",
+      now: NOW,
+      thresholds: SMALL,
+    });
+    expect(rolled.written).toBe(true);
+  });
+});
+
+describe("public champion statistics", () => {
+  test("the boots list is the Data Dragon boots on Summoner's Rift", () => {
+    const fromDataDragon = Object.entries(items.data)
+      .filter(
+        ([id, item]) =>
+          item.tags.includes("Boots") &&
+          item.maps["11"] === true &&
+          Number(id) < 100_000,
+      )
+      .map(([id]) => Number(id))
+      .toSorted((left, right) => left - right);
+    expect([...BOOTS_ITEM_IDS].toSorted((left, right) => left - right)).toEqual(
+      fromDataDragon,
+    );
+  });
+
+  test("duration, boots, keystone, spell_single and matchup_spell partials count each participant", async () => {
+    const { rows, of, champions } = await partialsFor("kinds", TWO);
+    // Every participant of the 23-minute fixture game is in the short bucket.
+    const durations = rows.filter((row) => row.kind === "duration");
+    expect(durations).toHaveLength(10);
+    expect(
+      durations.every((row) => row.key1 === "lt25" && row.games === 2),
+    ).toBe(true);
+
+    const bootsOf = (name: string) =>
+      of("boots", name).map((row) => [row.key1, row.games, row.wins]);
+    expect(bootsOf("Irelia")).toEqual([["3111", 2, 0]]);
+    expect(bootsOf("Volibear")).toEqual([["3009", 2, 2]]);
+    expect(bootsOf("Lissandra")).toEqual([["1001", 2, 0]]);
+    expect(bootsOf("Seraphine")).toEqual([["3171", 2, 2]]);
+    // Tristana and Yunara finish without boots, so they have no boots row.
+    expect(bootsOf("Tristana")).toEqual([]);
+    expect(bootsOf("Yunara")).toEqual([]);
+    expect(
+      rows
+        .filter((row) => row.kind === "boots")
+        .every((row) => BOOTS_ITEM_IDS.includes(Number(row.key1))),
+    ).toBe(true);
+
+    expect(
+      of("keystone", "Irelia").map((row) => [row.key1, row.games, row.wins]),
+    ).toEqual([["8010", 2, 0]]);
+
+    // Each spell is counted on its own whichever slot it sits in.
+    expect(
+      of("spell_single", "Seraphine").map((row) => [row.key1, row.games]),
+    ).toEqual([
+      ["12", 2],
+      ["4", 2],
+    ]);
+    expect(
+      of("spell_single", "Irelia").map((row) => [row.key1, row.games]),
+    ).toEqual([
+      ["14", 2],
+      ["4", 2],
+    ]);
+
+    // Irelia and Volibear met twice in TOP; both took Flash and Ignite.
+    const volibear = String(champions.get("Volibear"));
+    expect(
+      of("matchup_spell", "Irelia").map((row) => [
+        row.key1,
+        row.key2,
+        row.games,
+        row.wins,
+      ]),
+    ).toEqual([[volibear, "4,14", 2, 0]]);
+    expect(
+      of("matchup_spell", "Volibear").map((row) => [
+        row.key1,
+        row.key2,
+        row.games,
+        row.wins,
+      ]),
+    ).toEqual([[String(champions.get("Irelia")), "4,14", 2, 2]]);
+  });
+
+  test("game length buckets split at 25 and 35 minutes", async () => {
+    const segments = [];
+    for (const [index, gameDuration] of [1499, 1500, 2100, 2101].entries()) {
+      segments.push(
+        await variantSegment(
+          DAY,
+          `NA1_97000002${index.toString().padStart(2, "0")}`,
+          (info) => ({ ...info, gameDuration }),
+        ),
+      );
+    }
+    const buildDir = await buildWithDay("buckets", DAY, segments);
+    const rows = await partialRows(buildDir);
+    const irelia = rows.find(
+      (row) => row.kind === "champion" && row.key1 === "Irelia",
+    )?.champion_id;
+    expect(
+      rows
+        .filter((row) => row.kind === "duration" && row.champion_id === irelia)
+        .map((row) => [row.key1, row.games]),
+    ).toEqual([
+      ["25to35", 2],
+      ["gt35", 1],
+      ["lt25", 1],
+    ]);
+  });
+
+  test("the roll-up serves the new figures with the entry floor, and spell pairs with the matchup floor", async () => {
+    // Two matches share each spell pair; a third swaps the first spell to Smite.
+    const swapped = await variantSegment(DAY, "NA1_9700000302", (info) => ({
+      ...info,
+      participants: MatchShapeSchema.shape.info
+        .parse(info)
+        .participants.map((participant) => ({
+          ...participant,
+          summoner1Id: 11,
+        })),
+    }));
+    const buildDir = await buildWithDay("floors", DAY, [
+      await crawlSegment(DAY, ["NA1_9700000300", "NA1_9700000301"]),
+      swapped,
+    ]);
+    const serve = async (thresholds: {
+      minSliceGames: number;
+      minEntryGames: number;
+      minMatchupGames: number;
+    }) => {
+      await rollUpMeta({ buildDir, buildId: "floors", now: NOW, thresholds });
+      const meta = reader(buildDir);
+      const manifest = await meta.manifest();
+      const irelia = manifest?.champions.find((one) => one.name === "Irelia");
+      const champion = await meta.champion(irelia?.id ?? 0);
+      const matchups = await meta.matchups(irelia?.id ?? 0);
+      return {
+        slice: champion?.slices.find((one) => one.context.bracket === "all"),
+        opponents: matchups?.slices[0]?.opponents ?? [],
+      };
+    };
+
+    const generous = await serve({
+      minSliceGames: 1,
+      minEntryGames: 1,
+      minMatchupGames: 1,
+    });
+    expect(generous.slice?.durations).toEqual([
+      {
+        bucket: "lt25",
+        games: 3,
+        wins: 0,
+        winRate: wilsonInterval(0, 3),
+        share: wilsonInterval(3, 3),
+        denominator: "games_with_duration",
+      },
+    ]);
+    expect(generous.slice?.boots).toEqual([
+      expect.objectContaining({ itemId: 3111, games: 3, wins: 0 }),
+    ]);
+    expect(generous.slice?.keystones).toEqual([
+      expect.objectContaining({ perkId: 8010, games: 3, wins: 0 }),
+    ]);
+    // Irelia took Ignite or Flash in every game and Smite in one.
+    expect(
+      generous.slice?.singleSpells?.map((spell) => [
+        spell.spellId,
+        spell.games,
+      ]),
+    ).toEqual([
+      [14, 3],
+      [4, 2],
+      [11, 1],
+    ]);
+    expect(generous.opponents[0]?.spells?.map((pair) => pair.games)).toEqual([
+      2, 1,
+    ]);
+
+    // An entry floor of 3 keeps Ignite alone; the matchup floor of 2 keeps the
+    // pair played twice and drops the pair played once, whatever the entry floor.
+    const middle = await serve({
+      minSliceGames: 1,
+      minEntryGames: 3,
+      minMatchupGames: 2,
+    });
+    expect(middle.slice?.singleSpells?.map((spell) => spell.spellId)).toEqual([
+      14,
+    ]);
+    expect(middle.opponents[0]?.spells?.map((pair) => pair.spellIds)).toEqual([
+      [4, 14],
+    ]);
+
+    // At a matchup floor of 3 neither pair (2 and 1 games) qualifies.
+    const strict = await serve({
+      minSliceGames: 1,
+      minEntryGames: 1,
+      minMatchupGames: 3,
+    });
+    expect(strict.opponents[0]?.spells).toEqual([]);
   });
 });

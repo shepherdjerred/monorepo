@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renata-R",
+  "name": "Hostile Takeover",
+  "description": "Renata sends out a wave of chemicals, Berserking enemies for 1.25/1.75/2.25 seconds, causing them to Attack the nearest unit, prioritizing their allies. While Berserk, enemies gain 100% Attack Speed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renata-R.png",
+  "slot": "R",
+  "championKey": "Renata",
+  "championName": "Renata Glasc",
+  "maxRank": 3,
+  "cooldownByRank": [
+    150,
+    130,
+    110
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2000,
+    2000,
+    2000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "150/130/110 s"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jayce-R",
+  "name": "Mercury Cannon / Mercury Hammer",
+  "description": "Mercury Hammer: Jayce transforms his weapon into the Mercury Cannon, gaining Attack Range and new Abilities. Jayce's next Attack removes 20-35% (based on level) Armor and Magic Resist for 5 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jayce-R.png",
+  "slot": "R",
+  "championKey": "Jayce",
+  "championName": "Jayce",
+  "maxRank": 1,
+  "cooldownByRank": [
+    6
+  ],
+  "costByRank": [
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "663146",
+  "name": "Hextech Gunblade",
+  "description": "ACTIVE: (0s) Lightning Bolt: Shocks the target enemy champion, dealing magic damage and Slowing them by 40% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "90"
+    },
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Omnivamp",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/663146.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

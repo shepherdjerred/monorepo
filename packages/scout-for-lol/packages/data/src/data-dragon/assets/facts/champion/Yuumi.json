@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Yuumi",
+  "name": "Yuumi",
+  "description": "A magical cat from Bandle City, Yuumi was once the familiar of a yordle enchantress, Norra.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "425"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Yuumi-passive",
+      "name": "Feline Friendship",
+      "icon": "img/ability/Yuumi-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yuumi-Q",
+      "name": "Prowling Projectile",
+      "icon": "img/ability/Yuumi-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yuumi-W",
+      "name": "You and Me!",
+      "icon": "img/ability/Yuumi-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yuumi-E",
+      "name": "Zoomies",
+      "icon": "img/ability/Yuumi-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yuumi-R",
+      "name": "Final Chapter",
+      "icon": "img/ability/Yuumi-R.png"
+    }
+  ],
+  "icon": "img/champion/Yuumi.png",
+  "art": "img/champion-splash/Yuumi_0.jpg",
+  "title": "the Magical Cat",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

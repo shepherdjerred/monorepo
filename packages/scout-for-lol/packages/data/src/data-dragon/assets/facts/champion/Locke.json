@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Locke",
+  "name": "Locke",
+  "description": "A nail-slinging exorcist versed in forbidden rites, Corvin Locke is the progeny of Demacian occultists. Born into lies and hypocrisy, he learned young that demons aren't the cause of humanity's darkness, but the consequence.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Locke-passive",
+      "name": "Silver Stake",
+      "icon": "img/ability/Locke-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Locke-Q",
+      "name": "Ritual Nails",
+      "icon": "img/ability/Locke-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Locke-W",
+      "name": "Soul Ignition",
+      "icon": "img/ability/Locke-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Locke-E",
+      "name": "Ashen Pursuit",
+      "icon": "img/ability/Locke-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Locke-R",
+      "name": "Purgatory",
+      "icon": "img/ability/Locke-R.png"
+    }
+  ],
+  "icon": "img/champion/Locke.png",
+  "art": "img/champion-splash/Locke_0.jpg",
+  "title": "the Ashen Exorcist",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Qiyana-Q",
+  "name": "Elemental Wrath / Edge of Ixtal",
+  "description": "If Qiyana does not have an Enchantment, she slashes, dealing 70/100/130/160/190 (+90% bonus AD) physical damage to enemies in a small area.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "525"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Qiyana-Q.png",
+  "slot": "Q",
+  "championKey": "Qiyana",
+  "championName": "Qiyana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    35,
+    35,
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    525,
+    525,
+    525,
+    525,
+    525
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

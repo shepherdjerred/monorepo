@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Syndra-R",
+  "name": "Unleashed Power",
+  "description": "Passive: Dark Sphere gains an additional 10 Ability Haste for each rank of Unleashed Power. Syndra draws on her full cataclysmic power, launching the 3 Dark Spheres orbiting her plus up to 4 more nearby at an enemy champion.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "675"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Syndra-R.png",
+  "slot": "R",
+  "championKey": "Syndra",
+  "championName": "Syndra",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    675,
+    675,
+    675
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

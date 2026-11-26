@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shyvana-R",
+  "name": "Dragon's Descent",
+  "description": "Shyvana transforms into a Dragon and leaps forward causing enemies along her path to flee. While in Dragon form she becomes larger and her basic abilities are empowered.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1050"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shyvana-R.png",
+  "slot": "R",
+  "championKey": "Shyvana",
+  "championName": "Shyvana",
+  "maxRank": 3,
+  "cooldownByRank": [
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1050,
+    1050,
+    1050
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

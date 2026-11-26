@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zilean-passive",
+  "name": "Time In A Bottle",
+  "description": "Zilean stores time as Experience and can grant it to his allies. When he has enough Experience to finish an ally's level up, he can right-click them to impart it.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zilean-passive.png",
+  "slot": "passive",
+  "championKey": "Zilean",
+  "championName": "Zilean",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

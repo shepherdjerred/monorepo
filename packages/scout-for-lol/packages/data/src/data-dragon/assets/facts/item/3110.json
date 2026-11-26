@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3110",
+  "name": "Frozen Heart",
+  "description": "Winter's Caress: Reduce the Attack Speed of nearby champions by 20%.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "75"
+    },
+    {
+      "label": "Mana",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3082",
+      "name": "Warden's Mail",
+      "icon": "img/item/3082.png"
+    },
+    {
+      "kind": "item",
+      "key": "3024",
+      "name": "Glacial Buckler",
+      "icon": "img/item/3024.png"
+    }
+  ],
+  "icon": "img/item/3110.png",
+  "goldTotal": 2500,
+  "goldCombine": 600,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Syndra",
+  "name": "Syndra",
+  "description": "Syndra is a fearsome Ionian mage with incredible power at her command. As a child, she disturbed the village elders with her reckless and wild magic.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "583"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Syndra-passive",
+      "name": "Transcendent",
+      "icon": "img/ability/Syndra-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Syndra-Q",
+      "name": "Dark Sphere",
+      "icon": "img/ability/Syndra-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Syndra-W",
+      "name": "Force of Will",
+      "icon": "img/ability/Syndra-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Syndra-E",
+      "name": "Scatter the Weak",
+      "icon": "img/ability/Syndra-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Syndra-R",
+      "name": "Unleashed Power",
+      "icon": "img/ability/Syndra-R.png"
+    }
+  ],
+  "icon": "img/champion/Syndra.png",
+  "art": "img/champion-splash/Syndra_0.jpg",
+  "title": "the Dark Sovereign",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Sett",
+  "name": "Sett",
+  "description": "A leader of Ionia's growing criminal underworld, Sett rose to prominence in the wake of the war with Noxus.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "670"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Sett-passive",
+      "name": "Pit Grit",
+      "icon": "img/ability/Sett-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sett-Q",
+      "name": "Knuckle Down",
+      "icon": "img/ability/Sett-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sett-W",
+      "name": "Haymaker",
+      "icon": "img/ability/Sett-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sett-E",
+      "name": "Facebreaker",
+      "icon": "img/ability/Sett-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sett-R",
+      "name": "The Show Stopper",
+      "icon": "img/ability/Sett-R.png"
+    }
+  ],
+  "icon": "img/champion/Sett.png",
+  "art": "img/champion-splash/Sett_0.jpg",
+  "title": "the Boss",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

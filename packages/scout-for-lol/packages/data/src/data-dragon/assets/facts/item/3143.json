@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3143",
+  "name": "Randuin's Omen",
+  "description": "Resilience: Receive 30% less damage from Critical Strikes. Humility: Slow nearby enemies by 70% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Armor",
+      "value": "75"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3082",
+      "name": "Warden's Mail",
+      "icon": "img/item/3082.png"
+    },
+    {
+      "kind": "item",
+      "key": "1011",
+      "name": "Giant's Belt",
+      "icon": "img/item/1011.png"
+    }
+  ],
+  "icon": "img/item/3143.png",
+  "goldTotal": 2700,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2700 gold"
+  }
+}

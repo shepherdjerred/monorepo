@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "TwistedFate",
+  "name": "Twisted Fate",
+  "description": "Twisted Fate is an infamous cardsharp and swindler who has gambled and charmed his way across much of the known world, earning the enmity and admiration of the rich and foolish alike.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "604"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "TwistedFate-passive",
+      "name": "Loaded Dice",
+      "icon": "img/ability/TwistedFate-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TwistedFate-Q",
+      "name": "Wild Cards",
+      "icon": "img/ability/TwistedFate-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TwistedFate-W",
+      "name": "Pick a Card",
+      "icon": "img/ability/TwistedFate-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TwistedFate-E",
+      "name": "Stacked Deck",
+      "icon": "img/ability/TwistedFate-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TwistedFate-R",
+      "name": "Destiny",
+      "icon": "img/ability/TwistedFate-R.png"
+    }
+  ],
+  "icon": "img/champion/TwistedFate.png",
+  "art": "img/champion-splash/TwistedFate_0.jpg",
+  "title": "the Card Master",
+  "roles": [
+    "Mage",
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Marksman"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Warwick-Q",
+  "name": "Jaws of the Beast",
+  "description": "Tap: Warwick lunges forward and bites, dealing 120% AD (+100% AP) plus 6/7/8/9/10% max Health magic damage and healing for 25/37.5/50/62.5/75% of the damage dealt. Hold: Warwick lunges and clamps his jaws on the target, leaping behind them.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/85/90/95/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "365"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Warwick-Q.png",
+  "slot": "Q",
+  "championKey": "Warwick",
+  "championName": "Warwick",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    80,
+    85,
+    90,
+    95,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    365,
+    365,
+    365,
+    365,
+    365
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

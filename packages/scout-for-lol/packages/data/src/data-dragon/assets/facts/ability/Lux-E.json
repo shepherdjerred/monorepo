@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lux-E",
+  "name": "Lucent Singularity",
+  "description": "Lux creates a light zone that Slows by 25/30/35/40/45% and reveals the area. After 5 seconds or on Recasting this Ability, it detonates, dealing 65/115/165/215/265 (+80% AP) magic damage and Slowing for an additional 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/80/90/100/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lux-E.png",
+  "slot": "E",
+  "championKey": "Lux",
+  "championName": "Lux",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    70,
+    80,
+    90,
+    100,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

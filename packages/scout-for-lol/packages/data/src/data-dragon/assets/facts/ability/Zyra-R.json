@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zyra-R",
+  "name": "Stranglethorns",
+  "description": "Zyra summons the fury of nature, growing a twisted thicket that deals 200/300/400 (+70% AP) magic damage. After 2 seconds, the vines snap upwards, Knocking Up for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zyra-R.png",
+  "slot": "R",
+  "championKey": "Zyra",
+  "championName": "Zyra",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    100,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/100/90 s"
+  }
+}

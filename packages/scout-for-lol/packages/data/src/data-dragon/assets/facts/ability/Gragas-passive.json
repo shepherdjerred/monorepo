@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gragas-passive",
+  "name": "Happy Hour",
+  "description": "Gragas periodically heals upon using a skill.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Gragas-passive.png",
+  "slot": "passive",
+  "championKey": "Gragas",
+  "championName": "Gragas",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

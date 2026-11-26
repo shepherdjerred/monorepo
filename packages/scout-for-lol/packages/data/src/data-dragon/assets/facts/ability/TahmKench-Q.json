@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TahmKench-Q",
+  "name": "Tongue Lash",
+  "description": "Deals 75/120/165/210/255 (+100% AP) magic damage to the first enemy hit and Slows them by 50% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/46/42/38/34 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TahmKench-Q.png",
+  "slot": "Q",
+  "championKey": "TahmKench",
+  "championName": "Tahm Kench",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.5,
+    6,
+    5.5,
+    5
+  ],
+  "costByRank": [
+    50,
+    46,
+    42,
+    38,
+    34
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.5/6/5.5/5 s"
+  }
+}
