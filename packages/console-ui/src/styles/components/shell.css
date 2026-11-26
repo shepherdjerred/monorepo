@@ -1,0 +1,40 @@
+/*
+ * The frame: a 228px sidebar beside one inset panel. The panel is the only
+ * card; everything inside it is full-bleed and divided by hairlines.
+ */
+@layer ui.components {
+  .ui-shell {
+    display: grid;
+    grid-template-columns: var(--ui-sidebar) minmax(0, 1fr);
+    min-height: 100dvh;
+  }
+  .ui-panel {
+    min-width: 0;
+    margin: var(--ui-space-2) var(--ui-space-2) var(--ui-space-2) 0;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-panel);
+    /* Clips to the radius without becoming a scroll container. */
+    overflow: clip;
+  }
+  /* Below the sidebar breakpoint the phone top bar replaces the sidebar. */
+  @media (width <= 900px) {
+    .ui-shell {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .ui-shell > .ui-side {
+      display: none;
+    }
+    .ui-panel {
+      margin: var(--ui-space-2);
+    }
+  }
+
+  @media (width <= 600px) {
+    .ui-panel {
+      margin: 0;
+      border-width: 0;
+      border-radius: 0;
+    }
+  }
+}

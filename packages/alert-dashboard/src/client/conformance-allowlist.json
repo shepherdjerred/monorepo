@@ -1,0 +1,128 @@
+[
+  {
+    "rule": "theme-color",
+    "file": "index.html",
+    "count": 3,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "inline-typography",
+    "file": "src/client/ops/pages/the-storm-page.tsx",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "inline-typography",
+    "file": "src/client/ops/service-views/product-analytics-views.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/promotion/promotion.css",
+    "count": 15,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/styles/engineering.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/engineering.css",
+    "count": 1,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/styles/globals.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/styles/globals.css",
+    "count": 33,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/globals.css",
+    "count": 8,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/ledger.css",
+    "count": 16,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/styles/platform.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/styles/primitives.css",
+    "count": 3,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/primitives.css",
+    "count": 15,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "token-redefinition",
+    "file": "src/styles/primitives.css",
+    "count": 3,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/styles/product.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/styles/reports.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/styles/reports.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/signals.css",
+    "count": 14,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/tables.css",
+    "count": 11,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/styles/visuals.css",
+    "count": 1,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/styles/visuals.css",
+    "count": 3,
+    "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  }
+]

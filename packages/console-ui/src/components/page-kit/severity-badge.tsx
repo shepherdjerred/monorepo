@@ -22,6 +22,8 @@ export type SeverityBadgeProps = {
 /**
  * An uppercase pill tinted with the severity's soft colour: a glyph plus its
  * word, so severity never rests on colour alone.
+ *
+ * @deprecated Use `StatusGlyph` (glyph plus word; `icon` swaps the glyph).
  */
 export function SeverityBadge({
   severity,

@@ -1,0 +1,115 @@
+/*
+ * Phone navigation (ConsoleShell): below the sidebar breakpoint a sticky top
+ * bar and a modal drawer replace the sidebar. The bar's buttons keep a 44px
+ * touch target.
+ */
+@layer ui.components {
+  .ui-topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--ui-z-sticky);
+    display: none;
+    align-items: center;
+    gap: 2px;
+    height: var(--ui-topbar);
+    padding: 0 6px;
+    border-bottom: 1px solid var(--ui-line);
+    background: color-mix(in srgb, var(--ui-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .ui-topbar .ui-workspace {
+    flex: 0 1 auto;
+    margin-right: auto;
+  }
+  .ui-topbar-btn {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--ui-radius-md);
+    color: var(--ui-ink-2);
+    cursor: pointer;
+  }
+  .ui-topbar-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .ui-topbar-btn:hover {
+    background: var(--ui-side-hover);
+  }
+
+  /* One backdrop for every modal surface: drawer, dialog, palette. */
+  .ui-backdrop,
+  .ui-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--ui-z-backdrop);
+    background: var(--ui-backdrop);
+  }
+  .ui-drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: var(--ui-z-overlay);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-1);
+    width: min(300px, calc(100vw - 56px));
+    padding: var(--ui-space-1) var(--ui-space-2) var(--ui-space-3);
+    overflow-y: auto;
+    border-right: 1px solid var(--ui-line);
+    background: var(--ui-bg);
+    box-shadow: var(--ui-shadow-overlay);
+  }
+  .ui-drawer:focus-visible {
+    outline: none;
+  }
+  .ui-drawer-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    height: 44px;
+    margin-right: calc(-1 * var(--ui-space-1));
+    padding-left: var(--ui-space-2);
+  }
+  .ui-drawer-brand {
+    font-size: var(--ui-text-xl);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-drawer .ui-nav {
+    flex: none;
+  }
+  /* Drawer rows are touch rows: taller than the sidebar's 30px. */
+  .ui-drawer .ui-nav-item {
+    height: 38px;
+  }
+  .ui-drawer-foot {
+    margin-top: auto;
+    padding-top: var(--ui-space-2);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-drawer {
+      transition: transform var(--ui-duration-panel) var(--ui-ease-out);
+    }
+    .ui-backdrop,
+    .ui-drawer-backdrop {
+      transition: opacity var(--ui-duration-panel) var(--ui-ease-out);
+    }
+    .ui-drawer[data-starting-style],
+    .ui-drawer[data-ending-style] {
+      transform: translateX(-100%);
+    }
+    .ui-backdrop:is([data-starting-style], [data-ending-style]),
+    .ui-drawer-backdrop:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+  }
+
+  @media (width <= 900px) {
+    .ui-topbar {
+      display: flex;
+    }
+  }
+}

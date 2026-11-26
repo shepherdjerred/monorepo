@@ -6,7 +6,7 @@ import {
   TerminalIcon,
 } from "lucide-react";
 import { describe, expect, test } from "vitest";
-import { AppSwitcher } from "@shepherdjerred/console-ui/components/app-switcher.tsx";
+import { AppSwitcher } from "@shepherdjerred/console-ui/components/shell/app-switcher.tsx";
 import { Button } from "@shepherdjerred/console-ui/components/button.tsx";
 import { Chip } from "@shepherdjerred/console-ui/components/chip.tsx";
 import {
@@ -21,19 +21,19 @@ import { FigureStrip } from "@shepherdjerred/console-ui/components/figure-strip.
 import { HeaderBar } from "@shepherdjerred/console-ui/components/header-bar.tsx";
 import { IconButton } from "@shepherdjerred/console-ui/components/icon-button.tsx";
 import { Meter } from "@shepherdjerred/console-ui/components/meter.tsx";
-import { SeverityBadge } from "@shepherdjerred/console-ui/components/severity-badge.tsx";
-import { ShellFrame } from "@shepherdjerred/console-ui/components/shell-frame.tsx";
+import { SeverityBadge } from "@shepherdjerred/console-ui/components/page-kit/severity-badge.tsx";
+import { ShellFrame } from "@shepherdjerred/console-ui/components/shell/shell-frame.tsx";
 import {
   Sidebar,
   SidebarGroup,
-} from "@shepherdjerred/console-ui/components/sidebar.tsx";
-import { SidebarItem } from "@shepherdjerred/console-ui/components/sidebar-item.tsx";
+} from "@shepherdjerred/console-ui/components/shell/sidebar.tsx";
+import { SidebarItem } from "@shepherdjerred/console-ui/components/shell/sidebar-item.tsx";
 import { StatusGlyph } from "@shepherdjerred/console-ui/components/status-glyph.tsx";
 import {
   Tabs,
   tabTargetIndex,
 } from "@shepherdjerred/console-ui/components/tabs.tsx";
-import { ThemeRow } from "@shepherdjerred/console-ui/components/theme-row.tsx";
+import { ThemeRow } from "@shepherdjerred/console-ui/components/shell/theme-row.tsx";
 import { createThemeStore } from "@shepherdjerred/console-ui/theme.ts";
 
 const noop = (): void => {
@@ -209,12 +209,12 @@ describe("FigureStrip", () => {
         ]}
       />,
     );
-    expect(html).toBe(
+    expect(html.slice(0, html.indexOf("<svg") + 4)).toBe(
       '<dl class="ui-strip">' +
         '<div class="ui-strip-cell"><dt class="ui-strip-label">Firing alerts</dt><dd class="ui-strip-value"><span class="ui-strip-figure">15</span><span class="ui-strip-hint">in 13 groups</span></dd></div>' +
-        '<div class="ui-strip-cell" data-sev="error"><dt class="ui-strip-label">Critical</dt><dd class="ui-strip-value"><span class="ui-strip-figure">1</span></dd></div>' +
-        "</dl>",
+        '<div class="ui-strip-cell" data-sev="error"><dt class="ui-strip-label">Critical</dt><dd class="ui-strip-value"><span class="ui-strip-figure"><svg',
     );
+    expect(html).toContain("</svg>1</span></dd></div></dl>");
   });
 });
 
@@ -284,7 +284,7 @@ describe("Chip", () => {
         <Chip label="Projected month" value="$118.20" severity="warning" />,
       ),
     ).toBe(
-      '<span class="ui-chip" data-sev="warning">Projected month<b class="ui-chip-value">$118.20</b></span>',
+      '<span class="ui-chip" data-kind="metric" data-sev="warning">Projected month<b class="ui-chip-value">$118.20</b></span>',
     );
   });
 });

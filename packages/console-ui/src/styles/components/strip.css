@@ -1,0 +1,70 @@
+/*
+ * The figure strip: headline figures in cells split by hairlines. The lines
+ * are inset shadows clipped by the strip, so they stay correct however the
+ * cells wrap.
+ */
+@layer ui.components {
+  .ui-strip {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    overflow: clip;
+    border-bottom: 1px solid var(--ui-line);
+  }
+  .ui-strip[data-layout="wrap"] {
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    grid-auto-flow: row;
+  }
+  .ui-strip-cell {
+    min-width: 0;
+    padding: 11px var(--ui-gutter) 13px;
+    box-shadow:
+      -1px 0 0 var(--ui-line),
+      0 -1px 0 var(--ui-line);
+  }
+  .ui-strip-label {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+  .ui-strip-value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 10px;
+    margin-top: 1px;
+  }
+  .ui-strip-figure {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: inherit;
+    font: var(--ui-weight-strong) var(--ui-text-figure) / 1.2
+      var(--ui-font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    text-decoration: none;
+  }
+  .ui-strip-figure .ui-glyph-icon {
+    width: 16px;
+    height: 16px;
+  }
+  a.ui-strip-figure:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .ui-strip-cell[data-sev] .ui-strip-figure {
+    color: var(--ui-sev-ink);
+  }
+  .ui-strip-hint {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+
+  @media (width <= 900px) {
+    .ui-strip:not([data-layout="wrap"]) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-flow: row;
+    }
+  }
+}

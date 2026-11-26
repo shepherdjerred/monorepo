@@ -9,10 +9,10 @@ import {
   PageHeading,
   SummaryGrid,
   Tag,
-} from "@shepherdjerred/console-ui/components/page.tsx";
+} from "@shepherdjerred/console-ui/components/page-kit/page.tsx";
 import { SearchField } from "@shepherdjerred/console-ui/components/search-field.tsx";
-import { Segmented } from "@shepherdjerred/console-ui/components/segmented.tsx";
-import { TopBar } from "@shepherdjerred/console-ui/components/top-bar.tsx";
+import { Segmented } from "@shepherdjerred/console-ui/components/page-kit/segmented.tsx";
+import { TopBar } from "@shepherdjerred/console-ui/components/page-kit/top-bar.tsx";
 import { createThemeStore } from "@shepherdjerred/console-ui/theme.ts";
 
 const noop = (): void => {
@@ -126,7 +126,9 @@ describe("SearchField", () => {
     expect(html).toMatch(
       /^<label class="ui-search"><span class="ui-sr-only">Search links<\/span><svg[^>]*aria-hidden="true"/,
     );
-    expect(html).toMatch(/<input[^>]*type="search"[^>]*class="ui-input"/);
+    expect(html).toMatch(
+      /<input[^>]*type="search"[^>]*class="ui-search-input"/,
+    );
     expect(html).toContain('placeholder="Search…"');
   });
 });

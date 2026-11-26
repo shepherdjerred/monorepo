@@ -1,0 +1,122 @@
+/*
+ * Page base, the one focus ring, severity variables and utilities. Every
+ * class starts with `ui-`; every colour, size, radius and weight is a
+ * `--ui-*` token from tokens.css.
+ */
+@layer ui.components {
+  body {
+    min-width: 320px;
+    background: var(--ui-bg);
+    color: var(--ui-ink);
+    font: var(--ui-weight-regular) var(--ui-text-base) / 1.4 var(--ui-font-sans);
+    letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* The one focus ring. Components never draw their own. */
+  :focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+
+  [data-sev="ok"] {
+    --ui-sev: var(--ui-sev-ok);
+    --ui-sev-ink: var(--ui-sev-ok-text);
+    --ui-sev-soft: var(--ui-sev-ok-soft);
+  }
+  [data-sev="info"] {
+    --ui-sev: var(--ui-sev-info);
+    --ui-sev-ink: var(--ui-sev-info-text);
+    --ui-sev-soft: var(--ui-sev-info-soft);
+  }
+  [data-sev="unknown"] {
+    --ui-sev: var(--ui-sev-unknown);
+    --ui-sev-ink: var(--ui-sev-unknown-text);
+    --ui-sev-soft: var(--ui-sev-unknown-soft);
+  }
+  [data-sev="warning"] {
+    --ui-sev: var(--ui-sev-warning);
+    --ui-sev-ink: var(--ui-sev-warning-text);
+    --ui-sev-soft: var(--ui-sev-warning-soft);
+  }
+  [data-sev="error"] {
+    --ui-sev: var(--ui-sev-error);
+    --ui-sev-ink: var(--ui-sev-error-text);
+    --ui-sev-soft: var(--ui-sev-error-soft);
+  }
+
+  /* Utilities */
+  .ui-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .ui-mono {
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .ui-muted {
+    color: var(--ui-muted);
+  }
+  .ui-strong {
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-count,
+  .ui-zero {
+    color: var(--ui-faint);
+    font-weight: var(--ui-weight-regular);
+    font-variant-numeric: tabular-nums;
+  }
+  /* One line cut with an ellipsis; the element or its cell needs a width. */
+  .ui-truncate {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-skip-link {
+    position: fixed;
+    top: var(--ui-space-2);
+    left: var(--ui-space-2);
+    z-index: var(--ui-z-popover);
+    padding: var(--ui-space-2) var(--ui-space-3);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-medium);
+    transform: translateY(-200%);
+  }
+  .ui-skip-link:focus {
+    transform: none;
+  }
+
+  /*
+   * Touch screens keep 28px controls but give them a 44px hit area
+   * (`--ui-hit`): an invisible pseudo-element centred on the control.
+   */
+  @media (pointer: coarse) {
+    :is(.ui-btn, .ui-icon-btn, .ui-tab, .ui-chip[href], .ui-twist) {
+      position: relative;
+    }
+    :is(.ui-btn, .ui-icon-btn, .ui-tab, .ui-chip[href], .ui-twist)::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--ui-hit));
+      height: max(100%, var(--ui-hit));
+      transform: translate(-50%, -50%);
+      content: "";
+    }
+  }
+}

@@ -1,0 +1,257 @@
+/*
+ * The one table: 30px sentence-case header row, 36px rows, the gutter as the
+ * first and last cell's padding, 32px group rows. On a phone a table scrolls
+ * sideways inside `.ui-table-scroll`; `data-stack` opts in to label/value
+ * lines instead, each cell labelled by its `data-label`.
+ */
+@layer ui.components {
+  .ui-table-scroll {
+    overflow-x: auto;
+  }
+  .ui-table {
+    width: 100%;
+  }
+  .ui-table caption {
+    padding: 0 var(--ui-gutter) 9px;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+    text-align: left;
+  }
+  .ui-table th {
+    font-weight: inherit;
+    text-align: left;
+  }
+  .ui-table thead th {
+    height: var(--ui-head-row);
+    padding: 0 var(--ui-space-3);
+    border-block: 1px solid var(--ui-line);
+    background: var(--ui-head);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: var(--ui-weight-medium);
+    white-space: nowrap;
+  }
+  .ui-table[data-sticky] thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .ui-table td,
+  .ui-table tbody th {
+    height: var(--ui-row);
+    padding: 0 var(--ui-space-3);
+    border-bottom: 1px solid var(--ui-line-soft);
+    white-space: nowrap;
+  }
+  .ui-table tbody th[scope="row"] {
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-table tbody tr:last-child > * {
+    border-bottom-color: transparent;
+  }
+  .ui-table tfoot :is(th, td) {
+    height: var(--ui-row);
+    padding: 0 var(--ui-space-3);
+    border-top: 1px solid var(--ui-line);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-table :is(th, td):first-child {
+    padding-left: var(--ui-gutter);
+  }
+  .ui-table :is(th, td):last-child {
+    padding-right: var(--ui-gutter);
+  }
+  .ui-table tbody tr:hover > * {
+    background: var(--ui-hover);
+  }
+  .ui-table tbody tr[data-current] > * {
+    background: var(--ui-active);
+  }
+  .ui-table .ui-num {
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    text-align: right;
+  }
+  .ui-table thead .ui-num {
+    font-family: inherit;
+  }
+  /* Chips in a cell stay on the row's one line. */
+  .ui-table :is(th, td) .ui-chips {
+    flex-wrap: nowrap;
+  }
+  /* A cell that takes the remaining width; put `.ui-truncate` inside it. */
+  .ui-table .ui-fill {
+    width: 100%;
+    max-width: 0;
+  }
+  .ui-table-group th,
+  .ui-table-group td {
+    height: var(--ui-group-row);
+    border-bottom: 1px solid var(--ui-line-soft);
+    background: var(--ui-head);
+    color: var(--ui-ink);
+    font-size: var(--ui-text-base);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-table-group .ui-count {
+    margin-left: var(--ui-space-2);
+  }
+  .ui-table-child td,
+  .ui-table-child th {
+    background: var(--ui-head);
+  }
+  .ui-table tbody tr.ui-table-empty > * {
+    height: auto;
+    padding-block: var(--ui-space-6);
+    background: none;
+    color: var(--ui-muted);
+    white-space: normal;
+  }
+
+  /* Whole-row links: the row's `.ui-row-link` covers the row. */
+  .ui-table tr:has(.ui-row-link) {
+    position: relative;
+    cursor: pointer;
+  }
+  .ui-row-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .ui-row-link::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+  }
+  .ui-row-link:focus-visible {
+    outline: none;
+  }
+  .ui-table tr:has(.ui-row-link:focus-visible) {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: -2px;
+  }
+  /* Other controls in a linked row stay clickable above the cover. */
+  .ui-table
+    tr:has(.ui-row-link)
+    :is(button, input, select, a:not(.ui-row-link)) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ui-lead {
+    position: relative;
+  }
+  .ui-lead > .ui-glyph {
+    margin-right: 9px;
+  }
+  .ui-unread {
+    position: absolute;
+    top: 50%;
+    left: var(--ui-space-2);
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    border-radius: var(--ui-radius-round);
+    background: var(--ui-accent);
+  }
+  .ui-twist {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin: 0 2px 0 calc(-1 * var(--ui-space-1));
+    border-radius: var(--ui-radius-sm);
+    color: var(--ui-muted);
+    vertical-align: middle;
+    cursor: pointer;
+  }
+  .ui-twist:hover {
+    background: var(--ui-active);
+    color: var(--ui-ink);
+  }
+  .ui-twist svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media (width <= 900px) {
+    .ui-table[data-sticky] thead th {
+      top: var(--ui-topbar);
+    }
+  }
+
+  @media (width <= 600px) {
+    .ui-table[data-stack],
+    .ui-table[data-stack] :is(tbody, tfoot, tr) {
+      display: block;
+    }
+    .ui-table[data-stack] thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .ui-table[data-stack] tbody tr {
+      padding: 10px var(--ui-gutter);
+      border-bottom: 1px solid var(--ui-line-soft);
+    }
+    .ui-table[data-stack] tbody tr:last-child {
+      border-bottom: 0;
+    }
+    .ui-table[data-stack] :is(tbody, tfoot) :is(th, td),
+    .ui-table[data-stack]
+      :is(tbody, tfoot)
+      :is(th, td):is(:first-child, :last-child) {
+      display: grid;
+      grid-template-columns: minmax(96px, 36%) minmax(0, 1fr);
+      gap: var(--ui-space-3);
+      align-items: baseline;
+      height: auto;
+      max-width: none;
+      padding: 2px 0;
+      border: 0;
+      background: none;
+      text-align: left;
+      white-space: normal;
+    }
+    .ui-table[data-stack] :is(tbody, tfoot) :is(th, td) {
+      justify-items: start;
+    }
+    .ui-table[data-stack] .ui-chips {
+      flex-wrap: wrap;
+    }
+    .ui-table[data-stack] :is(th, td)[data-label]::before {
+      color: var(--ui-muted);
+      font-family: var(--ui-font-sans);
+      letter-spacing: -0.006em;
+      font-size: var(--ui-text-md);
+      content: attr(data-label);
+    }
+    /*
+     * A cell without a label (usually the row header) is the row's title
+     * line; group and empty rows are one line too. These selectors outrank
+     * the label/value grid above.
+     */
+    .ui-table[data-stack]
+      :is(tbody, tfoot)
+      :is(th, td):not([data-label]):is(*, :first-child, :last-child) {
+      display: block;
+      padding-bottom: var(--ui-space-1);
+    }
+    .ui-table[data-stack]
+      tbody
+      tr:is(.ui-table-group, .ui-table-empty)
+      > :is(th, td):is(*, :first-child, :last-child) {
+      display: block;
+      padding: 0;
+    }
+    .ui-table[data-stack] tr.ui-table-group {
+      padding-block: 6px;
+      background: var(--ui-head);
+    }
+  }
+}

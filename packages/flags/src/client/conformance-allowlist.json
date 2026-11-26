@@ -1,0 +1,26 @@
+[
+  {
+    "rule": "theme-color",
+    "file": "index.html",
+    "count": 2,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "theme-store-key",
+    "file": "src/client/main.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles.css",
+    "count": 9,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/styles.css",
+    "count": 11,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  }
+]

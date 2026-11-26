@@ -55,6 +55,8 @@ describe("the composed module registry", () => {
       "shell /house",
       "shell /history",
       "shell /system",
+      "shell /kit",
+      "shell /kit/detail",
       "shell /traces",
       "shell /traces/:traceId",
     ]);
