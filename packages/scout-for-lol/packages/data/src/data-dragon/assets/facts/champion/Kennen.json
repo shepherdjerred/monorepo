@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kennen",
+  "name": "Kennen",
+  "description": "More than just the lightning-quick enforcer of Ionian balance, Kennen is the only yordle member of the Kinkou. Despite his small, furry stature, he is eager to take on any threat with a whirling storm of shuriken and boundless enthusiasm.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kennen-passive",
+      "name": "Mark of the Storm",
+      "icon": "img/ability/Kennen-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kennen-Q",
+      "name": "Thundering Shuriken",
+      "icon": "img/ability/Kennen-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kennen-W",
+      "name": "Electrical Surge",
+      "icon": "img/ability/Kennen-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kennen-E",
+      "name": "Lightning Rush",
+      "icon": "img/ability/Kennen-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kennen-R",
+      "name": "Slicing Maelstrom",
+      "icon": "img/ability/Kennen-R.png"
+    }
+  ],
+  "icon": "img/champion/Kennen.png",
+  "art": "img/champion-splash/Kennen_0.jpg",
+  "title": "the Heart of the Tempest",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

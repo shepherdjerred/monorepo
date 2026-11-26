@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Naafiri-W",
+  "name": "The Call of the Pack",
+  "description": "Naafiri becomes Untargetable for 1 second and prepares to hunt, spawning 2 additional Packmates and gaining 22% AD Attack Damage and 20/22.5/25/27.5/30% Move Speed for 5 seconds. Packmates become Untargetable and are recalled to Naafiri.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Naafiri-W.png",
+  "slot": "W",
+  "championKey": "Naafiri",
+  "championName": "Naafiri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    24,
+    22,
+    20,
+    18
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/24/22/20/18 s"
+  }
+}

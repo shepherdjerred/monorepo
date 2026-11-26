@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3340",
+  "name": "Stealth Ward",
+  "description": "Active: (210 - 90s, max 2 charges) Places an Invisible Stealth Ward that grants vision for 90-120 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/3340.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

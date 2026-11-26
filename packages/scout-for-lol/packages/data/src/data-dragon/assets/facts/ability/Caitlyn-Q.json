@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Caitlyn-Q",
+  "name": "Piltover Peacemaker",
+  "description": "Caitlyn revs up her rifle for 1 second to unleash a penetrating shot that deals physical damage (deals less damage to subsequent targets).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Caitlyn-Q.png",
+  "slot": "Q",
+  "championKey": "Caitlyn",
+  "championName": "Caitlyn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1250,
+    1250,
+    1250,
+    1250,
+    1250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

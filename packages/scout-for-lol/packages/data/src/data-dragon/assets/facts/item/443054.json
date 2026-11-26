@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443054",
+  "name": "Darksteel Talons",
+  "description": "Gash: Attacks apply true damage on hit.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "50%"
+    },
+    {
+      "label": "Armor",
+      "value": "55"
+    },
+    {
+      "label": "Move Speed",
+      "value": "5%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443054.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

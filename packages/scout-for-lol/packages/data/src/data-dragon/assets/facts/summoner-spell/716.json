@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "716",
+  "name": "Surge",
+  "description": "Temporarily empowers your champion, granting Attack Speed and Ability Power for the duration. Summoner's Wrath: Increases the Attack Speed bonus by 5% and the Ability Power bonus by 10%.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "200"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerBattleCry_Jade.png",
+  "cooldownSeconds": 180,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "180 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KogMaw-R",
+  "name": "Living Artillery",
+  "description": "Kog'Maw shoots acid at an area, dealing 100/140/180 (+35/40/45% AP) (+75% bonus AD) plus 0.83333% per 1% missing Health magic damage and revealing enemies hit for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1300/1550/1800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KogMaw-R.png",
+  "slot": "R",
+  "championKey": "KogMaw",
+  "championName": "Kog'Maw",
+  "maxRank": 3,
+  "cooldownByRank": [
+    2,
+    1.5,
+    1
+  ],
+  "costByRank": [
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1300,
+    1550,
+    1800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "2/1.5/1 s"
+  }
+}

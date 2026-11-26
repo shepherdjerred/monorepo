@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Elise",
+  "name": "Elise",
+  "description": "Elise is a deadly predator who dwells in a shuttered, lightless palace, deep within the oldest city of Noxus.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Elise-passive",
+      "name": "Spider Queen",
+      "icon": "img/ability/Elise-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Elise-Q",
+      "name": "Neurotoxin / Venomous Bite",
+      "icon": "img/ability/Elise-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Elise-W",
+      "name": "Volatile Spiderling / Skittering Frenzy",
+      "icon": "img/ability/Elise-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Elise-E",
+      "name": "Cocoon / Rappel",
+      "icon": "img/ability/Elise-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Elise-R",
+      "name": "Spider Form",
+      "icon": "img/ability/Elise-R.png"
+    }
+  ],
+  "icon": "img/champion/Elise.png",
+  "art": "img/champion-splash/Elise_0.jpg",
+  "title": "the Spider Queen",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

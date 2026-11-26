@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1086",
+  "name": "Doran's Bow",
+  "description": "Grants 7 Attack Damage, 15% Attack Speed, 1.5% Omnivamp.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "7"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "15%"
+    },
+    {
+      "label": "Omnivamp",
+      "value": "1.5%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1086.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

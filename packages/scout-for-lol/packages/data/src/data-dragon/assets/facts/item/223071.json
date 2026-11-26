@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223071",
+  "name": "Black Cleaver",
+  "description": "Carve: Dealing physical damage to champions reduces the target's Armor by 6% for 6 seconds. Fervor: Dealing physical damage grants Move Speed for 2 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223071.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

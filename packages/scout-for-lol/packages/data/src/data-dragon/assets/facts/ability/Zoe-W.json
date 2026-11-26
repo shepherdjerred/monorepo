@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zoe-W",
+  "name": "Spell Thief",
+  "description": "Passive: Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "3000/4500/6000/3000/3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zoe-W.png",
+  "slot": "W",
+  "championKey": "Zoe",
+  "championName": "Zoe",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    3000,
+    4500,
+    6000,
+    3000,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.25 s"
+  }
+}

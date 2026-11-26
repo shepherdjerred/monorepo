@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Caitlyn",
+  "name": "Caitlyn",
+  "description": "Renowned as its finest peacekeeper, Caitlyn Kiramman is also Piltover's best shot at ridding the city of its elusive criminal elements. She is often paired with Vi, acting as a cool counterpoint to her partner's more impetuous nature.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "650"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Caitlyn-passive",
+      "name": "Headshot",
+      "icon": "img/ability/Caitlyn-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Caitlyn-Q",
+      "name": "Piltover Peacemaker",
+      "icon": "img/ability/Caitlyn-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Caitlyn-W",
+      "name": "Yordle Snap Trap",
+      "icon": "img/ability/Caitlyn-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Caitlyn-E",
+      "name": "90 Caliber Net",
+      "icon": "img/ability/Caitlyn-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Caitlyn-R",
+      "name": "Ace in the Hole",
+      "icon": "img/ability/Caitlyn-R.png"
+    }
+  ],
+  "icon": "img/champion/Caitlyn.png",
+  "art": "img/champion-splash/Caitlyn_0.jpg",
+  "title": "the Sheriff of Piltover",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

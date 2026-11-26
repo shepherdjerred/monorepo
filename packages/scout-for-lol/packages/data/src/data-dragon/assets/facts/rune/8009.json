@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8009",
+  "name": "Presence of Mind",
+  "description": "Restore a small amount of mana or energy when damaging an enemy champion. Takedowns restore mana or energy.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/PresenceOfMind.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}

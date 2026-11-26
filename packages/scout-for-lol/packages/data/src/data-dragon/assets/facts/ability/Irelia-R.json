@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Irelia-R",
+  "name": "Vanguard's Edge",
+  "description": "Irelia launches a barrage of blades, dealing 125/200/275 (+100% AP) magic damage and making champions and large jungle monsters Unsteady for 5 seconds. The barrage explodes into a cage around the first champion hit for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Irelia-R.png",
+  "slot": "R",
+  "championKey": "Irelia",
+  "championName": "Irelia",
+  "maxRank": 3,
+  "cooldownByRank": [
+    125,
+    105,
+    85
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "125/105/85 s"
+  }
+}

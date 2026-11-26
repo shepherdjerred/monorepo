@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gragas-E",
+  "name": "Body Slam",
+  "description": "Gragas charges forward, colliding with the first enemy, Knocking Up nearby enemies for 1 second and dealing 80/125/170/215/260 (+60% AP) magic damage to them. This Ability's Cooldown is reduced by 40% if Gragas collides with an enemy.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gragas-E.png",
+  "slot": "E",
+  "championKey": "Gragas",
+  "championName": "Gragas",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13.5,
+    13,
+    12.5,
+    12
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13.5/13/12.5/12 s"
+  }
+}

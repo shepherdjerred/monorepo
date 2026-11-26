@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yorick-R",
+  "name": "Eulogy of the Isles",
+  "description": "Yorick summons the Maiden of the Mist with 1050-3200 (based on level) (+60% bonus Health) Health and 50/75/100 (+30% bonus AD) Magic Attack Damage plus 2/3/4 Mist Walkers.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yorick-R.png",
+  "slot": "R",
+  "championKey": "Yorick",
+  "championName": "Yorick",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    130,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/130/100 s"
+  }
+}

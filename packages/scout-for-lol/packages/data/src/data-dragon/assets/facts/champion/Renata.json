@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Renata",
+  "name": "Renata Glasc",
+  "description": "Renata Glasc rose from the ashes of her childhood home with nothing but her name and her parents' alchemical research.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "545"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Renata-passive",
+      "name": "Leverage",
+      "icon": "img/ability/Renata-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renata-Q",
+      "name": "Handshake",
+      "icon": "img/ability/Renata-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renata-W",
+      "name": "Bailout",
+      "icon": "img/ability/Renata-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renata-E",
+      "name": "Loyalty Program",
+      "icon": "img/ability/Renata-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Renata-R",
+      "name": "Hostile Takeover",
+      "icon": "img/ability/Renata-R.png"
+    }
+  ],
+  "icon": "img/champion/Renata.png",
+  "art": "img/champion-splash/Renata_0.jpg",
+  "title": "the Chem-Baroness",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

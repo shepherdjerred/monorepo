@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771042",
+  "name": "Dagger",
+  "description": "Grants 12% Attack Speed.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "12%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771042.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

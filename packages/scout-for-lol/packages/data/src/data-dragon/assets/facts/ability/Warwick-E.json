@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Warwick-E",
+  "name": "Primal Howl",
+  "description": "Warwick gains 35/40/45/50/55% damage reduction for 2.75 seconds. After it ends, Warwick howls, Fearing nearby enemies for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "375"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Warwick-E.png",
+  "slot": "E",
+  "championKey": "Warwick",
+  "championName": "Warwick",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    375,
+    375,
+    375,
+    375,
+    375
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

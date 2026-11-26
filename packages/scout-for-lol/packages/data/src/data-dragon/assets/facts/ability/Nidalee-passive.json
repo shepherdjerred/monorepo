@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nidalee-passive",
+  "name": "Prowl",
+  "description": "Moving through brush increases Nidalee's Move Speed by 10% for 2 seconds, increased to 30% toward visible enemy champions within 1400 range.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nidalee-passive.png",
+  "slot": "passive",
+  "championKey": "Nidalee",
+  "championName": "Nidalee",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

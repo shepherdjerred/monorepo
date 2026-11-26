@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Galio-passive",
+  "name": "Colossal Smash",
+  "description": "Every few seconds, Galio's next basic attack deals bonus magic damage in an area.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Galio-passive.png",
+  "slot": "passive",
+  "championKey": "Galio",
+  "championName": "Galio",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

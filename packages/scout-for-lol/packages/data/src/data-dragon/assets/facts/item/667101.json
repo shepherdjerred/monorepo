@@ -1,0 +1,37 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "667101",
+  "name": "Gambler's Blade",
+  "description": "Playing for Time: Champion takedowns while using Gambler's Blade delays Doom-boss Veigar's arrival by an additional 10 seconds. Double Down: Champion takedowns grant a stack, each granting 10 bonus gold on kill.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "55"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    },
+    {
+      "label": "Lethality",
+      "value": "15"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "15"
+    },
+    {
+      "label": "Move Speed",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/667101.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

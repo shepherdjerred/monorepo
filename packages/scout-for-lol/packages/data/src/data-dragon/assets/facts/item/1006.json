@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1006",
+  "name": "Rejuvenation Bead",
+  "description": "Grants 100% Base Health Regen.",
+  "facts": [
+    {
+      "label": "Base Health Regen",
+      "value": "100%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1006.png",
+  "goldTotal": 300,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2007",
+  "name": "Disabled Recall",
+  "description": "",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2007.png",
+  "goldTotal": 60,
+  "goldCombine": 60,
+  "keyFact": {
+    "label": "Cost",
+    "value": "60 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MonkeyKing-E",
+  "name": "Nimbus Strike",
+  "description": "Wukong dashes to an enemy, sending out Clones that mimic the dash to up to 2 additional enemies nearby. Each enemy struck takes 80/120/160/200/240 (+100% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/35/40/45/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MonkeyKing-E.png",
+  "slot": "E",
+  "championKey": "MonkeyKing",
+  "championName": "Wukong",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.25,
+    8.5,
+    7.75,
+    7
+  ],
+  "costByRank": [
+    30,
+    35,
+    40,
+    45,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.25/8.5/7.75/7 s"
+  }
+}

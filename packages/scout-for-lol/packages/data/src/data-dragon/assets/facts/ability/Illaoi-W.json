@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Illaoi-W",
+  "name": "Harsh Lesson",
+  "description": "Illaoi leaps to her target, dealing physical damage and causing nearby Tentacles to also swing at the target.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Illaoi-W.png",
+  "slot": "W",
+  "championKey": "Illaoi",
+  "championName": "Illaoi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

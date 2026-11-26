@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223110",
+  "name": "Frozen Heart",
+  "description": "Winter's Caress: Reduces the Attack Speed of nearby enemies.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "90"
+    },
+    {
+      "label": "Mana",
+      "value": "450"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223110.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

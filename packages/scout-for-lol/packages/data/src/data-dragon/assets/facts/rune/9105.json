@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "9105",
+  "name": "Legend: Haste",
+  "description": "Takedowns on enemies grant permanent Basic Ability Haste.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/LegendHaste.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}

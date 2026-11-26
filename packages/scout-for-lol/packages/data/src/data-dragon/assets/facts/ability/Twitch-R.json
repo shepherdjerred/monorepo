@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Twitch-R",
+  "name": "Spray and Pray",
+  "description": "Twitch unleashes his crossbow, gaining 300 Attack Range and 30/45/60 Attack Damage, and causing his Attacks to become piercing bolts for 6 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Twitch-R.png",
+  "slot": "R",
+  "championKey": "Twitch",
+  "championName": "Twitch",
+  "maxRank": 3,
+  "cooldownByRank": [
+    90,
+    90,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "90 s"
+  }
+}

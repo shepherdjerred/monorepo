@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pantheon-W",
+  "name": "Shield Vault",
+  "description": "Pantheon dashes to a target, damaging and stunning them.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Pantheon-W.png",
+  "slot": "W",
+  "championKey": "Pantheon",
+  "championName": "Pantheon",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    55,
+    55,
+    55,
+    55,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

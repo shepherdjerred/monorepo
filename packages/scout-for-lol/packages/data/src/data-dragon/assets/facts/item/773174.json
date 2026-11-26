@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773174",
+  "name": "Shushei's Mana Jug",
+  "description": "Rabble-Rousing: Restores Health and Mana on kill or assist.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "20%"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/773108.png"
+    },
+    {
+      "kind": "item",
+      "key": "773028",
+      "name": "Chalice of Harmony",
+      "icon": "img/item/773028.png"
+    }
+  ],
+  "icon": "img/item/773174.png",
+  "goldTotal": 2600,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

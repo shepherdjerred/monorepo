@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gragas-W",
+  "name": "Drunken Rage",
+  "description": "Gragas samples his latest brew for 1 second. After finishing, he becomes boisterous and belligerent, dealing magic damage to all nearby enemies on his next basic attack and reducing damage received.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gragas-W.png",
+  "slot": "W",
+  "championKey": "Gragas",
+  "championName": "Gragas",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

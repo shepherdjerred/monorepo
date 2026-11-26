@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jax-passive",
+  "name": "Relentless Assault",
+  "description": "Jax's consecutive basic attacks continuously increase his Attack Speed.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Jax-passive.png",
+  "slot": "passive",
+  "championKey": "Jax",
+  "championName": "Jax",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

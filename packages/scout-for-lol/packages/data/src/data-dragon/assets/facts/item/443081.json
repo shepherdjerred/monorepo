@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443081",
+  "name": "Hexbolt Companion",
+  "description": "Covering Fire: Every 10 seconds, Autocast fires a bolt towards a nearby target, dealing physical damage and applying On-Hit effects. Energized: Moving and Attacking generates an Energized Attack.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "70"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "50%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443081.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

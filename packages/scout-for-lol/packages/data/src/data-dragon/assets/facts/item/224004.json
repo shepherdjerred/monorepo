@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "224004",
+  "name": "Spectral Cutlass",
+  "description": "Active -. Soul Anchor: (0s) Mark your current location.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "60"
+    },
+    {
+      "label": "Lethality",
+      "value": "21"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/224004.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

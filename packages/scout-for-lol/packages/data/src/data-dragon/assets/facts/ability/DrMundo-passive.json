@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "DrMundo-passive",
+  "name": "Goes Where He Pleases",
+  "description": "Dr. Mundo resists the first Immobilizing effect that hits him, instead losing Health and dropping a chemical cannister nearby.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/DrMundo-passive.png",
+  "slot": "passive",
+  "championKey": "DrMundo",
+  "championName": "Dr. Mundo",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

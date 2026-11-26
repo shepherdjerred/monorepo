@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9180",
+  "name": "UwU Blaster",
+  "description": "Rapidly fires projectiles at the nearest enemy, dealing damage to the first target hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9180.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

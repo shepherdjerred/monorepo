@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Thresh-passive",
+  "name": "Damnation",
+  "description": "Thresh can harvest the souls of enemies that die near him, permanently granting him Armor and Ability Power.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Thresh-passive.png",
+  "slot": "passive",
+  "championKey": "Thresh",
+  "championName": "Thresh",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

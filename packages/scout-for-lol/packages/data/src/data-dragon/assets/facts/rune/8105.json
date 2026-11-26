@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8105",
+  "name": "Relentless Hunter",
+  "description": "Unique takedowns grant permanent out of combat MS.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/RelentlessHunter.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

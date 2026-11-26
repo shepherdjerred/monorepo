@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "220004",
+  "name": "Legendary Mage Item",
+  "description": "Active - Consume: Automatically open a semi-random selection for a Legendary Mage item.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/220004.png",
+  "goldTotal": 2250,
+  "goldCombine": 2250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

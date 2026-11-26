@@ -1,0 +1,40 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TwistedFate-E",
+  "name": "Stacked Deck",
+  "description": "Passive: Twisted Fate gains 15/25/35/45/55% Attack Speed and every 4th Attack deals an additional 65/90/115/140/165 (+20% bonus AD) (+40% AP) magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/TwistedFate-E.png",
+  "slot": "E",
+  "championKey": "TwistedFate",
+  "championName": "Twisted Fate",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mel-R",
+  "name": "Golden Eclipse",
+  "description": "Passive: Overwhelm damage is increased to 60/70/80 (+10% AP) magic damage plus 3/4/5 (+0.75% AP) magic damage per stack.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Mel-R.png",
+  "slot": "R",
+  "championKey": "Mel",
+  "championName": "Mel",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    90,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/90/60 s"
+  }
+}

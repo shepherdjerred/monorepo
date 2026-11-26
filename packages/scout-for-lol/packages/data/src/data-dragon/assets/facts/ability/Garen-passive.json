@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Garen-passive",
+  "name": "Perseverance",
+  "description": "If Garen has not recently been struck by damage or enemy abilities, he regenerates a percentage of his total health each second.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Garen-passive.png",
+  "slot": "passive",
+  "championKey": "Garen",
+  "championName": "Garen",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

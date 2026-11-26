@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4013",
+  "name": "Lightning Braid",
+  "description": "Chain Lightning: You deal 20% reduced ability damage.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "30"
+    },
+    {
+      "label": "Tenacity",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/4013.png",
+  "goldTotal": 3000,
+  "goldCombine": 3000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

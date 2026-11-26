@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Olaf-passive",
+  "name": "Berserker Rage",
+  "description": "Olaf gains Attack Speed and Life Steal based on his missing Health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Olaf-passive.png",
+  "slot": "passive",
+  "championKey": "Olaf",
+  "championName": "Olaf",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

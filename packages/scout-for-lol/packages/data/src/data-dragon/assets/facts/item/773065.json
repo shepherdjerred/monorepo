@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773065",
+  "name": "Spirit Visage",
+  "description": "Lifeforce: Increases self-healing, Health Regen, Lifesteal, and Spell Vamp effects by 20%.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "55"
+    },
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "20"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773211",
+      "name": "Spectre's Cowl",
+      "icon": "img/item/773211.png"
+    },
+    {
+      "kind": "item",
+      "key": "773067",
+      "name": "Kindlegem",
+      "icon": "img/item/773067.png"
+    }
+  ],
+  "icon": "img/item/773065.png",
+  "goldTotal": 2750,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zilean-E",
+  "name": "Time Warp",
+  "description": "Zilean Slows an enemy champion by 40/55/70/85/99% or grants an allied champion 40/55/70/85/99% Move Speed for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zilean-E.png",
+  "slot": "E",
+  "championKey": "Zilean",
+  "championName": "Zilean",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15 s"
+  }
+}

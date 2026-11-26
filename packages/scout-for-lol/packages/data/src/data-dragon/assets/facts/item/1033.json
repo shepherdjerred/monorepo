@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1033",
+  "name": "Null-Magic Mantle",
+  "description": "Grants 20 Magic Resist.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1033.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

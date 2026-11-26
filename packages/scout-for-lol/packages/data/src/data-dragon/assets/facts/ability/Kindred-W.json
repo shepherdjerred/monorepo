@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kindred-W",
+  "name": "Wolf's Frenzy",
+  "description": "Passive: Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to 47-81 (based on level) Health based on their missing Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "560"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kindred-W.png",
+  "slot": "W",
+  "championKey": "Kindred",
+  "championName": "Kindred",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    560,
+    560,
+    560,
+    560,
+    560
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

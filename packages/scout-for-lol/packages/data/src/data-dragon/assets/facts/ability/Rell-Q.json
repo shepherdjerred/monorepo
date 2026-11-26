@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rell-Q",
+  "name": "Shattering Strike",
+  "description": "Rell thrusts her lance, Stunning targets for 0.65 seconds, destroying all Shields, and dealing 60/100/140/180/220 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rell-Q.png",
+  "slot": "Q",
+  "championKey": "Rell",
+  "championName": "Rell",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10.5,
+    10,
+    9.5,
+    9
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10.5/10/9.5/9 s"
+  }
+}

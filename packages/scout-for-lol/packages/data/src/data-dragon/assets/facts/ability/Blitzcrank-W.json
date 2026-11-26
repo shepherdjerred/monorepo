@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Blitzcrank-W",
+  "name": "Overdrive",
+  "description": "Blitzcrank supercharges themself, gaining 60/65/70/75/80% decaying Move Speed and 30/40/50/60/70% Attack Speed for 5 seconds. Afterwards, Blitzcrank is Slowed by 30% for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Blitzcrank-W.png",
+  "slot": "W",
+  "championKey": "Blitzcrank",
+  "championName": "Blitzcrank",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costByRank": [
+    75,
+    75,
+    75,
+    75,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15 s"
+  }
+}

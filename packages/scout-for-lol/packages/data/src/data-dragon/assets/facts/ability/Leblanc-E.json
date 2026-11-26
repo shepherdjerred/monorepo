@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leblanc-E",
+  "name": "Ethereal Chains",
+  "description": "LeBlanc launches a chain that shackles the first enemy hit, dealing 50/70/90/110/130 (+40% AP) magic damage and granting True Sight.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "925"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leblanc-E.png",
+  "slot": "E",
+  "championKey": "Leblanc",
+  "championName": "LeBlanc",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13.25,
+    12.5,
+    11.75,
+    11
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    925,
+    925,
+    925,
+    925,
+    925
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13.25/12.5/11.75/11 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ambessa-passive",
+  "name": "Drakehound's Step",
+  "description": "Entering an attack or movement command while casting an ability will cause Ambessa to dash a short distance once the ability is cast, granting her next attack bonus range, damage, and attack speed, and refunding energy.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Ambessa-passive.png",
+  "slot": "passive",
+  "championKey": "Ambessa",
+  "championName": "Ambessa",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

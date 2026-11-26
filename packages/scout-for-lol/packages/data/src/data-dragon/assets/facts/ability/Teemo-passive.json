@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Teemo-passive",
+  "name": "Guerrilla Warfare",
+  "description": "If Teemo stands still and takes no actions for a short duration, he becomes Invisible indefinitely. If he's in brush, Teemo can enter and maintain his Invisibility while moving.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Teemo-passive.png",
+  "slot": "passive",
+  "championKey": "Teemo",
+  "championName": "Teemo",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

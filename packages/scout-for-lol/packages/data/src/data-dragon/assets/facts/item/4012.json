@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4012",
+  "name": "Sin Eater",
+  "description": "The Feast: Whenever a nearby ally champion becomes affected by an immobilizing crowd control effect, instead you are stunned for that duration.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "45"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "45"
+    },
+    {
+      "label": "Tenacity",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/4012.png",
+  "goldTotal": 3000,
+  "goldCombine": 3000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

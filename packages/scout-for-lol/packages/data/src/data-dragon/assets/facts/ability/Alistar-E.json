@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Alistar-E",
+  "name": "Trample",
+  "description": "Alistar begins trampling the ground, becoming Ghosted and dealing 80/110/140/170/200 (+70% AP) magic damage over 5 seconds to nearby enemies. Each pulse that damages a champion grants a stack.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Alistar-E.png",
+  "slot": "E",
+  "championKey": "Alistar",
+  "championName": "Alistar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

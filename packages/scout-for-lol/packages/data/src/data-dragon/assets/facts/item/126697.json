@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "126697",
+  "name": "Hubris",
+  "description": "Eminence: Gain temporary AD based on champion kills on kill.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Lethality",
+      "value": "18"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3134",
+      "name": "Serrated Dirk",
+      "icon": "img/item/3134.png"
+    },
+    {
+      "kind": "item",
+      "key": "3133",
+      "name": "Caulfield's Warhammer",
+      "icon": "img/item/3133.png"
+    }
+  ],
+  "icon": "img/item/126697.png",
+  "goldTotal": 2950,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2950 gold"
+  }
+}

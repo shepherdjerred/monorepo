@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ziggs-Q",
+  "name": "Bouncing Bomb",
+  "description": "Ziggs throws a bouncing bomb that deals 80/130/180/230/280 (+60/65/70/75/80% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ziggs-Q.png",
+  "slot": "Q",
+  "championKey": "Ziggs",
+  "championName": "Ziggs",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5.5,
+    5,
+    4.5,
+    4
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5.5/5/4.5/4 s"
+  }
+}

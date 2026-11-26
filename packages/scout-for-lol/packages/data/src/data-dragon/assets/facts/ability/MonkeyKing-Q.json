@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MonkeyKing-Q",
+  "name": "Crushing Blow",
+  "description": "Wukong and his Clone's next Attack gains 135/145/155/165/175 range, deals an additional 20/45/70/95/120 (+50% bonus AD) physical damage, and removes 10/15/20/25/30% Armor for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "250/275/300/325/350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MonkeyKing-Q.png",
+  "slot": "Q",
+  "championKey": "MonkeyKing",
+  "championName": "Wukong",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    250,
+    275,
+    300,
+    325,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

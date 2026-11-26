@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Volibear",
+  "name": "Volibear",
+  "description": "To those who still revere him, the Volibear is the storm made manifest.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Volibear-passive",
+      "name": "The Relentless Storm",
+      "icon": "img/ability/Volibear-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Volibear-Q",
+      "name": "Thundering Smash",
+      "icon": "img/ability/Volibear-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Volibear-W",
+      "name": "Frenzied Maul",
+      "icon": "img/ability/Volibear-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Volibear-E",
+      "name": "Sky Splitter",
+      "icon": "img/ability/Volibear-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Volibear-R",
+      "name": "Stormbringer",
+      "icon": "img/ability/Volibear-R.png"
+    }
+  ],
+  "icon": "img/champion/Volibear.png",
+  "art": "img/champion-splash/Volibear_0.jpg",
+  "title": "the Relentless Storm",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

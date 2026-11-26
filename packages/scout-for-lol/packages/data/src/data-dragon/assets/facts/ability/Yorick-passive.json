@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yorick-passive",
+  "name": "Shepherd of Souls",
+  "description": "The Cursed Horde: Yorick can summon Mist Walkers to swarm and attack nearby enemies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Yorick-passive.png",
+  "slot": "passive",
+  "championKey": "Yorick",
+  "championName": "Yorick",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Briar-passive",
+  "name": "Crimson Curse",
+  "description": "Briar's attacks and abilities apply a stacking bleed that heals her for a portion of the damage it deals. Perpetually hungry, she gains increased healing based on her missing Health, but lacks innate Health Regeneration.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Briar-passive.png",
+  "slot": "passive",
+  "championKey": "Briar",
+  "championName": "Briar",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

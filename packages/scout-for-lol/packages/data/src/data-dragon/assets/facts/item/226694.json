@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226694",
+  "name": "Serylda's Grudge",
+  "description": "Bitter Cold: Damaging Abilities Slow enemies below 60% Health by 50% for 1 second.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Armor Penetration",
+      "value": "45%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226694.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

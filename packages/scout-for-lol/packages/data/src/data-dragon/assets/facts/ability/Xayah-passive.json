@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xayah-passive",
+  "name": "Clean Cuts",
+  "description": "After using an ability, Xayah's next basic attacks will hit all targets along their path and leave a Feather.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Xayah-passive.png",
+  "slot": "passive",
+  "championKey": "Xayah",
+  "championName": "Xayah",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

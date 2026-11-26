@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "663064",
+  "name": "Veigar's Talisman of Ascension",
+  "description": "Gain 100% Extra Experience Offers no stats, and cannot be sold......But will be worth it if you reach Level 30.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/663064.png",
+  "goldTotal": 900,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

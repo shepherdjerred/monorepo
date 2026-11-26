@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Veigar-Q",
+  "name": "Baleful Strike",
+  "description": "Veigar unleashes a bolt of dark energy, dealing 80/120/160/200/240 (+50/55/60/65/70% AP) magic damage to the first two enemies hit. If Veigar kills an enemy with this Ability, he gains 1 stack of Phenomenal Evil.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/35/40/45/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Veigar-Q.png",
+  "slot": "Q",
+  "championKey": "Veigar",
+  "championName": "Veigar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5.5,
+    5,
+    4.5,
+    4
+  ],
+  "costByRank": [
+    30,
+    35,
+    40,
+    45,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5.5/5/4.5/4 s"
+  }
+}

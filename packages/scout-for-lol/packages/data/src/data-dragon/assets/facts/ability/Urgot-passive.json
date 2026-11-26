@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Urgot-passive",
+  "name": "Echoing Flames",
+  "description": "Urgot's basic attacks and Purge periodically trigger blasts of flame from his legs, dealing physical damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Urgot-passive.png",
+  "slot": "passive",
+  "championKey": "Urgot",
+  "championName": "Urgot",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Volibear-R",
+  "name": "Stormbringer",
+  "description": "Volibear transforms and leaps, gaining 175/350/525 Health and 50 Attack Range for the next 12 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Volibear-R.png",
+  "slot": "R",
+  "championKey": "Volibear",
+  "championName": "Volibear",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    135,
+    110
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/135/110 s"
+  }
+}

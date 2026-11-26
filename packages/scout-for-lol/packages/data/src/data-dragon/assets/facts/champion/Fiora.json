@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Fiora",
+  "name": "Fiora",
+  "description": "The most feared duelist in all Valoran, Fiora is as renowned for her brusque manner and cunning mind as she is for the speed of her bluesteel rapier.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Fiora-passive",
+      "name": "Duelist's Dance",
+      "icon": "img/ability/Fiora-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiora-Q",
+      "name": "Lunge",
+      "icon": "img/ability/Fiora-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiora-W",
+      "name": "Riposte",
+      "icon": "img/ability/Fiora-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiora-E",
+      "name": "Bladework",
+      "icon": "img/ability/Fiora-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fiora-R",
+      "name": "Grand Challenge",
+      "icon": "img/ability/Fiora-R.png"
+    }
+  ],
+  "icon": "img/champion/Fiora.png",
+  "art": "img/champion-splash/Fiora_0.jpg",
+  "title": "the Grand Duelist",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Urgot-E",
+  "name": "Disdain",
+  "description": "Urgot charges forward, gaining 55/75/95/115/135 (+135% bonus AD) (+13.5% bonus Health) Shield for 4 seconds. The first champion hit is Stunned for 1.5 seconds and thrown behind Urgot.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Urgot-E.png",
+  "slot": "E",
+  "championKey": "Urgot",
+  "championName": "Urgot",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15.5,
+    15,
+    14.5,
+    14
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15.5/15/14.5/14 s"
+  }
+}

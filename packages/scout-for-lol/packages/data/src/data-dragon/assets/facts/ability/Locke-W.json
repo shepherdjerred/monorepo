@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Locke-W",
+  "name": "Soul Ignition",
+  "description": "Locke ignites his soul, gaining Attack Speed and Move Speed, and dealing damage to himself. At the end of the duration, Locke will heal back a portion of the damage he takes during the effect.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana and 2% Current Health Per Second"
+    },
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Locke-W.png",
+  "slot": "W",
+  "championKey": "Locke",
+  "championName": "Locke",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana and 2% Current Health Per Second",
+  "rangeByRank": [
+    250,
+    250,
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "DrMundo-Q",
+  "name": "Infected Bonesaw",
+  "description": "Dr. Mundo hurls his bonesaw, dealing 20/22.5/25/27.5/30% current Health magic damage to the first enemy hit and Slowing them by 40% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "975"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/DrMundo-Q.png",
+  "slot": "Q",
+  "championKey": "DrMundo",
+  "championName": "Dr. Mundo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    975,
+    975,
+    975,
+    975,
+    975
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

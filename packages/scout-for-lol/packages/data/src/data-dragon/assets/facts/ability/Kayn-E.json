@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayn-E",
+  "name": "Shadow Step",
+  "description": "Kayn gains 40% Move Speed, becomes Ghosted, and can move through Terrain for 7/7.5/8/8.5/9 seconds. When he first enters terrain, he restores 90/100/110/120/130 (+45% bonus AD) Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayn-E.png",
+  "slot": "E",
+  "championKey": "Kayn",
+  "championName": "Kayn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    21,
+    19,
+    17,
+    15,
+    13
+  ],
+  "costByRank": [
+    90,
+    90,
+    90,
+    90,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "21/19/17/15/13 s"
+  }
+}

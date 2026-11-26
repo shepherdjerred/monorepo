@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3855",
+  "name": "Runesteel Spaulders",
+  "description": "Spoils of War: While nearby an allied champion, Attacks execute minions below 0% of their max Health. Quest: Earn 1000 gold from this item to transform it into Pauldrons of Whiterock.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "6"
+    },
+    {
+      "label": "Health",
+      "value": "100"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "3"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3855.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

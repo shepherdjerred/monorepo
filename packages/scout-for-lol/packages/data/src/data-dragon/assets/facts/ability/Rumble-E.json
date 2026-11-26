@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rumble-E",
+  "name": "Electro Harpoon",
+  "description": "Rumble launches an electrified harpoon, dealing 55/80/105/130/155 (+50% AP) magic damage, Slowing by 15/20/25/30/35% for 2 seconds, and reducing the enemy's Magic Resist by 10/12/14/16/18% for 4 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rumble-E.png",
+  "slot": "E",
+  "championKey": "Rumble",
+  "championName": "Rumble",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.5 s"
+  }
+}

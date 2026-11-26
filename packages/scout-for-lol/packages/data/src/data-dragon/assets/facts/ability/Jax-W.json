@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jax-W",
+  "name": "Empower",
+  "description": "Jax charges his weapon with energy, causing his next Attack or Leap Strike to deal an additional 50/85/120/155/190 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jax-W.png",
+  "slot": "W",
+  "championKey": "Jax",
+  "championName": "Jax",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6,
+    5,
+    4,
+    3
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6/5/4/3 s"
+  }
+}

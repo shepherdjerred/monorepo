@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773348",
+  "name": "Red Trinket",
+  "description": "Active s Reveals enemy wards in the area for 8 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/773348.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

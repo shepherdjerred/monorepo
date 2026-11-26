@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gragas-R",
+  "name": "Explosive Cask",
+  "description": "Gragas hurls his cask, dealing 200/300/400 (+80% AP) magic damage and Knocking Away enemies from the impact zone.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gragas-R.png",
+  "slot": "R",
+  "championKey": "Gragas",
+  "championName": "Gragas",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    85,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/85/70 s"
+  }
+}

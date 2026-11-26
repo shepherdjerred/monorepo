@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zoe-Q",
+  "name": "Paddle Star!",
+  "description": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between 50/80/110/140/170 (+2-50 based on level) (+60% AP) to 125/200/275/350/425 (+5-125 based on level) (+150% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zoe-Q.png",
+  "slot": "Q",
+  "championKey": "Zoe",
+  "championName": "Zoe",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8.5,
+    8,
+    7.5,
+    7,
+    6.5
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8.5/8/7.5/7/6.5 s"
+  }
+}

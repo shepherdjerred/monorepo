@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Skarner-E",
+  "name": "Ixtal's Impact",
+  "description": "Skarner charges forward, steering toward the chosen direction and ignoring terrain. If he runs into a champion or large monster, Skarner drags them along for the rest of his charge.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Skarner-E.png",
+  "slot": "E",
+  "championKey": "Skarner",
+  "championName": "Skarner",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    21,
+    20,
+    19,
+    18
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1700,
+    1700,
+    1700,
+    1700,
+    1700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/21/20/19/18 s"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Gnar",
+  "name": "Gnar",
+  "description": "Gnar is a primeval yordle whose playful antics can erupt into a toddler's outrage in an instant, transforming him into a massive beast bent on destruction.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "540"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Gnar-passive",
+      "name": "Rage Gene",
+      "icon": "img/ability/Gnar-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gnar-Q",
+      "name": "Boomerang Throw / Boulder Toss",
+      "icon": "img/ability/Gnar-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gnar-W",
+      "name": "Hyper / Wallop",
+      "icon": "img/ability/Gnar-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gnar-E",
+      "name": "Hop / Crunch",
+      "icon": "img/ability/Gnar-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gnar-R",
+      "name": "GNAR!",
+      "icon": "img/ability/Gnar-R.png"
+    }
+  ],
+  "icon": "img/champion/Gnar.png",
+  "art": "img/champion-splash/Gnar_0.jpg",
+  "title": "the Missing Link",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Xerath-passive",
+  "name": "Mana Surge",
+  "description": "Xerath's basic attacks periodically restore Mana. Whenever Xerath kills a unit, this cooldown is reduced.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Xerath-passive.png",
+  "slot": "passive",
+  "championKey": "Xerath",
+  "championName": "Xerath",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

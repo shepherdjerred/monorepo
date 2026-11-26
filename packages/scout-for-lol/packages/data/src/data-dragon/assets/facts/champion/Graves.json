@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Graves",
+  "name": "Graves",
+  "description": "Malcolm Graves is a renowned mercenary, gambler, and thief—a wanted man in every city and empire he has visited.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "625"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "425"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Graves-passive",
+      "name": "New Destiny",
+      "icon": "img/ability/Graves-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Graves-Q",
+      "name": "End of the Line",
+      "icon": "img/ability/Graves-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Graves-W",
+      "name": "Smoke Screen",
+      "icon": "img/ability/Graves-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Graves-E",
+      "name": "Quickdraw",
+      "icon": "img/ability/Graves-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Graves-R",
+      "name": "Collateral Damage",
+      "icon": "img/ability/Graves-R.png"
+    }
+  ],
+  "icon": "img/champion/Graves.png",
+  "art": "img/champion-splash/Graves_0.jpg",
+  "title": "the Outlaw",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

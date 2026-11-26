@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kennen-passive",
+  "name": "Mark of the Storm",
+  "description": "Kennen stuns enemies he hits 3 times with his abilities.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kennen-passive.png",
+  "slot": "passive",
+  "championKey": "Kennen",
+  "championName": "Kennen",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

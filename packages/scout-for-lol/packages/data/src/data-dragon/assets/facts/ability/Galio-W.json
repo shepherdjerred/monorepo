@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Galio-W",
+  "name": "Shield of Durand",
+  "description": "Passive: Galio gains a 8/11/14/17/20% max Health Magic Shield after not taking damage for 12-8 (based on level) seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "275"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Galio-W.png",
+  "slot": "W",
+  "championKey": "Galio",
+  "championName": "Galio",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    275,
+    275,
+    275,
+    275,
+    275
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

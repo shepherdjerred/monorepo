@@ -1,0 +1,49 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "228008",
+  "name": "Runeglaive",
+  "description": "Grants 65 Attack Damage, 85 Ability Power, 30% Attack Speed, 25 Ability Haste, 600 Health, 50 Armor, 10% Move Speed, 20% Critical Strike Chance.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "65"
+    },
+    {
+      "label": "Ability Power",
+      "value": "85"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    },
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Move Speed",
+      "value": "10%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "20%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/228008.png",
+  "goldTotal": 9000,
+  "goldCombine": 9000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "9000 gold"
+  }
+}

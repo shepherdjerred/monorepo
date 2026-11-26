@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226696",
+  "name": "Axiom Arc",
+  "description": "Apophthegm: Your Ultimate Abilities deal 20% increased damage.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "45"
+    },
+    {
+      "label": "Lethality",
+      "value": "18"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226696.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

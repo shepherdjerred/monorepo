@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6698",
+  "name": "Profane Hydra",
+  "description": "Cleave: Attacks deal physical damage to nearby enemies. Heretical Cleave: Deal physical damage around you.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Lethality",
+      "value": "18"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3077",
+      "name": "Tiamat",
+      "icon": "img/item/3077.png"
+    },
+    {
+      "kind": "item",
+      "key": "2020",
+      "name": "The Brutalizer",
+      "icon": "img/item/2020.png"
+    }
+  ],
+  "icon": "img/item/6698.png",
+  "goldTotal": 2850,
+  "goldCombine": 313,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2850 gold"
+  }
+}

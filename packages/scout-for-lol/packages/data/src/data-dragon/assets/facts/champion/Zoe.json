@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zoe",
+  "name": "Zoe",
+  "description": "As the embodiment of mischief, imagination, and change, Zoe acts as the cosmic messenger of Targon, heralding major events that reshape worlds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zoe-passive",
+      "name": "More Sparkles!",
+      "icon": "img/ability/Zoe-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zoe-Q",
+      "name": "Paddle Star!",
+      "icon": "img/ability/Zoe-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zoe-W",
+      "name": "Spell Thief",
+      "icon": "img/ability/Zoe-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zoe-E",
+      "name": "Sleepy Trouble Bubble",
+      "icon": "img/ability/Zoe-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zoe-R",
+      "name": "Portal Jump",
+      "icon": "img/ability/Zoe-R.png"
+    }
+  ],
+  "icon": "img/champion/Zoe.png",
+  "art": "img/champion-splash/Zoe_0.jpg",
+  "title": "the Aspect of Twilight",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

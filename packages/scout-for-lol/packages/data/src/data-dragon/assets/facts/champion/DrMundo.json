@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "DrMundo",
+  "name": "Dr. Mundo",
+  "description": "Utterly mad, tragically homicidal, and horrifyingly purple, Dr. Mundo is what keeps many of Zaun's citizens indoors on particularly dark nights.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "DrMundo-passive",
+      "name": "Goes Where He Pleases",
+      "icon": "img/ability/DrMundo-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "DrMundo-Q",
+      "name": "Infected Bonesaw",
+      "icon": "img/ability/DrMundo-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "DrMundo-W",
+      "name": "Heart Zapper",
+      "icon": "img/ability/DrMundo-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "DrMundo-E",
+      "name": "Blunt Force Trauma",
+      "icon": "img/ability/DrMundo-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "DrMundo-R",
+      "name": "Maximum Dosage",
+      "icon": "img/ability/DrMundo-R.png"
+    }
+  ],
+  "icon": "img/champion/DrMundo.png",
+  "art": "img/champion-splash/DrMundo_0.jpg",
+  "title": "the Madman of Zaun",
+  "roles": [
+    "Tank",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Fighter"
+  }
+}

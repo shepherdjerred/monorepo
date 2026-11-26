@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rumble-passive",
+  "name": "Junkyard Titan",
+  "description": "Every spell Rumble casts gives him Heat. When he reaches 50% Heat he reaches Danger Zone, granting all his basic abilities bonus effects.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Rumble-passive.png",
+  "slot": "passive",
+  "championKey": "Rumble",
+  "championName": "Rumble",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

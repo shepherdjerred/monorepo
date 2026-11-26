@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rumble-W",
+  "name": "Scrap Shield",
+  "description": "Rumble pulls up a shield, protecting him from damage and granting him a quick burst of speed. While in Danger Zone, the shield strength and speed bonus is increased.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rumble-W.png",
+  "slot": "W",
+  "championKey": "Rumble",
+  "championName": "Rumble",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

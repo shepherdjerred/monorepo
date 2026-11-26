@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MasterYi-passive",
+  "name": "Double Strike",
+  "description": "Every few consecutive basic attack, Master Yi strikes twice.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/MasterYi-passive.png",
+  "slot": "passive",
+  "championKey": "MasterYi",
+  "championName": "Master Yi",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

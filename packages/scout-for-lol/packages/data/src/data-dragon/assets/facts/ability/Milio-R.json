@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Milio-R",
+  "name": "Breath of Life",
+  "description": "Milio unleashes a wave of soothing flames on nearby ally champions, cleansing Disabling and Immobilizing effects, restoring 150/250/350 (+50% AP) Health, and granting 65% Tenacity for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Milio-R.png",
+  "slot": "R",
+  "championKey": "Milio",
+  "championName": "Milio",
+  "maxRank": 3,
+  "cooldownByRank": [
+    160,
+    145,
+    130
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "160/145/130 s"
+  }
+}

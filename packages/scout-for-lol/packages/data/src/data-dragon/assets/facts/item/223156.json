@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223156",
+  "name": "Maw of Malmortius",
+  "description": "Lifeline: Upon taking magic damage that would reduce Health below 30%, gain a magic damage Shield. Lifeline: triggers, gain Omnivamp until the end of combat.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223156.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

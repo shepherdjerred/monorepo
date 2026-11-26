@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zed-passive",
+  "name": "Contempt for the Weak",
+  "description": "Zed's basic attacks against low health targets deals bonus Magic Damage. This effect can only occur once every few seconds against the same enemy champion.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zed-passive.png",
+  "slot": "passive",
+  "championKey": "Zed",
+  "championName": "Zed",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

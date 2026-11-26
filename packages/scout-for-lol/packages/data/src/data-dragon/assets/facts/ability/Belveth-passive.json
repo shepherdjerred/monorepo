@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Belveth-passive",
+  "name": "Death in Lavender ",
+  "description": "Bel'Veth gains permanent attack speed stacks after taking down large minions and monsters and champions. She also gains temporary bonus attack speed after using an ability.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Belveth-passive.png",
+  "slot": "passive",
+  "championKey": "Belveth",
+  "championName": "Bel'Veth",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

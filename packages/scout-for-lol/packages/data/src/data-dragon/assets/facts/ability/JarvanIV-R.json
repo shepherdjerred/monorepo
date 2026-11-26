@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "JarvanIV-R",
+  "name": "Cataclysm",
+  "description": "Jarvan heroically leaps to an enemy Champion, dealing 200/325/450 (+180% bonus AD) physical damage to them and surrounding enemies and creating an arena of impassable terrain around them for 3.5 seconds. Jarvan can Recast to collapse the terrain.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/JarvanIV-R.png",
+  "slot": "R",
+  "championKey": "JarvanIV",
+  "championName": "Jarvan IV",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    105,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/105/90 s"
+  }
+}

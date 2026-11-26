@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jinx-Q",
+  "name": "Switcheroo!",
+  "description": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana Per Rocket"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jinx-Q.png",
+  "slot": "Q",
+  "championKey": "Jinx",
+  "championName": "Jinx",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.9,
+    0.9,
+    0.9,
+    0.9,
+    0.9
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana Per Rocket",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.9 s"
+  }
+}

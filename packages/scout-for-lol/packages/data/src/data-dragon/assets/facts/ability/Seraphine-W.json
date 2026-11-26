@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Seraphine-W",
+  "name": "Surround Sound",
+  "description": "Seraphine Shields and Hastes nearby allies. If she is already Shielded she will Heal nearby allies as well.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Seraphine-W.png",
+  "slot": "W",
+  "championKey": "Seraphine",
+  "championName": "Seraphine",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    22,
+    22,
+    22,
+    22
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22 s"
+  }
+}

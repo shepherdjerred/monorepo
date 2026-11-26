@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vayne-passive",
+  "name": "Night Hunter",
+  "description": "Vayne ruthlessly hunts evil-doers, gaining Move Speed when moving toward nearby enemy champions.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Vayne-passive.png",
+  "slot": "passive",
+  "championKey": "Vayne",
+  "championName": "Vayne",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

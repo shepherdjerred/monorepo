@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karma-W",
+  "name": "Focused Resolve",
+  "description": "Karma tethers herself to a champion or jungle monster, dealing 40/65/90/115/140 (+45% AP) magic damage and revealing them for 2s.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "675"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Karma-W.png",
+  "slot": "W",
+  "championKey": "Karma",
+  "championName": "Karma",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    675,
+    675,
+    675,
+    675,
+    675
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

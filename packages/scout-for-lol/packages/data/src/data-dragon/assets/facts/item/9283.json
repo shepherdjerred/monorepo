@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9283",
+  "name": "Quad-o-rang",
+  "description": "Fires returning projectiles that explode into smaller projectiles at the closest enemy.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9283.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

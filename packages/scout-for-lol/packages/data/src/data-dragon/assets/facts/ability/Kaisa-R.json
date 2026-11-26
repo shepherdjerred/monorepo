@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kaisa-R",
+  "name": "Killer Instinct",
+  "description": "Kai'Sa warps near an enemy champion affected by Plasma and gains 100/150/200 (+90/135/180% AD) (+120% AP) Shield for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2000/2500/3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kaisa-R.png",
+  "slot": "R",
+  "championKey": "Kaisa",
+  "championName": "Kai'Sa",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    100,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2000,
+    2500,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/100/70 s"
+  }
+}

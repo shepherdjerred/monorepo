@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "220008",
+  "name": "Anvil Voucher",
+  "description": "Redeem during a Shopping Phase to gain a Stat Anvil!",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/220008.png",
+  "goldTotal": 750,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "750 gold"
+  }
+}

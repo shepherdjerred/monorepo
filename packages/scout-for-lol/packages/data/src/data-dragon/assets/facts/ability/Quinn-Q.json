@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Quinn-Q",
+  "name": "Blinding Assault",
+  "description": "Quinn orders Valor to dive, making the first enemy hit with Harrier, reducing their vision radius for 1.75 seconds and dealing 65/100/135/170/205 (+80/85/90/95/100% bonus AD) (+50% AP) physical damage to all surrounding enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1025"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Quinn-Q.png",
+  "slot": "Q",
+  "championKey": "Quinn",
+  "championName": "Quinn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10.5,
+    10,
+    9.5,
+    9
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1025,
+    1025,
+    1025,
+    1025,
+    1025
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10.5/10/9.5/9 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Singed-passive",
+  "name": "Noxious Slipstream",
+  "description": "Singed drafts off nearby champions, gaining a burst of Move Speed when passing them.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Singed-passive.png",
+  "slot": "passive",
+  "championKey": "Singed",
+  "championName": "Singed",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

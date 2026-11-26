@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "JarvanIV-E",
+  "name": "Demacian Standard",
+  "description": "Passive: Jarvan gains 20/22.5/25/27.5/30% Attack Speed. Active: Jarvan throws a standard into the ground, dealing 80/120/160/200/240 (+80% AP) magic damage and granting allies near the standard 20/22.5/25/27.5/30% Attack Speed for 8 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "860"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/JarvanIV-E.png",
+  "slot": "E",
+  "championKey": "JarvanIV",
+  "championName": "Jarvan IV",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    55,
+    55,
+    55,
+    55,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    860,
+    860,
+    860,
+    860,
+    860
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

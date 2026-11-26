@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zoe-passive",
+  "name": "More Sparkles!",
+  "description": "Zoe's next basic attack after casting a spell deals bonus magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zoe-passive.png",
+  "slot": "passive",
+  "championKey": "Zoe",
+  "championName": "Zoe",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "124011",
+  "name": "Sword of Blossoming Dawn",
+  "description": "Effervescence: Gain +1.2% Attack Speed for every 1% Heal and Shield Power you have. Peppermint: On-Hit, heal the lowest health ally champion near you for, prioritizing lower health allies.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "45"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "12%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3114",
+      "name": "Forbidden Idol",
+      "icon": "img/item/3114.png"
+    },
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    },
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    }
+  ],
+  "icon": "img/item/124011.png",
+  "goldTotal": 2350,
+  "goldCombine": 550,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2350 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Graves-Q",
+  "name": "End of the Line",
+  "description": "Graves fires a powder round dealing 50/75/100/125/150 (+55% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "925"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Graves-Q.png",
+  "slot": "Q",
+  "championKey": "Graves",
+  "championName": "Graves",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    11.25,
+    9.5,
+    7.75,
+    6
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    925,
+    925,
+    925,
+    925,
+    925
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/11.25/9.5/7.75/6 s"
+  }
+}

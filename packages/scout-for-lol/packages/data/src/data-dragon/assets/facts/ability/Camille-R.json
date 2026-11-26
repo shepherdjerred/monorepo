@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Camille-R",
+  "name": "The Hextech Ultimatum",
+  "description": "Camille briefly becomes Untargetable and leaps onto an enemy champion, interrupting channels and locking them into an area they cannot escape by any means for 2.5/3.25/4 seconds. Other nearby enemies are Knocked Away.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Camille-R.png",
+  "slot": "R",
+  "championKey": "Camille",
+  "championName": "Camille",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    115,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/115/90 s"
+  }
+}

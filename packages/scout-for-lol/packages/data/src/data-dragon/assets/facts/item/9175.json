@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9175",
+  "name": "Lioness's Lament",
+  "description": "Fires a crescent shaped projectiles to the left and right of your character.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9175.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

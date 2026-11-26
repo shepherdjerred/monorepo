@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Belveth-W",
+  "name": "Above and Below",
+  "description": "Bel'Veth slams her tail, dealing 80/140/200/260/320 (+150% bonus AP) magic damage, Knocking Up foes for 0.6/0.7/0.8/0.9/1 seconds, and Slowing them by 30% for 2 seconds. If a champion is hit, this refreshes the Cooldown of Void Surge in that direction.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "715"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Belveth-W.png",
+  "slot": "W",
+  "championKey": "Belveth",
+  "championName": "Bel'Veth",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    715,
+    715,
+    715,
+    715,
+    715
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Velkoz-W",
+  "name": "Void Rift",
+  "description": "Vel'Koz opens a rift to the void, dealing 30/50/70/90/110 (+20% AP) magic damage. The rift then erupts, dealing 45/75/105/135/165 (+25% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1050"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Velkoz-W.png",
+  "slot": "W",
+  "championKey": "Velkoz",
+  "championName": "Vel'Koz",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1050,
+    1050,
+    1050,
+    1050,
+    1050
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1.5 s"
+  }
+}

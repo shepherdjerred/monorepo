@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8304",
+  "name": "Magical Footwear",
+  "description": "You get free boots at 12 min but you cannot buy boots before then. Each takedown you get makes your boots come 45s sooner.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/MagicalFootwear.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

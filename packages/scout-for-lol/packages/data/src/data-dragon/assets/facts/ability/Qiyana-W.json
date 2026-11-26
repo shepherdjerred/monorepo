@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Qiyana-W",
+  "name": "Terrashape",
+  "description": "Passive: While Qiyana's weapon is Enchanted, she gains 15/20/25/30/35% Attack Speed and her Attacks deal an additional 8/16/24/32/40 (+45% AP) (+20% bonus AD) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "25/30/35/40/45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Qiyana-W.png",
+  "slot": "W",
+  "championKey": "Qiyana",
+  "championName": "Qiyana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    25,
+    30,
+    35,
+    40,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

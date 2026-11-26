@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Draven-Q",
+  "name": "Spinning Axe",
+  "description": "Draven readies a Spinning Axe, causing his next Attack to deal an additional 40/45/50/55/60 (+75/85/95/105/115% bonus AD) physical damage and ricochet into the air. If Draven catches it, he readies another Spinning Axe.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Draven-Q.png",
+  "slot": "Q",
+  "championKey": "Draven",
+  "championName": "Draven",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    45,
+    45,
+    45,
+    45,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

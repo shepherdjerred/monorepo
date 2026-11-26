@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "13",
+  "name": "Clarity",
+  "description": "Restores your and ally champion's Mana.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 6"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerMana.png",
+  "cooldownSeconds": 240,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "240 s"
+  }
+}

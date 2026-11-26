@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773091",
+  "name": "Wit's End",
+  "description": "Feedback Loop: Basic Attacks deal 42 bonus magic damage On-Hit and increase your Magic Resist by 5 for 5 seconds (stacks up to 4 times.)",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771043",
+      "name": "Recurve Bow",
+      "icon": "img/item/771043.png"
+    },
+    {
+      "kind": "item",
+      "key": "771033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/771033.png"
+    }
+  ],
+  "icon": "img/item/773091.png",
+  "goldTotal": 2150,
+  "goldCombine": 850,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2150 gold"
+  }
+}

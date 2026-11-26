@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Gwen",
+  "name": "Gwen",
+  "description": "A former doll transformed and brought to life by magic, Gwen wields the very tools that once created her. She carries the weight of her maker's love with every step, taking nothing for granted.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Gwen-passive",
+      "name": "A Thousand Cuts",
+      "icon": "img/ability/Gwen-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gwen-Q",
+      "name": "Snip Snip!",
+      "icon": "img/ability/Gwen-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gwen-W",
+      "name": "Hallowed Mist",
+      "icon": "img/ability/Gwen-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gwen-E",
+      "name": "Skip 'n Slash",
+      "icon": "img/ability/Gwen-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Gwen-R",
+      "name": "Needlework",
+      "icon": "img/ability/Gwen-R.png"
+    }
+  ],
+  "icon": "img/champion/Gwen.png",
+  "art": "img/champion-splash/Gwen_0.jpg",
+  "title": "The Hallowed Seamstress",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

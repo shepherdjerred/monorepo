@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Camille-Q",
+  "name": "Precision Protocol",
+  "description": "Camille's next Attack deals an additional 20/25/30/35/40% AD physical damage and grants her 25/30/35/40/45% Move Speed for 1 second. This ability can be Recast in the next 3.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "25 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Camille-Q.png",
+  "slot": "Q",
+  "championKey": "Camille",
+  "championName": "Camille",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    25,
+    25,
+    25,
+    25,
+    25
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

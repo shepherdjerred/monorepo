@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Teemo",
+  "name": "Teemo",
+  "description": "Undeterred by even the most dangerous and threatening of obstacles, Teemo scouts the world with boundless enthusiasm and a cheerful spirit.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "615"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Teemo-passive",
+      "name": "Guerrilla Warfare",
+      "icon": "img/ability/Teemo-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Teemo-Q",
+      "name": "Blinding Dart",
+      "icon": "img/ability/Teemo-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Teemo-W",
+      "name": "Move Quick",
+      "icon": "img/ability/Teemo-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Teemo-E",
+      "name": "Toxic Shot",
+      "icon": "img/ability/Teemo-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Teemo-R",
+      "name": "Noxious Trap",
+      "icon": "img/ability/Teemo-R.png"
+    }
+  ],
+  "icon": "img/champion/Teemo.png",
+  "art": "img/champion-splash/Teemo_0.jpg",
+  "title": "the Swift Scout",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

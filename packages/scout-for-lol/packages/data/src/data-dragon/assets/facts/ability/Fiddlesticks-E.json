@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiddlesticks-E",
+  "name": "Reap",
+  "description": "Fiddlesticks unleashes dark magic, dealing 70/105/140/175/210 (+50% AP) magic damage and Slowing by 30/35/40/45/50% for 1.25 seconds. Enemies in the center are also Silenced for the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiddlesticks-E.png",
+  "slot": "E",
+  "championKey": "Fiddlesticks",
+  "championName": "Fiddlesticks",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

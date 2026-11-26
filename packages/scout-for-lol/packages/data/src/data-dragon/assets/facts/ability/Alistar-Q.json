@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Alistar-Q",
+  "name": "Pulverize",
+  "description": "Alistar smashes the ground, Knocking Up enemies for 1 second and dealing 60/100/140/180/220 (+80% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "365"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Alistar-Q.png",
+  "slot": "Q",
+  "championKey": "Alistar",
+  "championName": "Alistar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    365,
+    365,
+    365,
+    365,
+    365
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

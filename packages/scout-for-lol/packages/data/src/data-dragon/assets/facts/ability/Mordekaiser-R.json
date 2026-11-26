@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mordekaiser-R",
+  "name": "Realm of Death",
+  "description": "Mordekaiser banishes a champion to the Death Realm with him for 7s, stealing 10% of their core stats for the duration. If Mordekaiser kills that enemy in the Death Realm he consumes their soul, keeping the stats he stole until the target respawns.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Mordekaiser-R.png",
+  "slot": "R",
+  "championKey": "Mordekaiser",
+  "championName": "Mordekaiser",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}
