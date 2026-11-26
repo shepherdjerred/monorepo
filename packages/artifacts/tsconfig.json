@@ -3,7 +3,8 @@
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun"],
+    "jsx": "react-jsx",
     "noEmit": true
   },
-  "include": ["src", "*.ts"]
+  "include": ["src", "e2e", "*.ts"]
 }

@@ -75,6 +75,8 @@ src/infrastructure/  config, database, object store, LISTEN hub, metrics
 src/server/      the three host handlers, tRPC router, SSE, agent guide
 src/bridge/      the in-frame script injected into HTML
 src/viewer/      the Mermaid viewer bundled on first request
+src/client/      the review UI (Vite + React), built to dist/client
+e2e/             Playwright acceptance with an in-memory fake of the service
 ```
 
 Publishing is `POST /api/uploads` (manifest, idempotency key and compare-and-set
@@ -107,6 +109,56 @@ resolved `flag -> default` (`src/infrastructure/config.ts`): the
 `-board-idle-days`, `-archive-grace-days`, `-upload-ttl-hours`,
 `-blob-grace-hours` and `-event-retention-days`. The flag keys join the managed
 inventory with the activation.
+
+## Review UI
+
+`src/client` is a React 19 / Vite single-page app on the console look
+(`@shepherdjerred/console-ui`, TanStack Query, `@base-ui/react`, tRPC over
+`/trpc`). `vite build` writes `dist/client`, which the app host serves.
+
+| Route               | Shows                                                                           |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `/`                 | Inbox: Needs review, Active, Kept, Archived; Keep, Archive, expiry              |
+| `/a/:artifactId?v=` | Focused view: viewer, version switcher, thread sidebar                          |
+| `/b/:slug`          | Board as a grid of frames (at most 6 live); `?grid=1` skips the launch redirect |
+| `/b/:slug/outline`  | The same board as a list: every review action is a button or link               |
+
+`ArtifactViewer` is the single switch over artifact kinds
+(`src/client/viewers/`). Each viewer exposes an `AnchorAdapter`
+(`toAnchor`, `toClient`, optional `probe` and `reveal`), so the pins overlay,
+comment mode and the thread sidebar never know which kind they are on:
+
+- **html, site, mermaid**: a sandboxed iframe (`allow-scripts allow-forms
+allow-popups`, never `allow-same-origin`) at a fixed 390 / 768 / 1440 or fit
+  width, scaled to the pane, `inert` until activated. The host side of the
+  bridge (`bridge-protocol.ts`) mirrors `src/bridge/bridge.ts`: a
+  `MessageChannel` per frame, every message schema-validated, clamped and
+  rate-limited, identity from the port. Pins are `doc` anchors from the bridge's
+  reported scroll and size, or approximate `frame` anchors when no bridge
+  answered.
+- **pdf**: pdf.js (legacy build, module worker), virtualized pages loaded by
+  range, canvas at `cssScale x dpr` capped at 16 MP, text layer in the focused
+  view, `page` anchors in unrotated page coordinates.
+- **image, video, markdown, cast, file**: native `<img>` with wheel zoom,
+  `<video preload="metadata">` with a timeline of pins, Markdown without raw
+  HTML (remote images become links), the asciinema player, a download card.
+
+Browser support is Baseline Widely Available. `bun run dev:client` serves the
+UI with Vite against a service on `:7440`.
+
+### End-to-end tests
+
+```bash
+bun run test:e2e        # Playwright + axe: desktop Chromium, mobile Chromium, WebKit
+bun e2e/serve-demo.ts   # the fake service, seeded with one artifact of each kind
+```
+
+The suite runs against `e2e/fake-service.ts`, an in-memory implementation of
+the same procedures and upload routes with a second listener for the content
+origin. It serves the real injected bridge (`buildBridge`) and the real
+content-host isolation headers, so the sandbox, the bridge and the viewers are
+exercised end to end; swapping in the PostgreSQL-backed server only changes
+`e2e/start.ts`. Playwright's bundled Firefox does not launch on macOS 27.
 
 ## Contract
 
