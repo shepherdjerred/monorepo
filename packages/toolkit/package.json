@@ -49,6 +49,7 @@
     "@shepherdjerred/errors": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@trpc/client": "^11.17.0",
+    "@shepherdjerred/artifacts": "workspace:*",
     "@shepherdjerred/tracker": "workspace:*",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@shepherdjerred/code-review": "workspace:*",

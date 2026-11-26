@@ -466,6 +466,108 @@ existing fields and add `coordination`. A three-second Tracker timeout reports
 coordination as unavailable without changing the primary command's verdict or
 exit code. CI waits and merge gates do not query the forum.
 
+## Artifacts
+
+`toolkit artifacts` publishes work for Jerred to review, blocks until the
+review produces comments, and answers them. It talks to the first-party
+`artifacts` service over the tailnet; there is no token, because every request
+already carries your Tailscale login and the service checks it against its
+operator list. The service URL resolves `--url`, then `ARTIFACTS_URL` /
+`[artifacts].url`, then `https://artifacts.tailnet-1a49.ts.net`. Callers
+identify themselves with the same native session identity as `tracker` (see
+[Tracker](#tracker)); the actor travels base64-encoded in `X-Artifacts-Actor`
+and includes a `workspaceKey` of `<hostname>:<worktree or cwd>`, which scopes a
+bare `wait` to the artifacts published from this worktree.
+
+```bash
+toolkit artifacts publish report.pdf                              # one file: its own entry; viewer chosen by extension
+toolkit artifacts publish dist/ --viewport 1440x900               # a directory with index.html is a site
+toolkit artifacts publish a.html b.html c.html --label A,B,C      # three concepts on one board, side by side
+toolkit artifacts publish flow.mmd --board design-review          # Mermaid, uploaded as diagram.mmd
+toolkit artifacts publish a.html --version-of <artifactId> --note-file why.md
+toolkit artifacts wait                                            # block until a comment arrives; hold exactly one
+toolkit artifacts wait --board design-review --timeout 2h --json
+toolkit artifacts reply <threadId> --body-file reply.md --resolve
+toolkit artifacts resolve <threadId>
+toolkit artifacts list --board design-review
+toolkit artifacts show <artifactId> --json                        # versions, threads with anchors, board notes
+toolkit artifacts boards
+toolkit artifacts guide [publishing]                              # the service's agent guide and references
+```
+
+**The loop.** Publish, then hold one `wait`. When it returns comments, hand
+each to a subagent, publish the result as a new version with `publish <path>
+--version-of <artifactId>`, answer the thread with `reply <threadId> --body-file
+F --resolve`, and run `wait` again. A comment is delivered once: `wait` prints
+the digest, flushes stdout, and only then acknowledges, so a second `wait`
+returns only newer comments and a crash in between redelivers rather than
+loses. An agent that stops and restarts in the same worktree receives the
+comments it never saw.
+
+**`publish`** takes one or more files or directories. Several paths publish
+several artifacts to one board (`<repo>-<yyyy-mm-dd>` unless `--board` names
+one); a single artifact without `--board` gets a board named after it. Kind is
+inferred from the extension (`html`, `pdf`, `image` for png/jpg/gif/webp/svg/avif,
+`video` for mp4/webm/mov, `markdown`, `cast`, `mermaid`, otherwise `file`) and
+`--kind` overrides it. Files stream from disk with their `Content-Length`; only
+blobs the service lacks are sent. The request carries an idempotency key
+derived from the caller's workspace, board, target and manifest digest, so a
+retried publish resumes instead of duplicating a version; `--idempotency-key`
+overrides it. The client rejects what the service would: paths the service
+reserves (a leading `_`), symbolic links, more than 2000 files, 500 MiB per
+file, 1 GiB per version. `--version-of` sends the artifact's current version as
+`expectedCurrentVersionId`; if someone published since, it exits 2 naming the
+current version and the fix. Text output starts with the review URL:
+
+```text
+Review: https://artifacts.tailnet-1a49.ts.net/a/<artifactId>?v=1
+Board: https://artifacts.tailnet-1a49.ts.net/b/<board>
+Next: toolkit artifacts wait
+```
+
+**`wait`** pins a scope (the caller's own artifacts by default, `--board`, or
+`--artifact`), subscribes to the service's event stream, and then claims. It
+claims again on every event, every reconnect, every 60 seconds, and when a
+comment's settle window ends, so a lost event only delays delivery. A dropped
+stream reconnects with backoff (1 s doubling to 30 s, with jitter) and never
+ends the wait. It writes one stderr heartbeat every five minutes and, inside an
+agent harness, the same one-line hint as `ci wait` for holding it cheaply.
+It does not reuse the CI loop in `lib/ci/wait`: that loop judges one pinned CI
+snapshot and ends when its single subscription fails, whereas this one claims
+and acknowledges work and must survive reconnects. Text output is a markdown
+digest, one `### <title> v<N> · <where> · thread <id>` block per comment with the
+comment quoted, earlier comments in the thread, the review URL, and the next
+steps. `--json` prints one object on stdout and notes on stderr:
+
+```json
+{
+  "outcome": "feedback",
+  "items": [{ "comment": {}, "thread": {}, "artifact": {}, "reviewUrl": "" }]
+}
+```
+
+`outcome` is `feedback`, `timeout` (`items` empty), or `gone`. `publish --json`
+prints `{ "artifacts": [{ "id", "version", "reviewUrl" }], "board": { "slug",
+"url" }, "deduplicated": false, "next": "toolkit artifacts wait" }`.
+
+| Exit | Meaning                                                           |
+| ---- | ----------------------------------------------------------------- |
+| 0    | Published, replied, or `wait` returned feedback                   |
+| 2    | Usage, an unreachable or refusing service, a stale `--version-of` |
+| 4    | `wait`: the board or artifact was archived, expired, or deleted   |
+| 6    | `wait --timeout` elapsed. Not a failure: run `wait` again         |
+| 130  | SIGINT                                                            |
+| 143  | SIGTERM                                                           |
+
+Failures name their fix. An unreachable service says to check
+`tailscale status`; HTTP 403 means your login is not in the service's
+`operatorLogins`; `Unknown command: artifacts` or an unknown artifacts
+subcommand means the installed binary is older than this documentation, so run
+`bun run --cwd packages/toolkit install:local`. Content URLs carry a capability
+token; the CLI redacts it (`/_t/[redacted]/`) from everything it prints. The CLI imports only
+the service's `contract` and `procedures` schemas, so the compiled binary
+carries no server code.
+
 ## Platform commands
 
 Platform commands delegate to native CLIs. Explicit flags and environment
@@ -1929,6 +2031,7 @@ value or unparseable file is an error, not a fallback.
 | `HISTORY_METRICS_PUSH_ENABLED` / `history.metrics.push.enabled`   | `false`                                               |
 | `HISTORY_METRICS_PUSH_ENDPOINT` / `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
 | `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://hub.tailnet-1a49.ts.net`                     |
+| `ARTIFACTS_URL` / `artifacts.url`                                 | `https://artifacts.tailnet-1a49.ts.net`               |
 | `BRIM_SYNC_MACHINE_ID` / `brim.sync.machine.id`                   | normalized hostname                                   |
 | `BRIM_SYNC_BUCKET` / `brim.sync.bucket`                           | `brim-sessions`                                       |
 | `BRIM_SYNC_PROFILE` / `brim.sync.profile`                         | `brim-sync` (AWS profile)                             |
