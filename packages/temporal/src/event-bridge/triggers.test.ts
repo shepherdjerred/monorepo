@@ -247,5 +247,20 @@ describe("Home Assistant event routing", () => {
       "reconcileLock",
       "reconcileClimate",
     ]);
+
+    const signalsAfterJerred = signalWithStart.mock.calls.length;
+    const startsAfterJerred = start.mock.calls.length;
+    await handleStateChanged(
+      client,
+      rest,
+    )({
+      data: {
+        entity_id: "person.shuxin",
+        old_state: { state: "home" },
+        new_state: { state: "not_home" },
+      },
+    });
+    expect(signalWithStart).toHaveBeenCalledTimes(signalsAfterJerred);
+    expect(start).toHaveBeenCalledTimes(startsAfterJerred);
   });
 });

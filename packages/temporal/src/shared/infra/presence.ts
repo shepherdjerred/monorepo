@@ -9,6 +9,26 @@
 //      without notifying / locking / vacuuming.
 export const PRESENCE_COOLDOWN_SECONDS = 90;
 
+/** People whose presence decides occupancy. */
+export const HOUSEHOLD_RESIDENTS = ["person.jerred"] as const;
+
+/**
+ * Residents recorded by workflows that started before
+ * `household-jerred-only-v1`. Replay keeps reading both.
+ */
+export const LEGACY_HOUSEHOLD_RESIDENTS = [
+  "person.jerred",
+  "person.shuxin",
+] as const;
+
+export const HOUSEHOLD_JERRED_ONLY_PATCH = "household-jerred-only-v1";
+
+export function householdResidents(
+  jerredOnly: boolean,
+): typeof HOUSEHOLD_RESIDENTS | typeof LEGACY_HOUSEHOLD_RESIDENTS {
+  return jerredOnly ? HOUSEHOLD_RESIDENTS : LEGACY_HOUSEHOLD_RESIDENTS;
+}
+
 export function cooldownBucket(nowMs: number = Date.now()): string {
   return String(Math.floor(nowMs / (PRESENCE_COOLDOWN_SECONDS * 1000)));
 }

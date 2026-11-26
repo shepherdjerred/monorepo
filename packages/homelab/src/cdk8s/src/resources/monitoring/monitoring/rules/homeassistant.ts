@@ -22,7 +22,6 @@ export const TEMPORAL_AUTOMATION_ENTITY_IDS = [
   "media_player.bedroom",
   "media_player.master_bathroom",
   "person.jerred",
-  "person.shuxin",
   "sun.sun",
   "vacuum.1st_floor",
   "vacuum.2nd_floor",
