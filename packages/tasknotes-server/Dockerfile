@@ -28,9 +28,7 @@ COPY --parents \
   ci/scripts/selectors/select-image-targets-lockfile.ts \
   /tools/
 RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
-  'tasknotes-server'
-RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /web-closure \
-  '@shepherdjerred/tasknotes-web'
+  'tasknotes-server' '@shepherdjerred/tasknotes-web'
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 # Copying just the closure's package.json files (plus the lockfile, bunfig, and
@@ -49,9 +47,11 @@ COPY ci/scripts/images/complete-bin-links.ts /tools/
 RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 # ── web: Vite build of the browser client, copied into the runtime image ───
+# Same projected closure as the server install. This stage keeps dev
+# dependencies so Vite can build; the runtime image does not copy them.
 FROM base AS web-deps
 COPY --parents bun.lock bunfig.toml patches/ ./
-COPY --from=manifests /web-closure/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/tasknotes-web'
 
 FROM web-deps AS web-build
