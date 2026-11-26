@@ -171,6 +171,9 @@ const commands: Record<
       ALERT_DASHBOARD_WEBHOOK_TOKEN:
         "smoke-test-token-with-at-least-32-characters",
       DATABASE_URL: "file:/tmp/alert-dashboard-smoke.db",
+      // The traces index defaults to the production volume (/data), which the
+      // image does not have; keep it beside the smoke database.
+      TRACES_INDEX_DB_PATH: "/tmp/alert-dashboard-smoke-traces.db",
       FEATURE_FLAGS_MODE: "disabled",
       GRAFANA_API_KEY: "smoke-viewer-token",
       GRAFANA_URL: "http://127.0.0.1:13000",
