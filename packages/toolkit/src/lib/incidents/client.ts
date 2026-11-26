@@ -4,6 +4,7 @@
  * loudly here instead of deep inside a command.
  */
 import { createTRPCClient, httpLink, TRPCClientError } from "@trpc/client";
+import { timedFetch } from "#lib/trpc-link.ts";
 import { z } from "zod";
 import {
   ActorInputSchema,
@@ -52,20 +53,7 @@ function trpcClient(baseUrl: string, timeoutMs: number) {
     links: [
       httpLink({
         url: `${hubBaseUrl(baseUrl)}${INCIDENTS_API_PATH}/trpc`,
-        fetch: async (url: string | URL, init) => {
-          const response = await fetch(url, {
-            ...init,
-            signal: AbortSignal.timeout(timeoutMs),
-          });
-          return {
-            status: response.status,
-            ok: response.ok,
-            headers: response.headers,
-            json: (): Promise<unknown> => response.json(),
-            text: () => response.text(),
-            body: null,
-          };
-        },
+        fetch: timedFetch(timeoutMs),
       }),
     ],
   });

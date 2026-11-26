@@ -4,6 +4,7 @@ import type {
   IncidentDetail,
 } from "@shepherdjerred/incidents/contract";
 import { incidentsApi, type IncidentsApi } from "#lib/incidents/client.ts";
+import type { DispatchHandles } from "#lib/incidents/dispatch-handles.ts";
 import type { Scheduler } from "#lib/incidents/scheduler.ts";
 import type {
   RepoLocation,
@@ -26,7 +27,11 @@ export type FakeScheduler = Scheduler & {
   readonly pending: () => number;
 };
 
-/** A clock the server and the waiters share; timers fire only on `advance`. */
+/**
+ * A clock the server and the waiters share. Future timers fire only on
+ * `advance`; a timer armed for an instant already past fires on the next
+ * macrotask, as `setTimeout(fn, 0)` would, so a re-arm loop shows up as one.
+ */
 export function fakeScheduler(start = T0): FakeScheduler {
   let now = start;
   let sequence = 0;
@@ -37,6 +42,10 @@ export function fakeScheduler(start = T0): FakeScheduler {
       sequence += 1;
       const id = sequence;
       timers.set(id, { at, callback });
+      if (at <= now)
+        setTimeout(() => {
+          if (timers.delete(id)) callback();
+        }, 0);
       return () => {
         timers.delete(id);
       };
@@ -77,7 +86,8 @@ export const REPO: RepoLocation = {
 export type SpawnCall = {
   readonly waiter: string;
   readonly request: SpawnRequest;
-  readonly token: string;
+  /** The dispatch handle the first message carries. */
+  readonly handle: string;
 };
 
 /** Records every spawn; `outcomes` answers calls in order (then succeeds). */
@@ -87,11 +97,33 @@ export function fakeSpawns(outcomes: SpawnOutcome[] = []) {
     calls,
     spawnerFor:
       (waiter: string): Spawner =>
-      (request, token) => {
-        calls.push({ waiter, request, token });
+      (request) => {
+        const handle =
+          /--dispatch-handle (\S+)/u.exec(request.message)?.[1] ?? "";
+        calls.push({ waiter, request, handle });
         return Promise.resolve(outcomes.shift() ?? { ok: true });
       },
   };
+}
+
+/** One machine's dispatch handle store, in memory. */
+export function memoryHandles() {
+  const tokens = new Map<string, string>();
+  let sequence = 0;
+  const handles: DispatchHandles = {
+    save: (token) => {
+      sequence += 1;
+      const handle = `handle-${String(sequence).padStart(12, "0")}`;
+      tokens.set(handle, token);
+      return Promise.resolve(handle);
+    },
+    read: (handle) => Promise.resolve(tokens.get(handle) ?? null),
+    remove: (handle) => {
+      tokens.delete(handle);
+      return Promise.resolve();
+    },
+  };
+  return { tokens, handles };
 }
 
 export type TestHub = {
@@ -105,16 +137,24 @@ export type TestHub = {
     },
   ) => Promise<IncidentDetail>;
   readonly deps: (actor: ActorInput, spawner: Spawner) => WaitDeps;
+  /** Tokens held for spawned sessions, by handle. */
+  readonly tokens: Map<string, string>;
+  readonly handles: DispatchHandles;
+  /** The token a spawn's handle stands for (what the spawned session redeems). */
+  readonly tokenOf: (call: SpawnCall | undefined) => string;
 };
 
 export async function startTestHub(
   settings: Partial<IncidentsTestSettings> = {},
+  /** How far the server's clock runs behind the waiters' clock. */
+  serverLagMs = 0,
 ): Promise<TestHub> {
   const scheduler = fakeScheduler();
   const hub = await serveIncidentsHub({
-    clock: () => new Date(scheduler.now()),
+    clock: () => new Date(scheduler.now() - serverLagMs),
     settings,
   });
+  const { tokens, handles } = memoryHandles();
   const api = incidentsApi(hub.url);
   const logs: string[] = [];
   return {
@@ -122,6 +162,13 @@ export async function startTestHub(
     api,
     scheduler,
     logs,
+    tokens,
+    handles,
+    tokenOf: (call) => {
+      const token = tokens.get(call?.handle ?? "");
+      if (token === undefined) throw new Error("no token for that spawn");
+      return token;
+    },
     declare: (input) =>
       api.declare({
         actor: DECLARER,
@@ -138,6 +185,8 @@ export async function startTestHub(
       spawner,
       spawnerName: "fake-spawner",
       repo: () => REPO,
+      handles,
+      hubUrl: hub.url,
       log: (line) => {
         logs.push(`${actor.key}: ${line}`);
       },

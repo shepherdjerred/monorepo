@@ -102,7 +102,7 @@ export function parseIncidentArgs(args: string[]) {
         force: boolean,
         spawn: boolean,
         "no-spawn": boolean,
-        "dispatch-token": string,
+        "dispatch-handle": string,
         to: string,
         "until-resolved": boolean,
         "timeout-sec": string,

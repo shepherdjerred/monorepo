@@ -9,12 +9,8 @@ import type {
   TakeCommandResult,
 } from "@shepherdjerred/incidents/contract";
 import { incidentRefusal, type IncidentsApi } from "./client.ts";
-import {
-  redactToken,
-  spawnRequest,
-  type RepoLocation,
-  type Spawner,
-} from "./spawn.ts";
+import type { DispatchHandles } from "./dispatch-handles.ts";
+import { spawnRequest, type RepoLocation, type Spawner } from "./spawn.ts";
 
 export type DispatchDeps = {
   readonly api: Pick<IncidentsApi, "byRef" | "postUpdate" | "releaseDispatch">;
@@ -23,6 +19,10 @@ export type DispatchDeps = {
   /** Name recorded on the timeline when a session is spawned. */
   readonly spawnerName: string;
   readonly repo: () => RepoLocation;
+  /** Holds the token for the spawned session; the message carries only the handle. */
+  readonly handles: DispatchHandles;
+  /** The Hub this caller used, or null for the default; the spawned session must use it too. */
+  readonly hubUrl: string | null;
   /** Progress for stderr. Never receives the dispatch token. */
   readonly log: (line: string) => void;
   readonly now: () => number;
@@ -80,14 +80,21 @@ export async function dispatchCommander(
 ): Promise<DispatchAttempt> {
   const token = lease.dispatchToken;
   let error: string | null = null;
+  let handle: string | null = null;
   try {
     const detail = await deps.api.byRef(id);
+    handle = await deps.handles.save(token);
     const request = spawnRequest(
       detail,
-      { token, leaseExpiresAt: lease.leaseExpiresAt, provider: lease.provider },
+      {
+        handle,
+        leaseExpiresAt: lease.leaseExpiresAt,
+        provider: lease.provider,
+      },
       deps.repo(),
+      deps.hubUrl,
     );
-    const outcome = await deps.spawner(request, token);
+    const outcome = await deps.spawner(request);
     if (!outcome.ok) error = outcome.error;
   } catch (error_) {
     error = message(error_);
@@ -97,7 +104,7 @@ export async function dispatchCommander(
     outcome: error === null ? "spawned" : "spawn-failed",
     provider: lease.provider,
     leaseExpiresAt: lease.leaseExpiresAt,
-    error: error === null ? null : redactToken(error, token),
+    error,
   };
   if (attempt.error === null) {
     deps.log(
@@ -106,6 +113,7 @@ export async function dispatchCommander(
     await recordSpawn(deps, id, lease);
     return attempt;
   }
+  if (handle !== null) await deps.handles.remove(handle);
   deps.log(
     `Spawning a commander for ${id} failed: ${attempt.error}. Releasing the lease so another agent can retry.`,
   );

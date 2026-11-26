@@ -94,6 +94,10 @@ function wakeQueue() {
   };
 }
 
+function isAborted(signal: AbortSignal | undefined): boolean {
+  return signal?.aborted === true;
+}
+
 function summaryOf(incident: IncidentSummary): IncidentSummary {
   return IncidentSummarySchema.parse(incident);
 }
@@ -188,6 +192,16 @@ class Waiter {
     });
   }
 
+  /**
+   * Arm for a deadline the server judges. When this clock already passed it
+   * but the server has not (its clock is behind), retry after a short delay
+   * instead of re-arming a past instant, which would spin.
+   */
+  private armServerDeadline(at: number): void {
+    const now = this.deps.scheduler.now();
+    this.armAt(at > now ? at : now + SKEW_RETRY_MS);
+  }
+
   disarm(): void {
     this.cancelDeadline?.();
     this.cancelDeadline = undefined;
@@ -235,7 +249,7 @@ class Waiter {
     }
     if (command.state === "dispatching") {
       if (command.leaseExpiresAt !== null)
-        this.armAt(Date.parse(command.leaseExpiresAt));
+        this.armServerDeadline(Date.parse(command.leaseExpiresAt));
       return null;
     }
     const eligibleAt = Date.parse(command.takeoverEligibleAt);
@@ -317,7 +331,7 @@ class Waiter {
       this.deps.log(
         `Another waiter is dispatching a commander for ${this.id}; still waiting.`,
       );
-      this.armAt(Date.parse(lease));
+      this.armServerDeadline(Date.parse(lease));
       return;
     }
     this.disarm();
@@ -335,8 +349,16 @@ export async function waitForIncident(
   const early = verdict(first);
   if (early !== null) return { ...early, dispatches: [] };
   const id = first.incident.identifier;
+  // A signal that fired during these reads is not replayed to listeners added later.
+  const canceled = (): WaitResult => ({
+    outcome: "canceled",
+    incident: first.incident,
+    dispatches: [],
+  });
+  if (isAborted(options.signal)) return canceled();
   if (!first.relation.affected)
     await deps.api.join({ actor: deps.actor, ref: id, note: JOIN_NOTE });
+  if (isAborted(options.signal)) return canceled();
 
   const { scheduler } = deps;
   const wakeups = wakeQueue();
@@ -350,6 +372,7 @@ export async function waitForIncident(
     wakeups.push("cancel");
   };
   options.signal?.addEventListener("abort", onCancel, { once: true });
+  if (isAborted(options.signal)) onCancel();
   const cancelTimeout =
     options.timeoutMs === undefined
       ? undefined

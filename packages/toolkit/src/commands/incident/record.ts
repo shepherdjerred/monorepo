@@ -30,6 +30,7 @@ import {
   summaryLine,
   type CheckedIncident,
 } from "#lib/incidents/guidance.ts";
+import type { DispatchHandles } from "#lib/incidents/dispatch-handles.ts";
 import type { Scheduler } from "#lib/incidents/scheduler.ts";
 import type { RepoLocation, Spawner } from "#lib/incidents/spawn.ts";
 import type { IncidentStream } from "#lib/incidents/stream.ts";
@@ -63,6 +64,10 @@ export type IncidentCommandContext = {
   readonly spawner: Spawner;
   readonly spawnerName: string;
   readonly repo: () => RepoLocation;
+  /** Dispatch tokens waiting for spawned sessions (never on a command line). */
+  readonly handles: DispatchHandles;
+  /** The Hub URL when it is not the default one, so spawned sessions target it too. */
+  readonly hubUrl: string | null;
   /** Progress lines (stderr). */
   readonly log: (line: string) => void;
   readonly signal?: AbortSignal | undefined;

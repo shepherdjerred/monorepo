@@ -1,8 +1,8 @@
 /**
  * Opening a commander session for an incident through `herdr-new-worktree`
  * (packages/dotfiles/bin): a new worktree and agent chat whose first message
- * makes that agent the commander. The dispatch token travels only inside the
- * request, which goes to the spawner through its environment, never argv.
+ * makes that agent the commander. The message reaches downstream argv, so it
+ * carries only a dispatch handle (see `dispatch-handles.ts`), never the token.
  */
 import os from "node:os";
 import path from "node:path";
@@ -33,19 +33,11 @@ export type RepoLocation = {
 export type SpawnOutcome =
   { readonly ok: true } | { readonly ok: false; readonly error: string };
 
-/** `token` is passed separately so a spawner can redact it from anything it reports. */
-export type Spawner = (
-  request: SpawnRequest,
-  token: string,
-) => Promise<SpawnOutcome>;
+export type Spawner = (request: SpawnRequest) => Promise<SpawnOutcome>;
 
 /** The variable `herdr-new-worktree --request-env` reads its request from. */
 export const SPAWN_REQUEST_VARIABLE = "HERDR_WORKTREE_REQUEST";
 export const REDACTED = "[redacted]";
-
-export function redactToken(text: string, token: string): string {
-  return token.length === 0 ? text : text.replaceAll(token, REDACTED);
-}
 
 function git(args: string[], cwd: string): string {
   const result = Bun.spawnSync(["git", ...args], {
@@ -81,9 +73,11 @@ export function repoLocation(
 /** The first message: everything the new agent needs to take command. */
 export function commanderMessage(
   incident: IncidentDetail,
-  dispatch: { token: string; leaseExpiresAt: string },
+  dispatch: { handle: string; leaseExpiresAt: string },
+  hubUrl: string | null,
 ): string {
   const id = incident.identifier;
+  const hub = hubUrl === null ? "" : ` --hub-url ${hubUrl}`;
   const links = incident.links.map(
     (link) =>
       `- ${link.kind} ${link.ref}${link.title === undefined ? "" : ` (${link.title})`}${link.url === undefined ? "" : ` ${link.url}`}`,
@@ -116,23 +110,33 @@ export function commanderMessage(
     ...(links.length === 0 ? [] : ["Links:", ...links]),
     `Incident page: ${incident.url}`,
     "",
-    `First, claim command. The token is single-use and the lease lapses at ${dispatch.leaseExpiresAt}, after which another agent may be dispatched:`,
-    `  toolkit incident claim ${id} --dispatch-token ${dispatch.token}`,
+    `First, claim command on this machine. The handle is single-use and the lease lapses at ${dispatch.leaseExpiresAt}, after which another agent may be dispatched:`,
+    `  toolkit incident claim ${id} --dispatch-handle ${dispatch.handle}${hub}`,
+    ...(hubUrl === null
+      ? []
+      : [
+          `This incident lives on ${hubUrl}: pass --hub-url ${hubUrl} to every toolkit incident command.`,
+        ]),
     "",
     "Then load the incident-response skill and work the incident until its exit condition holds.",
     `Other agents are blocked on ${id} and waiting with toolkit incident wait; they resume when it resolves.`,
-    `Post milestones with toolkit incident update ${id} --body "<what changed>".`,
-    `Resolve with evidence that the exit condition holds: toolkit incident view ${id} for the revision, then toolkit incident resolve ${id} --expected-revision <N> --note "<evidence>".`,
+    `Post milestones with toolkit incident update ${id}${hub} --body "<what changed>".`,
+    `Resolve with evidence that the exit condition holds: toolkit incident view ${id}${hub} for the revision, then toolkit incident resolve ${id}${hub} --expected-revision <N> --note "<evidence>".`,
   ].join("\n");
 }
 
+/**
+ * The spawn request. `hubUrl` is the Hub this caller used, or null for the
+ * default one; a non-default Hub is named in every command of the message.
+ */
 export function spawnRequest(
   incident: IncidentDetail,
-  dispatch: { token: string; leaseExpiresAt: string; provider: string },
+  dispatch: { handle: string; leaseExpiresAt: string; provider: string },
   repo: RepoLocation,
+  hubUrl: string | null,
 ): SpawnRequest {
   return {
-    message: commanderMessage(incident, dispatch),
+    message: commanderMessage(incident, dispatch, hubUrl),
     provider: dispatch.provider,
     machine: null,
     repoMain: repo.repoMain,
@@ -180,14 +184,13 @@ function startSpawner(executable: string, json: string) {
 
 /**
  * Run `<executable> --request-env` with the request in its environment and
- * report whether it opened the session (exit 0). Output is redacted of the
- * token before it reaches any message.
+ * report whether it opened the session (exit 0).
  */
 export function processSpawner(
   executable: string,
   options: { timeoutMs?: number } = {},
 ): Spawner {
-  return async (request, token) => {
+  return async (request) => {
     let child: ReturnType<typeof startSpawner>;
     try {
       child = startSpawner(executable, JSON.stringify(request));
@@ -215,10 +218,7 @@ export function processSpawner(
         : `exited ${String(code)}: ${lastLine(err) ?? lastLine(out) ?? "no output"}`;
       return {
         ok: false,
-        error: redactToken(
-          `${path.basename(executable)} ${detail}`,
-          token,
-        ).slice(0, 1000),
+        error: `${path.basename(executable)} ${detail}`.slice(0, 1000),
       };
     } finally {
       clearTimeout(timer);

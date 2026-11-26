@@ -34,6 +34,7 @@ function contextFor(
   hub: TestHub,
   actor: ActorInput | null,
   spawns = fakeSpawns(),
+  signal?: AbortSignal,
 ): IncidentCommandContext {
   return {
     url: hub.hub.url,
@@ -47,9 +48,12 @@ function contextFor(
     spawner: spawns.spawnerFor(actor?.key ?? "anonymous"),
     spawnerName: "fake-spawner",
     repo: () => REPO,
+    handles: hub.handles,
+    hubUrl: hub.hub.url,
     log: (line) => {
       hub.logs.push(line);
     },
+    signal,
   };
 }
 
@@ -57,15 +61,19 @@ function run(
   hub: TestHub,
   actor: ActorInput | null,
   command: string,
-  spawns = fakeSpawns(),
+  runtime: {
+    spawns?: ReturnType<typeof fakeSpawns>;
+    signal?: AbortSignal;
+  } = {},
 ) {
+  const { spawns = fakeSpawns(), signal } = runtime;
   const [action = "", ...args] = command.split(" ");
   const lines: string[] = [];
   return executeIncidentCommand(
-    () => Promise.resolve(contextFor(hub, actor, spawns)),
+    (_options, given) => Promise.resolve(contextFor(hub, actor, spawns, given)),
     action,
     args,
-    { emit: (line) => lines.push(line) },
+    { emit: (line) => lines.push(line), signal },
   );
 }
 
@@ -292,12 +300,14 @@ describe("command claims against the fixture Hub", () => {
       hub,
       agentActor("a"),
       `take ${id} --spawn --force --json`,
-      spawns,
+      { spawns },
     );
     expect(spawned.exitCode).toBe(0);
     expect(spawns.calls).toHaveLength(1);
-    const token = spawns.calls[0]?.token ?? "";
+    const call = spawns.calls[0];
+    const token = hub.tokenOf(call);
     expect(token.length).toBeGreaterThanOrEqual(16);
+    expect(JSON.stringify(call?.request)).not.toContain(token);
     expect(spawned.json).toMatchObject({
       take: { outcome: "dispatching", dispatchToken: "[redacted]" },
       dispatch: { outcome: "spawned", provider: "claude-code" },
@@ -307,9 +317,18 @@ describe("command claims against the fixture Hub", () => {
     const claimed = await run(
       hub,
       agentActor("commander"),
-      `claim ${id} --dispatch-token ${token} --json`,
+      `claim ${id} --dispatch-handle ${call?.handle ?? ""} --json`,
     );
     expect(claimed.exitCode).toBe(0);
+    // The handle is single-use: the token is gone once redeemed.
+    expect(hub.tokens.size).toBe(0);
+    const again = await run(
+      hub,
+      agentActor("commander"),
+      `claim ${id} --dispatch-handle ${call?.handle ?? ""}`,
+    );
+    expect(again.exitCode).toBe(15);
+    expect(again.text).toContain("No dispatch handle");
     expect(claimed.json).toMatchObject({
       command: { state: "owned", commander: { key: "claude-code:commander" } },
     });
@@ -338,7 +357,7 @@ describe("command claims against the fixture Hub", () => {
       hub,
       agentActor("a"),
       `take ${id} --spawn --force`,
-      spawns,
+      { spawns },
     );
 
     expect(outcome.exitCode).toBe(1);
@@ -347,7 +366,50 @@ describe("command claims against the fixture Hub", () => {
     );
     const detail = await hub.api.byRef(id);
     expect(detail.command.state).toBe("none");
+    expect(hub.tokens.size).toBe(0);
   });
+
+  test("a refused claim discards its handle; a malformed handle is a usage error", async () => {
+    const hub = await hubFor();
+    const declared = await runArgs(hub, agentActor("declarer"), DECLARE);
+    const id = identifierOf(declared);
+    const handle = await hub.handles.save("x".repeat(24));
+
+    const refused = await run(
+      hub,
+      agentActor("commander"),
+      `claim ${id} --dispatch-handle ${handle}`,
+    );
+    expect(refused.exitCode).not.toBe(0);
+    expect(hub.tokens.has(handle)).toBe(false);
+
+    const malformed = await run(
+      hub,
+      agentActor("commander"),
+      `claim ${id} --dispatch-handle ../../etc/passwd`,
+    );
+    expect(malformed.exitCode).toBe(2);
+  });
+
+  test.each(["watch", "watch INC --until-resolved"])(
+    "%s interrupted before it registers its listener exits as canceled",
+    async (command) => {
+      const hub = await hubFor();
+      const declared = await runArgs(hub, agentActor("declarer"), DECLARE);
+      const controller = new AbortController();
+      controller.abort();
+
+      const outcome = await run(
+        hub,
+        null,
+        command.replace("INC", identifierOf(declared)),
+        { signal: controller.signal },
+      );
+
+      expect(outcome.exitCode).toBe(130);
+      expect(outcome.json).toEqual({ outcome: "canceled" });
+    },
+  );
 
   test("update defaults to the current revision; link, join, leave, handoff and release work", async () => {
     const hub = await hubFor();

@@ -23,8 +23,9 @@ afterEach(async () => {
 
 async function newHub(
   settings: Parameters<typeof startTestHub>[0] = {},
+  serverLagMs = 0,
 ): Promise<TestHub> {
-  const started = await startTestHub(settings);
+  const started = await startTestHub(settings, serverLagMs);
   hubs.push(started);
   return started;
 }
@@ -206,23 +207,30 @@ describe("toolkit incident wait takeover", () => {
     expect(call.request.message).toContain(
       `You are the incident commander for ${id}: Storage is read-only.`,
     );
+    const token = hub.tokenOf(call);
+    expect(token.length).toBeGreaterThanOrEqual(16);
     expect(call.request.message).toContain(
-      `toolkit incident claim ${id} --dispatch-token ${call.token}`,
+      `toolkit incident claim ${id} --dispatch-handle ${call.handle} --hub-url ${hub.hub.url}`,
     );
+    expect(call.request.message).toContain(
+      `pass --hub-url ${hub.hub.url} to every toolkit incident command`,
+    );
+    // The message reaches downstream argv, so it must not carry the token.
+    expect(JSON.stringify(call.request)).not.toContain(token);
     expect(call.request.message).toContain("load the incident-response skill");
     expect(call.request.message).toContain("toolkit incident update");
     expect(call.request.message).toContain("https://github.com/o/r/pull/5150");
     const detail = await hub.api.byRef(id);
     expect(detail.command.state).toBe("dispatching");
-    expect(JSON.stringify(detail)).not.toContain(call.token);
-    expect(hub.logs.join("\n")).not.toContain(call.token);
+    expect(JSON.stringify(detail)).not.toContain(token);
+    expect(hub.logs.join("\n")).not.toContain(token);
 
     // The spawned session redeems the token; then resolves with evidence.
     const commander = agentActor("commander");
     await hub.api.claimDispatch({
       actor: commander,
       ref: id,
-      dispatchToken: call.token,
+      dispatchToken: token,
     });
     const owned = await hub.api.byRef(id);
     expect(owned.command.commander?.key).toBe(commander.key);
@@ -238,7 +246,7 @@ describe("toolkit incident wait takeover", () => {
       "resolved",
     ]);
     expect(resultA.dispatches.length + resultB.dispatches.length).toBe(1);
-    expect(JSON.stringify([resultA, resultB])).not.toContain(call.token);
+    expect(JSON.stringify([resultA, resultB])).not.toContain(token);
   });
 
   test("a failed spawn releases the lease and another waiter dispatches", async () => {
@@ -263,7 +271,9 @@ describe("toolkit incident wait takeover", () => {
     }, settle);
     const [failed, retried] = spawns.calls;
     expect(failed?.waiter).not.toBe(retried?.waiter);
-    expect(failed?.token).not.toBe(retried?.token);
+    expect(failed?.handle).not.toBe(retried?.handle);
+    // The failed spawn's token was discarded with its lease.
+    expect(hub.tokens.has(failed?.handle ?? "")).toBe(false);
     const timeline = await timelineOf(hub, id);
     expect(timeline.find((event) => event.type === "released")?.body).toBe(
       "Spawn failed: herdr-app is not running",
@@ -273,7 +283,7 @@ describe("toolkit incident wait takeover", () => {
     await hub.api.claimDispatch({
       actor: commander,
       ref: id,
-      dispatchToken: retried?.token ?? "",
+      dispatchToken: hub.tokenOf(retried),
     });
     const owned = await hub.api.byRef(id);
     await hub.api.resolve({
@@ -318,12 +328,90 @@ describe("toolkit incident wait takeover", () => {
     await vi.waitFor(() => {
       expect(spawns.calls).toHaveLength(2);
     }, settle);
-    expect(spawns.calls[0]?.token).not.toBe(spawns.calls[1]?.token);
+    expect(hub.tokenOf(spawns.calls[0])).not.toBe(hub.tokenOf(spawns.calls[1]));
     const timeline = await timelineOf(hub, id);
     expect(timeline.map((event) => event.type)).toContain("dispatch-expired");
 
     hub.scheduler.advance(3_600_000);
     await expect(waiting).resolves.toMatchObject({ outcome: "timeout" });
+  });
+});
+
+describe("toolkit incident wait clock skew and cancellation", () => {
+  test("a waiter whose clock runs ahead of Hub backs off instead of spinning on a lapsed lease", async () => {
+    const lagMs = 60_000;
+    const hub = await newHub(
+      { dispatchLeaseSeconds: 300, takeoverGraceSeconds: 60 },
+      lagMs,
+    );
+    const incident = await hub.declare({ systems: ["storage"] });
+    const id = incident.identifier;
+    const lease = await hub.api.take({
+      actor: agentActor("other-dispatcher"),
+      ref: id,
+      dispatch: true,
+      force: true,
+    });
+    if (lease.outcome !== "dispatching") throw new Error("lease");
+    const checks = { count: 0 };
+    const spawns = fakeSpawns();
+    const deps = hub.deps(agentActor("a"), spawns.spawnerFor("a"));
+    const counted = {
+      ...deps,
+      api: {
+        ...deps.api,
+        check: async (input: Parameters<typeof deps.api.check>[0]) => {
+          checks.count += 1;
+          return deps.api.check(input);
+        },
+      },
+    };
+    const controller = new AbortController();
+    aborts.push(controller);
+    const waiting = waitForIncident(counted, {
+      ref: id,
+      spawn: true,
+      signal: controller.signal,
+    });
+    waiters.push(waiting);
+    await vi.waitFor(async () => {
+      expect(await affectedKeys(hub, id)).toHaveLength(1);
+      expect(hub.scheduler.pending()).toBeGreaterThanOrEqual(1);
+    }, settle);
+
+    // Locally the lease has lapsed; on Hub's clock it still has a minute.
+    hub.scheduler.advance(
+      Date.parse(lease.leaseExpiresAt) - hub.scheduler.now(),
+    );
+    await Bun.sleep(300);
+    expect(await commandStateOf(hub, id)).toBe("dispatching");
+    expect(checks.count).toBeLessThanOrEqual(4);
+    expect(spawns.calls).toEqual([]);
+
+    hub.scheduler.advance(lagMs);
+    await vi.waitFor(() => {
+      expect(spawns.calls).toHaveLength(1);
+    }, settle);
+  });
+
+  test("a signal that fired before wait registered its listener still cancels it", async () => {
+    const hub = await newHub();
+    const incident = await hub.declare({ systems: ["storage"] });
+    const controller = new AbortController();
+    controller.abort();
+    const spawns = fakeSpawns();
+
+    const outcome = await waitForIncident(
+      hub.deps(agentActor("a"), spawns.spawnerFor("a")),
+      { ref: incident.identifier, spawn: true, signal: controller.signal },
+    );
+
+    expect(outcome).toMatchObject({
+      outcome: "canceled",
+      incident: { identifier: incident.identifier },
+    });
+    await expect(affectedKeys(hub, incident.identifier)).resolves.toEqual([]);
+    expect(spawns.calls).toEqual([]);
   });
 });
 

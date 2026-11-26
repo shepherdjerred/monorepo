@@ -620,7 +620,7 @@ toolkit incident update INC-12 --body "Remounted; watching writes"
 toolkit incident status INC-12 monitoring --expected-revision 4
 toolkit incident link INC-12 --kind pipeline --ref 19260 --title "red run"
 toolkit incident take INC-12 --spawn          # dispatch a commander session yourself
-toolkit incident claim INC-12 --dispatch-token <TOKEN>   # run by the spawned session
+toolkit incident claim INC-12 --dispatch-handle <HANDLE>  # run by the spawned session
 toolkit incident handoff INC-12 --to claude-code:<session> | release INC-12
 toolkit incident resolve INC-12 --expected-revision 6 --note "Probe write succeeded"
 toolkit incident watch INC-12 --until-resolved --json
@@ -639,25 +639,32 @@ frames; disconnects reconnect with backoff and refetch.
 
 The spawner is `herdr-new-worktree` from PATH (`INCIDENT_SPAWNER` /
 `incident.spawner` overrides it). It runs as `<spawner> --request-env` with the
-request in `HERDR_WORKTREE_REQUEST`, so the dispatch token never appears in a
-process list: provider from the lease, this machine, the current repository's
-main checkout and `~/.herdr/worktrees/<repo>`, and a tab named `INC-N
-commander`. The token appears only inside that request; JSON output prints
-`[redacted]`, and the timeline records the spawn without it.
+request in `HERDR_WORKTREE_REQUEST`: provider from the lease, this machine, the
+current repository's main checkout and `~/.herdr/worktrees/<repo>`, and a tab
+named `INC-N commander`. The first message reaches downstream process
+arguments (Herdr's `space.new` and the agent's launch command), so it never
+holds the dispatch token. The token waits in a `0600` file under
+`$XDG_STATE_HOME/toolkit/incident-dispatch` (default `~/.local/state/...`), and
+the message carries only its opaque handle: `claim --dispatch-handle` reads the
+token on this machine, redeems it, and deletes the file. A failed spawn or
+refused claim deletes it too; leftovers older than a day are swept. When the
+Hub is not the default one, every command in the message carries `--hub-url`.
+JSON output prints the token as `[redacted]`, and the timeline records the
+spawn without it.
 
-| Exit    | Meaning                                                                       |
-| ------- | ----------------------------------------------------------------------------- |
-| 0       | Done; `check`: nothing relevant open; `wait`: resolved, or nothing open       |
-| 1       | Refused (forbidden, not found, bad request) or Hub unreachable; spawn failed  |
-| 2       | Usage error                                                                   |
-| 6       | `wait`/`watch` `--timeout-sec` elapsed; the incident is not necessarily stuck |
-| 10      | `check`: a relevant open incident exists                                      |
-| 11      | `check`/`wait`: you likely caused it and nobody commands it; take it          |
-| 12      | `wait`: you are the commander (already, or took command after the grace)      |
-| 13      | `declare`: an open incident already covers the system; wait on or join it     |
-| 14      | Stale `--expected-revision`; the message names the current one                |
-| 15      | `take`/`claim`: someone else commands or is dispatching, or grace not over    |
-| 130/143 | SIGINT/SIGTERM                                                                |
+| Exit    | Meaning                                                                                                  |
+| ------- | -------------------------------------------------------------------------------------------------------- |
+| 0       | Done; `check`: nothing relevant open; `wait`: resolved, or nothing open                                  |
+| 1       | Refused (forbidden, not found, bad request) or Hub unreachable; spawn failed                             |
+| 2       | Usage error                                                                                              |
+| 6       | `wait`/`watch` `--timeout-sec` elapsed; the incident is not necessarily stuck                            |
+| 10      | `check`: a relevant open incident exists                                                                 |
+| 11      | `check`/`wait`: you likely caused it and nobody commands it; take it                                     |
+| 12      | `wait`: you are the commander (already, or took command after the grace)                                 |
+| 13      | `declare`: an open incident already covers the system; wait on or join it                                |
+| 14      | Stale `--expected-revision`; the message names the current one                                           |
+| 15      | `take`/`claim`: someone else commands or is dispatching, grace not over, or no such dispatch handle here |
+| 130/143 | SIGINT/SIGTERM                                                                                           |
 
 When main is red, `ci wait` (exit 5) and `ci main` add the open `main-ci`
 incident, its command state, and the `toolkit incident` command to run (`wait`,

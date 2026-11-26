@@ -125,6 +125,8 @@ async function streamChanges(
     queue.wake();
   };
   context.signal?.addEventListener("abort", stop, { once: true });
+  // Abort events are not replayed: a signal during the initial read stops here.
+  if (context.signal?.aborted === true) stop();
   const cancelTimeout =
     timeoutMs === undefined
       ? undefined
@@ -190,7 +192,8 @@ export async function incidentWatchCommand(
       { outcome: "timeout" },
       `Timed out after ${String((timeoutMsOf(options) ?? 0) / 1000)}s watching incidents.`,
     );
-  return end === "done" || !untilResolved
+  // "stopped" only comes from SIGINT/SIGTERM; the handler maps it to 130/143.
+  return end === "done"
     ? result(INCIDENT_EXIT.ok, null, "")
     : result(CANCELED_EXIT, { outcome: "canceled" }, "Stopped watching.");
 }

@@ -11,7 +11,11 @@ import { realScheduler } from "#lib/incidents/scheduler.ts";
 import { processSpawner, repoLocation } from "#lib/incidents/spawn.ts";
 import { incidentStream } from "#lib/incidents/stream.ts";
 import { agentWaitHint } from "#lib/ci/wait/agent-hint.ts";
-import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import {
+  loadToolkitConfig,
+  TOOLKIT_CONFIG_DEFINITION,
+} from "#lib/toolkit-config.ts";
+import { fileDispatchHandles } from "#lib/incidents/dispatch-handles.ts";
 import { sessionActor } from "#lib/tracker/context.ts";
 import {
   incidentRecordCommand,
@@ -60,7 +64,7 @@ Commands:
   link <INC-N> --kind KIND --ref REF [--url URL] [--title T]
   join <INC-N> [--note T] | leave <INC-N> [--note T]
   take <INC-N> [--force] [--spawn] [--note T]
-  claim <INC-N> --dispatch-token TOKEN  Redeem a dispatch lease (run by the spawned session)
+  claim <INC-N> --dispatch-handle H     Redeem a dispatch lease (run by the spawned session)
   handoff <INC-N> --to KEY|none [--note T] | release <INC-N> [--note T]
   resolve <INC-N> --expected-revision N --note EVIDENCE [--force]
   reopen <INC-N> --expected-revision N --note TEXT
@@ -138,6 +142,11 @@ async function buildContext(
     spawner: processSpawner(spawner),
     spawnerName: path.basename(spawner),
     repo: () => repoLocation(),
+    handles: fileDispatchHandles(),
+    hubUrl:
+      url === hubBaseUrl(TOOLKIT_CONFIG_DEFINITION.opsDashboardUrl.default)
+        ? null
+        : url,
     log: (line) => {
       console.error(line);
     },
