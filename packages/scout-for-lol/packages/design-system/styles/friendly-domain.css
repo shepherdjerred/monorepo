@@ -30,6 +30,10 @@
   --scout-face-size: 46px;
 }
 
+.scout-face[data-size="72"] {
+  --scout-face-size: 72px;
+}
+
 .scout-face[data-size="76"] {
   --scout-face-size: 76px;
 }
