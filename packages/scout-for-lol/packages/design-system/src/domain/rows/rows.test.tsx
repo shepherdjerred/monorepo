@@ -192,6 +192,18 @@ describe("SetupRow", () => {
     expect(html).toContain("<ul");
   });
 
+  test("shows a rate with a zero decimal as 52.0%", () => {
+    const html = renderToStaticMarkup(
+      <SetupRow
+        title="Starting items"
+        items={[{ label: "Doran's Ring", asset: { kind: "item", key: 1056 } }]}
+        proof={{ winRate: 52, games: 11_300, pickRate: 60 }}
+      />,
+    );
+    expect(html).toContain("<b>52.0%</b> wins");
+    expect(html).toContain("Picked 60.0%");
+  });
+
   test("puts a chevron between items in a sequence and an ordered list", () => {
     const html = renderToStaticMarkup(
       <SetupRow
@@ -292,6 +304,21 @@ describe("ChampionCard", () => {
     expect(html).toContain("from 1,970");
     expect(html).toContain("S tier");
     expect(html).toContain("Bot");
+  });
+
+  test("shows a win rate and a lane win rate with one decimal", () => {
+    const html = renderToStaticMarkup(
+      <ChampionCard
+        champion="Garen"
+        href="#garen"
+        winRate={50}
+        games={8120}
+        laneWinRate={52}
+        laneGames={1000}
+      />,
+    );
+    expect(html).toContain("<b>50.0%</b> wins");
+    expect(html).toContain("Wins lane 52.0%");
   });
 
   test("leaves out the lane and tier when they are not known", () => {
