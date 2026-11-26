@@ -1,4 +1,5 @@
 import type { CloneFile, FileIdentity } from "./clone.ts";
+import type { LeftAloneCounts } from "./reasons.ts";
 import type { CommandRunner } from "#lib/tend/types.ts";
 
 /**
@@ -63,6 +64,12 @@ export type CleanCheck =
 export type TemporaryPlace = {
   readonly dir: string;
   readonly dev: number | null;
+  /**
+   * The group a clone staged there is in. A new file takes its directory's
+   * group, not its source's, and a rename cannot change it afterwards: only a
+   * file in this group can be replaced by a clone that is its equal.
+   */
+  readonly gid: number | null;
 };
 
 export type DedupeWorktree = {
@@ -121,7 +128,7 @@ export type PendingReplacement = {
   readonly sourcePath: string;
   readonly targetPath: string;
   readonly target: FileIdentity;
-  readonly temporaryDir: string;
+  readonly staging: TemporaryPlace;
 };
 
 /**
@@ -132,7 +139,10 @@ export type DedupeRefresh =
   "not-needed" | "refreshed" | "live" | "disabled" | "failed";
 
 export type DedupePassResult = {
-  /** Files that qualify: replaced in an applied run, counted in a dry run. */
+  /**
+   * Files that passed every check a dry run makes. An applied run replaces
+   * each of them, or says under another count here why it did not.
+   */
   plannedFiles: number;
   plannedBytes: number;
   replacedFiles: number;
@@ -146,11 +156,8 @@ export type DedupePassResult = {
    * (line endings converted), so equal blobs do not prove equal bytes.
    */
   normalizedOrFilteredFiles: number;
-  /**
-   * Left alone: open in a process, hard-linked elsewhere, another user's, or
-   * carrying file flags or extended attributes of its own.
-   */
-  protectedFiles: number;
+  /** Left alone as in use or not plain, by reason. */
+  readonly leftAlone: LeftAloneCounts;
   /** Left alone: the copy to clone from was no longer the listed blob. */
   staleSourceFiles: number;
   refresh: DedupeRefresh;

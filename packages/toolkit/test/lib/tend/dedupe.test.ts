@@ -903,7 +903,7 @@ describe("toolkit tend dedupe", () => {
 
       expect(output()).toContain("toolkit tend — APPLY");
       expect(output()).toContain(
-        "Dedupe: shared 8 file(s), 1.1 MiB in 2 worktree(s); index refreshed in 2",
+        "Dedupe: shared 8 of 8 planned file(s), 1.1 MiB in 2 worktree(s); index refreshed in 2",
       );
       expect(output()).toContain(
         `[SHARED] (dedupe/worktree-files) ${fx.b} — 5 file(s), 644.5 KiB identical to another worktree's`,
@@ -931,7 +931,7 @@ describe("toolkit tend dedupe", () => {
 
       expect(refreshedIn(fx)).toEqual([]);
       expect(output()).toContain(
-        "Dedupe: shared 8 file(s), 1.1 MiB in 2 worktree(s); index skipped by --no-refresh in 2",
+        "Dedupe: shared 8 of 8 planned file(s), 1.1 MiB in 2 worktree(s); index skipped by --no-refresh in 2",
       );
       expect(await git(fx.a, "status", "--porcelain")).not.toContain("big.bin");
     },

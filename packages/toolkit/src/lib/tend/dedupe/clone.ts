@@ -85,6 +85,9 @@ const CLONE_UNSUPPORTED_CODES = new Set([
 ]);
 
 const TEMP_NAME_PATTERN = /^(\d+)-\d+$/u;
+/** The staging directory while it is being made inside a worktree. */
+const SEED_NAME_PREFIX = ".tend-dedupe-";
+const SEED_NAME_PATTERN = /^\.tend-dedupe-(\d+)$/u;
 let temporaryCounter = 0;
 
 /**
@@ -97,25 +100,108 @@ export function temporaryCloneDir(gitDir: string): string {
   return path.join(gitDir, "tend-dedupe");
 }
 
+/** The group of a directory, which is the group a file made in it gets. */
+export async function directoryGroup(directory: string): Promise<number> {
+  const info = await lstat(directory);
+  return info.gid;
+}
+
 /**
- * Create the directory and remove clones left by a run that died between
- * cloning and renaming. A file owned by a live pid is another run's.
+ * What a run that died left in `directory`: names that fit `pattern`, whose
+ * first group is the pid of a process that is gone.
  */
-export async function prepareTemporaryCloneDir(
+async function leftoversIn(
   directory: string,
+  pattern: RegExp,
   isPidAlive: (pid: number) => boolean,
-): Promise<void> {
-  await mkdir(directory, { recursive: true });
+): Promise<string[]> {
+  const leftovers: string[] = [];
   for (const name of await readdir(directory)) {
-    const ownerPid = Number(TEMP_NAME_PATTERN.exec(name)?.[1]);
+    const ownerPid = Number(pattern.exec(name)?.[1]);
     if (
       Number.isSafeInteger(ownerPid) &&
       ownerPid !== process.pid &&
       !isPidAlive(ownerPid)
     ) {
-      await rm(path.join(directory, name), { force: true });
+      leftovers.push(path.join(directory, name));
     }
   }
+  return leftovers;
+}
+
+/**
+ * Put an empty directory at `directory` that carries the worktree's group.
+ *
+ * A file takes the group of the directory it is made in, and a directory
+ * keeps the group it was made with wherever it is moved. A git directory
+ * need not be in the worktree's group: a worktree under `/tmp` is in group
+ * `wheel` while its git directory, under the home directory, is in `staff`.
+ * `chown` cannot fix that, since it only gives a file to a group the user
+ * belongs to. So the directory is made inside the worktree, where it gets
+ * the right group, and moved into the git directory before anything is
+ * cloned into it. It is empty the whole time it is in the worktree, and git
+ * does not report empty directories.
+ */
+async function adoptWorktreeGroup(
+  directory: string,
+  worktreePath: string,
+  isPidAlive: (pid: number) => boolean,
+): Promise<void> {
+  const worktree = await lstat(worktreePath);
+  for (const dead of await leftoversIn(
+    worktreePath,
+    SEED_NAME_PATTERN,
+    isPidAlive,
+  )) {
+    // Only ever an empty directory; anything else is not this tool's.
+    await rmdir(dead).catch(() => null);
+  }
+  const seed = path.join(
+    worktreePath,
+    `${SEED_NAME_PREFIX}${String(process.pid)}`,
+  );
+  await mkdir(seed);
+  try {
+    // Replaces the empty directory already there.
+    await rename(seed, directory);
+  } catch {
+    // Left as it was: the files there are then counted as not replaceable.
+    await rmdir(seed);
+  } finally {
+    await utimes(
+      worktreePath,
+      worktree.atimeMs / 1000,
+      worktree.mtimeMs / 1000,
+    );
+  }
+}
+
+/**
+ * Create the directory and remove clones left by a run that died between
+ * cloning and renaming; a file owned by a live pid is another run's. The
+ * directory is made to carry the worktree's group, so that a clone staged
+ * in it is in the group of the file it replaces. Returns the group it has.
+ */
+export async function prepareTemporaryCloneDir(options: {
+  readonly directory: string;
+  readonly worktreePath: string;
+  readonly isPidAlive: (pid: number) => boolean;
+}): Promise<number> {
+  const { directory, worktreePath, isPidAlive } = options;
+  await mkdir(directory, { recursive: true });
+  for (const dead of await leftoversIn(
+    directory,
+    TEMP_NAME_PATTERN,
+    isPidAlive,
+  )) {
+    await rm(dead, { force: true });
+  }
+  const wanted = await directoryGroup(worktreePath);
+  const leftover = await readdir(directory);
+  if ((await directoryGroup(directory)) !== wanted && leftover.length === 0) {
+    await adoptWorktreeGroup(directory, worktreePath, isPidAlive);
+  }
+  return directoryGroup(directory);
 }
 
 /** Leave no trace in the git directory once a worktree is done. */

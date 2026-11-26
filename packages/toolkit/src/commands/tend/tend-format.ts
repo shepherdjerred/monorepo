@@ -149,8 +149,17 @@ function formatDedupeSummaryLines(
         sum + numericMetadata(action, planned ? "bytes" : "replacedBytes"),
       0,
     );
+    // An applied run is held against its own plan: every file that passed
+    // the checks a dry run makes, shared or not.
+    const plannedFiles = sr.actions.reduce(
+      (sum, action) => sum + numericMetadata(action, "files"),
+      0,
+    );
+    const shared = planned
+      ? `would share ${String(files)} file(s)`
+      : `shared ${String(files)} of ${String(plannedFiles)} planned file(s)`;
     lines.push(
-      `Dedupe: ${planned ? "would share" : "shared"} ${String(files)} file(s), ${formatByteSize(bytes)} in ${String(acted.length)} worktree(s)${formatRefreshCounts(acted, planned)}`,
+      `Dedupe: ${shared}, ${formatByteSize(bytes)} in ${String(acted.length)} worktree(s)${formatRefreshCounts(acted, planned)}`,
     );
   }
   return lines;
