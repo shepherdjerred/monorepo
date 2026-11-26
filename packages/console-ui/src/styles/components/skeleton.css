@@ -1,0 +1,48 @@
+/* Skeleton bones: quiet track-coloured bars; the shimmer stops under reduced motion. */
+@layer ui.components {
+  .ui-skeleton {
+    display: grid;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-3) var(--ui-gutter);
+  }
+  .ui-bone {
+    display: block;
+    height: 12px;
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-track);
+    animation: ui-bone 1.6s ease-in-out infinite;
+  }
+  .ui-bone[data-last] {
+    width: 60%;
+  }
+  .ui-bone[data-height="sm"] {
+    height: 48px;
+  }
+  .ui-bone[data-height="md"] {
+    height: 120px;
+  }
+  .ui-bone[data-height="lg"] {
+    height: 240px;
+  }
+  .ui-skeleton-row {
+    display: grid;
+    grid-template-columns: repeat(
+      var(--ui-skeleton-columns, 4),
+      minmax(0, 1fr)
+    );
+    gap: var(--ui-space-4);
+    align-items: center;
+    min-height: var(--ui-row);
+    border-bottom: 1px solid var(--ui-line-soft);
+  }
+  @keyframes ui-bone {
+    50% {
+      opacity: 0.5;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-bone {
+      animation: none;
+    }
+  }
+}

@@ -9,6 +9,11 @@ export type HeaderBarProps = {
    * the title after a dialog closes.
    */
   readonly titleId?: string;
+  /**
+   * `p` when the page draws its own `<h1>` below the bar (an editable
+   * title, say), so the page keeps one top heading. Defaults to `h1`.
+   */
+  readonly titleAs?: "h1" | "p";
   /** Usually `<Tabs>` or `<NavTabs>`, placed right after the title. */
   readonly tabs?: ReactNode;
   /** Muted text, right-aligned (e.g. "Snapshot generated 1m ago"). */
@@ -31,14 +36,16 @@ export function HeaderBar({
   title,
   lead,
   titleId,
+  titleAs = "h1",
   tabs,
   meta,
   actions,
   focusOnMount = false,
 }: HeaderBarProps): React.JSX.Element {
+  const Title = titleAs;
   // A stable ref callback runs once when the title mounts.
   const focusTitle = useCallback(
-    (element: HTMLHeadingElement | null) => {
+    (element: HTMLElement | null) => {
       if (focusOnMount) element?.focus();
     },
     [focusOnMount],
@@ -46,14 +53,14 @@ export function HeaderBar({
   return (
     <header className="ui-header">
       {lead === undefined ? null : <div className="ui-header-lead">{lead}</div>}
-      <h1
+      <Title
         className="ui-header-title"
         id={titleId}
         ref={focusTitle}
         tabIndex={focusOnMount || titleId !== undefined ? -1 : undefined}
       >
         {title}
-      </h1>
+      </Title>
       {tabs}
       {meta === undefined ? null : (
         <span className="ui-header-meta">{meta}</span>

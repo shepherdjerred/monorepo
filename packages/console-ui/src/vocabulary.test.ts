@@ -21,8 +21,9 @@ type Finding = { readonly rule: string; readonly where: string };
 
 const COLOUR_LITERAL =
   /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(|\b(?:white|black)\b/i;
-/** Only the unread dot is round; everything else uses the radius scale. */
-const ROUND_ALLOWED = /\.ui-unread\b/;
+/** Only dots are round (unread, live status, radio); everything else uses the radius scale. */
+const ROUND_ALLOWED =
+  /\.ui-unread\b|\.ui-status-dot-mark\b|\.ui-choice-dot\b|\.ui-choice-box\[data-shape="radio"\]/;
 const ALLOWED_WIDTHS = new Set(Object.values(BREAKPOINTS));
 
 /** Property → the values it may take. A failing value is a finding. */

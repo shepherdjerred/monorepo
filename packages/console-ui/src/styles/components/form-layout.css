@@ -1,0 +1,95 @@
+/* Fieldset, input with addon, form actions row and the error summary. */
+@layer ui.components {
+  .ui-fieldset {
+    display: grid;
+    gap: var(--ui-space-2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .ui-fieldset-legend {
+    padding: 0;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-fieldset-body {
+    display: grid;
+    gap: var(--ui-space-2);
+  }
+
+  .ui-addon {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    height: var(--ui-control);
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+  }
+  .ui-addon:has(:focus-visible) {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+  .ui-addon[data-invalid] {
+    border-color: var(--ui-sev-error);
+  }
+  .ui-addon-text {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--ui-space-2);
+    background: var(--ui-head);
+    color: var(--ui-muted);
+  }
+  .ui-addon-text:first-child {
+    border-right: 1px solid var(--ui-line);
+  }
+  .ui-addon-text:last-child:not(:first-child) {
+    border-left: 1px solid var(--ui-line);
+  }
+  .ui-addon .ui-addon-input {
+    flex: 1;
+    height: auto;
+    border: 0;
+    background: none;
+  }
+  .ui-addon .ui-addon-input:focus-visible {
+    outline: none;
+  }
+
+  .ui-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-4) var(--ui-gutter) 0;
+  }
+  .ui-form-actions-status {
+    margin-right: auto;
+  }
+
+  /* Quiet like Banner: no tint, no bar; a hairline below separates it. */
+  .ui-error-summary {
+    padding: var(--ui-space-2) var(--ui-gutter) var(--ui-space-3);
+    border-bottom: 1px solid var(--ui-line);
+  }
+  .ui-error-summary-title {
+    margin: 0 0 var(--ui-space-1);
+    color: var(--ui-sev-error-text);
+    font-size: var(--ui-text-base);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-error-summary ul {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--ui-text-md);
+  }
+  .ui-error-summary a {
+    color: var(--ui-ink);
+  }
+}

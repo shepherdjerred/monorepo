@@ -1,4 +1,4 @@
-import { Chip } from "@shepherdjerred/console-ui";
+import { Chip, useCapped } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import type {
   GitHubFacet,
@@ -14,7 +14,7 @@ import { ExternalLinkIcon } from "lucide-react";
 import { useId } from "react";
 import { Link } from "react-router";
 
-import { ListToggle, useCapped } from "./capped-list.tsx";
+import { ListToggle } from "./capped-list.tsx";
 import { facetsQuery } from "./ops-api.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";

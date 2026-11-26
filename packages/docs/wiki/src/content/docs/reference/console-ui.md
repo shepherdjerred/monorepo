@@ -151,6 +151,45 @@ The page kit (`PageBody`, `PageHeading`, `SummaryGrid`, `Card`,
 `Button size="page"`, `.ui-data`, `.ui-summary*`, `.ui-eyebrow`) is
 deprecated and is deleted once nothing imports it.
 
+## Detail, form, time and feedback pieces
+
+| Piece                                                  | Job                                    | Key props                                                                      |
+| ------------------------------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------ |
+| `DescriptionList`                                      | Key-value facts                        | `layout` (`grid`, `rail`), `items` `{ label, value, mono?, wide?, severity? }` |
+| `Disclosure`                                           | Collapsible block                      | `title`, `count`, `defaultOpen`                                                |
+| `CodeBlock`                                            | Mono, scrolling text                   | `code`, `label`, `lineNumbers`, `activeLine`, `wrap`                           |
+| `CopyButton`                                           | Copy to clipboard                      | `text`, `label`, `variant` (`icon`, `text`)                                    |
+| `Pager`, `ListToggle`, `useCapped`                     | Keyset paging; cap a list and show all | `newerHref`, `olderHref`, `renderLink`; `useCapped(items, cap)`                |
+| `BackLink`                                             | `HeaderBar` `lead`                     | `href`, `label`                                                                |
+| `Checkbox`, `RadioGroup`, `Switch`                     | Choice controls (Base UI)              | `label`, `hint`, `invalid`, `options`                                          |
+| `Fieldset`, `Textarea`, `InputAddon`                   | Field groups and inputs                | `legend`, `hint`, `error`; `prefix`, `suffix`                                  |
+| `FormActions`, `ErrorSummary`                          | Form footer; failed-submit summary     | `submit`, `pending`, `cancel`, `status`; `errors`, `focusOnMount`              |
+| `RelativeTime`, `ExactTime`, `Duration`                | Times                                  | `value`, `now`; `precision`, `year`; `ms` or `start`/`end`                     |
+| `Kbd`, `useSearchShortcut`, `isEditableTarget`         | Keyboard                               | `ref` of the search input                                                      |
+| `StatusDot`, `SavedStatus`, `Skeleton`, `EmailPreview` | Feedback                               | `state`; `saved`; `kind`; `html`, `text`                                       |
+
+### Formatters
+
+| Function                                  | Output                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `formatRelative(value, now)`              | `just now` (under 45s), `45s ago`, `5m ago`, `3h ago`, `4d ago`, `2mo ago`, `1y ago`; `in 5m` for the future |
+| `formatExact(value, { precision, year })` | `Nov 26, 14:02 PT` (Pacific, 24-hour); `precision` is `day`, `minute` or `second`                            |
+| `formatDuration(ms)`                      | `850ms`, `45s`, `12m 5s`, `2h 14m`, `3d 4h`                                                                  |
+| `formatBytes(bytes)`                      | Binary units: `0 B`, `1.5 KiB`, `14.2 MiB`, `118 GiB`, `1 TiB`                                               |
+| `formatCount(n)`                          | `1,234,567`                                                                                                  |
+| `formatPercent(ratio, digits)`            | `97.1%` from `0.971`                                                                                         |
+
+### Conventions
+
+- Timestamps read relative with the exact time on hover (`title`, and the ISO
+  moment in `dateTime`). Absolute times are Pacific time.
+- Bytes use binary units.
+- Page titles read "Page · App".
+- Every relative time on a page shares one 30-second ticker, paused while the
+  tab is hidden.
+- Forms use TanStack Form with a Zod schema; errors are read with
+  `fieldErrorMessage` and listed with `ErrorSummary`.
+
 ## Conformance contract
 
 Every console runs `conformanceProblems(import.meta.dirname)` from

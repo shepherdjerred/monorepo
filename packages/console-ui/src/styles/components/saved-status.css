@@ -1,0 +1,18 @@
+/* "Saved." line: visible briefly, then faded out but still readable by AT. */
+@layer ui.components {
+  .ui-saved {
+    margin: 0;
+    color: var(--ui-sev-ok-text);
+    font-size: var(--ui-text-md);
+    opacity: 0;
+    transition: opacity var(--ui-duration-panel) var(--ui-ease-out);
+  }
+  .ui-saved[data-visible] {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-saved {
+      transition: none;
+    }
+  }
+}

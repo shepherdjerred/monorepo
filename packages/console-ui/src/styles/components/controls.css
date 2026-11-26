@@ -1,0 +1,118 @@
+/*
+ * Checkbox, radio and switch rows: a 16px box (switch: 28 by 16) beside the
+ * label, the row is the click target. Coarse pointers get a 44px hit area.
+ */
+@layer ui.components {
+  .ui-choices {
+    display: grid;
+    gap: var(--ui-space-2);
+  }
+  .ui-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ui-space-2);
+    min-height: var(--ui-control);
+    padding-block: 5px;
+    cursor: pointer;
+  }
+  .ui-choice-text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .ui-choice-hint {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-choice-box {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    padding: 0;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-panel);
+    color: var(--ui-on-accent);
+    cursor: pointer;
+  }
+  .ui-choice-box[data-shape="radio"] {
+    border-radius: var(--ui-radius-round);
+  }
+  .ui-choice-box[data-checked] {
+    border-color: var(--ui-accent-edge);
+    background: var(--ui-accent);
+  }
+  .ui-choice-box[aria-invalid="true"] {
+    border-color: var(--ui-sev-error);
+  }
+  .ui-choice-box[data-disabled],
+  .ui-switch[data-disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .ui-choice-mark svg {
+    width: 12px;
+    height: 12px;
+  }
+  .ui-choice-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--ui-radius-round);
+    background: currentcolor;
+  }
+
+  .ui-switch {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    width: 28px;
+    height: 16px;
+    margin-top: 2px;
+    padding: 0;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-track);
+    cursor: pointer;
+  }
+  .ui-switch[data-checked] {
+    border-color: var(--ui-accent-edge);
+    background: var(--ui-accent);
+  }
+  .ui-switch-thumb {
+    width: 10px;
+    height: 10px;
+    margin-left: 2px;
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-panel);
+    box-shadow: 0 0 0 1px var(--ui-btn-edge);
+    transition: transform var(--ui-duration-press);
+  }
+  .ui-switch[data-checked] .ui-switch-thumb {
+    background: var(--ui-on-accent);
+    box-shadow: none;
+    transform: translateX(12px);
+  }
+
+  @media (pointer: coarse) {
+    :is(.ui-choice-box, .ui-switch)::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--ui-hit));
+      height: max(100%, var(--ui-hit));
+      transform: translate(-50%, -50%);
+      content: "";
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-switch-thumb {
+      transition: none;
+    }
+  }
+}

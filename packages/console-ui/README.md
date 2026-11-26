@@ -18,6 +18,8 @@ app needs stays in that app — Tracker's board, Delivery's pipeline graph,
 Hub's signal list — but it is built only from shared tokens and shared
 pieces. The per-app scan below enforces the second half.
 
+The panel (`.ui-panel`) is a flex column, so a page's `main` can take `flex: 1` and fill its height.
+
 The layout rule: the shell's inset panel is the only card. A page is a
 `HeaderBar`, then a `FigureStrip`, then `Section`s divided by hairlines; the
 panel's `main` has no padding and every block is full-bleed.
@@ -66,32 +68,32 @@ exports the raw tokens and `@shepherdjerred/console-ui/testing` the scan.
 
 ## Components
 
-| Export                                   | Renders                                                                                                                                                                                                                              |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ConsoleShell`                           | The whole frame: skip link, sidebar (`AppSwitcher`, palette button, the `nav` you declare once, `sidebarFooter`, `ThemeRow`) beside the panel, and below 900px a top bar whose drawer holds the same `nav`.                          |
-| `ShellFrame`                             | Sidebar beside the inset panel; `ConsoleShell` uses it. The document scrolls; the panel never does.                                                                                                                                  |
-| `Sidebar`, `SidebarGroup`, `SidebarItem` | `<aside>` with a named `<nav>`; labelled lists of 30px `<li><a>` rows with icon, count and `aria-current`. `renderLink` lets a router draw the `a`.                                                                                  |
-| `AppSwitcher`                            | Workspace button opening a Base UI menu of `{ label, url, group }` links, same tab.                                                                                                                                                  |
-| `HeaderBar`                              | 48px bar: optional `lead` (back link, breadcrumb), the 15px `<h1>` (`titleId`, `focusOnMount` for focus after navigation), `tabs`, muted `meta`, `actions`. Wraps at phone width.                                                    |
-| `Tabs`                                   | Underlined view filter: a radio group with one tab stop and arrow, Home and End keys. Works in a `HeaderBar` and in a `.ui-toolbar`.                                                                                                 |
-| `NavTabs`                                | Route tabs with the same look: a named `<nav>` of `{ href, label, count?, current }` links; `renderLink` for routers.                                                                                                                |
-| `FigureStrip`                            | A `<dl>` of headline figures split by hairlines; `label`, `layout` (`row` or `wrap`), `Figure.href`, and a glyph on warning, error and unknown figures.                                                                              |
-| `Section`                                | A titled block (`title`, `count`, `actions`, `footer`, `headingLevel`, `id`) labelled by its heading. Put two or more in `.ui-columns` to place them side by side.                                                                   |
-| `Banner`                                 | A quiet full-bleed row: severity glyph and word, text, `actions`; optional live `role`.                                                                                                                                              |
-| `State`                                  | The loading, empty or error line where content would be (`kind`, `children`, `action`); announced as `status` or `alert`.                                                                                                            |
-| `Dialog`, `DialogClose`                  | Base UI modal: `title`, `description`, body, `actions`, `size` (`sm`/`md`/`lg`), controlled `open` or a `trigger`. Native `<dialog class="ui-dialog">` with the `ui-dialog-*` parts looks the same.                                  |
-| `StatusGlyph`                            | 14px severity glyph plus its word; `label` may be rich content, `icon` swaps the glyph (running, queued), `hideLabel` keeps the word for screen readers only.                                                                        |
-| `Chip`                                   | 22px bordered chip: a tag (`children`) or a `label`/`value` metric, optional `severity` and `href`. No margin; group chips in `.ui-chips`.                                                                                           |
-| `Button`                                 | Base UI button, 28px with a pressable edge; `variant` is `default`, `primary` or `danger`. Links: `render={<a href="…" />}` with `nativeButton={false}`.                                                                             |
-| `IconButton`                             | Icon-only button; `label` is required and becomes its accessible name.                                                                                                                                                               |
-| `SearchField`                            | 28px search input on the field look with a leading icon and hidden label; `ref` reaches the input.                                                                                                                                   |
-| `Field`                                  | Label, control, hint and error wired with `id`, `aria-describedby` and `aria-invalid`; `stacked` or `inline`.                                                                                                                        |
-| `Meter`                                  | `role="meter"` 64px bar with its figure; values past `max` fill the bar.                                                                                                                                                             |
-| `ThemeRow`                               | Sidebar row cycling system → light → dark.                                                                                                                                                                                           |
-| `CommandPalette` and friends             | `createCommandPaletteStore` (binds ⌘K/Ctrl+K), `CommandPalette` (the modal), `CommandPaletteSearch` (combobox over grouped options), `CommandPaletteButton`, `isCommandPaletteShortcut`. The app supplies `sections` and `onSelect`. |
-| `ICONS`, `THEME_ICON`                    | One lucide icon per meaning: refresh, copy, copied, close, menu, search, add, back, external, delete, expand, collapse and the three theme icons. Severity glyphs are `SEVERITY_ICON`.                                               |
-| `createThemeStore`                       | Theme preference under the shared `ops-theme` key, reflected as `html[data-theme]`, with `theme-color` metas kept equal to the `bg` token. Works without a DOM (in memory).                                                          |
-| `BREAKPOINTS`, `SIDEBAR_QUERY`           | The breakpoint numbers (`phone` 600, `sidebar` 900) and the media query scripts use.                                                                                                                                                 |
+| Export                                   | Renders                                                                                                                                                                                                                                                       |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConsoleShell`                           | The whole frame: skip link, sidebar (`AppSwitcher`, palette button, the `nav` you declare once, `sidebarFooter` (a node, or a function of the drawer's `close`), `ThemeRow`) beside the panel, and below 900px a top bar whose drawer holds the same `nav`.   |
+| `ShellFrame`                             | Sidebar beside the inset panel; `ConsoleShell` uses it. The document scrolls; the panel never does.                                                                                                                                                           |
+| `Sidebar`, `SidebarGroup`, `SidebarItem` | `<aside>` with a named `<nav>`; labelled lists of 30px `<li><a>` rows with icon, count and `aria-current`. `renderLink` lets a router draw the `a`.                                                                                                           |
+| `AppSwitcher`                            | Workspace button opening a Base UI menu of `{ label, url, group }` links, same tab.                                                                                                                                                                           |
+| `HeaderBar`                              | 48px bar: optional `lead` (back link, breadcrumb), the 15px `<h1>` (`titleId`, `focusOnMount` for focus after navigation; `titleAs="p"` when the page draws its own `h1`), `tabs`, muted `meta` after the tabs, `actions` pinned right. Wraps at phone width. |
+| `Tabs`                                   | Underlined view filter: a radio group with one tab stop and arrow, Home and End keys. Works in a `HeaderBar` and in a `.ui-toolbar`.                                                                                                                          |
+| `NavTabs`                                | Route tabs with the same look: a named `<nav>` of `{ href, label, count?, current }` links; `renderLink` for routers.                                                                                                                                         |
+| `FigureStrip`                            | A `<dl>` of headline figures split by hairlines; `label`, `layout` (`row` or `wrap`), `Figure.href`, and a glyph on warning, error and unknown figures.                                                                                                       |
+| `Section`                                | A titled block (`title`, `count`, `actions`, `footer`, `headingLevel`, `id`) labelled by its heading. Put two or more in `.ui-columns` to place them side by side.                                                                                            |
+| `Banner`                                 | A quiet full-bleed row: severity glyph and word, text, `actions`; optional live `role`.                                                                                                                                                                       |
+| `State`                                  | The loading, empty or error line where content would be (`kind`, `children`, `action`); announced as `status` or `alert`.                                                                                                                                     |
+| `Dialog`, `DialogClose`                  | Base UI modal: `title`, `description`, body, `actions`, `size` (`sm`/`md`/`lg`), controlled `open` or a `trigger`. Native `<dialog class="ui-dialog">` with the `ui-dialog-*` parts looks the same.                                                           |
+| `StatusGlyph`                            | 14px severity glyph plus its word; `label` may be rich content, `icon` swaps the glyph (running, queued), `hideLabel` keeps the word for screen readers only.                                                                                                 |
+| `Chip`                                   | 22px bordered chip: a tag (`children`) or a `label`/`value` metric, optional `severity` and `href`. No margin; group chips in `.ui-chips`.                                                                                                                    |
+| `Button`                                 | Base UI button, 28px with a pressable edge; `variant` is `default`, `primary` or `danger`. Links: `render={<a href="…" />}` with `nativeButton={false}`.                                                                                                      |
+| `IconButton`                             | Icon-only button; `label` is required and becomes its accessible name.                                                                                                                                                                                        |
+| `SearchField`                            | 28px search input on the field look with a leading icon and hidden label; `ref` reaches the input.                                                                                                                                                            |
+| `Field`                                  | Label, control, hint and error wired with `id`, `aria-describedby` and `aria-invalid`; `stacked` or `inline`.                                                                                                                                                 |
+| `Meter`                                  | `role="meter"` 64px bar with its figure; values past `max` fill the bar.                                                                                                                                                                                      |
+| `ThemeRow`                               | Sidebar row cycling system → light → dark.                                                                                                                                                                                                                    |
+| `CommandPalette` and friends             | `createCommandPaletteStore` (binds ⌘K/Ctrl+K), `CommandPalette` (the modal), `CommandPaletteSearch` (combobox over grouped options), `CommandPaletteButton`, `isCommandPaletteShortcut`. The app supplies `sections` and `onSelect`.                          |
+| `ICONS`, `THEME_ICON`                    | One lucide icon per meaning: refresh, copy, copied, close, menu, search, add, back, external, delete, expand, collapse and the three theme icons. Severity glyphs are `SEVERITY_ICON`.                                                                        |
+| `createThemeStore`                       | Theme preference under the shared `ops-theme` key, reflected as `html[data-theme]`, with `theme-color` metas kept equal to the `bg` token. Works without a DOM (in memory).                                                                                   |
+| `BREAKPOINTS`, `SIDEBAR_QUERY`           | The breakpoint numbers (`phone` 600, `sidebar` 900) and the media query scripts use.                                                                                                                                                                          |
 
 Plain markup with classes: `ui-table` (with `ui-table-scroll`,
 `ui-table-group`, `ui-table-child`, `ui-table-empty`, `tr[data-current]`,
@@ -133,6 +135,58 @@ each use; Go link's are recorded in its `eslint-suppressions.json`.
 Their components live in `src/components/page-kit/` and their styles in
 `src/styles/page.css`, which also keeps the old banner,
 state and 36px search look inside a `PageBody` so Go link renders unchanged.
+
+## Detail pages, forms, time and feedback
+
+| Export                                                                                           | Renders                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DescriptionList`                                                                                | A `<dl>` of `{ label, value, mono?, wide?, severity? }` items. `layout="grid"` auto-fits ~220px columns; `"rail"` is one column for a side rail.                      |
+| `Disclosure`                                                                                     | Native `<details>` with a twisting chevron, `count`, `defaultOpen`.                                                                                                   |
+| `CodeBlock`                                                                                      | Mono text in a focusable, labelled, scrolling region (`label` required); `lineNumbers`, `activeLine`, `wrap`.                                                         |
+| `CopyButton`                                                                                     | Copies `text`; icon-only or `variant="text"`; announces "Copied" or "Copy failed" in a polite live region and resets after 1.8s.                                      |
+| `Pager`, `ListToggle`, `useCapped`                                                               | Keyset "Newest / Older" links (`renderLink`), and the "Show all N / Show fewer" toggle with the hook that caps a list (`cappedCount`).                                |
+| `BackLink`                                                                                       | The arrow link for `HeaderBar`'s `lead`.                                                                                                                              |
+| `Checkbox`, `RadioGroup`, `Switch`                                                               | Base UI controls with their labels and hints (`invalid`).                                                                                                             |
+| `Fieldset`, `Textarea`, `InputAddon`                                                             | Legend and hint; multi-line input; input with a fixed `prefix` or `suffix` (`go/`). Spread `Field`'s control props onto the last two.                                 |
+| `FormActions`, `ErrorSummary`                                                                    | Right-aligned submit row (`pending`, `pendingLabel`, `cancel`, `status`); focusable alert listing field errors as links.                                              |
+| `fieldErrorMessage`, `collectErrorSummary`                                                       | The TanStack Form + Zod binding (below).                                                                                                                              |
+| `RelativeTime`, `ExactTime`, `Duration`                                                          | `<time>` elements on one 30s ticker (`useNow`, paused while the tab is hidden).                                                                                       |
+| `formatBytes`, `formatCount`, `formatPercent`, `formatDuration`, `formatRelative`, `formatExact` | The only way consoles format these. Temporal does the math, `Intl` the display.                                                                                       |
+| `Kbd`, `useSearchShortcut`, `isEditableTarget`                                                   | Keycap; `/` focuses a search input unless typing or inside a dialog, menu or listbox.                                                                                 |
+| `StatusDot`, `SavedStatus`, `Skeleton`, `EmailPreview`                                           | Live/connecting/reconnecting/offline dot and word; polite "Saved." line; bones (`line`, `block`, `rows`); sandboxed email frame with light/dark and plain-text views. |
+
+**Forms** use TanStack Form with a Zod schema as `validators`. `Field` (with
+an optional `id`) stays the field primitive; bind it like this:
+
+```tsx
+<form.Field name="slug">
+  {(field) => (
+    <Field label="Short link" error={fieldErrorMessage(field.state.meta)}>
+      {(control) => (
+        <InputAddon
+          {...control}
+          prefix="go/"
+          name={field.name}
+          value={field.state.value}
+          onBlur={field.handleBlur}
+          onChange={(event) => {
+            field.handleChange(event.target.value);
+          }}
+        />
+      )}
+    </Field>
+  )}
+</form.Field>
+```
+
+Errors show once a field is touched (a failed submit touches all).
+`collectErrorSummary(fieldMeta, { slug: { label, fieldId } })` feeds
+`ErrorSummary`, with `fieldMeta` from
+`form.Subscribe selector={(s) => s.fieldMeta}`.
+
+**Conventions.** Timestamps are relative ("3m ago", "just now" under 45s)
+with the exact time in the tooltip; absolute times are Pacific ("Nov 26,
+14:02 PT"); bytes are binary (KiB, MiB, GiB); page titles read "Page · App".
 
 ## Tokens
 

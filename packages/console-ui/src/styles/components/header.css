@@ -57,7 +57,10 @@
     color: var(--ui-muted);
     font-size: var(--ui-text-md);
   }
-  .ui-header-title + .ui-header-meta {
+  /* Meta that is followed by actions sits after the title or tabs, and the
+     actions keep the right edge. Meta alone stays right-aligned. */
+  .ui-header-title + .ui-header-meta,
+  .ui-header-meta:not(:last-child) {
     margin-left: 0;
   }
   .ui-header-actions {
@@ -66,10 +69,6 @@
     align-items: center;
     gap: var(--ui-space-2);
     margin-left: auto;
-  }
-  /* Meta sits right-aligned, just before the actions. */
-  .ui-header-meta + .ui-header-actions {
-    margin-left: 0;
   }
 
   @media (width <= 600px) {

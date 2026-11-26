@@ -171,3 +171,132 @@ export {
   ThemeRow,
   type ThemeRowProps,
 } from "@shepherdjerred/console-ui/components/shell/theme-row.tsx";
+
+// CU2: detail pages, forms, time and formatting, feedback.
+export {
+  DescriptionList,
+  type DescriptionItem,
+  type DescriptionListProps,
+} from "@shepherdjerred/console-ui/components/detail/description-list.tsx";
+export {
+  Disclosure,
+  type DisclosureProps,
+} from "@shepherdjerred/console-ui/components/detail/disclosure.tsx";
+export {
+  CodeBlock,
+  type CodeBlockProps,
+} from "@shepherdjerred/console-ui/components/detail/code-block.tsx";
+export {
+  COPY_RESET_MS,
+  CopyButton,
+  type CopyButtonProps,
+} from "@shepherdjerred/console-ui/components/detail/copy-button.tsx";
+export {
+  ListToggle,
+  Pager,
+  cappedCount,
+  useCapped,
+  type Capped,
+  type ListToggleProps,
+  type PagerProps,
+} from "@shepherdjerred/console-ui/components/detail/pager.tsx";
+export {
+  BackLink,
+  type BackLinkProps,
+} from "@shepherdjerred/console-ui/components/detail/back-link.tsx";
+export {
+  Checkbox,
+  type CheckboxProps,
+} from "@shepherdjerred/console-ui/components/forms/checkbox.tsx";
+export {
+  RadioGroup,
+  type RadioGroupProps,
+  type RadioOption,
+} from "@shepherdjerred/console-ui/components/forms/radio-group.tsx";
+export {
+  Switch,
+  type SwitchProps,
+} from "@shepherdjerred/console-ui/components/forms/switch.tsx";
+export {
+  Fieldset,
+  type FieldsetProps,
+} from "@shepherdjerred/console-ui/components/forms/fieldset.tsx";
+export {
+  Textarea,
+  type TextareaProps,
+} from "@shepherdjerred/console-ui/components/forms/textarea.tsx";
+export {
+  InputAddon,
+  type InputAddonProps,
+} from "@shepherdjerred/console-ui/components/forms/input-addon.tsx";
+export {
+  FormActions,
+  type FormActionsProps,
+} from "@shepherdjerred/console-ui/components/forms/form-actions.tsx";
+export {
+  ErrorSummary,
+  type ErrorSummaryItem,
+  type ErrorSummaryProps,
+} from "@shepherdjerred/console-ui/components/forms/error-summary.tsx";
+export {
+  collectErrorSummary,
+  fieldErrorMessage,
+  type FieldMetaLike,
+} from "@shepherdjerred/console-ui/components/forms/bind-field.ts";
+export {
+  RelativeTime,
+  type RelativeTimeProps,
+} from "@shepherdjerred/console-ui/components/time/relative-time.tsx";
+export {
+  ExactTime,
+  type ExactTimeProps,
+} from "@shepherdjerred/console-ui/components/time/exact-time.tsx";
+export {
+  Duration,
+  type DurationProps,
+} from "@shepherdjerred/console-ui/components/time/duration.tsx";
+export {
+  DISPLAY_ZONE,
+  durationIso,
+  formatBytes,
+  formatCount,
+  formatDuration,
+  formatExact,
+  formatPercent,
+  formatRelative,
+  toEpochMs,
+  toInstant,
+  toIso,
+  type ExactOptions,
+  type ExactPrecision,
+  type TimeInput,
+} from "@shepherdjerred/console-ui/format/format.ts";
+export {
+  NOW_INTERVAL_MS,
+  createNowStore,
+  useNow,
+  type NowStore,
+  type NowStoreEnvironment,
+} from "@shepherdjerred/console-ui/format/use-now.ts";
+export { Kbd } from "@shepherdjerred/console-ui/components/feedback/kbd.tsx";
+export {
+  isEditableTarget,
+  useSearchShortcut,
+} from "@shepherdjerred/console-ui/components/feedback/use-search-shortcut.ts";
+export {
+  StatusDot,
+  type ConnectionState,
+  type StatusDotProps,
+} from "@shepherdjerred/console-ui/components/feedback/status-dot.tsx";
+export {
+  SavedStatus,
+  type SavedStatusProps,
+} from "@shepherdjerred/console-ui/components/feedback/saved-status.tsx";
+export {
+  Skeleton,
+  type SkeletonProps,
+} from "@shepherdjerred/console-ui/components/feedback/skeleton.tsx";
+export {
+  EmailPreview,
+  type EmailPreviewProps,
+} from "@shepherdjerred/console-ui/components/feedback/email-preview.tsx";

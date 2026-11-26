@@ -1,0 +1,25 @@
+/* Keycap: a small mono key with a bottom edge, like the button's press edge. */
+@layer ui.components {
+  .ui-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-panel);
+    box-shadow: 0 1px 0 var(--ui-btn-edge);
+    color: var(--ui-muted);
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-xs);
+    letter-spacing: 0;
+  }
+  .ui-kbd + .ui-kbd {
+    margin-left: 2px;
+  }
+  .ui-time {
+    white-space: nowrap;
+  }
+}

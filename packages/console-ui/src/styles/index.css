@@ -28,4 +28,16 @@
 @import "./components/state.css";
 @import "./components/dialog.css";
 @import "./components/palette.css";
+/* CU2: detail, forms, time, feedback */
+@import "./components/description-list.css";
+@import "./components/disclosure.css";
+@import "./components/code-block.css";
+@import "./components/pager.css";
+@import "./components/controls.css";
+@import "./components/form-layout.css";
+@import "./components/kbd.css";
+@import "./components/status-dot.css";
+@import "./components/saved-status.css";
+@import "./components/skeleton.css";
+@import "./components/email-preview.css";
 @import "./page.css";

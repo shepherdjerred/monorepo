@@ -1,0 +1,45 @@
+/* Code blocks: mono text between two hairlines, scrolling in both axes. */
+@layer ui.components {
+  .ui-code {
+    max-height: 320px;
+    overflow: auto;
+    border-block: 1px solid var(--ui-line);
+    background: var(--ui-head);
+  }
+  .ui-code pre {
+    margin: 0;
+    padding: var(--ui-space-2) 0;
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    line-height: 1.5;
+    counter-reset: ui-line;
+    width: max-content;
+    min-width: 100%;
+  }
+  .ui-code[data-wrap] pre {
+    width: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .ui-code-line {
+    display: block;
+    min-height: 1.5em;
+    padding: 0 var(--ui-gutter);
+    counter-increment: ui-line;
+  }
+  .ui-code[data-numbers] .ui-code-line::before {
+    display: inline-block;
+    width: 3ch;
+    margin-right: var(--ui-space-4);
+    color: var(--ui-faint);
+    text-align: right;
+    content: counter(ui-line);
+    user-select: none;
+  }
+  .ui-code-line[data-active] {
+    background: var(--ui-active);
+    box-shadow: inset 2px 0 0 var(--ui-accent);
+  }
+}

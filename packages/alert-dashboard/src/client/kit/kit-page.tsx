@@ -11,10 +11,12 @@ import {
   State,
   StatusGlyph,
   Tabs,
+  useSearchShortcut,
 } from "@shepherdjerred/console-ui";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { Link } from "react-router";
 
+import { KitDetailForms } from "./kit-detail-forms.tsx";
 import { KitControls } from "./kit-controls.tsx";
 import { KIT_GROUPS, KitTabs, type KitAlert } from "./kit-parts.tsx";
 import "./kit.css";
@@ -196,6 +198,8 @@ function EmptyTable(): React.JSX.Element {
  */
 export function KitPage(): React.JSX.Element {
   const [scope, setScope] = useState<Scope>("all");
+  const search = useRef<HTMLInputElement>(null);
+  useSearchShortcut(search);
   const Refresh = ICONS.refresh;
   const Add = ICONS.add;
   return (
@@ -243,7 +247,11 @@ export function KitPage(): React.JSX.Element {
         }
       >
         <div className="ui-toolbar">
-          <SearchField label="Filter alerts" placeholder="Filter alerts…" />
+          <SearchField
+            ref={search}
+            label="Filter alerts"
+            placeholder="Filter alerts…"
+          />
           <Tabs
             label="Show"
             value={scope}
@@ -281,6 +289,7 @@ export function KitPage(): React.JSX.Element {
         </Section>
       </div>
       <KitControls />
+      <KitDetailForms />
     </main>
   );
 }

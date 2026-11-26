@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cappedCount } from "./capped-list.tsx";
+import { cappedCount } from "@shepherdjerred/console-ui";
 
 describe("cappedCount", () => {
   it("shows a list that fits whole", () => {

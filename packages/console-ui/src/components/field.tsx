@@ -10,6 +10,8 @@ export type FieldControlProps = {
 
 export type FieldProps = {
   readonly label: string;
+  /** The control's id; give one when an `ErrorSummary` must link to it. */
+  readonly id?: string;
   /**
    * `stacked` puts the label above the control. `inline` draws one bordered
    * box holding both, for toolbar filters.
@@ -17,18 +19,20 @@ export type FieldProps = {
   readonly layout?: "stacked" | "inline";
   readonly hint?: string;
   /** Marks the control invalid and describes it. */
-  readonly error?: string;
+  readonly error?: string | undefined;
   readonly children: (control: FieldControlProps) => ReactNode;
 };
 
 export function Field({
   label,
+  id: givenId,
   layout = "stacked",
   hint,
   error,
   children,
 }: FieldProps): React.JSX.Element {
-  const id = useId();
+  const generatedId = useId();
+  const id = givenId ?? generatedId;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   const describedBy = [

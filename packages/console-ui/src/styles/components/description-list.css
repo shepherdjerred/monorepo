@@ -1,0 +1,46 @@
+/*
+ * Description lists: label above value, split by hairlines. `grid` auto-fits
+ * ~220px columns at the gutter; `rail` is one column for a side rail.
+ */
+@layer ui.components {
+  .ui-dl {
+    display: grid;
+    margin: 0;
+  }
+  .ui-dl[data-layout="grid"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--ui-space-4) var(--ui-space-6);
+    padding: var(--ui-space-3) var(--ui-gutter) var(--ui-space-4);
+  }
+  .ui-dl[data-layout="rail"] {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 var(--ui-gutter);
+  }
+  .ui-dl[data-layout="rail"] .ui-dl-item {
+    padding: var(--ui-space-3) 0;
+  }
+  .ui-dl[data-layout="rail"] .ui-dl-item + .ui-dl-item {
+    border-top: 1px solid var(--ui-line-soft);
+  }
+  .ui-dl-item {
+    display: grid;
+    gap: var(--ui-space-1);
+    min-width: 0;
+  }
+  .ui-dl-item[data-wide] {
+    grid-column: 1 / -1;
+  }
+  .ui-dl dt {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-dl dd {
+    margin: 0;
+    min-width: 0;
+    color: var(--ui-ink);
+    overflow-wrap: anywhere;
+  }
+  .ui-dl dd[data-sev] {
+    color: var(--ui-sev-ink);
+  }
+}

@@ -39,8 +39,12 @@ export type ConsoleShellProps = {
     readonly store: CommandPaletteStore;
     readonly label: string;
   };
-  /** Above the theme row in the sidebar, and at the foot of the drawer. */
-  readonly sidebarFooter?: ReactNode;
+  /**
+   * Above the theme row in the sidebar, and at the foot of the drawer. As a
+   * function it receives the drawer's `close` (undefined in the sidebar), so
+   * a footer link, or a button that opens a dialog, can shut the drawer.
+   */
+  readonly sidebarFooter?: ReactNode | ((close?: () => void) => ReactNode);
   /** Extra icon buttons in the phone top bar, before the theme switch. */
   readonly topBarActions?: ReactNode;
   /** Selector of the element the skip link focuses; defaults to `#main`. */
@@ -94,6 +98,8 @@ export function ConsoleShell({
     store?.isOpen ?? closed,
     store?.isOpen ?? closed,
   );
+  const footer = (close?: () => void): ReactNode =>
+    typeof sidebarFooter === "function" ? sidebarFooter(close) : sidebarFooter;
   const switcher = <AppSwitcher current={app} apps={apps} />;
   const paletteButton =
     palette === undefined ? null : (
@@ -116,7 +122,7 @@ export function ConsoleShell({
         navLabel={navLabel}
         theme={theme}
         forceClosed={paletteOpen}
-        footer={sidebarFooter}
+        footer={sidebarFooter === undefined ? undefined : footer}
         actions={
           <>
             {palette === undefined ? null : (
@@ -151,7 +157,7 @@ export function ConsoleShell({
             }
             footer={
               <>
-                {sidebarFooter}
+                {footer()}
                 <ThemeRow store={theme} />
               </>
             }

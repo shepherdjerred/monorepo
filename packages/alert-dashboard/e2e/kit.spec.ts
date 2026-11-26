@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import {
@@ -47,7 +48,12 @@ for (const colorScheme of ["light", "dark"] as const) {
       await page.setViewportSize(viewport);
       for (const path of KIT_PATHS) {
         await gotoLoadedPage(page, path);
-        expect(await violations(page), path).toEqual([]);
+        // Legacy mode: the sandboxed email preview frame cannot run axe's
+        // cross-frame scripts, so axe checks the frame as one element.
+        expect(
+          await violations(new AxeBuilder({ page }).setLegacyMode(true)),
+          path,
+        ).toEqual([]);
       }
     }
     await page.setViewportSize(DESKTOP);
@@ -81,4 +87,54 @@ test("a stacked table reads as label and value lines on a phone", async ({
   );
   expect(label).toBe('"Status"');
   await expect(page.locator("thead").first()).toHaveCSS("position", "absolute");
+});
+
+test("the detail and forms section shows validation errors and a summary", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  const summary = page
+    .getByRole("alert")
+    .filter({ hasText: "problems to fix" });
+  await expect(summary).toBeVisible();
+  await summary.getByRole("link", { name: "Target URL" }).click();
+  await expect(page.getByLabel("Target URL")).toBeFocused();
+  await page.getByLabel("Target URL").fill("https://ha.example.com");
+  await page.getByLabel("Short link").fill("ha");
+  await expect(summary).toHaveCount(0);
+});
+
+test("copy announces and the search shortcut focuses the filter", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  await page.getByRole("button", { name: "Copy fingerprint" }).click();
+  await expect(page.getByText("Copied", { exact: true })).toBeAttached();
+  expect(
+    await page.evaluate(() => globalThis.navigator.clipboard.readText()),
+  ).toBe("9f2c41ab77d0");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("/");
+  await expect(page.getByLabel("Filter alerts")).toBeFocused();
+  await page.keyboard.type("a/b");
+  await expect(page.getByLabel("Filter alerts")).toHaveValue("a/b");
+});
+
+test("the email preview is sandboxed and toggles dark and plain text", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  const frame = page.locator("iframe.ui-email-frame");
+  await expect(frame).toHaveAttribute("sandbox", "");
+  await page.getByRole("radio", { name: "Dark" }).click();
+  await expect(frame).toHaveAttribute("data-scheme", "dark");
+  await page.getByRole("radio", { name: "Plain text" }).click();
+  await expect(page.locator("pre.ui-email-text")).toContainText(
+    "Weekly digest",
+  );
 });
