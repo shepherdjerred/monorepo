@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   CI_IO_OBSERVABILITY_VALUES,
   CI_KUBE_STATE_METRICS_VALUES,
+  GRAFANA_ADDITIONAL_DATASOURCES,
+  GRAFANA_DATASOURCE_HASH_ANNOTATION,
+  createGrafanaValues,
+  grafanaDatasourceConfigHash,
 } from "./grafana-values.ts";
 
 describe("Woodpecker I/O observability Helm values", () => {
@@ -32,5 +36,36 @@ describe("Woodpecker I/O observability Helm values", () => {
     const values = JSON.stringify(CI_KUBE_STATE_METRICS_VALUES);
     expect(values).not.toContain("[*]");
     expect(values).not.toContain("=[*]");
+  });
+});
+
+describe("Grafana datasource provisioning", () => {
+  const values = createGrafanaValues("renderer-secret");
+
+  // A watch sidecar races Grafana's startup provisioning and then depends on a
+  // server-admin reload credential; the init container removes both.
+  it("syncs datasources once in an init container without a reload call", () => {
+    expect(values.sidecar?.["datasources"]).toMatchObject({
+      initDatasources: true,
+      watchMethod: "LIST",
+      skipReload: true,
+    });
+  });
+
+  it("rolls Grafana when the provisioned datasource config changes", () => {
+    const podAnnotations = values["podAnnotations"];
+    expect(podAnnotations).toEqual({
+      [GRAFANA_DATASOURCE_HASH_ANNOTATION]: grafanaDatasourceConfigHash(),
+    });
+    expect(grafanaDatasourceConfigHash()).toMatch(/^[0-9a-f]{12}$/);
+  });
+
+  it("provisions the Loki, Tempo, and Pyroscope datasources", () => {
+    expect(values["additionalDataSources"]).toBe(
+      GRAFANA_ADDITIONAL_DATASOURCES,
+    );
+    expect(
+      GRAFANA_ADDITIONAL_DATASOURCES.map((datasource) => datasource.uid),
+    ).toEqual(["loki", "tempo", "pyroscope"]);
   });
 });

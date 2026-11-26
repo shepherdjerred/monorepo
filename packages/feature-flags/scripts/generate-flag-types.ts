@@ -133,13 +133,28 @@ export async function generateFlagTypesSource(): Promise<string> {
   return formatted;
 }
 
+/**
+ * The variant value-schema registry as JSON Schema, for editors that cannot
+ * import Zod. Imported lazily: the registry is typed by the key file this
+ * script also writes, so key generation must not depend on it.
+ */
+export async function generateFlagValueSchemasJson(): Promise<string> {
+  const { flagValueJsonSchemas } =
+    await import("@shepherdjerred/feature-flags/flag-value-schemas.ts");
+  return await format(JSON.stringify(flagValueJsonSchemas()), {
+    parser: "json",
+  });
+}
+
 async function main(): Promise<void> {
-  const outputPath = new URL(
-    "../src/managed-flag-keys.generated.ts",
-    import.meta.url,
+  await Bun.write(
+    new URL("../src/managed-flag-keys.generated.ts", import.meta.url),
+    await generateFlagTypesSource(),
   );
-  const source = await generateFlagTypesSource();
-  await Bun.write(outputPath, source);
+  await Bun.write(
+    new URL("../src/flag-value-schemas.generated.json", import.meta.url),
+    await generateFlagValueSchemasJson(),
+  );
 }
 
 if (import.meta.main) {

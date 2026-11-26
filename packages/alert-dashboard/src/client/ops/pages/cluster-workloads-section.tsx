@@ -21,6 +21,7 @@ import {
   ClusterOverviewStrip,
   ClusterStorageSection,
 } from "./cluster-storage-section.tsx";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 const ExplorerTabSchema = z.enum([
   "nodes",
@@ -36,7 +37,7 @@ function dbPill(
   text: string,
 ): React.JSX.Element {
   return (
-    <span className={`visual-pill visual-pill-${tone}`}>
+    <span className="visual-pill" data-sev={pillSeverity(tone)}>
       <span aria-hidden="true">{glyph}</span>
       <span>{text}</span>
     </span>
@@ -73,7 +74,7 @@ const DATABASE_COLUMNS: readonly DataTableColumn<
   },
   {
     key: "pvc",
-    header: "PVC Usage",
+    header: "PVC usage",
     render: (r) =>
       r.capacityBytes === null || r.capacityBytes <= 0 ? (
         "—"
@@ -94,7 +95,7 @@ const DATABASE_COLUMNS: readonly DataTableColumn<
   },
   {
     key: "velero",
-    header: "Velero Backed Up",
+    header: "Velero backed up",
     render: (r) =>
       r.veleroBackedUp === true
         ? dbPill("ok", "✓", "Backed up")
@@ -241,7 +242,7 @@ export function ClusterExplorerBody(props: {
 
   return (
     <>
-      <PageHeading eyebrow="Kubernetes & Talos" title="Cluster">
+      <PageHeading title="Cluster" meta="Kubernetes & Talos">
         <div className="platform-heading-actions">
           <RangePicker value={range} onChange={setRange} />
         </div>

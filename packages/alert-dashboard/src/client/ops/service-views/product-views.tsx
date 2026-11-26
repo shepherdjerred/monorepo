@@ -22,7 +22,7 @@ import {
   PresetGrid,
   txtCol,
 } from "./product-view-helpers.tsx";
-import { MetricTile } from "#client/ops/ops-ui.tsx";
+import { MetricStrip } from "#client/ops/ops-ui.tsx";
 import {
   DataTable,
   StackedMeter,
@@ -61,9 +61,7 @@ function isReviewOverdue(reviewBy: string): boolean {
 
 function enabledPill(enabled: boolean): React.JSX.Element {
   return (
-    <span
-      className={`visual-pill ${enabled ? "visual-pill-ok" : "visual-pill-neutral"}`}
-    >
+    <span className="visual-pill" data-sev={enabled ? "ok" : undefined}>
       {enabled ? "✓ Enabled" : "— Off"}
     </span>
   );
@@ -109,7 +107,8 @@ const FLAGS_INVENTORY_COLUMNS: readonly DataTableColumn<FlagsFlagSummary>[] = [
           )}
           {f.reviewBy === undefined ? null : (
             <span
-              className={`visual-pill ${overdue ? "visual-pill-error" : "visual-pill-warning"}`}
+              className="visual-pill"
+              data-sev={overdue ? "error" : "warning"}
             >
               {overdue
                 ? `✕ Overdue (${f.reviewBy})`
@@ -214,18 +213,18 @@ function FlagsServiceView({
               Math.max(flags.prodEnabledCount, flags.betaEnabledCount),
           );
           const kpis: readonly Metric[] = [
-            kpi("flags.total", "Total Flags", flags.totalFlags),
-            kpi("flags.prod", "Prod Enabled", flags.prodEnabledCount),
-            kpi("flags.beta", "Beta Enabled", flags.betaEnabledCount),
+            kpi("flags.total", "Total flags", flags.totalFlags),
+            kpi("flags.prod", "Prod enabled", flags.prodEnabledCount),
+            kpi("flags.beta", "Beta enabled", flags.betaEnabledCount),
             kpi(
               "flags.exceptions",
-              "Default-Off Exceptions",
+              "Default-off exceptions",
               flags.defaultOffExceptionsCount,
               { severity: flags.defaultOffExceptionsCount > 0 ? "info" : "ok" },
             ),
             kpi(
               "flags.overdue",
-              "Overdue Exceptions",
+              "Overdue exceptions",
               flags.overdueExceptionsCount,
               { severity: flags.overdueExceptionsCount > 0 ? "error" : "ok" },
             ),
@@ -238,11 +237,7 @@ function FlagsServiceView({
           ];
           return (
             <>
-              <div className="product-kpi-grid">
-                {kpis.map((m) => (
-                  <MetricTile key={m.id} metric={m} />
-                ))}
-              </div>
+              <MetricStrip metrics={kpis} />
               <div className="product-meter-card">
                 <StackedMeter
                   label="Rollout mix across managed flags"
@@ -251,19 +246,19 @@ function FlagsServiceView({
                       key: "prod",
                       label: "Prod enabled",
                       value: flags.prodEnabledCount,
-                      color: "var(--status-good)",
+                      color: "var(--ui-sev-ok)",
                     },
                     {
                       key: "beta-only",
                       label: "Beta only",
                       value: betaOnly,
-                      color: "var(--status-info)",
+                      color: "var(--ui-sev-info)",
                     },
                     {
                       key: "off",
                       label: "Default-off",
                       value: offBoth,
-                      color: "var(--status-warning)",
+                      color: "var(--ui-sev-warning)",
                     },
                   ]}
                 />

@@ -570,7 +570,7 @@ and on (namespace, persistentvolumeclaim)
           labels: {
             severity: "warning",
             category: "ci",
-            namespace: "turbo-cache",
+            namespace: "ci-cache",
           },
         },
       ],

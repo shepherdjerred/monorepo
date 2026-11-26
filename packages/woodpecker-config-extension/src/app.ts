@@ -12,6 +12,7 @@ import type { CiStep } from "#src/pipeline/model.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
+import { grantSccacheWebdav } from "#src/pipeline/sccache-webdav.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
@@ -485,11 +486,14 @@ export function createApp(options: AppOptions): Hono {
     }));
     const trustDomain = prVerification ? "pull-request" : "trusted";
     const selected = groupSmallChecks(
-      grantGradleBuildCache(
-        signRemoteCacheSteps(
-          selectSteps(
-            maintenance.enabled ? separateMaintenance(steps) : steps,
-            { ...selectionContext, changedFiles: changedFiles ?? [] },
+      grantSccacheWebdav(
+        grantGradleBuildCache(
+          signRemoteCacheSteps(
+            selectSteps(
+              maintenance.enabled ? separateMaintenance(steps) : steps,
+              { ...selectionContext, changedFiles: changedFiles ?? [] },
+            ),
+            trustDomain,
           ),
           trustDomain,
         ),

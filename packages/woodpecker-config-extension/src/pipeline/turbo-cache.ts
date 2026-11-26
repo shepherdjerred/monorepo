@@ -2,7 +2,7 @@ import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 
 /** Shared remote-cache endpoint. The signing pass adds its trust namespace. */
 export const TURBO_REMOTE_CACHE_ENVIRONMENT = {
-  TURBO_API: "https://turbo-cache.tailnet-1a49.ts.net",
+  TURBO_API: "https://ci-cache.tailnet-1a49.ts.net",
 } as const;
 
 const TURBO_CACHE_TEAMS = {

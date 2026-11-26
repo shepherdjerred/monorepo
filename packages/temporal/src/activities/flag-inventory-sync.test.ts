@@ -106,7 +106,9 @@ function buildFakeFlagsService() {
       ...scoutProdDoc.flags.map((flag) =>
         flag.key === "dares_enabled" && flag.type === "boolean"
           ? { ...flag, default: true }
-          : flag,
+          : flag.key === "scout-riot-budget-mode" && flag.type === "variant"
+            ? { ...flag, value: "block" }
+            : flag,
       ),
       {
         type: "boolean",
@@ -186,6 +188,8 @@ describe("Flags inventory reconciler activity", () => {
     expect(scoutProd?.extraFlags).toEqual(["manual-extra-flag"]);
     expect(scoutProd?.contractMismatches).toEqual([
       "dares_enabled: expected default false, got true",
+      'scout-riot-budget-mode: expected default "observe", got "block"',
+      'scout-riot-budget-mode: live value "block" fails its value schema (Invalid option: expected one of "observe"|"enforce")',
     ]);
 
     expect(postedAlerts).toHaveLength(20);

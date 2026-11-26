@@ -2,7 +2,7 @@
   "kind": "argocd",
   "application": "storm-forum",
   "namespace": "storm-forum",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "storm-forum",
   "chartComponent": "chart:storm-forum",
   "parameters": {},

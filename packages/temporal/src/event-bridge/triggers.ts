@@ -16,7 +16,11 @@ import {
   MOTION_LIGHT_ROOMS,
   type MotionLightRoom,
 } from "#shared/infra/motion-light.ts";
-import { cooldownBucket, isConfirmedAway } from "#shared/infra/presence.ts";
+import {
+  cooldownBucket,
+  HOUSEHOLD_RESIDENTS,
+  isConfirmedAway,
+} from "#shared/infra/presence.ts";
 import {
   PetCareEntityIdSchema,
   PET_CARE_SENSOR_POLICIES,
@@ -48,7 +52,7 @@ const StateChangedEventData = z.object({
   old_state: z.object({ state: z.string() }).loose().nullable().optional(),
 });
 
-const PERSON_ENTITIES = ["person.jerred", "person.shuxin"] as const;
+const PERSON_ENTITIES = HOUSEHOLD_RESIDENTS;
 const PERSON_ENTITY_SET = new Set<string>(PERSON_ENTITIES);
 const ROBOROCK_VACUUM_ENTITY_SET = new Set<string>(ROBOROCK_VACUUM_ENTITIES);
 const MOTION_LIGHT_ROOMS_BY_ENTITY = new Map<

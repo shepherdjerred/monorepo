@@ -10,7 +10,6 @@ import type { KubeprometheusstackHelmValues } from "./kube-prometheus-stack.type
 import type { PrometheusadapterHelmValues } from "./prometheus-adapter.types.ts";
 import type { PrometheusblackboxexporterHelmValues } from "./prometheus-blackbox-exporter.types.ts";
 import type { TailscaleoperatorHelmValues } from "./tailscale-operator.types.ts";
-import type { ChartmuseumHelmValues } from "./chartmuseum.types.ts";
 import type { MinecraftHelmValues } from "./minecraft.types.ts";
 import type { McrouterHelmValues } from "./mc-router.types.ts";
 import type { LokiHelmValues } from "./loki.types.ts";
@@ -36,7 +35,6 @@ export type HelmChartValuesMap = {
   "prometheus-adapter": PrometheusadapterHelmValues;
   "prometheus-blackbox-exporter": PrometheusblackboxexporterHelmValues;
   "tailscale-operator": TailscaleoperatorHelmValues;
-  chartmuseum: ChartmuseumHelmValues;
   minecraft: MinecraftHelmValues;
   "mc-router": McrouterHelmValues;
   loki: LokiHelmValues;

@@ -10,6 +10,7 @@ import type { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { eventually, status } from "#e2e/harness/rwf-match.ts";
 import { stageMap } from "#learning/maps/stage.ts";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 import { root, startRuntimeMapServer } from "./paper.ts";
 import { freezeInputs, type ConversionInputs } from "./inputs.ts";
 import {
@@ -73,7 +74,11 @@ async function capture(scenario: Scenario, frozen: ConversionInputs) {
     frozen.content,
     path.join(directory, "map-content"),
     "training-yard",
-    { duel: false, mapTool: path.join(frozen.mapTool, "bin/rwfmap") },
+    {
+      duel: false,
+      mapTool: path.join(frozen.mapTool, "bin/rwfmap"),
+      ensureMeshes: ensureNavMeshes,
+    },
   );
   await prepareNavigation(frozen, staged, directory);
   const token = randomBytes(24).toString("hex");

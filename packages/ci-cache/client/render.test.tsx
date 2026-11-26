@@ -10,7 +10,7 @@ import {
   formatBytes,
   storageWatermarkSeverity,
 } from "./fixture.ts";
-import { MobileBar, NamespacesSidebar } from "./shell.tsx";
+import { MobileBar, NamespacesSidebar, SWITCHER_APPS } from "./shell.tsx";
 
 const noop = (): void => {
   // Static render does not dispatch DOM events.
@@ -30,6 +30,16 @@ test("renders full CI cache console shell, headline figures, watermark meter, an
 
   // AppSwitcher mark + title + Read-only badge
   expect(html).toContain("CI cache");
+  expect(
+    SWITCHER_APPS.some(
+      (app) => app.url === "https://ci-cache.tailnet-1a49.ts.net",
+    ),
+  ).toBe(false);
+  expect(
+    SWITCHER_APPS.some(
+      (app) => app.url === "https://charts.tailnet-1a49.ts.net",
+    ),
+  ).toBe(true);
   expect(html).toContain(">cc<");
   expect(html).toContain("switch app");
   expect(html).toContain("Read-only");

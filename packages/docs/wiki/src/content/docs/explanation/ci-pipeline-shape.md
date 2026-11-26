@@ -101,16 +101,19 @@ The catalog retains upstream and toolchain dependencies, while
 in PostgreSQL. Publication does not select or reconcile a workload. CI has no
 Argo sync, deployment credential or Git commit-back.
 
-The verify and Playwright workflows use the private Turbo cache over the
-tailnet. [Separate teams and signing keys](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/turbo-cache.ts)
-keep trusted main output separate from PR output. Independent workflow
-checkouts can reuse unchanged tasks within their trust domain. Developer
-shells default to local caching because their network connection is less predictable.
+The verify and Playwright workflows use the first-party
+[`ci-cache`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/ci-cache/index.ts)
+service on `liskov` over the tailnet.
+[Separate teams and signing keys](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/turbo-cache.ts)
+keep trusted main output separate from PR output, while copy-on-write read-through
+lets `monorepo-pull-request` read `monorepo` entries on a miss without writing
+back to `monorepo`. Developer shells default to local caching because their
+network connection is less predictable.
 
-The [cache server](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/turbo-cache.ts)
-stores and returns each client's artifact signature unchanged. Signing keys
-stay with their respective clients. Turbo rejects missing or invalid signatures,
-so a successful artifact download alone does not prove a cache hit.
+`ci-cache` stores and returns each client's `x-artifact-tag` signature
+unchanged. Signing keys stay with their respective clients. Turbo rejects
+missing or invalid signatures, so a successful artifact download alone does not
+prove a cache hit.
 
 When the pinned CI image lacks a tool version, mise installs it once per node
 onto the shared `woodpecker-mise-installs` claim instead of each pod's writable
@@ -119,30 +122,26 @@ installs stay the read-only shared directory, and the claim has no collector
 beyond `ZfsPVCStorageHigh` and the
 [prune how-to](/how-to/prune-the-ci-mise-install-claim/).
 
-Turbo caches whole package tasks, so any change to The Storm reruns its entire
-Gradle build. Each workflow's Gradle user home is private, which leaves Gradle's
-own local build cache empty. Verify therefore also uses a remote Gradle build
-cache (`packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts`) over
-the tailnet: unchanged plugin modules load their compile and test outputs
-instead of rebuilding. Gradle's HTTP build cache needs only `GET` and `PUT` of
-opaque entries, so the server is nginx's WebDAV module on a claim. Gradle's
-standalone build cache node reaches end of life after 2026-12-31, and its
-successor, Develocity Edge, requires a paid Develocity installation.
+Turbo caches whole package tasks, so any change to The Storm or a Rust crate
+reruns its build. Each workflow's Gradle user home is private, leaving Gradle's
+local build cache empty. Verify therefore also uses `ci-cache`'s HTTP WebDAV
+stores over the tailnet for Gradle (`/cache/`) and `sccache` (`/sccache/`):
+unchanged plugin modules and Rust compilation units load cached outputs instead
+of rebuilding.
 
-Gradle has no signature check, so the trust split is enforced by the server's
-Basic-auth users instead. Default-branch verify holds the only write password;
-pull requests hold a read-only one, and nginx checks every method other than
-`GET` and `HEAD` against a file that lists only the write user. The
+Neither Gradle nor `sccache` checks artifact signatures, so `ci-cache` enforces
+the trust split through Basic Auth users instead. Default-branch verify holds
+the `ci-main` write password; pull requests hold the `ci-pull-request` read-only
+password, and `ci-cache` rejects writes from the read user. The
 [pipeline](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/app.ts)
-attaches exactly one of them per trust domain
-(`packages/woodpecker-config-extension/src/pipeline/gradle-build-cache.ts`), and
+attaches one identity per trust domain
+(`packages/woodpecker-config-extension/src/pipeline/gradle-build-cache.ts` and
+`packages/woodpecker-config-extension/src/pipeline/sccache-webdav.ts`), and
 [the build settings](https://github.com/shepherdjerred/monorepo/blob/main/packages/the-storm/plugin/settings.gradle.kts)
-push only with the write password. Gradle stops using the remote cache for the
-rest of a build after a failed request, so an unavailable or full server costs
-speed, not correctness. Gradle stores each key once and never rewrites it, so
-every pod start evicts entries stored more than 30 days ago. Between starts the
-cluster's generic PVC usage and projected-fill alerts watch the claim;
-restarting the deployment is the remedy they call for.
+push only with the write password. Gradle and `sccache` fall back to local
+compilation on remote errors, so an unavailable server costs speed rather than
+correctness. `ci-cache` bounds its claim automatically with per-protocol TTL
+expiry, high/low-watermark LRU eviction, and the daily `/v8/clean` sweep.
 
 Woodpecker reports a GitHub status per workflow. A final, clone-free PR
 workflow checks the selected blocking workflows at the same pipeline URL and
@@ -447,7 +446,7 @@ token expires without broadening the rest of the CI credential surface.
 ## Credentials follow issuer and rotation boundaries
 
 CI credentials are stored in 1Password by issuer or rotation unit, not by an
-arbitrary target number of Secrets. GitHub, Turbo, npm, Claude, ChartMuseum,
+arbitrary target number of Secrets. GitHub, Turbo, npm, Claude, Charts,
 Argo CD, SeaweedFS, Cloudflare, Tailscale, and the ARR and tracker services
 therefore have independent items and Kubernetes Secrets. Semantic field names
 distinguish identities that may initially carry the same value but must rotate

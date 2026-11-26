@@ -3,37 +3,32 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--muted);
-  font-size: 11px;
+  color: var(--ui-muted);
+  font-size: 12px;
   white-space: nowrap;
 }
 .live-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--success);
+  background: var(--ui-sev-ok);
 }
 .live-indicator[data-status="reconnecting"] .live-dot {
   background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--warning);
+  box-shadow: inset 0 0 0 1.5px var(--ui-sev-warning);
 }
 .sidebar-live {
   padding: 0 8px;
 }
-.mobile-live {
-  display: none;
-}
-@media (max-width: 767px) {
-  .mobile-live {
-    display: inline-flex;
-  }
+.header-live {
+  font-size: 12px;
 }
 
 .remote-edit {
   min-width: 0;
   overflow: hidden;
-  color: var(--accent);
-  font-size: 11px;
+  color: var(--ui-accent);
+  font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
   animation: remote-edit-fade 5s ease-in forwards;

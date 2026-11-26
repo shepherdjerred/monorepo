@@ -6,6 +6,11 @@ import {
   type RedditOutreachRun,
   type RedditOutreachStopReason,
 } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
+import {
+  FigureStrip,
+  StatusGlyph,
+  type Severity,
+} from "@shepherdjerred/console-ui";
 import { LinkOut, time } from "./ui.tsx";
 import { OutreachRunPosts } from "./reddit-outreach-posts.tsx";
 import { redditOutreachReasonLabels } from "./reddit-outreach-reasons.ts";
@@ -32,6 +37,13 @@ const runLabels = {
   missing: "Audit missing",
   unknown: "Unknown",
 } satisfies Record<RedditOutreachRun["status"], string>;
+const runSeverity = {
+  recorded: "ok",
+  running: "info",
+  failed: "error",
+  missing: "warning",
+  unknown: "unknown",
+} as const satisfies Record<RedditOutreachRun["status"], Severity>;
 const stopLabels = {
   exhausted: "Listings exhausted",
   "scan-limit": "Listing limit reached",
@@ -197,11 +209,14 @@ function OutreachRunRow({ run }: { run: RedditOutreachRun }) {
       <th scope="row" role="rowheader">
         <RunTime at={run.at} />
         <span className="p-muted p-outreach-run-status">
-          {runLabels[run.status]}
+          <StatusGlyph
+            severity={runSeverity[run.status]}
+            label={runLabels[run.status]}
+          />
           {run.elapsedMs !== null && ` · ${duration(run.elapsedMs)}`}
         </span>
       </th>
-      <td role="cell" className="p-outreach-stop">
+      <td role="cell" className="p-outreach-stop" data-label="Stop reason">
         {run.stopReason === null ? (
           <span className="p-muted">No stop reason recorded</span>
         ) : (
@@ -213,7 +228,7 @@ function OutreachRunRow({ run }: { run: RedditOutreachRun }) {
           </span>
         )}
       </td>
-      <td role="cell">
+      <td role="cell" data-label="Activity">
         {run.inspected === null &&
         run.assessed === null &&
         run.metrics === null ? (
@@ -235,7 +250,7 @@ function OutreachRunRow({ run }: { run: RedditOutreachRun }) {
           </dl>
         )}
       </td>
-      <td role="cell">
+      <td role="cell" data-label="Replies">
         {(hasAudit ||
           run.verifiedReceipts.length > 0 ||
           run.unresolvedReplies > 0) && (
@@ -254,20 +269,22 @@ function OutreachRunRow({ run }: { run: RedditOutreachRun }) {
 function OutreachRuns({ runs }: { runs: RedditOutreachRun[] }) {
   return (
     <>
-      <h3 id="reddit-outreach-runs">Recent production sweeps</h3>
+      <h3 id="reddit-outreach-runs" className="p-subhead">
+        Recent production sweeps
+      </h3>
       {runs.length === 0 ? (
-        <p className="p-muted">
+        <p className="p-muted p-empty">
           No production sweeps recorded today or yesterday.
         </p>
       ) : (
         <div
-          className="p-outreach-table-wrap"
+          className="ui-table-scroll p-table-wrap"
           role="region"
           aria-labelledby="reddit-outreach-runs"
           tabIndex={0}
         >
           <table
-            className="p-outreach-table"
+            className="ui-table p-outreach-table"
             role="table"
             aria-labelledby="reddit-outreach-runs"
           >
@@ -305,8 +322,12 @@ export function RedditOutreachPanel({
   data: RedditOutreachOverview | undefined;
 }) {
   return (
-    <section className="p-outreach" aria-labelledby="reddit-outreach">
-      <h2 id="reddit-outreach">Reddit outreach</h2>
+    <section className="p-section p-outreach" aria-labelledby="reddit-outreach">
+      <header className="ui-section-head">
+        <h2 id="reddit-outreach" className="ui-section-title">
+          Reddit outreach
+        </h2>
+      </header>
       {data?.status === "available" ? (
         <>
           <dl className="p-outreach-status">
@@ -351,39 +372,41 @@ export function RedditOutreachPanel({
               </div>
             )}
           </dl>
-          <h3>
+          <h3 className="p-subhead">
             Today <span className="p-muted">{data.today.day} Pacific</span>
           </h3>
-          <dl className="p-outreach-totals">
-            <div>
-              <dt>Listings inspected</dt>
-              <dd>{count(data.today.inspected)}</dd>
-            </div>
-            <div>
-              <dt>Threads assessed</dt>
-              <dd>{count(data.today.assessed)}</dd>
-            </div>
-            <div>
-              <dt>Drafts prepared</dt>
-              <dd>{count(data.today.draftsPrepared)}</dd>
-            </div>
-            <div>
-              <dt>Verified replies</dt>
-              <dd>{count(data.today.verifiedReplies)}</dd>
-            </div>
-            <div>
-              <dt>Unresolved replies</dt>
-              <dd>{count(data.today.unresolvedReplies)}</dd>
-            </div>
-            <div>
-              <dt>Reply slots left</dt>
-              <dd>{count(data.today.remainingSlots)}</dd>
-            </div>
-          </dl>
+          <FigureStrip
+            figures={[
+              {
+                label: "Listings inspected",
+                value: count(data.today.inspected),
+              },
+              { label: "Threads assessed", value: count(data.today.assessed) },
+              {
+                label: "Drafts prepared",
+                value: count(data.today.draftsPrepared),
+              },
+              {
+                label: "Verified replies",
+                value: count(data.today.verifiedReplies),
+              },
+              {
+                label: "Unresolved replies",
+                value: count(data.today.unresolvedReplies),
+                ...(data.today.unresolvedReplies > 0
+                  ? { severity: "warning" as const }
+                  : {}),
+              },
+              {
+                label: "Reply slots left",
+                value: count(data.today.remainingSlots),
+              },
+            ]}
+          />
           <OutreachRuns runs={data.runs} />
         </>
       ) : (
-        <p className="p-muted">Outreach status unavailable.</p>
+        <p className="p-muted p-empty">Outreach status unavailable.</p>
       )}
     </section>
   );

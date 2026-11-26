@@ -1,5 +1,5 @@
 {
-  "id": "loki/prod/2",
+  "id": "loki/prod/3",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -24,7 +24,7 @@
               "namespace": "loki"
             },
             "source": {
-              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "repoURL": "https://charts.tailnet-1a49.ts.net",
               "chart": "loki-companion"
             },
             "syncOptions": [

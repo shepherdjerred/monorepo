@@ -38,7 +38,7 @@ const POOL_COLUMNS: readonly DataTableColumn<
   ),
   tableCol(
     "tq",
-    "Task Queue",
+    "Task queue",
     (r) => <span className="mono">{r.taskQueue}</span>,
     (r) => r.taskQueue,
   ),
@@ -61,7 +61,7 @@ const POOL_COLUMNS: readonly DataTableColumn<
   ),
   numTableCol(
     "slots",
-    "Slots Available",
+    "Slots available",
     (r) => formatValue(r.slotsAvailable, "count"),
     (r) => r.slotsAvailable,
   ),
@@ -87,17 +87,17 @@ const SCHEDULE_COLUMNS: readonly DataTableColumn<
   ),
   numTableCol(
     "failures",
-    "Recent Failures",
+    "Recent failures",
     (r) =>
       r.recentFailures > 0
         ? statusPill("error", "✕", String(r.recentFailures))
         : "0",
     (r) => r.recentFailures,
   ),
-  tableCol("tq", "Task Queue", (r) => (
+  tableCol("tq", "Task queue", (r) => (
     <span className="mono">{r.taskQueue ?? "—"}</span>
   )),
-  tableCol("last", "Last Run", (r) =>
+  tableCol("last", "Last run", (r) =>
     r.lastRunAt === null ? "—" : age(r.lastRunAt),
   ),
 ];
@@ -123,11 +123,11 @@ function TemporalServiceView({
 
   return (
     <div className="platform-section">
-      <h2 className="block-heading">Temporal Control Plane & Schedules</h2>
+      <h2 className="block-heading">Temporal control plane & schedules</h2>
       {summary === undefined ? null : (
         <div className="platform-kpi-grid">
           {kpiCard(
-            "Total Schedules",
+            "Total schedules",
             String(summary.total),
             "Declarative fleet",
           )}
@@ -228,7 +228,7 @@ function ClusterBaselineView({
   const cluster = useOptionalFacet("cluster");
   return (
     <div className="platform-section">
-      <h2 className="block-heading">Kubernetes & Talos Baseline</h2>
+      <h2 className="block-heading">Kubernetes & Talos baseline</h2>
       <ChartGrid
         range={range}
         syncKey="cluster-baseline"
@@ -257,7 +257,7 @@ export function renderPlatformServiceView(
       return (
         <div className="platform-section">
           <h2 className="block-heading">
-            SeaweedFS & Caddy Static Sites Telemetry
+            SeaweedFS & Caddy static sites telemetry
           </h2>
           <ChartGrid
             range={range}
@@ -333,7 +333,7 @@ export function UniversalServiceTelemetry(props: {
 
   return (
     <div className="platform-section">
-      <h2 className="block-heading">Namespace & Service Telemetry</h2>
+      <h2 className="block-heading">Namespace & service telemetry</h2>
       <ChartGrid
         range={range}
         syncKey={`svc-${detail.service.id}`}

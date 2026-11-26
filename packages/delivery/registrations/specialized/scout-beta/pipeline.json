@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "scout-beta",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "scout-beta",
   "chartComponent": "chart:scout-beta",
   "namespace": "scout-beta",

@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "storm-stats",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "storm-stats",
   "chartComponent": "chart:storm-stats",
   "namespace": "storm-stats",

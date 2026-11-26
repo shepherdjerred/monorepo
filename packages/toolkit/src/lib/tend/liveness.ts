@@ -117,7 +117,7 @@ async function toHcTerminalEntry(
   };
 }
 
-async function collectHcTerminals(options: {
+export async function collectHcTerminals(options: {
   readonly runner: CommandRunner;
   readonly homeDir: string;
   readonly platform: NodeJS.Platform;
@@ -357,6 +357,7 @@ async function resolveForumNoticeState(options: {
         "Forum notice query unavailable; holding notice-sensitive sweeps (pass --offline to override)";
       options.warnings.push(`${holdMsg}: ${detail}`);
       holdSurfaces.set("worktrees", holdMsg);
+      holdSurfaces.set("dedupe", holdMsg);
       holdSurfaces.set("postgres", holdMsg);
       holdSurfaces.set("processes", holdMsg);
     }

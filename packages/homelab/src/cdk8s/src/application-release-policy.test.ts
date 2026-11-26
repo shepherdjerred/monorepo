@@ -49,7 +49,7 @@ function application(
     spec: {
       project: "default",
       source: {
-        repoUrl: "https://chartmuseum.sjer.red",
+        repoUrl: "https://charts.tailnet-1a49.ts.net",
         targetRevision: "1.0.0",
         chart: name,
       },
@@ -79,7 +79,7 @@ describe("applyApplicationReleasePolicy", () => {
         spec: {
           project: "default",
           source: {
-            repoUrl: "https://chartmuseum.sjer.red",
+            repoUrl: "https://charts.tailnet-1a49.ts.net",
             chart: "minecraft",
             targetRevision: "5.2.0",
             helm: {

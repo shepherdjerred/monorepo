@@ -22,11 +22,11 @@ test("/renovate renders KPIs, charts, tabs, and LLM version-delta drawers", asyn
     page.getByRole("meter", { name: "Open Renovate PRs" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("meter", { name: "LLM Delta Coverage" }),
+    page.getByRole("meter", { name: "LLM delta coverage" }),
   ).toBeVisible();
   await expect(page.locator(".eng-kpi-card")).toHaveCount(5);
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Awaiting Approval" }),
+    page.locator(".eng-kpi-card", { hasText: "Awaiting approval" }),
   ).toContainText("18");
   await expect(
     page.locator(".eng-kpi-card", { hasText: "Merged (7d / 30d)" }),
@@ -39,7 +39,7 @@ test("/renovate renders KPIs, charts, tabs, and LLM version-delta drawers", asyn
   await expect(openPrsTable).toContainText("hono");
   await expect(openPrsTable).toContainText("Running v4.12.18 → v4.13.2");
 
-  await page.getByRole("tab", { name: /Pending Approval/u }).click();
+  await page.getByRole("tab", { name: /Pending approval/u }).click();
   await expect(page).toHaveURL(/tab=approval/u);
   const approvalTable = page.getByRole("table", {
     name: "Renovate updates (approval)",
@@ -62,7 +62,7 @@ test("/renovate renders KPIs, charts, tabs, and LLM version-delta drawers", asyn
     "alert-dashboard and delivery already pass driver adapters; audit Json filter call sites.",
   );
 
-  await page.getByRole("tab", { name: /Recent Merges/u }).click();
+  await page.getByRole("tab", { name: /Recent merges/u }).click();
   await expect(page).toHaveURL(/tab=merged/u);
   await expect(
     page.getByRole("table", { name: "Recently merged Renovate pull requests" }),
@@ -221,14 +221,14 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
   ).toContainText("scout-experimental-voice-recap");
   // A service that is its own console links to it from the header.
   await expect(
-    page.locator("main .page-heading").getByRole("link", {
+    page.locator("main .page-head").getByRole("link", {
       name: "Open in Flags",
     }),
   ).toHaveAttribute("href", "https://flags.tailnet-1a49.ts.net");
 
   await page.goto("/services/golink");
   await expect(
-    page.locator("main .page-heading").getByRole("link", {
+    page.locator("main .page-head").getByRole("link", {
       name: "Open in Go links",
     }),
   ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");

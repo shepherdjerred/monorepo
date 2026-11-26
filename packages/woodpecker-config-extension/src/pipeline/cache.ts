@@ -22,21 +22,15 @@ export const UV_CACHE = {
  * Toolchain caches that otherwise land in the container's home directory --
  * the writable layer on the CI node's OS disk -- and are rebuilt by every
  * step. Each claim is a separate ZFS dataset with its own quota, so one tool
- * filling its cache cannot starve another. None has a collector: Cargo, Go
- * and sccache bound or expire their own caches, and the homelab's
- * per-claim usage alert covers the rest.
+ * filling its cache cannot starve another. None has a collector: Cargo and Go
+ * bound or expire their own caches (sccache uses remote WebDAV on `ci-cache`),
+ * and the homelab's per-claim usage alert covers the rest.
  */
 
 /** Cargo's crate registry and Git checkouts (`~/.cargo/{registry,git}`). */
 export const CARGO_CACHE = {
   claim: "woodpecker-cargo-cache",
   path: "/woodpecker/cargo-cache",
-} as const satisfies StepVolume;
-
-/** sccache's compiled-object store for every rustc invocation. */
-export const SCCACHE = {
-  claim: "woodpecker-sccache",
-  path: "/woodpecker/sccache",
 } as const satisfies StepVolume;
 
 /** Go's module download cache, build cache and golangci-lint cache. */
@@ -71,9 +65,6 @@ export const MISE_INSTALLS = {
 /** The image's own installs; mise keeps resolving them while writing elsewhere. */
 const IMAGE_MISE_INSTALLS = "/opt/mise/installs";
 
-/** sccache evicts least-recently-used objects above this size. */
-const SCCACHE_CACHE_SIZE = "30G";
-
 type CacheEnvironment = Readonly<Record<string, string>>;
 
 /**
@@ -96,17 +87,6 @@ const TOOLCHAIN_CACHE_ENVIRONMENT: readonly (readonly [
   // CARGO_HOME would move the rustup-managed toolchain with it, so
   // ci/scripts/toolchain.sh links the two cache directories to this path.
   [CARGO_CACHE, { CI_CARGO_CACHE_DIR: CARGO_CACHE.path }],
-  [
-    SCCACHE,
-    {
-      RUSTC_WRAPPER: "sccache",
-      SCCACHE_DIR: SCCACHE.path,
-      SCCACHE_CACHE_SIZE,
-      // sccache cannot cache incremental compilation, and a fresh workspace
-      // has no incremental state to reuse anyway.
-      CARGO_INCREMENTAL: "0",
-    },
-  ],
   [
     GO_CACHE,
     {
@@ -196,7 +176,6 @@ const COMMON_TOOL_CACHES: readonly StepVolume[] = [TOOL_CACHE];
 /** Caches only the full toolchain scope (Rust, Go, Gradle, Python) fills. */
 const FULL_TOOLCHAIN_CACHES: readonly StepVolume[] = [
   CARGO_CACHE,
-  SCCACHE,
   GO_CACHE,
   UV_CACHE,
 ];

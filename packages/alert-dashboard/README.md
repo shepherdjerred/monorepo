@@ -22,20 +22,27 @@ The core module has two halves in one process:
   (`/services`), Cluster (`/cluster`), Flow (`/flow`), Monorepo (`/monorepo`),
   Renovate (`/renovate`), Product (`/product`), The Storm (`/the-storm`), AI
   (`/ai`), Maintenance (`/maintenance`), Review (`/review`), and Reports
-  (`/reports`) pages plus the daily and weekly digest email. Home is the one overview page. In order it
-  shows the overall status; tiles for firing alerts, what waits on Jerred, and
-  Tracker triage; a card per area; a "Needs attention" list beside what is new
-  since the last visit; and a launcher for Tracker, Delivery, and the tools.
-  "Needs attention" lists every signal at attention severity or waiting on
-  Jerred, and its filter narrows it to what waits on him (`/?show=waiting`,
-  where the "Waiting on you" tile links). `/overview` was a separate page and
+  (`/reports`) pages plus the daily and weekly digest email. Home is the one
+  overview page. Its header bar holds the "Needs attention" filter as view
+  tabs (All / Waiting on you, each with its count) and the snapshot's age.
+  Below it, in order: the overall verdict; a strip of headline figures for
+  firing alerts, what waits on Jerred, and Tracker triage; the Areas table
+  (status as a glyph and word, issues against the busiest area, informational
+  and waiting counts, and key metrics as chips); "Needs attention" as a signal
+  table; a compact "New since last visit" table with "Mark all seen"; and a
+  launcher of the other apps and the tools. "Needs attention" lists every
+  signal at attention severity or waiting on Jerred, with an unread dot on
+  each new one, and the filter narrows it to what waits on him
+  (`/?show=waiting`, where the "Waiting on you" figure links). "New since last
+  visit" stays because it also lists new informational signals that are not
+  in "Needs attention". `/overview` was a separate page and
   now redirects to `/`, keeping its query string. Flow (pull requests and
   Tracker work) and Maintenance are section pages
   (`src/client/ops/section-page.tsx`): a summary card per snapshot section with
   every metric, then the trend charts, then a signal list per section. Flow was
   served at `/delivery`, the name of a different app; that URL redirects to
-  `/flow` with its query string and fragment. A metric tile at warning, error,
-  or unknown carries an accent bar and a named icon. The AI page
+  `/flow` with its query string and fragment. A metric at warning, error, or
+  unknown colours its figure and adds a severity glyph with its word. The AI page
   (`src/client/ops/ai-page.tsx`) shows its status with the section summary that
   explains it, API spend against the monthly budget beside the section's other
   metrics, then one table of subscription quota windows grouped by provider
@@ -49,14 +56,19 @@ The core module has two halves in one process:
   and is not a bill. Trend charts read Prometheus through named presets only;
   the browser never sends PromQL. A chart's legend shows each series' newest
   sample until a point is hovered. Every signal list renders through
-  `SignalList` (`src/client/ops/signal-list.tsx`): it collapses same-kind
-  signals with ops-model's `groupSignals` (an allowlist of kinds, so alerts
-  never collapse), shows a capped number of entries (ten unless the list sets
-  its own), and expands in place. There is no uncapped mode; the digest email
-  groups the same way before its own row cap. Change timelines cap the same way,
-  at fifteen. `e2e/volume.spec.ts` bounds page height at production volume, how
-  far down Home its area cards start, and how far down the section pages their
-  charts start.
+  `SignalList` (`src/client/ops/signal-list.tsx`) as one table: it collapses
+  same-kind signals with ops-model's `groupSignals` (an allowlist of kinds, so
+  alerts never collapse) into a row whose title is a disclosure button,
+  shows a capped number of entries (ten unless the list sets its own) under
+  one heading row per severity ("Error 3"), and expands in place. Columns are
+  the signal, where it belongs (the area on Home, the service elsewhere), its
+  usage meter for quota windows, and how long it has lasted; below 640px of
+  content width the middle columns fold into the signal's cell. There is no
+  uncapped mode; the digest email groups the same way before its own row cap.
+  Change timelines (`ChangeTimeline`) are a when / kind / change table that
+  caps the same way, at fifteen. `e2e/volume.spec.ts` bounds page height at
+  production volume, how far down Home its Areas table starts, and how far
+  down the section pages their charts start.
 - **Alert ledger & House chores.** Alertmanager remains authoritative for
   evaluation, grouping, inhibition, routing, and silences; this service stores
   actionable occurrence history (excluding `Watchdog`, `InfoInhibitor`,
@@ -71,9 +83,17 @@ The core module has two halves in one process:
   occurrences are hidden by default behind a URL-synced `Show Watchdog` /
   `Hide Watchdog` toggle (`?watchdog=1`, forced visible when `severity=unknown`
   or search matches `"watchdog"`), and `AlertTable` (`src/client/alert-table.tsx`)
-  collapses `alertname`s with two or more occurrences into expandable
-  `<details>` groups showing highest severity, occurrence count, and newest
-  `openedAt` age while leaving single occurrences inline. Alert openings and
+  is one table under a heading row per severity ("Critical 1"); it collapses
+  `alertname`s with two or more occurrences into a row whose name is a
+  disclosure button (highest severity, occurrence count, newest `openedAt`
+  age) with each occurrence as a row under it, and leaves single occurrences
+  inline. The ledger pages share one frame (`ScopedAlertPage`): a header bar
+  with the reconciliation age and Refresh, a figure strip of the counts, a
+  toolbar of search and filters, and the table, flush with the panel; at
+  phone width each table row becomes a card of labelled values. History is
+  an events table, System a components table with each state as a glyph and
+  word, and an alert's detail page shows its metadata, lifecycle and webhook
+  evidence as tables. Alert openings and
   resolutions also appear on the ops change timeline, derived from the ledger at
   read time, while daily and weekly Ops incident statistics exclude
   `category=household` chores.
@@ -112,21 +132,42 @@ shared visual primitives:
 | `/the-storm` | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link |
 | `/reports`   | `src/client/reports/reports-page.tsx`     | `ReportRun` + archived `DigestRun` + incident `EmailOutbox` ledger: 14-stream 30d Pacific schedule matrix, URL-synced unified feed, and `/reports/{runs/:id,digests/:kind/:periodKey,mail/:id}` inspectors       |
 
-These pages share the **Visuals Kit** (`src/client/visuals/`):
+These pages share the **Visuals Kit** (`src/client/visuals/`), drawn on the
+shared console look:
 
 - `DataTable` (`data-table.tsx`): accessible sortable/searchable table with
-  select filters, initial row caps, expandable detail rows (`renderExpanded`),
-  and client-side CSV/JSON export (`formatDataTableCsv`, `formatDataTableJson`).
+  filters, initial row caps, expandable detail rows (`renderExpanded`), and
+  client-side CSV/JSON export (`formatDataTableCsv`, `formatDataTableJson`).
+  The table is console-ui's `ui-table` (30px head row, 36px rows, hairlines,
+  mono right-aligned numerals); its toolbar uses console-ui's `Tabs` for
+  filters and `Button` for export. A table of more than three columns turns
+  each row into a labelled card below 680px of its own width; one of up to
+  three columns stays a table and wraps its cells. The caption is the
+  table's title bar in both layouts.
 - `BudgetMeter` and `StackedMeter` (`meters.tsx`): capacity/endurance gauges and
-  proportional segment bars.
+  proportional segment bars. A meter's severity is its `data-sev`; a meter that
+  needs attention also shows the severity's glyph and word.
 - `Sparkline` (`sparkline.tsx`), `StatusMatrix` (`status-matrix.tsx`), and
   `StackTree` / `buildStackForest` (`stack-tree.tsx`) for inline 7d trends,
-  multi-environment check grids, and stacked PR trees.
+  multi-environment check grids, and stacked PR trees. The matrix and the
+  stack tree are `ui-table`s: a stacked PR is a row indented under the PR it
+  builds on, with its checks, review and conflict state as glyphs and words.
+  Matrix cells and sparklines take their colour from `data-sev`; matrix cells
+  always pair a glyph with their word.
+- `.visual-pill` with `pillSeverity` (`pill.ts`): a category chip, or, with a
+  severity, a chip whose glyph takes that severity's colour.
 - Multi-mode `UplotChart` (`src/client/charts/uplot-chart.tsx`) and
   `SeriesChart` (`src/client/charts/series-chart.tsx`): supports `"line"`,
   `"stacked-area"`, and `"bar"` modes, horizontal `ChartThreshold` overlays,
   crosshair synchronization across sibling charts via `syncKey`
   (`getChartSync`), live resting legends, and collapsible data tables.
+
+Every table in Hub is a console-ui `ui-table`; Hub has no plain-table
+defaults of its own. The AI page's quota, tool-spend and Review's comparison
+tables are hand-built `ui-table`s; quota rows carry `data-sev` (and `data-reset` after a window
+resets) and use console-ui's 64px inline meter. Hub's table, meter and chart
+chrome lives in `src/styles/tables.css`, `src/styles/visuals.css` and the
+chart section of `src/styles/globals.css`.
 
 It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
 [`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts)),
@@ -162,14 +203,18 @@ bun packages/temporal/scripts/promotion/dashboard.ts
 
 Open `http://127.0.0.1:7342/promotion` on the Mac running the command. This
 local entry (`src/client/promotion/standalone.tsx`) renders the same page
-content under a minimal bar of its own instead of the Hub shell, so it uses
-Hub's theme without starting alert subscriptions.
+content in one console panel under a minimal bar of its own (the brand and
+console-ui's theme row) instead of the Hub shell, so it uses Hub's theme
+without starting alert subscriptions.
 It reads the promotion SQLite database and saved reports through a read-only API
 on port 7343. It needs no site credentials, Grafana, or Temporal server.
 Use `--state-dir`, `--port`, and `--api-port` to select local storage and ports.
 
 The page opens on the latest full run, including later retries and corrections.
-Its headline shows completed actions, unresolved outcomes and sources not run.
+Its verdict is a glyph and word; a figure strip shows completed actions,
+unresolved outcomes, sources not run and today's recorded AI and CAPTCHA
+spend. Each source's outcome, each sweep's status and each history entry is
+likewise a glyph and word, in console-ui tables.
 Sources are grouped as working, disabled (missing setup/access or paused), or
 needing attention. Normal cooldowns count as correct skips; a failed action,
 unconfirmed effect or unresolved cleanup failure prevents a pass. Successful
@@ -458,6 +503,28 @@ fixture server share.
 
 Circular dependencies are forbidden anywhere in `src/`.
 
+### Severity and page primitives
+
+Hub has one severity vocabulary, console-ui's `ok`, `info`, `unknown`,
+`warning` and `error`, and shows it one way: console-ui's `StatusGlyph`, an
+icon in the severity colour beside its word, never colour alone. The alert
+ledger's own severities map onto it in `src/client/ledger-severity.tsx`: a
+`critical` alert is the `error` tone and keeps the word "Critical", and a house
+chore's priority reads "Urgent" or "Chore". Every element that carries a
+severity exposes it as `data-sev="<tone>"`, which console-ui turns into the
+glyph colour (`--ui-sev`) and a text-safe colour (`--ui-sev-ink`); Hub's styles
+key severity colours on that attribute, not on per-component class names.
+
+The shared page pieces live in `src/client/ops/ops-ui.tsx`. `PageHeading` is
+console-ui's `HeaderBar` across the top of the panel: the title as the page's
+`<h1>`, an optional muted line saying what the page covers, and the page's
+controls (range tabs, buttons, its verdict) at the right. `MetricStrip` lays
+`MetricTile`s out as one description list of figure cells; `GlanceTiles` is
+Home's strip of linked headline figures. `SectionSummary` shows an area's
+verdict as a glyph and word with its metrics as a strip;
+`StatusBanner` is a quiet verdict row; `RangePicker` is console-ui's `Tabs`
+radio group. `src/styles/primitives.css` styles them.
+
 ### Modules
 
 The app is composed from modules. Ops and the alert ledger are the built-in
@@ -488,13 +555,13 @@ an inset panel that holds the page. The sidebar opens with the app switcher (a
 menu of every console in `CONSOLE_LINKS` from
 `@shepherdjerred/ops-model/tool-links.ts`, Hub marked current, each opening in
 the same tab) and the search button for the palette, then the grouped pages,
-then the theme row. Hub's look is console-ui's stylesheet and tokens; Hub's
-own sheets (`src/styles/`) still use their original custom property names,
-which `src/styles/legacy-tokens.css` maps onto the shared `--ui-*` tokens, and
-`src/client/theme.ts` is console-ui's theme store under the `ops-theme` key.
+then the theme row. Hub's look is console-ui's stylesheet and tokens: Hub's
+own sheets (`src/styles/`, and `src/client/promotion/promotion.css`) use the
+shared `--ui-*` custom properties directly, and `src/client/theme.ts` is
+console-ui's theme store under the `ops-theme` key.
 Charts take their axis, grid and threshold colours from the same tokens.
-Berkeley Mono is licensed and stays in `public/fonts`, declared by Hub's own
-`@font-face`.
+Berkeley Mono comes with console-ui's stylesheet, bundled as a hashed
+`/assets/` file like every other client asset; Hub serves no `/fonts/` path.
 
 The sidebar is grouped. Each `nav` entry is
 listed under its `group`, which defaults to the module's `title`; entries from

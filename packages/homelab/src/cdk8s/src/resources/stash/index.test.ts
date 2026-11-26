@@ -345,7 +345,7 @@ describe("Stash ArgoCD application", () => {
           }),
           source: z.object({
             chart: z.literal("stash"),
-            repoURL: z.literal("https://chartmuseum.tailnet-1a49.ts.net"),
+            repoURL: z.literal("https://charts.tailnet-1a49.ts.net"),
             targetRevision: z.literal("~2.0.0-0"),
           }),
           syncPolicy: z.object({

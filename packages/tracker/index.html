@@ -6,34 +6,38 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
+    <meta name="color-scheme" content="light dark" />
     <meta
       name="theme-color"
       media="(prefers-color-scheme: light)"
-      content="#ffffff"
+      content="#ecede6"
     />
     <meta
       name="theme-color"
       media="(prefers-color-scheme: dark)"
-      content="#1b1b1f"
+      content="#111210"
     />
     <title>Tracker</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M8 9h16v4h-6v12h-4V13H8z' fill='white'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23176b4d'/%3E%3Cpath d='M8 9h16v4h-6v12h-4V13H8z' fill='white'/%3E%3C/svg%3E"
     />
     <script>
-      // Apply the saved theme before first paint. settings.tsx is its only writer.
-      (() => {
-        const saved = localStorage.getItem("tracker.theme");
-        const theme = saved === "light" || saved === "dark" ? saved : "system";
-        document.documentElement.dataset.theme = theme;
-        if (theme === "system") return;
-        const color = theme === "dark" ? "#1b1b1f" : "#ffffff";
-        for (const meta of document.querySelectorAll(
-          'meta[name="theme-color"]',
-        ))
-          meta.content = color;
-      })();
+      // Apply the saved theme before first paint. The console-ui theme store
+      // in src/client/ui/theme.ts is its only writer; "system" leaves
+      // data-theme unset so prefers-color-scheme decides. The colours are
+      // console-ui's light and dark --ui-bg.
+      try {
+        const theme = localStorage.getItem("tracker.theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.dataset.theme = theme;
+          const color = theme === "dark" ? "#111210" : "#ecede6";
+          for (const meta of document.querySelectorAll(
+            'meta[name="theme-color"]',
+          ))
+            meta.content = color;
+        }
+      } catch {}
     </script>
   </head>
   <body>

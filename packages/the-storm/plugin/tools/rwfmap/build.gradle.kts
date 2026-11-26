@@ -1,7 +1,9 @@
 // rwfmap: the offline map analysis for Search and Destroy bots. It bakes every
 // rwf map (map.yml + blocks.schem) into the nav.rwfnav artifact rwfbots loads
-// and verifies the committed artifacts byte for byte when verifyRwfMaps is run.
+// and verifies the shipped artifacts byte for byte when verifyRwfMaps is run.
 // It also bakes the lobby (rwf/lobby) and verifies it the same way.
+// The artifacts are not in Git: rwf/nav-manifest.json names each one by sha256,
+// a bake records it there, and fetchRwfNavs materialises what the manifest names.
 // It is a tool, not a gameplay module: dist never
 // shades it and the architecture project never puts it on its classpath.
 plugins {
@@ -27,14 +29,54 @@ val mainClassName = "com.shepherdjerred.thestorm.tools.rwfmap.RwfMap"
 
 application { mainClass = mainClassName }
 
+/** The shipped rwf content: nav-manifest.json, the lobby and every map. */
+val rwfRoot = rootProject.file("../server/owned/plugins/TheStorm/rwf")
+
 /** The maps the server ships, each in its own `<id>/` folder. */
-val mapsRoot = rootProject.file("../server/owned/plugins/TheStorm/rwf/maps")
+val mapsRoot = rwfRoot.resolve("maps")
 
 /** The lobby: lobby.yml, blocks.schem and its nav files. */
-val lobbyFolder = rootProject.file("../server/owned/plugins/TheStorm/rwf/lobby")
+val lobbyFolder = rwfRoot.resolve("lobby")
 
 val mapFolders =
     (mapsRoot.listFiles { file -> file.isDirectory } ?: emptyArray()).sortedBy { it.name }
+
+// A bake changes one artifact's bytes, so each bake ends by recording that artifact and no other:
+// a nav.rwfnav left on disk by another branch is stale, never a reason to rewrite its entry.
+// The recorders share one file, so they run one at a time, in this order.
+val navManifestWriters = mutableListOf<TaskProvider<JavaExec>>()
+
+fun registerNavManifestWriter(name: String, artifact: String): TaskProvider<JavaExec> {
+  val writer =
+      tasks.register<JavaExec>(name) {
+        group = "rwf"
+        description = "Records the sha256 and size of the baked $artifact in nav-manifest.json."
+        classpath = sourceSets.main.get().runtimeClasspath
+        mainClass = mainClassName
+        args("manifest", rwfRoot.absolutePath, artifact)
+      }
+  navManifestWriters.lastOrNull()?.let { previous -> writer { mustRunAfter(previous) } }
+  navManifestWriters.add(writer)
+  return writer
+}
+
+// Everything that reads a shipped nav.rwfnav depends on this task: the files are ignored by Git
+// and exist in a checkout only once fetched. A missing or altered object fails the build.
+val fetchRwfNavs =
+    tasks.register<JavaExec>("fetchRwfNavs") {
+      group = "rwf"
+      description = "Fetches every nav.rwfnav that nav-manifest.json names, verified by sha256."
+      classpath = sourceSets.main.get().runtimeClasspath
+      mainClass = mainClassName
+      args("fetch", rwfRoot.absolutePath)
+      inputs
+          .file(rwfRoot.resolve("nav-manifest.json"))
+          .withPropertyName("navManifest")
+          .withPathSensitivity(PathSensitivity.NONE)
+      outputs
+          .files((mapFolders + lobbyFolder).map { it.resolve("nav.rwfnav") })
+          .withPropertyName("navFiles")
+    }
 
 fun taskSuffix(mapId: String) =
     mapId.split('-').joinToString("") { part -> part.replaceFirstChar(Char::uppercaseChar) }
@@ -53,6 +95,7 @@ val verifyRwfMaps =
 
 mapFolders.forEach { folder ->
   val suffix = taskSuffix(folder.name)
+  val writer = registerNavManifestWriter("writeRwfNavManifest$suffix", "maps/${folder.name}/nav.rwfnav")
   val bake =
       tasks.register<JavaExec>("bakeRwfMap$suffix") {
         group = "rwf"
@@ -62,6 +105,7 @@ mapFolders.forEach { folder ->
         args("bake", folder.absolutePath)
         inputs.files(folder.resolve("map.yml"), folder.resolve("blocks.schem"))
         outputs.files(folder.resolve("nav.rwfnav"), folder.resolve("nav.summary.json"))
+        finalizedBy(writer)
       }
   val verify =
       tasks.register<JavaExec>("verifyRwfMap$suffix") {
@@ -71,6 +115,7 @@ mapFolders.forEach { folder ->
         mainClass = mainClassName
         args("verify", folder.absolutePath)
         inputs.dir(folder)
+        dependsOn(fetchRwfNavs)
         mustRunAfter(bake)
       }
   val verifyDetails =
@@ -85,7 +130,10 @@ mapFolders.forEach { folder ->
   bakeRwfMaps { dependsOn(bake) }
   verifyRwfMaps { dependsOn(verify, verifyDetails) }
   tasks.test { mustRunAfter(bake) }
+  fetchRwfNavs { mustRunAfter(bake) }
 }
+
+val lobbyWriter = registerNavManifestWriter("writeRwfNavManifestLobby", "lobby/nav.rwfnav")
 
 val bakeRwfLobby =
     tasks.register<JavaExec>("bakeRwfLobby") {
@@ -96,7 +144,13 @@ val bakeRwfLobby =
       args("bake-lobby", lobbyFolder.absolutePath)
       inputs.files(lobbyFolder.resolve("lobby.yml"), lobbyFolder.resolve("blocks.schem"))
       outputs.files(lobbyFolder.resolve("nav.rwfnav"), lobbyFolder.resolve("nav.summary.json"))
+      finalizedBy(lobbyWriter)
     }
+
+fetchRwfNavs { mustRunAfter(bakeRwfLobby) }
+
+// A fetch in the same invocation as a bake runs last, so the bake's bytes are what it finds.
+navManifestWriters.forEach { writer -> fetchRwfNavs { mustRunAfter(writer) } }
 
 val verifyRwfLobby =
     tasks.register<JavaExec>("verifyRwfLobby") {
@@ -106,6 +160,7 @@ val verifyRwfLobby =
       mainClass = mainClassName
       args("verify-lobby", lobbyFolder.absolutePath)
       inputs.dir(lobbyFolder)
+      dependsOn(fetchRwfNavs)
       mustRunAfter(bakeRwfLobby)
     }
 
@@ -116,6 +171,7 @@ bakeRwfMaps { dependsOn(bakeRwfLobby) }
 listOf(":rwf", ":rwfbots").forEach { consumer ->
   rootProject.project(consumer).tasks.named("test") {
     mustRunAfter(bakeRwfMaps, bakeRwfLobby)
+    navManifestWriters.forEach { writer -> mustRunAfter(writer) }
   }
 }
 
@@ -123,17 +179,25 @@ verifyRwfMaps { dependsOn(verifyRwfLobby) }
 
 tasks.check { dependsOn(verifyRwfMaps) }
 
-// CI decodes every committed artifact and checks it against shipped map metadata. Full deterministic
-// rebakes stay in verifyRwfMaps, which is available to the operator and local extended suites.
+// CI fetches and decodes every shipped artifact and checks it against the manifest and the shipped
+// map metadata. Full deterministic rebakes stay in verifyRwfMaps, which is available to the
+// operator and local extended suites.
 tasks.test {
-  // The largest committed navigation artifact expands to over 200 MiB before its graph is decoded.
+  // The largest shipped navigation artifact expands to over 200 MiB before its graph is decoded.
   maxHeapSize = "2g"
+  dependsOn(fetchRwfNavs)
   mustRunAfter(bakeRwfLobby)
+  navManifestWriters.forEach { writer -> mustRunAfter(writer) }
   inputs.dir(mapsRoot).withPropertyName("shippedMaps").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
       .dir(lobbyFolder)
       .withPropertyName("shippedLobby")
       .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs
+      .file(rwfRoot.resolve("nav-manifest.json"))
+      .withPropertyName("navManifest")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+  systemProperty("thestorm.rwf.root", rwfRoot.absolutePath)
   systemProperty("thestorm.rwf.maps", mapsRoot.absolutePath)
   systemProperty("thestorm.rwf.lobby", lobbyFolder.absolutePath)
 }

@@ -53,12 +53,12 @@ rendered charts imply (`src/catalog/catalog-edges.ts`). A regenerated file
 that changed needs a new revision id in the catalog: Delivery refuses to
 change a registered revision.
 
-Fourteen upstream-chart constructors also render Ingresses, TunnelBindings,
-OnePasswordItems, claims and Velero Schedules into the root chart. Under
-transition rendering each gets a `<application>-companion` chart
-(`src/resources/companions/`) that renders the same objects with the root's
-names and waves, so its Application adopts them unchanged once the root is
-orphaned; `companions.test.ts` proves the bytes match.
+Upstream-chart constructors that also render Ingresses, TunnelBindings,
+OnePasswordItems, claims and Velero Schedules into the root chart get a
+`<application>-companion` chart (`src/resources/companions/`) under transition
+rendering that renders the same objects with the root's names and waves, so its
+Application adopts them unchanged once the root is orphaned;
+`companions.test.ts` proves the bytes match.
 
 ## Helm value types
 
@@ -85,8 +85,9 @@ of 5 and a construct id of `<name>-app`.
   `valuesObject` is checked as, so values written for another chart do not
   compile. `uncheckedValuesObject` carries values the generated type cannot
   express; spread the typed values into it so only the extra key escapes.
-- `createFirstPartyApplication` installs a wrapper chart from ChartMuseum at
-  the floating first-party revision.
+- `createFirstPartyApplication` installs a wrapper chart from the first-party
+  Charts registry (`charts.tailnet-1a49.ts.net`, bootstrapped via OCI
+  `charts-bootstrap`) at the floating first-party revision.
 - `argoApplication` is the base both use, for a source that is not a Helm
   chart, and takes a `spec` escape hatch merged over the derived fields.
 

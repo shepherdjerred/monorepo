@@ -36,7 +36,7 @@ function harness(peer: string | null = null) {
 
 const added: FlagValue = {
   type: "boolean",
-  key: "flags-test-added",
+  key: "delivery-writes-enabled",
   default: true,
   rollouts: [],
 };
@@ -139,7 +139,7 @@ test("create-missing does not clobber", async () => {
   );
   expect(response.status).toBe(200);
   const body = Created.parse(await response.json());
-  expect(body.created).toEqual(["flags-test-added"]);
+  expect(body.created).toEqual(["delivery-writes-enabled"]);
   expect(body.revision).toBe(existing.revision + 1);
   const after = await app.request(
     "/v1/deployments/scout/prod/flags/dares_enabled",
@@ -163,7 +163,7 @@ test("apply conflict writes nothing", async () => {
         added,
         {
           type: "boolean",
-          key: "flags-test-second",
+          key: "tracker-writes-enabled",
           default: false,
           rollouts: [],
         },
@@ -173,8 +173,10 @@ test("apply conflict writes nothing", async () => {
   expect(response.status).toBe(409);
   const body = Conflict.parse(await response.json());
   expect(body.revision).toBe(before.revision);
-  expect(body.flags.map((flag) => flag.key)).not.toContain("flags-test-added");
-  expect(store.flag("scout/prod", "flags-test-second")).toBeUndefined();
+  expect(body.flags.map((flag) => flag.key)).not.toContain(
+    "delivery-writes-enabled",
+  );
+  expect(store.flag("scout/prod", "tracker-writes-enabled")).toBeUndefined();
   expect(store.document("scout/prod")?.revision).toBe(before.revision);
 });
 
@@ -187,21 +189,21 @@ test("retire refuses a missing key and deletes when the revision matches", async
     headers: jsonHeaders,
     body: JSON.stringify({
       expectedRevision: created.revision,
-      keys: ["flags-test-added", "flags-test-missing"],
+      keys: ["delivery-writes-enabled", "tracker-forum-enabled"],
     }),
   });
   expect(refused.status).toBe(409);
-  expect(store.flag("scout/prod", "flags-test-added")).toBeDefined();
+  expect(store.flag("scout/prod", "delivery-writes-enabled")).toBeDefined();
   const retired = await app.request("/v1/deployments/scout/prod/retire", {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify({
       expectedRevision: created.revision,
-      keys: ["flags-test-added"],
+      keys: ["delivery-writes-enabled"],
     }),
   });
   expect(retired.status).toBe(200);
-  expect(store.flag("scout/prod", "flags-test-added")).toBeUndefined();
+  expect(store.flag("scout/prod", "delivery-writes-enabled")).toBeUndefined();
 });
 
 test("snapshot is credentialless and answers 304", async () => {

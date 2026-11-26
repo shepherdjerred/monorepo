@@ -51,7 +51,6 @@ export const WOODPECKER_CODEX_AUTH_PATH = "/woodpecker/codex-auth";
  * tool at them live in packages/woodpecker-config-extension/src/pipeline/cache.ts.
  */
 export const WOODPECKER_CARGO_CACHE_CLAIM = "woodpecker-cargo-cache";
-export const WOODPECKER_SCCACHE_CLAIM = "woodpecker-sccache";
 export const WOODPECKER_GO_CACHE_CLAIM = "woodpecker-go-cache";
 export const WOODPECKER_TOOL_CACHE_CLAIM = "woodpecker-tool-cache";
 export const WOODPECKER_GRADLE_HOME_CLAIM = "woodpecker-gradle-home";
@@ -233,22 +232,15 @@ export function createWoodpeckerCaches(chart: Chart): void {
   // registry, Go's module and build caches, Bun's install root for bunx, mise
   // and uv tool installs, NuGet packages and XDG-cached engine downloads. Each
   // family gets its own dataset so a quota hit stays local to that tool, and
-  // none has a collector: Cargo, Go, Gradle and sccache expire or bound their
-  // own caches, and ZfsPVCStorageHigh covers the rest. Same trust class as the
-  // Bun cache: the trusted graph shares them across PR and main runs; the
-  // credentialless graph mounts none.
+  // none has a collector: Cargo, Go and Gradle expire or bound their own
+  // caches (sccache uses WebDAV on `ci-cache`), and ZfsPVCStorageHigh covers
+  // the rest. Same trust class as the Bun cache: the trusted graph shares them
+  // across PR and main runs; the credentialless graph mounts none.
   createCacheClaim(
     chart,
     "woodpecker-cargo-cache-pvc",
     WOODPECKER_CARGO_CACHE_CLAIM,
     "30Gi",
-  );
-  // sccache keeps itself under SCCACHE_CACHE_SIZE (30G); the quota is headroom.
-  createCacheClaim(
-    chart,
-    "woodpecker-sccache-pvc",
-    WOODPECKER_SCCACHE_CLAIM,
-    "40Gi",
   );
   createCacheClaim(
     chart,

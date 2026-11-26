@@ -1,95 +1,27 @@
 /*
- * Go link's own rules on top of @shepherdjerred/console-ui. Unlayered, so they
- * win over the shared `ui.*` layers; every colour is a `--ui-*` token.
+ * Go link's own rules on top of the @shepherdjerred/console-ui page kit, which
+ * draws the page the way Hub draws its pages. Unlayered, so they win over the
+ * shared `ui.*` layers; every colour is a `--ui-*` token.
  */
 
-/* Header search */
-.golink-search form {
-  margin: 0;
-}
-.golink-search .ui-field-box {
-  min-width: min(300px, 40vw);
-}
-.golink-search .ui-field-control {
-  flex: 1;
-  min-width: 0;
-}
-.golink-search .ui-field-control:focus-visible {
-  outline: 0;
-}
-
-/* The sidebar hides below 900px; this bar keeps the switcher and the filter. */
-.golink-mobile-bar {
-  display: none;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--ui-line);
-}
-.golink-mobile-bar .ui-workspace {
-  flex: 1;
-}
-.golink-mobile-bar .ui-field-control {
+/* Hub's sidebar rows and group spacing, so the two sidebars line up. */
+.ui-nav-item {
   height: 26px;
 }
+.ui-nav-group {
+  margin-top: 6px;
+}
+.ui-nav-group:first-child {
+  margin-top: 4px;
+}
 
-/* Banners and states */
-.golink-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 12px 20px 0;
-  padding: 8px 12px;
-  border: 1px solid var(--ui-line);
-  border-left: 3px solid var(--ui-sev, var(--ui-line));
-  border-radius: 6px;
-  background: var(--ui-head);
-}
-.golink-banner[data-sev] {
-  color: var(--ui-ink);
-}
-.golink-banner-actions {
-  display: flex;
-  gap: 8px;
-}
-.golink-loading,
-.golink-empty {
-  padding: 28px 20px;
-  text-align: center;
-}
-.golink-table-wrap .golink-empty {
-  height: auto;
-  color: var(--ui-muted);
-  white-space: normal;
-}
-.golink-wrap {
-  overflow-wrap: anywhere;
-}
-.golink-danger {
-  color: var(--ui-sev-error-text);
+/* The sticky top bar would cover an in-page jump target at phone width. */
+#links,
+#shortcuts {
+  scroll-margin-top: 64px;
 }
 
 /* Links table */
-.golink-links {
-  table-layout: auto;
-}
-.golink-links tbody td,
-.golink-links tbody th {
-  height: 44px;
-  padding-block: 6px;
-  vertical-align: middle;
-}
-.golink-links tbody th {
-  border-bottom: 1px solid var(--ui-line-soft);
-  font-weight: 400;
-  white-space: nowrap;
-}
-.golink-links tbody tr:hover th {
-  background: var(--ui-hover);
-}
 .golink-links a {
   color: var(--ui-ink);
   text-decoration: none;
@@ -101,10 +33,14 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  white-space: nowrap;
+}
+.golink-short {
+  font-weight: 700;
 }
 .golink-copy {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 .golink-copy svg {
   width: 13px;
@@ -114,18 +50,23 @@
   width: 100%;
   max-width: 0;
 }
+.golink-cell {
+  min-width: 0;
+  max-width: 100%;
+}
 .golink-dest {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .golink-shadow {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-top: 2px;
   overflow: hidden;
-  font-size: 12px;
-  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .golink-shadow svg {
   width: 12px;
@@ -136,25 +77,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.golink-source {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.golink-source svg {
-  width: 14px;
-  height: 14px;
+.golink-links .ui-tag svg {
   color: var(--ui-muted);
 }
+.golink-links td.ui-num {
+  white-space: nowrap;
+}
+.golink-clicks,
 .golink-detail {
   display: block;
-  max-width: 24ch;
-  overflow: hidden;
-  font-size: 12px;
-  text-overflow: ellipsis;
 }
-.golink-links td.ui-num .golink-detail {
-  margin-left: auto;
+.golink-detail {
+  margin-top: 2px;
 }
 .golink-actions-cell {
   text-align: right;
@@ -163,123 +97,56 @@
   display: inline-flex;
   gap: 6px;
 }
-.golink-row-btn {
-  height: 24px;
-  padding: 0 8px;
-  font-size: 12px;
-  box-shadow: none;
+.golink-danger {
+  color: var(--ui-sev-error-text);
 }
-.golink-row-btn:hover,
-.golink-row-btn:active {
-  transform: none;
-  box-shadow: none;
+.golink-load-error {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  color: var(--ui-sev-error-text);
 }
-.golink-shortcuts th,
-.golink-shortcuts td {
-  white-space: normal;
-}
-.golink-shortcuts td,
-.golink-shortcuts th[scope="row"] {
-  height: auto;
-  padding-block: 7px;
-  font-weight: 400;
-}
-.golink-shortcuts th[scope="row"] {
-  border-bottom: 1px solid var(--ui-line-soft);
+
+/* Shortcuts */
+.golink-shortcuts tbody th {
+  font-weight: 700;
+  white-space: nowrap;
 }
 .golink-shortcuts a {
   color: var(--ui-accent);
 }
-#shortcuts {
-  scroll-margin-top: 8px;
+
+/* Missing-slug banner */
+.golink-missing {
+  justify-content: space-between;
+}
+.golink-banner-actions {
+  display: flex;
+  gap: 8px;
 }
 
-/* Narrow panels: one card per link instead of a table. */
-.golink-table-wrap {
-  container-type: inline-size;
-}
-@container (max-width: 640px) {
-  .golink-links thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .golink-links,
-  .golink-links tbody,
-  .golink-links tr,
-  .golink-links th,
-  .golink-links td {
-    display: block;
-  }
-  .golink-links tbody tr {
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--ui-line-soft);
-  }
-  .golink-links tbody th,
-  .golink-links tbody td,
-  .golink-links tbody tr:hover th,
-  .golink-links tbody tr:hover td {
-    height: auto;
-    padding: 2px 0;
-    border: 0;
-    background: none;
-  }
-  .golink-links .golink-dest-cell {
-    width: auto;
-    max-width: none;
-  }
-  .golink-links td[data-label="Source"],
-  .golink-links td[data-label="Usage"] {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-  .golink-links td[data-label="Source"]::before,
-  .golink-links td[data-label="Usage"]::before {
-    min-width: 56px;
-    color: var(--ui-muted);
-    font-size: 12px;
-    content: attr(data-label);
-  }
-  .golink-links td.ui-num {
-    text-align: left;
-  }
-  .golink-links td.ui-num .golink-detail {
-    margin-left: 0;
-  }
-  .golink-actions-cell {
-    padding-top: 6px;
-    text-align: left;
-  }
-  .golink-links .golink-empty {
-    display: block;
-  }
-}
-
-/* Dialogs */
+/* Dialogs: a Hub card lifted over a dimmed page. */
 .golink-dialog {
-  width: min(440px, calc(100vw - 32px));
+  width: min(460px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   padding: 0;
   border: 1px solid var(--ui-line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--ui-panel);
   color: var(--ui-ink);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
 }
 .golink-dialog::backdrop {
-  background: rgb(0 0 0 / 0.4);
+  background: rgb(10 12 10 / 0.45);
 }
 .golink-dialog-body {
   display: grid;
-  gap: 12px;
-  padding: 18px 20px 16px;
+  gap: 14px;
+  padding: 20px 20px 18px;
 }
 .golink-dialog-title {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 650;
 }
 .golink-dialog-text {
   color: var(--ui-muted);
@@ -290,38 +157,55 @@
   gap: 8px;
   margin-top: 4px;
 }
+.golink-dialog .ui-banner {
+  margin: 0;
+}
 .golink-form {
   display: grid;
   gap: 14px;
 }
-.golink-form .ui-field-control {
+.golink-form .ui-field {
+  gap: 5px;
+}
+.golink-form .ui-field-label {
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+.golink-form .ui-input {
   width: 100%;
+}
+.golink-wrap {
+  overflow-wrap: anywhere;
 }
 .golink-slug {
   display: flex;
   align-items: stretch;
-  border: 1px solid var(--ui-btn-edge);
-  border-radius: 6px;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
   background: var(--ui-panel);
 }
 .golink-slug:focus-within {
-  border-color: var(--ui-accent);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
+  outline-offset: 2px;
 }
 .golink-slug-prefix {
   display: grid;
   place-items: center;
-  padding: 0 8px;
+  padding: 0 0.7rem;
   border-right: 1px solid var(--ui-line);
+  border-radius: 6px 0 0 6px;
   background: var(--ui-head);
   color: var(--ui-muted);
 }
-.golink-slug .ui-field-control {
+.golink-slug .ui-input {
   flex: 1;
+  height: 34px;
   border: 0;
   background: none;
   font-family: var(--ui-font-mono);
 }
-.golink-slug .ui-field-control:focus-visible {
+.golink-slug .ui-input:focus-visible {
   outline: 0;
 }
 .golink-form input[readonly] {
@@ -342,39 +226,22 @@
   display: block;
 }
 
-@media (max-width: 900px) {
-  .golink-mobile-bar {
-    display: flex;
-  }
-  .golink-search .ui-field-box {
-    min-width: 0;
-  }
-  /* Title and New link share a row; the filter takes the full row below. */
-  .ui-header {
-    flex-wrap: wrap;
-    padding-block: 8px;
-  }
-  .ui-header-actions {
-    display: contents;
-  }
-  .ui-header-title {
-    flex: 1;
-  }
-  .ui-header .ui-btn,
-  .ui-header .ui-chip {
-    order: 2;
-  }
-  .golink-search {
-    order: 3;
-    flex-basis: 100%;
-  }
-  .golink-search .ui-field-box {
+/* Phone width: the kit turns rows into cards; let long values wrap there. */
+@media (max-width: 600px) {
+  .golink-dest-cell {
     width: 100%;
+    max-width: none;
   }
-  .golink-mobile-bar {
-    border-bottom: 0;
+  .golink-dest,
+  .golink-shadow {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
-  .golink-banner {
-    margin-inline: 12px;
+  .golink-actions-cell,
+  .golink-links td.ui-num {
+    text-align: left;
+  }
+  .golink-missing {
+    display: grid;
   }
 }

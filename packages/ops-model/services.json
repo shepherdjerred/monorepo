@@ -569,14 +569,12 @@
       "title": "GitOps & charts",
       "kind": "platform",
       "aliases": [],
-      "namespaces": ["argocd", "chartmuseum"],
-      "argoApps": ["apps", "argocd", "chartmuseum"],
-      "charts": ["argocd-companion", "chartmuseum-companion"],
+      "namespaces": ["argocd"],
+      "argoApps": ["apps", "argocd"],
+      "charts": ["argocd-companion"],
       "rootReleaseExclusions": {
         "argocd": "upstream",
-        "argocd-companion": "inactive",
-        "chartmuseum": "upstream",
-        "chartmuseum-companion": "inactive"
+        "argocd-companion": "inactive"
       },
       "images": [],
       "bootstrapImages": [],
@@ -668,17 +666,9 @@
         "woodpecker",
         "woodpecker-ci",
         "buildkitd",
-        "turbo-cache",
-        "gradle-build-cache",
         "kueue-system"
       ],
-      "argoApps": [
-        "woodpecker",
-        "buildkitd",
-        "turbo-cache",
-        "gradle-build-cache",
-        "kueue"
-      ],
+      "argoApps": ["woodpecker", "buildkitd", "kueue"],
       "charts": ["kueue-queues"],
       "rootReleaseExclusions": {
         "kueue": "upstream",
@@ -703,20 +693,8 @@
       "title": "Storage & backups",
       "kind": "platform",
       "aliases": [],
-      "namespaces": [
-        "openebs",
-        "seaweedfs",
-        "velero",
-        "postgres-operator",
-        "gickup"
-      ],
-      "argoApps": [
-        "openebs",
-        "seaweedfs",
-        "velero",
-        "postgres-operator",
-        "gickup"
-      ],
+      "namespaces": ["openebs", "seaweedfs", "velero", "postgres-operator"],
+      "argoApps": ["openebs", "seaweedfs", "velero", "postgres-operator"],
       "charts": ["seaweedfs-companion", "velero-companion", "velero-schedules"],
       "rootReleaseExclusions": {
         "openebs": "upstream",
@@ -731,7 +709,7 @@
       "bootstrapImages": [],
       "bugsinkProjects": [],
       "analyticsSites": [],
-      "grafanaDashboards": ["zfs-dashboard", "gitckup-dashboard"],
+      "grafanaDashboards": ["zfs-dashboard"],
       "deploy": []
     },
     {
@@ -743,15 +721,13 @@
         "tailscale",
         "cloudflare-tunnel",
         "cloudflare-operator-system",
-        "cert-manager",
-        "ddns"
+        "cert-manager"
       ],
       "argoApps": [
         "tailscale",
         "cloudflare-tunnel",
         "cloudflare-operator",
-        "cert-manager",
-        "ddns"
+        "cert-manager"
       ],
       "charts": [
         "tailscale-companion",
@@ -899,7 +875,8 @@
       "aliases": [],
       "namespaces": ["charts"],
       "argoApps": ["charts"],
-      "charts": [],
+      "charts": ["charts-bootstrap"],
+      "rootReleaseExclusions": { "charts-bootstrap": "inactive" },
       "images": ["charts"],
       "bootstrapImages": [],
       "bugsinkProjects": [],

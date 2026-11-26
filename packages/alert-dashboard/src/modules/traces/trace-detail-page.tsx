@@ -1,3 +1,5 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
+import { pillSeverity } from "#client/visuals/pill.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import type { TraceDetail } from "@shepherdjerred/ops-model/llm-traces.ts";
@@ -13,7 +15,7 @@ import { useId } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { z } from "zod";
 
-import { PageHeading, SeverityBadge } from "#client/ops/ops-ui.tsx";
+import { PageHeading } from "#client/ops/ops-ui.tsx";
 import { UrlTabBar } from "#client/ops/pages/cluster-page.tsx";
 import { isReportsNotFound } from "#client/reports/reports-api.ts";
 import { EngKpiStrip } from "#client/reports/reports-page.tsx";
@@ -39,7 +41,7 @@ type DetailTab = (typeof DETAIL_TABS)[number];
 const DETAIL_TAB_LABELS: Readonly<Record<DetailTab, string>> = {
   trajectory: "Trajectory",
   waterfall: "Waterfall",
-  archive: "Archive & Attributes",
+  archive: "Archive & attributes",
 };
 
 function parseDetailTab(raw: string | null): DetailTab {
@@ -76,7 +78,7 @@ function buildDetailKpis(detail: TraceDetail): readonly {
       sev: "ok",
     },
     {
-      label: "Spans & LLM Calls",
+      label: "Spans & LLM calls",
       val: `${String(detail.spanCount)} / ${String(detail.llmCallCount)}`,
       hint:
         detail.errorSpanCount > 0
@@ -85,19 +87,19 @@ function buildDetailKpis(detail: TraceDetail): readonly {
       sev: detail.status === "error" ? "error" : "ok",
     },
     {
-      label: "Input · Cached Tokens",
+      label: "Input · cached tokens",
       val: formatValue(totals.inputTokens, "tokens"),
       hint: `${formatValue(totals.cachedInputTokens, "tokens")} cached · ${formatValue(totals.cacheCreationTokens, "tokens")} write`,
       sev: "ok",
     },
     {
-      label: "Output · Reasoning Tokens",
+      label: "Output · reasoning tokens",
       val: formatValue(totals.outputTokens, "tokens"),
       hint: `${formatValue(totals.reasoningTokens, "tokens")} reasoning tokens`,
       sev: "ok",
     },
     {
-      label: "Cost & Attribution",
+      label: "Cost & attribution",
       val: costVal,
       hint: costHint,
       sev: "info",
@@ -144,21 +146,24 @@ function TraceDetailBody({
       </Link>
 
       <div className="rep-heading-badges">
-        <SeverityBadge severity={detail.status === "error" ? "error" : "ok"} />
+        <StatusGlyph severity={detail.status === "error" ? "error" : "ok"} />
         <span
-          className={`visual-pill visual-pill-${detail.source === "tempo" ? "info" : "warning"}`}
+          className="visual-pill"
+          data-sev={pillSeverity(
+            detail.source === "tempo" ? "info" : "warning",
+          )}
         >
           {detail.source === "tempo"
             ? "Tempo · Full trace"
             : "SeaweedFS · 365d archive"}
         </span>
         {detail.providers.map((provider) => (
-          <span key={provider} className="visual-pill visual-pill-neutral">
+          <span key={provider} className="visual-pill">
             {provider}
           </span>
         ))}
         {detail.models.map((model) => (
-          <span key={model} className="visual-pill visual-pill-info">
+          <span key={model} className="visual-pill" data-sev="info">
             {model}
           </span>
         ))}
@@ -166,17 +171,17 @@ function TraceDetailBody({
       </div>
 
       <PageHeading
-        eyebrow={`${detail.rootService}${detail.environment === null ? "" : ` · ${detail.environment}`}`}
+        meta={`${detail.rootService}${detail.environment === null ? "" : ` · ${detail.environment}`}`}
         title={detail.rootSpanName}
       >
-        <div className="heading-actions">
-          <a className="button" href={lokiUrl} target="_blank" rel="noreferrer">
+        <>
+          <a className="ui-btn" href={lokiUrl} target="_blank" rel="noreferrer">
             <span>Correlated Loki logs</span>
             <ExternalLinkIcon aria-hidden="true" />
           </a>
           {workflowLink === null ? null : (
             <a
-              className="button"
+              className="ui-btn"
               href={workflowLink.url}
               target="_blank"
               rel="noreferrer"
@@ -185,7 +190,7 @@ function TraceDetailBody({
               <ExternalLinkIcon aria-hidden="true" />
             </a>
           )}
-        </div>
+        </>
       </PageHeading>
 
       {detail.source === "archive" ? (

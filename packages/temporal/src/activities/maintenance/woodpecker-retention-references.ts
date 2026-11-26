@@ -18,7 +18,11 @@ const ApplicationSchema = z.object({
   metadata: z.object({ name: z.string() }),
   spec: z.object({
     source: z
-      .object({ repoURL: z.string(), targetRevision: z.string() })
+      .object({
+        repoURL: z.string(),
+        chart: z.string().optional(),
+        targetRevision: z.string(),
+      })
       .optional(),
   }),
   status: z
@@ -91,7 +95,12 @@ function observeApplication(raw: unknown, inventory: ArtifactInventory) {
     );
     return;
   }
-  if (repositoryHost !== "chartmuseum.tailnet-1a49.ts.net") return;
+  const firstPartyChartHost =
+    repositoryHost === "charts.tailnet-1a49.ts.net" ||
+    repositoryHost === "chartmuseum.tailnet-1a49.ts.net" ||
+    (repositoryHost === "registry-1.docker.io" &&
+      app.spec.source.chart === "charts-bootstrap");
+  if (!firstPartyChartHost) return;
   const actual = app.status?.sync?.revision;
   if (actual === undefined)
     inventory.reasons.add(

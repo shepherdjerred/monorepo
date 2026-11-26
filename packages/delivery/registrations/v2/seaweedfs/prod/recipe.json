@@ -1,5 +1,5 @@
 {
-  "id": "seaweedfs/prod/1",
+  "id": "seaweedfs/prod/2",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -24,7 +24,7 @@
               "namespace": "seaweedfs"
             },
             "source": {
-              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "repoURL": "https://charts.tailnet-1a49.ts.net",
               "chart": "seaweedfs-companion"
             },
             "syncOptions": [

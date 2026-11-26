@@ -10,7 +10,6 @@ export * from "./kube-prometheus-stack.types.ts";
 export * from "./prometheus-adapter.types.ts";
 export * from "./prometheus-blackbox-exporter.types.ts";
 export * from "./tailscale-operator.types.ts";
-export * from "./chartmuseum.types.ts";
 export * from "./minecraft.types.ts";
 export * from "./mc-router.types.ts";
 export * from "./loki.types.ts";

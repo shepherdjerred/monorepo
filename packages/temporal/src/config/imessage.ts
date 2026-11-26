@@ -1,29 +1,35 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
-import { z } from "zod/v4";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 
-export const ImessageOwnersSchema = z
-  .string()
-  .transform((value) =>
-    value === "[]"
-      ? []
-      : value
-          .split(",")
-          .map((entry) => entry.trim())
-          .filter((entry) => entry !== ""),
-  )
-  .pipe(z.array(z.string().min(1).max(200)).max(20));
+/**
+ * The registry validates the stored handle list (`[]` or up to 20
+ * comma-separated handles); this splits it into the handles callers match.
+ */
+export const ImessageOwnersSchema = flagValueSchema(
+  "temporal-agent-chat-photon-owners",
+).transform((value) =>
+  value === "[]"
+    ? []
+    : value
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry !== ""),
+);
 function createResolver(onSourceError: () => void) {
   return defineConfig({
     definition: {
       claudeModel: {
-        schema: z.string().min(1).max(200),
+        schema: flagValueSchema("temporal-agent-chat-imessage-claude-model"),
         sources: ["flag", "default"],
         default: "claude-opus-5-5",
         names: { flag: "temporal-agent-chat-imessage-claude-model" },
       },
       codexModel: {
-        schema: z.string().min(1).max(200),
+        schema: flagValueSchema("temporal-agent-chat-imessage-codex-model"),
         sources: ["flag", "default"],
         default: "gpt-6-luna",
         names: { flag: "temporal-agent-chat-imessage-codex-model" },
@@ -33,8 +39,10 @@ function createResolver(onSourceError: () => void) {
       flag: createFlagConfigSource({
         targetingKey: "temporal-agent-chat-imessage",
         kinds: {
-          claudeModel: "string",
-          codexModel: "string",
+          claudeModel: flagValueKind(
+            "temporal-agent-chat-imessage-claude-model",
+          ),
+          codexModel: flagValueKind("temporal-agent-chat-imessage-codex-model"),
         },
         onUnavailable: onSourceError,
       }),

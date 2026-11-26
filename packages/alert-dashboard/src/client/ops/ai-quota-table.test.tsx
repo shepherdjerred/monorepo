@@ -80,7 +80,7 @@ describe("QuotaTable", () => {
   it("is one table with a row group and a group header per provider", () => {
     const html = render(WINDOWS);
     expect(html).toContain(
-      '<table class="quota-table" role="table" aria-labelledby="quota-heading">',
+      '<table class="quota-table ui-table" role="table" aria-labelledby="quota-heading">',
     );
     expect(html.match(/<tbody/gu)).toHaveLength(3);
     expect(
@@ -103,10 +103,14 @@ describe("QuotaTable", () => {
     const row = rowWith(render(WINDOWS), "Primary window");
     expect(row).toContain('title="codex-primary-window · rolling"');
     expect(row).toContain(
-      'class="meter meter-ok" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="22" aria-label="Codex Primary window quota used"',
+      'class="ui-meter" data-sev="ok" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="22" aria-valuetext="22%" aria-label="Codex Primary window quota used"',
     );
-    expect(row).toContain('<span style="width:22%"></span>');
-    expect(row).toContain('<span class="quota-value">22%</span>');
+    expect(row).toContain(
+      '<span class="ui-meter-fill" style="width:22%"></span>',
+    );
+    expect(row).toContain(
+      '<span class="ui-meter-text" aria-hidden="true">22%</span>',
+    );
     expect(row).toContain("reset time unknown");
     // An ok row carries no severity cue.
     expect(row).toContain('<span class="quota-flag"></span>');
@@ -115,19 +119,21 @@ describe("QuotaTable", () => {
   it("colours a row by its signal's severity and names that severity", () => {
     const html = render(WINDOWS);
     const error = rowWith(html, "Weekly · Opus");
-    expect(error).toContain('class="quota-row quota-error"');
-    expect(error).toContain('class="meter meter-error"');
-    expect(error).toMatch(/<svg[^>]*class="[^"]*quota-flag-icon"/u);
-    expect(error).toContain('<span class="sr-only">error</span>');
+    expect(error).toContain('class="quota-row" data-sev="error"');
+    expect(error).toContain('class="ui-meter" data-sev="error"');
+    expect(error).toMatch(/<svg[^>]*class="[^"]*ui-glyph-icon"/u);
+    expect(error).toContain('<span class="ui-glyph-label">Error</span>');
     expect(error).toContain("resets in 2d");
 
     // 91% is past the error threshold, but the collector capped the window
     // at info because it resets soon; the page does not second-guess that.
     const capped = rowWith(html, "Claude · 5h");
-    expect(capped).toContain('class="quota-row quota-info"');
-    expect(capped).toContain('class="meter meter-info"');
-    expect(capped).toContain('<span class="sr-only">info</span>');
-    expect(capped).toContain('<span class="quota-value">91%</span>');
+    expect(capped).toContain('class="quota-row" data-sev="info"');
+    expect(capped).toContain('class="ui-meter" data-sev="info"');
+    expect(capped).toContain('<span class="ui-glyph-label">Info</span>');
+    expect(capped).toContain(
+      '<span class="ui-meter-text" aria-hidden="true">91%</span>',
+    );
     expect(capped).toMatch(
       /<time dateTime="2026-11-20T13:12:00Z" title="[^"]+">resets in 1h<\/time>/u,
     );
@@ -135,11 +141,13 @@ describe("QuotaTable", () => {
 
   it("shows a window that has reset as its last reading, not a full bar", () => {
     const row = rowWith(render(WINDOWS), "5-hour");
-    expect(row).toContain('class="quota-row quota-info quota-reset"');
-    expect(row).toContain('class="meter meter-info meter-reset"');
+    expect(row).toContain('class="quota-row" data-sev="info" data-reset=""');
+    expect(row).toContain('class="ui-meter" data-sev="info" data-reset=""');
     expect(row).toContain('aria-valuenow="100"');
     expect(row).toContain('aria-valuetext="reset · was 100%"');
-    expect(row).toContain('<span class="quota-value">reset · was 100%</span>');
+    expect(row).toContain(
+      '<span class="ui-meter-text" aria-hidden="true">reset · was 100%</span>',
+    );
     expect(row).toContain(
       '<td class="quota-resets" role="cell">awaiting new reading</td>',
     );
@@ -158,8 +166,8 @@ describe("QuotaTable", () => {
       ]),
       "5-hour",
     );
-    expect(row).toContain('class="quota-row quota-error quota-reset"');
-    expect(row).toContain('<span class="sr-only">error</span>');
+    expect(row).toContain('class="quota-row" data-sev="error" data-reset=""');
+    expect(row).toContain('<span class="ui-glyph-label">Error</span>');
     expect(row).toContain("reset · was 100%");
   });
 
@@ -176,8 +184,14 @@ describe("QuotaTable", () => {
       "Monthly",
     );
     expect(row).toContain('aria-valuenow="100"');
-    expect(row).toContain('<span style="width:100%"></span>');
-    expect(row).toContain('<span class="quota-value">131%</span>');
+    // Assistive technology hears the real reading, not the capped fill.
+    expect(row).toContain('aria-valuetext="131%"');
+    expect(row).toContain(
+      '<span class="ui-meter-fill" style="width:100%"></span>',
+    );
+    expect(row).toContain(
+      '<span class="ui-meter-text" aria-hidden="true">131%</span>',
+    );
   });
 
   it("shows the raw id under windows that share a label", () => {

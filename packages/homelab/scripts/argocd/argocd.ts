@@ -103,7 +103,7 @@ import {
 import { z } from "zod";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
-const DEFAULT_CHARTMUSEUM_ORIGIN = "https://chartmuseum.sjer.red";
+const DEFAULT_CHARTMUSEUM_ORIGIN = "https://charts.tailnet-1a49.ts.net";
 const DEFAULT_HEALTH_TIMEOUT_S = 300;
 const DEFAULT_SYNC_TIMEOUT_S = 300;
 const DEFAULT_DELETION_TIMEOUT_S = 120;

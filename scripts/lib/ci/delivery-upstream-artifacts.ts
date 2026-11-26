@@ -35,10 +35,11 @@ import {
 } from "./delivery-upstream-source.ts";
 
 /**
- * Charts still copied into ChartMuseum. Nothing new is mirrored (X11); the
- * registered minecraft-tsmc pipeline pulls chart:minecraft from
- * https://chartmuseum.sjer.red until WP3 re-registers it against the upstream
- * archive URL, so the Minecraft chart keeps its mirror until then.
+ * Charts still copied into Charts (`charts.tailnet-1a49.ts.net`). Nothing new
+ * is mirrored (X11); the registered minecraft-tsmc pipeline pulls
+ * chart:minecraft from https://charts.tailnet-1a49.ts.net until WP3
+ * re-registers it against the upstream archive URL, so the Minecraft chart
+ * keeps its mirror until then.
  */
 export const MIRRORED_CHARTS: ReadonlySet<string> = new Set(["minecraft"]);
 

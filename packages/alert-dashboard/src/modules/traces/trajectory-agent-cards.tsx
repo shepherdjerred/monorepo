@@ -62,7 +62,9 @@ function DecisionAnswerCard({
       return (
         <div className="traces-decision-card">
           <div className="traces-pill-wrap">
-            <span className="visual-pill visual-pill-info">Predicate</span>
+            <span className="visual-pill" data-sev="info">
+              Predicate
+            </span>
             <code className="rep-mailbox-chip">{answer.name}</code>
           </div>
           <BudgetMeter
@@ -79,7 +81,7 @@ function DecisionAnswerCard({
       return (
         <div className="traces-decision-card">
           <div className="traces-pill-wrap">
-            <span className="visual-pill visual-pill-ok">
+            <span className="visual-pill" data-sev="ok">
               {`Choice · ${answer.choice}`}
             </span>
             <ConfidenceCaption
@@ -97,7 +99,7 @@ function DecisionAnswerCard({
       return (
         <div className="traces-decision-card">
           <div className="traces-pill-wrap">
-            <span className="visual-pill visual-pill-info">
+            <span className="visual-pill" data-sev="info">
               {`Score · ${answer.score.toFixed(2)}`}
             </span>
             <ConfidenceCaption

@@ -34,6 +34,7 @@ import {
   authoredExperienceFromReadout,
 } from "./behavior.ts";
 import { CapacityFeatureReceiptSchema } from "./features.ts";
+import { navSha256 } from "#maps/nav/meshes.ts";
 
 /** Optional post-measurement diagnostics, always separate from release acceptance. */
 export async function profileAfterMeasurement(
@@ -197,12 +198,23 @@ export async function evidence(server: ServerInfo, rcon: RconClient) {
       "/data/plugins/TheStorm/rwfbots/personalities/manifest.json",
     ),
     personalityCount: manifest.personalities.length,
-    navigationSha256: await digest(
-      `server/owned/plugins/TheStorm/rwf/maps/${capacityMap()}/nav.rwfnav`,
-      `/data/plugins/TheStorm/rwf/maps/${capacityMap()}/nav.rwfnav`,
-    ),
+    navigationSha256: await navigationDigest(server.containerId),
     enforcedLimits: limits,
   };
+}
+
+/** The staged mesh must be the one the tracked manifest names for the capacity map. */
+async function navigationDigest(containerId: string): Promise<string> {
+  const expected = await navSha256(capacityMap());
+  const actual = await stagedDigest(
+    containerId,
+    `/data/plugins/TheStorm/rwf/maps/${capacityMap()}/nav.rwfnav`,
+  );
+  if (actual !== expected)
+    throw new Error(
+      `Staged capacity navigation differs from nav-manifest.json for ${capacityMap()}`,
+    );
+  return actual;
 }
 
 async function computeWorkers(server: ServerInfo): Promise<number> {

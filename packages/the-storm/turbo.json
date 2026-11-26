@@ -142,7 +142,9 @@
         "JAVA_HOME",
         "GRADLE_USER_HOME",
         "GRADLE_OPTS",
-        "GRADLE_BUILD_CACHE_*"
+        "GRADLE_BUILD_CACHE_*",
+        // Where the fetched rwf nav meshes are cached (rwfmap fetchRwfNavs).
+        "THE_STORM_NAV_CACHE"
       ]
     },
     "typecheck:ts": {
@@ -232,7 +234,9 @@
         "JAVA_HOME",
         "GRADLE_USER_HOME",
         "GRADLE_OPTS",
-        "GRADLE_BUILD_CACHE_*"
+        "GRADLE_BUILD_CACHE_*",
+        // Where the fetched rwf nav meshes are cached (rwfmap fetchRwfNavs).
+        "THE_STORM_NAV_CACHE"
       ]
     },
     // Real-server e2e against the built TheStorm.jar in a disposable Paper

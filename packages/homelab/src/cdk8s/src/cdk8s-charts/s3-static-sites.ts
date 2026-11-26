@@ -3,16 +3,24 @@ import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { createS3StaticSitesDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/s3-static-sites/index.ts";
 import {
+  PRIVATE_SHARE_APP_LABELS,
+  PRIVATE_SHARE_PORT,
+  PUBLIC_STATIC_SITES_APP_LABELS,
+  createPrivateShareSite,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/s3-static-sites/private.ts";
+import {
   STATIC_SITE_HTTP_PORT,
   STATIC_SITE_METRICS_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 import { createFirstPartyNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/workload-parts.ts";
 import {
+  blackboxProbeIngressRule,
   cloudflareTunnelIngressRule,
   dnsEgressRule,
   nsPeer,
   prometheusIngressRule,
   seaweedfsEgress,
+  tailscaleIngressRule,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
@@ -29,8 +37,9 @@ export function createS3StaticSitesChart(app: App) {
   });
 
   createS3StaticSitesDeployment(chart);
+  createPrivateShareSite(chart);
 
-  // Caddy is reached only through the public tunnel; its blackbox probes go
+  // The public Caddy is reached only through the public tunnel; its blackbox probes go
   // to the public hostnames. It reads the buckets from SeaweedFS S3 and
   // reverse-proxies Scout's API paths to each stage's backend
   // (`resources/s3-static-sites/sites.ts`).
@@ -39,7 +48,7 @@ export function createS3StaticSitesChart(app: App) {
     [
       {
         name: "s3-static-sites-netpol",
-        selects: "namespace",
+        selects: "app",
         ingress: [
           cloudflareTunnelIngressRule([STATIC_SITE_HTTP_PORT]),
           prometheusIngressRule([STATIC_SITE_METRICS_PORT]),
@@ -57,6 +66,26 @@ export function createS3StaticSitesChart(app: App) {
         ],
       },
     ],
-    undefined,
+    PUBLIC_STATIC_SITES_APP_LABELS,
+  );
+
+  // The tailnet-only Caddy is reached only through the Tailscale proxy (and
+  // blackbox-exporter's probe of that Ingress's Service) and reads only
+  // SeaweedFS. Its own policy, so the public pod's tunnel ingress and Scout
+  // egress do not apply to it, and the other way round.
+  createFirstPartyNetworkPolicies(
+    chart,
+    [
+      {
+        name: "s3-static-sites-private-netpol",
+        selects: "app",
+        ingress: [
+          tailscaleIngressRule([PRIVATE_SHARE_PORT]),
+          blackboxProbeIngressRule(PRIVATE_SHARE_PORT),
+        ],
+        egress: [dnsEgressRule(), seaweedfsEgress()],
+      },
+    ],
+    PRIVATE_SHARE_APP_LABELS,
   );
 }
