@@ -3,6 +3,7 @@
 @import "./components.css";
 @import "./friendly.css";
 @import "./friendly-domain.css";
+@import "./friendly-rows.css";
 
 * {
   border-color: var(--scout-color-border);
