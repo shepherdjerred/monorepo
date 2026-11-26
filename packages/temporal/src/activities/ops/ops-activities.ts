@@ -22,6 +22,7 @@ import {
 } from "#shared/infra/temporal-namespace.ts";
 import { captureCommand } from "#activities/command-runner.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { publishMainCiSignal } from "./incidents/main-ci-signal.ts";
 import { collectAuxiliaryFacets } from "./facets/auxiliary-facets.ts";
 import {
   buildTemporalFacet,
@@ -307,16 +308,24 @@ export const opsActivities = {
     return await timed("talos", () => collectTalos(talosctl));
   },
   async collectOpsCi(): Promise<OpsSourceResult> {
-    return await timed("ci", (context) =>
-      collectCi(
-        new WoodpeckerClient({
-          baseUrl: requiredEnvironment("WOODPECKER_URL"),
-          token: requiredEnvironment("WOODPECKER_TOKEN"),
-          repoId: requiredRepoId(),
+    return await timed("ci", (context) => {
+      const woodpecker = new WoodpeckerClient({
+        baseUrl: requiredEnvironment("WOODPECKER_URL"),
+        token: requiredEnvironment("WOODPECKER_TOKEN"),
+        repoId: requiredRepoId(),
+      });
+      return collectCi(woodpecker, context, (status) =>
+        publishMainCiSignal({
+          status,
+          fetchPipeline: (number) => woodpecker.pipeline(number),
+          dashboardUrl: requiredEnvironment("OPS_DASHBOARD_URL"),
+          token: requiredEnvironment("OPS_INGEST_TOKEN"),
+          post: postJson,
+          now: context.now,
+          secrets: SECRET_ENVIRONMENT.map((name) => Bun.env[name]),
         }),
-        context,
-      ),
-    );
+      );
+    });
   },
   async collectOpsGithub(): Promise<OpsSourceResult> {
     return await timed("github", (context) =>

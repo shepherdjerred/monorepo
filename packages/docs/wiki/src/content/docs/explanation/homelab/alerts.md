@@ -41,6 +41,14 @@ delivers webhook events to Hub without duplicating email, while `mail-fallback`
 retains an independent notification path for alerts that diagnose Hub or its
 webhook.
 
+A third receiver, `incidents`, copies a curated set of Delivery alerts to Hub's
+Incidents module at `/api/incidents/alertmanager`, which opens, attaches to, and
+clears incidents from them. Its route comes first and sets `continue: true`, so
+those alerts still reach `alerts`, `mail-fallback`, or `null` exactly as they
+would without it. The alertname list lives in `incidents-alerts.ts` beside
+`prometheus.ts`, and the rendered-route tests prove that removing the route
+changes no other receiver.
+
 Alertmanager's `mail-fallback` receiver does not use that HTTP API. It submits
 mail through `@shepherdjerred/mail`'s `:25` SMTP listener and requires `STARTTLS`
 with cluster-CA validation — see [Mail SMTP TLS](/explanation/homelab/mail-smtp-tls/).

@@ -2828,6 +2828,7 @@
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/glitter-context": "workspace:*",
         "@shepherdjerred/home-assistant": "workspace:*",
+        "@shepherdjerred/incidents": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",

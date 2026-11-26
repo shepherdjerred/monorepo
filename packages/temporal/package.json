@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@shepherdjerred/delivery": "workspace:*",
+    "@shepherdjerred/incidents": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
     "@shepherdjerred/media": "workspace:*",
     "@trpc/client": "^11.18.0",
