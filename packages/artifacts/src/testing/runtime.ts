@@ -71,6 +71,8 @@ export function memoryCatalog(): MemoryCatalog {
 
 export type TestRuntimeOptions = {
   db?: Database;
+  /** Connect the LISTEN hub to this database and serve content from it. */
+  databaseUrl?: string;
   flagValues?: Record<string, unknown>;
   clientRoot?: string;
   heartbeatMs?: number;
@@ -82,7 +84,7 @@ export async function createTestRuntime(
   options: TestRuntimeOptions = {},
 ): Promise<TestRuntime> {
   const store = memoryObjectStore();
-  const catalog = memoryCatalog();
+  const memory = memoryCatalog();
   const db = options.db ?? createDatabase(UNREACHABLE_DATABASE);
   const settings = behaviorConfig("test", {
     flagValues: options.flagValues ?? {},
@@ -92,10 +94,10 @@ export async function createTestRuntime(
     db,
     store,
     settings,
-    hub: createChangeHub(UNREACHABLE_DATABASE),
+    hub: createChangeHub(options.databaseUrl ?? UNREACHABLE_DATABASE),
     appOrigin: APP_ORIGIN,
     contentOrigin: CONTENT_ORIGIN,
-    catalog,
+    ...(options.databaseUrl === undefined ? { catalog: memory } : {}),
     ...(options.clientRoot === undefined
       ? {}
       : { clientRoot: options.clientRoot }),
@@ -117,5 +119,5 @@ export async function createTestRuntime(
       }),
     );
   };
-  return { ...runtime, store, catalog, call };
+  return { ...runtime, store, catalog: memory, call };
 }
