@@ -110,12 +110,12 @@
     border-color var(--dur-1) var(--ease-out);
 }
 .board-column.over {
-  background-color: color-mix(in srgb, var(--accent) 7%, var(--sidebar));
+  background-color: color-mix(in srgb, var(--ui-accent) 7%, var(--ui-bg));
 }
 .board-card.dragging {
   user-select: none;
-  border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--border));
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--ui-accent) 60%, var(--ui-line));
+  background: color-mix(in srgb, var(--ui-accent) 4%, transparent);
   box-shadow: none;
 }
 .board-card.dragging > * {

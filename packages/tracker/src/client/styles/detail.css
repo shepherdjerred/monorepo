@@ -1,9 +1,9 @@
 .editor {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 7px;
   overflow: hidden;
   margin: 8px 0 16px;
-  background: var(--bg);
+  background: var(--ui-panel);
 }
 .editor-toolbar {
   display: flex;
@@ -14,7 +14,7 @@
 .editor-toolbar button {
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   padding: 4px 8px;
 }
@@ -23,8 +23,8 @@
   gap: 2px;
 }
 .editor-toolbar [role="tab"][aria-selected="true"] {
-  color: var(--text);
-  background: var(--hover);
+  color: var(--ui-ink);
+  background: var(--ui-hover);
 }
 .editor textarea {
   border: 0;
@@ -41,9 +41,9 @@
 }
 .editor-hint {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
   padding: 7px 14px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
 }
 .markdown {
   overflow-wrap: anywhere;
@@ -54,7 +54,7 @@
   margin: 0 0 12px;
 }
 .markdown a {
-  color: var(--accent);
+  color: var(--ui-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -85,10 +85,8 @@
   font-size: 15px;
 }
 .markdown code {
-  font:
-    11px ui-monospace,
-    monospace;
-  background: var(--subtle);
+  font: 11px var(--ui-font-mono);
+  background: var(--ui-head);
   padding: 2px 4px;
   border-radius: 3px;
 }
@@ -96,14 +94,14 @@
   padding: 0;
 }
 .markdown blockquote {
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--ui-accent);
   padding-left: 16px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .markdown img {
   max-width: 100%;
   max-height: 400px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 7px;
 }
 .markdown table {
@@ -113,7 +111,7 @@
 }
 .markdown th,
 .markdown td {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   padding: 5px 10px;
 }
 .detail-toolbar {
@@ -121,9 +119,9 @@
   align-items: center;
   gap: 10px;
   padding: 18px 30px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
 }
 .detail-grid {
   display: grid;
@@ -170,40 +168,40 @@
   justify-content: space-between;
   margin-bottom: 18px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
 }
 .properties {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--ui-line);
   padding: 30px 22px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--sidebar);
+  background: var(--ui-bg);
 }
 .properties h2 {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-weight: 500;
 }
 .properties label {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
 }
 .properties select {
   width: 100%;
   font-size: 11px;
-  color: var(--text);
+  color: var(--ui-ink);
   background: transparent;
 }
 .property-labels label {
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  color: var(--text);
+  color: var(--ui-ink);
   margin-bottom: 7px;
 }
 .property-labels legend {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
 }
 .vote-button {
@@ -211,8 +209,8 @@
   font-size: 12px;
 }
 .vote-button.voted {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--ui-accent);
+  border-color: var(--ui-accent);
   background: var(--accent-soft);
 }
 .created-by {
@@ -221,7 +219,7 @@
   gap: 8px;
 }
 .created-by time {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
 }
 .created-by .actor-chip {
@@ -251,7 +249,7 @@
   flex-direction: column;
   gap: 5px;
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
   margin: 0 8px 10px 0;
   max-width: 170px;
   overflow: hidden;
@@ -261,7 +259,7 @@
   width: 155px;
   object-fit: cover;
   border-radius: 5px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
 }
 .comment {
   margin: 18px 0 24px;
@@ -274,7 +272,7 @@
 }
 .comment-time {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .comment-meta button {
   font-size: 11px;
@@ -293,7 +291,7 @@
 }
 .activity-list > li {
   padding: 17px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
 }
 .activity-meta {
   display: flex;
@@ -309,14 +307,14 @@
   font-weight: 500;
 }
 .activity-meta a {
-  color: var(--accent);
+  color: var(--ui-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 .activity-meta time {
   margin-left: auto;
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .peek {
   width: min(1000px, calc(100vw - 48px));
@@ -325,7 +323,7 @@
 .peek > .modal-heading {
   padding: 12px 20px;
   margin: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
 }
 .peek .detail-main {
   padding: 28px;
@@ -365,7 +363,7 @@
   }
   .properties {
     border-left: 0;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--ui-line);
     display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 24px 18px;
@@ -419,7 +417,7 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--panel);
+    background: var(--ui-panel);
     padding: 8px 17px;
   }
   .activity-meta {

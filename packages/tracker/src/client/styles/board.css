@@ -12,13 +12,13 @@
   flex: 0 0 275px;
   min-width: 275px;
   padding: 10px;
-  background: var(--sidebar);
+  background: var(--ui-bg);
   border-radius: 8px;
   scroll-snap-align: start;
   border: 1px solid transparent;
 }
 .board-column.over {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
 }
 .board-column h2 {
   display: flex;
@@ -36,9 +36,9 @@
 .skeleton-card,
 .lifted-card {
   padding: 11px 13px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 4px #00000003;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
   border-radius: 7px;
   margin-bottom: 8px;
 }
@@ -55,7 +55,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   touch-action: none;
   cursor: grab;
 }
@@ -66,10 +66,10 @@
   font-weight: 500;
 }
 .card-title:hover {
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .board-card:has([aria-current="true"]) {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
 }
 .card-labels {
   display: flex;
@@ -101,7 +101,7 @@
   align-items: center;
   flex-direction: column;
   gap: 8px;
-  color: var(--muted);
+  color: var(--ui-muted);
   padding: 40px 0;
   font-size: 11px;
 }

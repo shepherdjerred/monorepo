@@ -14,13 +14,13 @@
 }
 .view-heading p {
   margin-top: 5px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
 }
 .view-toggle {
   display: flex;
   padding: 3px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 7px;
   gap: 2px;
 }
@@ -28,12 +28,12 @@
   display: grid;
   place-items: center;
   padding: 5px 8px;
-  color: var(--muted);
+  color: var(--ui-muted);
   border-radius: 4px;
 }
 .view-toggle a.active {
-  background: var(--hover);
-  color: var(--text);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 .filters {
   display: flex;
@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: var(--muted);
+  color: var(--ui-muted);
   width: 165px;
 }
 .filter-search input {
@@ -58,11 +58,11 @@
 }
 #team-picker {
   min-height: 28px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .issue-list {
   position: relative;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -78,11 +78,11 @@
   gap: 8px;
   padding: 0 22px 0 12px;
   min-height: 48px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
 }
 .issue-row:has([aria-current="true"]),
 .issue-row:hover {
-  background: var(--subtle);
+  background: var(--ui-head);
 }
 .issue-row-main {
   justify-content: flex-start;
@@ -109,7 +109,7 @@
   justify-content: center;
   gap: 12px;
   min-height: 48px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
 }
 .list-sentinel {
@@ -138,7 +138,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   width: 104px;
   white-space: nowrap;
@@ -147,13 +147,13 @@
 }
 .row-date {
   width: 60px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   text-align: right;
   white-space: nowrap;
 }
 .row-votes {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
 }
 @media (max-width: 1150px) {
@@ -187,7 +187,7 @@
   .filter-search {
     width: 100%;
     height: 40px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--ui-line);
     margin-bottom: 3px;
   }
   .filter-search input {

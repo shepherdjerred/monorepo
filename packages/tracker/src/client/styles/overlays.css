@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: #10101675;
+  background: var(--backdrop);
   z-index: 40;
   backdrop-filter: blur(3px);
 }
@@ -10,12 +10,12 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: var(--panel);
+  background: var(--ui-panel);
   width: min(650px, calc(100vw - 32px));
   max-height: calc(100dvh - 48px);
   overflow-y: auto;
   padding: 22px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 12px;
   box-shadow: var(--shadow);
   z-index: 50;
@@ -64,7 +64,7 @@
   align-items: center;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
 }
 .label-options {
   flex: 1;
@@ -90,8 +90,8 @@
   gap: 12px;
   align-items: center;
   padding: 17px 20px;
-  border-bottom: 1px solid var(--border);
-  color: var(--muted);
+  border-bottom: 1px solid var(--ui-line);
+  color: var(--ui-muted);
 }
 .palette-search input {
   flex: 1;
@@ -106,7 +106,7 @@
   padding: 7px;
 }
 .palette-group {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   font-weight: 400;
   padding: 10px;
@@ -134,7 +134,7 @@
   outline: none;
 }
 .palette-results [role="option"]:hover {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 .palette-results [role="option"][aria-selected="true"] {
   background: var(--accent-soft);
@@ -158,22 +158,22 @@
 .palette-footer {
   display: flex;
   gap: 15px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   padding: 10px 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
 }
 .shortcut-list > div {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
   font-size: 12px;
 }
 .shortcut-list kbd {
-  background: var(--subtle);
+  background: var(--ui-head);
   padding: 3px 6px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 4px;
 }
 .identity-modal {
@@ -187,9 +187,9 @@
   gap: 8px 12px;
   padding: 10px 12px;
   margin-bottom: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 8px;
-  background: var(--subtle);
+  background: var(--ui-head);
 }
 .identity-current .identifier {
   white-space: normal;
@@ -208,9 +208,9 @@
   font-size: 12px;
 }
 .identity-presets button.selected {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 @media (max-width: 767px) {
   .modal {
@@ -298,7 +298,7 @@
 }
 .sheet-links a.active {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 @media (max-width: 767px) {
   .sheet {
@@ -327,8 +327,8 @@
   outline-offset: 6px;
 }
 .toast {
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line);
   border-radius: 9px;
   box-shadow: var(--shadow);
   transform: translate(
@@ -340,10 +340,10 @@
   display: none;
 }
 .toast[data-type="error"] {
-  border-color: var(--danger);
+  border-color: var(--ui-sev-error-text);
 }
 .toast[data-type="error"] .toast-title {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .toast-content {
   display: flex;
@@ -362,7 +362,7 @@
   flex: none;
   padding: 5px 10px;
   font-size: 12px;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .toast-close {
   flex: none;

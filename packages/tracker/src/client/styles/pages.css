@@ -22,20 +22,20 @@
 .project-card,
 .actor-card {
   display: block;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   padding: 22px;
   border-radius: 8px;
-  background: var(--panel);
+  background: var(--ui-panel);
 }
 .project-card:hover,
 .actor-card:hover {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
 }
 .project-card > div {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: var(--muted);
+  color: var(--ui-muted);
   margin-bottom: 22px;
 }
 .project-symbol {
@@ -47,7 +47,7 @@
   margin-bottom: 8px;
 }
 .project-card p {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
   min-height: 50px;
 }
@@ -67,10 +67,10 @@
   width: 100%;
   overflow-wrap: anywhere;
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .actor-card p {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
 }
 .actor-profile {
@@ -82,11 +82,11 @@
 }
 .actor-profile code {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .actor-profile p {
   width: 100%;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
 }
 .metadata-grid {
@@ -106,7 +106,7 @@
 .settings-page section {
   padding-bottom: 35px;
   margin-bottom: 30px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
 }
 .settings-page h2 {
   margin-bottom: 8px;
@@ -145,33 +145,42 @@
   font-size: 11px;
 }
 .theme-options button.selected {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
 }
+/* Previews draw each theme whichever is showing, so they name console-ui's
+   light and dark bg, panel and line values (tokens.json) directly. */
 .theme-preview {
   width: 130px;
   height: 75px;
   padding: 12px 12px 12px 35px;
-  border-radius: 3px;
-  background: #f8f8fa;
-  border: 1px solid #e5e5eb;
+  border-radius: 6px;
+  background: #ecede6;
+  border: 1px solid #dfe0d7;
+  box-shadow:
+    inset 30px 0 #ecede6,
+    inset 0 0 0 100px #ffffff;
 }
 .theme-preview span {
   width: 100%;
   height: 5px;
-  background: #dddde6;
+  border-radius: 2px;
+  background: #dfe0d7;
   display: block;
   margin-bottom: 8px;
 }
 .theme-dark {
-  background: #202027;
-  border-color: #33333a;
+  border-color: #2a2c28;
+  box-shadow:
+    inset 30px 0 #111210,
+    inset 0 0 0 100px #191a18;
 }
 .theme-dark span {
-  background: #44444e;
+  background: #2a2c28;
 }
 .theme-system {
-  background: linear-gradient(90deg, #f8f8fa 50%, #202027 50%);
+  box-shadow: none;
+  background: linear-gradient(90deg, #ffffff 50%, #191a18 50%);
 }
 .inline-form {
   display: flex;
@@ -190,7 +199,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line);
   padding: 8px 0;
   font-size: 12px;
 }
@@ -269,34 +278,34 @@
   height: 20px;
   margin-top: 1px;
   padding: 2px;
-  border: 1px solid var(--muted);
+  border: 1px solid var(--ui-muted);
   border-radius: 10px;
-  background: var(--subtle);
+  background: var(--ui-head);
   cursor: pointer;
   transition:
     background-color var(--dur-1) var(--ease-out),
     border-color var(--dur-1) var(--ease-out);
 }
 .switch[data-checked] {
-  border-color: #7c59d9;
-  background: #7c59d9;
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
 }
 .switch-thumb {
   display: block;
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--ui-muted);
   transition:
     translate var(--dur-1) var(--ease-out),
     background-color var(--dur-1) var(--ease-out);
 }
 .switch[data-checked] .switch-thumb {
   translate: 14px 0;
-  background: #fff;
+  background: var(--ui-on-accent);
 }
 .switch:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 3px;
 }
 .feedback-note {

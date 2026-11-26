@@ -1,85 +1,127 @@
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-}
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-button,
-select {
-  cursor: pointer;
-}
-a {
-  color: inherit;
-  text-decoration: none;
-}
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 7px 12px;
-  background: var(--panel);
-  color: var(--text);
-  font-weight: 500;
-}
-button:hover {
-  background: var(--hover);
-}
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-button.primary {
-  background: #7c59d9;
-  border-color: #7c59d9;
-  color: white;
-  box-shadow: inset 0 1px #ffffff18;
-}
-button.primary:hover {
-  background: #6e4bc9;
-}
-input,
-select,
-textarea {
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 10px;
-  min-width: 0;
-}
-input::placeholder,
-textarea::placeholder {
-  color: var(--muted);
-}
-input[type="checkbox"] {
-  accent-color: #7c59d9;
-  width: 14px;
-  height: 14px;
-}
-input[type="color"] {
-  width: 60px;
-  height: 36px;
-  padding: 4px;
-}
-textarea {
-  resize: vertical;
-  min-height: 100px;
-  width: 100%;
-}
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+/*
+ * Element defaults on top of console-ui's reset, which owns the body surface,
+ * Inter, the 13px type scale and the focus ring. Buttons and fields take the
+ * console's 28px controls: a bordered panel button with a pressable edge, and
+ * the accent for the primary action.
+ *
+ * They sit in tracker.elements, below ui.components (styles.css fixes the
+ * order), and skip `ui-*` controls, so console-ui's own buttons keep their
+ * look; every unlayered Tracker class rule still wins over them.
+ */
+@layer tracker.elements {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    letter-spacing: inherit;
+  }
+  button,
+  select {
+    cursor: pointer;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  /* console-ui's own controls (`ui-*`) rely on its reset being bare. */
+  button:not([class*="ui-"]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: 6px;
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  button:not([class*="ui-"]):hover {
+    background: var(--ui-hover);
+  }
+  /* The console's tactile edge, on plain and action buttons only: classed
+     controls (icon buttons, rows, chips, menu items) stay flat. */
+  button:not([class]),
+  button.primary,
+  button.danger,
+  button.secondary {
+    box-shadow: 0 2px 0 var(--ui-btn-edge);
+    transition:
+      transform 0.08s,
+      box-shadow 0.08s;
+  }
+  :is(
+      button:not([class]),
+      button.primary,
+      button.danger,
+      button.secondary
+    ):hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 var(--ui-btn-edge);
+  }
+  :is(
+      button:not([class]),
+      button.primary,
+      button.danger,
+      button.secondary
+    ):active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 var(--ui-btn-edge);
+  }
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  button.primary {
+    --ui-btn-edge: color-mix(in srgb, var(--ui-accent) 65%, black);
+    border-color: var(--ui-btn-edge);
+    background: var(--ui-accent);
+    color: var(--ui-on-accent);
+  }
+  button.primary:hover {
+    background: var(--ui-accent);
+  }
+  input,
+  select,
+  textarea {
+    min-width: 0;
+    padding: 5px 9px;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: 6px;
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    font-size: 12.5px;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    border-color: var(--ui-accent);
+    outline: 0;
+    box-shadow: 0 0 0 1px var(--ui-accent);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--ui-faint);
+  }
+  input[type="checkbox"] {
+    accent-color: var(--ui-accent);
+    width: 14px;
+    height: 14px;
+  }
+  input[type="color"] {
+    width: 60px;
+    height: 32px;
+    padding: 3px;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    width: 100%;
+    padding: 6px 9px;
+  }
 }
 label {
   display: flex;
@@ -114,28 +156,22 @@ h3 {
   font-weight: 600;
 }
 pre {
-  font:
-    11px/1.7 ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
+  font: 11px/1.7 var(--ui-font-mono);
   overflow: auto;
   padding: 12px;
   border-radius: 6px;
-  background: var(--subtle);
+  background: var(--ui-head);
   max-height: 440px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 kbd {
-  font:
-    11px ui-monospace,
-    monospace;
-  color: var(--muted);
+  font: 11px var(--ui-font-mono);
+  color: var(--ui-muted);
 }
 summary {
   cursor: pointer;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
   padding: 8px 0;
 }
@@ -143,16 +179,12 @@ summary {
   flex: 1;
 }
 .muted {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
 }
 .identifier {
-  font:
-    11px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  color: var(--muted);
+  font: 11px var(--ui-font-mono);
+  color: var(--ui-muted);
   white-space: nowrap;
 }
 .icon-button {
@@ -164,26 +196,26 @@ summary {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   border-radius: 5px;
 }
 .icon-button:hover {
-  color: var(--text);
-  background: var(--hover);
+  color: var(--ui-ink);
+  background: var(--ui-hover);
 }
 .text-button {
   border: 0;
   background: transparent;
   padding: 4px 0;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .text-button:hover {
   background: transparent;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .danger {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .avatar {
   height: 22px;
@@ -195,18 +227,18 @@ summary {
   width: 17px;
   text-align: center;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .priority-1 {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--ui-sev-error-text);
+  background: color-mix(in srgb, var(--ui-sev-error-text) 10%, transparent);
   border-radius: 3px;
 }
 .priority-2 {
-  color: var(--warning);
+  color: var(--ui-sev-warning-text);
 }
 .count {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-weight: 400;
   font-size: 11px;
 }
@@ -214,11 +246,11 @@ summary {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
   padding: 1px 7px;
-  color: var(--muted);
-  font-size: 11px;
+  color: var(--ui-muted);
+  font-size: 12px;
   white-space: nowrap;
 }
 .swatch {
@@ -237,12 +269,10 @@ summary {
 }
 .kind {
   font-size: 11px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 4px;
-  color: var(--muted);
+  color: var(--ui-muted);
   padding: 0 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 .empty {
   min-height: 320px;
@@ -256,7 +286,7 @@ summary {
 }
 .empty-icon {
   font-size: 38px;
-  color: var(--accent);
+  color: var(--ui-accent);
   opacity: 0.45;
 }
 .empty h2 {
@@ -265,12 +295,12 @@ summary {
 }
 .empty p {
   max-width: 330px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
 }
 .error {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 7%, transparent);
+  color: var(--ui-sev-error-text);
+  background: var(--ui-sev-error-soft);
   padding: 12px 16px;
   margin: 10px 0;
   border-radius: 6px;
@@ -278,10 +308,11 @@ summary {
   overflow-wrap: anywhere;
 }
 .banner {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 12px;
-  padding: 10px 30px;
+  background: var(--ui-sev-info-soft);
+  color: var(--ui-sev-info-text);
+  border-bottom: 1px solid var(--ui-line);
+  font-size: 12.5px;
+  padding: 9px 20px;
 }
 .actions {
   display: flex;
@@ -364,8 +395,8 @@ summary {
   z-index: 60;
   padding: 8px 12px;
   border-radius: 6px;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line);
   box-shadow: var(--shadow);
   font-size: 12px;
   font-weight: 500;

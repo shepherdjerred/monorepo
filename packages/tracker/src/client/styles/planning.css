@@ -5,15 +5,15 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   white-space: nowrap;
 }
 .due-chip[data-tone="soon"] {
-  color: var(--warning);
+  color: var(--ui-sev-warning-text);
 }
 .due-chip[data-tone="overdue"] {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .row-due {
   padding-inline: 5px;
@@ -23,10 +23,10 @@
   justify-content: flex-end;
 }
 .due-group-mark[data-bucket="overdue"] {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .due-group-mark[data-bucket="today"] {
-  color: var(--warning);
+  color: var(--ui-sev-warning-text);
 }
 
 /* The due date picker. */
@@ -50,7 +50,7 @@
   font-size: 12px;
 }
 .due-input input[aria-invalid="true"] {
-  border-color: var(--danger);
+  border-color: var(--ui-sev-error-text);
 }
 .due-preview {
   display: flex;
@@ -65,7 +65,7 @@
 }
 .due-preview kbd {
   margin-left: auto;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .due-choices {
   display: grid;
@@ -84,7 +84,7 @@
   font-weight: 450;
 }
 .due-choice[aria-pressed="true"] {
-  color: var(--accent);
+  color: var(--ui-accent);
   font-weight: 600;
 }
 .due-choice .muted {
@@ -120,7 +120,7 @@
     grid-area: calendar;
     padding: 0 0 0 12px;
     border-top: 0;
-    border-left: 1px solid var(--border);
+    border-left: 1px solid var(--ui-line);
   }
   .due-popover .due-clear {
     grid-area: clear;
@@ -131,7 +131,7 @@
 
 /* A month grid, in the date picker dialog pattern. */
 .calendar {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
   padding-top: 6px;
 }
 .calendar-header {
@@ -151,7 +151,7 @@
 }
 .calendar-grid th {
   padding: 4px 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 10px;
   font-weight: 500;
   text-align: center;
@@ -165,22 +165,22 @@
   font-variant-numeric: tabular-nums;
 }
 .calendar-grid td:hover {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 .calendar-grid td:focus-visible {
   outline-offset: -2px;
 }
 .calendar-grid td[data-outside] {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .calendar-grid td[aria-current="date"] {
-  color: var(--accent);
+  color: var(--ui-accent);
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px var(--accent);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
 }
 .calendar-grid td[aria-selected="true"] {
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--ui-accent);
+  color: var(--ui-panel);
   font-weight: 600;
 }
 
@@ -188,7 +188,7 @@
 progress.progress-ring,
 .ring-mark {
   --size: 14px;
-  --fill: var(--accent);
+  --fill: var(--ui-accent);
   appearance: none;
   display: inline-block;
   flex-shrink: 0;
@@ -198,7 +198,7 @@ progress.progress-ring,
   border-radius: 50%;
   background: conic-gradient(
     var(--fill) calc(var(--value, 0) * 1%),
-    color-mix(in srgb, var(--muted) 30%, transparent) 0
+    color-mix(in srgb, var(--ui-muted) 30%, transparent) 0
   );
   mask-image: radial-gradient(
     transparent calc(50% - 2.5px),
@@ -210,7 +210,7 @@ progress.progress-ring {
 }
 progress.progress-ring[data-complete],
 .ring-mark[data-complete] {
-  --fill: var(--success);
+  --fill: var(--ui-sev-ok-text);
 }
 progress.progress-ring::-webkit-progress-bar,
 progress.progress-ring::-webkit-progress-value {
@@ -230,13 +230,13 @@ progress.progress-ring::-moz-progress-bar {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .row-parent {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
   white-space: nowrap;
 }
@@ -249,7 +249,7 @@ progress.progress-ring::-moz-progress-bar {
   min-width: 0;
 }
 .parent-crumb:hover {
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .sub-issues .section-heading {
   justify-content: flex-start;
@@ -275,7 +275,7 @@ progress.progress-ring::-moz-progress-bar {
   border-radius: 6px;
 }
 .sub-issue:hover {
-  background: var(--subtle);
+  background: var(--ui-head);
 }
 .sub-issue[data-pending] {
   opacity: 0.6;
@@ -304,7 +304,7 @@ progress.progress-ring::-moz-progress-bar {
   align-items: center;
   gap: 8px;
   padding: 0 6px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .sub-issue-add input {
   flex: 1;
@@ -315,8 +315,8 @@ progress.progress-ring::-moz-progress-bar {
 }
 .sub-issue-add input:hover,
 .sub-issue-add input:focus {
-  border-color: var(--border);
-  background: var(--panel);
+  border-color: var(--ui-line);
+  background: var(--ui-panel);
 }
 .sub-issue-adopt {
   margin-bottom: 10px;
@@ -368,7 +368,7 @@ progress.progress-ring::-moz-progress-bar {
   border-radius: 6px;
 }
 .view-nav-item[data-over] {
-  box-shadow: inset 0 2px var(--accent);
+  box-shadow: inset 0 2px var(--ui-accent);
 }
 .view-nav-item > a {
   display: flex;
@@ -378,7 +378,7 @@ progress.progress-ring::-moz-progress-bar {
   min-width: 0;
   padding: 7px 10px;
   border-radius: 6px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
 }
 .view-nav-item > a > span:not(.view-scope) {
@@ -387,12 +387,12 @@ progress.progress-ring::-moz-progress-bar {
   white-space: nowrap;
 }
 .view-nav-item > a:hover {
-  background: var(--hover);
-  color: var(--text);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 .view-nav-item > a.active {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--ui-accent);
   font-weight: 600;
 }
 .view-nav-item > a[draggable="true"] {
@@ -418,7 +418,7 @@ progress.progress-ring::-moz-progress-bar {
 }
 .heading-icon {
   display: inline-flex;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .save-view {
   display: flex;
@@ -445,9 +445,9 @@ progress.progress-ring::-moz-progress-bar {
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 7px;
-  color: var(--muted);
+  color: var(--ui-muted);
   cursor: pointer;
 }
 .icon-choice input {
@@ -460,12 +460,12 @@ progress.progress-ring::-moz-progress-bar {
   cursor: pointer;
 }
 .icon-choice:has(:checked) {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .icon-choice:has(:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
 }
 .scope-choices {
@@ -477,7 +477,7 @@ progress.progress-ring::-moz-progress-bar {
   width: 100%;
 }
 .scope-choices input {
-  accent-color: #7c59d9;
+  accent-color: var(--ui-accent);
 }
 .scope-choices label {
   flex-direction: row;

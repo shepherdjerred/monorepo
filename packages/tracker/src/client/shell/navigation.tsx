@@ -2,18 +2,27 @@ import { useState } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 import {
   Activity,
-  Command,
   Ellipsis,
   Folder,
   Keyboard,
   LayoutGrid,
   List,
-  Plus,
   Search,
   Settings2,
   Users,
   MessagesSquare,
 } from "lucide-react";
+import {
+  AppSwitcher,
+  IconButton,
+  Sidebar as ConsoleSidebar,
+  SidebarGroup,
+  SidebarItem,
+  ThemeRow,
+  type AppSwitcherEntry,
+  type SidebarLinkProps,
+} from "@shepherdjerred/console-ui";
+import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { ActorSchema, type ActorEnvelope } from "#shared/actor.ts";
 import type { BootstrapData } from "#client/data/api.ts";
 import {
@@ -33,6 +42,7 @@ import { notify } from "#client/ui/toast.tsx";
 import { LiveIndicator } from "#client/live/presence.tsx";
 import { rememberTeam } from "./team.ts";
 import { ViewsNav } from "#client/saved-views/views-nav.tsx";
+import { trackerTheme } from "#client/ui/theme.ts";
 
 const links = [
   { name: "Issues", path: "/issues", icon: List },
@@ -44,117 +54,139 @@ const links = [
 ];
 // The phone's bottom bar has room for five; these live behind "More".
 const overflow = ["/actors", "/settings", "/forum"];
+/** Every console, Tracker marked current; each opens in this tab. */
+const switcherApps: readonly AppSwitcherEntry[] = CONSOLE_LINKS.map(
+  ({ label, url, group }) => ({ label, url, group }),
+);
+const currentApp = { label: "Tracker", mark: "T" } as const;
+
+/** A react-router `NavLink` drawn as a console sidebar row. */
+function sidebarLink({ href, ...props }: SidebarLinkProps) {
+  return <NavLink to={href} {...props} />;
+}
+
+/**
+ * The navigation above tablet width, drawn by the shared console sidebar:
+ * the app switcher and search, the workspace pages, saved views, teams and
+ * projects, then identity, settings, shortcuts and the theme row.
+ */
 export function Sidebar({
   bootstrap,
   teamKey,
-  create,
   search,
   help,
   identity,
 }: {
   bootstrap: BootstrapData | undefined;
   teamKey: string | undefined;
-  create: () => void;
   search: () => void;
   help: () => void;
   identity: () => void;
 }) {
   const actor = useCurrentActor();
   return (
-    <aside className="sidebar">
-      <Link className="workspace-brand" to="/issues">
-        <span className="brand-mark" aria-hidden="true">
-          T
-        </span>
-        <strong>Tracker</strong>
-      </Link>
-      <button type="button" className="search-command" onClick={search}>
-        <Search size={15} />
-        <span>Search anything</span>
-        <kbd>⌘ K</kbd>
-      </button>
-      <button
-        type="button"
-        className="new-issue"
-        onClick={create}
-        disabled={bootstrap?.writesEnabled !== true}
-      >
-        <Plus size={16} />
-        New issue<kbd>C</kbd>
-      </button>
-      <div className="sidebar-scroll">
-        <p className="nav-heading">Workspace</p>
-        <nav aria-label="Main navigation">
-          {links.map((link) => (
-            <NavLink key={link.path} to={link.path}>
-              <link.icon size={16} />
-              <span>{link.name}</span>
-            </NavLink>
-          ))}
-        </nav>
-        {bootstrap !== undefined && teamKey !== undefined && (
-          <ViewsNav bootstrap={bootstrap} teamKey={teamKey} />
-        )}
-        <p className="nav-heading">Teams</p>
-        <div className="team-nav">
-          {bootstrap?.teams.map((team) => (
-            <Link
-              key={team.id}
-              to={`/issues?team=${team.key}`}
-              className={teamKey === team.key ? "active-team" : ""}
-              onClick={() => {
-                rememberTeam(team.key);
-              }}
-            >
-              <span className="team-icon" aria-hidden="true">
-                {team.key}
-              </span>
-              <span>{team.name}</span>
-            </Link>
-          ))}
-        </div>
-        <p className="nav-heading">Projects</p>
-        <div className="project-nav">
-          {bootstrap?.projects
-            .filter(({ archivedAt }) => archivedAt === null)
-            .map((project) => (
-              <Link to={`/projects/${project.slug}`} key={project.id}>
-                <Swatch color={project.color} />
-                {project.name}
-              </Link>
-            ))}
-        </div>
-      </div>
-      <div className="sidebar-footer">
-        <button
-          type="button"
-          className="identity-button"
-          aria-haspopup="dialog"
-          onClick={identity}
-        >
-          <Avatar actor={actor} decorative />
-          <span className="identity-label">
-            <span className="sr-only">Acting as </span>
-            {actor.name}
-          </span>
-        </button>
-        <div className="sidebar-footer-links">
-          <NavLink to="/settings">
-            <Settings2 size={16} />
-            Settings
-          </NavLink>
-          <LiveIndicator className="sidebar-live" />
+    <ConsoleSidebar
+      label="Tracker"
+      navLabel="Main navigation"
+      top={
+        <>
+          <AppSwitcher current={currentApp} apps={switcherApps} />
+          <IconButton
+            icon={Search}
+            label="Search issues and commands"
+            aria-keyshortcuts="Meta+K Control+K"
+            title="Search (⌘K)"
+            onClick={search}
+          />
+        </>
+      }
+      footer={
+        <div className="sidebar-footer">
           <button
             type="button"
-            className="icon-button"
-            onClick={help}
-            aria-label="Keyboard shortcuts"
+            className="ui-nav-item identity-button"
+            aria-haspopup="dialog"
+            onClick={identity}
           >
-            <Command size={15} />
+            <Avatar actor={actor} decorative />
+            <span className="ui-nav-text">
+              <span className="sr-only">Acting as </span>
+              {actor.name}
+            </span>
           </button>
+          <NavLink to="/settings" className="ui-nav-item">
+            <Settings2 className="ui-nav-icon" aria-hidden="true" />
+            <span className="ui-nav-text">Settings</span>
+          </NavLink>
+          <button
+            type="button"
+            className="ui-nav-item"
+            aria-keyshortcuts="?"
+            onClick={help}
+          >
+            <Keyboard className="ui-nav-icon" aria-hidden="true" />
+            <span className="ui-nav-text">Keyboard shortcuts</span>{" "}
+            <kbd className="ui-nav-count">?</kbd>
+          </button>
+          <ThemeRow store={trackerTheme} />
         </div>
-      </div>
-    </aside>
+      }
+    >
+      <SidebarGroup label="Workspace">
+        {links.map((link) => (
+          <SidebarItem
+            key={link.path}
+            href={link.path}
+            label={link.name}
+            icon={link.icon}
+            renderLink={sidebarLink}
+          />
+        ))}
+      </SidebarGroup>
+      {bootstrap !== undefined && teamKey !== undefined && (
+        <ViewsNav bootstrap={bootstrap} teamKey={teamKey} />
+      )}
+      {bootstrap !== undefined && (
+        <SidebarGroup label="Teams">
+          {bootstrap.teams.map((team) => (
+            <li key={team.id}>
+              <Link
+                to={`/issues?team=${team.key}`}
+                className="ui-nav-item team-link"
+                data-current-team={teamKey === team.key ? "" : undefined}
+                onClick={() => {
+                  rememberTeam(team.key);
+                }}
+              >
+                <span className="team-icon" aria-hidden="true">
+                  {team.key}
+                </span>
+                <span className="ui-nav-text">{team.name}</span>
+              </Link>
+            </li>
+          ))}
+        </SidebarGroup>
+      )}
+      {bootstrap !== undefined && (
+        <SidebarGroup label="Projects">
+          {bootstrap.projects
+            .filter(({ archivedAt }) => archivedAt === null)
+            .map((project) => (
+              <li key={project.id}>
+                <NavLink
+                  to={`/projects/${project.slug}`}
+                  className="ui-nav-item project-link"
+                >
+                  <span className="ui-nav-icon project-icon" aria-hidden="true">
+                    <Swatch color={project.color} />
+                  </span>
+                  <span className="ui-nav-text">{project.name}</span>
+                </NavLink>
+              </li>
+            ))}
+        </SidebarGroup>
+      )}
+    </ConsoleSidebar>
   );
 }
 export function BottomNavigation({
