@@ -60,6 +60,7 @@ async function runDockerTokenOperation(
   action: "plan" | "apply",
   root: string,
   env: Record<string, string>,
+  options?: { expectNoChanges?: boolean },
 ): Promise<void> {
   const child = Bun.spawn(
     [
@@ -90,12 +91,22 @@ async function runDockerTokenOperation(
         : "No Docker token changes."
       : "Docker token apply succeeded; sensitive credentials remain in encrypted state.",
   );
+  if (
+    action === "plan" &&
+    exitCode === 2 &&
+    options?.expectNoChanges === true
+  ) {
+    throw new Error(
+      "tofu plan detected changes for dockerhub-tokens (--expect-no-changes)",
+    );
+  }
 }
 
 export async function runDockerTokenStack(
   action: TofuAction,
   root: string,
   env: Record<string, string>,
+  options?: { expectNoChanges?: boolean },
 ): Promise<void> {
   if (action !== "plan" && action !== "apply")
     throw new Error(
@@ -114,7 +125,7 @@ export async function runDockerTokenStack(
       ],
       { cwd: root, env: isolatedEnv, inheritEnv: false },
     );
-    await runDockerTokenOperation(action, root, isolatedEnv);
+    await runDockerTokenOperation(action, root, isolatedEnv, options);
   } finally {
     await rm(dataRoot, { recursive: true, force: true });
   }

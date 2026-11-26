@@ -3329,7 +3329,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/2",
-      "configurationRevisionId": "prometheus/prod/12"
+      "configurationRevisionId": "prometheus/prod/13"
     },
     {
       "id": "prometheus-adapter/prod",
@@ -3376,7 +3376,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tempo/prod/2",
+      "recipeRevisionId": "tempo/prod/3",
       "configurationRevisionId": "tempo/prod/1"
     },
     {
@@ -3384,7 +3384,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "pyroscope/prod/2",
+      "recipeRevisionId": "pyroscope/prod/3",
       "configurationRevisionId": "pyroscope/prod/2"
     },
     {
@@ -3449,7 +3449,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "seaweedfs/prod/2",
-      "configurationRevisionId": "seaweedfs/prod/2"
+      "configurationRevisionId": "seaweedfs/prod/3"
     },
     {
       "id": "velero/prod",

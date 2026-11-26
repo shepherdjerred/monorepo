@@ -59,7 +59,11 @@ public sealed class RecurrenceCodec : IRecurrenceEditor
             anchor = createdDate;
         }
 
-        string startText = (anchor ?? todayDate).ToString(
+        (string cleanRule, DateOnly? ruleDtStart, bool hasDateTimeDtStart) = ExtractRuleSegments(
+            rule
+        );
+        DateOnly? effectiveAnchor = anchor ?? ruleDtStart;
+        string startText = (effectiveAnchor ?? todayDate).ToString(
             "yyyy-MM-dd",
             CultureInfo.InvariantCulture
         );
@@ -74,7 +78,16 @@ public sealed class RecurrenceCodec : IRecurrenceEditor
             );
         }
 
-        RecurrenceDraft? draft = TryProjectDraft(rule, anchor);
+        if (
+            rule.Contains('\n', StringComparison.Ordinal)
+            || rule.Contains('\r', StringComparison.Ordinal)
+            || hasDateTimeDtStart
+        )
+        {
+            return Task.FromResult(new RecurrenceProjection(startText, null));
+        }
+
+        RecurrenceDraft? draft = TryProjectDraft(cleanRule, effectiveAnchor);
         return Task.FromResult(new RecurrenceProjection(startText, draft));
     }
 
@@ -561,48 +574,84 @@ public sealed class RecurrenceCodec : IRecurrenceEditor
         }
     }
 
-    private static (string CleanRule, DateOnly? DtStart) ExtractRuleAndDtStart(string raw)
+    private static (
+        string CleanRule,
+        DateOnly? DtStart,
+        bool HasDateTimeDtStart
+    ) ExtractRuleSegments(string raw)
     {
         DateOnly? dtStart = null;
-        string clean = raw.Trim();
-        if (
-            clean.Contains('\n', StringComparison.Ordinal)
-            || clean.Contains('\r', StringComparison.Ordinal)
+        bool hasDateTimeDtStart = false;
+        bool awaitingDtStartValue = false;
+        List<string> ruleSegments = [];
+
+        foreach (
+            string rawSegment in raw.Trim()
+                .Split(
+                    [';', '\r', '\n'],
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                )
         )
         {
-            string? rruleLine = null;
-            foreach (
-                string line in clean.Split(
-                    ['\r', '\n'],
-                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            string segment = rawSegment.StartsWith("RRULE:", StringComparison.OrdinalIgnoreCase)
+                ? rawSegment[6..].Trim()
+                : rawSegment;
+            if (segment.Length == 0)
+                continue;
+
+            if (segment.Equals("DTSTART", StringComparison.OrdinalIgnoreCase))
+            {
+                awaitingDtStartValue = true;
+                continue;
+            }
+
+            if (segment.StartsWith("DTSTART:", StringComparison.OrdinalIgnoreCase))
+            {
+                string value = segment[8..].Trim();
+                hasDateTimeDtStart |= value.Contains('T', StringComparison.OrdinalIgnoreCase);
+                if (TryParseUntilDate(value, out DateOnly parsedStart))
+                    dtStart = parsedStart;
+                awaitingDtStartValue = false;
+                continue;
+            }
+
+            int colon = segment.IndexOf(':', StringComparison.Ordinal);
+            if (
+                colon >= 0
+                && (
+                    awaitingDtStartValue
+                    || segment.StartsWith("VALUE=DATE", StringComparison.OrdinalIgnoreCase)
                 )
             )
             {
-                if (line.StartsWith("DTSTART", StringComparison.OrdinalIgnoreCase))
-                {
-                    int colon = line.IndexOf(':', StringComparison.Ordinal);
-                    if (
-                        colon >= 0
-                        && TryParseUntilDate(line[(colon + 1)..], out DateOnly parsedStart)
-                    )
-                        dtStart = parsedStart;
-                }
-                else if (line.StartsWith("RRULE:", StringComparison.OrdinalIgnoreCase))
-                {
-                    rruleLine = line[6..];
-                }
-                else if (line.Contains("FREQ=", StringComparison.OrdinalIgnoreCase))
-                {
-                    rruleLine = line;
-                }
+                string value = segment[(colon + 1)..].Trim();
+                hasDateTimeDtStart |= value.Contains('T', StringComparison.OrdinalIgnoreCase);
+                if (TryParseUntilDate(value, out DateOnly parsedStart))
+                    dtStart = parsedStart;
+                awaitingDtStartValue = false;
+                continue;
             }
-            clean = rruleLine ?? clean;
+
+            if (
+                awaitingDtStartValue
+                && segment.Contains('=', StringComparison.Ordinal)
+                && !segment.StartsWith("FREQ=", StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                continue;
+            }
+
+            awaitingDtStartValue = false;
+            ruleSegments.Add(segment);
         }
-        else if (clean.StartsWith("RRULE:", StringComparison.OrdinalIgnoreCase))
-        {
-            clean = clean[6..];
-        }
-        return (clean, dtStart);
+
+        return (string.Join(';', ruleSegments), dtStart, hasDateTimeDtStart);
+    }
+
+    private static (string CleanRule, DateOnly? DtStart) ExtractRuleAndDtStart(string raw)
+    {
+        (string cleanRule, DateOnly? dtStart, _) = ExtractRuleSegments(raw);
+        return (cleanRule, dtStart);
     }
 
     private sealed record ParsedRule(

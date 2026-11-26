@@ -339,6 +339,20 @@ describe("feature flag provider readiness alert", () => {
   });
 });
 
+describe("Argo CD comparison error alert", () => {
+  it("alerts within 15 minutes when an Application enters sync_status Unknown", () => {
+    const rules = getArgoCDRuleGroups().flatMap((group) => group.rules ?? []);
+    const comparisonError = rules.find(
+      (rule) => rule.alert === "ArgoAppComparisonError",
+    );
+    expect(comparisonError?.expr.value).toBe(
+      'argocd_app_info{sync_status="Unknown"} == 1',
+    );
+    expect(comparisonError?.for).toBe("15m");
+    expect(comparisonError?.labels).toEqual({ severity: "warning" });
+  });
+});
+
 describe("platform alert annotation contract", () => {
   it("defines summary and description without legacy message or bracket prefixes", () => {
     const groups = [

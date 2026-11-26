@@ -13,6 +13,14 @@ type GrafanaDashboardSidecarValues = Omit<
   labelValue?: string;
 };
 type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
+  initChownData?: {
+    resources?: {
+      requests?: {
+        cpu: string;
+        memory: string;
+      };
+    };
+  };
   sidecar?: Omit<GrafanaSidecarValues, "dashboards"> & {
     dashboards?: GrafanaDashboardSidecarValues;
   };
@@ -260,6 +268,11 @@ export function createGrafanaValues(
       labels: {
         "velero.io/backup": "enabled",
         "velero.io/exclude-from-backup": "false",
+      },
+    },
+    initChownData: {
+      resources: {
+        requests: { cpu: "10m", memory: "32Mi" },
       },
     },
     useStatefulSet: true,
