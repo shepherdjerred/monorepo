@@ -1859,6 +1859,10 @@ The reaper keeps a worktree whenever it cannot establish a fact:
 
 - `hc ls --json` unavailable holds the whole surface, because a live Herdr
   session would be invisible.
+- The liveness snapshot is taken once, and a sweep that removes worktrees can
+  run for minutes, so `hc ls --json` is asked again immediately before each
+  removal. A worktree a Herdr terminal has entered since is kept, and so is
+  every remaining candidate if the query fails; both show as `SKIPPED`.
 - When open pull requests cannot be listed (`gh` missing, unauthenticated, or
   returning something other than a JSON list), every branch worktree with
   commits ahead of the default branch is kept. Open pull requests are queried
@@ -1869,8 +1873,11 @@ The reaper keeps a worktree whenever it cannot establish a fact:
 - A snapshot or rescue ref that cannot be written keeps the worktree and
   reports the run as failed. An untracked nested git repository is one such
   case: a snapshot would record only a pointer to it.
-- Only a Claude-agent lock whose pid is dead is released. Pool slots and
-  locks with any other reason are never unlocked.
+- Only a Claude-agent lock whose process is gone is released: its pid is
+  dead, or the pid is alive but started at a different time than the lock
+  records, which means the number was reused. When either start time is
+  missing or unreadable, a live pid keeps the lock. Pool slots and locks with
+  any other reason are never unlocked.
 
 Every inspected worktree gets a decision with a reason. `--summary` prints the
 per-reason keep counts, `--verbose` also lists each kept worktree, and `--json`
@@ -1891,10 +1898,18 @@ git update-ref -d refs/tend/rescue/<name>              # discard it for good
 `com.jerred.toolkit-tend`, which runs
 `toolkit tend run --apply --only worktrees` every 24 hours with `~/.local/bin`
 and Homebrew on `PATH` (for `hc` and `gh`) and logs to
-`~/.toolkit/tend/logs/`. launchd also starts the job once when it is loaded,
-so installing it performs a real reap: run `toolkit tend worktrees` first and
-read the candidates. `schedule status` reports whether the plist exists and
-is loaded; `schedule uninstall` unloads and removes it.
+`~/.toolkit/tend/logs/`. Installing removes nothing: the agent does not run
+at load, so the first sweep is 24 hours after it is loaded (at install, and
+again at each login). To sweep by hand, read the candidates from the dry run
+and then apply:
+
+```bash
+toolkit tend worktrees --verbose   # dry run: candidates and kept worktrees
+toolkit tend worktrees --apply
+```
+
+`schedule status` reports whether the plist exists and is loaded;
+`schedule uninstall` unloads and removes it.
 
 This is a host LaunchAgent rather than a Temporal Schedule on purpose.
 Scheduled work in this repository normally belongs to Temporal, but the reaper

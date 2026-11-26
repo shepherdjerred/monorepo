@@ -26,10 +26,13 @@ const GIT_ENV = {
 };
 
 const runner: CommandRunner = (argv, options = {}) =>
-  defaultCommandRunner(argv, {
-    ...options,
-    env: { ...GIT_ENV, ...options.env },
-  });
+  argv[0] === "hc"
+    ? // Herdr is not part of this test: no terminals are open anywhere.
+      Promise.resolve({ exitCode: 0, stdout: '{"terminals":[]}', stderr: "" })
+    : defaultCommandRunner(argv, {
+        ...options,
+        env: { ...GIT_ENV, ...options.env },
+      });
 
 async function git(cwd: string, ...args: string[]): Promise<string> {
   const res = await runner(["git", ...args], { cwd });

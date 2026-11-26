@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { collectHcTerminals } from "./liveness.ts";
 import {
   canonicalizeExistingPath,
   DEFAULT_WORKTREE_MIN_AGE_MS,
@@ -189,6 +190,37 @@ function toCandidate(
   };
 }
 
+/**
+ * A reason to leave a removable worktree alone that only shows up now: a
+ * Herdr terminal opened in it after the liveness snapshot, or Herdr can no
+ * longer be asked.
+ */
+async function recheckLiveTerminals(
+  wt: WorktreePorcelainEntry,
+  ctx: RepoSweepContext,
+): Promise<{ readonly category: string; readonly reason: string } | null> {
+  const terminals = await ctx.listLiveTerminals();
+  if (terminals === null) {
+    return {
+      category: "Herdr sessions unknown",
+      reason:
+        "hc ls --json failed before removal; live Herdr sessions cannot be seen",
+    };
+  }
+  const canonicalWt = await canonicalizeExistingPath(wt.path, ctx.platform);
+  for (const terminal of terminals) {
+    for (const cwd of [terminal.cwd, terminal.foregroundCwd]) {
+      if (cwd !== undefined && isPathInside(cwd, canonicalWt, ctx.platform)) {
+        return {
+          category: "live Herdr terminal",
+          reason: `live Herdr terminal appeared during the sweep: ${cwd}`,
+        };
+      }
+    }
+  }
+  return null;
+}
+
 /** Act on one candidate and say what became of the worktree. */
 async function actOnCandidate(
   wt: WorktreePorcelainEntry,
@@ -214,6 +246,13 @@ async function actOnCandidate(
   }
   if (inspection.gitDir === undefined) {
     throw new Error(`No git dir was resolved for removable ${wt.path}`);
+  }
+  const held = await recheckLiveTerminals(wt, ctx);
+  if (held !== null) {
+    return {
+      action: { candidate, status: "skipped", detail: held.reason },
+      decision: { target: wt.path, action: "keep", ...held },
+    };
   }
   const outcome = await applyWorktreeRemoval({
     repoPath: ctx.repoPath,
@@ -333,8 +372,17 @@ export async function sweepWorktrees(
       ? [path.join(homeDir, "git"), path.join(homeDir, "Git")]
       : [path.join(homeDir, "git")];
   const gitDirs = options.gitDirs ?? defaultGitDirs;
-  const { processes } = options.liveness;
+  const { processes, platform, localHostAliases } = options.liveness;
   const probePid = options.isPidAlive ?? isProcessAliveByKillZero;
+  const listLiveTerminals = async () => {
+    const live = await collectHcTerminals({
+      runner,
+      homeDir,
+      platform,
+      localAliases: localHostAliases,
+    });
+    return live.available ? live.terminals : null;
+  };
   const holds = collectWorktreeHoldSources(
     options.liveness,
     options.leases ?? [],
@@ -365,6 +413,8 @@ export async function sweepWorktrees(
       nowMs: options.nowMs ?? Date.now(),
       homeDir,
       isPidAlive: (pid) => processes.has(pid) || probePid(pid),
+      processStartOf: (pid) => processes.get(pid)?.processStart,
+      listLiveTerminals,
     });
     inspectedCount += repoSweep.inspected;
     candidates.push(...repoSweep.candidates);

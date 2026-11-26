@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parseProcessStartMs } from "#lib/tend/process-probe.ts";
 import {
   classifyWorktreeLock,
   decideWorktree,
@@ -322,6 +323,12 @@ function alive(pid: number): boolean {
   return pid === 4242;
 }
 
+const LOCK_START = "Thu Nov 20 10:11:12 2026";
+
+function lockWithStart(start: string): string {
+  return `claude agent agent-a1b2c3 (pid 4242 start ${start})`;
+}
+
 describe("classifyWorktreeLock", () => {
   it("recognizes the Herdr pool and Claude agent lock reasons", () => {
     expect(classifyWorktreeLock({ locked: false, isPidAlive: alive })).toEqual({
@@ -349,6 +356,76 @@ describe("classifyWorktreeLock", () => {
         isPidAlive: alive,
       }),
     ).toEqual({ kind: "claude-agent", pid: 4343, alive: false });
+  });
+
+  it.each([
+    {
+      name: "pid is not running",
+      lockReason:
+        "claude agent agent-d4e5f6 (pid 4343 start Thu Nov 19 04:29:24 2026)",
+      currentStart: undefined,
+      alive: false,
+    },
+    {
+      name: "pid is running and started when the lock says",
+      lockReason: lockWithStart(LOCK_START),
+      // `ps` pads single-digit days; the same instant still matches.
+      currentStart: "Thu Nov 20 10:11:12 2026    ",
+      alive: true,
+    },
+    {
+      name: "pid is running but started at another time (pid reused)",
+      lockReason: lockWithStart(LOCK_START),
+      currentStart: "Mon Nov 24 08:00:00 2026",
+      alive: false,
+    },
+    {
+      name: "pid is running and the lock has no start time",
+      lockReason: "claude agent agent-a1b2c3 (pid 4242)",
+      currentStart: "Mon Nov 24 08:00:00 2026",
+      alive: true,
+    },
+    {
+      name: "pid is running and the lock's start time does not parse",
+      lockReason: lockWithStart("2026-11-20T10:11:12Z"),
+      currentStart: "Mon Nov 24 08:00:00 2026",
+      alive: true,
+    },
+    {
+      name: "pid is running and the snapshot has no start time for it",
+      lockReason: lockWithStart(LOCK_START),
+      currentStart: undefined,
+      alive: true,
+    },
+    {
+      name: "pid is running and the snapshot start time does not parse",
+      lockReason: lockWithStart(LOCK_START),
+      currentStart: "20261124080000.000000-480",
+      alive: true,
+    },
+  ])(
+    "Claude agent lock: $name",
+    ({ lockReason, currentStart, alive: expected }) => {
+      const state = classifyWorktreeLock({
+        locked: true,
+        lockReason,
+        isPidAlive: alive,
+        processStartOf: () => currentStart,
+      });
+      expect(state).toMatchObject({ kind: "claude-agent", alive: expected });
+    },
+  );
+
+  it("reads ps start times as UTC instants", () => {
+    expect(parseProcessStartMs("Thu Nov 20 10:11:12 2026")).toBe(
+      Date.UTC(2026, 10, 20, 10, 11, 12),
+    );
+    expect(parseProcessStartMs("Sun Nov  1 04:05:06 2026")).toBe(
+      Date.UTC(2026, 10, 1, 4, 5, 6),
+    );
+    expect(parseProcessStartMs("Thu Foo 20 10:11:12 2026")).toBeNull();
+    expect(parseProcessStartMs("unknown-4242")).toBeNull();
+    expect(parseProcessStartMs("")).toBeNull();
   });
 
   it("treats every other lock as unknown", () => {

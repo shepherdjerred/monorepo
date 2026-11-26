@@ -46,6 +46,9 @@ export function tendLaunchAgent(
     logsDir: path.join(paths.rootDir, "logs"),
     keepAlive: false,
     startIntervalSeconds: INTERVAL_SECONDS,
+    // Loading the agent must not remove anything: the first sweep is one
+    // interval later, after the candidates have been looked at by hand.
+    runAtLoad: false,
     // launchd's own PATH has neither `gh` (Homebrew) nor `hc` (~/.local/bin),
     // and a sweep that cannot see Herdr sessions holds itself.
     environment: {
@@ -95,7 +98,9 @@ export async function handleTendScheduleCommand(
       console.log(
         [
           `Tend LaunchAgent installed: ${spec.plistPath}`,
-          `Runs every 24 hours, and once now: ${spec.programArguments.join(" ")}`,
+          `Runs every 24 hours: ${spec.programArguments.join(" ")}`,
+          "Nothing runs now; the first sweep is 24 hours after the agent loads.",
+          "To sweep by hand: `toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`.",
           `Logs: ${logs.stdout}`,
         ].join("\n"),
       );

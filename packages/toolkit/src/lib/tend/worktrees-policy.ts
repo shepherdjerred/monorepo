@@ -1,11 +1,12 @@
 import { formatDurationCompact } from "./paths.ts";
+import { parseProcessStartMs } from "./process-probe.ts";
 import type { EligibilityVerdict } from "./worktrees-git.ts";
 
 /** Lock reason Herdr writes on its pre-created pool slots. */
 const HERDR_POOL_LOCK_REASON = "Herdr worktree pool";
 
 const CLAUDE_AGENT_LOCK_PATTERN =
-  /^claude agent \S+ \(pid (\d+)(?: start [^)]*)?\)$/u;
+  /^claude agent \S+ \(pid (\d+)(?: start ([^)]*))?\)$/u;
 
 export type WorktreeLockState =
   | { readonly kind: "unlocked" }
@@ -17,16 +18,56 @@ export type WorktreeLockState =
     }
   | { readonly kind: "unknown"; readonly reason: string };
 
+export type WorktreeLockProbe = {
+  readonly isPidAlive: (pid: number) => boolean;
+  /**
+   * Start time of the process that holds `pid` now, in the form
+   * `parseProcessStartMs` reads; `undefined` when it is not known.
+   */
+  readonly processStartOf?: ((pid: number) => string | undefined) | undefined;
+};
+
+/**
+ * Whether the process a Claude-agent lock names is still running.
+ *
+ * A live pid is not enough: pids are reused, and a lock left by a dead agent
+ * would then hold its worktree for as long as an unrelated process happens to
+ * carry the number. The lock also records the agent's start time, in the same
+ * UTC form the process snapshot uses, so a live pid that started at a
+ * different time is a different process. Without both start times there is
+ * nothing to compare and a live pid keeps the lock.
+ */
+function isClaudeAgentAlive(
+  pid: number,
+  lockStart: string | undefined,
+  probe: WorktreeLockProbe,
+): boolean {
+  if (!probe.isPidAlive(pid)) {
+    return false;
+  }
+  const lockStartMs =
+    lockStart === undefined ? null : parseProcessStartMs(lockStart);
+  const currentStart = probe.processStartOf?.(pid);
+  const currentStartMs =
+    currentStart === undefined ? null : parseProcessStartMs(currentStart);
+  return (
+    lockStartMs === null ||
+    currentStartMs === null ||
+    lockStartMs === currentStartMs
+  );
+}
+
 /**
  * Only a Claude-agent lock names a process whose death releases it. Every
  * other lock, including a bare one, was placed by something this policy does
  * not understand and is left alone.
  */
-export function classifyWorktreeLock(options: {
-  readonly locked: boolean;
-  readonly lockReason?: string | undefined;
-  readonly isPidAlive: (pid: number) => boolean;
-}): WorktreeLockState {
+export function classifyWorktreeLock(
+  options: {
+    readonly locked: boolean;
+    readonly lockReason?: string | undefined;
+  } & WorktreeLockProbe,
+): WorktreeLockState {
   if (!options.locked) {
     return { kind: "unlocked" };
   }
@@ -34,10 +75,14 @@ export function classifyWorktreeLock(options: {
   if (reason === HERDR_POOL_LOCK_REASON) {
     return { kind: "herdr-pool" };
   }
-  const pidText = CLAUDE_AGENT_LOCK_PATTERN.exec(reason)?.[1];
-  const pid = pidText === undefined ? Number.NaN : Number(pidText);
+  const match = CLAUDE_AGENT_LOCK_PATTERN.exec(reason);
+  const pid = match?.[1] === undefined ? Number.NaN : Number(match[1]);
   return Number.isSafeInteger(pid) && pid > 0
-    ? { kind: "claude-agent", pid, alive: options.isPidAlive(pid) }
+    ? {
+        kind: "claude-agent",
+        pid,
+        alive: isClaudeAgentAlive(pid, match?.[2], options),
+      }
     : { kind: "unknown", reason };
 }
 

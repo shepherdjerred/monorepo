@@ -82,6 +82,9 @@ function formatActionTag(
   if (status === "removed") {
     return "REMOVED";
   }
+  if (status === "skipped") {
+    return "SKIPPED";
+  }
   return status === "failed" ? "FAILED" : "WOULD REMOVE";
 }
 

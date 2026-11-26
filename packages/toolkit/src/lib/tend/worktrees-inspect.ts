@@ -7,6 +7,7 @@ import {
 import type {
   ClassifiedLease,
   CommandRunner,
+  HcTerminalEntry,
   LivenessSnapshot,
 } from "./types.ts";
 import {
@@ -51,6 +52,14 @@ export type RepoSweepContext = {
   readonly nowMs: number;
   readonly homeDir: string;
   readonly isPidAlive: (pid: number) => boolean;
+  /** Start time of the process that holds `pid` in the liveness snapshot. */
+  readonly processStartOf: (pid: number) => string | undefined;
+  /**
+   * Live Herdr terminals right now, or `null` when they cannot be listed.
+   * Asked again before each removal, because the liveness snapshot is taken
+   * once and a sweep that removes worktrees can run for minutes.
+   */
+  readonly listLiveTerminals: () => Promise<readonly HcTerminalEntry[] | null>;
 };
 
 /**
@@ -275,6 +284,7 @@ export async function inspectWorktree(
       locked: wt.locked,
       lockReason: wt.lockReason,
       isPidAlive: ctx.isPidAlive,
+      processStartOf: ctx.processStartOf,
     }),
     poolSlot: isPathInside(
       canonicalWt,

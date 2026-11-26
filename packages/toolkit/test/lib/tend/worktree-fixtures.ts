@@ -193,11 +193,28 @@ export type MockRunnerOptions = {
   readonly openPrs?: readonly PullRequestRow[] | null | undefined;
   /** Rows for `gh pr list --state all`; `null` makes the query fail. */
   readonly allPrs?: readonly PullRequestRow[] | null | undefined;
+  /**
+   * `cwd`s of the Herdr terminals `hc ls --json` reports; `null` makes the
+   * query fail. Defaults to no terminals.
+   */
+  readonly hcTerminalCwds?: readonly string[] | null | undefined;
   /** Return a result to replace the default response for a command. */
   readonly override?:
     ((command: RecordedCommand) => CommandExecResult | undefined) | undefined;
   readonly recorded: RecordedCommand[];
 };
+
+function hcResponse(options: MockRunnerOptions): CommandExecResult {
+  if (options.hcTerminalCwds === null) {
+    return FAILED;
+  }
+  const terminals = (options.hcTerminalCwds ?? []).map((cwd, index) => ({
+    address: `t${String(index)}`,
+    state: "live",
+    cwd,
+  }));
+  return { exitCode: 0, stdout: JSON.stringify({ terminals }), stderr: "" };
+}
 
 function ghResponse(
   argv: readonly string[],
@@ -267,6 +284,9 @@ export function createMockRunner(options: MockRunnerOptions): CommandRunner {
     const overridden = options.override?.(command);
     if (overridden !== undefined) {
       return Promise.resolve(overridden);
+    }
+    if (argv[0] === "hc") {
+      return Promise.resolve(hcResponse(options));
     }
     return Promise.resolve(
       argv[0] === "gh"

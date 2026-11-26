@@ -85,6 +85,10 @@ describe("tend LaunchAgent", () => {
       "<key>StartInterval</key>\n  <integer>86400</integer>",
     );
     expect(plist).not.toContain("<key>KeepAlive</key>");
+    // Loading the agent must not start a sweep.
+    expect(spec.runAtLoad).toBe(false);
+    expect(plist).toContain("<key>RunAtLoad</key>\n  <false/>");
+    expect(plist).not.toContain("<true/>");
     expect(plist).toContain(
       `<key>PATH</key>\n    <string>${HOME}/.local/bin:${HOMEBREW_JOB_PATH}</string>`,
     );
@@ -121,7 +125,13 @@ describe("toolkit tend schedule", () => {
     ]);
     expect(calls[1]?.[1]).toEqual(tendLaunchAgent(paths, HOME));
     expect(output()).toContain(`Tend LaunchAgent installed: ${PLIST}`);
-    expect(output()).toContain("Runs every 24 hours, and once now:");
+    expect(output()).toContain(
+      "Nothing runs now; the first sweep is 24 hours after the agent loads.",
+    );
+    expect(output()).toContain(
+      "`toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`",
+    );
+    expect(output()).not.toContain("once now");
     expect(output()).toContain(`Tend LaunchAgent removed: ${PLIST}`);
   });
 
@@ -255,6 +265,33 @@ describe("formatTendReport keep reasons", () => {
     expect(summary).not.toContain("[KEEP]");
     expect(formatTendReport(report)).toContain("Kept (worktrees): 3");
     expect(formatTendReport(report)).not.toContain("[KEEP]");
+  });
+
+  it("labels a removal that was called off as skipped", () => {
+    const [surface] = report.surfaces;
+    const [action] = surface?.actions ?? [];
+    if (surface === undefined || action === undefined) {
+      throw new Error("fixture has no action");
+    }
+    const skipped = formatTendReport({
+      ...report,
+      mode: "apply",
+      surfaces: [
+        {
+          ...surface,
+          actions: [
+            {
+              ...action,
+              status: "skipped",
+              detail: "live Herdr terminal appeared during the sweep: /wt/idle",
+            },
+          ],
+        },
+      ],
+    });
+    expect(skipped).toContain(
+      "[SKIPPED] (worktrees/detached-worktree) /wt/idle — detached HEAD reachable from origin/main (idle 9d) — live Herdr terminal appeared during the sweep: /wt/idle",
+    );
   });
 
   it("lists every kept worktree with its reason when verbose", () => {

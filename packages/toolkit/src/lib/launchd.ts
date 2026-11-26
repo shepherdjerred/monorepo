@@ -20,6 +20,12 @@ export type LaunchAgentSpec = {
   /** Re-run a one-shot program every N seconds. */
   readonly startIntervalSeconds?: number;
   /**
+   * Start the program as soon as the agent is loaded (at install and at every
+   * login). Defaults to `true`. With `false` and an interval, the first run
+   * is one interval after load.
+   */
+  readonly runAtLoad?: boolean;
+  /**
    * Environment for the job. launchd starts jobs with a minimal `PATH`
    * (`/usr/bin:/bin:/usr/sbin:/sbin`), so a job that spawns Homebrew tools
    * such as `op` must say where they live.
@@ -67,6 +73,7 @@ export function renderLaunchAgentPlist(spec: LaunchAgentSpec): string {
     .map((argument) => `    <string>${xmlEscape(argument)}</string>`)
     .join("\n");
   const logs = launchAgentLogPaths(spec);
+  const runAtLoad = spec.runAtLoad === false ? "<false/>" : "<true/>";
   const keepAlive = spec.keepAlive ? "  <key>KeepAlive</key>\n  <true/>\n" : "";
   const interval =
     spec.startIntervalSeconds === undefined
@@ -93,7 +100,7 @@ export function renderLaunchAgentPlist(spec: LaunchAgentSpec): string {
 ${programArguments}
   </array>
   <key>RunAtLoad</key>
-  <true/>
+  ${runAtLoad}
 ${keepAlive}${interval}${environment}  <key>ProcessType</key>
   <string>Background</string>
   <key>StandardOutPath</key>

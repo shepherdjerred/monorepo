@@ -3,7 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { DEFAULT_WORKTREE_MIN_AGE_MS } from "#lib/tend/paths.ts";
-import type { SurfaceSweepResult } from "#lib/tend/types.ts";
+import type {
+  LivenessSnapshot,
+  OsProcessEntry,
+  SurfaceSweepResult,
+} from "#lib/tend/types.ts";
 import { sweepWorktrees } from "#lib/tend/worktrees.ts";
 import {
   parsePorcelainWorktrees,
@@ -64,6 +68,9 @@ async function runSweep(
     readonly allPrs?: readonly PullRequestRow[] | null;
     readonly override?: MockRunnerOptions["override"];
     readonly prepare?: (repo: RepoFixture) => Promise<void>;
+    /** What `hc ls --json` reports when asked again before a removal. */
+    readonly hcTerminalCwds?: ((repo: RepoFixture) => string[]) | null;
+    readonly processes?: LivenessSnapshot["processes"];
   } = {},
 ): Promise<SweepHarness> {
   const root = await makeTempDir();
@@ -74,12 +81,15 @@ async function runSweep(
     liveness: makeLiveness({
       hcAvailable: options.hcAvailable ?? true,
       protectedPaths: new Set(options.protectedPaths?.(repo)),
+      processes: options.processes ?? new Map(),
     }),
     runner: createMockRunner({
       repo,
       openPrs: options.openPrs,
       allPrs: options.allPrs,
       override: options.override,
+      hcTerminalCwds:
+        options.hcTerminalCwds === null ? null : options.hcTerminalCwds?.(repo),
       recorded,
     }),
     apply: options.apply ?? true,
@@ -336,6 +346,105 @@ describe("sweepWorktrees locks", () => {
     expect(calls.filter((call) => call[1] === "remove")).toEqual([
       ["worktree", "remove", repo.pathOf("dead-agent")],
     ]);
+  });
+});
+
+function claudeProcess(processStart: string): OsProcessEntry {
+  return {
+    pid: 4242,
+    ppid: 1,
+    processStart,
+    elapsedSeconds: 60,
+    command: "claude",
+    args: "claude",
+  };
+}
+
+describe("sweepWorktrees lock and liveness rechecks", () => {
+  it("releases a Claude agent lock whose pid now belongs to another process", async () => {
+    const specs: WorktreeSpec[] = [
+      { name: "agent", ageDays: 30, lock: LIVE_AGENT_LOCK },
+    ];
+    const same = await runSweep(specs, {
+      processes: new Map([[4242, claudeProcess("Thu Nov 20 10:11:12 2026")]]),
+    });
+    expect(same.keepCategory("agent")).toBe("locked by a live Claude agent");
+    expect(same.result.candidates).toEqual([]);
+
+    const reused = await runSweep(specs, {
+      processes: new Map([[4242, claudeProcess("Mon Nov 24 08:00:00 2026")]]),
+    });
+    expect(reused.result.actions.map((action) => action.status)).toEqual([
+      "removed",
+    ]);
+    expect(gitCalls(reused.recorded)).toContainEqual([
+      "worktree",
+      "unlock",
+      reused.repo.pathOf("agent"),
+    ]);
+  });
+
+  it("asks Herdr again before each removal and skips a worktree a terminal has entered", async () => {
+    const specs: WorktreeSpec[] = [
+      { name: "entered", ageDays: 9, status: "?? scratch.txt\0" },
+      { name: "quiet", ageDays: 9 },
+    ];
+    const { repo, recorded, result, keepCategory } = await runSweep(specs, {
+      hcTerminalCwds: (fixture) => [
+        "/Users/jerred/elsewhere",
+        path.join(fixture.pathOf("entered"), "packages", "app"),
+      ],
+    });
+
+    expect(result.candidates).toHaveLength(2);
+    expect(result.actions.map((action) => action.status)).toEqual([
+      "skipped",
+      "removed",
+    ]);
+    expect(result.actions[0]?.detail).toContain(
+      "live Herdr terminal appeared during the sweep: ",
+    );
+    expect(result.actions[0]?.detail).toContain("entered/packages/app");
+    expect(keepCategory("entered")).toBe("live Herdr terminal");
+    expect(recorded.filter((command) => command.argv[0] === "hc")).toEqual([
+      expect.objectContaining({ argv: ["hc", "ls", "--json"] }),
+      expect.objectContaining({ argv: ["hc", "ls", "--json"] }),
+    ]);
+    // Nothing was saved, unlocked or removed for the worktree in use.
+    expect(gitCalls(recorded, repo.pathOf("entered"))).not.toContainEqual(
+      expect.arrayContaining(["add"]),
+    );
+    expect(gitCalls(recorded).filter((call) => call[1] === "remove")).toEqual([
+      ["worktree", "remove", repo.pathOf("quiet")],
+    ]);
+
+    const dryRun = await runSweep(specs, { apply: false });
+    expect(
+      dryRun.recorded.filter((command) => command.argv[0] === "hc"),
+    ).toEqual([]);
+  });
+
+  it("skips every removal when Herdr cannot be asked again", async () => {
+    const { recorded, result, keepCategory } = await runSweep(
+      [
+        { name: "first", ageDays: 9, status: "?? scratch.txt\0" },
+        { name: "second", ageDays: 9, ahead: 2 },
+      ],
+      { hcTerminalCwds: null },
+    );
+    expect(result.actions.map((action) => action.status)).toEqual([
+      "skipped",
+      "skipped",
+    ]);
+    expect(result.actions[0]?.detail).toBe(
+      "hc ls --json failed before removal; live Herdr sessions cannot be seen",
+    );
+    expect(keepCategory("first")).toBe("Herdr sessions unknown");
+    expect(keepCategory("second")).toBe("Herdr sessions unknown");
+    const calls = gitCalls(recorded);
+    expect(calls.filter((call) => call[1] === "remove")).toEqual([]);
+    expect(calls.filter((call) => call[0] === "update-ref")).toEqual([]);
+    expect(calls.filter((call) => call[0] === "add")).toEqual([]);
   });
 });
 
