@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { PlaybackSourceSchema } from "#shared/household/playback.ts";
 
 /**
  * What the History page is narrowed to, as its address says it: a title
- * search, one person (the owner's choice), and a span of days. The same
+ * search, one person (the owner's choice), a source, and a span of days. The same
  * parameters narrow both the statistics and the list of plays.
  *
  * `from` and `to` are moments, as the API takes them: the midnight that
@@ -16,6 +17,7 @@ export type HistoryView = {
   search: string;
   /** A household member's id, or null for everyone the reader may see. */
   person: string | null;
+  source: z.infer<typeof PlaybackSourceSchema> | "all";
   /** Plays that started at or after this moment. */
   from: string | null;
   /** Plays that started before this moment. */
@@ -25,6 +27,7 @@ export type HistoryView = {
 export const EVERYTHING: HistoryView = {
   search: "",
   person: null,
+  source: "all",
   from: null,
   to: null,
 };
@@ -44,9 +47,11 @@ function moment(value: string | null): string | null {
 
 export function readHistoryView(params: URLSearchParams): HistoryView {
   const person = params.get("userId");
+  const source = PlaybackSourceSchema.safeParse(params.get("source"));
   return {
     search: (params.get("search") ?? "").slice(0, SEARCH_LIMIT),
     person: person === null || person === "" ? null : person,
+    source: source.success ? source.data : "all",
     from: moment(params.get("from")),
     to: moment(params.get("to")),
   };
@@ -57,6 +62,7 @@ function filterParams(view: HistoryView): URLSearchParams {
   const params = new URLSearchParams();
   if (view.search.trim() !== "") params.set("search", view.search.trim());
   if (view.person !== null) params.set("userId", view.person);
+  if (view.source !== "all") params.set("source", view.source);
   if (view.from !== null) params.set("from", view.from);
   if (view.to !== null) params.set("to", view.to);
   return params;
@@ -83,6 +89,7 @@ export function historyReadPath(
   cursor: string | null,
 ): string {
   const params = filterParams(view);
+  params.set("view", "timeline");
   params.set("limit", String(PAGE_SIZE));
   if (cursor !== null) params.set("cursor", cursor);
   return `/playback/history?${params.toString()}`;

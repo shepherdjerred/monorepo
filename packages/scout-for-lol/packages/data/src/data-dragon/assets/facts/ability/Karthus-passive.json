@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karthus-passive",
+  "name": "Death Defied",
+  "description": "Upon dying, Karthus enters a spirit form that allows him to continue casting spells.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Karthus-passive.png",
+  "slot": "passive",
+  "championKey": "Karthus",
+  "championName": "Karthus",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

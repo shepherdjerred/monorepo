@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773114",
+  "name": "Malady",
+  "description": "Cursed Blade: Basic Attacks deal bonus magic damage On-Hit and remove 4 Magic Resist from the target for 8 seconds (stacks up to 7 times).",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "25"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "45%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771042",
+      "name": "Dagger",
+      "icon": "img/item/771042.png"
+    },
+    {
+      "kind": "item",
+      "key": "771042",
+      "name": "Dagger",
+      "icon": "img/item/771042.png"
+    },
+    {
+      "kind": "item",
+      "key": "771052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/771052.png"
+    }
+  ],
+  "icon": "img/item/773114.png",
+  "goldTotal": 2035,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2035 gold"
+  }
+}

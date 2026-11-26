@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nunu-W",
+  "name": "Biggest Snowball Ever!",
+  "description": "Nunu and Willump create a snowball that grows in size and speed as they roll it. They turn slower while rolling it, but can increase turning speed by holding the turn.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "7500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nunu-W.png",
+  "slot": "W",
+  "championKey": "Nunu",
+  "championName": "Nunu & Willump",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    14,
+    14,
+    14,
+    14
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    7500,
+    7500,
+    7500,
+    7500,
+    7500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14 s"
+  }
+}

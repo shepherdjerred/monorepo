@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773190",
+  "name": "Locket of the Iron Solari",
+  "description": "Solari Resilience: Grants nearby allied champions 15 Health Regen per 5 seconds.Active 60s Grants a Shield to nearby allies for 5 seconds that absorbs up to damage.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "35"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773052",
+      "name": "Emblem of Valor",
+      "icon": "img/item/773052.png"
+    },
+    {
+      "kind": "item",
+      "key": "773132",
+      "name": "Heart of Gold",
+      "icon": "img/item/773132.png"
+    }
+  ],
+  "icon": "img/item/773190.png",
+  "goldTotal": 2225,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2225 gold"
+  }
+}

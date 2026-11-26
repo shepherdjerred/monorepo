@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Blitzcrank-E",
+  "name": "Power Fist",
+  "description": "Blitzcrank charges up their fist, causing their next Attack to Knock Up for 1 second(s) and deal 200% AD (+25% AP) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "25 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Blitzcrank-E.png",
+  "slot": "E",
+  "championKey": "Blitzcrank",
+  "championName": "Blitzcrank",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.5,
+    6,
+    5.5,
+    5
+  ],
+  "costByRank": [
+    25,
+    25,
+    25,
+    25,
+    25
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.5/6/5.5/5 s"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Briar-Q",
+  "name": "Head Rush",
+  "description": "Briar leaps to a target, Stunning it for 0.85 seconds, dealing 60/85/110/135/160 (+60% AP) (+80% bonus AD) physical damage and reducing 10/12.5/15/17.5/20% Armor and Magic Resist for 5 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Briar-Q.png",
+  "slot": "Q",
+  "championKey": "Briar",
+  "championName": "Briar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

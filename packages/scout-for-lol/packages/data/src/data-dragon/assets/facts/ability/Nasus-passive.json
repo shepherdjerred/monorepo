@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nasus-passive",
+  "name": "Soul Eater",
+  "description": "Nasus drains his foe's spiritual energy, giving him bonus Life Steal.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nasus-passive.png",
+  "slot": "passive",
+  "championKey": "Nasus",
+  "championName": "Nasus",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

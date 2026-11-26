@@ -168,7 +168,7 @@ describe("maintenance", () => {
     const result = mapMaintenance(
       maintenance({
         certificates: [
-          sample(5 * 86_400, { namespace: "postal", name: "smtp" }),
+          sample(5 * 86_400, { namespace: "mail", name: "mail-smtp-tls" }),
         ],
         zpools: [sample(0.92, { zpool_name: "tank" })],
         filesystems: [
@@ -193,7 +193,7 @@ describe("maintenance", () => {
       now,
     );
     expect(result.signals.map((s) => [s.id, s.severity])).toEqual([
-      ["maintenance:certificate:postal/smtp", "error"],
+      ["maintenance:certificate:mail/mail-smtp-tls", "error"],
       ["maintenance:filesystem:liskov:/var/mnt/ci", "warning"],
       ["maintenance:zpool:zpool tank", "error"],
       ["maintenance:backup:Velero nightly", "warning"],

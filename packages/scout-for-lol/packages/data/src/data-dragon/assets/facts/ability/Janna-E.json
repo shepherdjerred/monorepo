@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Janna-E",
+  "name": "Eye Of The Storm",
+  "description": "Janna grants an ally champion or turret 80/120/160/200/240 (+55% AP) Shield for 4 seconds. While shielded, they gain 10/15/20/25/30 (+10% AP) Attack Damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Janna-E.png",
+  "slot": "E",
+  "championKey": "Janna",
+  "championName": "Janna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15,
+    14,
+    13,
+    12
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15/14/13/12 s"
+  }
+}

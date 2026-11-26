@@ -64,21 +64,6 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3 (daily at 05:00 PT)",
   },
   {
-    id: "freshrss-sync-hourly",
-    workflowType: "runFreshRssSyncWorkflow",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "7 * * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    catchupWindow: "5 minutes",
-    workflowExecutionTimeout: "6 minutes",
-    memo: "Hourly FreshRSS Repo Stack reconciliation before feed refresh",
-  },
-  {
     id: "feeds-refresh",
     workflowType: "runFeedsRefreshWorkflow",
     args: [],

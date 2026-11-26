@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Vayne",
+  "name": "Vayne",
+  "description": "Shauna Vayne is a deadly, remorseless Demacian monster hunter, who has dedicated her life to finding and destroying the demon that murdered her family.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Vayne-passive",
+      "name": "Night Hunter",
+      "icon": "img/ability/Vayne-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vayne-Q",
+      "name": "Tumble",
+      "icon": "img/ability/Vayne-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vayne-W",
+      "name": "Silver Bolts",
+      "icon": "img/ability/Vayne-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vayne-E",
+      "name": "Condemn",
+      "icon": "img/ability/Vayne-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Vayne-R",
+      "name": "Final Hour",
+      "icon": "img/ability/Vayne-R.png"
+    }
+  ],
+  "icon": "img/champion/Vayne.png",
+  "art": "img/champion-splash/Vayne_0.jpg",
+  "title": "the Night Hunter",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

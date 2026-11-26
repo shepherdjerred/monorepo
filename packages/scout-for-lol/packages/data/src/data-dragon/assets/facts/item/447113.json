@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447113",
+  "name": "Detonation Orb",
+  "description": "The Bomb: Ability damage marks the target, storing 20% of the damage dealt (increased to 25% against Immobilized enemies). 3 seconds after you last damage the target with an ability, detonate the stored damage on them.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "90"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "12"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447113.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

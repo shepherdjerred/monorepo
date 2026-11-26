@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443056",
+  "name": "Demon King's Crown",
+  "description": "Supremacy: Increases your Health, Armor, Magic Resist, Attack Damage, Ability Power, Attack Speed, increased by 0% per round win and -3% each round lost after acquiring this item.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/443056.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

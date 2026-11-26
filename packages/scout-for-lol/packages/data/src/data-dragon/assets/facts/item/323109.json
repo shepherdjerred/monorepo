@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "323109",
+  "name": "Knight's Vow",
+  "description": "Sacrifice: While near your Worthy ally, take 14% of the damage they receive and heal for 12% of the damage they deal to champions. Pledge: (0s) Designate an ally as Worthy.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1031",
+      "name": "Chain Vest",
+      "icon": "img/item/1031.png"
+    },
+    {
+      "kind": "item",
+      "key": "1006",
+      "name": "Rejuvenation Bead",
+      "icon": "img/item/1006.png"
+    }
+  ],
+  "icon": "img/item/323109.png",
+  "goldTotal": 2900,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

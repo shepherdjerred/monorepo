@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Cassiopeia-E",
+  "name": "Twin Fang",
+  "description": "Cassiopeia launches deadly fangs, dealing 50-119.9992 (based on level) (+20% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Cassiopeia-E.png",
+  "slot": "E",
+  "championKey": "Cassiopeia",
+  "championName": "Cassiopeia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+  ],
+  "costByRank": [
+    45,
+    45,
+    45,
+    45,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.75 s"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2422",
+  "name": "Slightly Magical Footwear",
+  "description": "Grants an additional 10 Move Speed.",
+  "facts": [
+    {
+      "label": "Move Speed",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/2422.png",
+  "goldTotal": 300,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}

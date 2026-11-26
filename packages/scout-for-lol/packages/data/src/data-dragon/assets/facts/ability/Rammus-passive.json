@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rammus-passive",
+  "name": "Spiked Shell",
+  "description": "Rammus gains bonus Attack Damage scaling with his Armor and Magic Resistance.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Rammus-passive.png",
+  "slot": "passive",
+  "championKey": "Rammus",
+  "championName": "Rammus",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

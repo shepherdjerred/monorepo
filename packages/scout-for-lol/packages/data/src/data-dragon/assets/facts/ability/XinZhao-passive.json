@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "XinZhao-passive",
+  "name": "Determination",
+  "description": "Every third attack deals bonus damage and heals Xin Zhao.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/XinZhao-passive.png",
+  "slot": "passive",
+  "championKey": "XinZhao",
+  "championName": "Xin Zhao",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

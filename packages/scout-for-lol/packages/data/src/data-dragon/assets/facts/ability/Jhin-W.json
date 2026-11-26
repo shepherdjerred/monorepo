@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jhin-W",
+  "name": "Deadly Flourish",
+  "description": "Jhin fires a long range shot dealing 70/105/140/175/210 (+50% AD) physical damage to the first champion hit and other enemies along the way.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jhin-W.png",
+  "slot": "W",
+  "championKey": "Jhin",
+  "championName": "Jhin",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3000,
+    3000,
+    3000,
+    3000,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

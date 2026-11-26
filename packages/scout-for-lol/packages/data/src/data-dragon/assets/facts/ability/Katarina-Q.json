@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Katarina-Q",
+  "name": "Bouncing Blade",
+  "description": "Katarina throws a Dagger, dealing 80/115/150/185/220 (+40% AP) magic damage to the target and 2 nearby enemies. The Dagger then ricochets onto the ground behind the primary target.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Katarina-Q.png",
+  "slot": "Q",
+  "championKey": "Katarina",
+  "championName": "Katarina",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    625,
+    625,
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

@@ -11,6 +11,7 @@ import {
   RedditBrowserReadError,
   validateRedditFeedPageUrl,
 } from "#activities/promotion/reddit-discovery/browser-reader.ts";
+import type { RedditDatasetArchive } from "./dataset.ts";
 import {
   recordRedditAccountFailure,
   recordRedditAccountSuccess,
@@ -27,6 +28,7 @@ export function createRedditOutreachBrowser(input: {
   store: PromotionStore;
   occurrenceId: string;
   signal: AbortSignal;
+  dataset: RedditDatasetArchive;
   maxNavigations: number;
   onNavigation: () => void;
   onCleanupFailure: (error: unknown) => void;
@@ -100,11 +102,13 @@ export function createRedditOutreachBrowser(input: {
           const url = after ?? `https://old.reddit.com/r/${subreddit}/new/`;
           validateRedditFeedPageUrl(url, subreddit);
           await tab.open(url);
-          return await tab.readRedditFeedPage({
+          const page = await tab.readRedditFeedPage({
             subreddit,
             limit,
             account: REDDIT_OUTREACH_ACCOUNT,
           });
+          await input.dataset.listing(subreddit, page.posts);
+          return page;
         },
         false,
       ),
@@ -129,9 +133,10 @@ export function createRedditOutreachBrowser(input: {
         redditReplyTarget(post),
         async (tab) => {
           await tab.open(url.href);
-          const thread = await tab.readRedditThread({
+          const observation = await tab.readRedditThreadSnapshot({
             account: REDDIT_OUTREACH_ACCOUNT,
           });
+          const thread = observation.post;
           if (
             thread.loggedInUsername?.toLowerCase() !== REDDIT_OUTREACH_ACCOUNT
           )
@@ -139,6 +144,7 @@ export function createRedditOutreachBrowser(input: {
               "identity",
               "Reddit browser is not signed in as the configured outreach account",
             );
+          await input.dataset.thread(observation);
           return thread;
         },
         owned,

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Varus-passive",
+  "name": "Living Vengeance",
+  "description": "On kill or assist, Varus temporarily gains Attack Damage and Ability Power. This bonus is larger if the enemy is a champion.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Varus-passive.png",
+  "slot": "passive",
+  "championKey": "Varus",
+  "championName": "Varus",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226655",
+  "name": "Luden's Echo",
+  "description": "Echo: Damaging Abilities consume all the charges to deal an additional magic damage to the target and one additional nearby target per charge.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "85"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226655.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

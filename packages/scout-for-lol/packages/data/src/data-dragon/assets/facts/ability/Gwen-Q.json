@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gwen-Q",
+  "name": "Snip Snip!",
+  "description": "Passive: Gwen gains 1 stack when she hits an enemy with an attack (max 4, lasts 6 seconds). Active: Consumes stacks.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gwen-Q.png",
+  "slot": "Q",
+  "championKey": "Gwen",
+  "championName": "Gwen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6.5,
+    5.75,
+    5,
+    4.25,
+    3.5
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6.5/5.75/5/4.25/3.5 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zed-W",
+  "name": "Living Shadow",
+  "description": "Passive: Zed gains 30/35/40/45/50 Energy whenever he and his Shadows strike an enemy with the same Ability. Active: Zed's Shadow dashes forward, remaining in place for 5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/35/30/25/20 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zed-W.png",
+  "slot": "W",
+  "championKey": "Zed",
+  "championName": "Zed",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    19,
+    18,
+    17,
+    16
+  ],
+  "costByRank": [
+    40,
+    35,
+    30,
+    25,
+    20
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/19/18/17/16 s"
+  }
+}

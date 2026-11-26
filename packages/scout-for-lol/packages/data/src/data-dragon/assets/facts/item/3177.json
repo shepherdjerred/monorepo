@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3177",
+  "name": "Guardian's Blade",
+  "description": "Grants 30 Attack Damage, 150 Health, 15 Ability Haste.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "30"
+    },
+    {
+      "label": "Health",
+      "value": "150"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3177.png",
+  "goldTotal": 950,
+  "goldCombine": 950,
+  "keyFact": {
+    "label": "Cost",
+    "value": "950 gold"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "663172",
+  "name": "Zephyr",
+  "description": "Like the Wind: Gain 5% Move Speed On-Hit for 6 seconds, stacking up to 25% Move Speed.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "8%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    },
+    {
+      "label": "Tenacity",
+      "value": "20%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/663172.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

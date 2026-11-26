@@ -9,14 +9,16 @@ import {
 } from "./imports.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
+import { repeatableRead } from "#infrastructure/locks.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { PlaybackHistoryApplication } from "#application/playback-ports.ts";
-import { MINIMUM_PLAY_MS } from "#domain/household/playback.ts";
 import {
   PlaybackSessionViewSchema,
+  PlaybackTimelineSchema,
   type ImportPlaybackHistory,
   type PlaybackQuery,
+  type PlaybackTimelineQuery,
   type SealPlaybackHandoff,
   type PlaybackHandoffEvidence,
 } from "#shared/household/playback.ts";
@@ -26,59 +28,9 @@ import {
   readPlaybackMedia,
   type PlaybackServer,
 } from "./session-view.ts";
+import { readPlaybackTimeline } from "./timeline.ts";
+import { playbackScope } from "./scope.ts";
 
-function scope(
-  actor: MediaActor,
-  query: PlaybackQuery,
-  completed = true,
-): Prisma.PlaybackSessionWhereInput {
-  if (
-    actor.role !== "owner" &&
-    query.userId !== undefined &&
-    query.userId !== actor.id
-  )
-    throw new MediaError(
-      "forbidden",
-      "You can only view your own playback",
-      403,
-    );
-  const from = query.from === undefined ? undefined : new Date(query.from);
-  const to = query.to === undefined ? undefined : new Date(query.to);
-  if (from !== undefined && to !== undefined && from >= to)
-    throw new MediaError("invalid_range", "Start must be before end");
-  return {
-    ...(actor.role === "owner"
-      ? query.userId === undefined
-        ? {}
-        : { userId: query.userId }
-      : { userId: actor.id }),
-    ...(completed
-      ? { state: "stopped", watchedMs: { gte: MINIMUM_PLAY_MS } }
-      : {}),
-    ...dateScope(from, to),
-    ...(query.search === undefined || query.search === ""
-      ? {}
-      : {
-          OR: [
-            { title: { contains: query.search, mode: "insensitive" } },
-            { seriesTitle: { contains: query.search, mode: "insensitive" } },
-          ],
-        }),
-  };
-}
-
-function dateScope(
-  from: Date | undefined,
-  to: Date | undefined,
-): Prisma.PlaybackSessionWhereInput {
-  if (from === undefined && to === undefined) return {};
-  return {
-    startedAt: {
-      ...(from === undefined ? {} : { gte: from }),
-      ...(to === undefined ? {} : { lt: to }),
-    },
-  };
-}
 function rank(
   label: string,
   row: { _count: number; _sum: { watchedMs: number | null } },
@@ -102,7 +54,7 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
 
   async people(actor: MediaActor) {
     actor = await this.currentActor(actor);
-    scope(actor, { limit: 100 }, false);
+    playbackScope(actor, { limit: 100 }, false);
     return this.database.mediaUser.findMany({
       where: actor.role === "owner" ? {} : { id: actor.id },
       select: { id: true, displayName: true },
@@ -111,8 +63,11 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
     });
   }
 
-  private async currentActor(actor: MediaActor): Promise<MediaActor> {
-    const current = await this.database.mediaUser.findUnique({
+  private async currentActor(
+    actor: MediaActor,
+    db: Prisma.TransactionClient = this.database,
+  ): Promise<MediaActor> {
+    const current = await db.mediaUser.findUnique({
       where: { id: actor.id },
     });
     if (current?.plexAccountId !== actor.plexAccountId)
@@ -147,7 +102,7 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
     actor = await this.currentActor(actor);
     const where = {
       serverMachineId: this.serverMachineId,
-      ...scope(actor, query),
+      ...playbackScope(actor, query),
     };
     // Validate a cursor within the same privacy scope; a foreign cursor is never a probe.
     if (
@@ -187,6 +142,39 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
     };
   }
 
+  async timeline(actor: MediaActor, query: PlaybackTimelineQuery) {
+    const { reader, page, nextCursor } = await repeatableRead(
+      this.database,
+      async (tx) => {
+        const current = await this.currentActor(actor, tx);
+        const timeline = await readPlaybackTimeline(tx, {
+          actor: current,
+          serverMachineId: this.serverMachineId,
+          query,
+        });
+        return { reader: current, ...timeline };
+      },
+    );
+    const sessions = page.flatMap((row) =>
+      row.kind === "session" ? [row.value] : [],
+    );
+    const [names, media] = await Promise.all([
+      this.names(sessions),
+      readPlaybackMedia(this.database, reader, this.server, sessions),
+    ]);
+    return PlaybackTimelineSchema.parse({
+      items: page.map((row) =>
+        row.kind === "session"
+          ? {
+              kind: row.kind,
+              session: playbackSessionView(row.value, names, media),
+            }
+          : row,
+      ),
+      nextCursor,
+    });
+  }
+
   async nowPlaying(actor: MediaActor) {
     actor = await this.currentActor(actor);
     const collector = await this.database.playbackCollector.findUnique({
@@ -201,14 +189,14 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
       : await this.database.playbackSession.findMany({
           where: {
             serverMachineId: this.serverMachineId,
-            ...scope(actor, { limit: 100 }, false),
+            ...playbackScope(actor, { limit: 100 }, false),
             state: { not: "stopped" },
           },
           orderBy: [{ startedAt: "desc" }, { id: "desc" }],
           take: 100,
         });
     // Scope validation also runs on a stale/empty observation.
-    scope(actor, { limit: 100 }, false);
+    playbackScope(actor, { limit: 100 }, false);
     const names = await this.names(rows);
     const media = await readPlaybackMedia(
       this.database,
@@ -227,7 +215,7 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
     actor = await this.currentActor(actor);
     const where = {
       serverMachineId: this.serverMachineId,
-      ...scope(actor, query),
+      ...playbackScope(actor, query),
     };
     const [total, titles, users, platforms, decisions, completed] =
       await Promise.all([

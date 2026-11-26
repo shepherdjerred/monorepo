@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Brand-passive",
+  "name": "Blaze",
+  "description": "Brand's spells light his targets ablaze, dealing damage over 4 seconds, stacking up to 3 times. If Brand kills an enemy while it is ablaze he regains mana.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Brand-passive.png",
+  "slot": "passive",
+  "championKey": "Brand",
+  "championName": "Brand",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

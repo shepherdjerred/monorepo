@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3128",
+  "name": "Deathfire Grasp",
+  "description": "Active -. The Silence: Deal magic damage equal to 15% of the Target's Max Health, and then amplify damage they take by 15% for 4 seconds (90(0s)).",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "120"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1058",
+      "name": "Needlessly Large Rod",
+      "icon": "img/item/1058.png"
+    },
+    {
+      "kind": "item",
+      "key": "3108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/3108.png"
+    }
+  ],
+  "icon": "img/item/3128.png",
+  "goldTotal": 2900,
+  "goldCombine": 850,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

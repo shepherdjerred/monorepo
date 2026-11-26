@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447110",
+  "name": "Moonflair Spellblade",
+  "description": "Relentless: When you use an Ability, reset your auto attack timer and gain 90% Attack Speed for your next 3 Attacks.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "85"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Tenacity",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447110.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ivern-Q",
+  "name": "Rootcaller",
+  "description": "Ivern conjures a vine dealing 80/125/170/215/260 (+70% AP) magic damage and Rooting the first enemy hit for 1.6/1.7/1.8/1.9/2 seconds. Allies that Attack a Rooted enemy dash into Attack Range.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1125"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ivern-Q.png",
+  "slot": "Q",
+  "championKey": "Ivern",
+  "championName": "Ivern",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1125,
+    1125,
+    1125,
+    1125,
+    1125
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

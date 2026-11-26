@@ -14,9 +14,8 @@
  * 2. CLIs: every operator CLI the scheduled workflows shell out to must be on
  *    PATH and runnable inside the image. Each CLI is exec'd with its cheapest
  *    no-credential invocation; a missing/broken binary fails the smoke. The list
- *    mirrors REQUIRED_AUDIT_BINARIES in src/activities/homelab/homelab-audit-preflight.ts
- *    plus github-mcp-server (used outside the audit preflight). Claude and Codex
- *    are package-local SDKs and are covered by typecheck/tests.
+ *    mirrors REQUIRED_AUDIT_BINARIES in src/activities/homelab/homelab-audit-preflight.ts.
+ *    Claude and Codex are package-local SDKs and are covered by typecheck/tests.
  *
  * Dependency-free: Bun.spawn only. Always removes the container, exits non-zero
  * on failure.
@@ -30,7 +29,6 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "gh", args: ["gh", "--version"] },
   { name: "git-lfs", args: ["git-lfs", "--version"] },
   { name: "kubectl", args: ["kubectl", "version", "--client"] },
-  { name: "github-mcp-server", args: ["github-mcp-server", "--version"] },
   { name: "talosctl", args: ["talosctl", "version", "--client"] },
   { name: "tofu", args: ["tofu", "version"] },
   { name: "argocd", args: ["argocd", "version", "--client"] },

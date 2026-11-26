@@ -80,9 +80,7 @@ EOF
 
 {{- if ne .profile "assistant-host" }}
 
-# The detached worker deduplicates appearance events. Its first invocation only
-# records the current mode, so installing/reloading the watcher does not restart
-# panes. Ordinary applies in the same mode are also harmless. Assistant hosts
-# run no Codex, so they do not carry this helper.
+# Reconcile managed Codex clients against their actual launch theme, including
+# after sleep or a missed notification. Assistant hosts run no Codex.
 "$HOME/bin/restart-codex-panes" --on-change
 {{- end }}

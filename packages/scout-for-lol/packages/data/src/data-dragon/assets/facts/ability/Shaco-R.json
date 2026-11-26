@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shaco-R",
+  "name": "Hallucinate",
+  "description": "Shaco briefly disappears, then reappears with a clone that lasts 18 seconds and detonates when it dies, dealing 150/225/300 (+70% AP) magic damage and spawning three mini Jack in the Boxes that trigger immediately.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shaco-R.png",
+  "slot": "R",
+  "championKey": "Shaco",
+  "championName": "Shaco",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    90,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    200,
+    200,
+    200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/90/80 s"
+  }
+}

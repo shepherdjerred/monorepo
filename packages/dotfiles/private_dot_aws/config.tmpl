@@ -36,6 +36,13 @@ region = us-east-1
 credential_process = {{ $toolkit }} aws credential brim-sync
 {{- end }}
 
+[profile agent-share]
+endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
+region = us-east-1
+{{- if $agentHost }}
+credential_process = {{ $toolkit }} aws credential agent-share
+{{- end }}
+
 [profile aws]
 login_session = arn:aws:iam::926367030076:root
 region = us-east-1

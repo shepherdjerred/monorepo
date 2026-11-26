@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "32",
+  "name": "Mark",
+  "description": "Throw a snowball in a straight line at your enemies. If it hits an enemy, they become marked, granting True Sight, and your champion can quickly travel to the marked target as a follow up.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1600"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 6"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerSnowball.png",
+  "cooldownSeconds": 80,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "80 s"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kalista",
+  "name": "Kalista",
+  "description": "A specter of wrath and retribution, Kalista is the undying spirit of vengeance, an armored nightmare summoned from the Shadow Isles to hunt deceivers and traitors.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "560"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kalista-passive",
+      "name": "Martial Poise",
+      "icon": "img/ability/Kalista-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kalista-Q",
+      "name": "Pierce",
+      "icon": "img/ability/Kalista-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kalista-W",
+      "name": "Sentinel",
+      "icon": "img/ability/Kalista-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kalista-E",
+      "name": "Rend",
+      "icon": "img/ability/Kalista-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kalista-R",
+      "name": "Fate's Call",
+      "icon": "img/ability/Kalista-R.png"
+    }
+  ],
+  "icon": "img/champion/Kalista.png",
+  "art": "img/champion-splash/Kalista_0.jpg",
+  "title": "the Spear of Vengeance",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

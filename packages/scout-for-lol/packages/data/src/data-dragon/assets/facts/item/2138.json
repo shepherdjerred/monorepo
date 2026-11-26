@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2138",
+  "name": "Elixir of Iron",
+  "description": "Consume: Grants 300 Health, 25% Tenacity and increased size for 3 minutes.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2138.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

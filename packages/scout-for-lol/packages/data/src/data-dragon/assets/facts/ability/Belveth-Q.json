@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Belveth-Q",
+  "name": "Void Surge",
+  "description": "Bel'Veth dashes, dealing 12/14/16/18/20 (+105% AD) physical damage to enemies she passes through.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Belveth-Q.png",
+  "slot": "Q",
+  "championKey": "Belveth",
+  "championName": "Bel'Veth",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    3.25,
+    2.5,
+    1.75,
+    1
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4/3.25/2.5/1.75/1 s"
+  }
+}

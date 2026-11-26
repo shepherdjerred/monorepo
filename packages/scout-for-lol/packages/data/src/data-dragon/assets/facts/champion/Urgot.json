@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Urgot",
+  "name": "Urgot",
+  "description": "Once a powerful Noxian headsman, Urgot was betrayed by the empire for which he had killed so many. Bound in iron chains, he was forced to learn the true meaning of strength in the Dredge—a prison mine deep beneath Zaun.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "655"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "350"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Urgot-passive",
+      "name": "Echoing Flames",
+      "icon": "img/ability/Urgot-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Urgot-Q",
+      "name": "Corrosive Charge",
+      "icon": "img/ability/Urgot-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Urgot-W",
+      "name": "Purge",
+      "icon": "img/ability/Urgot-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Urgot-E",
+      "name": "Disdain",
+      "icon": "img/ability/Urgot-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Urgot-R",
+      "name": "Fear Beyond Death",
+      "icon": "img/ability/Urgot-R.png"
+    }
+  ],
+  "icon": "img/champion/Urgot.png",
+  "art": "img/champion-splash/Urgot_0.jpg",
+  "title": "the Dreadnought",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

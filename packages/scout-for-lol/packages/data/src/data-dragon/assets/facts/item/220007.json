@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "220007",
+  "name": "Prismatic Item",
+  "description": "Active - Consume: Automatically open a semi-random selection for a Prismatic item.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/220007.png",
+  "goldTotal": 4000,
+  "goldCombine": 4000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "4000 gold"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kassadin-passive",
+  "name": "Void Stone",
+  "description": "Kassadin takes reduced magic damage and ignores unit collision.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kassadin-passive.png",
+  "slot": "passive",
+  "championKey": "Kassadin",
+  "championName": "Kassadin",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

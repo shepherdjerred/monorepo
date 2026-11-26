@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  ChampionMetaFileSchema,
+  MatchupFileSchema,
+} from "@scout-for-lol/data/meta/meta-serving.ts";
+import {
   assembleMetaServing,
   comparePatches,
   gradeForLowerBound,
@@ -12,15 +16,15 @@ import {
 import { DEFAULT_META_THRESHOLDS } from "@scout-for-lol/data/meta/meta-serving.ts";
 import { wilsonInterval } from "#src/meta/wilson.ts";
 
-describe("assembleMetaServing", () => {
-  const serving = assembleMetaServing({
-    rows: FIXTURE_ROWS,
-    days: ["2026-11-12", "2026-11-13"],
-    buildId: "b1",
-    now: FIXTURE_NOW,
-    thresholds: DEFAULT_META_THRESHOLDS,
-  });
+const serving = assembleMetaServing({
+  rows: FIXTURE_ROWS,
+  days: ["2026-11-12", "2026-11-13"],
+  buildId: "b1",
+  now: FIXTURE_NOW,
+  thresholds: DEFAULT_META_THRESHOLDS,
+});
 
+describe("assembleMetaServing", () => {
   test("serves only slices at or above the sample floor", () => {
     expect(serving.manifest.champions).toEqual([
       { id: 1, name: "Aatrox" },
@@ -74,7 +78,9 @@ describe("assembleMetaServing", () => {
     const slice = serving.champions
       .get(2)
       ?.slices.find((one) => one.context.patch === "16.3");
-    expect(slice?.coreItems.map((item) => item.itemId)).toEqual([3020, 6655]);
+    expect(slice?.coreItems.map((item) => item.itemId)).toEqual([
+      3020, 6655, 3089, 4645, 3157,
+    ]);
     expect(slice?.coreItems[0]?.share).toEqual(wilsonInterval(450, 500));
     expect(slice?.buildPaths[0]).toMatchObject({
       itemIds: [6655, 3020, 3089],
@@ -93,6 +99,136 @@ describe("assembleMetaServing", () => {
     });
     expect(slice?.spells[0]?.spellIds).toEqual([4, 14]);
     expect(slice?.skillOrders[0]?.order).toBe("QEW");
+  });
+});
+
+describe("assembleMetaServing slice detail and matchups", () => {
+  test("serves game length, boots, keystones and single spells with counts and intervals", () => {
+    const slice = serving.champions
+      .get(2)
+      ?.slices.find((one) => one.context.patch === "16.3");
+    expect(slice?.durations?.map((entry) => entry.bucket)).toEqual([
+      "lt25",
+      "25to35",
+      "gt35",
+    ]);
+    expect(slice?.durations?.[0]).toEqual({
+      bucket: "lt25",
+      games: 90,
+      wins: 60,
+      winRate: wilsonInterval(60, 90),
+      share: wilsonInterval(90, 500),
+      denominator: "games_with_duration",
+    });
+    expect(slice?.boots?.map((entry) => entry.itemId)).toEqual([3020, 3158]);
+    expect(slice?.boots?.[0]).toMatchObject({
+      games: 450,
+      wins: 270,
+      winRate: wilsonInterval(270, 450),
+      share: wilsonInterval(450, 490),
+      denominator: "games_with_boots",
+    });
+    expect(slice?.keystones?.[0]).toMatchObject({
+      perkId: 8112,
+      games: 400,
+      share: wilsonInterval(400, 500),
+    });
+    expect(slice?.singleSpells?.map((entry) => entry.spellId)).toEqual([4, 14]);
+    expect(slice?.singleSpells?.[0]?.share).toEqual(wilsonInterval(490, 500));
+  });
+
+  test("items after the core drop the top build path and the boots", () => {
+    const slice = serving.champions
+      .get(2)
+      ?.slices.find((one) => one.context.patch === "16.3");
+    // 6655, 3020 and 3089 are the top build path; 3020 is also boots.
+    expect(slice?.itemsAfterCore?.map((item) => item.itemId)).toEqual([
+      4645, 3157,
+    ]);
+    expect(slice?.itemsAfterCore?.[0]).toMatchObject({
+      games: 160,
+      wins: 90,
+      winRate: wilsonInterval(90, 160),
+      share: wilsonInterval(160, 500),
+      denominator: "slice_games",
+    });
+  });
+
+  test("a slice with no build path serves no items after the core", () => {
+    const rows = FIXTURE_ROWS.filter((row) => row.kind !== "build_path");
+    const slice = assembleMetaServing({
+      rows,
+      days: ["2026-11-13"],
+      buildId: "b2",
+      now: FIXTURE_NOW,
+      thresholds: DEFAULT_META_THRESHOLDS,
+    })
+      .champions.get(2)
+      ?.slices.find((one) => one.context.patch === "16.3");
+    expect(slice?.itemsAfterCore).toEqual([]);
+  });
+
+  test("a slice without the new partials serves empty lists", () => {
+    const withheld = new Set([
+      "duration",
+      "boots",
+      "keystone",
+      "spell_single",
+      "matchup_spell",
+    ]);
+    const files = assembleMetaServing({
+      rows: FIXTURE_ROWS.filter((row) => !withheld.has(row.kind)),
+      days: ["2026-11-13"],
+      buildId: "b3",
+      now: FIXTURE_NOW,
+      thresholds: DEFAULT_META_THRESHOLDS,
+    });
+    const slice = files.champions
+      .get(2)
+      ?.slices.find((one) => one.context.patch === "16.3");
+    expect(slice).toMatchObject({
+      durations: [],
+      boots: [],
+      keystones: [],
+      singleSpells: [],
+    });
+    expect(files.matchups.get(2)?.slices[0]?.opponents[0]?.spells).toEqual([]);
+  });
+
+  test("files written before the additive fields existed still parse", () => {
+    const champion = serving.champions.get(2);
+    const {
+      durations: _durations,
+      boots: _boots,
+      keystones: _keystones,
+      singleSpells: _singleSpells,
+      itemsAfterCore: _itemsAfterCore,
+      ...legacySlice
+    } = champion?.slices[0] ?? {};
+    const legacyChampion = ChampionMetaFileSchema.parse({
+      ...champion,
+      slices: [legacySlice],
+    });
+    expect(legacyChampion.slices[0]?.durations).toBeUndefined();
+    const matchup = serving.matchups.get(2);
+    const legacyMatchup = MatchupFileSchema.parse({
+      ...matchup,
+      slices: [
+        {
+          ...matchup?.slices[0],
+          opponents: [
+            {
+              championId: 3,
+              championName: "Annie",
+              games: 80,
+              wins: 50,
+              winRate: wilsonInterval(50, 80),
+            },
+          ],
+        },
+      ],
+    });
+    expect(legacyMatchup.slices[0]?.opponents[0]?.spells).toBeUndefined();
   });
 
   test("item lift is the item's win rate against a trait minus the baseline, with significance", () => {
@@ -120,6 +256,32 @@ describe("assembleMetaServing", () => {
         winRate: wilsonInterval(50, 80),
       }),
     ]);
+  });
+
+  test("matchups carry the spell pairs played in them, each with games, wins and its interval", () => {
+    const [annie] = serving.matchups.get(2)?.slices[0]?.opponents ?? [];
+    expect(annie?.spells).toEqual([
+      {
+        spellIds: [4, 14],
+        games: 50,
+        wins: 34,
+        winRate: wilsonInterval(34, 50),
+        share: wilsonInterval(50, 80),
+        denominator: "matchup_games",
+      },
+      {
+        spellIds: [4, 12],
+        games: 30,
+        wins: 16,
+        winRate: wilsonInterval(16, 30),
+        share: wilsonInterval(30, 80),
+        denominator: "matchup_games",
+      },
+    ]);
+    // Annie's matchup has no spell partials, so none are served for it.
+    expect(serving.matchups.get(3)?.slices[0]?.opponents[0]?.spells).toEqual(
+      [],
+    );
   });
 
   test("defaults to the newest patch, ranked solo, all brackets", () => {

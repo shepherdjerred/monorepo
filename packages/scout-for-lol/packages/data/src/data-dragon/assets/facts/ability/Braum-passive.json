@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Braum-passive",
+  "name": "Concussive Blows",
+  "description": "Braum's basic attacks apply Concussive Blows. Once the first stack is applied, ally basic attacks also stack Concussive Blows.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Braum-passive.png",
+  "slot": "passive",
+  "championKey": "Braum",
+  "championName": "Braum",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

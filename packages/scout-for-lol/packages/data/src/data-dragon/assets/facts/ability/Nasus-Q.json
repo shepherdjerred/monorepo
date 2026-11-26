@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nasus-Q",
+  "name": "Siphoning Strike",
+  "description": "Nasus strikes his foe, dealing damage and increasing the power of his future Siphoning Strikes if he slays his target.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "255"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nasus-Q.png",
+  "slot": "Q",
+  "championKey": "Nasus",
+  "championName": "Nasus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7.5,
+    6.5,
+    5.5,
+    4.5,
+    3.5
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    255,
+    255,
+    255,
+    255,
+    255
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7.5/6.5/5.5/4.5/3.5 s"
+  }
+}

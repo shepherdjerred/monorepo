@@ -1,0 +1,23 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773117",
+  "name": "Boots of Mobility",
+  "description": "Enhanced Movement: 45 Move Speed.",
+  "facts": [],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771001",
+      "name": "Boots of Speed",
+      "icon": "img/item/771001.png"
+    }
+  ],
+  "icon": "img/item/773117.png",
+  "goldTotal": 1000,
+  "goldCombine": 675,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

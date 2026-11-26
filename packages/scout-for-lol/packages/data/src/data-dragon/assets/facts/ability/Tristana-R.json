@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tristana-R",
+  "name": "Buster Shot",
+  "description": "Tristana fires a massive cannonball, dealing 225/275/325 (+70% bonus AD) (+100% AP) magic damage to the target, Knocking Back and Stunning them and surrounding enemies for 0.4/0.55/0.7 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Tristana-R.png",
+  "slot": "R",
+  "championKey": "Tristana",
+  "championName": "Tristana",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    100,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100 s"
+  }
+}

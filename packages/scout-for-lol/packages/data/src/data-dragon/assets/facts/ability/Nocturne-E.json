@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nocturne-E",
+  "name": "Unspeakable Horror",
+  "description": "Passive: Nocturne gains 90% Move Speed toward Feared enemies. Active: Nocturne plants a nightmare tether into his target, dealing 80/125/170/215/260 (+100% AP) magic damage over 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "425"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nocturne-E.png",
+  "slot": "E",
+  "championKey": "Nocturne",
+  "championName": "Nocturne",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    425,
+    425,
+    425,
+    425,
+    425
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

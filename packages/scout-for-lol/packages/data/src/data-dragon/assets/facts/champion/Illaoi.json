@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Illaoi",
+  "name": "Illaoi",
+  "description": "Illaoi's powerful physique is dwarfed only by her indomitable faith. As the prophet of the Great Kraken, she uses a huge, golden idol to rip her foes' spirits from their bodies and shatter their perception of reality.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "656"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Illaoi-passive",
+      "name": "Prophet of an Elder God",
+      "icon": "img/ability/Illaoi-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Illaoi-Q",
+      "name": "Tentacle Smash",
+      "icon": "img/ability/Illaoi-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Illaoi-W",
+      "name": "Harsh Lesson",
+      "icon": "img/ability/Illaoi-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Illaoi-E",
+      "name": "Test of Spirit",
+      "icon": "img/ability/Illaoi-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Illaoi-R",
+      "name": "Leap of Faith",
+      "icon": "img/ability/Illaoi-R.png"
+    }
+  ],
+  "icon": "img/champion/Illaoi.png",
+  "art": "img/champion-splash/Illaoi_0.jpg",
+  "title": "the Kraken Priestess",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

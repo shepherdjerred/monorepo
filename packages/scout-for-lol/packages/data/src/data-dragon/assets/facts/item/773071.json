@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773071",
+  "name": "The Black Cleaver",
+  "description": "Wicked Edge: 10 Lethality Cleaving Strike: Dealing physical damage to an enemy champion reduces their Armor by 5% for 4 seconds (stacks up to 5 times, up to 25%).",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773134",
+      "name": "The Brutalizer",
+      "icon": "img/item/773134.png"
+    },
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    }
+  ],
+  "icon": "img/item/773071.png",
+  "goldTotal": 3000,
+  "goldCombine": 1188,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

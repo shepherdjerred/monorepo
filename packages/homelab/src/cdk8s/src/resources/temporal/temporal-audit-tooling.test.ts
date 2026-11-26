@@ -600,7 +600,9 @@ describe("Temporal operations worker isolation", () => {
       expect(repoEnv).not.toContain(required);
       expect(scoutEnv).not.toContain(required);
     }
-    expect(repoEnv).toContain("FRESHRSS_API_PASSWORD_FILE");
+    expect(repoEnv).toContain("FEEDS_URL");
+    expect(repoEnv).toContain("FEEDS_MACHINE_TOKEN");
+    expect(repoEnv).not.toContain("FRESHRSS_API_PASSWORD_FILE");
     expect(repoEnv).toContain("WOODPECKER_TOKEN");
     expect(repoEnv).toContain("OPENAI_API_KEY");
     expect(repoEnv).toContain("GITHUB_REVIEW_TOKEN");

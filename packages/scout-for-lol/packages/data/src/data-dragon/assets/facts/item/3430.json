@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3430",
+  "name": "Rite Of Ruin",
+  "description": "Wrath and Ruin: On spell cast, gain 2.5% Critical Strike Chance for 6 seconds, stacking up to 20%. Salvage the Wreckage: Your spells have a chance equal to your Critical Strike Chance to grant you or your targeted ally a shield for for 3s.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "50"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3430.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

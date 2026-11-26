@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Neeko-passive",
+  "name": "Inherent Glamour",
+  "description": "Neeko can look like an ally champion or as other units on the map. Receiving immobilizing crowd control, casting damaging spells, damaging enemy towers as a non-champion, or your disguise taking damage equal to its healthbar breaks the disguise.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Neeko-passive.png",
+  "slot": "passive",
+  "championKey": "Neeko",
+  "championName": "Neeko",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

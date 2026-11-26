@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kled-R",
+  "name": "Chaaaaaaaarge!!!",
+  "description": "Kled charges toward an area, leaving a trail that grants allies increasing Move Speed. While charging and for 2 seconds after Kled gains up to 200/300/400 (+300% bonus AD) Shield.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "3500/4000/4500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kled-R.png",
+  "slot": "R",
+  "championKey": "Kled",
+  "championName": "Kled",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    125,
+    110
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    3500,
+    4000,
+    4500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/125/110 s"
+  }
+}

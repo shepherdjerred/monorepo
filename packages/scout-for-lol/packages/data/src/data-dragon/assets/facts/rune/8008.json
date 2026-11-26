@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8008",
+  "name": "Lethal Tempo",
+  "description": "Attacking an enemy champion grants you Attack Speed, up to 6 stacks. At max stacks, deal bonus adaptive damage On-Attack.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/LethalTempoTemp.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1209",
+  "name": "Jungle Quest Reward",
+  "description": "Rewards • Upgraded Smite and evolve jungle pet to Mosstomper • Increased gold and XP from large monsters • Bonus movement speed in the jungle",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/1209.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

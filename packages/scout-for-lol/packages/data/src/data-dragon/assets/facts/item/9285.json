@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9285",
+  "name": "Neverending Mobstomper",
+  "description": "Fires explosives that bounce endlessly between enemies as long as it can find a target.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9285.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

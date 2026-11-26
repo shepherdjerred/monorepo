@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Blitzcrank-R",
+  "name": "Static Field",
+  "description": "Passive: While this ability is available, lightning charges Blitzcrank's fists, marking those Attacked.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Blitzcrank-R.png",
+  "slot": "R",
+  "championKey": "Blitzcrank",
+  "championName": "Blitzcrank",
+  "maxRank": 3,
+  "cooldownByRank": [
+    60,
+    40,
+    20
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "60/40/20 s"
+  }
+}

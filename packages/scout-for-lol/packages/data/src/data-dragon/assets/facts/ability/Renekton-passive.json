@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renekton-passive",
+  "name": "Reign of Anger",
+  "description": "Renekton's attacks generate Fury, increased when he is low on life. This Fury can empower his abilities with bonus effects.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Renekton-passive.png",
+  "slot": "passive",
+  "championKey": "Renekton",
+  "championName": "Renekton",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

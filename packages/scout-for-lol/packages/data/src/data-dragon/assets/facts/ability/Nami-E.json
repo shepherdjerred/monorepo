@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nami-E",
+  "name": "Tidecaller's Blessing",
+  "description": "Empowers an allied champion for a short duration. The ally's basic attacks and spells deal bonus magic damage and slow the target.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nami-E.png",
+  "slot": "E",
+  "championKey": "Nami",
+  "championName": "Nami",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    11,
+    11,
+    11,
+    11
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11 s"
+  }
+}

@@ -31,6 +31,7 @@ import {
 import {
   readRedditListing,
   readRedditThread,
+  readRedditThreadSnapshot,
   readRedditCommentReceipt,
   readRedditFeedPage,
   readRedditRules,
@@ -263,6 +264,9 @@ export class PromotionBrowser {
   }
   async readRedditThread(input: { account: string }) {
     return await readRedditThread(this.redditReader(), input);
+  }
+  async readRedditThreadSnapshot(input: { account: string }) {
+    return await readRedditThreadSnapshot(this.redditReader(), input);
   }
   async readRedditCommentReceipt() {
     return await readRedditCommentReceipt(this.redditReader());

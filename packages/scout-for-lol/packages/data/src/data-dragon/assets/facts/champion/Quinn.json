@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Quinn",
+  "name": "Quinn",
+  "description": "Quinn is an elite ranger-knight of Demacia, who undertakes dangerous missions deep in enemy territory.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "565"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Quinn-passive",
+      "name": "Harrier",
+      "icon": "img/ability/Quinn-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Quinn-Q",
+      "name": "Blinding Assault",
+      "icon": "img/ability/Quinn-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Quinn-W",
+      "name": "Heightened Senses",
+      "icon": "img/ability/Quinn-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Quinn-E",
+      "name": "Vault",
+      "icon": "img/ability/Quinn-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Quinn-R",
+      "name": "Behind Enemy Lines",
+      "icon": "img/ability/Quinn-R.png"
+    }
+  ],
+  "icon": "img/champion/Quinn.png",
+  "art": "img/champion-splash/Quinn_0.jpg",
+  "title": "Demacia's Wings",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

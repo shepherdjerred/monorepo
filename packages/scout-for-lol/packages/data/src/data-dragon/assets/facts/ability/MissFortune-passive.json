@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MissFortune-passive",
+  "name": "Love Tap",
+  "description": "Miss Fortune deals bonus physical damage whenever she basic attacks a new target.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/MissFortune-passive.png",
+  "slot": "passive",
+  "championKey": "MissFortune",
+  "championName": "Miss Fortune",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

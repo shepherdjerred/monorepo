@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jax-E",
+  "name": "Counter Strike",
+  "description": "Jax enters a defensive stance for up to 2 seconds, dodging incoming Attacks and taking 25% less damage from area of effect Abilities.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jax-E.png",
+  "slot": "E",
+  "championKey": "Jax",
+  "championName": "Jax",
+  "maxRank": 5,
+  "cooldownByRank": [
+    17,
+    15,
+    13,
+    11,
+    9
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "17/15/13/11/9 s"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3116",
+  "name": "Rylai's Crystal Scepter",
+  "description": "Rimefrost: Damaging Abilities Slow enemies by 30% for 1 second.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1026",
+      "name": "Blasting Wand",
+      "icon": "img/item/1026.png"
+    },
+    {
+      "kind": "item",
+      "key": "1011",
+      "name": "Giant's Belt",
+      "icon": "img/item/1011.png"
+    },
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    }
+  ],
+  "icon": "img/item/3116.png",
+  "goldTotal": 2600,
+  "goldCombine": 450,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3513",
+  "name": "Eye of the Herald",
+  "description": "Active - Consume: Crush the Eye of the Herald, begining the ritual to summon Rift Herald.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/3513.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

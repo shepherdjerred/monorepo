@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "324005",
+  "name": "Imperial Mandate",
+  "description": "Control: Gain 20 Ability Haste for your abilities with Immobilizing effects. Command: On Immobilizing an enemy champion, mark them as 7% Vulnerable for 4 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1026",
+      "name": "Blasting Wand",
+      "icon": "img/item/1026.png"
+    },
+    {
+      "kind": "item",
+      "key": "4642",
+      "name": "Bandleglass Mirror",
+      "icon": "img/item/4642.png"
+    }
+  ],
+  "icon": "img/item/324005.png",
+  "goldTotal": 2400,
+  "goldCombine": 650,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2400 gold"
+  }
+}

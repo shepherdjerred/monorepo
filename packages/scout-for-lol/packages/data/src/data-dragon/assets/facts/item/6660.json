@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6660",
+  "name": "Bami's Cinder",
+  "description": "Immolate: After taking or dealing damage, deal magic damage to nearby enemies for 3 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "150"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "5"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    },
+    {
+      "kind": "item",
+      "key": "2022",
+      "name": "Glowing Mote",
+      "icon": "img/item/2022.png"
+    }
+  ],
+  "icon": "img/item/6660.png",
+  "goldTotal": 900,
+  "goldCombine": 250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

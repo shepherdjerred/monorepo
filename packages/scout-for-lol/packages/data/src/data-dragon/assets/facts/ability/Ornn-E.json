@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ornn-E",
+  "name": "Searing Charge",
+  "description": "Ornn charges, dealing 80/125/170/215/260 (+40% bonus Armor) (+40% bonus Magic Resist) physical damage. If Ornn rams into terrain, he creates a shockwave that Knocks Up enemies for 1.25 seconds and applies the same damage to those not hit by the charge.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35/40/45/50/55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ornn-E.png",
+  "slot": "E",
+  "championKey": "Ornn",
+  "championName": "Ornn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13.5,
+    13,
+    12.5,
+    12
+  ],
+  "costByRank": [
+    35,
+    40,
+    45,
+    50,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13.5/13/12.5/12 s"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Belveth-R",
+  "name": "Endless Banquet",
+  "description": "Passive: Attacks deal an additional 2/4/6 (+3% bonus AD) true damage, stacking infinitely. Takedowns against champions and epic monsters leave behind a piece of Void Coral.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Belveth-R.png",
+  "slot": "R",
+  "championKey": "Belveth",
+  "championName": "Bel'Veth",
+  "maxRank": 3,
+  "cooldownByRank": [
+    1,
+    1,
+    1
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1 s"
+  }
+}

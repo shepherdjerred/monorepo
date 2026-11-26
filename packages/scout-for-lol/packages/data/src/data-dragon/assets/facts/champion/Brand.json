@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Brand",
+  "name": "Brand",
+  "description": "Once a tribesman of the icy Freljord named Kegan Rodhe, the creature known as Brand is a lesson in the temptation of greater power.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "570"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Brand-passive",
+      "name": "Blaze",
+      "icon": "img/ability/Brand-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Brand-Q",
+      "name": "Sear",
+      "icon": "img/ability/Brand-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Brand-W",
+      "name": "Pillar of Flame",
+      "icon": "img/ability/Brand-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Brand-E",
+      "name": "Conflagration",
+      "icon": "img/ability/Brand-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Brand-R",
+      "name": "Pyroclasm",
+      "icon": "img/ability/Brand-R.png"
+    }
+  ],
+  "icon": "img/champion/Brand.png",
+  "art": "img/champion-splash/Brand_0.jpg",
+  "title": "the Burning Vengeance",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

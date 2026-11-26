@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Sejuani",
+  "name": "Sejuani",
+  "description": "Sejuani is the brutal, unforgiving Iceborn warmother of the Winter's Claw, one of the most feared tribes of the Freljord.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Sejuani-passive",
+      "name": "Fury of the North",
+      "icon": "img/ability/Sejuani-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sejuani-Q",
+      "name": "Arctic Assault",
+      "icon": "img/ability/Sejuani-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sejuani-W",
+      "name": "Winter's Wrath",
+      "icon": "img/ability/Sejuani-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sejuani-E",
+      "name": "Permafrost",
+      "icon": "img/ability/Sejuani-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Sejuani-R",
+      "name": "Glacial Prison",
+      "icon": "img/ability/Sejuani-R.png"
+    }
+  ],
+  "icon": "img/champion/Sejuani.png",
+  "art": "img/champion-splash/Sejuani_0.jpg",
+  "title": "Fury of the North",
+  "roles": [
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank"
+  }
+}

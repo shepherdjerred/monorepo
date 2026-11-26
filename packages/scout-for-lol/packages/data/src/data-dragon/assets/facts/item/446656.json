@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "446656",
+  "name": "Everfrost",
+  "description": "ACTIVE: (0s) Glaciate: Deal damage in a cone, Slowing enemies hit.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "100"
+    },
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/446656.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

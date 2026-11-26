@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Draven",
+  "name": "Draven",
+  "description": "In Noxus, warriors known as Reckoners face one another in arenas where blood is spilled and strength tested—but none has ever been as celebrated as Draven.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "675"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Draven-passive",
+      "name": "League of Draven",
+      "icon": "img/ability/Draven-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Draven-Q",
+      "name": "Spinning Axe",
+      "icon": "img/ability/Draven-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Draven-W",
+      "name": "Blood Rush",
+      "icon": "img/ability/Draven-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Draven-E",
+      "name": "Stand Aside",
+      "icon": "img/ability/Draven-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Draven-R",
+      "name": "Whirling Death",
+      "icon": "img/ability/Draven-R.png"
+    }
+  ],
+  "icon": "img/champion/Draven.png",
+  "art": "img/champion-splash/Draven_0.jpg",
+  "title": "the Glorious Executioner",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

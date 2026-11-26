@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6032",
+  "name": "Stat Bonus",
+  "description": "Active - Consume: Automatically open a semi-random selection for a permanent stat bonus.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/6032.png",
+  "goldTotal": 750,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "750 gold"
+  }
+}

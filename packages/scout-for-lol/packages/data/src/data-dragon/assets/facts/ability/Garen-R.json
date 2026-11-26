@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Garen-R",
+  "name": "Demacian Justice",
+  "description": "Garen calls upon the might of Demacia to slay his enemy, dealing 125/200/275 plus 25/30/35% missing Health true damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Garen-R.png",
+  "slot": "R",
+  "championKey": "Garen",
+  "championName": "Garen",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

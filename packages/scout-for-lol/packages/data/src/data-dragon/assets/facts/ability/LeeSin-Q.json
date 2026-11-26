@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "LeeSin-Q",
+  "name": "Sonic Wave / Resonating Strike",
+  "description": "Lee Sin projects a discordant wave of sound, dealing 60/90/120/150/180 (+90% bonus AD) physical damage to the first enemy hit, granting True Sight of them, and allows Lee Sin to Recast for the next 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/LeeSin-Q.png",
+  "slot": "Q",
+  "championKey": "LeeSin",
+  "championName": "Lee Sin",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

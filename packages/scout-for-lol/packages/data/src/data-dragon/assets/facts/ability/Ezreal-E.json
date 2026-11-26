@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ezreal-E",
+  "name": "Arcane Shift",
+  "description": "Ezreal teleports then fires a bolt at the nearest enemy, dealing 80/130/180/230/280 (+60% bonus AD) (+75% AP) magic damage. The bolt prioritizes enemies affected by Essence Flux.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ezreal-E.png",
+  "slot": "E",
+  "championKey": "Ezreal",
+  "championName": "Ezreal",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    23,
+    20,
+    17,
+    14
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/23/20/17/14 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Diana-W",
+  "name": "Pale Cascade",
+  "description": "Diana creates three orbiting spheres for 5 seconds that explode on contact, each dealing 20/32/44/56/68 (+18% AP) magic damage, up to a max of 60/96/132/168/204 (+54% AP) damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Diana-W.png",
+  "slot": "W",
+  "championKey": "Diana",
+  "championName": "Diana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    13.5,
+    12,
+    10.5,
+    9
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/13.5/12/10.5/9 s"
+  }
+}

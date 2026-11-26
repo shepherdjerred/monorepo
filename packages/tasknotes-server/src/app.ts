@@ -6,11 +6,14 @@ import { createHealthRoutes } from "./routes/health.ts";
 import { requireAdminPrincipal } from "./v1/request-context.ts";
 import { v1Routes } from "./v1/routes.ts";
 import type { FacetStore } from "./v1/types.ts";
+import { mountWebUi } from "./web-ui.ts";
 
 export type CreateFacetAppOptions = {
   store: FacetStore;
   getAuthToken?: (() => string) | undefined;
   enableRequestLogging?: boolean | undefined;
+  /** Built `tasknotes-web` directory. Omitted when the client has not been built. */
+  webRoot?: string | undefined;
 };
 
 export function createFacetApp(options: CreateFacetAppOptions): Hono {
@@ -51,6 +54,10 @@ export function createFacetApp(options: CreateFacetAppOptions): Hono {
       skippedFiles: [],
     });
   });
+
+  if (options.webRoot !== undefined) {
+    mountWebUi(app, options.webRoot);
+  }
 
   return app;
 }

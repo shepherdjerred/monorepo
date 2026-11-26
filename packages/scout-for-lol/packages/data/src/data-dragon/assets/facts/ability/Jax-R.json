@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jax-R",
+  "name": "Grandmaster-at-Arms",
+  "description": "Passive: Every third Attack within 2.5 seconds deals an additional 75/130/185 (+60% AP) magic damage. Active: Jax slams his lantern down, dealing 100/175/250 (+100% bonus AP) magic damage to nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "260"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jax-R.png",
+  "slot": "R",
+  "championKey": "Jax",
+  "championName": "Jax",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    100,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    260,
+    260,
+    260
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/100/90 s"
+  }
+}

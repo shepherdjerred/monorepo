@@ -25,6 +25,7 @@ export type WorkspacePackage = {
 // though no file under the target's source prefixes changed.
 const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
   arcade: ["@arcade/frontend", "@shepherdjerred/arcade"],
+  "tasknotes-server": ["@shepherdjerred/tasknotes-web"],
   "temporal-worker": ["@shepherdjerred/toolkit"],
 };
 

@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tryndamere-R",
+  "name": "Undying Rage",
+  "description": "Tryndamere becomes completely immune to death for 5 seconds, refusing to be reduced below 30/50/70 Health, and instantly gains 50/75/100 Fury.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Tryndamere-R.png",
+  "slot": "R",
+  "championKey": "Tryndamere",
+  "championName": "Tryndamere",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

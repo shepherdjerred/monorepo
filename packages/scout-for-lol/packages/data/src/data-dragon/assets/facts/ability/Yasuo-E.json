@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yasuo-E",
+  "name": "Sweeping Blade",
+  "description": "Yasuo dashes through a target, dealing 70/85/100/115/130 (+20% bonus AD) (+60% AP) magic damage. Each use of this Ability grants 17.5/21.25/25/28.75/32.5 (+5% bonus AD) (+15% AP) bonus damage to subsequent uses for 5 seconds, stacking up to 4 times.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "475"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yasuo-E.png",
+  "slot": "E",
+  "championKey": "Yasuo",
+  "championName": "Yasuo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.5,
+    0.4,
+    0.3,
+    0.2,
+    0.1
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    475,
+    475,
+    475,
+    475,
+    475
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.5/0.4/0.3/0.2/0.1 s"
+  }
+}

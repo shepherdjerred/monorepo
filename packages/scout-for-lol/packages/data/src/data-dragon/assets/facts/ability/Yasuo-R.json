@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yasuo-R",
+  "name": "Last Breath",
+  "description": "Yasuo teleports to an Airborne enemy champion, dealing 200/350/500 (+150% bonus AD) physical damage and holding all nearby Airborne enemies up for an additional 1 second. Yasuo also gains maximum Flow, but loses all Steel Tempest stacks.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yasuo-R.png",
+  "slot": "R",
+  "championKey": "Yasuo",
+  "championName": "Yasuo",
+  "maxRank": 3,
+  "cooldownByRank": [
+    70,
+    50,
+    30
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1400,
+    1400,
+    1400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "70/50/30 s"
+  }
+}

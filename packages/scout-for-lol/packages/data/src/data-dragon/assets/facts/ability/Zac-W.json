@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zac-W",
+  "name": "Unstable Matter",
+  "description": "Zac explodes outward towards nearby enemies, dealing a percentage of their maximum health as magic damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zac-W.png",
+  "slot": "W",
+  "championKey": "Zac",
+  "championName": "Zac",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

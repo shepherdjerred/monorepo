@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hecarim-W",
+  "name": "Spirit of Dread",
+  "description": "Hecarim deals 80/120/160/200/240 (+80% AP) magic damage over 4 seconds to nearby enemies. Hecarim gains 5/10/15/20/25 Armor and Magic Resist and heals for 25% of damage nearby enemies take from Hecarim and 12.5% of damage taken from his allies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "525"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hecarim-W.png",
+  "slot": "W",
+  "championKey": "Hecarim",
+  "championName": "Hecarim",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    14,
+    14,
+    14,
+    14
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    525,
+    525,
+    525,
+    525,
+    525
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14 s"
+  }
+}

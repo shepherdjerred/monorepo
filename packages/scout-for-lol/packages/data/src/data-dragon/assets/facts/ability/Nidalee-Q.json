@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nidalee-Q",
+  "name": "Javelin Toss / Takedown",
+  "description": "Human Form: Nidalee throws her javelin, dealing 70/90/110/130/150 (+50% AP) magic damage, increased up to 227.5/292.5/357.5/422.5/487.5 (+162.5% AP) magic damage based on distance flown.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nidalee-Q.png",
+  "slot": "Q",
+  "championKey": "Nidalee",
+  "championName": "Nidalee",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1500,
+    1500,
+    1500,
+    1500,
+    1500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

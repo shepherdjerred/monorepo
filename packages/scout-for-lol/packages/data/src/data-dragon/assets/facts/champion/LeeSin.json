@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "LeeSin",
+  "name": "Lee Sin",
+  "description": "A master of Ionia's ancient martial arts, Lee Sin is a principled fighter who channels the essence of the dragon spirit to face any challenge.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "645"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "LeeSin-passive",
+      "name": "Flurry",
+      "icon": "img/ability/LeeSin-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "LeeSin-Q",
+      "name": "Sonic Wave / Resonating Strike",
+      "icon": "img/ability/LeeSin-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "LeeSin-W",
+      "name": "Safeguard / Iron Will",
+      "icon": "img/ability/LeeSin-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "LeeSin-E",
+      "name": "Tempest / Cripple",
+      "icon": "img/ability/LeeSin-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "LeeSin-R",
+      "name": "Dragon's Rage",
+      "icon": "img/ability/LeeSin-R.png"
+    }
+  ],
+  "icon": "img/champion/LeeSin.png",
+  "art": "img/champion-splash/LeeSin_0.jpg",
+  "title": "the Blind Monk",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

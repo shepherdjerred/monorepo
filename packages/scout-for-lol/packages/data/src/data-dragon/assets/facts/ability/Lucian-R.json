@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lucian-R",
+  "name": "The Culling",
+  "description": "Lucian unleashes a torrent of shots from his weapons.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lucian-R.png",
+  "slot": "R",
+  "championKey": "Lucian",
+  "championName": "Lucian",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    100,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1400,
+    1400,
+    1400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/100/90 s"
+  }
+}

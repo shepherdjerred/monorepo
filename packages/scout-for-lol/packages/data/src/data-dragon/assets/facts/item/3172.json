@@ -1,0 +1,36 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3172",
+  "name": "Gunmetal Greaves",
+  "description": "Grants 45% Attack Speed, 45 Move Speed, 5% Life Steal.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "45%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "45"
+    },
+    {
+      "label": "Life Steal",
+      "value": "5%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3006",
+      "name": "Berserker's Greaves",
+      "icon": "img/item/3006.png"
+    }
+  ],
+  "icon": "img/item/3172.png",
+  "goldTotal": 1100,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

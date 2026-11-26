@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vayne-Q",
+  "name": "Tumble",
+  "description": "Vayne rolls a short distance, and deals an additional 75/85/95/105/115% AD (+50% AP) physical damage on her next Attack. This Ability triggers spell effects upon dealing damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vayne-Q.png",
+  "slot": "Q",
+  "championKey": "Vayne",
+  "championName": "Vayne",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5,
+    4,
+    3,
+    2
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5/4/3/2 s"
+  }
+}

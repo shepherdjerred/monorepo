@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nautilus-W",
+  "name": "Titan's Wrath",
+  "description": "Nautilus gains a 50/60/70/80/90 (+8/9/10/11/12% max Health) Shield for 6 seconds. While the Shield persists, Nautilus' Attacks deal an additional 30/40/50/60/70 (+40% AP) magic damage over 2 seconds to his target and all surrounding enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nautilus-W.png",
+  "slot": "W",
+  "championKey": "Nautilus",
+  "championName": "Nautilus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

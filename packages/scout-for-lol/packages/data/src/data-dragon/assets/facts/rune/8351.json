@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8351",
+  "name": "Glacial Augment",
+  "description": "Immobilizing an enemy champion will cause 3 glacial rays that slow nearby enemies and reduce their damage to your allies.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Cooldown",
+      "value": "25s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/GlacialAugment.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

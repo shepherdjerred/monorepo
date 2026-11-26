@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sett-E",
+  "name": "Facebreaker",
+  "description": "Sett smashes enemies on either side of him into each other, dealing 50/70/90/110/130 (+60% AD) physical damage and Slowing them by 70% for 0.5 seconds. If Sett grabbed at least one enemy on each side, all enemies are Stunned for 1 second.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "490"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sett-E.png",
+  "slot": "E",
+  "championKey": "Sett",
+  "championName": "Sett",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14.5,
+    13,
+    11.5,
+    10
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    490,
+    490,
+    490,
+    490,
+    490
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14.5/13/11.5/10 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pantheon-passive",
+  "name": "Mortal Will",
+  "description": "Every few spells or attacks, Pantheon's next spell is empowered.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Pantheon-passive.png",
+  "slot": "passive",
+  "championKey": "Pantheon",
+  "championName": "Pantheon",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

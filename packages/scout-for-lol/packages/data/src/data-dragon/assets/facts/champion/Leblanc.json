@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Leblanc",
+  "name": "LeBlanc",
+  "description": "Mysterious even to other members of the Black Rose cabal, LeBlanc is but one of many names for a pale woman who has manipulated people and events since the earliest days of Noxus.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "598"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Leblanc-passive",
+      "name": "Mirror Image",
+      "icon": "img/ability/Leblanc-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leblanc-Q",
+      "name": "Sigil of Malice",
+      "icon": "img/ability/Leblanc-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leblanc-W",
+      "name": "Distortion",
+      "icon": "img/ability/Leblanc-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leblanc-E",
+      "name": "Ethereal Chains",
+      "icon": "img/ability/Leblanc-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Leblanc-R",
+      "name": "Mimic",
+      "icon": "img/ability/Leblanc-R.png"
+    }
+  ],
+  "icon": "img/champion/Leblanc.png",
+  "art": "img/champion-splash/Leblanc_0.jpg",
+  "title": "the Deceiver",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

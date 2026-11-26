@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shen-passive",
+  "name": "Ki Barrier",
+  "description": "After casting a spell, Shen gets a shield. Affecting other champions reduces the cooldown of this effect.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Shen-passive.png",
+  "slot": "passive",
+  "championKey": "Shen",
+  "championName": "Shen",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

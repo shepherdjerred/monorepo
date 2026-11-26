@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Rengar",
+  "name": "Rengar",
+  "description": "Rengar is a ferocious vastayan trophy hunter who lives for the thrill of tracking down and killing dangerous creatures.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Rengar-passive",
+      "name": "Unseen Predator",
+      "icon": "img/ability/Rengar-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rengar-Q",
+      "name": "Savagery",
+      "icon": "img/ability/Rengar-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rengar-W",
+      "name": "Battle Roar",
+      "icon": "img/ability/Rengar-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rengar-E",
+      "name": "Bola Strike",
+      "icon": "img/ability/Rengar-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rengar-R",
+      "name": "Thrill of the Hunt",
+      "icon": "img/ability/Rengar-R.png"
+    }
+  ],
+  "icon": "img/champion/Rengar.png",
+  "art": "img/champion-splash/Rengar_0.jpg",
+  "title": "the Pridestalker",
+  "roles": [
+    "Assassin",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Fighter"
+  }
+}

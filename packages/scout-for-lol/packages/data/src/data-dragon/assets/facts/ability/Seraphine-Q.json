@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Seraphine-Q",
+  "name": "High Note",
+  "description": "Seraphine projects a pure note, dealing 60/85/110/135/160 (+40% AP) magic damage, increased against champions and monsters by the target's missing Health percentage up to 105/148.75/192.5/236.25/280 (+70% AP) damage below 25% Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Seraphine-Q.png",
+  "slot": "Q",
+  "championKey": "Seraphine",
+  "championName": "Seraphine",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

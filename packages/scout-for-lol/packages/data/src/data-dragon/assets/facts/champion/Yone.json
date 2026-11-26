@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Yone",
+  "name": "Yone",
+  "description": "In life, he was Yone—half-brother of Yasuo, and renowned student of his village's sword school.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Yone-passive",
+      "name": "Way of the Hunter",
+      "icon": "img/ability/Yone-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yone-Q",
+      "name": "Mortal Steel",
+      "icon": "img/ability/Yone-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yone-W",
+      "name": "Spirit Cleave",
+      "icon": "img/ability/Yone-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yone-E",
+      "name": "Soul Unbound",
+      "icon": "img/ability/Yone-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yone-R",
+      "name": "Fate Sealed",
+      "icon": "img/ability/Yone-R.png"
+    }
+  ],
+  "icon": "img/champion/Yone.png",
+  "art": "img/champion-splash/Yone_0.jpg",
+  "title": "the Unforgotten",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

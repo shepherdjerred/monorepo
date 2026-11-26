@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2520",
+  "name": "Bastionbreaker",
+  "description": "Shaped Charge: (0s) Dealing Ability damage to a Champion or Epic Monster deals an additional true damage. Sabotage: Taking down a champion within 3 seconds of damaging them grants Sabotage for 25000 seconds.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Lethality",
+      "value": "18"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "2020",
+      "name": "The Brutalizer",
+      "icon": "img/item/2020.png"
+    },
+    {
+      "kind": "item",
+      "key": "3134",
+      "name": "Serrated Dirk",
+      "icon": "img/item/3134.png"
+    }
+  ],
+  "icon": "img/item/2520.png",
+  "goldTotal": 3000,
+  "goldCombine": 663,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

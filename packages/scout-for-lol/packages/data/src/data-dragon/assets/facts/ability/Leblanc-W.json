@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leblanc-W",
+  "name": "Distortion",
+  "description": "LeBlanc dashes then deals 75/115/155/195/235 (+90% AP) magic damage to nearby enemies. For 4 seconds after dashing, LeBlanc can Recast.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/70/80/90/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leblanc-W.png",
+  "slot": "W",
+  "championKey": "Leblanc",
+  "championName": "LeBlanc",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    13.75,
+    12.5,
+    11.25,
+    10
+  ],
+  "costByRank": [
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/13.75/12.5/11.25/10 s"
+  }
+}

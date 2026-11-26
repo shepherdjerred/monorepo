@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Malphite",
+  "name": "Malphite",
+  "description": "A massive creature of living stone, Malphite struggles to impose blessed order on a chaotic world.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "665"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Malphite-passive",
+      "name": "Granite Shield",
+      "icon": "img/ability/Malphite-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malphite-Q",
+      "name": "Seismic Shard",
+      "icon": "img/ability/Malphite-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malphite-W",
+      "name": "Thunderclap",
+      "icon": "img/ability/Malphite-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malphite-E",
+      "name": "Ground Slam",
+      "icon": "img/ability/Malphite-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malphite-R",
+      "name": "Unstoppable Force",
+      "icon": "img/ability/Malphite-R.png"
+    }
+  ],
+  "icon": "img/champion/Malphite.png",
+  "art": "img/champion-splash/Malphite_0.jpg",
+  "title": "Shard of the Monolith",
+  "roles": [
+    "Tank",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Mage"
+  }
+}

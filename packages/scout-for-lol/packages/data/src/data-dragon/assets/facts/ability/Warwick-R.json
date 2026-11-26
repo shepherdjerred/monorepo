@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Warwick-R",
+  "name": "Infinite Duress",
+  "description": "Warwick leaps a huge distance that scales with his Move Speed, Suppressing the first champion he collides with while he channels for 1.5 seconds. He attacks that champion 3 times over the duration, dealing 175/350/525 (+167% bonus AD) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Warwick-R.png",
+  "slot": "R",
+  "championKey": "Warwick",
+  "championName": "Warwick",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    90,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/90/70 s"
+  }
+}

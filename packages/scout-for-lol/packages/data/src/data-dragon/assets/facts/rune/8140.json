@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8140",
+  "name": "Grisly Mementos",
+  "description": "Collect 1 memento on champion takedowns, up to 18 total. Gain 6 Trinket Haste for each collected.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/GrislyMementos.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223003",
+  "name": "Archangel's Staff",
+  "description": "Awe: Gain Ability Power equal to 2% bonus Mana. Mana Charge: After 2 combat rounds, this item transforms into Seraph's Embrace.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "55"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223003.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

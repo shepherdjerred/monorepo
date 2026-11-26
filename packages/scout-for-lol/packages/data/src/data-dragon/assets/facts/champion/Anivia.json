@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Anivia",
+  "name": "Anivia",
+  "description": "Anivia is a benevolent winged spirit who endures endless cycles of life, death, and rebirth to protect the Freljord.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "550"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "600"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Anivia-passive",
+      "name": "Rebirth",
+      "icon": "img/ability/Anivia-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Anivia-Q",
+      "name": "Flash Frost",
+      "icon": "img/ability/Anivia-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Anivia-W",
+      "name": "Crystallize",
+      "icon": "img/ability/Anivia-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Anivia-E",
+      "name": "Frostbite",
+      "icon": "img/ability/Anivia-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Anivia-R",
+      "name": "Glacial Storm",
+      "icon": "img/ability/Anivia-R.png"
+    }
+  ],
+  "icon": "img/champion/Anivia.png",
+  "art": "img/champion-splash/Anivia_0.jpg",
+  "title": "the Cryophoenix",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

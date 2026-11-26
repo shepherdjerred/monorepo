@@ -1,0 +1,48 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Aphelios-W",
+  "name": "Phase",
+  "description": "Swap main-hand and off-hand weapons, equipping Gravitum.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Aphelios-W.png",
+  "slot": "W",
+  "championKey": "Aphelios",
+  "championName": "Aphelios",
+  "maxRank": 6,
+  "cooldownByRank": [
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    250,
+    250,
+    250,
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.8 s"
+  }
+}

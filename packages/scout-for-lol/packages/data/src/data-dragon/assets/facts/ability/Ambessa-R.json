@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ambessa-R",
+  "name": "Public Execution",
+  "description": "Ambessa blinks to the farthest enemy champion in a line of her choosing and suppresses them upon her arrival. She then slams the enemy into the ground where they take damage and are stunned.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ambessa-R.png",
+  "slot": "R",
+  "championKey": "Ambessa",
+  "championName": "Ambessa",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    115,
+    100
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1250,
+    1250,
+    1250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/115/100 s"
+  }
+}

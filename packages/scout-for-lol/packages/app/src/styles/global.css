@@ -35,6 +35,21 @@
   --color-scout-success-fill: var(--scout-color-success);
   --color-scout-border: var(--scout-color-border);
   --color-scout-focus: var(--scout-color-focus);
+  /* Match outcomes. `win`/`loss` read as text on a surface; the `-fill`
+     variants are solid fills for dots, bars and badges. */
+  --color-scout-win: var(--scout-color-success-on-surface);
+  --color-scout-win-fill: var(--scout-color-success);
+  --color-scout-loss: var(--scout-color-danger-on-surface);
+  --color-scout-loss-fill: var(--scout-color-danger);
+  /* Categorical chart series, in the order the themes define them. */
+  --color-scout-chart1: var(--scout-color-chart1);
+  --color-scout-chart2: var(--scout-color-chart2);
+  --color-scout-chart3: var(--scout-color-chart3);
+  --color-scout-chart4: var(--scout-color-chart4);
+  --color-scout-chart5: var(--scout-color-chart5);
+  --color-scout-chart6: var(--scout-color-chart6);
+  --color-scout-chart7: var(--scout-color-chart7);
+  --color-scout-chart8: var(--scout-color-chart8);
   --radius-sm: var(--scout-radius-small);
   --radius-md: var(--scout-radius-medium);
   --radius-lg: var(--scout-radius-large);

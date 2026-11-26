@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Quinn-W",
+  "name": "Heightened Senses",
+  "description": "Passive: Attacking a Harrier target grants Quinn 28/41/54/67/80% Attack Speed and 20/25/30/35/40% Move Speed for 2 seconds. Active: Valor reveals a large area nearby for 2 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "2100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Quinn-W.png",
+  "slot": "W",
+  "championKey": "Quinn",
+  "championName": "Quinn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    50,
+    45,
+    40,
+    35,
+    30
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    2100,
+    2100,
+    2100,
+    2100,
+    2100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "50/45/40/35/30 s"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8112",
+  "name": "Electrocute",
+  "description": "Hitting a champion with 3 separate attacks or abilities in 3s deals bonus adaptive damage.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    },
+    {
+      "label": "Damage",
+      "value": "70 - 240 (+0.1 bonus AD, +0.05 AP) damage"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Electrocute.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

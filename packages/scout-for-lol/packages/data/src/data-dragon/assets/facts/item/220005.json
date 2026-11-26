@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "220005",
+  "name": "Legendary Tank Item",
+  "description": "Active - Consume: Automatically open a semi-random selection for a Legendary Tank item.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/220005.png",
+  "goldTotal": 2250,
+  "goldCombine": 2250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

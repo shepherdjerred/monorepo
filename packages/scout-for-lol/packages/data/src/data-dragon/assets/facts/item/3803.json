@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3803",
+  "name": "Catalyst of Aeons",
+  "description": "Eternity: Restores 10% of the damage taken from champions as Mana.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Mana",
+      "value": "375"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    },
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    },
+    {
+      "kind": "item",
+      "key": "1027",
+      "name": "Sapphire Crystal",
+      "icon": "img/item/1027.png"
+    }
+  ],
+  "icon": "img/item/3803.png",
+  "goldTotal": 1300,
+  "goldCombine": 200,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1300 gold"
+  }
+}

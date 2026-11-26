@@ -6,6 +6,7 @@ import type {
 } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import {
   redditOutreachConfig,
+  validateRedditOutreachSubreddits,
   type RedditOutreachSettings,
 } from "#config/reddit-outreach.ts";
 import { promotionConfig } from "#config/promotion.ts";
@@ -16,27 +17,28 @@ import {
   RedditBrowserReadError,
   type RedditFeedPost,
 } from "./reddit-discovery/browser-reader.ts";
-import {
-  qualifiesForRedditDraft,
-  type RedditQualification,
-} from "./reddit-discovery/decisions.ts";
+import { qualifiesForRedditDraft } from "./reddit-discovery/decisions.ts";
 import { runIncrementalRedditDiscovery } from "./reddit-discovery/incremental.ts";
 import type { RedditRequestPost } from "./reddit-discovery/model.ts";
 import { screenRedditBatch } from "./reddit-discovery/screening.ts";
-import { executeRedditOutreachReply } from "./reddit-outreach/index.ts";
 import {
   readRedditReplyRecord,
   remainingRedditReplyAllowance,
 } from "./reddit-outreach/ledger.ts";
 import {
   createRedditOutreachBrowser,
-  RedditNavigationBudget,
   REDDIT_OUTREACH_ACCOUNT,
 } from "./reddit-outreach/browser-session.ts";
+import {
+  createRedditDatasetArchive,
+  RedditDatasetStorageError,
+  type RedditDatasetArchive,
+} from "./reddit-outreach/dataset.ts";
 import {
   recordSweep,
   type SweepSummary,
 } from "./reddit-outreach/sweep-audit.ts";
+import { publishCandidate } from "./reddit-outreach/sweep-publication.ts";
 import {
   countDecisionRejections,
   countReason,
@@ -49,8 +51,6 @@ import {
 } from "./reddit-outreach/sweep-stop.ts";
 
 const OUTREACH_SWEEP_BUDGET_MS = 13 * 60_000;
-// Initial rules/thread checks, composer open, two rules/thread rechecks, receipt.
-const MIN_REPLY_PAGE_OPENS = 8;
 type ActiveSweepSummary = SweepSummary & { metrics: RedditOutreachMetrics };
 type SweepInput = {
   settings: RedditOutreachSettings;
@@ -62,9 +62,17 @@ type SweepInput = {
 };
 type SweepServices = SweepInput & {
   browser: ReturnType<typeof createRedditOutreachBrowser>;
+  dataset: RedditDatasetArchive;
 };
 
-export async function sweepRedditOutreach(input: { preview?: boolean } = {}) {
+export type RedditOutreachSweepOptions = {
+  preview?: boolean;
+  subreddits?: string[];
+};
+
+export async function sweepRedditOutreach(
+  input: RedditOutreachSweepOptions = {},
+) {
   const started = performance.now();
   const context = Context.current();
   const { workflowExecution, namespace } = context.info;
@@ -72,6 +80,8 @@ export async function sweepRedditOutreach(input: { preview?: boolean } = {}) {
     throw new Error("Reddit outreach requires a Workflow-owned Activity");
   if (namespace !== "prod" && input.preview !== true)
     throw new Error("Reddit publishing requires the production namespace");
+  if (input.subreddits !== undefined && input.preview !== true)
+    throw new Error("Reddit subreddit overrides require a preview");
   const { workflowId, runId } = workflowExecution;
   const summary: ActiveSweepSummary = {
     occurrenceId: `${workflowId}/${runId}`,
@@ -89,7 +99,14 @@ export async function sweepRedditOutreach(input: { preview?: boolean } = {}) {
     replies: [],
     drafts: [],
   };
-  const settings = await redditOutreachConfig();
+  const configured = await redditOutreachConfig();
+  const settings =
+    input.subreddits === undefined
+      ? configured
+      : {
+          ...configured,
+          subreddits: validateRedditOutreachSubreddits(input.subreddits),
+        };
   const config = await promotionConfig();
   const disabled =
     !settings.enabled ||
@@ -130,6 +147,8 @@ export async function sweepRedditOutreach(input: { preview?: boolean } = {}) {
       posts,
     });
   } catch (error) {
+    if (error instanceof RedditDatasetStorageError)
+      context.log.error(error.message, { occurrenceId: summary.occurrenceId });
     await recordSweepStop(store, summary, signal, error);
   } finally {
     clearInterval(beat);
@@ -165,9 +184,16 @@ export async function runRedditOutreachSweep(input: SweepInput) {
     summary.stopReason = "daily-limit";
     return;
   }
+  const dataset = createRedditDatasetArchive({
+    store,
+    signal,
+    occurrenceId: summary.occurrenceId,
+    preview: summary.preview,
+  });
   const browser = createRedditOutreachBrowser({
     store,
     signal,
+    dataset,
     occurrenceId: summary.occurrenceId,
     maxNavigations: settings.maxRedditNavigationsPerSweep,
     onNavigation: () => {
@@ -177,7 +203,7 @@ export async function runRedditOutreachSweep(input: SweepInput) {
       recordSweepFailure(summary, "browser cleanup", error, "browser");
     },
   });
-  const services = { ...input, browser };
+  const services = { ...input, browser, dataset };
   const rules = new Map<string, string>();
   const coverage = new Map<string, RedditOutreachCoverage>();
   const result = await runIncrementalRedditDiscovery<RedditFeedPost>({
@@ -389,6 +415,7 @@ async function assessThread(
     reservationId: `${summary.occurrenceId}/decisions/${post.id}`,
     dailySpendUsd: config.dailySpendUsd,
     cacheScope: "thread",
+    onAssessment: services.dataset.decision,
   });
   summary.assessed += assessment.assessed;
   summary.cached += assessment.cached;
@@ -434,57 +461,6 @@ async function assessThread(
   audit.result = `publish-${result}`;
   audit.reason = audit.result;
   return result === "deferred" ? "deferred" : "scored";
-}
-
-async function publishCandidate(
-  services: SweepServices,
-  input: {
-    post: RedditRequestPost;
-    reply: string;
-    rules: string;
-    qualification: RedditQualification;
-  },
-) {
-  const { browser, store, signal, config, settings, summary } = services;
-  if (browser.remainingNavigations() < MIN_REPLY_PAGE_OPENS)
-    throw new RedditNavigationBudget(
-      "Insufficient Reddit page-open budget for posting and verification",
-    );
-  const result = await executeRedditOutreachReply({
-    post: input.post,
-    replyText: input.reply,
-    relevanceReason: input.qualification.reason,
-    occurrenceId: `${summary.occurrenceId}/reply/${input.post.id}`,
-    settings: { ...settings, ...config },
-    store,
-    signal,
-    inspect: async () => await browser.readThread(input.post, true),
-    beforeRedditNavigation: browser.beforeRedditNavigation,
-    validate: async () =>
-      (await browser.readRules(input.post.subreddit, true)) === input.rules,
-    enabled: async () => enabledBeforePublish(services, input.post),
-  });
-  summary.replies.push(result);
-  countReason(summary, `publish-${result.status}`);
-  return result.status;
-}
-
-async function enabledBeforePublish(
-  { signal, settings }: SweepServices,
-  post: RedditRequestPost,
-) {
-  signal.throwIfAborted();
-  const latest = await redditOutreachConfig();
-  return (
-    latest.enabled &&
-    latest.maxRepliesPerDay >= settings.maxRepliesPerDay &&
-    latest.maxRepliesPerSweep >= settings.maxRepliesPerSweep &&
-    latest.subreddits.some(
-      (name) => name.toLowerCase() === post.subreddit.toLowerCase(),
-    ) &&
-    Date.now() - Date.parse(post.createdAt) <=
-      latest.maxPostAgeHours * 3_600_000
-  );
 }
 
 export type RedditOutreachActivities = {

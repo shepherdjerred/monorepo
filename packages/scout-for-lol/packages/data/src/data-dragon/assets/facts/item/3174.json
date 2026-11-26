@@ -1,0 +1,32 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3174",
+  "name": "Armored Advance",
+  "description": "Plating: Reduces incoming damage from Attacks by 10%. Noxian Endurance: (0s) After taking physical damage from a Champion, gain a physical shield for 5 seconds.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "35"
+    },
+    {
+      "label": "Move Speed",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3047",
+      "name": "Plated Steelcaps",
+      "icon": "img/item/3047.png"
+    }
+  ],
+  "icon": "img/item/3174.png",
+  "goldTotal": 1200,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1200 gold"
+  }
+}
