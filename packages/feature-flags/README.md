@@ -37,6 +37,59 @@ Operator management (`7360`, via `https://flags.tailnet-1a49.ts.net` or
 covers the operator UI, `toolkit flags`, missing-key reconciliation, and
 revision-checked declared rollout writes.
 
+## Variant value schemas
+
+Every variant flag stores one string, but each key has a real type.
+`src/flag-value-schemas.ts` is the single source of truth: `flagValueSchemas`
+maps every `ManagedVariantFlagKey` (a missing or extra key is a compile error)
+to a wire encoding and a Zod schema for the decoded value:
+
+| Encoding | Wire string                 | Decoded value        | Helper             |
+| -------- | --------------------------- | -------------------- | ------------------ |
+| `string` | the value                   | string (enum, regex) | `variantString(s)` |
+| `number` | JSON number literal (`900`) | number               | `variantNumber(s)` |
+| `json`   | JSON text (`[]`, `{...}`)   | array or object      | `variantJson(s)`   |
+
+Decoded schemas carry no transforms so they export as JSON Schema; object
+fields may use `.default()`. Consumers keep reading through
+`createFlagConfigSource` and use the registry in their definitions:
+
+```ts
+enabledEnvironments: {
+  schema: flagValueSchema("delivery-enabled-environments"),
+  sources: ["flag", "default"],
+  default: "[]",
+  names: { flag: "delivery-enabled-environments" },
+},
+// kinds: { enabledEnvironments: flagValueKind("delivery-enabled-environments") }
+```
+
+`flagValueSchema(key)` accepts what config layers hand a key today (the string
+for `string` keys; a number or decimal string for `number` keys; JSON text or an
+already-decoded value for `json` keys) and outputs the validated decoded value.
+Consumer-only post-processing, such as splitting a comma-separated list or
+mapping `disabled` to an empty channel, stays in the consumer as a `.transform`
+after it. `decodeVariantValue`, `encodeVariantValue` (canonical: `String` for
+numbers, compact `JSON.stringify` for JSON), and `validateVariantValue` (issues
+with JSON Pointer paths) serve tools and the Flags server, which rejects invalid
+writes (`flag-write-validation.ts`) and reports invalid live values in drift.
+
+Each entry mirrors the consumer schema that reads the key. Where the registry is
+stricter than a consumer, the difference is deliberate: model ids have no
+whitespace and at most 200 characters; Discord ids are 1-25 digits; comma lists
+(`explore-guild-allowlist`, `streambot-subtitle-languages`, Home Assistant
+entities, Photon owners) have no empty entries and no padding except a space
+after a comma; JSON settings objects reject unknown keys and coerced numeric
+strings; stored strings carry no surrounding whitespace where consumers trimmed.
+`storm-forum-season` lists the `@shepherdjerred/storm-theme` catalog ids,
+guarded by a storm-forum test.
+
+`bun run generate` also writes `src/flag-value-schemas.generated.json`
+(`{ [key]: { encoding, schema } }`, JSON Schema draft 2020-12 of the decoded
+input) for editors. Tests fail when either generated file is stale. When adding
+a variant flag, add its registry entry, regenerate, and make sure its inventory
+default and overrides decode.
+
 ```bash
 bun run generate
 bun run build

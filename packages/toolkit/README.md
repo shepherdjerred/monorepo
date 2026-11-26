@@ -355,8 +355,11 @@ toolkit flags apply --file reviewed.json --machine
 Every command accepts `--json` and `--url`. The service URL resolves from
 `--url`, then `FLAGS_URL`, then `[flags].url`, then
 `https://flags.tailnet-1a49.ts.net`. `diff` exits 0 when every deployment
-matches the managed inventory and 1 when a flag is missing, extra, or drifted.
-`apply` exits 2 on a revision conflict and writes nothing.
+matches the managed inventory and 1 when a flag is missing, extra, drifted, or
+holds a live value that fails its variant value schema (each issue is printed).
+`apply` exits 2 on a revision conflict and writes nothing. It exits 1 and prints
+each `key path: message` when Flags refuses an undeclared key, a wrong type, or
+an invalid variant value; nothing is written.
 
 ## Errors
 

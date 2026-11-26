@@ -3,6 +3,7 @@ import { z } from "zod";
 import { parseFlagsDeployment, validateFlagsUrl } from "./config/schema.ts";
 import { flagDeployments, type FlagDeployment } from "./deployments.ts";
 import type { FlagValue } from "./evaluate.ts";
+import { variantValueIssues } from "./flag-write-validation.ts";
 import {
   managedFlagInventory,
   managedFlagNamespaces,
@@ -58,6 +59,15 @@ export const FlagsDiffResponseSchema = z.strictObject({
           key: z.string().min(1),
           live: FlagsValueSchema,
           declared: FlagsValueSchema,
+        }),
+      ),
+      invalid: z.array(
+        z.strictObject({
+          key: z.string().min(1),
+          value: z.string(),
+          issues: z.array(
+            z.strictObject({ path: z.string(), message: z.string().min(1) }),
+          ),
         }),
       ),
     }),
@@ -171,7 +181,31 @@ export function diffProjectedDeploymentFlags(
         ? []
         : [{ key: flag.key, live: current, declared: flag }];
     }),
+    invalid: invalidLiveVariants(declared, document.flags),
   };
+}
+
+/**
+ * Declared variant flags whose live value fails the key's value schema. Live
+ * data is reported, never trusted or thrown on: a bad value written before
+ * validation existed must stay visible rather than break the diff.
+ */
+function invalidLiveVariants(
+  declared: readonly FlagValue[],
+  liveFlags: readonly FlagValue[],
+) {
+  const declaredVariants = new Set(
+    declared.filter((flag) => flag.type === "variant").map((flag) => flag.key),
+  );
+  return liveFlags.flatMap((flag) => {
+    if (flag.type !== "variant" || !declaredVariants.has(flag.key)) return [];
+    const issues = variantValueIssues(flag.key, flag.value).map(
+      ({ path, message }) => ({ path, message }),
+    );
+    return issues.length === 0
+      ? []
+      : [{ key: flag.key, value: flag.value, issues }];
+  });
 }
 
 export async function fetchFlagsDeploymentSnapshot(options: {
@@ -276,6 +310,23 @@ export function describeFlagValueDrift(
     return mismatches;
   }
   return [];
+}
+
+/** One line per invalid live variant, naming each failing path. */
+export function describeInvalidFlagValue(entry: {
+  readonly key: string;
+  readonly value: string;
+  readonly issues: readonly {
+    readonly path: string;
+    readonly message: string;
+  }[];
+}): string {
+  const issues = entry.issues
+    .map((issue) =>
+      issue.path === "" ? issue.message : `${issue.path}: ${issue.message}`,
+    )
+    .join("; ");
+  return `${entry.key}: live value ${JSON.stringify(entry.value)} fails its value schema (${issues})`;
 }
 
 export function compareDeploymentFlags(

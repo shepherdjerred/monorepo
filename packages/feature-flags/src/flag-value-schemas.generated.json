@@ -1,0 +1,911 @@
+{
+  "alert-dashboard-digest-email-from": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 160,
+      "pattern": "^(?:(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}|[A-Za-z0-9](?:[\\w .,:&+/-]{0,61}[\\w.,:&+/-])? <(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}>)$"
+    }
+  },
+  "alert-dashboard-digest-email-to": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    }
+  },
+  "alert-dashboard-email-from": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 160,
+      "pattern": "^(?:(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}|[A-Za-z0-9](?:[\\w .,:&+/-]{0,61}[\\w.,:&+/-])? <(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}>)$"
+    }
+  },
+  "alert-dashboard-email-to": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    }
+  },
+  "alert-dashboard-incident-email-from": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 160,
+      "pattern": "^(?:(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}|[A-Za-z0-9](?:[\\w .,:&+/-]{0,61}[\\w.,:&+/-])? <(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}>)$"
+    }
+  },
+  "alert-dashboard-incident-email-to": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    }
+  },
+  "birmel-agent-auxiliary-timeout-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "birmel-agent-max-steps": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 24
+    }
+  },
+  "birmel-agent-response-timeout-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "birmel-llm-classifier-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-llm-decisions-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-llm-decisions-threshold": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "birmel-llm-embedding-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-llm-image-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-llm-max-output-tokens": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "birmel-llm-memory-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-llm-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-llm-reasoning-effort": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": ["minimal", "low", "medium", "high"]
+    }
+  },
+  "birmel-persona-style-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "birmel-responder-engagement-window-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "birmel-responder-transcript-max-messages": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    }
+  },
+  "birmel-responder-transcript-window-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "delivery-enabled-environments": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "delivery-enrichment-sources": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "delivery-executor-concurrency": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    }
+  },
+  "delivery-lease-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 7200
+    }
+  },
+  "delivery-operator-logins": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "explore-guild-allowlist": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^(?:\\d{1,25})(?:,\\s*(?:\\d{1,25}))*$"
+    }
+  },
+  "karma-admin-user-id": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^\\d{1,25}$"
+    }
+  },
+  "karma-emoji": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^\\S+$"
+    }
+  },
+  "llm-daily-token-budget": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "llm-hourly-token-budget": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "mail-settings": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "retentionDays": {
+          "default": 30,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxPerClientPerTenMinutes": {
+          "default": 200,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allowCleartextSmtpAuth": { "default": false, "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "media-artwork-cache-max-bytes": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 67108864,
+      "maximum": 1099511627776
+    }
+  },
+  "media-email-sender": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    }
+  },
+  "media-keep-days": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365
+    }
+  },
+  "media-permitted-movie-section-id": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^[1-9]\\d*$"
+    }
+  },
+  "media-permitted-tv-section-id": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^[1-9]\\d*$"
+    }
+  },
+  "media-session-lifetime-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 60000,
+      "maximum": 604800000
+    }
+  },
+  "media-shared-discord-channel-id": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "anyOf": [
+        { "type": "string", "const": "disabled" },
+        { "type": "string", "pattern": "^\\d{1,25}$" }
+      ]
+    }
+  },
+  "scout-client-end-of-game-deadline-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 3600
+    }
+  },
+  "scout-client-minimum-version": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[\\dA-Za-z-]+(?:\\.[\\dA-Za-z-]+)*)?(?:\\+[\\dA-Za-z-]+(?:\\.[\\dA-Za-z-]+)*)?$"
+    }
+  },
+  "scout-explore-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "scout-explore-quota-limits": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "userMinute": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "userHour": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "userDay": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "userWeek": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "globalHour": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "globalDay": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "globalWeek": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "userMinute",
+        "userHour",
+        "userDay",
+        "userWeek",
+        "globalHour",
+        "globalDay",
+        "globalWeek"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "scout-explore-spend-policy": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "globalMonthlyMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 80000000
+        },
+        "userMonthlyMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 40000000
+        },
+        "turnMicros": { "type": "integer", "minimum": 0, "maximum": 20000000 }
+      },
+      "required": ["globalMonthlyMicros", "userMonthlyMicros", "turnMicros"],
+      "additionalProperties": false
+    }
+  },
+  "scout-feature-tip-cooldown-hours": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "scout-feature-tip-percent": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "scout-participant-crawl-daily-match-budget": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    }
+  },
+  "scout-report-ai-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "scout-riot-budget-mode": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": ["observe", "enforce"]
+    }
+  },
+  "storm-brain-conversation-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "const": "gpt-6-luna"
+    }
+  },
+  "storm-brain-decisions-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "storm-brain-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "storm-forum-season": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": [
+        "auto",
+        "normal",
+        "spring",
+        "summer",
+        "autumn",
+        "winter",
+        "newyear",
+        "valentines",
+        "easter",
+        "midsummer",
+        "harvest",
+        "halloween",
+        "thanksgiving",
+        "christmas"
+      ]
+    }
+  },
+  "streambot-idle-timeout-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "streambot-live-buffer-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 500,
+      "maximum": 10000
+    }
+  },
+  "streambot-music-search-provider": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": ["youtube-music", "musicbrainz"]
+    }
+  },
+  "streambot-player-card-repost-after-messages": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "streambot-player-card-tick-ms": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "streambot-reconnect-delay-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "streambot-reconnect-max-attempts": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "streambot-subtitle-languages": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9-]+)(?:,\\s*(?:[A-Za-z0-9-]+))*$"
+    }
+  },
+  "temporal-agent-chat-discord-claude-default-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "temporal-agent-chat-discord-codex-default-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "temporal-agent-chat-imessage-claude-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "temporal-agent-chat-imessage-codex-model": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^\\S+$"
+    }
+  },
+  "temporal-agent-chat-photon-owners": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^[^,\\s](?:[^,]*[^,\\s])?(?:,\\s*[^,\\s](?:[^,]*[^,\\s])?)*$"
+    }
+  },
+  "temporal-code-review-settings": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "object",
+          "properties": {
+            "codex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "greptile": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qodo": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "coderabbit": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "cubic": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "codeant": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "additionalProperties": false
+        },
+        "quotaCooldownSeconds": {
+          "default": 3600,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "timeoutCooldownSeconds": {
+          "default": 900,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "requestRetrySeconds": {
+          "default": 720,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "providerTimeoutSeconds": {
+          "default": 1500,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["weights"],
+      "additionalProperties": false
+    }
+  },
+  "temporal-email-recipient": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    }
+  },
+  "temporal-email-sender": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 160,
+      "pattern": "^(?:(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}|[A-Za-z0-9](?:[\\w .,:&+/-]{0,61}[\\w.,:&+/-])? <(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}>)$"
+    }
+  },
+  "the-storm-promotion-settings": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "maxSteps": { "type": "integer", "minimum": 1, "maximum": 80 },
+        "timeoutMinutes": { "type": "integer", "minimum": 1, "maximum": 15 },
+        "monthlySolverUsd": { "type": "number", "minimum": 0, "maximum": 10 },
+        "enabledTargets": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "dailySpendUsd": {
+          "default": 5,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "model",
+        "maxSteps",
+        "timeoutMinutes",
+        "monthlySolverUsd",
+        "enabledTargets"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "the-storm-reddit-outreach-settings": {
+    "encoding": "json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "subreddits": {
+          "minItems": 1,
+          "maxItems": 10,
+          "type": "array",
+          "items": { "type": "string", "pattern": "^\\w{3,21}$" }
+        },
+        "maxPostAgeHours": { "type": "integer", "minimum": 1, "maximum": 24 },
+        "maxPostsPerSweep": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1500
+        },
+        "maxListingPagesPerSweep": {
+          "default": 12,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "maxThreadReadsPerSweep": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "maxRedditNavigationsPerSweep": {
+          "default": 60,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "maxRepliesPerSweep": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "maxRepliesPerDay": { "type": "integer", "minimum": 0, "maximum": 10 }
+      },
+      "required": [
+        "subreddits",
+        "maxPostAgeHours",
+        "maxPostsPerSweep",
+        "maxRepliesPerSweep",
+        "maxRepliesPerDay"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "tracker-attachment-max-bytes": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 104857600
+    }
+  },
+  "trmnl-ha-climate-entities": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+    }
+  },
+  "trmnl-ha-presence-entities": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+    }
+  },
+  "trmnl-ha-security-entities": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+    }
+  },
+  "woodpecker-log-retention-days": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 3650
+    }
+  }
+}
