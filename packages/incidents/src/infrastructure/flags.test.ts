@@ -20,6 +20,10 @@ function source(
   };
 }
 
+function read(values: Record<string, unknown>) {
+  return createIncidentsFlagReader(source(values)).read();
+}
+
 describe("incidents flags", () => {
   it("declares every key in the alert-dashboard namespace with matching defaults", () => {
     const keys = new Map<string, string>(Object.entries(INCIDENTS_FLAG_KEYS));
@@ -72,6 +76,27 @@ describe("incidents flags", () => {
         source({ [INCIDENTS_FLAG_KEYS.dispatchLeaseSeconds]: -5 }),
       ).read(),
     ).rejects.toThrow();
+  });
+
+  it("enforces the registry bounds for the variant flags", async () => {
+    await expect(
+      read({ [INCIDENTS_FLAG_KEYS.dispatchLeaseSeconds]: 29 }),
+    ).rejects.toThrow();
+    await expect(
+      read({ [INCIDENTS_FLAG_KEYS.takeoverGraceSeconds]: 86_401 }),
+    ).rejects.toThrow();
+    await expect(
+      read({ [INCIDENTS_FLAG_KEYS.takeoverProvider]: "gpt" }),
+    ).rejects.toThrow();
+    await expect(
+      read({
+        [INCIDENTS_FLAG_KEYS.dispatchLeaseSeconds]: 3600,
+        [INCIDENTS_FLAG_KEYS.takeoverProvider]: "codex",
+      }),
+    ).resolves.toMatchObject({
+      dispatchLeaseSeconds: 3600,
+      takeoverProvider: "codex",
+    });
   });
 
   it("falls back to the default and warns when the source fails", async () => {

@@ -6,6 +6,10 @@
 import { defineConfig } from "@shepherdjerred/config";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
 import type { IncidentsSettings } from "#domain/model.ts";
@@ -44,8 +48,6 @@ export const DEFAULT_INCIDENTS_SETTINGS: IncidentsSettings = {
 
 const FLAG_ONLY = ["flag", "default"] as const;
 const BooleanSchema = z.boolean();
-const SecondsSchema = z.number().int().min(0).max(86_400);
-const ProviderSchema = z.string().min(1).max(100);
 const D = DEFAULT_INCIDENTS_SETTINGS;
 const K = INCIDENTS_FLAG_KEYS;
 
@@ -69,13 +71,13 @@ const DEFINITION = {
     names: { flag: K.autoOpenMainCi },
   },
   takeoverGraceSeconds: {
-    schema: SecondsSchema,
+    schema: flagValueSchema(K.takeoverGraceSeconds),
     sources: FLAG_ONLY,
     default: D.takeoverGraceSeconds,
     names: { flag: K.takeoverGraceSeconds },
   },
   dispatchLeaseSeconds: {
-    schema: SecondsSchema,
+    schema: flagValueSchema(K.dispatchLeaseSeconds),
     sources: FLAG_ONLY,
     default: D.dispatchLeaseSeconds,
     names: { flag: K.dispatchLeaseSeconds },
@@ -87,7 +89,7 @@ const DEFINITION = {
     names: { flag: K.takeoverSpawnEnabled },
   },
   takeoverProvider: {
-    schema: ProviderSchema,
+    schema: flagValueSchema(K.takeoverProvider),
     sources: FLAG_ONLY,
     default: D.takeoverProvider,
     names: { flag: K.takeoverProvider },
@@ -102,10 +104,10 @@ export function incidentsFlagSource(): ConfigSource {
       enabled: "boolean",
       autoOpenAlertmanager: "boolean",
       autoOpenMainCi: "boolean",
-      takeoverGraceSeconds: "number",
-      dispatchLeaseSeconds: "number",
+      takeoverGraceSeconds: flagValueKind(K.takeoverGraceSeconds),
+      dispatchLeaseSeconds: flagValueKind(K.dispatchLeaseSeconds),
       takeoverSpawnEnabled: "boolean",
-      takeoverProvider: "string",
+      takeoverProvider: flagValueKind(K.takeoverProvider),
     },
   });
 }

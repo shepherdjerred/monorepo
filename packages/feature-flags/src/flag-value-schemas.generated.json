@@ -56,6 +56,40 @@
       "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
     }
   },
+  "alert-dashboard-incidents-dispatch-lease-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 3600
+    }
+  },
+  "alert-dashboard-incidents-takeover-grace-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400
+    }
+  },
+  "alert-dashboard-incidents-takeover-provider": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": [
+        "claude-code",
+        "codex",
+        "antigravity",
+        "cursor",
+        "grok",
+        "kimi",
+        "muse"
+      ]
+    }
+  },
   "birmel-agent-auxiliary-timeout-ms": {
     "encoding": "number",
     "schema": {
