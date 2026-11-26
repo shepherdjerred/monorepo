@@ -1,42 +1,29 @@
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { defaultCommandRunner } from "#lib/tend/process-probe.ts";
 
 /** Injectable process runner so reach/send logic is testable without a live core. */
 export type AgentCommandRunner = (
   args: readonly string[],
 ) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
 
-export const defaultAgentRunner: AgentCommandRunner = async (args) => {
+/** Default runner: resolves `hc` from ~/.local/bin when PATH misses it, then delegates to tend's shared runner. */
+export const defaultAgentRunner: AgentCommandRunner = (args) => {
   const [bin, ...rest] = args;
   if (bin === undefined)
-    return { exitCode: 127, stdout: "", stderr: "empty command" };
+    return Promise.resolve({
+      exitCode: 127,
+      stdout: "",
+      stderr: "empty command",
+    });
   const executable =
     bin === "hc"
       ? (Bun.which("hc", { PATH: path.join(os.homedir(), ".local", "bin") }) ??
         Bun.which("hc") ??
         bin)
       : bin;
-  try {
-    const child = Bun.spawn([executable, ...rest], {
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-      signal: AbortSignal.timeout(30_000),
-    });
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
-    return { exitCode, stdout, stderr };
-  } catch (error) {
-    return {
-      exitCode: 127,
-      stdout: "",
-      stderr: error instanceof Error ? error.message : String(error),
-    };
-  }
+  return defaultCommandRunner([executable, ...rest], { timeoutMs: 30_000 });
 };
 
 const TerminalSchema = z.looseObject({
