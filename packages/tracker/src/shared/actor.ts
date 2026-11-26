@@ -14,6 +14,9 @@ export const ActorMetadataSchema = z.strictObject({
   cwd: z.string().max(2000).optional(),
   herdrWorkspace: z.string().max(500).optional(),
   hcTerminal: z.string().max(500).optional(),
+  hcAddress: z.string().max(500).optional(),
+  herdrSpace: z.string().max(500).optional(),
+  herdrTab: z.string().max(500).optional(),
   parentKey: z.string().max(500).optional(),
   plan: z.string().max(2000).optional(),
 });

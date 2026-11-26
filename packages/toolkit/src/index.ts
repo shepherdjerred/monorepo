@@ -51,6 +51,7 @@ Credential helpers (no secrets on disk):
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
   forum <COMMAND>             Agent notices, discussions, and replies
+  agent reach|send <TARGET>   Message the agent owning an issue/thread via Herdr
   ci wait [PR]                Block until merge readiness or an actionable blocker
   ci wait --main              Block until main's own verifying run passes or fails
   ci explain|main|load        Failure evidence, main health, and CI capacity
@@ -120,6 +121,10 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   [
     "tracker",
     () => import("./handlers/tracker.ts").then((m) => m.handleTrackerCommand),
+  ],
+  [
+    "agent",
+    () => import("./commands/agent.ts").then((m) => m.handleAgentCommand),
   ],
   ["ci", () => import("./handlers/ci.ts").then((m) => m.handleCiCommand)],
   [
