@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "443061",
+  "name": "Force Of Entropy",
+  "description": "Atrophy: When you Immobilizing a target roll your Critical Chance to increase their duration by 0.25 +33% seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "900"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "30"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/443061.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

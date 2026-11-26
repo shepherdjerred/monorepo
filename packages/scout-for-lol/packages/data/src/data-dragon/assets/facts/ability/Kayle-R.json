@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayle-R",
+  "name": "Divine Judgment",
+  "description": "Kayle makes an allied champion Invulnerable for 2.5 seconds and then purifies the area around them, dealing 200/300/400 (+70% AP) (+100% bonus AD) magic damage to nearby enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100/50/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayle-R.png",
+  "slot": "R",
+  "championKey": "Kayle",
+  "championName": "Kayle",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    110,
+    80
+  ],
+  "costByRank": [
+    100,
+    50,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/110/80 s"
+  }
+}

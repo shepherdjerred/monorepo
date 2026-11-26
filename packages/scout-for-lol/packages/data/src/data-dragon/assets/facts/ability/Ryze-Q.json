@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ryze-Q",
+  "name": "Overload",
+  "description": "Passive: Rune Prison and Spell Flux refresh this Ability's Cooldown and charge a rune for 4 seconds (max 2 runes).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/38/36/34/32 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ryze-Q.png",
+  "slot": "Q",
+  "championKey": "Ryze",
+  "championName": "Ryze",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    40,
+    38,
+    36,
+    34,
+    32
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

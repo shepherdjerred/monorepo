@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Caitlyn-E",
+  "name": "90 Caliber Net",
+  "description": "Caitlyn fires a net, pushing her backwards. The net Slows the first target hit by 50% for 1 second and deals 80/130/180/230/280 (+80% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Caitlyn-E.png",
+  "slot": "E",
+  "championKey": "Caitlyn",
+  "championName": "Caitlyn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14,
+    12,
+    10,
+    8
+  ],
+  "costByRank": [
+    75,
+    75,
+    75,
+    75,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    750,
+    750,
+    750,
+    750,
+    750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14/12/10/8 s"
+  }
+}

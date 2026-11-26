@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ahri-Q",
+  "name": "Orb of Deception",
+  "description": "Ahri throws then pulls back her orb, dealing 35/60/85/110/135 (+50% AP) magic damage on the way out and 35/60/85/110/135 (+50% AP) true damage on the way back.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/65/75/85/95 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "970"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ahri-Q.png",
+  "slot": "Q",
+  "championKey": "Ahri",
+  "championName": "Ahri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    55,
+    65,
+    75,
+    85,
+    95
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    970,
+    970,
+    970,
+    970,
+    970
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

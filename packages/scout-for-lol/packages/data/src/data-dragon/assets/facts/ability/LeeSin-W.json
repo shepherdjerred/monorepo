@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "LeeSin-W",
+  "name": "Safeguard / Iron Will",
+  "description": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself 60/105/150/195/240 (+80% AP) Shield for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/LeeSin-W.png",
+  "slot": "W",
+  "championKey": "LeeSin",
+  "championName": "Lee Sin",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nilah-passive",
+  "name": "Joy Unending",
+  "description": "Nilah gains increased experience from last-hitting minions along with the ability to enhance and share nearby healing and shielding from her allies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nilah-passive.png",
+  "slot": "passive",
+  "championKey": "Nilah",
+  "championName": "Nilah",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3011",
+  "name": "Chemtech Putrifier",
+  "description": "Puffcap Toxin: Dealing damage applies 40% Grievous Wounds to champions for 3 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "35"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3916",
+      "name": "Oblivion Orb",
+      "icon": "img/item/3916.png"
+    },
+    {
+      "kind": "item",
+      "key": "3114",
+      "name": "Forbidden Idol",
+      "icon": "img/item/3114.png"
+    }
+  ],
+  "icon": "img/item/3011.png",
+  "goldTotal": 1900,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1900 gold"
+  }
+}

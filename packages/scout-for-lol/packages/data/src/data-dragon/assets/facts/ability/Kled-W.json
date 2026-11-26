@@ -1,0 +1,40 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kled-W",
+  "name": "Violent Tendencies",
+  "description": "Passive: Kled's next Attack grants 150% Attack Speed for four Attacks or 4 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kled-W.png",
+  "slot": "W",
+  "championKey": "Kled",
+  "championName": "Kled",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223181",
+  "name": "Hullbreaker",
+  "description": "Skipper: Every fifth Attack against champions and epic monsters deals bonus physical damage, increased to against structures. Solo Party: While no allied champions are within 1500 range, you gain Armor and Magic Resist.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223181.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

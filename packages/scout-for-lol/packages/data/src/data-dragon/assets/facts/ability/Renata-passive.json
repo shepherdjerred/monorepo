@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renata-passive",
+  "name": "Leverage",
+  "description": "Renata's Attacks deal bonus damage and mark enemies. Renata's allies can damage marked enemies to deal bonus damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Renata-passive.png",
+  "slot": "passive",
+  "championKey": "Renata",
+  "championName": "Renata Glasc",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

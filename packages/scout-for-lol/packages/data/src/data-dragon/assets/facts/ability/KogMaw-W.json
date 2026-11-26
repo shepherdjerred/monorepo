@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KogMaw-W",
+  "name": "Bio-Arcane Barrage",
+  "description": "Kog'Maw's attacks gain range and deal a percent of the target's maximum health as magic damage %i:OnHit% On-Hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "530"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KogMaw-W.png",
+  "slot": "W",
+  "championKey": "KogMaw",
+  "championName": "Kog'Maw",
+  "maxRank": 5,
+  "cooldownByRank": [
+    17,
+    17,
+    17,
+    17,
+    17
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    530,
+    530,
+    530,
+    530,
+    530
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "17 s"
+  }
+}

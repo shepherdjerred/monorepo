@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Evelynn-passive",
+  "name": "Demon Shade",
+  "description": "When out of combat, Evelynn enters Demon Shade. Demon Shade heals Evelynn when she is low on health and grants Camouflage after level 6.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Evelynn-passive.png",
+  "slot": "passive",
+  "championKey": "Evelynn",
+  "championName": "Evelynn",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

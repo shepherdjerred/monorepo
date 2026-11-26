@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Heimerdinger-passive",
+  "name": "Hextech Affinity",
+  "description": "Gain Move Speed while near allied towers and turrets deployed by Heimerdinger.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Heimerdinger-passive.png",
+  "slot": "passive",
+  "championKey": "Heimerdinger",
+  "championName": "Heimerdinger",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

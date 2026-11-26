@@ -1,0 +1,48 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Udyr-W",
+  "name": "Iron Mantle",
+  "description": "Mantle Stance: Udyr gains 45/65/85/105/125/145 (+2/2.3/2.6/2.9/3.2/3.5% max Health) (+40% AP) (+50% bonus AD) Shield for 4 seconds. Additionally, Udyr's next two Attacks gain 15/16/17/18/19/20% Life Steal and restore 1.2% max Health (+8% AP) Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Udyr-W.png",
+  "slot": "W",
+  "championKey": "Udyr",
+  "championName": "Udyr",
+  "maxRank": 6,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

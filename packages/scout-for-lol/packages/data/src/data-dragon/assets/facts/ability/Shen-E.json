@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shen-E",
+  "name": "Shadow Dash",
+  "description": "Passive: Dealing damage with Twilight Assault or this Ability recovers 30-50 (based on level) Energy. Active: Shen dashes, Taunting champions and jungle monsters for 1.5 seconds and dealing 60/85/110/135/160 (+11% bonus Health) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "150 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shen-E.png",
+  "slot": "E",
+  "championKey": "Shen",
+  "championName": "Shen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    16,
+    14,
+    12,
+    10
+  ],
+  "costByRank": [
+    150,
+    150,
+    150,
+    150,
+    150
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/16/14/12/10 s"
+  }
+}

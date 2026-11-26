@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773140",
+  "name": "Quicksilver Sash",
+  "description": "Active 90s Removes all debuffs.",
+  "facts": [
+    {
+      "label": "Magic Resist",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771057",
+      "name": "Negatron Cloak",
+      "icon": "img/item/771057.png"
+    }
+  ],
+  "icon": "img/item/773140.png",
+  "goldTotal": 1550,
+  "goldCombine": 830,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1550 gold"
+  }
+}

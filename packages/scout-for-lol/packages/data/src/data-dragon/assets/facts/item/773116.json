@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773116",
+  "name": "Rylai's Crystal Scepter",
+  "description": "Frost Crystal: Dealing spell damage Slows the target's Move Speed by 35% for 1.5 seconds (15% for multi-target and damage-over-time spells).",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "500"
+    },
+    {
+      "label": "Ability Power",
+      "value": "80"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771026",
+      "name": "Blasting Wand",
+      "icon": "img/item/771026.png"
+    },
+    {
+      "kind": "item",
+      "key": "771052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/771052.png"
+    },
+    {
+      "kind": "item",
+      "key": "771011",
+      "name": "Giant's Belt",
+      "icon": "img/item/771011.png"
+    }
+  ],
+  "icon": "img/item/773116.png",
+  "goldTotal": 2900,
+  "goldCombine": 605,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2900 gold"
+  }
+}

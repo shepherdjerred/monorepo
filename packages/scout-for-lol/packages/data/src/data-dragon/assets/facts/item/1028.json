@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1028",
+  "name": "Ruby Crystal",
+  "description": "Grants 150 Health.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1028.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

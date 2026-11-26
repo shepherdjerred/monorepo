@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3105",
+  "name": "Aegis of the Legion",
+  "description": "Grants 25 Armor, 25 Magic Resist, 10 Ability Haste.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "25"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/1033.png"
+    },
+    {
+      "kind": "item",
+      "key": "1029",
+      "name": "Cloth Armor",
+      "icon": "img/item/1029.png"
+    }
+  ],
+  "icon": "img/item/3105.png",
+  "goldTotal": 1100,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

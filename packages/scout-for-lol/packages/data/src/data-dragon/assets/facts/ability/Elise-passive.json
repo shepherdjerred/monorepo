@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Elise-passive",
+  "name": "Spider Queen",
+  "description": "Human Form: When Elise's abilities hit an enemy, she gains a dormant Spiderling. Spider Form: Basic attacks deal bonus magic damage and restore health to Elise.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Elise-passive.png",
+  "slot": "passive",
+  "championKey": "Elise",
+  "championName": "Elise",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

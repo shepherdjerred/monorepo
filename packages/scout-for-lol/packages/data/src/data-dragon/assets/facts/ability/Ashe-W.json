@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ashe-W",
+  "name": "Volley",
+  "description": "Ashe fires a volley of 7/8/9/10/11 arrows, each dealing 60/95/130/165/200 (+100% bonus AD) physical damage. Enemies can be hit by multiple arrows, but only take damage from the first.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75/70/65/60/55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ashe-W.png",
+  "slot": "W",
+  "championKey": "Ashe",
+  "championName": "Ashe",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    14.5,
+    11,
+    7.5,
+    4
+  ],
+  "costByRank": [
+    75,
+    70,
+    65,
+    60,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/14.5/11/7.5/4 s"
+  }
+}

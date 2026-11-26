@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9407",
+  "name": "Hopped-Up Hex",
+  "description": "Aurora now shoots more hexes and her purge now deals damage in an area around Hexedtarget.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9407.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

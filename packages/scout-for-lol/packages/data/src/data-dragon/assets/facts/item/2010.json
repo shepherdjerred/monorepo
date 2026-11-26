@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2010",
+  "name": "Total Biscuit of Everlasting Will",
+  "description": "Active - Consume: Eat the biscuit to restore Health over 5 seconds, increased based on missing health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2010.png",
+  "goldTotal": 50,
+  "goldCombine": 50,
+  "keyFact": {
+    "label": "Cost",
+    "value": "50 gold"
+  }
+}

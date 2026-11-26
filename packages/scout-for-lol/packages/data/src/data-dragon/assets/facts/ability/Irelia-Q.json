@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Irelia-Q",
+  "name": "Bladesurge",
+  "description": "Irelia dashes to an enemy, dealing 5/25/45/65/85 (+80% AD) physical damage and restoring 9/10/11/12/13% AD Health to herself. If the enemy dies or was Unsteady, the Cooldown is refreshed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "15 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Irelia-Q.png",
+  "slot": "Q",
+  "championKey": "Irelia",
+  "championName": "Irelia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    15,
+    15,
+    15,
+    15,
+    15
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

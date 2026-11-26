@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ryze-E",
+  "name": "Spell Flux",
+  "description": "Ryze releases an orb of pure magical power that damages an enemy and debuffs all nearby enemies. Ryze's spells have additional effects against the debuffed enemy.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/50/60/70/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "615"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ryze-E.png",
+  "slot": "E",
+  "championKey": "Ryze",
+  "championName": "Ryze",
+  "maxRank": 5,
+  "cooldownByRank": [
+    3.5,
+    3.25,
+    3,
+    2.75,
+    2.5
+  ],
+  "costByRank": [
+    40,
+    50,
+    60,
+    70,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    615,
+    615,
+    615,
+    615,
+    615
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "3.5/3.25/3/2.75/2.5 s"
+  }
+}

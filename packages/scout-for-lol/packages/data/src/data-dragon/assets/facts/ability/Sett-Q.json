@@ -1,0 +1,40 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sett-Q",
+  "name": "Knuckle Down",
+  "description": "Sett itches for a fight, gaining 30% Move Speed towards enemy champions for 1.5 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Sett-Q.png",
+  "slot": "Q",
+  "championKey": "Sett",
+  "championName": "Sett",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

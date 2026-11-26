@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4003",
+  "name": "Lifeline",
+  "description": "Active -. Soul Anchor: (0s) Mark your current location.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    },
+    {
+      "label": "Lethality",
+      "value": "5"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "6690",
+      "name": "Rectrix",
+      "icon": "img/item/6690.png"
+    },
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/4003.png",
+  "goldTotal": 1600,
+  "goldCombine": 475,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1600 gold"
+  }
+}

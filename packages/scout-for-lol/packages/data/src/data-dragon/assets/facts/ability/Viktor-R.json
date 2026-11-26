@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viktor-R",
+  "name": "Arcane Storm",
+  "description": "Viktor conjures an Arcane Storm in an area for 6.5 seconds, which instantly deals 100/175/250 (+60% AP) magic damage followed by 65/105/145 (+35% AP) magic damage per second to surrounding enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viktor-R.png",
+  "slot": "R",
+  "championKey": "Viktor",
+  "championName": "Viktor",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

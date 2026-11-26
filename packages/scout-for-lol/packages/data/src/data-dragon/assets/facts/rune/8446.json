@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8446",
+  "name": "Demolish",
+  "description": "Your third attack against turrets deals bonus damage.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    },
+    {
+      "label": "Cooldown",
+      "value": "30s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Demolish.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

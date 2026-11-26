@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Poppy-Q",
+  "name": "Hammer Shock",
+  "description": "Poppy smashes the ground, dealing 30/55/80/105/130 (+75% bonus AD) plus 7/7.5/8/8.5/9% max Health physical damage and making the ground unstable.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35/40/45/50/55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "430"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Poppy-Q.png",
+  "slot": "Q",
+  "championKey": "Poppy",
+  "championName": "Poppy",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7,
+    6,
+    5,
+    4
+  ],
+  "costByRank": [
+    35,
+    40,
+    45,
+    50,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    430,
+    430,
+    430,
+    430,
+    430
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7/6/5/4 s"
+  }
+}

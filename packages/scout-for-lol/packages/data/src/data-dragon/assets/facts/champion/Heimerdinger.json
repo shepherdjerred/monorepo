@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Heimerdinger",
+  "name": "Heimerdinger",
+  "description": "The eccentric Professor Cecil B. Heimerdinger is one of the most innovative and esteemed inventors the world has ever known.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "558"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Heimerdinger-passive",
+      "name": "Hextech Affinity",
+      "icon": "img/ability/Heimerdinger-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Heimerdinger-Q",
+      "name": "H-28 G Evolution Turret",
+      "icon": "img/ability/Heimerdinger-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Heimerdinger-W",
+      "name": "Hextech Micro-Rockets",
+      "icon": "img/ability/Heimerdinger-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Heimerdinger-E",
+      "name": "CH-2 Electron Storm Grenade",
+      "icon": "img/ability/Heimerdinger-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Heimerdinger-R",
+      "name": "UPGRADE!!!",
+      "icon": "img/ability/Heimerdinger-R.png"
+    }
+  ],
+  "icon": "img/champion/Heimerdinger.png",
+  "art": "img/champion-splash/Heimerdinger_0.jpg",
+  "title": "the Revered Inventor",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

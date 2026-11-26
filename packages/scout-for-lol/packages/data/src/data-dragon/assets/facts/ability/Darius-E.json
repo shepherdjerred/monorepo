@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Darius-E",
+  "name": "Apprehend",
+  "description": "Passive: Darius gains 20/25/30/35/40% Armor Penetration. Active: Darius hooks with his axe, Pulling, and Knocking Up and Slowing by 40% for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/60/50/40/30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "535"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Darius-E.png",
+  "slot": "E",
+  "championKey": "Darius",
+  "championName": "Darius",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    23.5,
+    21,
+    18.5,
+    16
+  ],
+  "costByRank": [
+    70,
+    60,
+    50,
+    40,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    535,
+    535,
+    535,
+    535,
+    535
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/23.5/21/18.5/16 s"
+  }
+}

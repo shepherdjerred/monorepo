@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9179",
+  "name": "Battle Bunny Crossbow",
+  "description": "Fires a cone of projectiles with bonus crit chance in a random direction.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9179.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

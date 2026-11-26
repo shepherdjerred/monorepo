@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Locke-passive",
+  "name": "Silver Stake",
+  "description": "Locke's attacks deal additional magic damage On-Hit, increased based on enemy missing Health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Locke-passive.png",
+  "slot": "passive",
+  "championKey": "Locke",
+  "championName": "Locke",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

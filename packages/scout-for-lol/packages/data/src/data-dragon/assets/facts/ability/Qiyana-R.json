@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Qiyana-R",
+  "name": "Supreme Display of Talent",
+  "description": "Qiyana launches a shockwave that Knocks Back enemies and detonates when it hits terrain. The explosion follows the entire edge of the terrain, Stunning for between 0.5 and 1 seconds and dealing 100/200/300 (+125% bonus AD) plus 10% max Health physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Qiyana-R.png",
+  "slot": "R",
+  "championKey": "Qiyana",
+  "championName": "Qiyana",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    120,
+    120
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120 s"
+  }
+}

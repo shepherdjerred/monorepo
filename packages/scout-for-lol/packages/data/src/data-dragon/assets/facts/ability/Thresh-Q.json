@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Thresh-Q",
+  "name": "Death Sentence",
+  "description": "Thresh throws out his scythe, Stunning the first unit hit and Pulling them towards Thresh for 1.5 seconds. The scythe does 100/150/200/250/300 (+90% AP) magic damage and also grants True Sight for the duration.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1075"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Thresh-Q.png",
+  "slot": "Q",
+  "championKey": "Thresh",
+  "championName": "Thresh",
+  "maxRank": 5,
+  "cooldownByRank": [
+    19,
+    16.5,
+    14,
+    11.5,
+    9
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1075,
+    1075,
+    1075,
+    1075,
+    1075
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "19/16.5/14/11.5/9 s"
+  }
+}

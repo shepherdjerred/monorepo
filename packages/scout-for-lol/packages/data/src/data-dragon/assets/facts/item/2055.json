@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2055",
+  "name": "Control Ward",
+  "description": "Consume: Places a Control Ward that grants vision and reveals enemy Stealth Wards, traps and Camouflaged enemies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2055.png",
+  "goldTotal": 75,
+  "goldCombine": 75,
+  "keyFact": {
+    "label": "Cost",
+    "value": "75 gold"
+  }
+}

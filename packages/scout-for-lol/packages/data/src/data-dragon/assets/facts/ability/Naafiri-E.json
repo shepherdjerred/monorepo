@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Naafiri-E",
+  "name": "Eviscerate",
+  "description": "Naafiri surges forward, dealing 15/25/35/45/55 (+40% bonus AD) physical damage, then explodes in a flurry of blades, dealing 60/85/110/135/160 (+80% bonus AD) physical damage. Packmates become Untargetable and are recalled to Naafiri restoring 100% Health.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Naafiri-E.png",
+  "slot": "E",
+  "championKey": "Naafiri",
+  "championName": "Naafiri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

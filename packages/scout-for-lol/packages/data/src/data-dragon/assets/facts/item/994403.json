@@ -1,0 +1,69 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "994403",
+  "name": "Golden Spatula",
+  "description": "Doing Something: You are permanently On Fire!",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "90"
+    },
+    {
+      "label": "Ability Power",
+      "value": "110"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "15%"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Armor",
+      "value": "20"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "20"
+    },
+    {
+      "label": "Mana",
+      "value": "200"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    },
+    {
+      "label": "Move Speed",
+      "value": "10%"
+    },
+    {
+      "label": "Life Steal",
+      "value": "10%"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "50%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/994403.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

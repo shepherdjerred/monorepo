@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Twitch",
+  "name": "Twitch",
+  "description": "A Zaunite plague rat by birth, but a connoisseur of filth by passion, Twitch is not afraid to get his paws dirty.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Twitch-passive",
+      "name": "Deadly Venom",
+      "icon": "img/ability/Twitch-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Twitch-Q",
+      "name": "Ambush",
+      "icon": "img/ability/Twitch-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Twitch-W",
+      "name": "Venom Cask",
+      "icon": "img/ability/Twitch-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Twitch-E",
+      "name": "Contaminate",
+      "icon": "img/ability/Twitch-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Twitch-R",
+      "name": "Spray and Pray",
+      "icon": "img/ability/Twitch-R.png"
+    }
+  ],
+  "icon": "img/champion/Twitch.png",
+  "art": "img/champion-splash/Twitch_0.jpg",
+  "title": "the Plague Rat",
+  "roles": [
+    "Marksman",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Assassin"
+  }
+}

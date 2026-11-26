@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MissFortune-W",
+  "name": "Strut",
+  "description": "Passive: After 4 seconds of not taking damage, Miss Fortune gains 30/35/40/45/50 Move Speed. After another 3 seconds, this increases to 60/70/80/90/100.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MissFortune-W.png",
+  "slot": "W",
+  "championKey": "MissFortune",
+  "championName": "Miss Fortune",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    45,
+    45,
+    45,
+    45,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jinx-passive",
+  "name": "Get Excited!",
+  "description": "Jinx receives massively increased Move Speed and Attack Speed whenever she helps kill or destroy an enemy champions epic jungle monster, or structure.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Jinx-passive.png",
+  "slot": "passive",
+  "championKey": "Jinx",
+  "championName": "Jinx",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

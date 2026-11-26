@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiddlesticks-R",
+  "name": "Crowstorm",
+  "description": "Fiddlesticks channels for 1.5 seconds, then teleports and unleashes a murder of crows, dealing 750/1250/1750 (+250% AP) magic damage over 5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiddlesticks-R.png",
+  "slot": "R",
+  "championKey": "Fiddlesticks",
+  "championName": "Fiddlesticks",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    110,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/110/80 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Karma-passive",
+  "name": "Gathering Fire",
+  "description": "Karma's damaging abilities will reduce the cooldown of Mantra.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Karma-passive.png",
+  "slot": "passive",
+  "championKey": "Karma",
+  "championName": "Karma",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

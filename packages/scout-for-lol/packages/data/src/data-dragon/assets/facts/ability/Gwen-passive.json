@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gwen-passive",
+  "name": "A Thousand Cuts",
+  "description": "Gwen's attacks deal bonus magic damage based on the targets health. She heals for a portion of the damage dealt to champions by this effect.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Gwen-passive.png",
+  "slot": "passive",
+  "championKey": "Gwen",
+  "championName": "Gwen",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

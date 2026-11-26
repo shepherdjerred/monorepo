@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Bard-passive",
+  "name": "Traveler's Call",
+  "description": "Meeps: Bard attracts lesser spirits that assist with his basic attacks to deal extra magic damage. When Bard has collected enough Chimes, his meeps will also deal damage in an area and slow enemies hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Bard-passive.png",
+  "slot": "passive",
+  "championKey": "Bard",
+  "championName": "Bard",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

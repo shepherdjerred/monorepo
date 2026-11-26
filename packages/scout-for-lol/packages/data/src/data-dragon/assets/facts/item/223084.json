@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223084",
+  "name": "Heartsteel",
+  "description": "Colossal Consumption: (0s) per target Charge up a powerful attack against a champion over time while near them. Goliath: Gain increased size based on Total Health.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223084.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

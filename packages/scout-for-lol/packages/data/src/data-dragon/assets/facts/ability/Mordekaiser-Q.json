@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mordekaiser-Q",
+  "name": "Obliterate",
+  "description": "Mordekaiser smashes the ground with his mace dealing damage to each enemy struck. Damage is increased when hitting a single enemy.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "675"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Mordekaiser-Q.png",
+  "slot": "Q",
+  "championKey": "Mordekaiser",
+  "championName": "Mordekaiser",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7,
+    6,
+    5,
+    4
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    675,
+    675,
+    675,
+    675,
+    675
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7/6/5/4 s"
+  }
+}

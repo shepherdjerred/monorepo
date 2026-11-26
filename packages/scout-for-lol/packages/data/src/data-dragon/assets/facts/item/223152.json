@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223152",
+  "name": "Hextech Rocketbelt",
+  "description": "Active -. Supersonic: Dash in target direction, unleashing an arc of magic missiles that deal damage.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "95"
+    },
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223152.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

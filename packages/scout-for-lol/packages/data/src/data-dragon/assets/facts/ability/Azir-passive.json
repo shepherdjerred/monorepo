@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Azir-passive",
+  "name": "Shurima's Legacy",
+  "description": "Azir can summon the Disc of the Sun from the ruins of allied or enemy turrets.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Azir-passive.png",
+  "slot": "passive",
+  "championKey": "Azir",
+  "championName": "Azir",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

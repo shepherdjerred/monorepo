@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shen-R",
+  "name": "Stand United",
+  "description": "Shen grants an allied champion anywhere on the map between 120/220/320 (+15% bonus Health) (+135% AP) and 192/352/512 (+24% bonus Health) (+216% AP) Shield based on their missing Health for 5 seconds (max Shield at 60% missing Health).",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "35000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shen-R.png",
+  "slot": "R",
+  "championKey": "Shen",
+  "championName": "Shen",
+  "maxRank": 3,
+  "cooldownByRank": [
+    200,
+    180,
+    160
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    35000,
+    35000,
+    35000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "200/180/160 s"
+  }
+}

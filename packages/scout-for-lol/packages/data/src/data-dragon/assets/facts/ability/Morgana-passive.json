@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Morgana-passive",
+  "name": "Soul Siphon",
+  "description": "Morgana drains spirit from her enemies, healing as she deals damage to champions, large minions, and medium and larger jungler monsters.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Morgana-passive.png",
+  "slot": "passive",
+  "championKey": "Morgana",
+  "championName": "Morgana",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

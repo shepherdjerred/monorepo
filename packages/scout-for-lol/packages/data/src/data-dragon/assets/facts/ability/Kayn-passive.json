@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayn-passive",
+  "name": "The Darkin Scythe",
+  "description": "Kayn wields an ancient weapon and fights Rhaast, the darkin within it, for control. Either the Darkin will triumph, or Kayn will master Rhaast and become the Shadow Assassin.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Kayn-passive.png",
+  "slot": "passive",
+  "championKey": "Kayn",
+  "championName": "Kayn",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

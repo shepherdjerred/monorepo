@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Camille-W",
+  "name": "Tactical Sweep",
+  "description": "Camille winds up and slices, dealing 60/85/110/135/160 (+60% bonus AD) physical damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "610"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Camille-W.png",
+  "slot": "W",
+  "championKey": "Camille",
+  "championName": "Camille",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    610,
+    610,
+    610,
+    610,
+    610
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

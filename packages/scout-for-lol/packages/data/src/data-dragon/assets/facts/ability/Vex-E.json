@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vex-E",
+  "name": "Looming Darkness",
+  "description": "Vex commands Shadow to fly to a location, increasing in size as it travels. Upon arriving, it deals 50/70/90/110/130 (+40/45/50/55/60% AP) magic damage and Slows by 30/35/40/45/50% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/80/90/100/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vex-E.png",
+  "slot": "E",
+  "championKey": "Vex",
+  "championName": "Vex",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    70,
+    80,
+    90,
+    100,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

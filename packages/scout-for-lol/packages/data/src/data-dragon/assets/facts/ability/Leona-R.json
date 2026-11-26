@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leona-R",
+  "name": "Solar Flare",
+  "description": "Leona calls down a radiant beam of solar energy dealing 150/225/300 (+80% AP) magic damage and Slowing by 80% for 1.75 seconds. Enemies in the center of the flare are Stunned instead of Slowed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leona-R.png",
+  "slot": "R",
+  "championKey": "Leona",
+  "championName": "Leona",
+  "maxRank": 3,
+  "cooldownByRank": [
+    90,
+    75,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "90/75/60 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taliyah-W",
+  "name": "Seismic Shove",
+  "description": "Taliyah quakes the earth, Knocking enemies in an area in the chosen direction.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/30/20/10/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Taliyah-W.png",
+  "slot": "W",
+  "championKey": "Taliyah",
+  "championName": "Taliyah",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    12.5,
+    11,
+    9.5,
+    8
+  ],
+  "costByRank": [
+    40,
+    30,
+    20,
+    10,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/12.5/11/9.5/8 s"
+  }
+}

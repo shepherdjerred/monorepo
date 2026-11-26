@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Talon",
+  "name": "Talon",
+  "description": "Talon is the knife in the darkness, a merciless killer able to strike without warning and escape before any alarm is raised.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "658"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Talon-passive",
+      "name": "Blade's End",
+      "icon": "img/ability/Talon-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Talon-Q",
+      "name": "Noxian Diplomacy",
+      "icon": "img/ability/Talon-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Talon-W",
+      "name": "Rake",
+      "icon": "img/ability/Talon-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Talon-E",
+      "name": "Assassin's Path",
+      "icon": "img/ability/Talon-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Talon-R",
+      "name": "Shadow Assault",
+      "icon": "img/ability/Talon-R.png"
+    }
+  ],
+  "icon": "img/champion/Talon.png",
+  "art": "img/champion-splash/Talon_0.jpg",
+  "title": "the Blade's Shadow",
+  "roles": [
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin"
+  }
+}

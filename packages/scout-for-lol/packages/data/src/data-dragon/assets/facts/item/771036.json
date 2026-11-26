@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771036",
+  "name": "Long Sword",
+  "description": "Grants 10 Attack Damage.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771036.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

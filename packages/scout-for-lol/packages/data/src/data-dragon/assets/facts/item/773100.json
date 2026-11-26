@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773100",
+  "name": "Lich Bane",
+  "description": "Spellblade of The Arcane: After using an ability, the next Basic Attack deals bonus magic damage On-Hit (2 second cooldown).",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "80"
+    },
+    {
+      "label": "Mana",
+      "value": "250"
+    },
+    {
+      "label": "Move Speed",
+      "value": "5%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773057",
+      "name": "Sheen",
+      "icon": "img/item/773057.png"
+    },
+    {
+      "kind": "item",
+      "key": "771026",
+      "name": "Blasting Wand",
+      "icon": "img/item/771026.png"
+    }
+  ],
+  "icon": "img/item/773100.png",
+  "goldTotal": 3000,
+  "goldCombine": 940,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

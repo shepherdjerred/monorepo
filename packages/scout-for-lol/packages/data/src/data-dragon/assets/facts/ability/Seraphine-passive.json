@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Seraphine-passive",
+  "name": "Stage Presence",
+  "description": "Every third basic spell will cast twice from Seraphine. Additionally, casting spells near allies grants her bonus magic damage and range on her next basic attack.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Seraphine-passive.png",
+  "slot": "passive",
+  "championKey": "Seraphine",
+  "championName": "Seraphine",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

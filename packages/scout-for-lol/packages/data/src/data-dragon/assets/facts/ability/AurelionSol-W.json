@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "AurelionSol-W",
+  "name": "Astral Flight",
+  "description": "Aurelion Sol flies in a direction. While flying, Breath of Light has no Cooldown, no max channel duration, and its flat damage is increased by 8/9/10/11/12%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/AurelionSol-W.png",
+  "slot": "W",
+  "championKey": "AurelionSol",
+  "championName": "Aurelion Sol",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    20,
+    18,
+    16,
+    14
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1500,
+    1500,
+    1500,
+    1500,
+    1500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/20/18/16/14 s"
+  }
+}

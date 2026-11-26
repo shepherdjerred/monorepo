@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vladimir-passive",
+  "name": "Crimson Pact",
+  "description": "Every 30 points of bonus Health gives Vladimir 1 Ability Power and every 1 point of Ability Power gives Vladimir 1.6 bonus Health (does not stack with itself).",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Vladimir-passive.png",
+  "slot": "passive",
+  "championKey": "Vladimir",
+  "championName": "Vladimir",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

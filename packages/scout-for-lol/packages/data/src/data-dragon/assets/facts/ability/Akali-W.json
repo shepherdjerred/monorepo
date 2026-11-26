@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akali-W",
+  "name": "Twilight Shroud",
+  "description": "Akali drops a smoke bomb, unleashing a spreading cover of smoke lasting 5/5.5/6/6.5/7 seconds and granting herself 30/35/40/45/50% Move Speed decaying over 2 seconds. Akali increases her max Energy by 100 while the shroud is active.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Akali-W.png",
+  "slot": "W",
+  "championKey": "Akali",
+  "championName": "Akali",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    19,
+    18,
+    17,
+    16
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/19/18/17/16 s"
+  }
+}

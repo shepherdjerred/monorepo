@@ -1,0 +1,23 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773515",
+  "name": "Hex Core mk-2",
+  "description": "",
+  "facts": [],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773514",
+      "name": "Hex Core mk-1",
+      "icon": "img/item/773514.png"
+    }
+  ],
+  "icon": "img/item/773515.png",
+  "goldTotal": 2250,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773517",
+  "name": "Eggnog",
+  "description": "Click to Consume: Restores 150 Health over 15 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/773517.png",
+  "goldTotal": 35,
+  "goldCombine": 35,
+  "keyFact": {
+    "label": "Cost",
+    "value": "35 gold"
+  }
+}

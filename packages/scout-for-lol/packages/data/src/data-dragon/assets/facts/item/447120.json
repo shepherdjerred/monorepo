@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "447120",
+  "name": "Diamond-Tipped Spear",
+  "description": "Reach Weapon: Increase your attack range by 75. Sweet Spot: Deal up to 30% increased damage with Attacks and 50% with Abilities based on how far your target is from you.",
+  "facts": [
+    {
+      "label": "Adaptive Force",
+      "value": "75"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/447120.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

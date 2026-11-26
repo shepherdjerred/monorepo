@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kennen-Q",
+  "name": "Thundering Shuriken",
+  "description": "Kennen throws a shuriken, dealing 75/125/175/225/275 (+75% AP) magic damage to the first enemy hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/55/50/45/40 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kennen-Q.png",
+  "slot": "Q",
+  "championKey": "Kennen",
+  "championName": "Kennen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.25,
+    5.5,
+    4.75,
+    4
+  ],
+  "costByRank": [
+    60,
+    55,
+    50,
+    45,
+    40
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.25/5.5/4.75/4 s"
+  }
+}

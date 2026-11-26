@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayn-W",
+  "name": "Blade's Reach",
+  "description": "Kayn swipes his scythe upward, dealing 85/130/175/220/265 (+110% bonus AD) physical damage and Slowing enemies hit by 90%, decaying over 1.5 seconds. Shadow Assassin: Kayn can move while using this Ability and increases its range.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayn-W.png",
+  "slot": "W",
+  "championKey": "Kayn",
+  "championName": "Kayn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

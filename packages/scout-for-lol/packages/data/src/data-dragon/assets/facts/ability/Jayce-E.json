@@ -1,0 +1,52 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Jayce-E",
+  "name": "Thundering Blow / Acceleration Gate",
+  "description": "Hammer Form: Jayce swings his hammer, Knocking Back his target and dealing 100% bonus AD plus 8/10.8/13.6/16.4/19.2/22% max Health magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "240"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Jayce-E.png",
+  "slot": "E",
+  "championKey": "Jayce",
+  "championName": "Jayce",
+  "maxRank": 6,
+  "cooldownByRank": [
+    20,
+    18,
+    16,
+    14,
+    12,
+    10
+  ],
+  "costByRank": [
+    55,
+    55,
+    55,
+    55,
+    55,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    240,
+    240,
+    240,
+    240,
+    240,
+    240
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18/16/14/12/10 s"
+  }
+}

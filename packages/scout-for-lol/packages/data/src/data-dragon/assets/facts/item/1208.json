@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1208",
+  "name": "Support Quest Reward",
+  "description": "Rewards • A new slot for control wards • Discounted control wards • Bounty of Worlds item",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/1208.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

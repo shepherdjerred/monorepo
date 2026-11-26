@@ -3,6 +3,8 @@
 type AssetCheck = {
   label: string;
   maxBytes: number;
+  /** Optional budget for every matched file together. */
+  totalMaxBytes?: number;
   patterns: readonly string[];
 };
 
@@ -36,6 +38,14 @@ const checks: readonly AssetCheck[] = [
     ],
   },
   {
+    // One JSON file per entity, fetched on hover; the whole folder ships with
+    // the shared asset corpus.
+    label: "Game fact file",
+    maxBytes: 8 * 1024,
+    totalMaxBytes: 3 * BYTES_PER_MIB,
+    patterns: ["packages/data/src/data-dragon/assets/facts/**/*.json"],
+  },
+  {
     label: "Scout top-level image asset",
     maxBytes: 5 * BYTES_PER_MIB,
     patterns: [
@@ -52,6 +62,46 @@ function formatMib(bytes: number): string {
   return `${(bytes / BYTES_PER_MIB).toFixed(2)} MiB`;
 }
 
+async function scanCheck(
+  check: AssetCheck,
+  checkedPaths: Set<string>,
+): Promise<{ checkedCount: number; violations: AssetViolation[] }> {
+  let checkedCount = 0;
+  let totalBytes = 0;
+  const violations: AssetViolation[] = [];
+
+  for (const pattern of check.patterns) {
+    const glob = new Bun.Glob(pattern);
+    for await (const relativePath of glob.scan({ cwd: scoutRoot })) {
+      if (checkedPaths.has(relativePath)) {
+        continue;
+      }
+      checkedPaths.add(relativePath);
+      checkedCount++;
+
+      const size = Bun.file(`${scoutRoot}/${relativePath}`).size;
+      totalBytes += size;
+      if (size > check.maxBytes) {
+        violations.push({
+          label: check.label,
+          maxBytes: check.maxBytes,
+          path: `packages/scout-for-lol/${relativePath}`,
+          size,
+        });
+      }
+    }
+  }
+  if (check.totalMaxBytes !== undefined && totalBytes > check.totalMaxBytes) {
+    violations.push({
+      label: `${check.label} total`,
+      maxBytes: check.totalMaxBytes,
+      path: `packages/scout-for-lol/${check.patterns.join(", ")}`,
+      size: totalBytes,
+    });
+  }
+  return { checkedCount, violations };
+}
+
 async function scanAssets(): Promise<{
   checkedCount: number;
   violations: AssetViolation[];
@@ -61,26 +111,9 @@ async function scanAssets(): Promise<{
   const violations: AssetViolation[] = [];
 
   for (const check of checks) {
-    for (const pattern of check.patterns) {
-      const glob = new Bun.Glob(pattern);
-      for await (const relativePath of glob.scan({ cwd: scoutRoot })) {
-        if (checkedPaths.has(relativePath)) {
-          continue;
-        }
-        checkedPaths.add(relativePath);
-        checkedCount++;
-
-        const size = Bun.file(`${scoutRoot}/${relativePath}`).size;
-        if (size > check.maxBytes) {
-          violations.push({
-            label: check.label,
-            maxBytes: check.maxBytes,
-            path: `packages/scout-for-lol/${relativePath}`,
-            size,
-          });
-        }
-      }
-    }
+    const result = await scanCheck(check, checkedPaths);
+    checkedCount += result.checkedCount;
+    violations.push(...result.violations);
   }
 
   return { checkedCount, violations };
@@ -99,5 +132,5 @@ if (violations.length > 0) {
 }
 
 console.log(
-  `Checked ${String(checkedCount)} Scout image assets; all are within size limits.`,
+  `Checked ${String(checkedCount)} Scout assets; all are within size limits.`,
 );

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akali-E",
+  "name": "Shuriken Flip",
+  "description": "Akali flips backwards as she throws a shuriken, dealing 21/42/63/84/105 (+30% AD) (+33% AP) magic damage and marking the first enemy or smoke cloud hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Akali-E.png",
+  "slot": "E",
+  "championKey": "Akali",
+  "championName": "Akali",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    14.5,
+    13,
+    11.5,
+    10
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    825,
+    825,
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/14.5/13/11.5/10 s"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "MasterYi-E",
+  "name": "Wuju Style",
+  "description": "Master Yi's Attacks deal an additional 20/25/30/35/40 (+35% bonus AD) true damage for 5 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/MasterYi-E.png",
+  "slot": "E",
+  "championKey": "MasterYi",
+  "championName": "Master Yi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    14,
+    14,
+    14,
+    14
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14 s"
+  }
+}

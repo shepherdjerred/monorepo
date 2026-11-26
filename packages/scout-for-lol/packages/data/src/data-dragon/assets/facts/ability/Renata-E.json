@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renata-E",
+  "name": "Loyalty Program",
+  "description": "Renata sends out a pair of chemtech missiles, dealing 65/95/125/155/185 (+55% AP) magic damage and Slowing surrounding enemies and enemies hit by 30% for 2 seconds. Allies hit gain 50/65/80/95/110 (+50% AP) Shield for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/80/90/100/110 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renata-E.png",
+  "slot": "E",
+  "championKey": "Renata",
+  "championName": "Renata Glasc",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    70,
+    80,
+    90,
+    100,
+    110
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Chogath-passive",
+  "name": "Carnivore",
+  "description": "Whenever Cho'Gath kills a unit, he recovers Health and Mana. The values restored increase with Cho'Gath's level.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Chogath-passive.png",
+  "slot": "passive",
+  "championKey": "Chogath",
+  "championName": "Cho'Gath",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

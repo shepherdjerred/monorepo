@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223074",
+  "name": "Ravenous Hydra",
+  "description": "Cleave: Attacks and Abilities deal physical damage to other nearby enemies. Ravenous Crescent: Deal physical damage to enemies around you.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "70"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Life Steal",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223074.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

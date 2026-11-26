@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9176",
+  "name": "Gatling Bunny-Guns",
+  "description": "Deals area damage over time in a cone.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9176.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

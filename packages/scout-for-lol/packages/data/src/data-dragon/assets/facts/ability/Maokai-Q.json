@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Maokai-Q",
+  "name": "Bramble Smash",
+  "description": "Maokai smashes his fist into the ground, dealing 75/120/165/210/255 (+50% AP) plus 2.5/3/3.5/4/4.5% max Health magic damage and briefly Slowing. Nearby enemies are also Knocked Back.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Maokai-Q.png",
+  "slot": "Q",
+  "championKey": "Maokai",
+  "championName": "Maokai",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.5,
+    6,
+    5.5,
+    5
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.5/6/5.5/5 s"
+  }
+}

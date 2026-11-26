@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Poppy-passive",
+  "name": "Iron Ambassador",
+  "description": "Poppy throws her buckler that bounces off the target. Poppy can pick it up to gain a temporary shield.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Poppy-passive.png",
+  "slot": "passive",
+  "championKey": "Poppy",
+  "championName": "Poppy",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

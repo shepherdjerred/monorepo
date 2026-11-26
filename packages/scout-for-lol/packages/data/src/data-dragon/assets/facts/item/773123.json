@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773123",
+  "name": "Executioner's Calling",
+  "description": "Rending Strike: Basic Attacks inflict Grievous Wounds on enemy champions for 1.5 seconds On-Hit.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773093",
+      "name": "Avarice Blade",
+      "icon": "img/item/773093.png"
+    },
+    {
+      "kind": "item",
+      "key": "771036",
+      "name": "Long Sword",
+      "icon": "img/item/771036.png"
+    }
+  ],
+  "icon": "img/item/773123.png",
+  "goldTotal": 1900,
+  "goldCombine": 700,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1900 gold"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Shaco",
+  "name": "Shaco",
+  "description": "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Shaco-passive",
+      "name": "Backstab",
+      "icon": "img/ability/Shaco-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shaco-Q",
+      "name": "Deceive",
+      "icon": "img/ability/Shaco-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shaco-W",
+      "name": "Jack In The Box",
+      "icon": "img/ability/Shaco-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shaco-E",
+      "name": "Two-Shiv Poison",
+      "icon": "img/ability/Shaco-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shaco-R",
+      "name": "Hallucinate",
+      "icon": "img/ability/Shaco-R.png"
+    }
+  ],
+  "icon": "img/champion/Shaco.png",
+  "art": "img/champion-splash/Shaco_0.jpg",
+  "title": "the Demon Jester",
+  "roles": [
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin"
+  }
+}

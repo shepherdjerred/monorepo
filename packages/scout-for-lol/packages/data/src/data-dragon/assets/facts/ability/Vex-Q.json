@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vex-Q",
+  "name": "Mistral Bolt",
+  "description": "Vex launches a wave of mist that deals 70/115/160/205/250 (+70% AP) magic damage. After a delay, the wave becomes smaller and faster.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45/50/55/60/65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vex-Q.png",
+  "slot": "Q",
+  "championKey": "Vex",
+  "championName": "Vex",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7,
+    6,
+    5,
+    4
+  ],
+  "costByRank": [
+    45,
+    50,
+    55,
+    60,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1200,
+    1200,
+    1200,
+    1200,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7/6/5/4 s"
+  }
+}

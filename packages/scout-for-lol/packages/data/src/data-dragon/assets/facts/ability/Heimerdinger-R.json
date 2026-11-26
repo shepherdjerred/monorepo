@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Heimerdinger-R",
+  "name": "UPGRADE!!!",
+  "description": "Heimerdinger upgrades his next non-ultimate Ability.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Heimerdinger-R.png",
+  "slot": "R",
+  "championKey": "Heimerdinger",
+  "championName": "Heimerdinger",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    85,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/85/70 s"
+  }
+}

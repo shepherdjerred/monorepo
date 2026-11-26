@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9406",
+  "name": "Lover's Ricochet",
+  "description": "Xayah now also throws a familiar dagger behind her.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9406.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

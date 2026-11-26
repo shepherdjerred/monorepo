@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8463",
+  "name": "Font of Life",
+  "description": "Impairing the movement of an enemy champion heals nearby allied champions.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/FontOfLife.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

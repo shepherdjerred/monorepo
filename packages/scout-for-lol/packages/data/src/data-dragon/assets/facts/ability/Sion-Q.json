@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sion-Q",
+  "name": "Decimating Smash",
+  "description": "Begin Charging: Sion charges a heavy blow for up to 2 seconds. Release: Sion slams his axe down, briefly Slowing and dealing between 30/45/60/75/90 (+40/50/60/70/80% AD) and 90/155/220/285/350 (+120/150/180/210/240% AD) physical damage based on charge time.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "10000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sion-Q.png",
+  "slot": "Q",
+  "championKey": "Sion",
+  "championName": "Sion",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    45,
+    45,
+    45,
+    45,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    10000,
+    10000,
+    10000,
+    10000,
+    10000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

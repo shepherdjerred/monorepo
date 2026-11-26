@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Renekton-R",
+  "name": "Dominus",
+  "description": "Renekton surrounds himself with dark energies for 15 seconds, gaining 300/500/700 max Health and 20 Fury. While active, he deals 60/150/240 (+10% AP) (+10% bonus AD) magic damage and gains 5 Fury per second.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Renekton-R.png",
+  "slot": "R",
+  "championKey": "Renekton",
+  "championName": "Renekton",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ziggs-R",
+  "name": "Mega Inferno Bomb",
+  "description": "Ziggs hurls his ultimate creation, dealing 300/500/700 (+100% AP) magic damage in the center of the blast radius, or 195/325/455 (+65% AP) magic damage at the edge.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "5000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ziggs-R.png",
+  "slot": "R",
+  "championKey": "Ziggs",
+  "championName": "Ziggs",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    95,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    5000,
+    5000,
+    5000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/95/70 s"
+  }
+}

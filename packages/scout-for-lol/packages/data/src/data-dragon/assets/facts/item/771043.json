@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771043",
+  "name": "Recurve Bow",
+  "description": "Grants 30% Attack Speed.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771043.png",
+  "goldTotal": 900,
+  "goldCombine": 900,
+  "keyFact": {
+    "label": "Cost",
+    "value": "900 gold"
+  }
+}

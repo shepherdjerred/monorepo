@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223107",
+  "name": "Redemption",
+  "description": "ACTIVE: (0s) Intervention: Target an area within.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "30"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "100%"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223107.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

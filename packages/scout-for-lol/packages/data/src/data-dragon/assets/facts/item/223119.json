@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223119",
+  "name": "Winter's Approach",
+  "description": "Awe: Gain bonus Health equal to Total Mana. Mana Charge: After 2 combat rounds, this item transforms into Fimbulwinter.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "400"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223119.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

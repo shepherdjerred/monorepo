@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tryndamere-E",
+  "name": "Spinning Slash",
+  "description": "Tryndamere spins through his enemies, dealing 80/120/160/200/240 (+100% bonus AD) (+80% AP) physical damage and generating 2 Fury per enemy hit, increased to 5 Fury against enemy champions.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Tryndamere-E.png",
+  "slot": "E",
+  "championKey": "Tryndamere",
+  "championName": "Tryndamere",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773073",
+  "name": "Stack of Sunfire Capes",
+  "description": "Excessive Heat: Deals 40 magic damage per second to nearby enemies.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "450"
+    },
+    {
+      "label": "Armor",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771031",
+      "name": "Chain Vest",
+      "icon": "img/item/771031.png"
+    },
+    {
+      "kind": "item",
+      "key": "771011",
+      "name": "Giant's Belt",
+      "icon": "img/item/771011.png"
+    }
+  ],
+  "icon": "img/item/773073.png",
+  "goldTotal": 3000,
+  "goldCombine": 1280,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

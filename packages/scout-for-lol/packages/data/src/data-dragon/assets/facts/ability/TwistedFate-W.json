@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TwistedFate-W",
+  "name": "Pick a Card",
+  "description": "Twisted Fate begins shuffling his deck, allowing him to Recast to lock in one of three cards and enhance his next Attack.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TwistedFate-W.png",
+  "slot": "W",
+  "championKey": "TwistedFate",
+  "championName": "Twisted Fate",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    200,
+    200,
+    200,
+    200,
+    200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

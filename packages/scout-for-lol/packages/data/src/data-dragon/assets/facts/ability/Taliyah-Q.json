@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Taliyah-Q",
+  "name": "Threaded Volley",
+  "description": "Taliyah hurls 5 rocks, each dealing 55/72.5/90/107.5/125 (+50% AP) magic damage in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal 60% less damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55/60/65/70/75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Taliyah-Q.png",
+  "slot": "Q",
+  "championKey": "Taliyah",
+  "championName": "Taliyah",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6,
+    5,
+    4,
+    3
+  ],
+  "costByRank": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6/5/4/3 s"
+  }
+}

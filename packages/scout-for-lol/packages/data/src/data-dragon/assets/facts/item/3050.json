@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3050",
+  "name": "Zeke's Convergence",
+  "description": "Frostfire Tempest: Casting your Ultimate summons a storm around you for 5 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "25"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "1029",
+      "name": "Cloth Armor",
+      "icon": "img/item/1029.png"
+    },
+    {
+      "kind": "item",
+      "key": "1033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/1033.png"
+    }
+  ],
+  "icon": "img/item/3050.png",
+  "goldTotal": 2200,
+  "goldCombine": 700,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2200 gold"
+  }
+}

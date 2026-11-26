@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3851",
+  "name": "Frostfang",
+  "description": "Tribute: While nearby an ally champion, damaging Abilities and Attacks against champions or buildings grant 20 gold. Quest: Earn 1000 gold from this item to transform it into World Rune T2.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "15"
+    },
+    {
+      "label": "Health",
+      "value": "70"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "50%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "3"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3851.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

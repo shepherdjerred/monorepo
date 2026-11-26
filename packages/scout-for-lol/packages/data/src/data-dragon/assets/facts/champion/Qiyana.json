@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Qiyana",
+  "name": "Qiyana",
+  "description": "In the jungle city of Ixaocan, Qiyana plots her own ruthless path to the high seat of the Yun Tal. Last in line to succeed her parents, she faces those who stand in her way with brash confidence and unprecedented mastery over elemental magic.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Qiyana-passive",
+      "name": "Royal Privilege",
+      "icon": "img/ability/Qiyana-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Qiyana-Q",
+      "name": "Elemental Wrath / Edge of Ixtal",
+      "icon": "img/ability/Qiyana-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Qiyana-W",
+      "name": "Terrashape",
+      "icon": "img/ability/Qiyana-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Qiyana-E",
+      "name": "Audacity",
+      "icon": "img/ability/Qiyana-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Qiyana-R",
+      "name": "Supreme Display of Talent",
+      "icon": "img/ability/Qiyana-R.png"
+    }
+  ],
+  "icon": "img/champion/Qiyana.png",
+  "art": "img/champion-splash/Qiyana_0.jpg",
+  "title": "Empress of the Elements",
+  "roles": [
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin"
+  }
+}

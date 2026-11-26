@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vi-Q",
+  "name": "Vault Breaker",
+  "description": "Begin Charging: Vi begins charging a powerful punch, Slowing herself by 15%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vi-Q.png",
+  "slot": "Q",
+  "championKey": "Vi",
+  "championName": "Vi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    10.5,
+    9,
+    7.5,
+    6
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    250,
+    250,
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/10.5/9/7.5/6 s"
+  }
+}

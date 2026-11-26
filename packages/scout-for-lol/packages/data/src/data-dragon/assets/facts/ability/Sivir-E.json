@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sivir-E",
+  "name": "Spell Shield",
+  "description": "Sivir creates a magical barrier for 1.5 seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores 60/65/70/75/80% AD (+50% AP) health and triggers Fleet of Foot.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sivir-E.png",
+  "slot": "E",
+  "championKey": "Sivir",
+  "championName": "Sivir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    22.5,
+    21,
+    19.5,
+    18
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/22.5/21/19.5/18 s"
+  }
+}

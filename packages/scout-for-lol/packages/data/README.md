@@ -26,6 +26,26 @@ same Data Dragon version as the champion facts. The generated asset manifest
 includes the `ability` kind and uses `Champion-slot` identities, such as
 `Ahri-Q`. Regenerate the manifest after changing committed assets.
 
+## Game facts for tooltips
+
+`src/game-facts/` holds the schema (`schema.ts`, a `GameFact` union by kind:
+champion, ability, item, rune, summoner spell, keyword), the pure builders
+(`build.ts`) and a typed client (`loadGameFact(kind, key, { signal })`). Facts
+are generated from the committed Data Dragon snapshot into
+`assets/facts/<kind>/<key>.json`, one small file per entity, and the shared
+asset emission serves them at `/assets/scout/game/<patch>/facts/<kind>/<key>.json`.
+Keys are the Data Dragon champion key, `<champion>-<slot>` for abilities, and
+the numeric Riot id for items, runes and summoner spells.
+
+Item summaries come from the item's stats and passive text; Data Dragon's
+`plaintext` is never read because it is unreliable. Regenerate after changing
+the snapshot (the full refresh does this for you):
+
+```bash
+bun run generate:game-facts   # rewrite assets/facts/
+bun run check:game-facts      # fail on drift (also part of `generate`)
+```
+
 ## Dare contracts
 
 `src/model/dares/` defines free SQL challenges, targets, deadlines, progress,

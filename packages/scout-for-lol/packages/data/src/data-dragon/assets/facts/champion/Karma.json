@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Karma",
+  "name": "Karma",
+  "description": "No mortal exemplifies the spiritual traditions of Ionia more than Karma.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Karma-passive",
+      "name": "Gathering Fire",
+      "icon": "img/ability/Karma-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karma-Q",
+      "name": "Inner Flame",
+      "icon": "img/ability/Karma-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karma-W",
+      "name": "Focused Resolve",
+      "icon": "img/ability/Karma-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karma-E",
+      "name": "Inspire",
+      "icon": "img/ability/Karma-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karma-R",
+      "name": "Mantra",
+      "icon": "img/ability/Karma-R.png"
+    }
+  ],
+  "icon": "img/champion/Karma.png",
+  "art": "img/champion-splash/Karma_0.jpg",
+  "title": "the Enlightened One",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

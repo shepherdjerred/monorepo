@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "220006",
+  "name": "Legendary Support Item",
+  "description": "Active - Consume: Automatically open a semi-random selection for a Legendary Support item.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/220006.png",
+  "goldTotal": 2250,
+  "goldCombine": 2250,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2250 gold"
+  }
+}
