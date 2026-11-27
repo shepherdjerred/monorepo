@@ -552,6 +552,8 @@ test("the archive lists retired flags read-only, with their history inline", asy
   expect(unrecorded?.textContent).toContain(
     "Retired before audit; final value not recorded.",
   );
+  // Nothing was recorded for it, so there is no history to open.
+  expect(unrecorded?.querySelector("button")).toBeNull();
   expect(recorded?.textContent).toContain(
     "Retired 2026-11-22 08:30 UTC by operator@example.test · rev 3",
   );

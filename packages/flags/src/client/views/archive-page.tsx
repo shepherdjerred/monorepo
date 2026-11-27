@@ -66,7 +66,10 @@ function Retirement({ flag }: { readonly flag: ArchivedFlag }) {
   );
 }
 
-/** One retired key; its history (served although the key is gone) opens inline. */
+/**
+ * One retired key; its history (served although the key is gone) opens inline.
+ * A key retired before audit has no recorded history, so it offers none.
+ */
 function ArchivedRow({
   id,
   flag,
@@ -80,15 +83,17 @@ function ArchivedRow({
     <li className="fl-drift-item fl-archive-item">
       <div className="fl-drift-row">
         <span className="ui-mono fl-archive-key">{flag.key}</span>
-        <Button
-          type="button"
-          aria-expanded={showHistory}
-          onClick={() => {
-            setShowHistory(!showHistory);
-          }}
-        >
-          {showHistory ? "Hide history" : "History"}
-        </Button>
+        {flag.basis === "declared-retired" ? null : (
+          <Button
+            type="button"
+            aria-expanded={showHistory}
+            onClick={() => {
+              setShowHistory(!showHistory);
+            }}
+          >
+            {showHistory ? "Hide history" : "History"}
+          </Button>
+        )}
       </div>
       <Retirement flag={flag} />
       {showHistory ? (
