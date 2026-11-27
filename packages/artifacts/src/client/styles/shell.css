@@ -1,0 +1,188 @@
+/*
+ * The floating shell of the canvas and the focused view: a nav pill at the top
+ * left (the shell bar and the page header as one), and the comments as a card
+ * on the right that collapses to a pill. Nothing animates.
+ */
+.ar-fnav {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - var(--ar-inset-right, 0px) - 24px);
+  padding: 4px 6px 4px 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  background: var(--ui-panel);
+  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+}
+.ar-fnav-links a {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--ui-ink);
+  font-weight: 500;
+  text-decoration: none;
+}
+.ar-fnav-links a:hover {
+  background: var(--ui-head);
+}
+.ar-fnav-sep {
+  flex: none;
+  width: 1px;
+  height: 22px;
+  margin: 0 6px;
+  background: var(--ui-line);
+}
+.ar-fnav-lead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 420px;
+  padding: 0 4px;
+}
+.ar-fnav-title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-fnav-crumb {
+  max-width: 160px;
+  overflow: hidden;
+  color: var(--ui-muted);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-fnav-arrow {
+  color: var(--ui-muted);
+}
+.ar-fnav-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.ar-fnav-select select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--ui-btn-edge);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12.5px;
+}
+.ar-fnav .ar-icon-button {
+  min-width: 32px;
+  min-height: 32px;
+}
+.ar-fnav-more {
+  display: none;
+}
+@media (max-width: 640px) {
+  .ar-fnav {
+    right: 12px;
+    max-width: none;
+  }
+  .ar-fnav .ui-workspace-label,
+  .ar-fnav-links,
+  .ar-fnav-actions,
+  .ar-fnav-end {
+    display: none;
+  }
+  .ar-fnav-lead {
+    flex: 1;
+  }
+  .ar-fnav-more {
+    display: inline-grid;
+    margin-left: auto;
+  }
+}
+
+/* Comments */
+.ar-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 24;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 360px;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  background: var(--ui-panel);
+  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+}
+.ar-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.ar-panel-head h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ar-panel-body {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 12px;
+  overflow: auto;
+}
+.ar-panel-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 24;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 20px;
+  background: var(--ui-panel);
+  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+.ar-panel-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.ar-panel-dot {
+  background: var(--ui-sev-ok);
+}
+@media (pointer: coarse) {
+  .ar-panel-pill {
+    min-height: 44px;
+  }
+}
+/* A narrow screen: the card is a bottom sheet, and its pill sits above the tools. */
+@media (max-width: 900px) {
+  .ar-panel {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    height: min(55dvh, 520px);
+  }
+  .ar-panel-pill {
+    top: auto;
+    right: auto;
+    bottom: 130px;
+    left: 10px;
+  }
+}

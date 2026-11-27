@@ -520,6 +520,50 @@ describe("boards", () => {
     expect(new Set(frames).size).toBe(8);
   });
 
+  it("a resize and a concurrent agent placeFrame both survive", async () => {
+    await human.mutate("boards.create", { slug: "resize", title: "Resize" });
+    const [frame, placed] = [crypto.randomUUID(), crypto.randomUUID()];
+    await human.mutate("boards.applyOps", {
+      slug: "resize",
+      ops: [{ op: "placeFrame", artifactId: frame, w: 640, h: 420 }],
+    });
+    await Promise.all([
+      human.mutate("boards.applyOps", {
+        slug: "resize",
+        ops: [
+          {
+            op: "moveFrames",
+            moves: [{ artifactId: frame, x: 96, y: 48, w: 800, h: 500 }],
+          },
+        ],
+      }),
+      human.mutate("boards.applyOps", {
+        slug: "resize",
+        ops: [{ op: "placeFrame", artifactId: placed, w: 400, h: 300 }],
+      }),
+    ]);
+    const board = z
+      .object({ index: BoardIndexSchema })
+      .parse(await human.query("boards.get", { slug: "resize" }));
+    expect(board.index.frames[frame]).toMatchObject({
+      x: 96,
+      y: 48,
+      w: 800,
+      h: 500,
+    });
+    expect(board.index.frames[placed]).toMatchObject({ w: 400, h: 300 });
+    expect(board.index.order).toHaveLength(2);
+    // A move without a size leaves the resized size alone.
+    await human.mutate("boards.applyOps", {
+      slug: "resize",
+      ops: [{ op: "moveFrames", moves: [{ artifactId: frame, x: 0, y: 0 }] }],
+    });
+    const moved = z
+      .object({ index: BoardIndexSchema })
+      .parse(await human.query("boards.get", { slug: "resize" }));
+    expect(moved.index.frames[frame]).toMatchObject({ w: 800, h: 500 });
+  });
+
   it("replaces the whole document only against the current revision", async () => {
     await human.mutate("boards.create", { slug: "replace", title: "Replace" });
     const current = z

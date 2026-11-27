@@ -1,5 +1,15 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { agentApi, resetAndSeed, sharedFixtures } from "./review-setup.ts";
+import {
+  SETTLE_MS,
+  camera,
+  cameraOf,
+  frame,
+  openBoard,
+  viewportBox,
+  wheel,
+  zoomOf,
+} from "./canvas-helpers.ts";
 import { publishFixture, type SeededBoards } from "./seed.ts";
 
 let seeded: SeededBoards;
@@ -8,72 +18,6 @@ test.beforeAll(async ({ baseURL }) => {
   test.setTimeout(120_000);
   seeded = await resetAndSeed(baseURL);
 });
-
-const SETTLE_MS = 450;
-
-type Camera = { x: number; y: number; s: number };
-
-async function camera(page: Page): Promise<Camera> {
-  return page.getByTestId("canvas-world").evaluate((element) => {
-    const match =
-      /translate\((?<x>[\d.e+-]+)px, (?<y>[\d.e+-]+)px\) scale\((?<s>[\d.e+-]+)\)/u.exec(
-        element instanceof HTMLElement ? element.style.transform : "",
-      );
-    const groups = match?.groups;
-    return {
-      x: Number(groups?.["x"]),
-      y: Number(groups?.["y"]),
-      s: Number(groups?.["s"]),
-    };
-  });
-}
-
-async function zoomOf(page: Page): Promise<number> {
-  const { s } = await camera(page);
-  return s;
-}
-
-async function cameraOf(page: Page): Promise<Camera> {
-  return camera(page);
-}
-
-async function viewportBox(page: Page) {
-  const box = await page.getByTestId("canvas-viewport").boundingBox();
-  if (box === null) throw new Error("the canvas has no box");
-  return box;
-}
-
-/** Dispatches a wheel event on the viewport (Playwright's mouse cannot set both modifiers and integer points). */
-async function wheel(
-  page: Page,
-  init: { dx?: number; dy?: number; ctrl?: boolean; x: number; y: number },
-): Promise<void> {
-  await page.getByTestId("canvas-viewport").evaluate((element, value) => {
-    element.dispatchEvent(
-      new WheelEvent("wheel", {
-        deltaX: value.dx ?? 0,
-        deltaY: value.dy ?? 0,
-        ctrlKey: value.ctrl ?? false,
-        clientX: value.x,
-        clientY: value.y,
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-  }, init);
-}
-
-async function openBoard(page: Page, slug: string): Promise<void> {
-  await page.goto(`/b/${slug}`);
-  await expect(page.getByTestId("canvas-viewport")).toBeVisible();
-  await expect(page.getByTestId("canvas-frame").first()).toBeVisible();
-  // The first view fits every frame.
-  await page.waitForTimeout(SETTLE_MS);
-}
-
-function frame(page: Page, artifactId: string) {
-  return page.locator(`[data-frame-id="${artifactId}"]`);
-}
 
 test.describe("canvas", () => {
   test("lays frames out from the index and fits them all on first open", async ({
@@ -175,6 +119,29 @@ test.describe("canvas", () => {
     expect(dragged.x - moved.x).toBeCloseTo(-50, 0);
   });
 
+  test("the tool pill shows the active tool: V select, H hand, C comment", async ({
+    page,
+  }) => {
+    await openBoard(page, "concepts");
+    const select = page.getByRole("button", { name: "Select tool" });
+    const hand = page.getByRole("button", { name: "Hand tool" });
+    const comment = page.getByRole("button", { name: "Comment mode" });
+    await expect(select).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("h");
+    await expect(hand).toHaveAttribute("aria-pressed", "true");
+    await expect(select).toHaveAttribute("aria-pressed", "false");
+    await page.keyboard.press("c");
+    await expect(comment).toHaveAttribute("aria-pressed", "true");
+    await expect(hand).toHaveAttribute("aria-pressed", "false");
+    await page.keyboard.press("v");
+    await expect(select).toHaveAttribute("aria-pressed", "true");
+    await expect(comment).toHaveAttribute("aria-pressed", "false");
+    // Zoom and fit live in their own pill.
+    await expect(
+      page.getByRole("toolbar", { name: "Zoom" }).getByTestId("zoom-readout"),
+    ).toBeVisible();
+  });
+
   test("1 fits all, 2 fits the selection, 0 is 100 %", async ({ page }) => {
     await openBoard(page, "concepts");
     await page.keyboard.press("0");
@@ -240,7 +207,7 @@ test.describe("canvas", () => {
     await frame(page, seeded.concepts[0]?.artifactId ?? "").click();
     await page
       .getByTestId("canvas-viewport")
-      .click({ position: { x: 20, y: 20 } });
+      .click({ position: { x: 20, y: 140 } });
     await page.waitForTimeout(500);
     expect(documents.length).toBe(loaded);
   });
@@ -321,88 +288,6 @@ test.describe("canvas", () => {
     expect(await camera(page)).toEqual(before);
     // The new frame loads once; the two that were there never reload.
     expect(documents.length).toBe(loaded + 1);
-  });
-
-  test("a board pin is placed on empty canvas, round-trips, and stays glued while panning", async ({
-    page,
-    baseURL,
-  }) => {
-    await openBoard(page, "demo");
-    await page.keyboard.press("c");
-    await expect(page.getByTestId("comment-mode")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    const view = await viewportBox(page);
-    const at = { x: view.x + 120, y: view.y + 120 };
-    await page.mouse.click(at.x, at.y);
-    const composer = page.getByTestId("placement-composer");
-    await expect(composer).toBeVisible();
-    await composer.getByRole("textbox").fill("The spacing here is off");
-    await composer.getByRole("button", { name: "Comment" }).click();
-    await expect(composer).toBeHidden();
-    const pin = page.getByTestId("pin");
-    await expect(pin).toHaveCount(1);
-    const pinBox = await pin.boundingBox();
-    if (pinBox === null) throw new Error("no pin box");
-    // The pin's tip is where the click was.
-    expect(Math.abs(pinBox.x + 2 - at.x)).toBeLessThan(3);
-    expect(Math.abs(pinBox.y + pinBox.height - at.y)).toBeLessThan(3);
-
-    const claim = await agentApi(baseURL).feedback.claim.mutate({
-      scope: { type: "board", board: "demo" },
-    });
-    const anchor = claim.items.at(-1)?.thread.anchor;
-    expect(anchor?.type).toBe("board");
-
-    // Panning moves the pin with the world, by exactly the delta.
-    await wheel(page, { dx: -60, dy: -25, x: 400, y: 400 });
-    await page.waitForTimeout(40);
-    await expect
-      .poll(async () => {
-        const box = await pin.boundingBox();
-        return box?.x ?? 0;
-      })
-      .toBeCloseTo(pinBox.x + 60, 0);
-
-    // And it is still where it was after a reload (the camera is restored too).
-    await page.waitForTimeout(SETTLE_MS);
-    const moved = await pin.boundingBox();
-    await page.reload();
-    await expect(page.getByTestId("pin")).toHaveCount(1);
-    await page.waitForTimeout(SETTLE_MS);
-    const restored = await page.getByTestId("pin").boundingBox();
-    expect(Math.abs((restored?.x ?? 0) - (moved?.x ?? 0))).toBeLessThan(1.5);
-    expect(Math.abs((restored?.y ?? 0) - (moved?.y ?? 0))).toBeLessThan(1.5);
-  });
-
-  test("a frame pin is placed on a frame and follows it", async ({ page }) => {
-    await openBoard(page, "concepts");
-    await page.getByRole("button", { name: /^Concept A,/u }).click();
-    await page.keyboard.press("2");
-    await page.waitForTimeout(SETTLE_MS);
-    await page.keyboard.press("c");
-    const target = frame(page, seeded.concepts[0]?.artifactId ?? "");
-    const box = await target.boundingBox();
-    if (box === null) throw new Error("no frame box");
-    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5);
-    const composer = page.getByTestId("placement-composer");
-    await expect(composer).toBeVisible();
-    await composer.getByRole("textbox").fill("Heading is too small");
-    await composer.getByRole("button", { name: "Comment" }).click();
-    await expect(composer).toBeHidden();
-    const pin = page.getByTestId("pin");
-    await expect(pin).toHaveCount(1);
-    await expect(page.getByTestId("thread")).toContainText("Concept A");
-    const first = await pin.boundingBox();
-    const frameBefore = await target.boundingBox();
-    if (first === null || frameBefore === null) throw new Error("no boxes");
-    await wheel(page, { dx: -90, dy: 0, x: 300, y: 300 });
-    await page.waitForTimeout(SETTLE_MS);
-    const frameAfter = await target.boundingBox();
-    const second = await pin.boundingBox();
-    if (second === null || frameAfter === null) throw new Error("no boxes");
-    expect(second.x - first.x).toBeCloseTo(frameAfter.x - frameBefore.x, 0);
   });
 
   test("reduced motion leaves nothing animating on the canvas", async ({

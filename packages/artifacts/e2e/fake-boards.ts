@@ -293,6 +293,8 @@ function moveFrames(
     if (frame === undefined) continue;
     frame.x = move.x;
     frame.y = move.y;
+    if (move.w !== undefined) frame.w = move.w;
+    if (move.h !== undefined) frame.h = move.h;
     if (move.page !== undefined) frame.page = move.page;
   }
 }

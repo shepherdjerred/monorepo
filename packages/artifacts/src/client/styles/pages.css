@@ -77,22 +77,13 @@
 
 /* Board */
 .ar-board {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  height: calc(100dvh - var(--ar-top));
-  min-height: 0;
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
 }
-@media (max-width: 900px) {
-  .ar-board {
-    height: auto;
-  }
-}
-.ar-board-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--ui-line);
+.ar-board > .ar-cv {
+  position: absolute;
+  inset: 0;
 }
 .ar-placeholder {
   display: grid;

@@ -11,6 +11,25 @@ describe("matches", () => {
     expect(matches({ key: "c", run: noop }, key({ key: "C" }))).toBe(true);
   });
 
+  test("Shift makes a letter a different key", () => {
+    expect(
+      matches({ key: "c", run: noop }, key({ key: "C", shiftKey: true })),
+    ).toBe(false);
+    expect(
+      matches(
+        { key: "c", shift: true, run: noop },
+        key({ key: "C", shiftKey: true }),
+      ),
+    ).toBe(true);
+    expect(
+      matches({ key: "c", shift: true, run: noop }, key({ key: "c" })),
+    ).toBe(false);
+    // Symbols are unaffected: `?` needs Shift on most keyboards.
+    expect(
+      matches({ key: "?", run: noop }, key({ key: "?", shiftKey: true })),
+    ).toBe(true);
+  });
+
   test("named keys compare exactly", () => {
     expect(matches({ key: "Escape", run: noop }, key({ key: "Escape" }))).toBe(
       true,

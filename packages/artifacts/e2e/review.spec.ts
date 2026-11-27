@@ -8,6 +8,8 @@ import {
   drain,
   KARPATHY,
   openFocused,
+  openPanel,
+  selectVersion,
   resetAndSeed,
   sharedFixtures,
 } from "./review-setup.ts";
@@ -211,7 +213,7 @@ test.describe("html frames", () => {
     if (rect === null) throw new Error("frame has no box");
     await page.mouse.click(
       rect.x + rect.width * 0.3,
-      rect.y + rect.height * 0.2,
+      rect.y + rect.height * 0.5,
     );
     await commentWithMode(page, "Version one needs a logo");
     await expect(page.getByTestId("pin")).toHaveCount(1);
@@ -229,7 +231,7 @@ test.describe("html frames", () => {
       "false",
     );
 
-    await page.getByRole("combobox", { name: "Version" }).selectOption("2");
+    await selectVersion(page, 2);
     await expect(page).toHaveURL(/v=2/u);
     const thread = page
       .getByTestId("thread")
@@ -368,6 +370,7 @@ test.describe("board", () => {
 
   test("board comments are listed in the sidebar", async ({ page }) => {
     await page.goto("/b/concepts");
+    await openPanel(page);
     await page
       .getByLabel("Comment on the board")
       .fill("Overall direction B looks strongest");
@@ -383,6 +386,7 @@ test.describe("threads", () => {
     page,
   }) => {
     await openFocused(page, seeded.demo.png.artifactId);
+    await openPanel(page);
     await page.getByLabel("General comment").fill("Needs a caption");
     await page
       .getByRole("button", { name: "Comment", exact: true })
@@ -424,8 +428,9 @@ test.describe("threads", () => {
     const api = agentApi(baseURL);
     const artifactId = seeded.demo.webm.artifactId;
     await openFocused(page, artifactId);
+    await openPanel(page);
     // The breadcrumb names the board by its title, not its slug.
-    await expect(page.locator(".ar-crumbs")).toHaveText("Demo board");
+    await expect(page.locator(".ar-fnav-crumb")).toHaveText("Demo board");
     await expect(page.getByTestId("waiting")).toHaveText(/No agent waiting/u);
 
     await page.getByLabel("General comment").fill("Audio is missing");

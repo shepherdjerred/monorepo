@@ -3,6 +3,11 @@ import { useEffect, useRef } from "react";
 export type Binding = {
   /** `KeyboardEvent.key`; letters compare case-insensitively. */
   readonly key: string;
+  /**
+   * A letter with Shift held is a different key: a binding fires for it only
+   * when it says `shift: true`, and a plain letter binding does not fire for it.
+   */
+  readonly shift?: boolean;
   readonly run: (event: KeyboardEvent) => void;
 };
 
@@ -28,10 +33,14 @@ function isActivatable(target: EventTarget | null): boolean {
 export type KeyInput = Pick<
   KeyboardEvent,
   "key" | "metaKey" | "ctrlKey" | "altKey"
->;
+> &
+  Partial<Pick<KeyboardEvent, "shiftKey">>;
 
 export function matches(binding: Binding, event: KeyInput): boolean {
   if (event.metaKey || event.ctrlKey || event.altKey) return false;
+  const letter = /^[a-z]$/iu.test(binding.key);
+  if (letter && (event.shiftKey === true) !== (binding.shift === true))
+    return false;
   return binding.key.length === 1
     ? event.key.toLowerCase() === binding.key.toLowerCase()
     : event.key === binding.key;
@@ -46,7 +55,8 @@ function onKeyDown(event: KeyboardEvent): void {
   // the page when a field has focus (to leave comment mode).
   if (!escape && isTypingTarget(event.target)) return;
   if (event.key === "Enter" && isActivatable(event.target)) return;
-  if (!escape && document.querySelector("dialog[open]") !== null) return;
+  // An open modal owns every key, Escape included: it closes itself.
+  if (document.querySelector("dialog[open]") !== null) return;
   for (let index = stack.length - 1; index >= 0; index -= 1) {
     const entry = stack[index];
     const binding = entry?.current.find((candidate) =>
@@ -93,9 +103,14 @@ export const SHORTCUT_SHEET: readonly {
   { keys: "1 / 2 / 0", does: "Canvas: fit all, fit the selection, 100 %" },
   { keys: "+ / -", does: "Canvas: zoom in and out" },
   {
-    keys: "H, Space",
-    does: "Canvas: hand tool, or hold Space and drag to pan",
+    keys: "V / H / Space",
+    does: "Canvas: select tool, hand tool, or hold Space and drag to pan",
   },
+  { keys: "Arrows", does: "Canvas: nudge the selection 1 px (Shift: 10 px)" },
+  { keys: "[ / ]", does: "Canvas: send the selection back or forward" },
+  { keys: "Delete", does: "Canvas: remove the selection from the board" },
+  { keys: "Ctrl/⌘ Z", does: "Canvas: undo (Shift to redo)" },
+  { keys: "Shift+C", does: "Show or hide the comments panel" },
   { keys: "C", does: "Comment mode: click to place a pin" },
   { keys: "Enter", does: "Interact with the selected frame" },
   { keys: "Esc", does: "Leave the frame, comment mode, or a draft" },
@@ -103,6 +118,6 @@ export const SHORTCUT_SHEET: readonly {
   { keys: "J / K", does: "Next and previous thread" },
   { keys: "R", does: "Reply to the selected thread" },
   { keys: "E", does: "Resolve or reopen the selected thread" },
-  { keys: "[ / ]", does: "Previous and next version" },
+  { keys: "[ / ]", does: "Focused view: previous and next version" },
   { keys: "?", does: "This sheet" },
 ];

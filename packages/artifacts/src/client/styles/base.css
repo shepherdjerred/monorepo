@@ -7,6 +7,8 @@
   --ar-top: 44px;
   --ar-pin: var(--ui-accent);
   --ar-pin-ink: var(--ui-on-accent);
+  /* Set at startup from lucide's MessageCircle (lib/pin-shape.ts). */
+  --ar-comment-cursor: crosshair;
 }
 
 body {

@@ -17,12 +17,18 @@ export function Dialog({
 }): React.JSX.Element {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  // Closing from here fires a native `close` event later; it must not close a
+  // dialog that was opened again in between.
+  const closedByUs = useRef(false);
 
   useEffect(() => {
     const dialog = ref.current;
     if (dialog === null) return;
     if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
+    if (!open && dialog.open) {
+      closedByUs.current = true;
+      dialog.close();
+    }
   }, [open]);
 
   return (
@@ -30,7 +36,13 @@ export function Dialog({
       ref={ref}
       className="ar-dialog"
       aria-labelledby={titleId}
-      onClose={onClose}
+      onClose={() => {
+        if (closedByUs.current) {
+          closedByUs.current = false;
+          return;
+        }
+        onClose();
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

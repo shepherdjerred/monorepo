@@ -1,10 +1,19 @@
-import { useMemo, useState } from "react";
+import { ListIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { useCreateThread } from "#client/data/mutations.ts";
 import { useLiveUpdates } from "#client/data/live.ts";
 import { useBoard, useBoardThreads } from "#client/data/queries.ts";
 import { Canvas } from "#client/canvas/canvas.tsx";
 import { canvasPins, frameModels } from "#client/canvas/model.ts";
+import { CommentsPanel } from "#client/shell/comments-panel.tsx";
+import { FloatingNav } from "#client/shell/floating-nav.tsx";
+import {
+  NARROW_QUERY,
+  PANEL_CLEARANCE,
+  usePanelInset,
+  usePanelState,
+} from "#client/shell/panel-state.ts";
 import { Composer } from "#client/threads/composer.tsx";
 import {
   ThreadList,
@@ -38,6 +47,27 @@ export function BoardPage(): React.JSX.Element {
   const titles = useMemo(
     () => new Map(frames.map((frame) => [frame.id, frame.summary.title])),
     [frames],
+  );
+  const panel = usePanelState("board");
+  const openCount = all.filter((thread) => thread.state === "open").length;
+  // A wide screen keeps the open panel's strip clear; a narrow one overlays a sheet.
+  const wide = !globalThis.matchMedia(NARROW_QUERY).matches;
+  const inset = wide && !panel.collapsed ? PANEL_CLEARANCE : 0;
+  usePanelInset(inset);
+  const { expand } = panel;
+  const selectThread = useCallback(
+    (id: string | null) => {
+      setSelectedThreadId(id);
+      if (id === null) return;
+      // Selecting a thread (a pin, J/K, a new comment) opens the panel on it.
+      expand();
+      requestAnimationFrame(() => {
+        document
+          .querySelector(`[id="thread-${id}"]`)
+          ?.scrollIntoView({ block: "nearest" });
+      });
+    },
+    [expand],
   );
   const pinNumber = useMemo(
     () => new Map(pins.map((pin) => [pin.id, pin.index])),
@@ -73,53 +103,62 @@ export function BoardPage(): React.JSX.Element {
   return (
     <main className="ar-board" id="content" tabIndex={-1}>
       <title>{`${board.data.board.title} · Artifacts`}</title>
-      <header className="ar-board-head">
-        <h1>{board.data.board.title}</h1>
-        <span className="ar-grow" />
-        <Link className="ui-btn" to={`/b/${slug}/outline`}>
-          List view
-        </Link>
-      </header>
-      <div className="ar-focus-body ar-board-body">
-        <Canvas
-          key={slug}
-          slug={slug}
-          frames={frames}
-          pins={pins}
-          selectedThreadId={selectedThreadId}
-          onSelectThread={setSelectedThreadId}
+      <Canvas
+        key={slug}
+        slug={slug}
+        data={board.data}
+        pins={pins}
+        selectedThreadId={selectedThreadId}
+        onSelectThread={selectThread}
+        rightInset={inset}
+      />
+      <FloatingNav
+        lead={<h1 className="ar-fnav-title">{board.data.board.title}</h1>}
+        actions={
+          <Link
+            className="ar-icon-button"
+            to={`/b/${slug}/outline`}
+            aria-label="List view"
+            title="List view"
+          >
+            <ListIcon aria-hidden="true" />
+          </Link>
+        }
+        menu={[{ key: "list", label: "List view", to: `/b/${slug}/outline` }]}
+      />
+      <CommentsPanel
+        state={panel}
+        scope={{ board: slug }}
+        openCount={openCount}
+      >
+        <WaitingHeader scope={{ type: "board", board: slug }} />
+        <ThreadList
+          threads={all}
+          filter={filter}
+          onFilter={setFilter}
+          selectedId={selectedThreadId}
+          onSelect={selectThread}
+          currentVersion={null}
+          indexOf={(thread) => pinNumber.get(thread.id) ?? null}
+          contextOf={(thread) =>
+            thread.artifactId === null
+              ? null
+              : (titles.get(thread.artifactId) ?? null)
+          }
+          empty="No comments yet. Press C and click the canvas to pin one."
         />
-        <aside className="ar-sidebar" aria-label="Board threads">
-          <WaitingHeader scope={{ type: "board", board: slug }} />
-          <h2 className="ar-side-title">Comments</h2>
-          <ThreadList
-            threads={all}
-            filter={filter}
-            onFilter={setFilter}
-            selectedId={selectedThreadId}
-            onSelect={setSelectedThreadId}
-            currentVersion={null}
-            indexOf={(thread) => pinNumber.get(thread.id) ?? null}
-            contextOf={(thread) =>
-              thread.artifactId === null
-                ? null
-                : (titles.get(thread.artifactId) ?? null)
-            }
-            empty="No comments yet. Press C and click the canvas to pin one."
-          />
-          <Composer
-            label="Comment on the board"
-            pending={create.isPending}
-            onSubmit={(body) => {
-              create.mutate({
-                board: slug,
-                anchor: { type: "board", page: 0, x: 0, y: 0 },
-                body,
-              });
-            }}
-          />
-        </aside>
-      </div>
+        <Composer
+          label="Comment on the board"
+          pending={create.isPending}
+          onSubmit={(body) => {
+            create.mutate({
+              board: slug,
+              anchor: { type: "board", page: 0, x: 0, y: 0 },
+              body,
+            });
+          }}
+        />
+      </CommentsPanel>
     </main>
   );
 }

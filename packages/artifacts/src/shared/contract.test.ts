@@ -271,6 +271,10 @@ describe("BoardOpSchema", () => {
       { op: "placeFrame", artifactId: ID, w: 1440, h: 900 },
       { op: "placeFrame", artifactId: ID, w: 1, h: 1, rightOf: OTHER_ID },
       { op: "moveFrames", moves: [{ artifactId: ID, x: 1, y: 2 }] },
+      {
+        op: "moveFrames",
+        moves: [{ artifactId: ID, x: 1, y: 2, w: 800, h: 500 }],
+      },
       { op: "reorder", order: [ID, "n1"] },
       { op: "putNote", id: "n1", note: board.notes.n1 },
       { op: "deleteNote", id: "n1" },
@@ -284,6 +288,12 @@ describe("BoardOpSchema", () => {
     expect(() => BoardOpSchema.parse({ op: "explode" })).toThrow();
     expect(() =>
       BoardOpSchema.parse({ op: "moveFrames", moves: [] }),
+    ).toThrow();
+    expect(() =>
+      BoardOpSchema.parse({
+        op: "moveFrames",
+        moves: [{ artifactId: ID, x: 1, y: 2, w: 0 }],
+      }),
     ).toThrow();
     expect(() =>
       BoardOpSchema.parse({ op: "removeFrame", artifactId: "x" }),

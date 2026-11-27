@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef } from "react";
 import type { HostInput } from "#client/viewers/types.ts";
 import { panBy, wheelZoomFactor, zoomAt } from "./camera.ts";
 import type { CameraController } from "./controller.ts";
-import { attachGestures, type Tap, type Tool } from "./gestures.ts";
+import {
+  attachGestures,
+  type SessionStart,
+  type PointerSession,
+  type Tap,
+  type Tool,
+} from "./gestures.ts";
 import { createForwardedGestures } from "./pinch.ts";
 
 /** Elements where Space is a character or a click, not the pan modifier. */
@@ -21,6 +27,7 @@ export function useCanvasInput({
   tool,
   onTap,
   onDoubleTap,
+  beginSession,
 }: {
   readonly controller: CameraController;
   readonly viewport: HTMLElement | null;
@@ -28,12 +35,13 @@ export function useCanvasInput({
   readonly tool: Tool;
   readonly onTap: (tap: Tap) => void;
   readonly onDoubleTap: (frameId: string) => void;
+  readonly beginSession: (start: SessionStart) => PointerSession | null;
 }): (input: HostInput) => void {
   const toolRef = useRef(tool);
   toolRef.current = tool;
   const spaceHeld = useRef(false);
-  const handlers = useRef({ onTap, onDoubleTap });
-  handlers.current = { onTap, onDoubleTap };
+  const handlers = useRef({ onTap, onDoubleTap, beginSession });
+  handlers.current = { onTap, onDoubleTap, beginSession };
 
   useEffect(() => {
     if (viewport === null || blanket === null) return;
@@ -49,6 +57,7 @@ export function useCanvasInput({
       onDoubleTap: (id) => {
         handlers.current.onDoubleTap(id);
       },
+      beginSession: (start) => handlers.current.beginSession(start),
     });
   }, [viewport, blanket, controller]);
 
