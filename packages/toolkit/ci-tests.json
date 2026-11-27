@@ -20,6 +20,18 @@
       ]
     },
     {
+      "runner": "vitest",
+      "name": "artifacts-contract",
+      "tier": "extended",
+      "args": [
+        "test-integration/artifacts.contract.integration.test.ts",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000"
+      ]
+    },
+    {
       "runner": "command",
       "name": "capture-addon",
       "command": [

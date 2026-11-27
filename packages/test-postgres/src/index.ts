@@ -1,5 +1,6 @@
 import * as binaries from "./binaries.ts";
 import * as databases from "./databases.ts";
+import * as migrated from "./migrated.ts";
 import * as owner from "./owner.ts";
 import * as postmaster from "./postmaster.ts";
 import * as server from "./server.ts";
@@ -105,6 +106,7 @@ export const assertOwnedEphemeralDatabaseName =
   databases.assertOwnedEphemeralDatabaseName;
 export const cloneTemplateDatabaseSync = databases.cloneTemplateDatabaseSync;
 export const createEmptyTestDatabase = databases.createEmptyTestDatabase;
+export const createMigratedTestDatabase = migrated.createMigratedTestDatabase;
 export const createTemplateTestDatabase = databases.createTemplateTestDatabase;
 export const dropOwnedTestDatabase = databases.dropOwnedTestDatabase;
 export const dropOwnedTestDatabaseSync = databases.dropOwnedTestDatabaseSync;
