@@ -204,6 +204,35 @@ function executor(): ReturnType<typeof vi.fn<Execute>> {
   });
 }
 
+async function submitWithLostPrResponse() {
+  const scenario = fixture([candidate("alpha")]);
+  const execute = executor();
+  scenario.deps.openPr.mockImplementationOnce(async (input) => {
+    await input.beforePush?.(HEAD);
+    scenario.setRemote(HEAD);
+    throw new Error("PR creation response was lost");
+  });
+  await expect(
+    dispatchRenovateBundle({}, { ...scenario.deps, execute }),
+  ).rejects.toThrow("response was lost");
+  return { ...scenario, execute };
+}
+
+function mockMismatchedRecoveredPr(readbackHeadSha = HEAD): void {
+  const data = {
+    number: PR.number,
+    node_id: "app-created-node",
+    html_url: PR.url,
+    head: { sha: HEAD },
+    base: { sha: SKEWED },
+    state: "open",
+  };
+  githubApi.create.mockResolvedValueOnce({ data });
+  githubApi.get.mockResolvedValueOnce({
+    data: { ...data, head: { sha: readbackHeadSha } },
+  });
+}
+
 describe("Renovate dispatch", () => {
   test("does not admit bundles when a paused or backlogged Woodpecker reports idle workers", () => {
     const queue = {
@@ -285,18 +314,8 @@ describe("Renovate dispatch", () => {
   });
 
   test("recovers a pushed branch after ambiguous failure without pushing it again", async () => {
-    const { deps, recover, state, setRemote, advance } = fixture([
-      candidate("alpha"),
-    ]);
-    const execute = executor();
-    deps.openPr.mockImplementationOnce(async (input) => {
-      await input.beforePush?.(HEAD);
-      setRemote(HEAD);
-      throw new Error("PR creation response was lost");
-    });
-    await expect(
-      dispatchRenovateBundle({}, { ...deps, execute }),
-    ).rejects.toThrow("response was lost");
+    const { deps, recover, state, advance, execute } =
+      await submitWithLostPrResponse();
     expect(
       Object.values(state().publications).map(({ headSha }) => headSha),
     ).toEqual([HEAD]);
@@ -422,16 +441,8 @@ describe("Renovate recovery conflicts", () => {
   });
 
   test("holds a previously pushed commit when the eligibility snapshot expires", async () => {
-    const { deps, recover, setRemote, advance } = fixture([candidate("alpha")]);
-    const execute = executor();
-    deps.openPr.mockImplementationOnce(async (input) => {
-      await input.beforePush?.(HEAD);
-      setRemote(HEAD);
-      throw new Error("PR creation response was lost");
-    });
-    await expect(
-      dispatchRenovateBundle({}, { ...deps, execute }),
-    ).rejects.toThrow("response was lost");
+    const { deps, recover, advance, execute } =
+      await submitWithLostPrResponse();
     advance(37 * 60 * 60 * 1000);
     await expect(
       dispatchRenovateBundle({}, { ...deps, execute }),
@@ -467,16 +478,7 @@ describe("GitHub publication checks", () => {
   );
 
   test("closes only the PR it just created when that PR's refs fail readback", async () => {
-    const data = {
-      number: PR.number,
-      node_id: "app-created-node",
-      html_url: PR.url,
-      head: { sha: HEAD },
-      base: { sha: SKEWED },
-      state: "open",
-    };
-    githubApi.create.mockResolvedValueOnce({ data });
-    githubApi.get.mockResolvedValueOnce({ data });
+    mockMismatchedRecoveredPr();
     githubApi.update.mockResolvedValueOnce({ data: { state: "closed" } });
     const github = await createRenovateGitHub();
 
@@ -493,18 +495,7 @@ describe("GitHub publication checks", () => {
   });
 
   test("preserves a created PR whose head moved before cleanup readback", async () => {
-    const data = {
-      number: PR.number,
-      node_id: "app-created-node",
-      html_url: PR.url,
-      head: { sha: HEAD },
-      base: { sha: SKEWED },
-      state: "open",
-    };
-    githubApi.create.mockResolvedValueOnce({ data });
-    githubApi.get.mockResolvedValueOnce({
-      data: { ...data, head: { sha: SKEWED } },
-    });
+    mockMismatchedRecoveredPr(SKEWED);
     githubApi.update.mockClear();
     const github = await createRenovateGitHub();
 
@@ -518,16 +509,7 @@ describe("GitHub publication checks", () => {
   });
 
   test("returns the mismatched creation receipt if cleanup is unconfirmed", async () => {
-    const data = {
-      number: PR.number,
-      node_id: "app-created-node",
-      html_url: PR.url,
-      head: { sha: HEAD },
-      base: { sha: SKEWED },
-      state: "open",
-    };
-    githubApi.create.mockResolvedValueOnce({ data });
-    githubApi.get.mockResolvedValueOnce({ data });
+    mockMismatchedRecoveredPr();
     githubApi.update.mockRejectedValueOnce(new Error("Closure response lost"));
     const github = await createRenovateGitHub();
 
