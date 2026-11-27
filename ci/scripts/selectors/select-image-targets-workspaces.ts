@@ -32,7 +32,7 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
 // Repository tooling is installed in the build stage but is not copied into
 // any production image. Keep it out of image closure attribution even when a
 // runtime workspace lists a tooling helper as a development dependency.
-const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/"]);
+const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/", "packages/script-kit/"]);
 
 // Some images copy only shared contracts from a workspace. Dependency fingerprints
 // still use the entire closure; source selection follows the copied files.

@@ -75,6 +75,15 @@ test("routes code-review changes to Temporal rather than the Woodpecker config e
   }
 });
 
+test("script-kit helpers are repository tooling and select no image", async () => {
+  expect(
+    await select([
+      "packages/script-kit/src/temporal-replay.ts",
+      "packages/script-kit/package.json",
+    ]),
+  ).toEqual([]);
+});
+
 test("rebuilds both consumers of The Storm's public status contract", async () => {
   expect(await select(["packages/the-storm/public-status.json"])).toEqual([
     "infra",

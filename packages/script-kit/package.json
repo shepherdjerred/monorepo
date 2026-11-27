@@ -18,7 +18,7 @@
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "bunx --no-install eslint --cache ."
   },
   "dependencies": {
     "@temporalio/client": "1.26.0",
