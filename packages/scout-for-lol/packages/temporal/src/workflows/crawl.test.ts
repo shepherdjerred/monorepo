@@ -3,7 +3,6 @@ import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import {
   CRAWL_FRONTIER_PRUNE_MAX_BATCHES,
-  type ScoutCrawlFrontierPruneBatchResult,
   type ScoutParticipantCrawlResult,
 } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
@@ -32,9 +31,9 @@ const result: ScoutParticipantCrawlResult = {
   segmentsWritten: 1,
 };
 
-/** Start the workflow worker and a crawl-queue worker running `runParticipantCrawl`. */
+/** Start the workflow worker and a crawl-queue worker serving `activities`. */
 async function startWorkers(
-  runParticipantCrawl: (input: unknown) => ScoutParticipantCrawlResult,
+  activities: Record<string, (input: unknown) => unknown>,
 ): Promise<void> {
   await workers.start(
     await Worker.create({
@@ -47,7 +46,7 @@ async function startWorkers(
     await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: queues.crawl,
-      activities: { runParticipantCrawl },
+      activities,
     }),
   );
 }
@@ -62,9 +61,11 @@ function runTick(workflowId: string): Promise<unknown> {
 
 test("one tick runs one crawl Activity on the crawl queue and returns its counts", async () => {
   const inputs: unknown[] = [];
-  await startWorkers((input) => {
-    inputs.push(input);
-    return result;
+  await startWorkers({
+    runParticipantCrawl: (input) => {
+      inputs.push(input);
+      return result;
+    },
   });
 
   expect(await runTick("scout-dev-participant-crawl-test")).toEqual(result);
@@ -73,9 +74,11 @@ test("one tick runs one crawl Activity on the crawl queue and returns its counts
 
 test("a failed tick is not retried: the next scheduled tick is the retry", async () => {
   let attempts = 0;
-  await startWorkers(() => {
-    attempts += 1;
-    throw new Error("database unavailable");
+  await startWorkers({
+    runParticipantCrawl: () => {
+      attempts += 1;
+      throw new Error("database unavailable");
+    },
   });
 
   await expect(
@@ -83,26 +86,6 @@ test("a failed tick is not retried: the next scheduled tick is the retry", async
   ).rejects.toThrow();
   expect(attempts).toBe(1);
 }, 60_000);
-
-/** Start the workflow worker and a crawl-queue worker running `pruneCrawlFrontier`. */
-async function startPruneWorkers(
-  pruneCrawlFrontier: (input: unknown) => ScoutCrawlFrontierPruneBatchResult,
-): Promise<void> {
-  await workers.start(
-    await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: queues.workflow,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-    }),
-  );
-  await workers.start(
-    await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: queues.crawl,
-      activities: { pruneCrawlFrontier },
-    }),
-  );
-}
 
 function runPrune(workflowId: string): Promise<unknown> {
   return environment.client.workflow.execute(
@@ -122,12 +105,14 @@ test("a prune run repeats full batches until one comes back short, and totals th
     { stale: 0, overflow: 40, more: false },
   ];
   let calls = 0;
-  await startPruneWorkers((input) => {
-    expect(input).toEqual({ stage: "dev", trigger: "schedule" });
-    const batch = batches[Math.min(calls, batches.length - 1)];
-    calls += 1;
-    if (batch === undefined) throw new Error("no batch");
-    return batch;
+  await startWorkers({
+    pruneCrawlFrontier: (input) => {
+      expect(input).toEqual({ stage: "dev", trigger: "schedule" });
+      const batch = batches[Math.min(calls, batches.length - 1)];
+      calls += 1;
+      if (batch === undefined) throw new Error("no batch");
+      return batch;
+    },
   });
 
   expect(await runPrune("scout-dev-crawl-frontier-prune-test")).toEqual({
@@ -141,9 +126,11 @@ test("a prune run repeats full batches until one comes back short, and totals th
 
 test("a prune run stops at its batch limit and reports the frontier is not drained", async () => {
   let calls = 0;
-  await startPruneWorkers(() => {
-    calls += 1;
-    return { stale: 2000, overflow: 0, more: true };
+  await startWorkers({
+    pruneCrawlFrontier: () => {
+      calls += 1;
+      return { stale: 2000, overflow: 0, more: true };
+    },
   });
 
   expect(await runPrune("scout-dev-crawl-frontier-prune-limit")).toEqual({
