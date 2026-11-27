@@ -210,6 +210,33 @@ export const flagValueSchemas = {
   "alert-dashboard-digest-email-from": variantString(MailboxSchema),
   "alert-dashboard-digest-email-to": variantString(EmailSchema),
 
+  // incidents, a Hub module (`incidents/src/infrastructure/flags.ts`)
+  /** 0 lets anyone take command at once; a day is the longest sensible wait. */
+  "alert-dashboard-incidents-takeover-grace-seconds": variantNumber(
+    z.number().int().min(0).max(86_400),
+  ),
+  /** Long enough to start a worktree and agent session, short enough to retry. */
+  "alert-dashboard-incidents-dispatch-lease-seconds": variantNumber(
+    z.number().int().min(30).max(3600),
+  ),
+  /**
+   * The dispatcher passes this to `herdr-new-worktree`, which can only launch
+   * the profiles in its `PROFILE_COMMAND` table
+   * (`dotfiles/bin/herdr_new_worktree_core.ts`); any other value would lease
+   * command to a session that can never start.
+   */
+  "alert-dashboard-incidents-takeover-provider": variantString(
+    z.enum([
+      "claude-code",
+      "codex",
+      "antigravity",
+      "cursor",
+      "grok",
+      "kimi",
+      "muse",
+    ]),
+  ),
+
   // temporal reports (`temporal/src/config/mail.ts`)
   "temporal-email-recipient": variantString(EmailSchema),
   "temporal-email-sender": variantString(MailboxSchema),

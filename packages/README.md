@@ -15,6 +15,7 @@ hold only scoped invariants that agents must keep in context.
 | [feeds](feeds/)                                                 | Tailnet feed listing console and isolated NetNewsWire Reader API over SQLite + FTS5                       |
 | [flags](flags/)                                                 | Deployment flag documents, credentialless evaluation, and operator edits                                  |
 | [errors](errors/)                                               | First-party Sentry-envelope error tracker with Hub console UI, Bugsink import, and Tracker AI linking     |
+| [incidents](incidents/)                                         | Hub incident records — single commander claims, dispatch leases, and Alertmanager/main-ci auto-open       |
 | [mail](mail/)                                                   | Outbound mail broker — SQLite WAL outbox, REST submission API, cluster STARTTLS SMTP, and console UI      |
 | [charts](charts/)                                               | Helm chart registry (`index.yaml`, `/api/charts*`, SQLite WAL index) and read-only console UI             |
 | [ci-cache](ci-cache/)                                           | Streaming Rust remote cache for Turborepo (`/v8/*`), Gradle (`/cache/*`), and `sccache` WebDAV            |

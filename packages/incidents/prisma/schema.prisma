@@ -1,0 +1,167 @@
+// Enum-valued columns are TEXT and parsed with the wire contract's Zod enums
+// on every read, so an unknown value fails loudly instead of widening a
+// database enum behind the contract's back.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Actor {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  kind        String
+  name        String
+  metadata    Json?
+  firstSeenAt DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(6)
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  seenCount   Int      @default(1) @map("seen_count")
+
+  created     Incident[]         @relation("IncidentCreator")
+  commanded   Incident[]         @relation("IncidentCommander")
+  dispatching Incident[]         @relation("IncidentDispatcher")
+  events      IncidentEvent[]
+  affected    IncidentAffected[]
+
+  @@map("actors")
+}
+
+model Incident {
+  id                 String    @id @default(uuid()) @db.Uuid
+  /// `INC-<number>`; drawn from the `incidents_number_seq` sequence.
+  number             Int       @unique @default(autoincrement())
+  kind               String
+  title              String
+  summary            String    @default("")
+  impact             String?
+  severity           String
+  status             String
+  systems            String[]
+  components         String[]
+  exitCondition      String    @map("exit_condition")
+  source             String
+  suspect            Json?
+  creatorId          String?   @map("creator_id") @db.Uuid
+  commandState       String    @default("none") @map("command_state")
+  commanderId        String?   @map("commander_id") @db.Uuid
+  dispatcherId       String?   @map("dispatcher_id") @db.Uuid
+  /// SHA-256 of the one-time dispatch token; the token itself is never stored.
+  dispatchTokenHash  String?   @map("dispatch_token_hash")
+  leaseExpiresAt     DateTime? @map("lease_expires_at") @db.Timestamptz(6)
+  everClaimed        Boolean   @default(false) @map("ever_claimed")
+  takeoverEligibleAt DateTime  @map("takeover_eligible_at") @db.Timestamptz(6)
+  declaredAt         DateTime  @map("declared_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @map("updated_at") @db.Timestamptz(6)
+  mitigatedAt        DateTime? @map("mitigated_at") @db.Timestamptz(6)
+  resolvedAt         DateTime? @map("resolved_at") @db.Timestamptz(6)
+  resolutionNote     String?   @map("resolution_note")
+  scheduledStart     DateTime? @map("scheduled_start") @db.Timestamptz(6)
+  scheduledEnd       DateTime? @map("scheduled_end") @db.Timestamptz(6)
+  /// Optimistic-concurrency guard: every commit is `UPDATE ... WHERE revision = $expected`.
+  revision           Int       @default(0)
+  lastEventSeq       Int       @default(0) @map("last_event_seq")
+
+  creator     Actor?               @relation("IncidentCreator", fields: [creatorId], references: [id])
+  commander   Actor?               @relation("IncidentCommander", fields: [commanderId], references: [id])
+  dispatcher  Actor?               @relation("IncidentDispatcher", fields: [dispatcherId], references: [id])
+  events      IncidentEvent[]
+  affected    IncidentAffected[]
+  links       IncidentLink[]
+  signals     IncidentSignal[]
+  openSystems OpenIncidentSystem[]
+
+  @@index([status])
+  @@index([declaredAt])
+  @@map("incidents")
+}
+
+/// Dedupe claim: one row per system held by an open `incident`-kind record.
+/// The primary key makes two concurrent declarations for one system collide.
+model OpenIncidentSystem {
+  system     String   @id
+  incidentId String   @map("incident_id") @db.Uuid
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@map("open_incident_systems")
+}
+
+model IncidentEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  seq        Int
+  type       String
+  actorId    String?  @map("actor_id") @db.Uuid
+  body       String?
+  data       Json?
+  createdAt  DateTime @map("created_at") @db.Timestamptz(6)
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  actor    Actor?   @relation(fields: [actorId], references: [id])
+
+  @@unique([incidentId, seq])
+  @@map("incident_events")
+}
+
+model IncidentAffected {
+  incidentId String   @map("incident_id") @db.Uuid
+  actorId    String   @map("actor_id") @db.Uuid
+  joinedAt   DateTime @map("joined_at") @db.Timestamptz(6)
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  actor    Actor    @relation(fields: [actorId], references: [id])
+
+  @@id([incidentId, actorId])
+  @@map("incident_affected")
+}
+
+model IncidentLink {
+  id         String   @id @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  kind       String
+  ref        String
+  url        String?
+  title      String?
+  createdAt  DateTime @map("created_at") @db.Timestamptz(6)
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId, kind, ref])
+  @@map("incident_links")
+}
+
+model IncidentSignal {
+  incidentId    String   @map("incident_id") @db.Uuid
+  key           String
+  source        String
+  title         String
+  firing        Boolean
+  firstFiredAt  DateTime @map("first_fired_at") @db.Timestamptz(6)
+  lastChangedAt DateTime @map("last_changed_at") @db.Timestamptz(6)
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@id([incidentId, key])
+  @@index([key])
+  @@map("incident_signals")
+}
+
+/// Newest accepted observation per producer key, independent of incidents, so
+/// retried or delayed reports cannot recreate or resolve incidents against
+/// newer evidence. `revision` guards its compare-and-set.
+model SignalWatermark {
+  source         String
+  key            String
+  lastObservedAt DateTime @map("last_observed_at") @db.Timestamptz(6)
+  firing         Boolean
+  revision       Int      @default(0)
+
+  @@id([source, key])
+  @@map("signal_watermarks")
+}

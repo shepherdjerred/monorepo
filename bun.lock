@@ -1383,6 +1383,32 @@
         "vitest": "5.0.5",
       },
     },
+    "packages/incidents": {
+      "name": "@shepherdjerred/incidents",
+      "version": "0.1.0",
+      "dependencies": {
+        "@prisma/adapter-pg": "7.10.1",
+        "@prisma/client": "^7.10.1",
+        "@prisma/client-runtime-utils": "7.10.1",
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
+        "@trpc/server": "^11.18.0",
+        "hono": "^4.12.18",
+        "prisma": "^7.10.1",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/test-postgres": "workspace:*",
+        "@types/bun": "1.4.5",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.5",
+        "eslint": "^10.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.5",
+      },
+    },
     "packages/justin-principal-engineer": {
       "name": "@shepherdjerred/justin-principal-engineer",
       "version": "0.1.0",
@@ -4713,6 +4739,8 @@
     "@shepherdjerred/hkctl": ["@shepherdjerred/hkctl@workspace:packages/hkctl"],
 
     "@shepherdjerred/home-assistant": ["@shepherdjerred/home-assistant@workspace:packages/home-assistant"],
+
+    "@shepherdjerred/incidents": ["@shepherdjerred/incidents@workspace:packages/incidents"],
 
     "@shepherdjerred/justin-principal-engineer": ["@shepherdjerred/justin-principal-engineer@workspace:packages/justin-principal-engineer"],
 

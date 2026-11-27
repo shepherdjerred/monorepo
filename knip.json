@@ -94,6 +94,15 @@
         "*.ts"
       ]
     },
+    "packages/incidents": {
+      "entry": ["src/**/*.test.{ts,tsx}", "architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "architecture-fixtures/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
     "packages/media": {
       "entry": [
         "architecture.config.ts",
