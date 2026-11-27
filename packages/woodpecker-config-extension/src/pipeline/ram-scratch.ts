@@ -85,14 +85,15 @@ export type RamScratchProfile =
 
 /**
  * Steps whose pods request their profile. The homelab admission policy is
- * generated from every profile above, but a live guard (`failurePolicy: Fail`)
- * denies a pod carrying a profile it has not synced yet, and Delivery ships this
- * package independently of ArgoCD. A profile therefore lands here only in a
- * later change, once ArgoCD has synced the policy that admits it.
+ * generated from every profile above and was synced before `tofu-validate`
+ * was listed here: a live guard (`failurePolicy: Fail`) denies a pod carrying a
+ * profile it has not synced, and Delivery ships this package independently of
+ * ArgoCD.
  */
 const REQUESTING_STEP_KEYS: ReadonlySet<string> = new Set([
   "verify",
   "verify-extended",
+  "tofu-validate",
   "playwright-e2e",
 ]);
 

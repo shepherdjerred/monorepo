@@ -11,7 +11,38 @@ import {
 } from "#src/pipeline/maintenance.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
-import { TEST_IMAGES } from "./identity.ts";
+import { emitWorkflow } from "#src/pipeline/emit.ts";
+import { UV_CACHE } from "#src/pipeline/cache.ts";
+import { goldenHistoryCommands } from "#src/pipeline/git-history.ts";
+import { TEST_IDENTITY, TEST_IMAGES } from "./identity.ts";
+
+test("the golden workspace syncs the locked learning environment with the cache verify uses", () => {
+  const [step] = maintenanceSteps(TEST_IMAGES, "workspace-golden");
+  if (step === undefined) throw new Error("Golden step missing");
+  const commands = step.commands;
+  const sync = commands.findIndex((command) => command.startsWith("uv sync"));
+  // Locked and compiled, for the project verify's `uv run --locked` uses, and
+  // after the install but before the history fetch and the publication that
+  // snapshots the tree. A failed sync must fail the step, so nothing masks its exit status.
+  expect(commands[sync]).toBe(
+    "uv sync --project packages/the-storm/tools/learning --locked --compile-bytecode",
+  );
+  expect(sync).toBeGreaterThan(
+    commands.indexOf("ci/scripts/bun-install.sh --frozen-lockfile"),
+  );
+  expect(sync).toBeLessThan(commands.indexOf(goldenHistoryCommands()[0] ?? ""));
+  expect(sync).toBeLessThan(
+    commands.findIndex((command) =>
+      command.includes("publish-workspace-golden"),
+    ),
+  );
+  expect(commands.join("\n")).not.toContain("||");
+  // The shared uv cache claim verify mounts: uv copies packages out of it, so
+  // the environment's site-packages are self-contained in the snapshot.
+  expect(step.volumes).toContainEqual(UV_CACHE);
+  const emitted = emitWorkflow(step, { ...TEST_IDENTITY, event: "manual" });
+  expect(emitted).toContain("UV_CACHE_DIR: /woodpecker/uv-cache");
+});
 
 test("seed maintenance requires the exact fully verified source, including manual requests", async () => {
   const pipeline = PipelineSchema.parse(fixture.pipeline);

@@ -4,7 +4,7 @@ import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps, githubReleaseStep } from "#src/pipeline/lanes/scout.ts";
-import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE } from "#src/pipeline/cache.ts";
 import { noWorkStep } from "#src/pipeline/completion.ts";
 import {
   WORKSPACE_GOLDEN,
@@ -268,10 +268,36 @@ function workspaceSeedSteps(images: CiImages): CiStep[] {
 }
 
 /**
+ * Project of The Storm's Python "learning" environment. Verify runs it through
+ * `uv run --project ... --locked` (test, lint and typecheck tasks). A run whose
+ * tasks miss the Turbo cache builds the environment first when it is missing.
+ */
+const LEARNING_PROJECT = "packages/the-storm/tools/learning";
+
+/**
  * Installs a verified main checkout from scratch and copies it into the golden
  * claim, which Temporal then snapshots for new workspaces to clone. This
  * workspace may itself be a golden clone; removing every untracked file first
  * keeps an earlier generation's leftovers out of the next.
+ *
+ * The learning environment (CPU PyTorch, ONNX and their dependencies) is part
+ * of the snapshot, so a verify workspace inherits it instead of writing it
+ * again. Verify's own `uv run --locked` stays the correctness path: it syncs
+ * the same locked set, which is a no-op while the lockfile still matches the
+ * snapshot. Bytecode is compiled here too: otherwise the first import in every
+ * workspace writes about 170 MB of `.pyc` files next to the packages.
+ *
+ * The step mounts the shared uv cache like verify does. uv picks the mise
+ * toolchain's Python (the venv links to that install, not to
+ * `UV_PYTHON_INSTALL_DIR`), and without `UV_LINK_MODE` it copies packages out of
+ * the cache, so the venv's site-packages are self-contained. A workspace whose
+ * interpreter link no longer resolves only makes `uv run --locked` rebuild the
+ * environment, which is the cost this removes, never a failure.
+ *
+ * A failed `uv sync` fails the refresh and no golden is published. That is
+ * deliberate: a required tool that cannot run is a broken contract to fix at
+ * its source (the lockfile, the index, the cache claim), not to skip with a
+ * fallback that would publish a golden without the environment.
  */
 function workspaceGoldenStep(images: CiImages): CiStep {
   return {
@@ -282,13 +308,14 @@ function workspaceGoldenStep(images: CiImages): CiStep {
       "git clean -ffdxq",
       ". ci/scripts/toolchain.sh",
       "ci/scripts/bun-install.sh --frozen-lockfile",
+      `uv sync --project ${LEARNING_PROJECT} --locked --compile-bytecode`,
       ...goldenHistoryCommands(),
       "bun --no-install ci/scripts/publish-workspace-golden.ts",
     ],
     timeoutMinutes: 30,
     resources: MEDIUM_TIER,
     secrets: [GITHUB_DOWNLOAD],
-    volumes: [BUN_CACHE, BUN_CACHE_CONTROL, WORKSPACE_GOLDEN],
+    volumes: [BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE, WORKSPACE_GOLDEN],
     concurrency: { limit: 1, group: "ci-maintenance" },
   };
 }
