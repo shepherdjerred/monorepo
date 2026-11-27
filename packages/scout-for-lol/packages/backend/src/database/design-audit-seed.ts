@@ -18,6 +18,7 @@ import {
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
+import { seedDesignAuditServerWeek } from "#src/database/design-audit-server-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
   designAuditMatchFixtures,
@@ -256,6 +257,12 @@ export async function seedDesignAuditDatabase(
       main: { playerId: player.id, playerAlias, puuid },
       now: new Date(),
     });
+    // The Server page's week: LP movement and a pentakill.
+    const serverWeek = await seedDesignAuditServerWeek({
+      prisma,
+      guildId,
+      now: new Date(),
+    });
 
     await prisma.subscription.create({
       data: {
@@ -334,6 +341,7 @@ export async function seedDesignAuditDatabase(
       matchFacts: [
         ...champions.tracked,
         ...playerFriends.matchFacts,
+        ...serverWeek.matchFacts,
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,

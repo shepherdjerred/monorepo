@@ -15,6 +15,21 @@ export type CommunityPlayer = {
   }[];
 };
 
+/** The Prisma `select` that yields a {@link CommunityPlayer}. */
+export const COMMUNITY_PLAYER_SELECT = {
+  id: true,
+  alias: true,
+  accounts: {
+    select: {
+      id: true,
+      puuid: true,
+      riotGameName: true,
+      riotTagLine: true,
+      region: true,
+    },
+  },
+} as const;
+
 type Match = { id: string; at: number; rows: GuildMatchRow[] };
 
 function groupMatches(rows: GuildMatchRow[]): Match[] {

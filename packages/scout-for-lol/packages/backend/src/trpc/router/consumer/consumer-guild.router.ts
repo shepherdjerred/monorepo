@@ -13,8 +13,10 @@ import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.t
 import { balanceGuildTeams } from "#src/trpc/router/consumer/community-balancer.ts";
 import {
   buildCommunityInsights,
+  COMMUNITY_PLAYER_SELECT,
   squadChemistry,
 } from "#src/trpc/router/consumer/community-insights.ts";
+import { getGuildServerPage } from "#src/trpc/router/consumer/server/server-page.ts";
 import { STANDARD_COMMUNITY_QUEUES } from "#src/trpc/router/consumer/standard-rift.ts";
 import { listLivePrematchGames } from "#src/temporal/prematch/prematch-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
@@ -40,19 +42,7 @@ async function authorizedGuild(user: User, guildId: DiscordGuildId) {
 async function loadInsights(input: z.infer<typeof CommunityFilters>) {
   const players = await prisma.player.findMany({
     where: { serverId: input.guildId },
-    select: {
-      id: true,
-      alias: true,
-      accounts: {
-        select: {
-          id: true,
-          puuid: true,
-          riotGameName: true,
-          riotTagLine: true,
-          region: true,
-        },
-      },
-    },
+    select: COMMUNITY_PLAYER_SELECT,
   });
   const puuids = [
     ...new Set(
@@ -110,6 +100,15 @@ export const consumerGuildRouter = router({
       };
     }),
 
+  server: protectedProcedure.input(GuildInput).query(async ({ ctx, input }) => {
+    const guild = await authorizedGuild(ctx.user, input.guildId);
+    return await getGuildServerPage({
+      guild: { id: guild.id, name: guild.name },
+      viewerDiscordId: ctx.user.discordId,
+      nowMs: Date.now(),
+    });
+  }),
+
   balance: protectedProcedure
     .input(
       CommunityFilters.extend({
@@ -162,19 +161,7 @@ export const consumerGuildRouter = router({
       }
       const players = await prisma.player.findMany({
         where: { serverId: input.guildId },
-        select: {
-          id: true,
-          alias: true,
-          accounts: {
-            select: {
-              id: true,
-              puuid: true,
-              riotGameName: true,
-              riotTagLine: true,
-              region: true,
-            },
-          },
-        },
+        select: COMMUNITY_PLAYER_SELECT,
       });
       if (
         input.playerIds.some(
