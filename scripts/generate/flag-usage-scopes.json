@@ -1,5 +1,5 @@
 {
-  "alert-dashboard": ["packages/alert-dashboard"],
+  "alert-dashboard": ["packages/alert-dashboard", "packages/incidents"],
   "arcade": ["packages/arcade"],
   "birmel": ["packages/birmel"],
   "delivery": ["packages/delivery"],

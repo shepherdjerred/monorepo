@@ -107,6 +107,62 @@
         "count": 1
       }
     ],
+    "alert-dashboard-incidents-auto-open-alertmanager-enabled": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incidents-auto-open-main-ci-enabled": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incidents-dispatch-lease-seconds": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incidents-enabled": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incidents-takeover-grace-seconds": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incidents-takeover-provider": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incidents-takeover-spawn-enabled": [
+      {
+        "package": "@shepherdjerred/incidents",
+        "file": "packages/incidents/src/infrastructure/flags.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
     "arcade_brawl_enabled": [
       {
         "package": "@arcade/backend",
@@ -422,6 +478,12 @@
     "challenge_runs_enabled": [
       {
         "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
         "file": "packages/scout-for-lol/packages/backend/src/explore/tools/challenge-tools.ts",
         "kind": "call-argument",
         "count": 1
@@ -472,6 +534,12 @@
       }
     ],
     "clash_surface": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
+      },
       {
         "package": "@scout-for-lol/backend",
         "file": "packages/scout-for-lol/packages/backend/src/league/clash/access.ts",
@@ -529,6 +597,18 @@
         "file": "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.ts",
         "kind": "call-argument",
         "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/help.ts",
+        "kind": "constant",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
       },
       {
         "package": "@scout-for-lol/backend",
@@ -725,9 +805,21 @@
         "file": "packages/scout-for-lol/packages/backend/src/explore/creation/confirm.ts",
         "kind": "call-argument",
         "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
       }
     ],
     "explore_on_demand_riot_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
+      },
       {
         "package": "@scout-for-lol/backend",
         "file": "packages/scout-for-lol/packages/backend/src/explore/tools/riot-history-tools.ts",
@@ -794,6 +886,12 @@
       }
     ],
     "hall_of_fame_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
+      },
       {
         "package": "@scout-for-lol/backend",
         "file": "packages/scout-for-lol/packages/backend/src/explore/tools/hall-tools.ts",
@@ -927,6 +1025,12 @@
         "file": "packages/mail/src/server/config.ts",
         "kind": "call-argument",
         "count": 1
+      },
+      {
+        "package": "@shepherdjerred/mail",
+        "file": "packages/mail/src/server/config.ts",
+        "kind": "constant",
+        "count": 1
       }
     ],
     "mail-settings": [
@@ -935,6 +1039,12 @@
         "file": "packages/mail/src/server/config.ts",
         "kind": "call-argument",
         "count": 2
+      },
+      {
+        "package": "@shepherdjerred/mail",
+        "file": "packages/mail/src/server/config.ts",
+        "kind": "constant",
+        "count": 1
       }
     ],
     "media-acquisition-enabled": [
@@ -1124,6 +1234,12 @@
       }
     ],
     "mvp_votes_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/replay/profiles.ts",
+        "kind": "constant",
+        "count": 1
+      },
       {
         "package": "@scout-for-lol/backend",
         "file": "packages/scout-for-lol/packages/backend/src/explore/tools/mvp-votes-tools.ts",
@@ -2109,6 +2225,14 @@
         "count": 1
       }
     ],
+    "temporal-renovate-publishing-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/renovate-publishing.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
     "temporal-report-auto-remediation-enabled": [
       {
         "package": "@shepherdjerred/temporal",
@@ -2547,6 +2671,12 @@
         "file": "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.ts",
         "kind": "call-argument",
         "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/help.ts",
+        "kind": "constant",
+        "count": 1
       },
       {
         "package": "@scout-for-lol/backend",

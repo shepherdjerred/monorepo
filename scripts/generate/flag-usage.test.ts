@@ -54,6 +54,20 @@ describe("extractTypeScriptHits", () => {
     ]);
   });
 
+  test("counts a key held as an object property value", () => {
+    expect(
+      hits(`
+        export const FLAG_KEYS = {
+          enabled: "demo-enabled",
+          limit: "demo-limit",
+        } as const;
+      `),
+    ).toEqual([
+      { key: "demo-enabled", kind: "constant" },
+      { key: "demo-limit", kind: "constant" },
+    ]);
+  });
+
   test("counts an explicit names.flag and not the derived name beside it", () => {
     expect(
       hits(`
@@ -102,7 +116,7 @@ describe("extractTypeScriptHits", () => {
       hits(`
         const level = env.LEVEL ?? "debug";
         if (mode === "demo-enabled") {}
-        const map = { "demo-limit": 1, value: "demo-enabled" };
+        const map = { "demo-limit": 1 };
         log.info(\`demo-\${"x"}\`);
       `),
     ).toEqual([]);

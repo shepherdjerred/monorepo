@@ -157,7 +157,11 @@ function literalKind(literal: ts.StringLiteralLike): FlagUsageKind | undefined {
   ) {
     return "constant";
   }
-  return isNamesFlagValue(outer) ? "config-flag-name" : undefined;
+  if (isNamesFlagValue(outer)) return "config-flag-name";
+  // A key held as an object property value, such as a map of aliases to keys.
+  return ts.isPropertyAssignment(parent) && parent.initializer === outer
+    ? "constant"
+    : undefined;
 }
 
 /**

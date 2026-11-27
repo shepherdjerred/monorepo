@@ -18,7 +18,8 @@
  * - `call-argument` — `isEnabled("…")`, `flagValueSchema("…")`, typed
  *   wrappers such as streambot `enabled("…")` or scout `getFlag("…")`;
  * - `array-element` — key lists such as `["…", "…"] as const`;
- * - `constant` — a named key such as `const FLAG_KEY = "…"` or a class field,
+ * - `constant` — a named key such as `const FLAG_KEY = "…"`, a class field, or
+ *   an object property value such as `{ enabled: "…" }` in a map of aliases,
  *   which the file then passes to one of the readers above.
  *
  * Literal types (`"a" | "b"`, `satisfies Record<"a", …>`, type arguments) are
