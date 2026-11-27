@@ -93,7 +93,7 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * A span of time: `850ms`, `45s`, `12m 5s`, `2h 14m`, `3d 4h`. At most two
+ * A span of time: `850ms`, `1.3s`, `45s`, `12m 5s`, `2h 14m`, `3d 4h`. One decimal under ten seconds, whole seconds from ten. At most two
  * units, the largest two that are not zero.
  */
 export function formatDuration(ms: number): string {
@@ -102,6 +102,10 @@ export function formatDuration(ms: number): string {
   }
   const whole = Math.floor(ms);
   if (whole < 1000) return `${String(whole)}ms`;
+  if (whole < 10_000) {
+    const tenths = Math.floor(whole / 100);
+    return `${String(Math.floor(tenths / 10))}.${String(tenths % 10)}s`;
+  }
   const parts = Temporal.Duration.from({ milliseconds: whole }).round({
     largestUnit: "day",
     smallestUnit: "second",

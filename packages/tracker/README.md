@@ -97,8 +97,8 @@ search, Workspace, Views, Teams and Projects groups, identity, settings,
 shortcuts and the theme row), its `--ui-*` colour tokens, Inter and Berkeley
 Mono, and its 28px controls. `src/client/styles/tokens.css` adds only
 non-colour tokens (shadows, backdrop, the accent selection tint and motion).
-`src/client/styles/base.css` puts element defaults in a `tracker.elements`
-cascade layer between console-ui's reset and components; Tracker's own class
+`src/client/styles/base.css` puts element defaults in a console-ui's
+`ui.app` cascade layer, below its components; Tracker's own class
 rules are unlayered and win over both. The theme preference uses console-ui's
 theme store under `tracker.theme`, applied before first paint by
 `index.html`. At 900px and below console-ui hides the sidebar; Tracker's page

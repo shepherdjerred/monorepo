@@ -298,6 +298,10 @@ describe("time pieces", () => {
     );
   });
 
+  test("Duration keeps one decimal under ten seconds", () => {
+    expect(renderToStaticMarkup(<Duration ms={1300} />)).toContain(">1.3s<");
+  });
+
   test("Duration takes milliseconds or a start and end", () => {
     expect(renderToStaticMarkup(<Duration ms={8_040_000} />)).toContain(
       'dateTime="PT2H14M"',
@@ -346,6 +350,7 @@ describe("feedback pieces", () => {
       <EmailPreview html="<p>Hi</p>" text="Hi" />,
     );
     expect(html).toContain('sandbox=""');
+    expect(html).toContain('referrerPolicy="no-referrer"');
     expect(html).toContain(
       'srcDoc="&lt;p&gt;Hi&lt;/p&gt;"'.replace("srcDoc", "srcDoc"),
     );

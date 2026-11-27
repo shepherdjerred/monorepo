@@ -45,6 +45,12 @@ export type ConsoleShellProps = {
    * a footer link, or a button that opens a dialog, can shut the drawer.
    */
   readonly sidebarFooter?: ReactNode | ((close?: () => void) => ReactNode);
+  /**
+   * Actions in the desktop sidebar header, after the app switcher and
+   * palette button (a search button, say), the counterpart of
+   * `topBarActions` on a phone.
+   */
+  readonly sidebarActions?: ReactNode;
   /** Extra icon buttons in the phone top bar, before the theme switch. */
   readonly topBarActions?: ReactNode;
   /** Selector of the element the skip link focuses; defaults to `#main`. */
@@ -88,6 +94,7 @@ export function ConsoleShell({
   theme,
   palette,
   sidebarFooter,
+  sidebarActions,
   topBarActions,
   skipLinkTarget = "#main",
   children,
@@ -153,6 +160,7 @@ export function ConsoleShell({
               <>
                 {switcher}
                 {paletteButton}
+                {sidebarActions}
               </>
             }
             footer={

@@ -1,5 +1,11 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import type { ReactElement, ReactNode } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { openStateProps } from "@shepherdjerred/console-ui/components/overlays/open-state.ts";
 import { ICONS } from "@shepherdjerred/console-ui/icons.ts";
 
@@ -21,13 +27,22 @@ export type DialogProps = {
   readonly onOpenChange?: (open: boolean) => void;
   /** An element that opens the dialog, e.g. `<Button>Delete</Button>`. */
   readonly trigger?: ReactElement;
+  /**
+   * Where focus goes on close. By default the element focused when a
+   * controlled dialog opened (the trigger handles itself); see Base UI's
+   * `finalFocus`.
+   */
+  readonly finalFocus?: ComponentProps<
+    typeof DialogPrimitive.Popup
+  >["finalFocus"];
   readonly children?: ReactNode;
 };
 
 /**
  * A modal dialog (Base UI): backdrop, a 15px title row with a close button,
  * the body, and actions. Focus is trapped while open and returns to the
- * trigger on close. Native `<dialog class="ui-dialog">` markup with the same
+ * trigger on close; a controlled dialog returns it to the element that
+ * had focus when it opened (override with `finalFocus`). Native `<dialog class="ui-dialog">` markup with the same
  * `ui-dialog-*` parts looks the same.
  */
 export function Dialog({
@@ -38,8 +53,15 @@ export function Dialog({
   open,
   onOpenChange,
   trigger,
+  finalFocus,
   children,
 }: DialogProps): React.JSX.Element {
+  const opener = useRef<Element | null>(null);
+  // Remember focus before Base UI moves it into the popup. Only a controlled
+  // dialog needs this: with a trigger, Base UI returns focus to the trigger.
+  useLayoutEffect(() => {
+    if (open === true) opener.current = document.activeElement;
+  }, [open]);
   return (
     <DialogPrimitive.Root {...openStateProps(open, onOpenChange)}>
       {trigger === undefined ? null : (
@@ -47,7 +69,19 @@ export function Dialog({
       )}
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="ui-backdrop" />
-        <DialogPrimitive.Popup className="ui-dialog" data-size={size}>
+        <DialogPrimitive.Popup
+          className="ui-dialog"
+          data-size={size}
+          finalFocus={
+            finalFocus ??
+            (() => {
+              const element = opener.current;
+              return element instanceof HTMLElement && element.isConnected
+                ? element
+                : true;
+            })
+          }
+        >
           <div className="ui-dialog-head">
             <DialogPrimitive.Title className="ui-dialog-title">
               {title}

@@ -84,7 +84,10 @@ describe("formatDuration", () => {
   test.each([
     [0, "0ms"],
     [850, "850ms"],
-    [1000, "1s"],
+    [1000, "1.0s"],
+    [1300, "1.3s"],
+    [9999, "9.9s"],
+    [10_000, "10s"],
     [45 * SECOND, "45s"],
     [12 * MINUTE + 5 * SECOND, "12m 5s"],
     [2 * HOUR + 14 * MINUTE, "2h 14m"],

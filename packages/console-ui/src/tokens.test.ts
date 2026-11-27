@@ -58,9 +58,9 @@ describe("stylesheets", () => {
 
   test("index.css declares the layer order before importing", async () => {
     const css = withoutComments(await stylesheet("index.css")).trim();
-    expect(css.startsWith("@layer ui.reset, ui.tokens, ui.components;")).toBe(
-      true,
-    );
+    expect(
+      css.startsWith("@layer ui.reset, ui.tokens, ui.app, ui.components;"),
+    ).toBe(true);
   });
 
   test.each(["reset.css", "tokens.css", "fonts.css", ...classSheets])(

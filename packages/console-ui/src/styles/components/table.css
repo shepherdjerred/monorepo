@@ -43,6 +43,13 @@
     border-bottom: 1px solid var(--ui-line-soft);
     white-space: nowrap;
   }
+  /* Opt-in wrapping for headlines and error text: `<td data-wrap>`. */
+  .ui-table :is(th, td)[data-wrap] {
+    height: auto;
+    padding-block: var(--ui-space-2);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .ui-table tbody th[scope="row"] {
     color: var(--ui-ink);
     font-weight: var(--ui-weight-medium);

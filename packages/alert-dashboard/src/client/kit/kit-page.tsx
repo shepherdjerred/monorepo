@@ -194,6 +194,33 @@ function EmptyTable(): React.JSX.Element {
   );
 }
 
+function WrapTable(): React.JSX.Element {
+  return (
+    <div className="ui-table-scroll">
+      <table className="ui-table">
+        <thead>
+          <tr>
+            <th scope="col">Failure</th>
+            <th scope="col" className="ui-num">
+              Count
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-wrap="">
+              Wrapping cell: a long headline or error message breaks onto
+              further lines instead of stretching the row, as in this
+              connection-refused example from the mail relay.
+            </td>
+            <td className="ui-num">3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /**
  * `/kit`: every console-ui piece in a realistic list page. Reached from the
  * command palette, not the sidebar.
@@ -266,6 +293,9 @@ export function KitPage(): React.JSX.Element {
       </Section>
       <Section title="Silences" count={0}>
         <EmptyTable />
+      </Section>
+      <Section title="Wrapping cells" headingLevel={3}>
+        <WrapTable />
       </Section>
       <div className="ui-columns">
         <Section title="Banners" headingLevel={3}>

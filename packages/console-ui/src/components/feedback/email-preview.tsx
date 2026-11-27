@@ -46,6 +46,7 @@ export function EmailPreview({
       ) : (
         <iframe
           sandbox=""
+          referrerPolicy="no-referrer"
           title={title}
           srcDoc={html}
           className="ui-email-frame"
