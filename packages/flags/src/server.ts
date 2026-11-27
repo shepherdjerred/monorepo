@@ -2,6 +2,7 @@ import { authFromEnv } from "./auth.ts";
 import { createFlagsApp, createFlagsEvaluationApp } from "./app.ts";
 import { createFlagsMetrics } from "./metrics.ts";
 import { FlagStore } from "./store.ts";
+import { createFlagsUsageTracker } from "./usage.ts";
 
 const NON_NEGATIVE_INTEGER = /^(?:0|[1-9]\d*)$/u;
 const peers = new WeakMap<Request, string | null>();
@@ -48,11 +49,12 @@ export async function startServer(
       }),
     );
     const metrics = createFlagsMetrics();
+    const usage = createFlagsUsageTracker();
     const clientRoot = `${import.meta.dir}/../dist/client`;
     const clientReady = await Bun.file(`${clientRoot}/index.html`).exists();
     const app = clientReady
-      ? createFlagsApp({ store, auth, peerAddress, clientRoot, metrics })
-      : createFlagsApp({ store, auth, peerAddress, metrics });
+      ? createFlagsApp({ store, auth, peerAddress, clientRoot, metrics, usage })
+      : createFlagsApp({ store, auth, peerAddress, metrics, usage });
     const server = Bun.serve({
       port,
       hostname,
@@ -67,7 +69,7 @@ export async function startServer(
     }
     let evaluationServer: ReturnType<typeof Bun.serve> | undefined;
     if (evaluationPort !== undefined) {
-      const evaluationApp = createFlagsEvaluationApp({ store, metrics });
+      const evaluationApp = createFlagsEvaluationApp({ store, metrics, usage });
       try {
         evaluationServer = Bun.serve({
           port: evaluationPort,
