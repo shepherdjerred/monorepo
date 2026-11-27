@@ -1,6 +1,10 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import { seek } from "./recorded-replay-fixture.ts";
+import {
+  createCurrentInventoryVerifier,
+  currentInventoryReplaySha256,
+} from "./proof/current-inventory.ts";
 
 export async function verifyRecordedRoster(
   page: Page,
@@ -10,6 +14,9 @@ export async function verifyRecordedRoster(
     championInventory: boolean;
     championExperience: boolean;
     descriptor: { durationSeconds: number; sha256: string };
+    root: string;
+    manifestPath: string;
+    roflPath: string;
   },
   testInfo: TestInfo,
 ) {
@@ -42,13 +49,8 @@ export async function verifyRecordedRoster(
       capabilities.descriptor.sha256,
       testInfo,
     );
-  if (capabilities.championInventory) {
-    await verifyRecordedInventory(
-      page,
-      testInfo,
-      capabilities.descriptor.durationSeconds > 100,
-    );
-  }
+  if (capabilities.championInventory)
+    await verifyFixtureInventory(page, capabilities, testInfo);
   if (
     capabilities.descriptor.sha256 ===
     "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
@@ -57,6 +59,33 @@ export async function verifyRecordedRoster(
       await verifyCurrentChampionStats(page, capabilities, testInfo);
   } else if (capabilities.championResources)
     await verifyRecordedRosterResources(page, testInfo);
+}
+
+async function verifyFixtureInventory(
+  page: Page,
+  fixture: {
+    descriptor: { durationSeconds: number; sha256: string };
+    root: string;
+    manifestPath: string;
+    roflPath: string;
+  },
+  testInfo: TestInfo,
+) {
+  if (fixture.descriptor.sha256 !== currentInventoryReplaySha256) {
+    await verifyRecordedInventory(
+      page,
+      testInfo,
+      fixture.descriptor.durationSeconds > 100,
+    );
+    return;
+  }
+  const verifier = await createCurrentInventoryVerifier(fixture);
+  await verifier.verifySamples(page, seek, testInfo);
+  const slider = page.getByRole("slider", { name: "Replay time" });
+  await slider.press("End");
+  await expect(slider).toHaveAttribute("aria-busy", "false");
+  await verifier.verifyEnd(page);
+  await seek(page, 0);
 }
 
 async function verifyCurrentChampionStats(

@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 import struct
 from importlib import import_module
 from pathlib import Path
@@ -16,6 +17,8 @@ SOURCE_HASHES = {
     "da4d842e11c9c04dfb003fd67ab1e15aaefb0ab26e13a1d5efc4d1403e8a7495",
     "e06f536cff87123b0bf792a6d2c52a11ca90d7e615d6a6e4ad8d65e226447569",
 }
+CURRENT_BUILD = "16.23.841.8428"
+CURRENT_ARCHIVE = "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
 READERS = {
     190: 0x119B530,
     226: 0x11A02A0,
@@ -169,22 +172,40 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("archive", "source", "output"):
         parser.add_argument(name, type=Path)
+    parser.add_argument("--current", action="store_true")
+    parser.add_argument("--source-sha256")
     args = parser.parse_args()
+    if args.current:
+        if not re.fullmatch(r"[a-f0-9]{64}", args.source_sha256 or ""):
+            parser.error("--current requires --source-sha256 with a lowercase SHA-256 digest")
+    elif args.source_sha256 is not None:
+        parser.error("--source-sha256 is only accepted with --current")
     source_bytes = args.source.read_bytes()
     source_hash = hashlib.sha256(source_bytes).hexdigest()
-    if source_hash not in SOURCE_HASHES:
+    expected_sources = {args.source_sha256} if args.current else SOURCE_HASHES
+    if source_hash not in expected_sources:
         raise ValueError("Expected exact saved replay inventory evidence")
     archive = args.archive.read_bytes()
-    if hashlib.sha256(archive).hexdigest() != baseline.ARCHIVE:
+    expected_archive = CURRENT_ARCHIVE if args.current else baseline.ARCHIVE
+    if hashlib.sha256(archive).hexdigest() != expected_archive:
         raise ValueError("Expected exact archived replay executable")
     source = json.loads(source_bytes)
+    if args.current and (
+        source["build"] != CURRENT_BUILD
+        or source["protocol"] != "8bbfcd5af2bc92db"
+        or not source["rows"]
+        or not re.fullmatch(r"[a-f0-9]{64}", source["replaySha256"])
+        or not re.fullmatch(r"[a-f0-9]{64}", source["sceneSha256"])
+    ):
+        raise ValueError("Current inventory evidence requires an exact build, replay and bound scene")
     image = MachImage(archive)
     rows = list(decode(image, source["rows"]))
     result = {
         **{key: source[key] for key in ("build", "protocol", "replaySha256", "participants")},
         "sliceSha256": hashlib.sha256(image.binary).hexdigest(),
         "sourceSha256": source_hash,
-        "archiveSha256": baseline.ARCHIVE,
+        "archiveSha256": expected_archive,
+        **({"sceneSha256": source["sceneSha256"]} if args.current else {}),
         "mutations": baseline.registered_mutation_counts(image.image, source["rosterOpcodesByStream"]),
         "rows": rows,
     }

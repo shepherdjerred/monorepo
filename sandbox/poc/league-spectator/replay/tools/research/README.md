@@ -124,10 +124,21 @@ uv run --no-project --with unicorn python "$tools/probe-exact-inventory-mutation
 bun "$tools/research/audit-exact-inventory-chronology.mjs" $inventoryNativeProof $replayPath $boundScene $inventoryAudit $inventoryTracks
 ```
 
+For 16.23.841.8428, use the bound scene and the exact macOS archive. The
+chronology audit compares the terminal slots with the saved replay and the
+reviewed Riot Match-V5 result. Supply the SHA-256 pins for the exact inputs.
+
+```powershell
+bun "$tools/research/extract-exact-inventory-set.mjs" --current --all --replay-sha256 $replaySha256 --scene-sha256 $boundSceneSha256 $replayPath $boundScene $inventoryNativeInput
+uv run --no-project --with unicorn python "$tools/probe-exact-inventory-mutations.py" --current --source-sha256 $inventoryNativeInputSha256 $macGameExecutable $inventoryNativeInput $inventoryNativeProof
+bun "$tools/research/audit-exact-inventory-chronology.mjs" --current --native-proof-sha256 $inventoryNativeProofSha256 --canonical-match $matchV5Path --canonical-match-sha256 $matchV5Sha256 $inventoryNativeProof $replayPath $boundScene $inventoryAudit $inventoryTracks
+```
+
 Collect the unique positive `itemId` values from the seven-slot arrays into a
 JSON array. Build the `terrain-texture-mips` utility and pass its DLL to the asset
 preparer. The preparer reads names and icon textures from the exact local game
-archives and exports the original top mip as PNG.
+archives and exports the original top mip as PNG. Add `--current-build` for
+the verified 16.23.841.8428 installation.
 
 ```powershell
 bun "$tools/research/prepare-exact-inventory-assets.mjs" $installation $itemIds $outputDirectory $terrainTextureMipsDll

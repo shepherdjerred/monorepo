@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
+import { observeRecordedItemBlobs } from "./proof/current-inventory.ts";
 import {
   observeDirectChampionStatsWorker,
   verifyDirectChampionStatsWorker,
@@ -183,6 +184,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   const result = await readFooterScores(fixture.roflPath);
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   await installRecordedDrawProbe(page);
+  await observeRecordedItemBlobs(page);
   if (fixture.directChampionStats) await observeDirectChampionStatsWorker(page);
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {

@@ -1,34 +1,79 @@
 import { writeFile } from "node:fs/promises";
+import { basename } from "node:path";
+import { parseArgs } from "node:util";
+import { zstdDecompressSync } from "node:zlib";
+import { createReplayPacketReader } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/packet-reader.mjs";
 import {
   compareRecordedInventoryFooter,
   readInventoryReplayFooter,
 } from "./verify-recorded-inventory-footer.mjs";
 
-const [inputPath, replayPath, scenePath, outputPath, tracksPath] =
-  process.argv.slice(2);
-if (!inputPath || !replayPath || !scenePath || !outputPath)
-  throw Error(
-    "Usage: bun audit-exact-inventory-chronology.mjs NATIVE_PROOF ROFL BOUND_SCENE AUDIT [ORDINARY_TRACKS]",
-  );
-const bytes = await Bun.file(inputPath).arrayBuffer();
-const sourceSha256 = new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
+const { positionals, values } = parseArgs({
+  options: {
+    current: { type: "boolean" },
+    "canonical-match": { type: "string" },
+    "canonical-match-sha256": { type: "string" },
+    "native-proof-sha256": { type: "string" },
+  },
+  allowPositionals: true,
+});
+const [inputPath, replayPath, scenePath, outputPath, tracksPath, ...extra] =
+  positionals;
+const canonicalPath = values["canonical-match"];
+const canonicalPin = values["canonical-match-sha256"];
+const nativePin = values["native-proof-sha256"];
+const sha256Pattern = /^[a-f0-9]{64}$/;
 if (
-  !new Set([
-    "fc4a64afd3546d07343ae365ac8d4db0e58b90bd5e42e82d9405e784b6adcd63",
-    "21c3b017efce44d8fd939fb3b50514e3dadfe19e51c8913171af1e23b552dd63",
-  ]).has(sourceSha256)
+  !inputPath ||
+  !replayPath ||
+  !scenePath ||
+  !outputPath ||
+  extra.length ||
+  (values.current
+    ? !canonicalPath ||
+      !sha256Pattern.test(canonicalPin) ||
+      !sha256Pattern.test(nativePin)
+    : canonicalPath !== undefined ||
+      canonicalPin !== undefined ||
+      nativePin !== undefined)
 )
+  throw Error(
+    "Usage: bun audit-exact-inventory-chronology.mjs [--current --native-proof-sha256 SHA --canonical-match MATCH_V5_JSON --canonical-match-sha256 SHA] NATIVE_PROOF ROFL BOUND_SCENE AUDIT [ORDINARY_TRACKS]",
+  );
+const sha = (value) =>
+  new Bun.CryptoHasher("sha256").update(value).digest("hex");
+const bytes = await Bun.file(inputPath).arrayBuffer();
+const sourceSha256 = sha(bytes);
+const acceptedDigests = values.current
+  ? [nativePin]
+  : [
+      "fc4a64afd3546d07343ae365ac8d4db0e58b90bd5e42e82d9405e784b6adcd63",
+      "21c3b017efce44d8fd939fb3b50514e3dadfe19e51c8913171af1e23b552dd63",
+    ];
+if (!acceptedDigests.includes(sourceSha256))
   throw Error("Expected a verified native inventory observation receipt");
-const { build, protocol, replaySha256, sliceSha256, participants, rows } =
-  JSON.parse(new TextDecoder().decode(bytes));
-const rawReplay = await Bun.file(replayPath).bytes();
-const scene = await Bun.file(scenePath).json();
+const {
+  build,
+  protocol,
+  replaySha256,
+  sliceSha256,
+  archiveSha256,
+  participants,
+  rows,
+  sceneSha256,
+} = JSON.parse(new TextDecoder().decode(bytes));
+const replayBuffer = await Bun.file(replayPath).arrayBuffer();
+const rawReplay = new Uint8Array(replayBuffer);
+const sceneBytes = await Bun.file(scenePath).bytes();
+const scene = JSON.parse(
+  new TextDecoder("utf-8", { fatal: true }).decode(sceneBytes),
+);
 if (
-  new Bun.CryptoHasher("sha256").update(rawReplay).digest("hex") !==
-    replaySha256 ||
+  sha(rawReplay) !== replaySha256 ||
   scene.identity.replaySha256 !== replaySha256 ||
   scene.identity.build !== build ||
-  scene.identity.protocol !== protocol
+  scene.identity.protocol !== protocol ||
+  (values.current && sha(sceneBytes) !== sceneSha256)
 )
   throw Error(
     "Inventory footer audit must use the same saved replay and bound scene",
@@ -40,6 +85,40 @@ const checkpoints = Map.groupBy(
 const [opening, ...later] = checkpoints.values();
 if (opening?.length !== participants.length)
   throw Error("Incomplete initial native inventory checkpoint");
+if (values.current) {
+  const original = createReplayPacketReader(replayBuffer, (input, output) =>
+    zstdDecompressSync(input, { maxOutputLength: output.length }),
+  );
+  const participantsById = new Set(participants);
+  if (
+    build !== "16.23.841.8428" ||
+    protocol !== "8bbfcd5af2bc92db" ||
+    original.build !== build ||
+    original.protocol !== protocol ||
+    original.durationMilliseconds !== scene.identity.durationMilliseconds ||
+    archiveSha256 !==
+      "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7" ||
+    sliceSha256 !==
+      "de6db1683eb61358d0aaf9fac44ef722850a927263eae7f68212add8621a500e" ||
+    checkpoints.size !== original.keyframes.length ||
+    participants.length !== 10 ||
+    participantsById.size !== 10 ||
+    original.keyframes.some(({ chunkOffset, timeSeconds }) => {
+      const snapshot = checkpoints.get(chunkOffset);
+      return (
+        snapshot?.length !== 10 ||
+        new Set(snapshot.map(({ context }) => context)).size !== 10 ||
+        snapshot.some(
+          (row) =>
+            !participantsById.has(row.context) ||
+            row.opcode !== 1214 ||
+            row.timeSeconds !== timeSeconds,
+        )
+      );
+    })
+  )
+    throw Error("Current inventory requires complete original snapshots");
+}
 
 function snapshot(row, slots) {
   slots.fill(null, 0, 10);
@@ -59,6 +138,9 @@ for (const row of opening) {
   state.set(row.context, snapshot(row, emptyStorage()));
   tracks.set(row.context, [[0, state.get(row.context).slice()]]);
 }
+const rawOpening = new Map(
+  [...state].map(([context, slots]) => [context, slots.slice()]),
+);
 for (const row of rows) {
   if (row.stream !== 1) continue;
   const slots = state.get(row.context);
@@ -106,15 +188,17 @@ for (const checkpoint of later) {
       throw Error("Inventory checkpoint did not share a primary clock");
     const expected = snapshot(row, emptyStorage()).slice(0, 10);
     const points = tracks.get(row.context);
-    const matchAt = (clock) => {
-      const [, sample] = points.findLast(
-        ([timeSeconds]) => timeSeconds <= clock,
-      );
-      return expected.every(
+    const matches = (sample) =>
+      expected.every(
         (item, i) =>
           item?.itemId === sample[i]?.itemId &&
           item?.count === sample[i]?.count,
       );
+    const matchAt = (clock) => {
+      const [, sample] = points.findLast(
+        ([timeSeconds]) => timeSeconds <= clock,
+      );
+      return matches(sample);
     };
     comparisons.push({
       participantId: row.context,
@@ -123,9 +207,62 @@ for (const checkpoint of later) {
       precedingBoundary,
       matchesRecordedBoundary: matchAt(currentBoundary),
       matchesPrecedingBoundary: matchAt(precedingBoundary),
+      ...(values.current
+        ? {
+            matchesRawOpeningBeforeSameClockGameplay:
+              precedingBoundary === 0 && matches(rawOpening.get(row.context)),
+            matchesAnyOlderFoldState: points.some(
+              ([time, slots]) => time < precedingBoundary && matches(slots),
+            ),
+          }
+        : {}),
     });
   }
   precedingBoundary = currentBoundary;
+}
+
+async function verifyCanonicalFooter() {
+  const canonicalBytes = await Bun.file(canonicalPath).bytes();
+  const canonicalSha256 = sha(canonicalBytes);
+  if (canonicalSha256 !== canonicalPin)
+    throw Error("Current inventory requires the reviewed Riot Match-V5 result");
+  const canonical = JSON.parse(
+    new TextDecoder("utf-8", { fatal: true }).decode(canonicalBytes),
+  );
+  const game = /^([A-Z0-9]+)-(\d+)\.rofl$/.exec(basename(replayPath));
+  if (
+    !game ||
+    canonical.metadata.matchId !== `${game[1]}_${game[2]}` ||
+    String(canonical.info.gameId) !== game[2] ||
+    canonical.info.gameVersion !== build ||
+    canonical.info.mapId !== 11 ||
+    canonical.info.gameMode !== "CLASSIC" ||
+    canonical.info.participants.length !== 10
+  )
+    throw Error("Riot Match-V5 result differs from the bound Rift replay");
+  const footer = JSON.parse(readInventoryReplayFooter(rawReplay).statsJson);
+  const matched = new Set();
+  for (const row of footer) {
+    const candidates = canonical.info.participants.filter(
+      (member) =>
+        member.riotIdGameName === row.RIOT_ID_GAME_NAME &&
+        member.riotIdTagline === row.RIOT_ID_TAG_LINE &&
+        member.teamId === Number(row.TEAM) &&
+        member.championName === row.SKIN,
+    );
+    if (candidates.length !== 1 || matched.has(candidates[0]))
+      throw Error("Riot Match-V5 inventory lacks a unique bound participant");
+    const [member] = candidates;
+    matched.add(member);
+    for (let slot = 0; slot < 7; slot++)
+      if (member[`item${slot}`] !== Number(row[`ITEM${slot}`]))
+        throw Error(
+          "Riot Match-V5 ordered inventory differs from the replay footer",
+        );
+  }
+  if (matched.size !== 10)
+    throw Error("Riot Match-V5 final inventory is incomplete");
+  return { sourceSha256: canonicalSha256, verifiedSlots: matched.size * 7 };
 }
 
 const result = {
@@ -143,6 +280,24 @@ const result = {
     (r) => r.matchesPrecedingBoundary,
   ).length,
   comparisons,
+  ...(values.current
+    ? {
+        canonicalFooter: await verifyCanonicalFooter(),
+        snapshotChronology: {
+          matchedRawOpeningBeforeSameClockGameplay: comparisons.filter(
+            (row) =>
+              !row.matchesPrecedingBoundary &&
+              row.matchesRawOpeningBeforeSameClockGameplay,
+          ).length,
+          matchedOlderFoldStateWithoutClockProof: comparisons.filter(
+            (row) =>
+              !row.matchesPrecedingBoundary &&
+              !row.matchesRawOpeningBeforeSameClockGameplay &&
+              row.matchesAnyOlderFoldState,
+          ).length,
+        },
+      }
+    : {}),
   finalSlots: compareRecordedInventoryFooter(
     rawReplay,
     scene.participants,

@@ -3,6 +3,10 @@ import { resolve, join } from "node:path";
 import { zstdDecompressSync } from "node:zlib";
 import { readExactItemDefinitions } from "../exact-map-bin.mjs";
 import { openLocalWad } from "../wad.mjs";
+import {
+  championArchiveExecutableHashes,
+  currentChampionBuild,
+} from "./native-terrain-champion-model-catalog.mjs";
 
 const sha256 = (bytes) =>
   new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
@@ -12,6 +16,14 @@ const localeSha256 =
 const nameHashBits = 38n;
 const nameHashMask = (1n << nameHashBits) - 1n;
 const pngSignature = Buffer.from("89504e470d0a1a0a", "hex");
+export const currentInventoryAssetSource = Object.freeze({
+  installedExeSha256: championArchiveExecutableHashes[currentChampionBuild],
+  archiveIndexSha256: Object.freeze({
+    global: "df830d29218ffd1df26bf50af2be5df16b19d4e2aed9e7f629e9e349010d0b0c",
+    localized:
+      "09070c98d71ba5059bee206d814eb11b113dfc08cabc270beb35ff0302307939",
+  }),
+});
 
 export function inventoryIconDimensions(bytes) {
   const png = Buffer.from(bytes);
@@ -89,7 +101,13 @@ function exactItemDescriptor(objects, itemId) {
   return { itemId, stringKey: name.value, sourceHash: BigInt(icon.value) };
 }
 
-async function prepare(installation, requested, output, exporter) {
+async function prepare(
+  installation,
+  requested,
+  output,
+  exporter,
+  currentBuild,
+) {
   const itemIds = requested.toSorted((left, right) => left - right);
   if (
     itemIds.length === 0 ||
@@ -99,24 +117,40 @@ async function prepare(installation, requested, output, exporter) {
     )
   )
     throw Error("Unique positive replay inventory item IDs required");
+  const source = currentBuild ? currentInventoryAssetSource : undefined;
+  if (
+    source !== undefined &&
+    sha256(
+      await Bun.file(
+        join(installation, "Game", "League of Legends.exe"),
+      ).bytes(),
+    ) !== source.installedExeSha256
+  )
+    throw Error("Installed current inventory asset build differs from the pin");
   const [global, localized] = await Promise.all([
     openLocalWad(
       installation,
       "DATA/FINAL/Global.wad.client",
       zstdDecompressSync,
+      source?.archiveIndexSha256.global,
     ),
     openLocalWad(
       installation,
       "DATA/FINAL/Localized/Global.en_US.wad.client",
       zstdDecompressSync,
+      source?.archiveIndexSha256.localized,
     ),
   ]);
   const [definitions, strings] = await Promise.all([
     global.byHash(0x1d720f4f42640c18n),
     localized.byHash(localeHash),
   ]);
-  const { build, objects, sourceSha256 } =
-    readExactItemDefinitions(definitions);
+  // Current archive entries match the archived definition and locale bytes.
+  const {
+    build: definitionBuild,
+    objects,
+    sourceSha256,
+  } = readExactItemDefinitions(definitions);
   const descriptors = itemIds.map((id) => exactItemDescriptor(objects, id));
   const names = readItemNames(
     strings,
@@ -127,6 +161,7 @@ async function prepare(installation, requested, output, exporter) {
   const display = join(output, "item-icons");
   await Promise.all([mkdir(sources), mkdir(display)]);
   const jobs = {};
+  const texturesByItem = new Map();
   const items = [];
   for (const { itemId, stringKey, sourceHash } of descriptors) {
     const bytes = Buffer.from(await global.byHash(sourceHash));
@@ -140,6 +175,7 @@ async function prepare(installation, requested, output, exporter) {
     const icon = `item-icons/${itemId}.png`;
     await Bun.write(texture, bytes);
     jobs[texture] = join(output, icon);
+    texturesByItem.set(itemId, texture);
     items.push({
       itemId,
       name: names.get(stringKey),
@@ -155,7 +191,8 @@ async function prepare(installation, requested, output, exporter) {
     stderr: "inherit",
   });
   if (child.exitCode !== 0) throw Error("Item texture conversion failed");
-  const mipLevels = Object.values(JSON.parse(child.stdout.toString("utf8")));
+  const results = JSON.parse(child.stdout.toString("utf8"));
+  const mipLevels = Object.values(results);
   if (
     mipLevels.length !== items.length ||
     mipLevels.some(({ mipLevel }) => mipLevel !== 0)
@@ -166,15 +203,29 @@ async function prepare(installation, requested, output, exporter) {
     const png = Buffer.from(
       await Bun.file(join(output, item.icon)).arrayBuffer(),
     );
-    Object.assign(item, inventoryIconDimensions(png), {
+    const dimensions = inventoryIconDimensions(png);
+    if (currentBuild) {
+      const texture = texturesByItem.get(item.itemId);
+      const result = results[texture];
+      if (
+        result?.width !== dimensions.width ||
+        result.height !== dimensions.height ||
+        sha256(await Bun.file(texture).bytes()) !== item.textureSha256
+      )
+        throw Error(
+          `Current item texture or output dimensions changed for ${item.itemId}`,
+        );
+    }
+    Object.assign(item, dimensions, {
       iconSha256: sha256(png),
     });
   }
   const manifest = {
     kind: "scout-exact-inventory-assets",
-    build,
+    build: currentBuild ? currentChampionBuild : definitionBuild,
     definitionsSha256: sourceSha256,
     localeSha256,
+    ...source,
     items,
   };
   const data = JSON.stringify(manifest) + "\n";
@@ -185,13 +236,27 @@ async function prepare(installation, requested, output, exporter) {
 }
 
 if (import.meta.main) {
-  const [installation, idsPath, output, exporter] = process.argv.slice(2);
-  if (!installation || !idsPath || !output || !exporter) {
+  const [installation, idsPath, output, exporter, ...options] =
+    process.argv.slice(2);
+  const currentBuild = options.length === 1 && options[0] === "--current-build";
+  if (
+    !installation ||
+    !idsPath ||
+    !output ||
+    !exporter ||
+    (options.length && !currentBuild)
+  ) {
     throw Error(
-      "Usage: bun prepare-exact-inventory-assets.mjs <installation> <item-ids.json> <output-dir> <terrain-texture-mips.dll>",
+      "Usage: bun prepare-exact-inventory-assets.mjs <installation> <item-ids.json> <output-dir> <terrain-texture-mips.dll> [--current-build]",
     );
   }
   const requested = await Bun.file(idsPath).json();
   if (!Array.isArray(requested)) throw Error("Replay item ID list required");
-  await prepare(installation, requested, resolve(output), resolve(exporter));
+  await prepare(
+    installation,
+    requested,
+    resolve(output),
+    resolve(exporter),
+    currentBuild,
+  );
 }

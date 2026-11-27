@@ -1,17 +1,38 @@
 import { writeFile } from "node:fs/promises";
+import { parseArgs } from "node:util";
 import { zstdDecompressSync } from "node:zlib";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
 
-const [replayPath, goldPath, outputPath, mode] = process.argv.slice(2);
-if (!replayPath || !goldPath || !outputPath)
+const { values, positionals } = parseArgs({
+  options: {
+    all: { type: "boolean" },
+    current: { type: "boolean" },
+    "replay-sha256": { type: "string" },
+    "scene-sha256": { type: "string" },
+  },
+  allowPositionals: true,
+});
+const [replayPath, evidencePath, outputPath] = positionals;
+const replayPin = values["replay-sha256"];
+const scenePin = values["scene-sha256"];
+const sha256Pattern = /^[a-f0-9]{64}$/;
+if (
+  positionals.length !== 3 ||
+  !replayPath ||
+  !evidencePath ||
+  !outputPath ||
+  (values.current
+    ? !values.all ||
+      !sha256Pattern.test(replayPin) ||
+      !sha256Pattern.test(scenePin)
+    : replayPin !== undefined || scenePin !== undefined)
+)
   throw Error(
-    "Usage: bun extract-exact-inventory-set.mjs REPLAY GOLD_TRACKS OUTPUT",
+    "Usage: bun extract-exact-inventory-set.mjs REPLAY GOLD_TRACKS OUTPUT [--all] | --current --all --replay-sha256 SHA --scene-sha256 SHA REPLAY BOUND_SCENE OUTPUT",
   );
 const sha256 = (bytes) =>
   new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
-if (mode !== undefined && mode !== "--all")
-  throw Error("Unknown inventory extraction mode");
 const channels = new Set([190, 226, 248, 415, 797, 840, 1143, 1214]);
 const goldDigests = new Map([
   [
@@ -26,18 +47,39 @@ const goldDigests = new Map([
 const bytes = await Bun.file(replayPath).arrayBuffer();
 const replay = openReplay(bytes);
 const replaySha256 = sha256(bytes);
-const goldBytes = await Bun.file(goldPath).arrayBuffer();
-const goldSha256 = sha256(goldBytes);
+const evidenceBytes = await Bun.file(evidencePath).arrayBuffer();
+const evidenceSha256 = sha256(evidenceBytes);
+const evidence = JSON.parse(
+  new TextDecoder("utf-8", { fatal: true }).decode(evidenceBytes),
+);
 if (
-  replay.build !== "16.23.840.6595" ||
   replay.protocol !== "8bbfcd5af2bc92db" ||
-  goldDigests.get(replaySha256) !== goldSha256
+  (values.current
+    ? replay.build !== "16.23.841.8428" ||
+      replaySha256 !== replayPin ||
+      evidenceSha256 !== scenePin ||
+      evidence.identity.replaySha256 !== replaySha256 ||
+      evidence.identity.build !== replay.build ||
+      evidence.identity.protocol !== replay.protocol ||
+      evidence.identity.durationMilliseconds !== replay.durationMilliseconds ||
+      evidence.identity.participantCount !== 10
+    : replay.build !== "16.23.840.6595" ||
+      goldDigests.get(replaySha256) !== evidenceSha256)
 )
-  throw Error("Expected a pinned exact replay and its recorded gold tracks");
-const { tracks } = JSON.parse(new TextDecoder().decode(goldBytes));
-const participants = new Set(tracks.map(({ participantId }) => participantId));
+  throw Error("Expected a pinned exact replay and its corresponding evidence");
+const roster = values.current ? evidence.participants : evidence.tracks;
+const participants = new Set(roster.map(({ participantId }) => participantId));
+if (
+  values.current &&
+  (participants.size !== 10 ||
+    roster.length !== 10 ||
+    [...participants].some(
+      (id) => !Number.isInteger(id) || id < 1 || id > 0xffffffff,
+    ))
+)
+  throw Error("Current inventory requires ten bound champion contexts");
 const spends = [];
-for (const { participantId, gold } of tracks) {
+for (const { participantId, gold } of values.current ? [] : evidence.tracks) {
   for (let i = 1; i < gold.length; i++) {
     const [timeSeconds, after] = gold[i];
     const before = gold[i - 1][1];
@@ -68,7 +110,8 @@ for (const packet of replayTimedPacketEnvelopes(
     const stream = (rosterOpcodesByStream[packet.stream] ??= {});
     stream[opcode] = (stream[opcode] ?? 0) + 1;
   }
-  if (mode === "--all" ? !channels.has(opcode) : opcode !== 840) continue;
+  if (values.all ? !channels.has(opcode) : opcode !== 840) continue;
+  if (values.current && !participants.has(context)) continue;
   streamCounts[packet.stream] = (streamCounts[packet.stream] ?? 0) + 1;
   rows.push({
     context,
@@ -77,9 +120,7 @@ for (const packet of replayTimedPacketEnvelopes(
     chunkOffset: packet.chunkOffset,
     blockOffset: packet.blockOffset,
     body: Buffer.from(packet.payload).toString("hex"),
-    ...(mode === "--all"
-      ? { opcode, secondTimeBits: packet.secondTimeBits }
-      : {}),
+    ...(values.all ? { opcode, secondTimeBits: packet.secondTimeBits } : {}),
   });
 }
 await writeFile(
@@ -88,7 +129,9 @@ await writeFile(
     build: replay.build,
     protocol: replay.protocol,
     replaySha256,
-    goldSha256,
+    ...(values.current
+      ? { sceneSha256: evidenceSha256 }
+      : { goldSha256: evidenceSha256 }),
     participants: [...participants],
     spends,
     streamCounts,

@@ -1,6 +1,11 @@
 import type { ReplayInventoryItem } from "@scout-for-lol/replay/types";
 import type { z } from "zod";
 import { readChampionTracks } from "./scout-terrain-champion-stats.ts";
+import {
+  currentTerrainClientSliceSha256,
+  currentTerrainPositionBuild,
+  isExactTerrainReplay,
+} from "./tools/research/native-terrain-byte-codecs.mjs";
 
 const inventorySliceSha256 =
   "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa";
@@ -62,13 +67,19 @@ export function readRecordedInventory(
   identity: InventoryIdentity,
   roster: Iterable<number>,
 ) {
+  if (!isExactTerrainReplay(identity, { allowCurrentBuild: true }))
+    throw Error("Recorded inventory requires a verified replay build.");
+  const sliceSha256 =
+    identity.build === currentTerrainPositionBuild
+      ? currentTerrainClientSliceSha256
+      : inventorySliceSha256;
   const { tracks } = schema
     .object({
       kind: schema.literal("scout-recorded-champion-inventory"),
       build: schema.literal(identity.build),
       protocol: schema.literal(identity.protocol),
       replaySha256: schema.literal(identity.replaySha256),
-      sliceSha256: schema.literal(inventorySliceSha256),
+      sliceSha256: schema.literal(sliceSha256),
       scope: schema.literal("ordinary-stream-with-initial-checkpoint"),
       chronologyAuditSha256: schema.string().regex(/^[0-9a-f]{64}$/),
       verifiedFooterSlots: schema.literal(70),

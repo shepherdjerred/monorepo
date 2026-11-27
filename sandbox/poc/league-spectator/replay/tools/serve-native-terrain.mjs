@@ -1855,7 +1855,7 @@ if (championStatInputs.length > 0 || inventoryPath !== undefined) {
   if (inventoryPath !== undefined) {
     const { itemIdsForTracks, readRecordedInventory, replayItemAssetSchema } =
       await import("../scout-terrain-inventory.ts");
-    const { inventoryIconDimensions } =
+    const { inventoryIconDimensions, currentInventoryAssetSource } =
       await import("./research/prepare-exact-inventory-assets.mjs");
     const { verifyRecordedInventoryFooter } =
       await import("./research/verify-recorded-inventory-footer.mjs");
@@ -1880,10 +1880,26 @@ if (championStatInputs.length > 0 || inventoryPath !== undefined) {
       roster,
     );
     verifyRecordedInventoryFooter(bytes, scene.participants, tracks);
+    const sourceIdentity = currentBuild
+      ? {
+          installedExeSha256: z.literal(
+            currentInventoryAssetSource.installedExeSha256,
+          ),
+          archiveIndexSha256: z.object({
+            global: z.literal(
+              currentInventoryAssetSource.archiveIndexSha256.global,
+            ),
+            localized: z.literal(
+              currentInventoryAssetSource.archiveIndexSha256.localized,
+            ),
+          }),
+        }
+      : {};
     const { items: catalog } = z
       .object({
         kind: z.literal("scout-exact-inventory-assets"),
         build: z.literal(scene.identity.build),
+        ...sourceIdentity,
         definitionsSha256: z.literal(
           "838c2828b0f8ae9e2380611691553ba67c163c7810bc0898a73807e1dca4d33c",
         ),
