@@ -781,7 +781,9 @@
         "packages/scout-for-lol/scripts/check-asset-sizes.ts",
         "packages/scout-for-lol/assets/**",
         "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-loading/**",
-        "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-splash/**"
+        "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-splash/**",
+        "packages/scout-for-lol/packages/data/src/meta/snapshot-v2-budget.ts",
+        "packages/scout-for-lol/packages/frontend/src/data/generated/champion-meta/**"
       ]
     },
     "//#guard:migration": {
