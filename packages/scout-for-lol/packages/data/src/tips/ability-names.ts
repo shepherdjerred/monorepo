@@ -1,3 +1,4 @@
+import { getAllChampions } from "#src/model/riot/champion-registry.ts";
 import type { AbilityNameIndex } from "#src/tips/grounding.ts";
 
 /**
@@ -5,7 +6,9 @@ import type { AbilityNameIndex } from "#src/tips/grounding.ts";
  * ("Flap, Flap, Flap", "Watch Out! Eep!", "90 Caliber Net"), which a sentence
  * counter, a number check and a length limit would all misread. The name list
  * comes from the ability facts (every champion's abilities), never from a hand
- * list.
+ * list. A champion with two forms lists them as "To the Skies! / Shock Blast"
+ * and a tip may name either one alone, so each form is a name too; a champion's
+ * own name with a period ("Dr. Mundo") is read the same way.
  */
 
 /** What a name becomes while a text is counted: one plain word. */
@@ -21,7 +24,14 @@ function patternFor(index: AbilityNameIndex): RegExp {
   if (known !== undefined) {
     return known;
   }
-  const names = [...new Set(index.map((owner) => owner.name))]
+  const forms = index.flatMap((owner) => [
+    owner.name,
+    ...owner.name.split(" / ").filter((form) => form.length >= 4),
+  ]);
+  const champions = getAllChampions()
+    .map((champion) => champion.name)
+    .filter((name) => name.includes("."));
+  const names = [...new Set([...forms, ...champions])]
     .filter((name) => name.length > 0)
     .toSorted((left, right) => right.length - left.length);
   const pattern = new RegExp(

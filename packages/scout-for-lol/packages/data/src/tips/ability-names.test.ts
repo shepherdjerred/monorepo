@@ -92,6 +92,27 @@ describe("official ability names", () => {
     expect(issues).toEqual([]);
   });
 
+  test("of a champion with two forms count by either form alone (Jayce's To the Skies!)", async () => {
+    const jayce = await champion("Jayce");
+    const issues = validateTip(
+      {
+        text: "Land To the Skies! on the enemy, then step back before the fight starts.",
+        cites: [citeOf(jayce, "To the Skies! / Shock Blast")],
+      },
+      context(jayce),
+    );
+    expect(issues.map((issue) => issue.code)).not.toContain("sentences");
+  });
+
+  test("and a champion's own name with a period are one word too (Dr. Mundo)", () => {
+    expect(
+      maskAbilityNames(
+        "Stay out of range of Dr. Mundo until he spends it.",
+        index,
+      ).text,
+    ).toBe(`Stay out of range of ${NAME_PLACEHOLDER} until he spends it.`);
+  });
+
   test("with a number are not an uncited number (Caitlyn's 90 Caliber Net)", async () => {
     const caitlyn = await champion("Caitlyn");
     const issues = validateTip(
