@@ -296,6 +296,41 @@ describe("one reader per credential", () => {
     });
     expect(await Bun.file(path.join(directory, "owner")).exists()).toBe(false);
   });
+
+  test("concurrent stale eviction and parallel claims never fail with ENOENT", async () => {
+    const root = await scratch();
+    const ref = "op://v/i/race";
+    const directory = lockDirectory(root, ref);
+    const lock = directoryLock({
+      root,
+      staleMs: 0,
+      pollMs: 1,
+      maxWaitMs: 2000,
+    });
+    let completed = 0;
+    const evictor = (async () => {
+      for (let i = 0; i < 12; i += 1) {
+        const deadDir = `${directory}.seed-${String(i)}`;
+        await mkdir(deadDir, { recursive: true });
+        await writeFile(path.join(deadDir, "owner"), "2147483646:dead");
+        await rm(deadDir, { recursive: true, force: true });
+        await Bun.sleep(1);
+      }
+    })();
+    await mkdir(directory, { recursive: true });
+    await writeFile(path.join(directory, "owner"), "2147483646:dead");
+    await Promise.all([
+      evictor,
+      ...Array.from({ length: 20 }, () =>
+        lock(ref, async () => {
+          await Bun.sleep(1);
+          completed += 1;
+        }),
+      ),
+    ]);
+    expect(completed).toBe(20);
+    expect(await readdir(root)).toEqual([]);
+  });
 });
 
 describe("credential read log", () => {

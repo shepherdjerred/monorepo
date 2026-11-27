@@ -376,8 +376,9 @@ identity. A hidden player in pre-match data still has no row at all.
 
 A `NULL` `puuid` is what keeps these rows out of player-centred answers by
 default. Tracked scopes join the server's accounts on `puuid` and never see
-them. Global aggregates describe players, so they leave non-players out unless
-the query names the column that tells them apart. The rows stay in the match
+them. Global aggregates describe players, so they leave bots out unless the
+query names the column that tells them apart; an unidentified player still
+counts. The rows stay in the match
 for anything about the game itself: a bot's gold counts toward its team, and
 row identity uses the participant's slot, team and champion when there is no
 `puuid` to key on.

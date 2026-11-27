@@ -2,19 +2,72 @@ import {
   ArtifactVersionSchema,
   type ArtifactVersion,
 } from "@shepherdjerred/delivery/contract";
-import type { DeliveryClient } from "@shepherdjerred/delivery/client";
+import {
+  DeliveryClientError,
+  type DeliveryClient,
+} from "@shepherdjerred/delivery/client";
 import type { SandboxCreateRequest } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
 import { deliveryClient } from "#lib/delivery/client.ts";
 
-async function registeredReader() {
-  await resolveCredentials(["DELIVERY_PUBLISHER_TOKEN"]);
+type PublishedReader = Pick<
+  DeliveryClient,
+  "latestQualifiedArtifact" | "overview" | "version"
+>;
+
+export type RegisteredReaderOptions = {
+  readonly deliveryUrl?: string;
+  readonly makeClient?: (url: string, token?: string) => PublishedReader;
+  readonly resolveApiToken?: () => Promise<string | undefined>;
+};
+
+async function defaultResolveApiToken(): Promise<string | undefined> {
+  await resolveCredentials(["DELIVERY_API_TOKEN"]);
+  return Bun.env["DELIVERY_API_TOKEN"];
+}
+
+async function configuredDeliveryUrl(): Promise<string> {
   const config = await loadToolkitConfig();
-  return deliveryClient(
-    await config.value("deliveryUrl"),
-    Bun.env["DELIVERY_PUBLISHER_TOKEN"],
-  );
+  return config.value("deliveryUrl");
+}
+
+export async function registeredReader(
+  options: RegisteredReaderOptions = {},
+): Promise<PublishedReader> {
+  const url = options.deliveryUrl ?? (await configuredDeliveryUrl());
+  const makeClient = options.makeClient ?? deliveryClient;
+  const resolveApiToken = options.resolveApiToken ?? defaultResolveApiToken;
+  const ambient = Bun.env["DELIVERY_API_TOKEN"];
+  if (ambient !== undefined && ambient.length > 0) {
+    return makeClient(url, ambient);
+  }
+  let activeClient = makeClient(url);
+  let tokenResolved = false;
+  const withReadAuth = async <T>(
+    operation: (client: PublishedReader) => Promise<T>,
+  ): Promise<T> => {
+    try {
+      return await operation(activeClient);
+    } catch (error) {
+      if (
+        tokenResolved ||
+        !(error instanceof DeliveryClientError) ||
+        (error.status !== 401 && error.code !== "UNAUTHORIZED")
+      ) {
+        throw error;
+      }
+      tokenResolved = true;
+      activeClient = makeClient(url, await resolveApiToken());
+      return operation(activeClient);
+    }
+  };
+  return {
+    latestQualifiedArtifact: (input) =>
+      withReadAuth((client) => client.latestQualifiedArtifact(input)),
+    overview: () => withReadAuth((client) => client.overview()),
+    version: (id) => withReadAuth((client) => client.version(id)),
+  };
 }
 
 async function sourceConfig(response: Response) {
@@ -58,11 +111,6 @@ async function sourceConfig(response: Response) {
     yaml: new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   };
 }
-
-type PublishedReader = Pick<
-  DeliveryClient,
-  "latestQualifiedArtifact" | "overview" | "version"
->;
 
 async function originalProfileArtifact(
   profile: "storm-prod" | "storm-candidate",

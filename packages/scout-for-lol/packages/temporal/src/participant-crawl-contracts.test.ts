@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
+  ScoutCrawlFrontierPruneBatchResultSchema,
+  ScoutCrawlFrontierPruneInputSchema,
+  ScoutCrawlFrontierPruneResultSchema,
   ScoutParticipantCrawlInputSchema,
   ScoutParticipantCrawlResultSchema,
 } from "./contracts.ts";
@@ -38,6 +41,40 @@ describe("participant crawl contracts", () => {
         trigger: "schedule",
         puuid: "x",
       }),
+    ).toThrow();
+  });
+
+  test("the frontier prune names a Workflow type the bundle exports and takes only the scheduled trigger", () => {
+    expect(SCOUT_WORKFLOW_NAMES.crawlFrontierPrune).toBe(
+      "scoutCrawlFrontierPruneWorkflow",
+    );
+    expect(Object.keys(workflows)).toContain("scoutCrawlFrontierPruneWorkflow");
+    expect(
+      ScoutCrawlFrontierPruneInputSchema.parse({
+        stage: "beta",
+        trigger: "schedule",
+      }),
+    ).toEqual({ stage: "beta", trigger: "schedule" });
+    expect(() =>
+      ScoutCrawlFrontierPruneInputSchema.parse({
+        stage: "beta",
+        trigger: "manual",
+      }),
+    ).toThrow();
+  });
+
+  test("the frontier prune results carry counts, never identifiers", () => {
+    const batch = { stale: 3, overflow: 4, more: false };
+    expect(ScoutCrawlFrontierPruneBatchResultSchema.parse(batch)).toEqual(
+      batch,
+    );
+    expect(() =>
+      ScoutCrawlFrontierPruneBatchResultSchema.parse({ ...batch, puuids: [] }),
+    ).toThrow();
+    const run = { batches: 1, stale: 3, overflow: 4, drained: true };
+    expect(ScoutCrawlFrontierPruneResultSchema.parse(run)).toEqual(run);
+    expect(() =>
+      ScoutCrawlFrontierPruneResultSchema.parse({ ...run, batches: 0 }),
     ).toThrow();
   });
 

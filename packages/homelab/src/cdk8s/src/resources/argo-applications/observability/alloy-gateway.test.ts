@@ -10,6 +10,7 @@ import {
 } from "./alloy-gateway.ts";
 
 const PortSchema = z.looseObject({ name: z.string(), port: z.number() });
+const EnvSchema = z.looseObject({ name: z.string() });
 
 const ApplicationSchema = z.object({
   kind: z.literal("Application"),
@@ -18,11 +19,19 @@ const ApplicationSchema = z.object({
     source: z.object({
       helm: z.object({
         valuesObject: z.object({
-          alloy: z.object({ extraPorts: z.array(PortSchema) }),
+          alloy: z.object({
+            extraPorts: z.array(PortSchema),
+            extraEnv: z.array(EnvSchema),
+          }),
         }),
       }),
     }),
   }),
+});
+
+const OnePasswordItemSchema = z.object({
+  kind: z.literal("OnePasswordItem"),
+  metadata: z.object({ name: z.string(), namespace: z.string() }),
 });
 
 const IngressSchema = z.object({
@@ -93,6 +102,7 @@ describe("Alloy gateway tailnet metrics receiver", () => {
   it("keeps the trace receiver on 4318 and never feeds it metrics", () => {
     const gateway = block('otelcol.receiver.otlp "gateway"');
     expect(gateway).toContain('endpoint = "0.0.0.0:4318"');
+    expect(gateway).toContain('max_request_body_size = "64MiB"');
     expect(gateway).not.toContain("metrics =");
   });
 
@@ -125,42 +135,39 @@ describe("Alloy gateway tailnet metrics receiver", () => {
   });
 });
 
-describe("Alloy gateway Phoenix branches", () => {
-  const PROJECTS = ["scout-beta", "scout-prod", "birmel", "temporal", "misc"];
-
-  it("routes each allowlisted project to Phoenix by header", () => {
-    for (const project of PROJECTS) {
-      expect(ALLOY_GATEWAY_CONFIG).toContain(
-        `"x-project-name" = "${project}",`,
-      );
-    }
-    const exporters = ALLOY_GATEWAY_CONFIG.match(
-      /otelcol\.exporter\.otlphttp "px_\w+"/g,
+describe("Alloy gateway stateless Tempo forwarder", () => {
+  it("batches every trace unconditionally into Tempo without tail-sampling or retired consumers", () => {
+    const gateway = block('otelcol.receiver.otlp "gateway"');
+    expect(gateway).toContain("traces = [otelcol.processor.batch.tempo.input]");
+    expect(block('otelcol.processor.batch "tempo"')).toContain(
+      "traces = [otelcol.exporter.otlphttp.tempo.input]",
     );
-    expect(exporters).toHaveLength(PROJECTS.length);
-    expect(ALLOY_GATEWAY_CONFIG).toContain(
-      'endpoint = "http://phoenix.phoenix.svc.cluster.local:6006"',
-    );
-    expect(ALLOY_GATEWAY_CONFIG).toContain('sys.env("PHOENIX_API_KEY")');
-  });
-
-  it("keeps protobuf encoding and never names a removed consumer", () => {
-    // Phoenix's OTLP route rejects JSON bodies; otlphttp defaults to proto.
-    expect(ALLOY_GATEWAY_CONFIG).not.toMatch(/encoding\s*=\s*"json"/);
-    expect(ALLOY_GATEWAY_CONFIG.toLowerCase()).not.toContain("braintrust");
-    expect(ALLOY_GATEWAY_CONFIG).not.toContain("x-bt-parent");
-  });
-
-  it("sends every span to Tempo and has no catch-all Phoenix branch", () => {
-    expect(ALLOY_GATEWAY_CONFIG).toContain(
+    expect(block('otelcol.exporter.otlphttp "tempo"')).toContain(
       'endpoint = "http://tempo.tempo.svc.cluster.local:4318"',
     );
-    const filters = ALLOY_GATEWAY_CONFIG.match(
-      /otelcol\.processor\.filter "px_\w+" \{[\s\S]*?span = \[[\s\S]*?\]/g,
-    );
-    expect(filters).toHaveLength(PROJECTS.length);
-    for (const filter of filters ?? []) {
-      expect(filter).toMatch(/span = \[\s*"/);
+    expect(ALLOY_GATEWAY_CONFIG).not.toContain("tail_sampling");
+    expect(ALLOY_GATEWAY_CONFIG.toLowerCase()).not.toContain("phoenix");
+    expect(ALLOY_GATEWAY_CONFIG).not.toContain("px_");
+    expect(ALLOY_GATEWAY_CONFIG.toLowerCase()).not.toContain("braintrust");
+  });
+
+  it("mounts only Prometheus remote-write credentials", () => {
+    const documents = synth();
+    const secretItems = documents
+      .map((document) => OnePasswordItemSchema.safeParse(document))
+      .flatMap((result) => (result.success ? [result.data.metadata.name] : []));
+    expect(secretItems).toEqual(["alloy-gateway-monitoring-api-auth"]);
+
+    const application = documents
+      .map((document) => ApplicationSchema.safeParse(document))
+      .find((result) => result.success);
+    if (!application?.success) {
+      throw new Error("alloy-gateway Application was not synthesized");
     }
+    expect(
+      application.data.spec.source.helm.valuesObject.alloy.extraEnv.map(
+        (entry) => entry.name,
+      ),
+    ).toEqual(["PROMETHEUS_WRITE_TOKEN"]);
   });
 });

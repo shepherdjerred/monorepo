@@ -201,7 +201,7 @@ function CrystalBalancesCard({
           <thead>
             <tr>
               <SortableTh label="Player" {...headerProps("name")} />
-              <th scope="col">Town</th>
+              <th scope="col">Camp / Town</th>
               <SortableTh
                 label="Crystals"
                 numeric
@@ -213,7 +213,13 @@ function CrystalBalancesCard({
             {sortedRows.map((row) => (
               <tr key={row.uuid}>
                 <PlayerRowHeader uuid={row.uuid} name={row.name} />
-                <td data-label="Town">{row.townName ?? "—"}</td>
+                <td data-label="Camp / Town">
+                  {row.townName === null
+                    ? "—"
+                    : row.townKind === "camp"
+                      ? `${row.townName} (Camp)`
+                      : row.townName}
+                </td>
                 <td data-label="Crystals" className="num-col">
                   <span className="pill pill-gold">
                     {formatInt(row.crystals)}

@@ -53,4 +53,11 @@ test("following main keeps waiting through a failed tip and ends on a passing on
     "waiting",
   );
   expect(evaluateFollowedMain(snapshot(run("success"))).outcome).toBe("ready");
+  const passedWithNewerRunningTip = evaluateFollowedMain(
+    snapshot(run("success"), "f".repeat(40)),
+  );
+  expect(passedWithNewerRunningTip.outcome).toBe("ready");
+  expect(passedWithNewerRunningTip.reasons.join(" ")).toContain(
+    "Main has advanced",
+  );
 });

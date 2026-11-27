@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,12 +38,16 @@ public final class SessionLedger {
       @Nullable String joinAddress,
       WorldBucket world,
       GameModeBucket mode,
-      boolean afk) {
+      boolean afk,
+      @Nullable String countryCode,
+      @Nullable String countryName) {
     public JoinInput {
       playerName = CombatClassifier.boundName(playerName);
       clientVersion = boundString(clientVersion, 64, "unknown");
       clientBrand = nullableBoundString(clientBrand, 64);
       joinAddress = JoinAddresses.normalize(joinAddress);
+      countryCode = normalizeCountryCode(countryCode);
+      countryName = countryCode == null ? null : nullableBoundString(countryName, 80);
     }
   }
 
@@ -78,7 +83,9 @@ public final class SessionLedger {
         Platform platform,
         String clientVersion,
         @Nullable String clientBrand,
-        @Nullable String joinAddress)
+        @Nullable String joinAddress,
+        @Nullable String countryCode,
+        @Nullable String countryName)
         implements LedgerEvent {}
 
     record Interval(
@@ -144,7 +151,9 @@ public final class SessionLedger {
             input.platform(),
             input.clientVersion(),
             input.clientBrand(),
-            input.joinAddress());
+            input.joinAddress(),
+            input.countryCode(),
+            input.countryName());
     return Optional.of(
         new LedgerTransition(
             input.playerUuid(),
@@ -367,6 +376,21 @@ public final class SessionLedger {
       return null;
     }
     return stripped.length() > max ? stripped.substring(0, max) : stripped;
+  }
+
+  private static @Nullable String normalizeCountryCode(@Nullable String value) {
+    if (value == null) {
+      return null;
+    }
+    var normalized = value.strip().toUpperCase(Locale.ROOT);
+    if (normalized.length() != 2
+        || normalized.charAt(0) < 'A'
+        || normalized.charAt(0) > 'Z'
+        || normalized.charAt(1) < 'A'
+        || normalized.charAt(1) > 'Z') {
+      return null;
+    }
+    return normalized;
   }
 
   private record AdvanceResult(long connectedMs, long activeMs, List<LedgerEvent> events) {}

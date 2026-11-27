@@ -54,5 +54,31 @@ describe("screenshot package registry", () => {
 
   test("resolvePackage returns the matching entry", () => {
     expect(resolvePackage("scout-app").alias).toBe("scout-app");
+    expect(resolvePackage("streambot")).toMatchObject({
+      alias: "streambot",
+      cwd: "packages/streambot",
+      devCommand: ["bun", "run", "preview:web"],
+      devRunner: "port-env",
+      expectedPort: 5188,
+      defaultRoute: "/",
+      requiresAuth: "streambot-preview-login",
+    });
+    expect(resolvePackage("alert-dashboard")).toMatchObject({
+      alias: "alert-dashboard",
+      cwd: "packages/alert-dashboard",
+      devCommand: ["bun", "run", "dev:fixture"],
+      devRunner: "hub-dev-fixture",
+      expectedPort: 7342,
+      defaultRoute: "/",
+      readyPath: "/api/v1/summary",
+    });
+    expect(resolvePackage("docs-wiki")).toMatchObject({
+      alias: "docs-wiki",
+      cwd: "packages/docs/wiki",
+      devCommand: ["bun", "run", "dev"],
+      devRunner: "astro",
+      expectedPort: 4321,
+      defaultRoute: "/",
+    });
   });
 });

@@ -2,7 +2,7 @@
 // { folder, machine } for a repo without a space; optional { branch, tab, argv }.
 // New takes the first message for the agent instead of a branch name, plus the
 // agent (from Brim's ranking) and its mode, model and effort. Enter hands that
-// to ~/bin/herdr-new-worktree and closes: it names the branch, space and tab with
+// to ~/bin/herdr-new-worktree and closes: it names the branch and space with
 // OpenAI (naming.js), creates the worktree and opens the space in the
 // background. A given { branch } skips naming and runs here.
 
@@ -606,7 +606,7 @@ export default class Worktree extends View {
     const placeholder =
       this.sendMessage && this.hasAgentTarget()
         ? "First message for the agent"
-        : "Describe the worktree (names the branch and tab)";
+        : "Describe the worktree (names the branch and space)";
     if (this.lastPlaceholder === placeholder) return;
     this.lastPlaceholder = placeholder;
     const focusedNow = this.inputFocused;
@@ -642,7 +642,7 @@ export default class Worktree extends View {
     if (branch === undefined && !message)
       return sendMessage
         ? "Type a first message."
-        : "Describe the worktree to name its branch and tab.";
+        : "Describe the worktree to name its branch and space.";
     if (this.picking && !this.agents)
       return "Still asking Brim for the agents.";
     const provider = this.provider();
@@ -1000,7 +1000,7 @@ export default class Worktree extends View {
           div()
             .text_size(11.5)
             .text_color(t.dim)
-            .child("Names branch & tab only (plain shell)"),
+            .child("Names branch & space only (plain shell)"),
         ),
       );
   }
@@ -1434,10 +1434,10 @@ export default class Worktree extends View {
               : `Closes the space and deletes ${tilde(r.top, this.userHome)}. The branch stays.`
             : this.messaging
               ? willSend
-                ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from the message, which the agent starts with.`
+                ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and space are named from the message, which the agent starts with.`
                 : hasAgent
-                  ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from your description; the agent opens without a first message.`
-                  : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from your description.`
+                  ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and space are named from your description. The agent opens without a first message.`
+                  : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and space are named from your description.`
               : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/. A branch that exists is checked out; a new one starts from here.`;
     const blocked = !r || (remove && !r.linked);
     const hint = this.busy
