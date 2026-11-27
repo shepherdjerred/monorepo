@@ -1,5 +1,5 @@
-import { mkdir } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
+import { dirname, join, resolve, sep } from "node:path";
 import { zstdDecompressSync } from "node:zlib";
 import { readExactItemDefinitions } from "../exact-map-bin.mjs";
 import { openLocalWad } from "../wad.mjs";
@@ -42,7 +42,7 @@ export function inventoryIconDimensions(bytes) {
   return { width, height };
 }
 
-function readItemNames(raw, keys) {
+function readItemNames(raw, keys, requireEveryName = true) {
   const bytes = Buffer.from(raw);
   if (
     sha256(bytes) !== localeSha256 ||
@@ -75,48 +75,41 @@ function readItemNames(raw, keys) {
       throw Error(`Conflicting archived item name ${key}`);
     names.set(key, name);
   }
-  if (names.size !== pending.size) throw Error("Missing archived item name");
+  if (requireEveryName && names.size !== pending.size)
+    throw Error("Missing archived item name");
   return names;
 }
 
-function exactItemDescriptor(objects, itemId) {
-  const matches = objects.filter(
-    ({ classHash, fields }) =>
-      classHash === "244c26e6" &&
-      fields["13bddc7b"]?.type === "U32" &&
-      fields["13bddc7b"].value === itemId,
-  );
-  const fields = matches[0]?.fields;
+function groupItemDefinitions(objects) {
+  const grouped = new Map();
+  for (const { classHash, fields } of objects) {
+    const id = fields["13bddc7b"];
+    if (classHash !== "244c26e6" || id?.type !== "U32" || id.value <= 0)
+      continue;
+    const group = grouped.get(id.value) ?? [];
+    group.push(fields);
+    grouped.set(id.value, group);
+  }
+  return grouped;
+}
+
+function exactItemDescriptor(matches, itemId) {
+  const fields = matches?.[0];
   const ui = fields?.d92888a0;
   const name = fields?.["74d44065"];
   const icon = ui?.fields?.c68db52e;
   if (
-    matches.length !== 1 ||
+    matches?.length !== 1 ||
     ui?.classHash !== "851af275" ||
     name?.type !== "String" ||
     icon?.type !== "WadChunkLink"
   ) {
-    throw Error(`Missing exact icon/name association for item ${itemId}`);
+    return null;
   }
   return { itemId, stringKey: name.value, sourceHash: BigInt(icon.value) };
 }
 
-async function prepare(
-  installation,
-  requested,
-  output,
-  exporter,
-  currentBuild,
-) {
-  const itemIds = requested.toSorted((left, right) => left - right);
-  if (
-    itemIds.length === 0 ||
-    itemIds.length > 4096 ||
-    itemIds.some(
-      (id, i) => !Number.isSafeInteger(id) || id <= 0 || id === itemIds[i - 1],
-    )
-  )
-    throw Error("Unique positive replay inventory item IDs required");
+async function readAssetSources(installation, currentBuild) {
   const source = currentBuild ? currentInventoryAssetSource : undefined;
   if (
     source !== undefined &&
@@ -151,7 +144,123 @@ async function prepare(
     objects,
     sourceSha256,
   } = readExactItemDefinitions(definitions);
-  const descriptors = itemIds.map((id) => exactItemDescriptor(objects, id));
+  return {
+    source,
+    global,
+    strings,
+    definitionBuild,
+    sourceSha256,
+    definitions: groupItemDefinitions(objects),
+  };
+}
+
+export async function indexCurrentInventoryAssets(installation) {
+  const { source, global, strings, sourceSha256, definitions } =
+    await readAssetSources(installation, true);
+  const rows = [...definitions].sort(([left], [right]) => left - right);
+  const descriptors = rows.map(([id, matches]) =>
+    exactItemDescriptor(matches, id),
+  );
+  const names = readItemNames(
+    strings,
+    descriptors.flatMap((descriptor) =>
+      descriptor === null ? [] : [descriptor.stringKey],
+    ),
+    false,
+  );
+  const items = [];
+  for (const [index, [itemId]] of rows.entries()) {
+    const descriptor = descriptors[index];
+    if (descriptor === null) {
+      items.push({
+        itemId,
+        status: "unavailable",
+        reason: "missing-exact-descriptor",
+      });
+      continue;
+    }
+    const { sourceHash, stringKey } = descriptor;
+    const name = names.get(stringKey);
+    if (name === undefined) {
+      items.push({
+        itemId,
+        status: "unavailable",
+        reason: "missing-localized-name",
+      });
+      continue;
+    }
+    const textureHash = sourceHash.toString(16).padStart(16, "0");
+    let bytes;
+    try {
+      bytes = Buffer.from(await global.byHash(sourceHash));
+    } catch (cause) {
+      if (
+        !(cause instanceof Error) ||
+        cause.message !== `Missing WAD path hash ${textureHash}`
+      )
+        throw cause;
+      items.push({ itemId, status: "unavailable", reason: "missing-texture" });
+      continue;
+    }
+    const signature = bytes.toString("ascii", 0, 4);
+    if (signature !== "DDS " && signature !== "TEX\0") {
+      items.push({
+        itemId,
+        status: "unavailable",
+        reason: "unsupported-texture-format",
+      });
+      continue;
+    }
+    items.push({
+      itemId,
+      status: "indexed-source",
+      name,
+      textureHash,
+      textureSha256: sha256(bytes),
+      textureFormat: signature === "DDS " ? "dds" : "tex",
+    });
+  }
+  return {
+    kind: "scout-exact-inventory-source-index",
+    schema: 1,
+    build: currentChampionBuild,
+    definitionsSha256: sourceSha256,
+    localeSha256,
+    ...source,
+    items,
+  };
+}
+
+async function prepare(
+  installation,
+  requested,
+  output,
+  exporter,
+  currentBuild,
+) {
+  const itemIds = requested.toSorted((left, right) => left - right);
+  if (
+    itemIds.length === 0 ||
+    itemIds.length > 4096 ||
+    itemIds.some(
+      (id, i) => !Number.isSafeInteger(id) || id <= 0 || id === itemIds[i - 1],
+    )
+  )
+    throw Error("Unique positive replay inventory item IDs required");
+  const {
+    source,
+    global,
+    strings,
+    definitionBuild,
+    sourceSha256,
+    definitions,
+  } = await readAssetSources(installation, currentBuild);
+  const descriptors = itemIds.map((id) => {
+    const descriptor = exactItemDescriptor(definitions.get(id), id);
+    if (descriptor === null)
+      throw Error(`Missing exact icon/name association for item ${id}`);
+    return descriptor;
+  });
   const names = readItemNames(
     strings,
     descriptors.map(({ stringKey }) => stringKey),
@@ -236,27 +345,53 @@ async function prepare(
 }
 
 if (import.meta.main) {
-  const [installation, idsPath, output, exporter, ...options] =
-    process.argv.slice(2);
-  const currentBuild = options.length === 1 && options[0] === "--current-build";
-  if (
-    !installation ||
-    !idsPath ||
-    !output ||
-    !exporter ||
-    (options.length && !currentBuild)
-  ) {
-    throw Error(
-      "Usage: bun prepare-exact-inventory-assets.mjs <installation> <item-ids.json> <output-dir> <terrain-texture-mips.dll> [--current-build]",
+  const args = process.argv.slice(2);
+  if (args[0] === "--current-index") {
+    const [, installation, output] = args;
+    if (!installation || !output || args.length !== 3)
+      throw Error(
+        "Usage: bun prepare-exact-inventory-assets.mjs --current-index <installation> <private .cache output.json>",
+      );
+    const cache = await realpath(".cache");
+    const parent = await realpath(dirname(resolve(output)));
+    if (parent !== cache && !parent.startsWith(cache + sep))
+      throw Error("Inventory source index requires a private .cache output");
+    const index = await indexCurrentInventoryAssets(installation);
+    const data = JSON.stringify(index) + "\n";
+    await writeFile(resolve(output), data, { flag: "wx" });
+    const indexed = index.items.filter(
+      ({ status }) => status === "indexed-source",
+    ).length;
+    console.log(
+      JSON.stringify({
+        indexed,
+        unavailable: index.items.length - indexed,
+        indexSha256: sha256(data),
+      }),
+    );
+  } else {
+    const [installation, idsPath, output, exporter, ...options] = args;
+    const currentBuild =
+      options.length === 1 && options[0] === "--current-build";
+    if (
+      !installation ||
+      !idsPath ||
+      !output ||
+      !exporter ||
+      (options.length && !currentBuild)
+    ) {
+      throw Error(
+        "Usage: bun prepare-exact-inventory-assets.mjs <installation> <item-ids.json> <output-dir> <terrain-texture-mips.dll> [--current-build]",
+      );
+    }
+    const requested = await Bun.file(idsPath).json();
+    if (!Array.isArray(requested)) throw Error("Replay item ID list required");
+    await prepare(
+      installation,
+      requested,
+      resolve(output),
+      resolve(exporter),
+      currentBuild,
     );
   }
-  const requested = await Bun.file(idsPath).json();
-  if (!Array.isArray(requested)) throw Error("Replay item ID list required");
-  await prepare(
-    installation,
-    requested,
-    resolve(output),
-    resolve(exporter),
-    currentBuild,
-  );
 }

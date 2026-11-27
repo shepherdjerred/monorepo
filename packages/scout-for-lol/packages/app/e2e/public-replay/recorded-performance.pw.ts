@@ -165,6 +165,9 @@ function reviewedSamplingWindows(
           ? {}
           : { follow: 1_073_742_169 }),
       },
+      ...(fixture.directTerrainVisibility || fixture.terrainVisibility
+        ? [{ label: "Mountain terrain transition", timeSeconds: 881 }]
+        : []),
       { label: "first turret loss", timeSeconds: 854 },
       { label: "siege wave", timeSeconds: 1200 },
       ...(fixture.unitVisibility

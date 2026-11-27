@@ -60,6 +60,7 @@ const { positionals, values } = parseArgs({
     "terrain-materials": { type: "string" },
     "terrain-visibility": { type: "string" },
     "terrain-visibility-sha256": { type: "string" },
+    "terrain-visibility-from-replay": { type: "string" },
     "infernal-terrain-export": { type: "string" },
     "champion-models": { type: "string" },
     "champion-catalog-sha256": { type: "string" },
@@ -125,12 +126,20 @@ assert.ok(
 );
 const terrainVisibilityPath = values["terrain-visibility"];
 const terrainVisibilityDigest = values["terrain-visibility-sha256"];
+const terrainControllerMaterialsPath = values["terrain-visibility-from-replay"];
 assert.ok(
   terrainVisibilityDigest === undefined ||
     (privatePackageOutput !== undefined &&
       terrainVisibilityPath !== undefined &&
       /^[a-f\d]{64}$/u.test(terrainVisibilityDigest)),
   "--terrain-visibility-sha256 requires a SHA-256 pin, --terrain-visibility, and a private package",
+);
+assert.ok(
+  terrainControllerMaterialsPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      terrainVisibilityPath === undefined &&
+      values["terrain-materials"] !== undefined),
+  "Replay-derived terrain visibility requires reviewed materials and a private package without a prepared terrain receipt",
 );
 assert.ok(
   recoveryPath === undefined || privatePackageOutput !== undefined,
@@ -1376,7 +1385,8 @@ let staticMesh = proof.staticMesh;
 let terrainAssetDigests = localDigests;
 if (infernalTerrainExport !== undefined) {
   assert.ok(
-    values["terrain-visibility"] !== undefined &&
+    (terrainVisibilityPath !== undefined ||
+      terrainControllerMaterialsPath !== undefined) &&
       values["terrain-materials"] !== undefined,
     "Infernal geometry requires matching recorded visibility and materials",
   );
@@ -1569,6 +1579,12 @@ if (values["terrain-materials"] !== undefined) {
     texturedTriangles: mats.texturedTriangles,
   };
 }
+// The base export omits Infernal replacements. Preserve the existing
+// conservative omission when a match lacks the reviewed base-variant evidence.
+const missingReplacementMeshControllerIds =
+  infernalTerrainExport === undefined && !reviewedCurrentReplay
+    ? [0x4aefd282, 0xa8951ff3]
+    : [];
 if (terrainVisibilityPath !== undefined) {
   assert.ok(
     materialRoutes,
@@ -1606,12 +1622,6 @@ if (terrainVisibilityPath !== undefined) {
           replay.duration,
           { omitUnresolved: currentBuild },
         );
-  // The reviewed map export omits the three mask-2 geometry meshes that
-  // replace these pieces on Infernal terrain.
-  const missingReplacementMeshControllerIds =
-    infernalTerrainExport === undefined && !reviewedCurrentReplay
-      ? [0x4aefd282, 0xa8951ff3]
-      : [];
   scene.terrainVisibility = {
     tracks: receipt.tracks.filter(
       ({ controllerId }) =>
@@ -2244,6 +2254,41 @@ if (
     if (decodeChampionInventory) scene.championInventoryItems = items;
     else scene.championInventory = { items, tracks };
   }
+}
+if (terrainControllerMaterialsPath !== undefined) {
+  assert.ok(
+    currentBuild && scene.workerMotion && replayCodecs && materialRoutes,
+    "Replay-derived terrain visibility requires the current motion worker",
+  );
+  const { readExactMap11ControllerGraph, readExactMap11ControllerPackets } =
+    await import("./extract-exact-map11-controller-inputs.mjs");
+  const { deriveCurrentMap11ControllerVisibility } =
+    await import("./research/native-terrain-controller-visibility.mjs");
+  const graph = readExactMap11ControllerGraph(
+    metadata,
+    await readFile(terrainControllerMaterialsPath),
+  );
+  const receipt = deriveCurrentMap11ControllerVisibility({
+    ...graph,
+    ...readExactMap11ControllerPackets(replay),
+    identity: {
+      ...identity,
+      geometrySha256: graph.geometrySha256,
+      materialsSha256: graph.materialsSha256,
+    },
+    codecs: replayCodecs,
+    durationSeconds: replay.duration,
+  });
+  validateRecordedTerrainVisibility(
+    receipt,
+    JSON.parse(metadata).meshes,
+    replay.duration,
+    { omitUnresolved: true },
+  );
+  scene.workerMotion.terrainControllerGraph = {
+    ...graph,
+    missingReplacementMeshControllerIds,
+  };
 }
 if (decodeTeamVision) {
   assert.ok(

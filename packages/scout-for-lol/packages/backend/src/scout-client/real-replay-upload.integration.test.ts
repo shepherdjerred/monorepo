@@ -11,7 +11,7 @@ import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descri
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import { normalizeGameBuild } from "@scout-for-lol/domain/artifacts/replay-transport.mjs";
 import { Database } from "bun:sqlite";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -136,7 +136,9 @@ async function handOffReplays(
   replayIds: Readonly<Record<string, string>>,
   released: Promise<undefined>,
 ) {
-  await Bun.write(receiptPath, JSON.stringify({ origin, replayIds }));
+  const stagedReceipt = `${receiptPath}.tmp`;
+  await Bun.write(stagedReceipt, JSON.stringify({ origin, replayIds }));
+  await rename(stagedReceipt, receiptPath);
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     await Promise.race([

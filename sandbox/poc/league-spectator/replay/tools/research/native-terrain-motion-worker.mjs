@@ -11,6 +11,10 @@ import {
 } from "./native-terrain-byte-codecs.mjs";
 import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-identities.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
+import {
+  createCurrentMap11ControllerObserver,
+  verifyCurrentMap11ControllerGraph,
+} from "./native-terrain-controller-visibility.mjs";
 import { prepareNativeTerrainMotion } from "./native-terrain-motion.mjs";
 import { createMoveSpeed309ReaderFromCodecs } from "./native-terrain-move-speed-reader.mjs";
 import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-944-reader.mjs";
@@ -141,6 +145,7 @@ async function prepareMotion({
   announcerEvents,
   decodeTeamVision,
   teamVisionWorldActors,
+  terrainControllerGraph,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -213,6 +218,16 @@ async function prepareMotion({
     throw Error(
       "Replay-derived announcer cues require the reviewed current build.",
     );
+  if (terrainControllerGraph !== undefined) {
+    if (
+      !options.allowCurrentBuild ||
+      replay.build !== currentTerrainPositionBuild
+    )
+      throw Error(
+        "Replay-derived terrain visibility requires the reviewed current build.",
+      );
+    await verifyCurrentMap11ControllerGraph(terrainControllerGraph);
+  }
   const announcerMapping =
     announcerEvents === undefined
       ? undefined
@@ -274,9 +289,28 @@ async function prepareMotion({
           codecs,
         )
       : undefined;
-  const observers = [inventory, animation, announcer, teamVision].filter(
-    (collector) => collector !== undefined,
-  );
+  const terrain =
+    terrainControllerGraph === undefined
+      ? undefined
+      : createCurrentMap11ControllerObserver({
+          ...terrainControllerGraph,
+          identity: {
+            replaySha256: identity.replaySha256,
+            build: replay.build,
+            protocol: replay.protocol,
+            geometrySha256: terrainControllerGraph.geometrySha256,
+            materialsSha256: terrainControllerGraph.materialsSha256,
+          },
+          codecs,
+          durationSeconds: replay.duration,
+        });
+  const observers = [
+    inventory,
+    animation,
+    announcer,
+    teamVision,
+    terrain,
+  ].filter((collector) => collector !== undefined);
   const observe = (packet) => {
     for (const observer of observers) observer.observe(packet);
   };
@@ -312,6 +346,26 @@ async function prepareMotion({
       binding,
       championExperienceTracks,
     );
+  let terrainVisibility;
+  if (terrain !== undefined) {
+    const observed = terrain.finish();
+    const missing = terrainControllerGraph.missingReplacementMeshControllerIds;
+    terrainVisibility = {
+      tracks: observed.tracks.filter(
+        ({ controllerId }) => !missing.includes(controllerId),
+      ),
+      unresolvedMeshControllerIds: observed.unresolvedMeshControllerIds,
+      missingReplacementMeshControllerIds: missing,
+      omittedMeshControllerIds: observed.unresolvedMeshControllerIds,
+      ...(observed.unresolvedWindows === undefined
+        ? {}
+        : {
+            unresolvedWindows: observed.unresolvedWindows.filter(
+              ({ controllerId }) => !missing.includes(controllerId),
+            ),
+          }),
+    };
+  }
   return {
     type: "ready",
     frames: keyframes.frames,
@@ -328,6 +382,7 @@ async function prepareMotion({
       ? {}
       : { championAnimationCues: animation.finish() }),
     ...(teamVision === undefined ? {} : { teamVision: teamVision.finish() }),
+    ...(terrainVisibility === undefined ? {} : { terrainVisibility }),
     ...(announcer === undefined
       ? {}
       : {

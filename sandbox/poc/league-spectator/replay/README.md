@@ -176,6 +176,15 @@ excluded births by reason. The private renderer draws units during recorded
 path intervals. The first-wave profile remains available as
 `--first-wave-8428`.
 
+For an exact-build Rift ROFL with reviewed Match-V5 data, the portable
+exporter reads the lane lifecycle and movement directly from the recording.
+It uses the saved decoder and authored Map11 BIN inputs. Its output keeps
+the actor proof format consumed by the lane model preparer.
+
+```powershell
+bun tools/research/export-current-lane-minions.mjs $replayPath $matchV5 $matchV5Sha256 $preparedDecoder $map11MaterialsBin $map11DefinitionsBin $newLaneActorProof
+```
+
 Run the offline announcer verifier with a saved ROFL, the matching Female1
 English WPK, and the local vgmstream decoder. It verifies the recorded welcome
 and minion-spawn events and checks their original media at replay clock offsets.
@@ -324,6 +333,13 @@ a verified Map11 controller receipt to `--terrain-visibility` with its digest
 in `--terrain-visibility-sha256`. The browser harness checks the rendered
 draws at the recorded transition times and after rewinding.
 
+For 16.23.841.8428, `--terrain-visibility-from-replay` takes the authored
+`base_srx.materials.bin` archive entry. The builder pins that file and the
+selected Map11 mesh export. The package carries the authored controller
+graph, and the browser worker derives visibility from the original replay
+packets during its motion scan. It omits meshes without verified controller
+states and withholds affected draws during unresolved transition windows.
+
 The private 16.23.841.8428 package requires a pinned catalog for the actual
 replay build. A catalog built from a pinned archive selection can serve replay
 openings with different actor IDs whenever it contains the exact selected
@@ -427,6 +443,20 @@ the Riot account to the replay's local UUID in its isolated test database and
 serves the original result through the receipted archive path. Use one game
 in `SCOUT_REPLAY_PROOF_GAMES` for this mode. Keep the match response and ROFL
 in private storage.
+
+For a single saved 16.23.841.8428 Rift replay and a private package, the
+end-to-end harness builds the Scout preview, pairs a local test device,
+uploads the ROFL, and runs the signed-out browser checks. Invoke it from the
+repository root with the original filename and the reviewed Match-V5 digest.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/prove-paired-scout-replay.mjs $manifest $rofl $matchV5 $matchV5Sha256 $uploaderChampion $oracleDirectory
+```
+
+Use the directory containing the pinned replay checks as `$oracleDirectory`.
+The harness also tests announcer playback when the package declares the
+announcer preview. It releases the local backend after the browser test and
+prints the evidence directory under `.cache`.
 
 In the app workspace, keep the manifest and ROFL inputs above. Once the receipt
 appears, select the game ID matching that ROFL and run against the uploaded

@@ -5,6 +5,7 @@ import {
   verifyDirectAnimationCues,
   workerAnimationCues,
 } from "./animation-worker-oracle.ts";
+import { RecordedTerrainVisibilitySchema } from "./terrain-visibility-schema.ts";
 
 const schemaTrack = z.number().int().positive();
 const statPoint = z.tuple([z.number(), z.number(), z.number()]);
@@ -82,6 +83,7 @@ const reply = z.object({
   experienceTracks: experience.optional(),
   animationCues: workerAnimationCues.optional(),
   teamVision: teamVision.optional(),
+  terrainVisibility: RecordedTerrainVisibilitySchema.optional(),
   announcerCues: z
     .array(
       z
@@ -120,13 +122,18 @@ export async function observeDirectChampionStatsWorker(page: Page) {
           );
           const hasAnnouncerEvents = Object.hasOwn(object, "announcerEvents");
           const hasTeamVision = Object.hasOwn(object, "decodeTeamVision");
+          const hasTerrainControllers = Object.hasOwn(
+            object,
+            "terrainControllerGraph",
+          );
           if (
             decodeChampionStats ||
             decodeChampionInventory ||
             decodeChampionExperience ||
             hasChampionAnimationCatalog ||
             hasAnnouncerEvents ||
-            hasTeamVision
+            hasTeamVision ||
+            hasTerrainControllers
           ) {
             const requestKeys = Object.keys(object).sort();
             const captureReady = ({ data }: MessageEvent<unknown>) => {
@@ -164,6 +171,11 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                     response,
                     "teamVision",
                   )?.value;
+                const terrainVisibility: unknown =
+                  Object.getOwnPropertyDescriptor(
+                    response,
+                    "terrainVisibility",
+                  )?.value;
                 Object.defineProperty(
                   globalThis,
                   "__scoutDirectChampionStatsProof",
@@ -181,6 +193,7 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                       animationCues,
                       announcerCues,
                       teamVision: observedTeamVision,
+                      terrainVisibility,
                     },
                   },
                 );
@@ -197,6 +210,8 @@ export async function observeDirectChampionStatsWorker(page: Page) {
 }
 
 const oracleFiles = {
+  "exact-terrain-fog-agent/exact-8428-rift-terrain-windowed-receipt.json":
+    "069130f305c46b9f626e8e4f70f9a9c3c20ce77892aac8e8444295aedc898f8d",
   "scout-8428-v21-team-vision-tracks.json":
     "c4a260a2e74c8d43275718126d47f013377c4df4b9e6f78cef2df0d4fe0b8979",
   "scout-8428-champion-health.json":
@@ -259,10 +274,16 @@ export async function verifyDirectChampionStatsWorker(
     championAnimationCueCount: number;
     announcerEvents?: unknown;
     directTeamVision: boolean;
+    directTerrainVisibility: boolean;
+    terrainVisibility:
+      z.infer<typeof RecordedTerrainVisibilitySchema> | undefined;
   },
 ) {
   if (!fixture.directReplayObservations)
-    return fixture.championAnimationCueCount;
+    return {
+      cueCount: fixture.championAnimationCueCount,
+      terrainVisibility: fixture.terrainVisibility,
+    };
   const {
     descriptor,
     directChampionStats,
@@ -288,6 +309,7 @@ export async function verifyDirectChampionStatsWorker(
     decodeChampionStats: directChampionStats,
     decodeTeamVision: fixture.directTeamVision,
     teamVisionWorldActors: fixture.directTeamVision,
+    terrainControllerGraph: fixture.directTerrainVisibility,
   })
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
@@ -305,6 +327,11 @@ export async function verifyDirectChampionStatsWorker(
     fixture.directTeamVision,
     actual.teamVision,
     descriptor.sha256,
+    oracleRoot,
+  );
+  const terrainVisibility = await verifyDirectTerrainVisibility(
+    fixture,
+    actual.terrainVisibility,
     oracleRoot,
   );
   if (directChampionStats) {
@@ -374,10 +401,41 @@ export async function verifyDirectChampionStatsWorker(
       descriptor.sha256,
       actual.animationCues,
     );
-    return actual.animationCues.length;
+    return { cueCount: actual.animationCues.length, terrainVisibility };
   }
   expect(actual.animationCues).toBeUndefined();
-  return fixture.championAnimationCueCount;
+  return { cueCount: fixture.championAnimationCueCount, terrainVisibility };
+}
+
+async function verifyDirectTerrainVisibility(
+  fixture: {
+    descriptor: { sha256: string };
+    directTerrainVisibility: boolean;
+    terrainVisibility:
+      z.infer<typeof RecordedTerrainVisibilitySchema> | undefined;
+  },
+  actual: z.infer<typeof RecordedTerrainVisibilitySchema> | undefined,
+  oracleRoot: string,
+) {
+  if (!fixture.directTerrainVisibility) {
+    expect(actual).toBeUndefined();
+    return fixture.terrainVisibility;
+  }
+  const bytes = await readOracle(
+    oracleRoot,
+    "exact-terrain-fog-agent/exact-8428-rift-terrain-windowed-receipt.json",
+  );
+  const { replaySha256, unresolvedMeshControllerIds, ...expected } =
+    RecordedTerrainVisibilitySchema.extend({
+      replaySha256: z.string(),
+      unresolvedMeshControllerIds: z.array(z.number().int().positive()),
+    }).parse(decode(bytes));
+  expect(replaySha256).toBe(fixture.descriptor.sha256);
+  expect(actual).toEqual({
+    ...expected,
+    omittedMeshControllerIds: unresolvedMeshControllerIds,
+  });
+  return actual;
 }
 
 async function verifyDirectTeamVision(

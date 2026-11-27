@@ -31,7 +31,7 @@ import {
   readRecordedTerrainRanges,
   verifyLateTerrain,
   verifyOpeningTerrain,
-  verifyRecordedTerrainTransitions,
+  verifyRecordedTerrainTransitions as verifyTerrainChanges,
 } from "./recorded-terrain-assertions.ts";
 import {
   verifyLaterRecordedLaneWaves,
@@ -181,7 +181,6 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   if (baseURL === undefined)
     throw new Error("A loopback base URL is required.");
   const fixture = await readRecordedReplay();
-  const terrainRanges = await readRecordedTerrainRanges(fixture);
   const result = await readFooterScores(fixture.roflPath);
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   await installRecordedDrawProbe(page);
@@ -232,7 +231,12 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await expect(score).toContainText(/Blue team\s*0\s*kills/);
   await expect(score).toContainText(/Red team\s*0\s*kills/);
   await expect(score.getByText(result.winner)).toHaveCount(0);
-  const cueCount = await verifyDirectChampionStatsWorker(page, fixture);
+  const { cueCount, terrainVisibility } = await verifyDirectChampionStatsWorker(
+    page,
+    fixture,
+  );
+  const terrain = { ...fixture, terrainVisibility };
+  const terrainRanges = await readRecordedTerrainRanges(terrain);
   await verifyRecordedRoster(page, fixture, testInfo);
   const opening = await readRecordedDraw(page);
   verifyCameraProjection(opening, undefined, 1, false);
@@ -376,12 +380,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await canvas.screenshot({
     path: testInfo.outputPath("late-match-overview.png"),
   });
-  await verifyRecordedTerrainTransitions(
-    page,
-    terrainRanges,
-    fixture,
-    testInfo,
-  );
+  await verifyTerrainChanges(page, terrainRanges, terrain, testInfo);
   const slider = page.getByRole("slider", { name: "Replay time" });
   await slider.press("End");
   await expect(score.getByText(result.winner)).toBeVisible();

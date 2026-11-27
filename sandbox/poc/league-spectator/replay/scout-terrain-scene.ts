@@ -127,6 +127,58 @@ const WorkerChampionStatsSchema = z.strictObject({
   championHealthTracks: ChampionHealthTracksSchema,
   championResourceTracks: ChampionResourceTracksSchema,
 });
+const meshId = z.number().int().positive().max(0xffffffff);
+const TerrainControllerGraphSchema = z.strictObject({
+  geometrySha256: z.string().regex(/^[0-9a-f]{64}$/),
+  materialsSha256: z.string().regex(/^[0-9a-f]{64}$/),
+  meshControllerIds: z.array(meshId).min(12).max(13),
+  controllers: z
+    .record(
+      z.string().regex(/^[1-9]\d{0,9}$/),
+      z.union([
+        z.strictObject({
+          classHash: z.enum(["c406a533", "ec733fe2", "e07edfa4"]),
+          nameHash: meshId,
+          defaultVisible: z.boolean().nullable(),
+          elementalTerrainFlags: z.number().int().nonnegative().nullable(),
+        }),
+        z.strictObject({
+          classHash: z.literal("e21083b5"),
+          children: z.array(meshId).min(1).max(6),
+          operation: z
+            .union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)])
+            .nullable(),
+        }),
+      ]),
+    )
+    .refine((entries) => Object.keys(entries).length === 35),
+  missingReplacementMeshControllerIds: z.array(meshId).max(2),
+});
+const TerrainVisibilitySchema = z.object({
+  tracks: z
+    .array(
+      z.object({
+        controllerId: z.number().int().positive(),
+        points: z
+          .array(z.tuple([z.number().nonnegative(), z.boolean()]))
+          .nonempty(),
+      }),
+    )
+    .nonempty(),
+  unresolvedMeshControllerIds: z.array(z.number().int().positive()),
+  missingReplacementMeshControllerIds: z.array(z.number().int().positive()),
+  omittedMeshControllerIds: z.array(z.number().int().positive()).optional(),
+  unresolvedWindows: z
+    .array(
+      z.object({
+        controllerId: z.number().int().positive(),
+        startSeconds: z.number().nonnegative(),
+        endSeconds: z.number().positive(),
+      }),
+    )
+    .optional(),
+});
+
 const TerrainSceneFields = z.object({
   identity: z.object({
     build: z.enum([terrainPositionBuild, currentTerrainPositionBuild]),
@@ -245,32 +297,7 @@ const TerrainSceneFields = z.object({
       ),
     })
     .optional(),
-  terrainVisibility: z
-    .object({
-      tracks: z
-        .array(
-          z.object({
-            controllerId: z.number().int().positive(),
-            points: z
-              .array(z.tuple([z.number().nonnegative(), z.boolean()]))
-              .nonempty(),
-          }),
-        )
-        .nonempty(),
-      unresolvedMeshControllerIds: z.array(z.number().int().positive()),
-      missingReplacementMeshControllerIds: z.array(z.number().int().positive()),
-      omittedMeshControllerIds: z.array(z.number().int().positive()).optional(),
-      unresolvedWindows: z
-        .array(
-          z.object({
-            controllerId: z.number().int().positive(),
-            startSeconds: z.number().nonnegative(),
-            endSeconds: z.number().positive(),
-          }),
-        )
-        .optional(),
-    })
-    .optional(),
+  terrainVisibility: TerrainVisibilitySchema.optional(),
   championModels: z
     .object({
       bindings: z
@@ -388,6 +415,7 @@ const TerrainSceneFields = z.object({
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
+      terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       decodeTeamVision: z.literal(true).optional(),
     })
     .optional(),
@@ -507,6 +535,20 @@ export const SceneSchema = TerrainSceneFields.refine(
       path: ["workerMotion", "announcerEvents"],
       message:
         "Replay-derived announcements require exact current worker motion.",
+    },
+  )
+  .refine(
+    (scene) =>
+      scene.workerMotion?.terrainControllerGraph === undefined ||
+      (scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.terrainMaterials !== undefined &&
+        scene.terrainVisibility === undefined),
+    {
+      path: ["workerMotion", "terrainControllerGraph"],
+      message:
+        "Replay-derived terrain visibility requires exact current worker motion and no baked visibility.",
     },
   )
   .refine(
@@ -662,9 +704,68 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     championAnimationCues: ChampionAnimationWorkerCuesSchema.optional(),
     announcerCues: AnnouncerCuesSchema.optional(),
     teamVision: TeamVisionSchema.optional(),
+    terrainVisibility: TerrainVisibilitySchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
+
+function validateWorkerTerrainVisibility(
+  visibility: z.infer<typeof TerrainVisibilitySchema>,
+  graph: z.infer<typeof TerrainControllerGraphSchema>,
+  duration: number,
+) {
+  const expected = new Set(graph.meshControllerIds);
+  const unresolved = visibility.unresolvedMeshControllerIds;
+  const missing = visibility.missingReplacementMeshControllerIds;
+  const omitted = visibility.omittedMeshControllerIds;
+  if (
+    omitted === undefined ||
+    omitted.length !== unresolved.length ||
+    !omitted.every((id, index) => id === unresolved[index]) ||
+    missing.length !== graph.missingReplacementMeshControllerIds.length ||
+    !missing.every(
+      (id, index) => id === graph.missingReplacementMeshControllerIds[index],
+    ) ||
+    ![...unresolved, ...missing].every((id) => expected.delete(id))
+  )
+    throw Error(
+      "Worker terrain visibility does not match its authored mesh omissions.",
+    );
+  const tracked = new Set<number>();
+  for (const { controllerId, points } of visibility.tracks) {
+    if (
+      !expected.delete(controllerId) ||
+      points[0][0] !== 0 ||
+      !points.every(
+        ([time], index) =>
+          time <= duration && time > (points[index - 1]?.[0] ?? -1),
+      )
+    )
+      throw Error("Worker terrain visibility has an invalid track.");
+    tracked.add(controllerId);
+  }
+  if (expected.size !== 0)
+    throw Error(
+      "Worker terrain visibility did not cover all authored mesh controllers.",
+    );
+  const lastEnd = new Map<number, number>();
+  for (const {
+    controllerId,
+    startSeconds,
+    endSeconds,
+  } of visibility.unresolvedWindows ?? []) {
+    if (
+      !tracked.has(controllerId) ||
+      startSeconds < (lastEnd.get(controllerId) ?? 0) ||
+      endSeconds <= startSeconds ||
+      endSeconds > duration
+    )
+      throw Error(
+        "Worker terrain visibility has an invalid unresolved window.",
+      );
+    lastEnd.set(controllerId, endSeconds);
+  }
+}
 
 async function loadWorkerMotion(
   identity: TerrainScene["identity"],
@@ -724,6 +825,20 @@ async function loadWorkerMotion(
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    const terrainGraph = workerMotion.terrainControllerGraph;
+    if (
+      (result.terrainVisibility !== undefined) !==
+      (terrainGraph !== undefined)
+    )
+      throw Error(
+        "Replay motion worker returned unexpected terrain visibility coverage.",
+      );
+    if (result.terrainVisibility !== undefined && terrainGraph !== undefined)
+      validateWorkerTerrainVisibility(
+        result.terrainVisibility,
+        terrainGraph,
+        identity.durationMilliseconds / 1000,
+      );
     if ((result.teamVision !== undefined) !== (teamVisionActors !== undefined))
       throw Error(
         "Replay motion worker returned unexpected team vision coverage.",
@@ -918,6 +1033,12 @@ export async function loadSceneMotion(
       ...(decoded.teamVision === undefined
         ? {}
         : { teamVision: decoded.teamVision, workerMotion: undefined }),
+      ...(decoded.terrainVisibility === undefined
+        ? {}
+        : {
+            terrainVisibility: decoded.terrainVisibility,
+            workerMotion: undefined,
+          }),
       ...(championStats === undefined
         ? {}
         : { ...championStats, workerMotion: undefined }),

@@ -1,15 +1,26 @@
 import { defineConfig } from "@playwright/test";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { replayPath } from "./recorded-replay-data.ts";
 
-const origin = "http://127.0.0.1:5195";
+const port = z.coerce
+  .number()
+  .int()
+  .min(1)
+  .max(65_535)
+  .parse(Bun.env["SCOUT_REPLAY_E2E_PORT"] ?? "5195");
+const origin = `http://127.0.0.1:${String(port)}`;
 const config = "e2e/public-replay/recorded-vite.config.ts";
 const build = `bun run build --config ${config}`;
-const preview = "bun e2e/public-replay/recorded-preview.ts 5195";
+const preview = `bun e2e/public-replay/recorded-preview.ts ${String(port)}`;
+const withAnnouncer = Bun.env["SCOUT_REPLAY_E2E_WITH_ANNOUNCER"] === "1";
 
 export default defineConfig({
   testDir: ".",
-  testMatch: "recorded-replay.pw.ts",
+  testMatch: withAnnouncer
+    ? ["recorded-replay.pw.ts", "recorded-announcer.pw.ts"]
+    : "recorded-replay.pw.ts",
+  ...(withAnnouncer ? { workers: 1 } : {}),
   outputDir: "../../test-results/recorded-replay",
   timeout: 180_000,
   expect: { timeout: 60_000 },

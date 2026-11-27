@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import { replayFixture } from "#src/lib/replay/replay-fixture.ts";
 import { LocalScoutTerrainManifestSchema } from "./local-scout-terrain-manifest.ts";
+import { RecordedTerrainVisibilitySchema } from "./proof/terrain-visibility-schema.ts";
 
 const uploadOrigin = Bun.env["SCOUT_REPLAY_E2E_BACKEND_ORIGIN"];
 const uploadedReplayId = Bun.env["SCOUT_REPLAY_E2E_BACKEND_REPLAY_ID"];
@@ -81,28 +82,7 @@ const SceneIdentitySchema = z.object({
       ),
     })
     .optional(),
-  terrainVisibility: z
-    .object({
-      omittedMeshControllerIds: z.array(z.number().int().positive()).optional(),
-      unresolvedWindows: z
-        .array(
-          z.object({
-            controllerId: z.number().int().positive(),
-            startSeconds: z.number().nonnegative(),
-            endSeconds: z.number().positive(),
-          }),
-        )
-        .optional(),
-      tracks: z.array(
-        z.object({
-          controllerId: z.number().int().positive(),
-          points: z
-            .array(z.tuple([z.number().nonnegative(), z.boolean()]))
-            .nonempty(),
-        }),
-      ),
-    })
-    .optional(),
+  terrainVisibility: RecordedTerrainVisibilitySchema.optional(),
   teamVision: z.array(z.unknown()).optional(),
   inhibitorModels: z
     .object({
@@ -130,6 +110,7 @@ const SceneIdentitySchema = z.object({
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
+      terrainControllerGraph: z.object({}).optional(),
       decodeTeamVision: z.literal(true).optional(),
       announcerEvents: z
         .array(
@@ -252,6 +233,28 @@ function championCapabilities({
   };
 }
 
+function visibilityCapabilities({
+  workerMotion,
+  terrainVisibility,
+  teamVision,
+}: z.infer<typeof SceneIdentitySchema>) {
+  const directTerrainVisibility =
+    workerMotion?.terrainControllerGraph !== undefined;
+  if (directTerrainVisibility && terrainVisibility !== undefined)
+    throw new Error(
+      "Replay-derived terrain visibility cannot use prepared tracks.",
+    );
+  const directTeamVision = workerMotion?.decodeTeamVision === true;
+  if (directTeamVision && teamVision !== undefined)
+    throw new Error("Direct team vision requires a scene without baked masks.");
+  return {
+    unitVisibility: teamVision !== undefined || directTeamVision,
+    directTeamVision,
+    directTerrainVisibility,
+    directVisibility: directTerrainVisibility || directTeamVision,
+  };
+}
+
 export async function readRecordedReplay() {
   const manifestPath = Bun.env["SCOUT_REPLAY_E2E_MANIFEST"] ?? "";
   const roflPath = Bun.env["SCOUT_REPLAY_E2E_ROFL"] ?? "";
@@ -273,7 +276,6 @@ export async function readRecordedReplay() {
     followCameraDefaults,
     terrainMaterials,
     terrainVisibility,
-    teamVision,
     inhibitorModels,
     championAnimationCues,
   } = scene;
@@ -288,9 +290,7 @@ export async function readRecordedReplay() {
     );
   }
   const capabilities = championCapabilities(scene);
-  const directTeamVision = scene.workerMotion?.decodeTeamVision === true;
-  if (directTeamVision && teamVision !== undefined)
-    throw new Error("Direct team vision requires a scene without baked masks.");
+  const { directVisibility, ...visibility } = visibilityCapabilities(scene);
 
   const packageDigest = sha256(manifest);
   const packageRoot = `${packagePrefix}${packageDigest}`;
@@ -322,10 +322,9 @@ export async function readRecordedReplay() {
         .filter(({ sourceAlphaBlend }) => sourceAlphaBlend)
         .map(({ material }) => material.slice(material.lastIndexOf("/") + 1)) ??
       [],
-    unitVisibility: teamVision !== undefined || directTeamVision,
-    directTeamVision,
+    ...visibility,
     directReplayObservations:
-      directTeamVision || capabilities.directChampionObservations,
+      directVisibility || capabilities.directChampionObservations,
     announcerEvents: scene.workerMotion?.announcerEvents,
     announcerPreview: inventory.capabilities.announcerPreview,
     championAnimationCueCount: championAnimationCues?.length ?? 0,

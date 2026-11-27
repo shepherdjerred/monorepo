@@ -154,6 +154,15 @@ the verified 16.23.841.8428 installation.
 bun "$tools/research/prepare-exact-inventory-assets.mjs" $installation $itemIds $outputDirectory $terrainTextureMipsDll
 ```
 
+For the current build, list exact archived sources without exporting image
+files. The private index reports the verified name and texture digest for
+each indexed item and a reason for each unavailable item. Prepared PNGs
+remain required for the viewer.
+
+```powershell
+bun "$tools/research/prepare-exact-inventory-assets.mjs" --current-index $installation $newPrivateItemIndex
+```
+
 ## Original Map11 ground queries
 
 The viewer uses the initial Map11 navigation grid for champion ground
