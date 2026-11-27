@@ -1,6 +1,6 @@
 ---
 title: LLM stack
-description: One shared runtime that calls OpenAI, Anthropic, and Google directly, two native coding-agent exceptions, per-workload credentials with provider-side spend caps, and an observability boundary that puts full content on every span and tail-samples LLM traces into a self-hosted Phoenix.
+description: One shared runtime that calls OpenAI, Anthropic, and Google directly, two native coding-agent exceptions, per-workload credentials with provider-side spend caps, and an observability boundary that puts full content in Tempo and a 365-day SeaweedFS archive read directly by Hub.
 sidebar:
   order: 5
 ---
@@ -110,43 +110,35 @@ tokens, and Discord webhook and invite URLs — by
 [`redact.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-observability/src/redact.ts),
 so they stay out of every store.
 
-Traces enter storage through `alloy-gateway`, an unprivileged Grafana Alloy
-Deployment that receives OTLP/HTTP. It forwards every span to Tempo
-unconditionally and tail-samples LLM traces into Phoenix. The gateway
-exists so that adding a trace consumer is gateway configuration rather than a
-credential and an exporter in every service; Phoenix is that consumer. It
-is deliberately a second Alloy release: the existing `alloy` app is a
-privileged, hostPID eBPF profiler whose security boundary is having no ingress
-at all, and a trace gateway needs the opposite shape. The gateway carries no
-Kubernetes RBAC and mounts no service-account token: a network-facing pod that
-never calls the Kubernetes API gets nothing to escalate with.
+Traces enter storage through [`alloy-gateway`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts), an unprivileged Grafana Alloy
+Deployment that receives OTLP/HTTP on port 4318 (`64 MiB` body cap) and batches
+every span unconditionally into Tempo. Producers speak to one cluster-internal
+gateway URL rather than holding storage endpoints directly. It is deliberately a
+second Alloy release: the `alloy` app is a privileged, hostPID eBPF profiler
+whose security boundary is having no ingress at all, and a trace gateway needs
+the opposite shape. The gateway carries no Kubernetes RBAC and mounts no
+service-account token: a network-facing pod that never calls the Kubernetes API
+gets nothing to escalate with.
 
-[Arize Phoenix](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/phoenix/index.ts)
-is the trace, eval, and dataset consumer of those spans. It runs in the
-cluster on its own Postgres. The hosted consumer it replaced metered ingest,
-and the sampled LLM traffic outgrew its free allowance within weeks. Phoenix
-converts `gen_ai.*` attributes to its own conventions on ingest, so producers
-need no Phoenix-specific instrumentation. Messages in the semantic-convention
-`parts` shape, which AI SDK emits, render as chat turns. Other message shapes
-stay readable as raw span attributes.
+[Hub's `/traces` module](https://github.com/shepherdjerred/monorepo/tree/main/packages/alert-dashboard/src/modules/traces)
+is the first-party trajectory viewer over Tempo and the SeaweedFS archive. It
+replaces an earlier self-hosted Arize Phoenix deployment and its dedicated
+PostgreSQL cluster. Phoenix required an explicit `alloy-gateway` tail-sampling
+allowlist to bound database growth, dropped unlisted workloads, lost root spans
+that finished more than two minutes before the first LLM call, and degraded
+`runtime.decide()`, Claude Agent SDK, and Codex SDK attributes to raw JSON.
+Reading Tempo directly for recent traces (`0–30` days) keeps complete
+distributed waterfalls for every service with zero sampling split.
 
-The gateway keeps whole traces that contain `gen_ai.*` spans, deciding after a
-two-minute wait. Whole traces keep the root span, so a trace reads as one
-trajectory rather than orphaned LLM calls. Kept traces route to
-per-service-stage projects — `scout-beta`, `scout-prod`, `birmel`,
-`temporal`, `misc` — through explicit allowlist branches.
-Each branch sets the `x-project-name` header and shares one system API key. A
-service listed in no branch reaches no project. That exclusion bounds
-Phoenix's database growth, so there is deliberately no catch-all branch.
-Phoenix keeps traces
-for 30 days, matching Tempo, and blocks inserts before its volume fills. The
-kill switch for a runaway producer is removing a branch from the sampler's
-output list, which the config reloader applies without recreating the pod;
-see [Route a service to Phoenix](/how-to/route-a-service-to-phoenix/). The
-sampler's decision cache forwards late spans of already-kept traces, but
-spans that completed more than the decision window before a trace's first
-LLM span are gone for Phoenix. That loss is bounded to the pre-LLM bootstrap
-of long agent traces and is accepted; Tempo always holds the complete trace.
+For traces older than Tempo's 30-day retention (`31–365` days), the
+[`llm-archive-index`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ops/llm-archive-index.ts)
+Temporal schedule scans new `.json.gz` envelopes in `s3://llm-archive` every 15
+minutes on `temporal-infra-worker` and pushes compact span metadata into Hub's
+[`LlmTraceArchiveStore`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-observability/src/archive-index-store.ts)
+(`/data/llm-traces-index.db`). Gunzipping multi-megabyte historical envelopes on
+the 6 GiB worker keeps Hub's web pod lean; Hub hydrates individual S3 objects on
+demand only when a user opens an archived trace, normalizing all four repository
+span shapes through [`trajectory`](https://github.com/shepherdjerred/monorepo/tree/main/packages/llm-observability/src/trajectory).
 
 Prometheus uses bounded service, workload, provider, model, outcome, token-type,
 and cost-type labels. Trace, generation, session, and user IDs are never
@@ -219,11 +211,12 @@ spans and would find nothing.
 Because subject IDs are unbounded they stay span attributes and never become
 metric labels. That choice sets the horizon on every per-subject question:
 
-| Store      | Retention | Answers                      |
-| ---------- | --------- | ---------------------------- |
-| Prometheus | 365 days  | per-feature cost             |
-| Loki       | 90 days   | per-call cost, generation ID |
-| Tempo      | 30 days   | per-subject attribution      |
+| Store                         | Retention | Answers                                   |
+| ----------------------------- | --------- | ----------------------------------------- |
+| Prometheus                    | 365 days  | per-feature cost                          |
+| SeaweedFS + Hub archive index | 365 days  | prompt/response/tool bodies, trace lookup |
+| Loki                          | 90 days   | per-call cost, generation ID              |
+| Tempo                         | 30 days   | full traces, per-subject attribution      |
 
 Tempo is the binding constraint, and Tempo additionally caps a metrics query at
 a three-hour range. Per-subject spend is therefore a recent-window question

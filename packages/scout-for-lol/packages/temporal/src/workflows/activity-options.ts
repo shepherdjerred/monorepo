@@ -99,6 +99,29 @@ export function crawlActivities(stage: ScoutStage) {
   });
 }
 
+/**
+ * A frontier prune batch deletes a few thousand rows in well under a second.
+ * It is idempotent, so a transient database error is retried a few times; the
+ * next scheduled run is the backstop.
+ */
+export const CRAWL_MAINTENANCE_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "2 minutes",
+  scheduleToCloseTimeout: "10 minutes",
+  retry: {
+    maximumAttempts: 3,
+    initialInterval: "5 seconds",
+    backoffCoefficient: 2,
+    nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+  },
+} satisfies QueueActivityOptions;
+
+export function crawlMaintenanceActivities(stage: ScoutStage) {
+  return proxyActivities<ScoutTemporalActivities>({
+    taskQueue: scoutTaskQueues(stage).crawl,
+    ...CRAWL_MAINTENANCE_ACTIVITY_OPTIONS,
+  });
+}
+
 export function realtimeActivities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalActivities>({
     taskQueue: scoutTaskQueues(stage).realtime,

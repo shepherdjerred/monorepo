@@ -1,9 +1,11 @@
+import { createHash } from "node:crypto";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
+import { DeploymentDetailSchema } from "@shepherdjerred/delivery/contract";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
 import { argoApplication } from "#lib/delivery/model/step-testing.ts";
 import { forumDetail } from "#lib/delivery/model/forum-testing.ts";
-import { artifact } from "#lib/delivery/model/testing.ts";
+import { artifact, detail } from "#lib/delivery/model/testing.ts";
 import type * as Activity from "@temporalio/activity";
 import type * as ArgoClient from "#lib/delivery/argo-client.ts";
 import type * as Argocd from "#activities/delivery/argocd.ts";
@@ -210,6 +212,173 @@ afterEach(() => {
   calls.failCreate = false;
   calls.failUpdate = false;
   calls.failRestore = false;
+});
+
+const CHART_REGISTRY = "https://charts.tailnet-1a49.ts.net";
+const LEGACY_CHART_REGISTRY = "https://chartmuseum.sjer.red";
+const CHART_VERSION = "5.4.0";
+const CHART_PATH = `/charts/minecraft-${CHART_VERSION}.tgz`;
+const PUBLISHER_REPO = "https://itzg.github.io/minecraft-server-charts/";
+const CHART_CONTENT = "upstream Minecraft chart";
+const CHART_DIGEST = `sha256:${createHash("sha256").update(CHART_CONTENT).digest("hex")}`;
+
+function minecraftFixture(
+  uri: string,
+  repoURL = CHART_REGISTRY,
+  upstream = PUBLISHER_REPO,
+) {
+  const chart = {
+    ...artifact({
+      id: "chart/minecraft",
+      component: "chart:minecraft",
+      kind: "chart",
+      uri,
+      version: CHART_VERSION,
+      character: "a",
+    }),
+    serviceId: "minecraft",
+    digest: CHART_DIGEST,
+    origin: {
+      kind: "upstream",
+      repository: upstream,
+      name: "minecraft",
+      version: CHART_VERSION,
+      checksum: CHART_DIGEST,
+    },
+  };
+  const instance = "application:minecraft-tsmc";
+  const definition = {
+    kind: "kubernetes-application",
+    application: {
+      name: "minecraft-tsmc",
+      project: "default",
+      destination: {
+        server: "https://kubernetes.default.svc",
+        namespace: "minecraft-tsmc",
+      },
+      source: { repoURL, chart: "minecraft" },
+      lifecycle: "retain",
+    },
+    chartComponent: "chart:minecraft",
+    runner: { service: "ci", component: "image:ci-base" },
+    steps: [
+      { kind: "apply-safety", instance },
+      { kind: "sync", instance },
+    ],
+    oracle: { probes: [], tests: [] },
+  };
+  const base = detail(definition, chart);
+  const current = DeploymentDetailSchema.parse({
+    ...base,
+    deployment: {
+      ...base.deployment,
+      serviceId: "minecraft",
+      environmentId: "minecraft/tsmc",
+    },
+    versionSet: { ...base.versionSet, serviceId: "minecraft" },
+  });
+  const recipe = current.pipeline.definition;
+  if (recipe.kind !== "kubernetes-application")
+    throw new Error("Minecraft fixture requires a Kubernetes Application");
+  return { current, recipe };
+}
+
+describe("Minecraft chart apply-safety", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.each([
+    {
+      uri: `${LEGACY_CHART_REGISTRY}${CHART_PATH}`,
+      requestedUri: `${CHART_REGISTRY}${CHART_PATH}`,
+      redirect: "error",
+    },
+    {
+      uri: `https://chartmuseum.tailnet-1a49.ts.net${CHART_PATH}`,
+      requestedUri: `${CHART_REGISTRY}${CHART_PATH}`,
+      redirect: "error",
+    },
+    {
+      uri: `${CHART_REGISTRY}${CHART_PATH}`,
+      requestedUri: `${CHART_REGISTRY}${CHART_PATH}`,
+      redirect: "follow",
+    },
+    {
+      uri: `${PUBLISHER_REPO}minecraft-${CHART_VERSION}.tgz`,
+      requestedUri: `${PUBLISHER_REPO}minecraft-${CHART_VERSION}.tgz`,
+      redirect: "follow",
+    },
+  ])(
+    "verifies the frozen bytes for $uri",
+    async ({ uri, requestedUri, redirect }) => {
+      const { current, recipe } = minecraftFixture(uri);
+      const download = vi.fn().mockResolvedValue(new Response(CHART_CONTENT));
+      vi.stubGlobal("fetch", download);
+      calls.reads = [null];
+
+      await applySafety(current, recipe, "step-apply-safety");
+
+      expect(download).toHaveBeenCalledExactlyOnceWith(
+        requestedUri,
+        expect.objectContaining({ redirect }),
+      );
+      expect(calls.events).toContain(
+        `assert-apply-safe minecraft-tsmc --revision ${CHART_VERSION}`,
+      );
+      expect(calls.stages.at(-1)?.receipt).toMatchObject({
+        evidence: [
+          { summary: expect.stringContaining(`bytes match ${CHART_DIGEST}`) },
+          { kind: "preflight" },
+        ],
+      });
+      expect(current.versionSet.components["chart:minecraft"]?.uri).toBe(uri);
+    },
+  );
+
+  test("refuses changed bytes from the replacement mirror before writing anything", async () => {
+    const { current, recipe } = minecraftFixture(
+      `${LEGACY_CHART_REGISTRY}${CHART_PATH}`,
+    );
+    const download = vi.fn().mockResolvedValue(new Response("changed bytes"));
+    vi.stubGlobal("fetch", download);
+
+    await expect(
+      applySafety(current, recipe, "step-apply-safety"),
+    ).rejects.toThrow(
+      "Published source bytes differ from the immutable artifact digest",
+    );
+    expect(download).toHaveBeenCalledExactlyOnceWith(
+      `${CHART_REGISTRY}${CHART_PATH}`,
+      expect.objectContaining({ redirect: "error" }),
+    );
+    expect(calls.events).toEqual([]);
+    expect(calls.stages).toEqual([]);
+  });
+
+  test.each([
+    { uri: `${LEGACY_CHART_REGISTRY}/charts/minecraft-5.3.0.tgz` },
+    { uri: `${LEGACY_CHART_REGISTRY}/other/minecraft-${CHART_VERSION}.tgz` },
+    { uri: `${LEGACY_CHART_REGISTRY}${CHART_PATH}?download=1` },
+    { uri: `${LEGACY_CHART_REGISTRY}${CHART_PATH}`, repoURL: PUBLISHER_REPO },
+    { uri: `${LEGACY_CHART_REGISTRY}${CHART_PATH}`, upstream: CHART_REGISTRY },
+  ])(
+    "refuses an unbound historical chart URI ($uri)",
+    async ({ uri, repoURL, upstream }) => {
+      const { current, recipe } = minecraftFixture(uri, repoURL, upstream);
+      const download = vi.fn();
+      vi.stubGlobal("fetch", download);
+
+      await expect(
+        applySafety(current, recipe, "step-apply-safety"),
+      ).rejects.toThrow(
+        "Historical ChartMuseum URI does not match the selected upstream Minecraft chart and its canonical Charts recipe",
+      );
+      expect(download).not.toHaveBeenCalled();
+      expect(calls.events).toEqual([]);
+      expect(calls.stages).toEqual([]);
+    },
+  );
 });
 
 function mediaRetirementFixture() {

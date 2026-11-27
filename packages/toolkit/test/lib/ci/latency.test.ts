@@ -1,5 +1,10 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { distribution, latencyReport, pipelineKind } from "#lib/ci/latency.ts";
+import {
+  distribution,
+  formatLatency,
+  latencyReport,
+  pipelineKind,
+} from "#lib/ci/latency.ts";
 import { pipelineHistory } from "#lib/ci/history.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 
@@ -91,8 +96,17 @@ test("percentiles expose missing samples and use nearest rank", () => {
     count: 4,
     missing: 1,
     p50Seconds: 20,
+    p90Seconds: 40,
     p95Seconds: 40,
   });
+  expect(distribution([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).toEqual({
+    count: 10,
+    missing: 0,
+    p50Seconds: 5,
+    p90Seconds: 9,
+    p95Seconds: 10,
+  });
+  expect(distribution([]).p90Seconds).toBeNull();
   expect(distribution([]).p95Seconds).toBeNull();
 });
 
@@ -118,8 +132,22 @@ test("never mixes canceled, rerun or unknown review work into a fresh SLO", () =
     count: 1,
     missing: 0,
     p50Seconds: 30,
+    p90Seconds: 30,
     p95Seconds: 30,
   });
+  expect(report.cohorts[0]?.workflows).toContainEqual({
+    name: "verify",
+    count: 1,
+    missing: 0,
+    p50Seconds: 130,
+    p90Seconds: 130,
+    p95Seconds: 130,
+  });
+  const formatted = formatLatency(report);
+  expect(formatted).toContain("p50=200s, p90=200s, p95=200s");
+  expect(formatted).toContain(
+    "workflow verify: n=1, p50=130s, p90=130s, p95=130s",
+  );
 });
 
 test("missing timestamps remain unknown and secrets are not copied into records", () => {

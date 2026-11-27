@@ -51,7 +51,6 @@ import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
-import { createPhoenixApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/phoenix.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/service-probes.ts";
@@ -161,7 +160,6 @@ export async function createAppsChart(app: App) {
     createTemporalDataApp(chart);
   }
   createBugsinkApp(chart);
-  createPhoenixApp(chart);
   createTasknotesApp(chart);
   createTemporalApp(chart);
   if (deliveryExecutorActivation() !== undefined)

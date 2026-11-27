@@ -91,19 +91,37 @@ function listInput(options: TrackerOptions, search?: string) {
   });
 }
 
+async function issueDescriptionInput(
+  options: TrackerOptions,
+): Promise<string | undefined> {
+  const hasDescription =
+    options.description !== undefined ||
+    options["description-file"] !== undefined;
+  const hasBody =
+    options.body !== undefined || options["body-file"] !== undefined;
+  if (hasDescription && hasBody) {
+    throw new Error(
+      "Use --description/--description-file or --body/--body-file, not both",
+    );
+  }
+  return hasBody
+    ? textInput(options.body, options["body-file"])
+    : textInput(options.description, options["description-file"]);
+}
+
 async function create(context: TrackerCommandContext, options: TrackerOptions) {
   if ((options.state?.length ?? 0) > 1)
     throw new Error("Create takes one --state");
   const triage = triageFields(options);
+  const description = await issueDescriptionInput(options);
+  const teamKey = required(options.team, "--team");
+  const title = required(options.title, "--title");
   return context.client.issues.create.mutate(
     CreateIssueSchema.parse({
       actor: await context.actor(),
-      teamKey: required(options.team, "--team"),
-      title: required(options.title, "--title"),
-      description: await textInput(
-        options.description,
-        options["description-file"],
-      ),
+      teamKey,
+      title,
+      description,
       ...triage,
       projectSlug: options.project,
       assigneeKey: options.assignee,
@@ -121,6 +139,8 @@ async function update(
   options: TrackerOptions,
 ) {
   const fields = patchFields(options);
+  const description = await issueDescriptionInput(options);
+  const expectedRevision = integer(options["expected-revision"]);
   const state = options.state?.[0];
   const states =
     state === undefined
@@ -139,13 +159,10 @@ async function update(
       actor: await context.actor(),
       identifier,
       title: options.title,
-      description: await textInput(
-        options.description,
-        options["description-file"],
-      ),
+      description,
       ...fields,
       stateName: selected?.name,
-      expectedRevision: integer(options["expected-revision"]),
+      expectedRevision,
     }),
   );
 }
@@ -189,6 +206,8 @@ async function bulkUpdate(
     "title",
     "description",
     "description-file",
+    "body",
+    "body-file",
     "expected-revision",
   ] as const)
     if (options[flag] !== undefined)

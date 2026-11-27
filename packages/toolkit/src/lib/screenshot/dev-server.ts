@@ -12,6 +12,7 @@ export type DevServerHandle = {
   stop: () => Promise<void>;
 };
 
+const HUB_DEFAULT_API_PORT = 7341;
 const SCOUT_DEFAULT_BACKEND_PORT = 3000;
 const SCOUT_TEMPORAL_PORT_OFFSET = 4233;
 const SCOUT_TEMPORAL_UI_PORT_OFFSET = 5233;
@@ -155,80 +156,116 @@ export async function allocateFreePort(
   throw new Error("Failed to allocate an unused local TCP port after 32 tries");
 }
 
-function parseExplicitPortOverride(
-  value: string | undefined,
-): number | undefined {
-  if (value === undefined || !/^\d+$/.test(value)) {
+function parseExplicitPortOverride(value: string): number | undefined {
+  if (!/^\d+$/.test(value)) {
     return undefined;
   }
   const port = Number(value);
   return port >= 1 && port <= 65_535 ? port : undefined;
 }
 
-export async function buildIsolatedDevLaunch(
+async function resolveLaunchPort(
+  envVar: string,
+  explicitRaw: string | undefined,
+  preferredPort: number | undefined,
+  used: Set<number>,
+): Promise<number> {
+  if (explicitRaw !== undefined) {
+    const explicit = parseExplicitPortOverride(explicitRaw);
+    if (explicit === undefined) {
+      throw new Error(
+        `Invalid explicit ${envVar} override "${explicitRaw}": expected an integer TCP port in 1..65535.`,
+      );
+    }
+    if (used.has(explicit)) {
+      throw new Error(
+        `Explicit ${envVar} port ${String(explicit)} collides with another port in this launch.`,
+      );
+    }
+    if (!(await isPortAvailable(explicit))) {
+      throw new Error(
+        `Explicit ${envVar} port ${String(explicit)} is already in use; toolkit screenshot refuses to capture an occupied port.`,
+      );
+    }
+    used.add(explicit);
+    return explicit;
+  }
+  const allocated = await allocateFreePort(preferredPort, used);
+  used.add(allocated);
+  return allocated;
+}
+
+async function buildHubDevFixtureLaunch(
   entry: PackageEntry,
-  envOverrides: Record<string, string> = {},
+  envOverrides: Record<string, string>,
 ): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
-  if (entry.devRunner === "astro") {
-    const port = await allocateFreePort(entry.expectedPort);
-    return {
-      port,
-      command: [
-        ...entry.devCommand,
-        "--",
-        "--ignore-lock",
-        "--port",
-        String(port),
-      ],
-      env: { ...envOverrides },
-    };
-  }
+  const used = new Set<number>();
+  const webPort = await resolveLaunchPort(
+    "PORT",
+    envOverrides["PORT"],
+    entry.expectedPort,
+    used,
+  );
+  const apiPort = await resolveLaunchPort(
+    "API_PORT",
+    envOverrides["API_PORT"],
+    HUB_DEFAULT_API_PORT,
+    used,
+  );
 
-  if (entry.devRunner === "vite") {
-    const port = await allocateFreePort(entry.expectedPort);
-    return {
-      port,
-      command: [
-        ...entry.devCommand,
-        "--",
-        "--port",
-        String(port),
-        "--strictPort",
-      ],
-      env: { ...envOverrides },
-    };
-  }
+  return {
+    port: webPort,
+    command: [...entry.devCommand],
+    env: {
+      ...envOverrides,
+      PORT: String(webPort),
+      API_PORT: String(apiPort),
+    },
+  };
+}
 
+async function buildScoutDevWebLaunch(
+  entry: PackageEntry,
+  envOverrides: Record<string, string>,
+): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
   // `scout-dev-web` (`bun scripts/dev/dev-web.ts`) starts Vite, the Scout API
   // backend, and Temporal dev + UI listeners. Allocate 4 distinct free ports so
   // concurrent worktrees never collide on any of the 4 sockets.
   const used = new Set<number>();
-  const webPort =
-    parseExplicitPortOverride(envOverrides["SCOUT_DEV_WEB_PORT"]) ??
-    (await allocateFreePort(entry.expectedPort, used));
-  used.add(webPort);
-
-  const backendPort =
-    parseExplicitPortOverride(envOverrides["SCOUT_DEV_BACKEND_PORT"]) ??
-    (await allocateFreePort(SCOUT_DEFAULT_BACKEND_PORT, used));
-  used.add(backendPort);
+  const webPort = await resolveLaunchPort(
+    "SCOUT_DEV_WEB_PORT",
+    envOverrides["SCOUT_DEV_WEB_PORT"],
+    entry.expectedPort,
+    used,
+  );
+  const backendPort = await resolveLaunchPort(
+    "SCOUT_DEV_BACKEND_PORT",
+    envOverrides["SCOUT_DEV_BACKEND_PORT"],
+    SCOUT_DEFAULT_BACKEND_PORT,
+    used,
+  );
 
   const preferredTemporal =
     backendPort + SCOUT_TEMPORAL_PORT_OFFSET <= 65_535
       ? backendPort + SCOUT_TEMPORAL_PORT_OFFSET
       : SCOUT_DEFAULT_BACKEND_PORT + SCOUT_TEMPORAL_PORT_OFFSET;
-  const temporalPort =
-    parseExplicitPortOverride(envOverrides["SCOUT_DEV_TEMPORAL_PORT"]) ??
-    (await allocateFreePort(preferredTemporal, used));
-  used.add(temporalPort);
+  const temporalPort = await resolveLaunchPort(
+    "SCOUT_DEV_TEMPORAL_PORT",
+    envOverrides["SCOUT_DEV_TEMPORAL_PORT"],
+    preferredTemporal,
+    used,
+  );
 
   const preferredTemporalUi =
     backendPort + SCOUT_TEMPORAL_UI_PORT_OFFSET <= 65_535
       ? backendPort + SCOUT_TEMPORAL_UI_PORT_OFFSET
       : SCOUT_DEFAULT_BACKEND_PORT + SCOUT_TEMPORAL_UI_PORT_OFFSET;
-  const temporalUiPort =
-    parseExplicitPortOverride(envOverrides["SCOUT_DEV_TEMPORAL_UI_PORT"]) ??
-    (await allocateFreePort(preferredTemporalUi, used));
+  const temporalUiPort = await resolveLaunchPort(
+    "SCOUT_DEV_TEMPORAL_UI_PORT",
+    envOverrides["SCOUT_DEV_TEMPORAL_UI_PORT"],
+    preferredTemporalUi,
+    used,
+  );
 
   return {
     port: webPort,
@@ -241,6 +278,62 @@ export async function buildIsolatedDevLaunch(
       SCOUT_DEV_TEMPORAL_UI_PORT: String(temporalUiPort),
     },
   };
+}
+
+export async function buildIsolatedDevLaunch(
+  entry: PackageEntry,
+  envOverrides: Record<string, string> = {},
+): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
+  switch (entry.devRunner) {
+    case "astro": {
+      const port = await allocateFreePort(entry.expectedPort);
+      return {
+        port,
+        command: [
+          ...entry.devCommand,
+          "--",
+          "--ignore-lock",
+          "--port",
+          String(port),
+        ],
+        env: { ...envOverrides },
+      };
+    }
+    case "vite": {
+      const port = await allocateFreePort(entry.expectedPort);
+      return {
+        port,
+        command: [
+          ...entry.devCommand,
+          "--",
+          "--port",
+          String(port),
+          "--strictPort",
+        ],
+        env: { ...envOverrides },
+      };
+    }
+    case "port-env": {
+      const port = await resolveLaunchPort(
+        "PORT",
+        envOverrides["PORT"],
+        entry.expectedPort,
+        new Set(),
+      );
+      return {
+        port,
+        command: [...entry.devCommand],
+        env: {
+          ...envOverrides,
+          PORT: String(port),
+        },
+      };
+    }
+    case "hub-dev-fixture":
+      return buildHubDevFixtureLaunch(entry, envOverrides);
+    case "scout-dev-web":
+      return buildScoutDevWebLaunch(entry, envOverrides);
+  }
 }
 
 async function terminateProcessGroup(
@@ -284,6 +377,20 @@ async function terminateProcessGroup(
     } catch {
       proc.kill("SIGKILL");
     }
+  }
+}
+
+async function assertChildAlive(
+  entry: PackageEntry,
+  proc: Bun.Subprocess<"ignore", "pipe", "pipe">,
+  stop: () => Promise<void>,
+  output: () => string,
+): Promise<void> {
+  if (proc.exitCode !== null) {
+    await stop();
+    throw new Error(
+      `${entry.alias}: dev server exited before it became ready.\n--- output ---\n${output()}`,
+    );
   }
 }
 
@@ -356,17 +463,14 @@ export async function ensureDevServer(
   options.registerCleanup?.(stop);
 
   const deadline = Date.now() + timeoutMs;
+  const readCombinedOutput = () => combinedOutput;
   while (Date.now() < deadline) {
+    await assertChildAlive(entry, proc, stop, readCombinedOutput);
     if (await probeReady(`${baseUrl}${readyPath}`, 2000)) {
+      await assertChildAlive(entry, proc, stop, readCombinedOutput);
       void stdoutDone;
       void stderrDone;
       return { baseUrl, port: launch.port, stop };
-    }
-    if (proc.exitCode !== null) {
-      await stop();
-      throw new Error(
-        `${entry.alias}: dev server exited before it became ready.\n--- output ---\n${combinedOutput}`,
-      );
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }

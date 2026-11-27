@@ -76,8 +76,13 @@ import {
   scoutPipelineReconciliationWorkflow as pipelineReconciliation,
   scoutRecoveryBatchWorkflow as recoveryBatch,
 } from "./durable.ts";
-import { scoutParticipantCrawlWorkflow as participantCrawl } from "./crawl.ts";
+import {
+  scoutCrawlFrontierPruneWorkflow as crawlFrontierPrune,
+  scoutParticipantCrawlWorkflow as participantCrawl,
+} from "./crawl.ts";
 import type {
+  ScoutCrawlFrontierPruneInput,
+  ScoutCrawlFrontierPruneResult,
   ScoutParticipantCrawlInput,
   ScoutParticipantCrawlResult,
 } from "#src/contracts.ts";
@@ -119,6 +124,12 @@ export async function scoutParticipantCrawlWorkflow(
   input: ScoutParticipantCrawlInput,
 ): Promise<ScoutParticipantCrawlResult> {
   return await participantCrawl(input);
+}
+
+export async function scoutCrawlFrontierPruneWorkflow(
+  input: ScoutCrawlFrontierPruneInput,
+): Promise<ScoutCrawlFrontierPruneResult> {
+  return await crawlFrontierPrune(input);
 }
 
 export async function scoutBackgroundJobWorkflow(

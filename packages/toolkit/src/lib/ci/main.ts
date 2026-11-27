@@ -107,6 +107,26 @@ async function selectMainRuns(
   return { latest, lastVerdict };
 }
 
+const CommitShaSchema = z.object({
+  sha: z.string().regex(/^[a-f\d]{40}$/iu),
+});
+
+/** Expand a 7–39 character hex prefix through GitHub; full 40-hex SHAs pass through. */
+export async function resolveMainHeadSha(
+  github: GitHubClient,
+  head: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const normalized = head.toLowerCase();
+  if (/^[a-f\d]{40}$/u.test(normalized)) return normalized;
+  const commit = await github.read(
+    `/repos/${github.repo}/commits/${encodeURIComponent(normalized)}`,
+    CommitShaSchema,
+    signal,
+  );
+  return commit.sha.toLowerCase();
+}
+
 /** Main's current tip commit; `maxAgeMs` accepts a shared read that recent. */
 export async function readMainTip(
   github: GitHubClient,
@@ -180,6 +200,37 @@ export async function getMainStatus(
 /** Main runs searched for a pinned commit before reporting none exists yet. */
 const PINNED_RUN_WINDOW = 200;
 
+type MainPipelineList = Awaited<ReturnType<typeof listPipelines>>;
+type MainPipelineEntry = MainPipelineList[number];
+
+async function readMainWindowThroughCommit(
+  github: GitHubClient,
+  config: WoodpeckerConfig,
+  commitSha: string,
+  signal?: AbortSignal,
+): Promise<{ tip: string; listed: MainPipelineList }> {
+  // Runs are listed newest first, and a commit's push run precedes any
+  // manual recovery of it. Once its push is listed, every newer run of
+  // that commit is too; a partial manual run must not stop the search.
+  const [tip, listed] = await Promise.all([
+    readMainTip(github, signal),
+    listPipelines(
+      config,
+      {
+        event: ["push", "manual"],
+        branch: "main",
+        stopWhen: (entries) =>
+          entries.length >= PINNED_RUN_WINDOW ||
+          entries.some(
+            (entry) => entry.commit === commitSha && entry.event === "push",
+          ),
+      },
+      signal,
+    ),
+  ]);
+  return { tip, listed };
+}
+
 export type MainRunSnapshot = {
   /** The pinned main commit this wait reports on. */
   sha: string;
@@ -197,25 +248,12 @@ export async function getMainRun(
   sha: string,
   signal?: AbortSignal,
 ): Promise<MainRunSnapshot> {
-  const [tip, listed] = await Promise.all([
-    readMainTip(github, signal),
-    listPipelines(
-      config,
-      {
-        event: ["push", "manual"],
-        branch: "main",
-        // Runs are listed newest first, and a commit's push run precedes any
-        // manual recovery of it. Once its push is listed, every newer run of
-        // that commit is too; a partial manual run must not stop the search.
-        stopWhen: (entries) =>
-          entries.length >= PINNED_RUN_WINDOW ||
-          entries.some(
-            (entry) => entry.commit === sha && entry.event === "push",
-          ),
-      },
-      signal,
-    ),
-  ]);
+  const { tip, listed } = await readMainWindowThroughCommit(
+    github,
+    config,
+    sha,
+    signal,
+  );
   let run: WoodpeckerPipeline | null = null;
   for (const entry of listed) {
     if (entry.commit !== sha) continue;
@@ -231,4 +269,180 @@ export async function getMainRun(
     run,
     url: run === null ? null : pipelineUrl(run, config),
   };
+}
+
+type FollowedScanOptions = {
+  readonly candidates: MainPipelineList;
+  readonly startSha: string;
+  readonly tip: string;
+  readonly floorNumber: number | null;
+  readonly listed: MainPipelineList;
+  readonly github: GitHubClient;
+  readonly config: WoodpeckerConfig;
+  readonly signal: AbortSignal | undefined;
+};
+
+type FollowedEntryContext = FollowedScanOptions & {
+  readonly entry: MainPipelineEntry;
+  readonly ancestryCache: Map<string, boolean>;
+};
+
+async function isCommitAtOrAfterStart(
+  options: FollowedEntryContext,
+): Promise<boolean> {
+  const { entry, startSha, tip, floorNumber, listed, github, ancestryCache } =
+    options;
+  if (entry.commit === startSha || entry.commit === tip) return true;
+  if (floorNumber !== null) {
+    if (entry.event === "push") return entry.number >= floorNumber;
+    const hasPushInWindow = listed.some(
+      (item) =>
+        item.event === "push" &&
+        item.commit === entry.commit &&
+        item.number >= floorNumber,
+    );
+    if (hasPushInWindow) return true;
+  }
+  const cached = ancestryCache.get(entry.commit);
+  if (cached !== undefined) return cached;
+  const comparison = await github.read(
+    `/repos/${github.repo}/compare/${startSha}...${entry.commit}`,
+    z.object({
+      status: z.enum(["ahead", "behind", "identical", "diverged"]),
+    }),
+    options.signal,
+  );
+  const atOrAfter =
+    comparison.status === "ahead" || comparison.status === "identical";
+  ancestryCache.set(entry.commit, atOrAfter);
+  return atOrAfter;
+}
+
+function followedSnapshotFor(
+  pipeline: WoodpeckerPipeline | null,
+  tip: string,
+  config: WoodpeckerConfig,
+): MainRunSnapshot {
+  const sha = pipeline === null ? tip : pipeline.commit;
+  return {
+    sha,
+    tipSha: tip,
+    run: pipeline,
+    url: pipeline === null ? null : pipelineUrl(pipeline, config),
+  };
+}
+
+function classifyFollowedRun(
+  pipeline: WoodpeckerPipeline,
+): "failed" | "passed" | "pending" {
+  const status = workflowStatus(pipeline.status);
+  if (status === "UNHEALTHY" || failedWorkflows(pipeline)) return "failed";
+  return status === "HEALTHY" && completedVerdict(pipeline)
+    ? "passed"
+    : "pending";
+}
+
+async function loadVerifiedFollowedEntry(
+  entry: MainPipelineEntry,
+  completedCommits: ReadonlySet<string>,
+  options: FollowedScanOptions,
+): Promise<WoodpeckerPipeline | null> {
+  if (completedCommits.has(entry.commit)) return null;
+  const pipeline = await getPipeline(
+    entry.number,
+    options.config,
+    options.signal,
+  );
+  assertMainIdentity(pipeline, entry);
+  return verifiesMain(pipeline) ? pipeline : null;
+}
+
+async function followedEntryEligibility(
+  options: FollowedEntryContext,
+): Promise<"include" | "skip" | "stop"> {
+  const eligible = await isCommitAtOrAfterStart(options);
+  if (eligible) return "include";
+  return options.floorNumber === null && options.entry.event === "push"
+    ? "stop"
+    : "skip";
+}
+
+function classifyAndRecordFollowedRun(
+  pipeline: WoodpeckerPipeline,
+  completedCommits: Set<string>,
+): "failed" | "passed" | "pending" {
+  const outcome = classifyFollowedRun(pipeline);
+  if (outcome !== "pending") completedCommits.add(pipeline.commit);
+  return outcome;
+}
+
+async function scanFollowedCandidates(
+  options: FollowedScanOptions,
+): Promise<WoodpeckerPipeline | null> {
+  const { candidates, tip } = options;
+  const completedCommits = new Set<string>();
+  const ancestryCache = new Map<string, boolean>();
+  let tipRun: WoodpeckerPipeline | null = null;
+  for (const entry of candidates) {
+    const eligibility = await followedEntryEligibility({
+      ...options,
+      entry,
+      ancestryCache,
+    });
+    if (eligibility === "stop") break;
+    if (eligibility === "skip") continue;
+    const pipeline = await loadVerifiedFollowedEntry(
+      entry,
+      completedCommits,
+      options,
+    );
+    if (pipeline === null) continue;
+    if (tipRun === null && pipeline.commit === tip) tipRun = pipeline;
+    const outcome = classifyAndRecordFollowedRun(pipeline, completedCommits);
+    if (outcome === "failed") return tipRun ?? pipeline;
+    if (outcome === "passed") return pipeline;
+  }
+  return tipRun;
+}
+
+/**
+ * Snapshot for `ci wait --main --follow`: scan main runs from newest back
+ * through `startSha`. Any completed green verifying run at or after `startSha`
+ * satisfies merge readiness when no newer verifying run has failed.
+ */
+export async function getFollowedMainSnapshot(
+  github: GitHubClient,
+  config: WoodpeckerConfig,
+  startSha: string,
+  signal?: AbortSignal,
+): Promise<MainRunSnapshot> {
+  const { tip, listed } = await readMainWindowThroughCommit(
+    github,
+    config,
+    startSha,
+    signal,
+  );
+  const startEntries = listed.filter((entry) => entry.commit === startSha);
+  const floorNumber =
+    startEntries.length === 0
+      ? null
+      : Math.min(...startEntries.map((entry) => entry.number));
+  if (floorNumber === null && tip === startSha) {
+    return followedSnapshotFor(null, tip, config);
+  }
+  const candidates =
+    floorNumber === null
+      ? listed
+      : listed.filter((entry) => entry.number >= floorNumber);
+  const selected = await scanFollowedCandidates({
+    candidates,
+    startSha,
+    tip,
+    floorNumber,
+    listed,
+    github,
+    config,
+    signal,
+  });
+  return followedSnapshotFor(selected, tip, config);
 }

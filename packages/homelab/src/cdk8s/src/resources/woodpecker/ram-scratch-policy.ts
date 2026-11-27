@@ -33,8 +33,14 @@ const mutationName = (profile: RamScratchProfile) =>
 
 /**
  * Fixed tmpfs mounts on a lane's execution pod; checkout and reports stay on
- * PVC. Any CI execution pod of a profiled lane may carry its profile: Kueue
- * admits the profile's full memory request, which bounds how many run at once.
+ * PVC. Any CI execution pod of a profiled lane may carry its profile.
+ *
+ * tmpfs pages count against the container's memory, so the guard requires the
+ * profile's memory limit, which carries the whole tmpfs allowance on top of the
+ * lane's own limit: a full scratch volume can never squeeze the process below
+ * its tier. The memory request is the lane's measured working set, tmpfs pages
+ * included, and only orders Kueue admission; `ci-pod-guard.ts` already
+ * requires one on every CI container.
  */
 export function createRamScratchPolicy(chart: Chart): void {
   const matchConstraints = {
@@ -114,9 +120,9 @@ export function createRamScratchPolicy(chart: Chart): void {
         ...PROFILES.map((profile) => ({
           expression: when(
             profile,
-            `object.spec.containers.all(c, has(c.resources) && has(c.resources.requests) && 'memory' in c.resources.requests && has(c.resources.limits) && 'memory' in c.resources.limits && quantity(c.resources.requests['memory']).compareTo(quantity('${profile.resources.memoryRequest}')) >= 0 && quantity(c.resources.limits['memory']).compareTo(quantity('${profile.resources.memoryLimit}')) >= 0)`,
+            `object.spec.containers.all(c, has(c.resources) && has(c.resources.limits) && 'memory' in c.resources.limits && quantity(c.resources.limits['memory']).compareTo(quantity('${profile.resources.memoryLimit}')) >= 0)`,
           ),
-          message: `RAM scratch ${profile.profile} requires its full memory allowance in requests and limits`,
+          message: `RAM scratch ${profile.profile} requires its full tmpfs allowance in its memory limit`,
           reason: "Forbidden",
         })),
         ...PROFILES.flatMap((profile) =>

@@ -13,30 +13,6 @@
         }
       ]
     },
-    "phoenix": {
-      "revision": 0,
-      "environment": "production",
-      "consumer_probe": "Existing Phoenix session and ingestion",
-      "onepassword_targets": [
-        {
-          "vault_item_id": "exhnzueehuqwi5uw55s2tgl5iu",
-          "vault_field": "PHOENIX_SECRET",
-          "vault_field_id": "mbcil2nue2vn74uhkr6iceare4"
-        }
-      ]
-    },
-    "phoenix_admin": {
-      "revision": 0,
-      "environment": "production",
-      "consumer_probe": "Phoenix admin authentication",
-      "onepassword_targets": [
-        {
-          "vault_item_id": "exhnzueehuqwi5uw55s2tgl5iu",
-          "vault_field": "PHOENIX_ADMIN_SECRET",
-          "vault_field_id": "a7rhfdygvenwp6moq7muodvbdu"
-        }
-      ]
-    },
     "woodpecker_agent": {
       "revision": 0,
       "environment": "shared",

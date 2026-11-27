@@ -73,7 +73,15 @@ function httpOutcome(
   return { status: error === null ? "ok" : "error", httpStatus, error };
 }
 
-function applyHttp(store: CaptureStore, record: CaptureHttpRecord): boolean {
+export type AppliedRecord = {
+  readonly created: boolean;
+  readonly secrets: number;
+};
+
+function applyHttp(
+  store: CaptureStore,
+  record: CaptureHttpRecord,
+): AppliedRecord {
   const json = parseJsonObject(bodyText(record.request.body));
   const request = json === null ? null : parseRequest(record.path, json);
   const format = request?.format ?? "unknown";
@@ -91,7 +99,7 @@ function applyHttp(store: CaptureStore, record: CaptureHttpRecord): boolean {
     request === null
       ? { blocks: [], chainedFrom: null, contextComplete: true }
       : chainedContext(store, request);
-  const id = insertCapture(store, {
+  const inserted = insertCapture(store, {
     flowId: record.id,
     seq: 0,
     connectionId: record.connectionId,
@@ -117,7 +125,7 @@ function applyHttp(store: CaptureStore, record: CaptureHttpRecord): boolean {
         ? store.putBlob(bodyBytes(responseBody))
         : null,
   });
-  return id !== null;
+  return { created: inserted.id !== null, secrets: inserted.secrets };
 }
 
 const WsFlowRowSchema = z.object({
@@ -149,10 +157,12 @@ function applyWsRequest(
   ws: WsFlow,
   record: CaptureWsMessageRecord,
   message: JsonRecord,
-): boolean {
-  if (message["type"] !== "response.create") return false;
+): AppliedRecord {
+  if (message["type"] !== "response.create") {
+    return { created: false, secrets: 0 };
+  }
   const request = parseRequest(ws.path, responsesRequestBody(message));
-  const id = insertCapture(store, {
+  const inserted = insertCapture(store, {
     flowId: record.id,
     seq: record.seq,
     connectionId: ws.connection_id,
@@ -173,7 +183,7 @@ function applyWsRequest(
     response: null,
     rawResponseHash: null,
   });
-  return id !== null;
+  return { created: inserted.id !== null, secrets: inserted.secrets };
 }
 
 /** `response.created` names the response the oldest pending request gets. */
@@ -204,9 +214,9 @@ function applyWsResponse(
   store: CaptureStore,
   record: CaptureWsMessageRecord,
   message: JsonRecord,
-): void {
+): number {
   const response = responsesResponse(message);
-  if (response === null) return;
+  if (response === null) return 0;
   const byId =
     response.responseId === null
       ? null
@@ -221,8 +231,9 @@ function applyWsResponse(
       "SELECT id FROM captures WHERE flow_id = ? AND status = 'pending' ORDER BY seq LIMIT 1",
       record.id,
     );
-  if (target == null) return;
-  store.run(
+  if (target == null) return 0;
+  const storedResponse = storeResponse(store, response);
+  const { changes } = store.run(
     `UPDATE captures SET status = ?, ended_at = ?, error = ?, usage_json = ?,
        model = COALESCE(?, model), stop_reason = ?, response_id = COALESCE(?, response_id),
        response_hash = ?
@@ -234,15 +245,16 @@ function applyWsResponse(
     response.model,
     response.stopReason,
     response.responseId,
-    storeResponse(store, response),
+    storedResponse.hash,
     IdRowSchema.parse(target).id,
   );
+  return changes === 0 ? 0 : storedResponse.secrets;
 }
 
 function applyWsMessage(
   store: CaptureStore,
   record: CaptureWsMessageRecord,
-): boolean {
+): AppliedRecord {
   const flow = store.get("SELECT * FROM ws_flows WHERE flow_id = ?", record.id);
   if (flow == null) {
     throw new Error(
@@ -251,14 +263,16 @@ function applyWsMessage(
   }
   const ws = WsFlowRowSchema.parse(flow);
   const message = parseJsonObject(bodyText(record.body));
-  if (message === null) return false;
+  if (message === null) return { created: false, secrets: 0 };
   if (record.fromClient) return applyWsRequest(store, ws, record, message);
   if (message["type"] === "response.created") {
     applyWsCreated(store, record, message);
-  } else {
-    applyWsResponse(store, record, message);
+    return { created: false, secrets: 0 };
   }
-  return false;
+  return {
+    created: false,
+    secrets: applyWsResponse(store, record, message),
+  };
 }
 
 function applyWsClose(store: CaptureStore, record: CaptureWsCloseRecord): void {
@@ -276,21 +290,21 @@ function applyWsClose(store: CaptureStore, record: CaptureWsCloseRecord): void {
   );
 }
 
-/** Applies one record; true when it created a capture. */
+/** Applies one record, reporting whether it created a capture and any post-assembly redactions. */
 export function applyRecord(
   store: CaptureStore,
   record: CaptureRecord,
-): boolean {
+): AppliedRecord {
   switch (record.kind) {
     case "http":
       return applyHttp(store, record);
     case "ws-open":
       applyWsOpen(store, record);
-      return false;
+      return { created: false, secrets: 0 };
     case "ws-message":
       return applyWsMessage(store, record);
     case "ws-close":
       applyWsClose(store, record);
-      return false;
+      return { created: false, secrets: 0 };
   }
 }

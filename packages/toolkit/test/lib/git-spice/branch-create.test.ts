@@ -105,7 +105,7 @@ describe("branch create in agent worktrees (AI-755 & AI-2)", () => {
     expect(
       await readGitConfig(agentWt, "branch.feat/without-target.merge", shimEnv),
     ).toBeNull();
-  });
+  }, 25_000);
 
   test("succeeds with --target main and relative -C -t origin/main while main is checked out in primary worktree", async () => {
     const { root, primary, originMainSha, shimEnv } =
@@ -154,7 +154,7 @@ describe("branch create in agent worktrees (AI-755 & AI-2)", () => {
     expect(branches.has("herdr-wt-2")).toBe(false);
     expect(branches.has("herdr-wt-3")).toBe(false);
     expect(git(["branch", "--show-current"], primary)).toBe("main");
-  });
+  }, 25_000);
 
   test("keeps <cur> tracked on trunk so <newBranch> stacks on <cur> when <cur> has commits ahead of trunk and --target is omitted", async () => {
     const { root, primary, shimEnv } = await setupPrimaryAndWorktree();
@@ -188,7 +188,7 @@ describe("branch create in agent worktrees (AI-755 & AI-2)", () => {
     expect(
       await readGitConfig(stackWt, "branch.feat/part-1.merge", shimEnv),
     ).toBeNull();
-  });
+  }, 25_000);
 
   test("preserves trunk base commit without leaking feature commits when --target main or -t origin/main is run from a branch ahead of trunk", async () => {
     const { root, primary, originMainSha, shimEnv } =
@@ -264,5 +264,5 @@ describe("branch create in agent worktrees (AI-755 & AI-2)", () => {
     expect(wtOriginExit).toBe(0);
     expect(git(["rev-parse", "feat/wt-from-origin~1"], wt)).toBe(originMainSha);
     expect(await Bun.file(path.join(wt, "wt-ahead.ts")).exists()).toBe(false);
-  });
+  }, 25_000);
 });

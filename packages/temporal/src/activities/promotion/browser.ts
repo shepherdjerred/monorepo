@@ -256,6 +256,7 @@ export class PromotionBrowser {
     subreddit: string;
     limit: number;
     account: string;
+    after?: string | null;
   }) {
     return await readRedditFeedPage(this.redditReader(), input);
   }

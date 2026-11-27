@@ -68,7 +68,9 @@ public record StatsWrite(
         String platform,
         String clientVersion,
         @Nullable String clientBrand,
-        @Nullable String joinAddress)
+        @Nullable String joinAddress,
+        @Nullable String countryCode,
+        @Nullable String countryName)
         implements OutboxDraft {}
   }
 }

@@ -2890,18 +2890,29 @@ model DareNotificationPreference {
   @@unique([serverId, discordId])
 }
 
-/// One participant the participant crawl may visit. Seeded from the
-/// participants of freshly processed tracked matches (depth 0); a crawled
-/// match's participants join one level deeper. The migration CHECKs depth to
-/// 0..2 and pins the 7-day per-PUUID cooldown: a visited row's `nextEligibleAt`
-/// is never earlier than `lastVisitedAt` plus seven days. `rankTier` and
-/// `rankDivision` hold the bracket from the one league-v4 lookup made per
-/// visited player (`rankedAt` set, both NULL when unranked).
+/// One participant the participant crawl may visit: the crawl's work queue,
+/// holding only what scheduling needs. Seeded from the participants of freshly
+/// processed tracked matches (depth 0); a crawled match's participants join one
+/// level deeper. The migration CHECKs depth to 0..2 and pins the 7-day
+/// per-PUUID cooldown: a visited row's `nextEligibleAt` is never earlier than
+/// `lastVisitedAt` plus seven days. `rankTier` and `rankDivision` hold the
+/// bracket from the one league-v4 lookup made per visited player (`rankedAt`
+/// set, both NULL when unranked).
+///
+/// The table is bounded by `crawl-frontier-prune.ts`, which a Temporal Schedule
+/// runs: it deletes rows not claimed within the lookback and caps each depth's
+/// unvisited backlog. The claim order is the index order: depth, then
+/// `nextEligibleAt`. Crawled matches, not frontier rows, are the permanent
+/// record; a pruned player is admitted again when a later match names them.
+///
+/// `seedMatchId`, `visitCount`, `createdAt` and `updatedAt` are retired: no code
+/// reads or writes them, and their defaults let a row insert without them. A
+/// later migration drops them once no running pod writes them.
 model CrawlFrontier {
   puuid          String    @id
   platformRoute  String
   depth          Int
-  seedMatchId    String
+  seedMatchId    String    @default("")
   rankTier       String?
   rankDivision   String?
   rankedAt       DateTime?
@@ -2909,8 +2920,11 @@ model CrawlFrontier {
   nextEligibleAt DateTime
   visitCount     Int       @default(0)
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  updatedAt      DateTime  @default(now())
 
+  /// The claim and the pruner walk this order. The older
+  /// (nextEligibleAt, depth) index below is retired with the columns above.
+  @@index([depth, nextEligibleAt])
   @@index([nextEligibleAt, depth])
 }
 
@@ -2932,6 +2946,8 @@ model CrawlMatch {
 
   @@index([crawledAt])
   @@index([segmentSha256])
+  /// Erasure finds a player's matches by this column.
+  @@index([visitedPuuid])
 }
 
 /// One immutable raw segment under `crawl/v1/route=…/dt=…/seg-{sha256}.ndjson.zst`.

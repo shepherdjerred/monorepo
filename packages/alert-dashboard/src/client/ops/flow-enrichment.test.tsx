@@ -107,7 +107,11 @@ describe("FlowEnrichment", () => {
     expect(html).toContain("└─");
     expect(html).not.toContain("#4812");
 
-    // GitHub GraphQL & Core API rate-limit BudgetMeters
+    // GitHub GraphQL & Core API rate-limit BudgetMeters + PR code-review summary
+    expect(html).toContain("Review pool ready");
+    expect(html).toContain("2/2");
+    expect(html).toContain("Re-reviews saved 7d");
+    expect(html).toContain('href="/monorepo#code-review"');
     expect(html).toContain('aria-label="GitHub GraphQL quota used"');
     expect(html).toContain("4188 remaining");
     expect(html).toContain('aria-label="GitHub Core API quota used"');
@@ -136,6 +140,7 @@ describe("renderEngineeringServiceView", () => {
     const ciHtml = wrap("ci");
     expect(ciHtml).toContain("Woodpecker active CI pods");
     expect(ciHtml).toContain("Kueue CPU usage vs reservation");
+    expect(ciHtml).toContain("PR code review gate outcomes");
     expect(ciHtml).toContain("Expensive Turborepo cache misses");
 
     for (const id of ["delivery", "delivery-control-plane", "delivery-data"]) {
