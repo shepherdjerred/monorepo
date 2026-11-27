@@ -50,7 +50,7 @@
     "icon:render": "bun server/render-icon.ts",
     "icon:check": "bun server/render-icon.ts --check",
     "client": "bun --no-install tools/client/index.ts",
-    "build:plugin": "mise exec -- gradle -p plugin assemble --console=plain",
+    "build:plugin": "if [ -n \"${STORM_E2E_HOST:-}\" ]; then mise exec -- gradle -p plugin :dist:assemble :companions:e2eJar :mechanics:e2eJar --max-workers=4 '-Dorg.gradle.jvmargs=-Xmx3g -XX:+UseParallelGC -XX:MaxMetaspaceSize=768m' --console=plain; else mise exec -- gradle -p plugin assemble --console=plain; fi",
     "build:client": "mise exec -- gradle -p client assemble --console=plain",
     "check:client": "mise exec -- gradle -p client check --console=plain",
     "test:client": "mise exec -- gradle -p client test --console=plain && bun --no-install --bun vitest run tools/client --exclude '**/.cache/**' --config ../../vitest.config.ts",
