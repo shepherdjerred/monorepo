@@ -30,13 +30,16 @@ export function rankedQueueTypeForQueueId(
   return queueId === 440 ? "flex" : null;
 }
 
-function parseSnapshot(json: string | null): Rank | null {
+export function parseSnapshot(json: string | null): Rank | null {
   return json === null || json.length === 0
     ? null
     : RankSchema.parse(JSON.parse(json));
 }
 
-function lpDeltaBetween(before: Rank | null, after: Rank): number | null {
+export function lpDeltaBetween(
+  before: Rank | null,
+  after: Rank,
+): number | null {
   if (before === null) return null;
   const crossesApex =
     before.tier !== after.tier &&

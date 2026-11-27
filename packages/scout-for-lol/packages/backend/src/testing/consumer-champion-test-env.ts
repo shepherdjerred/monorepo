@@ -9,6 +9,7 @@ import {
 import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import {
   configureConsumerProfileFeatureTest,
+  consumerAccessStub,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
@@ -19,10 +20,7 @@ import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
  * before every test, and the group's seeding helpers bound to them. Call it
  * once at the top of a test file, after any `vi.mock`.
  */
-export async function createChampionPageTestEnv(
-  testName: string,
-  options: { onPrepare?: () => void } = {},
-) {
+export async function createChampionPageTestEnv(testName: string) {
   const guildId = DiscordGuildIdSchema.parse("100000000000000051");
   const otherGuildId = DiscordGuildIdSchema.parse("100000000000000052");
   const viewerDiscordId = DiscordAccountIdSchema.parse("300000000000000051");
@@ -37,7 +35,7 @@ export async function createChampionPageTestEnv(
   registerConsumerProfileFeatureTestLifecycle({
     feature: profileFeature,
     prepare: async () => {
-      options.onPrepare?.();
+      consumerAccessStub.unavailable = false;
       trpc.setMembership([{ guildId, asAdmin: false }]);
       await prisma.account.deleteMany();
       await prisma.player.deleteMany();

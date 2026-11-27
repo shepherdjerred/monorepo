@@ -1,7 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import { createChampionPageTestEnv } from "#src/testing/consumer-champion-test-env.ts";
-import { expectOneLakeSlot } from "#src/testing/consumer-profile-feature-test.ts";
-import type * as AccessModule from "#src/consumer/access.ts";
+import {
+  consumerAccessStub,
+  expectOneLakeSlot,
+} from "#src/testing/consumer-profile-feature-test.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import {
   AHRI,
@@ -17,20 +19,10 @@ import {
 } from "#src/testing/consumer-champion-group.ts";
 
 // A Discord lookup that cannot answer is not a denial.
-const discord = vi.hoisted(() => ({ unavailable: false }));
 vi.mock("#src/consumer/access.ts", async () => {
-  const actual: typeof AccessModule = await vi.importActual(
-    "#src/consumer/access.ts",
-  );
-  return {
-    ...actual,
-    resolveConsumerGuildAccess: (
-      ...args: Parameters<typeof actual.resolveConsumerGuildAccess>
-    ) =>
-      discord.unavailable
-        ? Promise.resolve({ kind: "unavailable" as const })
-        : actual.resolveConsumerGuildAccess(...args),
-  };
+  const { stubbedConsumerAccess } =
+    await import("#src/testing/consumer-profile-feature-test.ts");
+  return await stubbedConsumerAccess();
 });
 
 const {
@@ -43,11 +35,7 @@ const {
   seedGroup,
   seedPlayer,
   writeLobbies,
-} = await createChampionPageTestEnv("trpc-consumer-champion-index", {
-  onPrepare: () => {
-    discord.unavailable = false;
-  },
-});
+} = await createChampionPageTestEnv("trpc-consumer-champion-index");
 
 describe("champion pages: access", () => {
   const requests = {
@@ -68,7 +56,7 @@ describe("champion pages: access", () => {
 
   test("a server that cannot be confirmed is unavailable, not forbidden", async () => {
     profileFeature.enable(guildId);
-    discord.unavailable = true;
+    consumerAccessStub.unavailable = true;
     for (const request of Object.values(requests)) {
       await expect(request()).rejects.toMatchObject({
         code: "SERVICE_UNAVAILABLE",

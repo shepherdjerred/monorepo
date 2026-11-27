@@ -1,5 +1,6 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import { afterAll, beforeAll, beforeEach, expect } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, vi } from "vitest";
+import type * as AccessModule from "#src/consumer/access.ts";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -104,4 +105,28 @@ export async function expectOneLakeSlot<T>(
   request: () => Promise<T>,
 ): Promise<T> {
   return await expectLakeSlots(1, request);
+}
+
+/** Set `unavailable` for a test whose Discord lookup cannot answer. */
+export const consumerAccessStub = { unavailable: false };
+
+/**
+ * The `#src/consumer/access.ts` module replacement for a suite that needs a
+ * Discord lookup that cannot answer, which is not a denial: it answers
+ * `unavailable` while `consumerAccessStub.unavailable` is set. Use from a
+ * `vi.mock` factory; `createChampionPageTestEnv` clears the flag per test.
+ */
+export async function stubbedConsumerAccess() {
+  const actual: typeof AccessModule = await vi.importActual(
+    "#src/consumer/access.ts",
+  );
+  return {
+    ...actual,
+    resolveConsumerGuildAccess: (
+      ...args: Parameters<typeof actual.resolveConsumerGuildAccess>
+    ) =>
+      consumerAccessStub.unavailable
+        ? Promise.resolve({ kind: "unavailable" as const })
+        : actual.resolveConsumerGuildAccess(...args),
+  };
 }

@@ -54,7 +54,7 @@ const CHAMPIONS = [
   { id: 61, name: "Orianna" },
 ] as const;
 
-type Friend = {
+export type Friend = {
   alias: string;
   gameName: string;
   puuid: LeaguePuuid;
@@ -64,7 +64,7 @@ type Friend = {
   together: number[];
 };
 
-const FRIENDS: Friend[] = [
+export const FRIENDS: Friend[] = [
   {
     alias: "Marrow",
     gameName: "Marrow",
