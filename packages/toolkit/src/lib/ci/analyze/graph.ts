@@ -1,6 +1,6 @@
 import path from "node:path";
 import { z } from "zod";
-import type { TaskGraph } from "./report.ts";
+import type { Churn, TaskGraph } from "./report.ts";
 
 const DryRunSchema = z
   .object({
@@ -15,6 +15,8 @@ const DryRunSchema = z
           inputs: z.record(z.string(), z.string()),
           dependents: z.array(z.string()),
           command: z.string(),
+          /** Turbo's hash of the lockfile entries this task's package depends on. */
+          hashOfExternalDependencies: z.string().min(1),
         })
         .loose(),
     ),
@@ -22,11 +24,15 @@ const DryRunSchema = z
   .loose();
 
 /**
- * Turbo hashes these into every task without listing them as inputs. The
- * lockfile only reaches packages whose dependency closure changed, so treating
- * it as global is an upper bound.
+ * The only file besides `globalCacheInputs.files` that always reaches every
+ * task: the root turbo.json configures every task's hash. Turbo hashes the
+ * lockfile per package through `hashOfExternalDependencies`, so it is not
+ * global. The root package.json is an input of the root `//#` tasks, but its
+ * dependency fields also feed `globalCacheInputs.hashOfExternalDependencies`,
+ * so an edit to them reaches every task; see `rootDependencyEdits`.
  */
-const ALWAYS_HASHED = ["package.json", "turbo.json", "bun.lock"];
+const GLOBAL_CONFIG = ["turbo.json"];
+const LOCKFILE = "bun.lock";
 
 /** The task graph from `turbo run ... --dry=json`, with repository paths. */
 export function taskGraphFromDryRun(raw: unknown): TaskGraph {
@@ -51,10 +57,16 @@ export function taskGraphFromDryRun(raw: unknown): TaskGraph {
     ),
     globalFiles: [
       ...new Set([
-        ...ALWAYS_HASHED,
+        ...GLOBAL_CONFIG,
         ...Object.keys(dryRun.globalCacheInputs.files),
       ]),
     ],
+    lockfile: LOCKFILE,
+    externalDependencyGroups: new Map(
+      [
+        ...Map.groupBy(dryRun.tasks, (task) => task.hashOfExternalDependencies),
+      ].map(([hash, tasks]) => [hash, tasks.map((task) => task.taskId)]),
+    ),
   };
 }
 
@@ -100,12 +112,97 @@ export async function repositoryTopLevel(): Promise<string> {
   return root.trim();
 }
 
+const DEPENDENCY_FIELDS = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+  "overrides",
+  "resolutions",
+  "catalog",
+  "catalogs",
+  "patchedDependencies",
+  "trustedDependencies",
+] as const;
+
+/** The parts of a root package.json that Turbo's external-dependency hash reads. */
+function dependencyView(manifest: string): string {
+  const parsed = z
+    .object({ workspaces: z.unknown().optional() })
+    .loose()
+    .parse(JSON.parse(manifest));
+  const fields: Record<string, unknown> = {};
+  for (const field of DEPENDENCY_FIELDS) fields[field] = parsed[field];
+  // Bun keeps catalogs under `workspaces`; the workspace globs themselves only
+  // add packages, which changes their hashes and not the global one.
+  const workspaces = z
+    .object({
+      catalog: z.unknown().optional(),
+      catalogs: z.unknown().optional(),
+    })
+    .loose()
+    .safeParse(parsed.workspaces);
+  if (workspaces.success) {
+    fields["workspaces.catalog"] = workspaces.data.catalog;
+    fields["workspaces.catalogs"] = workspaces.data.catalogs;
+  }
+  return JSON.stringify(fields);
+}
+
+/** Whether a root package.json edit changed any dependency field. */
+export function dependencyFieldsChanged(
+  before: string,
+  after: string,
+): boolean {
+  return dependencyView(before) !== dependencyView(after);
+}
+
+/** Commits in the window that changed the root package.json's dependency fields. */
+async function rootDependencyEdits(
+  repositoryRoot: string,
+  churnDays: number,
+  ref: string,
+): Promise<number> {
+  const log = await output(
+    [
+      "git",
+      "log",
+      `--since=${String(churnDays)}.days`,
+      "--format=%H",
+      ref,
+      "--",
+      "package.json",
+    ],
+    repositoryRoot,
+    "git log package.json",
+  );
+  const commits = log.split("\n").filter((line) => line.trim() !== "");
+  const changed = await Promise.all(
+    commits.map(async (commit) => {
+      const [before, after] = await Promise.all([
+        output(
+          ["git", "show", `${commit}^:package.json`],
+          repositoryRoot,
+          "git show parent package.json",
+        ),
+        output(
+          ["git", "show", `${commit}:package.json`],
+          repositoryRoot,
+          "git show package.json",
+        ),
+      ]);
+      return dependencyFieldsChanged(before, after);
+    }),
+  );
+  return changed.filter(Boolean).length;
+}
+
 /** Verify's task graph and per-file churn from the local checkout. */
 export async function collectHotFileInputs(
   repositoryRoot: string,
   churnDays: number,
   ref: string,
-): Promise<{ graph: TaskGraph; commits: Map<string, number> }> {
+): Promise<{ graph: TaskGraph; churn: Churn }> {
   const tasks = z
     .array(z.string().min(1))
     .min(1)
@@ -118,7 +215,7 @@ export async function collectHotFileInputs(
         ),
       ),
     );
-  const [dryRun, gitLog] = await Promise.all([
+  const [dryRun, gitLog, dependencyEdits] = await Promise.all([
     output(
       ["bun", "x", "--no-install", "turbo", "run", ...tasks, "--dry=json"],
       repositoryRoot,
@@ -137,9 +234,13 @@ export async function collectHotFileInputs(
       repositoryRoot,
       "git log",
     ),
+    rootDependencyEdits(repositoryRoot, churnDays, ref),
   ]);
   return {
     graph: taskGraphFromDryRun(JSON.parse(dryRun)),
-    commits: commitsPerFile(gitLog),
+    churn: {
+      commits: commitsPerFile(gitLog),
+      rootDependencyEdits: dependencyEdits,
+    },
   };
 }

@@ -582,7 +582,10 @@ toolkit ci explain 3447                # Current blockers and bounded failure lo
 toolkit ci main                        # Current main verification and last completed verdict
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit ci timings --since 72h --json   # Recent timing cohorts and per-workflow phases
-toolkit ci analyze --since 72h           # Uncached work, critical path, repeated misses, hot files
+toolkit ci scorecard --since 24h --json  # Ready-PR/main latency, failure share, queue, pool writes by writer
+toolkit ci analyze --since 72h           # Uncached work, critical path, miss causes, repeated misses, hot files
+toolkit ci maintenance retry workspace-golden          # Dry run: would a blocked stream be retried?
+toolkit ci maintenance retry workspace-golden --apply  # Send maintenanceRetry and read the memo back
 toolkit ci analyze --suites --compare 4300  # Slowest test suites of the newest run; deltas from pipeline 4300
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
@@ -601,7 +604,55 @@ verify's task list in the current checkout. Each file's commits on `--ref`
 (default `origin/main`) over `--churn-days` are multiplied by the median miss
 cost of every task hash the file reaches, directly or through `dependsOn`.
 `--no-hot-files` skips the local graph. Costs come from task IDs seen in the
-window, so a renamed task counts as free until new runs record it.
+window, so a renamed task counts as free until new runs record it. The
+hot-file graph treats only `globalCacheInputs.files` and the root `turbo.json`
+as always global, and spreads a `bun.lock` edit over one
+`hashOfExternalDependencies` group (one package's lockfile closure) on average,
+because Turbo scopes the lockfile per package. The root `package.json` is an
+input of the root `//#` tasks, but its dependency fields also feed Turbo's
+global external-dependency hash, so a commit that changes `dependencies`,
+`devDependencies`, `peerDependencies`, `optionalDependencies`, `overrides`,
+`resolutions`, `patchedDependencies`, `trustedDependencies` or a catalog
+reaches every task; any other root `package.json` commit (a new workspace
+glob, a script) reaches only the root `//#` tasks. The analysis reads each
+commit's diff to tell them apart. Were that history unavailable, every root
+`package.json` commit would count as global, an upper bound.
+
+A "why executed tasks ran" section classifies each executed (MISS) task
+against the earlier tasks with the same id, ordered by start so concurrent
+pipelines count, and prints hours and share of executed time per cause:
+identical hash re-ran (any earlier task already had this exact hash, so it was
+cacheable: cache isolation between PR and main, a lost artifact or concurrent
+duplicate work; checked first so an intervening different hash cannot hide
+it), unknown (first seen in the window, which keeps the window edge from
+inflating the other causes), own inputs changed (earlier tasks exist, none with
+these own files and external dependencies), an upstream dependency hash changed
+since the latest earlier task with the same own inputs, or no own or upstream
+change (the global hash, environment or task config moved).
+
+`toolkit ci scorecard [--since 24h] [--json]` is the CI program's one report:
+finished ready-PR pipelines (success, failure or error; killed and canceled
+ones are not verdicts) end to end at p50 and p90, split into agent wait
+(pipeline created to the `verify` workflow starting), Kueue gate (the verify
+step pod created to its container started, from kube-state-metrics, since
+Woodpecker marks the step started when it creates the pod) and run (the rest);
+the share of those pipelines that failed; main-push p50 and p90; Woodpecker's
+pending and running workflows now; and the CI pool's logical writes over the
+last 24 hours by writer (`ci-workspace` claims, `buildkitd` claims,
+`delivery-*` claims, other caches) against budgets of 250, 100, 50 and 70 GB
+and a 500 GB total, next to the pool's physical writes. Workspace datasets live
+for minutes, so they use the counter's `max_over_time` as the
+`ci_step:workspace_logical_written_bytes:sum24h` rule does; long-lived claims
+use `increase`. It reads pipeline history without per-step logs and finishes in
+seconds. A source that cannot be read is reported in its own section.
+
+`toolkit ci maintenance retry <kind> [--apply]` reads the
+`ci-maintenance-coordinator` memo and, when `blocked[kind]` exists and nothing
+is pending, would send the Temporal signal `maintenanceRetry {kind, requestId}`
+bound to that blocked request; otherwise it prints why not. It is a dry run
+unless `--apply`, which sends the signal through the `temporal` passthrough and
+reads the memo back until the block clears. `toolkit ci maintenance` now also
+lists `workspace-seeds` and `workspace-golden` runs.
 
 `toolkit ci analyze --suites` explains a slow test task by the files inside
 it. Verify diagnostics carry the `<testsuite>` summaries (name, seconds, tests,

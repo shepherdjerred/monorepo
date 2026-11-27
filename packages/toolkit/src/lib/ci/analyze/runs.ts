@@ -66,6 +66,8 @@ const RunTaskSchema = z.object({
   dependencies: z.array(z.string()),
   /** Digest of the task's own file inputs and external dependencies only. */
   ownInputs: z.string(),
+  /** Fingerprint of the task's dependency hashes; moves when an upstream hash does. */
+  upstream: z.string(),
 });
 export type RunTask = z.infer<typeof RunTaskSchema>;
 
@@ -94,7 +96,7 @@ export type VerifyRun = z.infer<typeof VerifyRunSchema>;
  * compaction written before the field existed is re-read from the source
  * instead of parsing as a run that lacks it.
  */
-const CACHE_FORMAT = 2;
+const CACHE_FORMAT = 3;
 
 function ownInputsDigest(task: z.infer<typeof DiagnosticTaskSchema>): string {
   const inputs = Object.entries(task.inputHashes ?? {}).toSorted(
@@ -106,11 +108,26 @@ function ownInputsDigest(task: z.infer<typeof DiagnosticTaskSchema>): string {
     .slice(0, 16);
 }
 
+/** The dependency tasks' hashes, which Turbo folds into the task's own hash. */
+function upstreamDigest(
+  task: z.infer<typeof DiagnosticTaskSchema>,
+  hashes: ReadonlyMap<string, string>,
+): string {
+  const dependencies = task.dependencies
+    .map((id) => [id, hashes.get(id) ?? null] as const)
+    .toSorted(([left], [right]) => left.localeCompare(right));
+  return createHash("sha256")
+    .update(JSON.stringify(dependencies))
+    .digest("hex")
+    .slice(0, 16);
+}
+
 /** One verify run's per-task record, without input paths or hashes. */
 export function compactDiagnostics(raw: unknown): VerifyRun {
   const diagnostics = DiagnosticsSchema.parse(raw);
-  const tasks = diagnostics.turbo.flatMap((run) =>
-    run.tasks.flatMap((task): RunTask[] => {
+  const tasks = diagnostics.turbo.flatMap((run) => {
+    const hashes = new Map(run.tasks.map((task) => [task.taskId, task.hash]));
+    return run.tasks.flatMap((task): RunTask[] => {
       const execution = task.execution;
       if (execution?.endTime === undefined) return [];
       return [
@@ -123,10 +140,11 @@ export function compactDiagnostics(raw: unknown): VerifyRun {
           end: execution.endTime,
           dependencies: task.dependencies,
           ownInputs: ownInputsDigest(task),
+          upstream: upstreamDigest(task, hashes),
         },
       ];
-    }),
-  );
+    });
+  });
   return {
     pipeline: diagnostics.pipeline,
     commit: diagnostics.commit,

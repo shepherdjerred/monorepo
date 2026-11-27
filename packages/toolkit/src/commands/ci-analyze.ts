@@ -12,6 +12,7 @@ import {
 import {
   criticalTasks,
   hotFiles,
+  missCauses,
   missCosts,
   repeatedMisses,
   uncachedTasks,
@@ -43,6 +44,10 @@ compacted under ~/.cache/toolkit/ci-analyze):
 
   uncached    executed tasks by total seconds
   critical    the task each run finished last on, with median run wall time
+  causes      each executed task against the most recent earlier run with the
+              same own inputs: own inputs changed, an upstream hash changed,
+              nothing own or upstream changed (global hash, environment or
+              task config), or an identical hash re-ran; hours and share each
   repeated    misses whose own inputs an earlier run already executed: only an
               upstream (dependsOn) hash, the global hash or the cache
               namespace differed
@@ -114,6 +119,7 @@ type Report = {
   readonly runs: number;
   readonly uncached: ReturnType<typeof uncachedTasks>;
   readonly critical: ReturnType<typeof criticalTasks>;
+  readonly causes: ReturnType<typeof missCauses>;
   readonly repeated: ReturnType<typeof repeatedMisses>;
   readonly hotFiles: ReturnType<typeof hotFiles> | null;
 };
@@ -132,6 +138,12 @@ function formatReport(report: Report): string {
     ...report.critical.map(
       (task) =>
         `  ${String(task.runs).padStart(4)}  ${minutes(task.medianWallSeconds).padStart(7)}  ${task.task}`,
+    ),
+    "",
+    "Why executed tasks ran (hours, share of executed time, misses):",
+    ...report.causes.map(
+      (row) =>
+        `  ${row.hours.toFixed(1).padStart(7)}h  ${`${(row.share * 100).toFixed(0)}%`.padStart(4)}  ${String(row.misses).padStart(5)}  ${row.cause}`,
     ),
     "",
     "Repeated misses with unchanged own inputs (seconds, repeated/misses):",
@@ -328,12 +340,12 @@ export async function ciAnalyzeCommand(
   let hot: Report["hotFiles"] = null;
   if (!values["no-hot-files"]) {
     const repositoryRoot = await repositoryTopLevel();
-    const { graph, commits } = await collectHotFileInputs(
+    const { graph, churn } = await collectHotFileInputs(
       repositoryRoot,
       churnDays,
       values.ref,
     );
-    hot = hotFiles(graph, commits, missCosts(runs), churnDays).slice(0, top);
+    hot = hotFiles(graph, churn, missCosts(runs), churnDays).slice(0, top);
   }
   const report: Report = {
     window: {
@@ -343,6 +355,7 @@ export async function ciAnalyzeCommand(
     runs: runs.length,
     uncached: uncachedTasks(runs).slice(0, top),
     critical: criticalTasks(runs).slice(0, top),
+    causes: missCauses(runs),
     repeated: repeatedMisses(runs).slice(0, top),
     hotFiles: hot,
   };
