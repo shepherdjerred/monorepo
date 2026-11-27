@@ -9,7 +9,7 @@ import {
 } from "#src/tips/combos/combo-schema.ts";
 import { GameFactKindSchema } from "#src/game-facts/schema.ts";
 import { LaneSchema } from "#src/model/riot/lane.ts";
-import { TIP_TEXT_MAX_LENGTH } from "#src/tips/schema.ts";
+import { TIP_TEXT_HARD_MAX_LENGTH } from "#src/tips/schema.ts";
 
 /**
  * The generated tips as the app and the public site fetch them: one JSON file
@@ -45,7 +45,7 @@ export type TextRef = z.infer<typeof TextRefSchema>;
 export const OutputTipSchema = z.strictObject({
   /** Stable: the set and the tip's position when it was written. */
   id: z.string().min(1),
-  text: z.string().trim().min(1).max(TIP_TEXT_MAX_LENGTH),
+  text: z.string().trim().min(1).max(TIP_TEXT_HARD_MAX_LENGTH),
   refs: z.array(TextRefSchema),
   /** The Decisions API's probability that the tip is wrong, rounded to two places. */
   pWrong: z.number().min(0).max(1),
