@@ -73,7 +73,10 @@ export async function storeSeriesPackCandidateV1(
     throw error;
   });
   if (interpreted === null) return null;
-  if (!(await refreshRetainedAvailability(context, releaseId, input.source)))
+  if (
+    input.discovery === true &&
+    !(await refreshRetainedAvailability(context, releaseId, input.source))
+  )
     return null;
   if (
     interpreted.value.profile.id !== input.profile.id ||

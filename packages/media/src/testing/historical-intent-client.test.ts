@@ -26,6 +26,15 @@ test("the pre-038 fixture client never reads artwork columns its schemas lack", 
     );
 });
 
+test("the historical fixture client excludes the later retirement column", () => {
+  expect(Current.QualityProfileScalarFieldEnum).toHaveProperty(
+    "replacedByProfileId",
+  );
+  expect(Historical.QualityProfileScalarFieldEnum).not.toHaveProperty(
+    "replacedByProfileId",
+  );
+});
+
 // scripts/generate.ts drops historical fields by name across the whole schema,
 // so an artwork name reused on another model would silently vanish from the
 // historical client there as well.

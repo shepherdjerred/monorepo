@@ -19,6 +19,7 @@ import { canonicalReferences } from "#infrastructure/acquisition-identity/refere
 import { referenceConflict } from "#infrastructure/acquisition-identity/evaluation.ts";
 import { matchMovieReleaseV4 } from "#domain/editions/release-v4.ts";
 import { evaluateRelease, chooseUpgrade } from "#domain/quality.ts";
+import { isProgressiveQualityProfile } from "#domain/progressive-quality.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import {
   MovieEditionScopeSchema,
@@ -186,8 +187,6 @@ async function rankMovieCandidateV4(
     releaseId,
     observedSource: source,
   });
-  if (!(await refreshRetainedAvailability(context, releaseId, source)))
-    return null;
   const current = await assertCurrentMovieAssessment(
     context.db,
     assessment.ref,
@@ -213,6 +212,11 @@ async function rankMovieCandidateV4(
     version: current.current.profile.version,
     ...current.current.rules,
   };
+  if (
+    isProgressiveQualityProfile(profile) &&
+    !(await refreshRetainedAvailability(context, releaseId, source))
+  )
+    return null;
   const chosen = chooseUpgrade({
     phase: "listing",
     candidate,
