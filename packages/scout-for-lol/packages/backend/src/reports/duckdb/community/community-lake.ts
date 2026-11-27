@@ -79,6 +79,11 @@ type GuildMatchRowOptions = {
   puuids: string[];
   queues?: string[];
   afterMs?: number;
+  /**
+   * Only games both lists have a participant in. `puuids` must hold both
+   * lists; each side is one person's accounts.
+   */
+  bothOf?: { left: string[]; right: string[] };
   lakeDir?: string;
 };
 
@@ -112,8 +117,13 @@ export async function readGuildMatchRows(
     params: [],
   });
   if (target === undefined || full === undefined) return [];
+  const both = options.bothOf;
   const sql =
-    `WITH target AS (SELECT DISTINCT match_id FROM (${target.sql})), ` +
+    `WITH target AS (SELECT match_id FROM (${target.sql}) GROUP BY match_id` +
+    (both === undefined
+      ? ""
+      : ` HAVING bool_or(puuid IN (SELECT unnest(?))) AND bool_or(puuid IN (SELECT unnest(?)))`) +
+    `), ` +
     `full_rosters AS (${full.sql}) ` +
     `SELECT match_id, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
     `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
@@ -123,7 +133,10 @@ export async function readGuildMatchRows(
   return await runSource({
     session: page.session,
     source: target,
-    trailingParams: full.params,
+    trailingParams:
+      both === undefined
+        ? full.params
+        : [listParam(both.left), listParam(both.right), ...full.params],
     sql,
     schema: GuildMatchRowSchema,
   });

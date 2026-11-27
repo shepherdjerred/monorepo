@@ -404,28 +404,39 @@ export function buildCommunityInsights(options: {
   };
 }
 
+/** The guild player owning each PUUID, and each selected player's row. */
+function ownersByPuuid(players: CommunityPlayer[]): Map<string, number> {
+  return new Map<string, number>(
+    players.flatMap((player) =>
+      player.accounts.map((account) => [account.puuid, player.id] as const),
+    ),
+  );
+}
+
+function selectedRows(
+  match: Match,
+  ownerByPuuid: Map<string, number>,
+  selected: Set<number>,
+): Map<number, GuildMatchRow> {
+  const rowByPlayer = new Map<number, GuildMatchRow>();
+  for (const row of match.rows) {
+    const owner = row.puuid === null ? undefined : ownerByPuuid.get(row.puuid);
+    if (owner !== undefined && selected.has(owner)) rowByPlayer.set(owner, row);
+  }
+  return rowByPlayer;
+}
+
 export function squadChemistry(options: {
   players: CommunityPlayer[];
   rows: GuildMatchRow[];
   playerIds: number[];
 }) {
   const selected = new Set(options.playerIds);
-  // Keyed by raw puuid: match rows carry every participant, tracked or not.
-  const ownerByPuuid = new Map<string, number>(
-    options.players.flatMap((player) =>
-      player.accounts.map((account) => [account.puuid, player.id] as const),
-    ),
-  );
+  const ownerByPuuid = ownersByPuuid(options.players);
   const shared = groupMatches(options.rows)
     .filter((match) => isStandardFiveVsFive(match))
     .flatMap((match) => {
-      const teamByPlayer = new Map<number, GuildMatchRow>();
-      for (const row of match.rows) {
-        const owner =
-          row.puuid === null ? undefined : ownerByPuuid.get(row.puuid);
-        if (owner !== undefined && selected.has(owner))
-          teamByPlayer.set(owner, row);
-      }
+      const teamByPlayer = selectedRows(match, ownerByPuuid, selected);
       if (teamByPlayer.size !== selected.size) return [];
       const participants = [...teamByPlayer.values()];
       const teamId = participants[0]?.team_id;
@@ -443,5 +454,47 @@ export function squadChemistry(options: {
     wins: shared.filter((match) => match.win).length,
     lowSample: shared.length < 3,
     matches: shared.slice(0, 20),
+  };
+}
+
+/**
+ * A pair's shared history: games on one team (their squad chemistry) and games
+ * on opposite teams, newest first. A remake has no winner and is left out.
+ */
+export function duoHistory(options: {
+  players: CommunityPlayer[];
+  rows: GuildMatchRow[];
+  playerIds: readonly [number, number];
+}) {
+  const [left, right] = options.playerIds;
+  const ownerByPuuid = ownersByPuuid(options.players);
+  const against = groupMatches(options.rows)
+    .filter((match) => isStandardFiveVsFive(match))
+    .flatMap((match) => {
+      const rows = selectedRows(match, ownerByPuuid, new Set([left, right]));
+      const leftRow = rows.get(left);
+      const rightRow = rows.get(right);
+      if (
+        leftRow === undefined ||
+        rightRow === undefined ||
+        leftRow.team_id === rightRow.team_id ||
+        leftRow.win === rightRow.win
+      )
+        return [];
+      return [
+        {
+          matchId: match.id,
+          at: match.at,
+          winner: leftRow.win ? ("left" as const) : ("right" as const),
+        },
+      ];
+    });
+  return {
+    together: squadChemistry({
+      players: options.players,
+      rows: options.rows,
+      playerIds: [left, right],
+    }),
+    against,
   };
 }

@@ -1,5 +1,7 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import { afterAll, beforeAll, beforeEach, expect } from "vitest";
+import type * as AccessModule from "#src/consumer/access.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { afterAll, beforeAll, beforeEach, expect, vi } from "vitest";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -104,4 +106,35 @@ export async function expectOneLakeSlot<T>(
   request: () => Promise<T>,
 ): Promise<T> {
   return await expectLakeSlots(1, request);
+}
+
+/**
+ * The replacement for `#src/consumer/access.ts` in which one named actor's
+ * Discord membership cannot be asked, the one boundary the harness cannot make
+ * unavailable. Use from a `vi.mock` factory; nothing is shared between tests,
+ * so a test that outlives its timeout cannot change what the next one sees.
+ */
+export async function withUnavailableMembershipFor(
+  actorDiscordId: string,
+): Promise<typeof AccessModule> {
+  const actual = await vi.importActual<typeof AccessModule>(
+    "#src/consumer/access.ts",
+  );
+  return {
+    ...actual,
+    resolveConsumerGuildAccess: (...args) =>
+      args[0].discordId === actorDiscordId
+        ? Promise.resolve({ kind: "unavailable" as const })
+        : actual.resolveConsumerGuildAccess(...args),
+  };
+}
+
+/** Empty the tables a consumer profile test seeds, before each test. */
+export async function clearConsumerProfileTables(
+  prisma: ExtendedPrismaClient,
+): Promise<void> {
+  await prisma.currentRankSnapshot.deleteMany();
+  await prisma.matchRankHistory.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.player.deleteMany();
 }

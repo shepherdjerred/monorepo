@@ -17,6 +17,7 @@ import {
   seedDesignAuditChampionFriends,
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
+import { seedDesignAuditCompare } from "#src/database/design-audit-compare-fixture.ts";
 import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
@@ -256,6 +257,13 @@ export async function seedDesignAuditDatabase(
       main: { playerId: player.id, playerAlias, puuid },
       now: new Date(),
     });
+    // Compare page: games against Marrow, who the friends fixture seeds.
+    const playerCompare = await seedDesignAuditCompare({
+      prisma,
+      guildId,
+      main: { playerId: player.id, playerAlias, puuid },
+      now: new Date(),
+    });
 
     await prisma.subscription.create({
       data: {
@@ -334,6 +342,7 @@ export async function seedDesignAuditDatabase(
       matchFacts: [
         ...champions.tracked,
         ...playerFriends.matchFacts,
+        ...playerCompare.matchFacts,
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,
@@ -409,6 +418,7 @@ export async function seedDesignAuditDatabase(
       untrackedMatchFacts: [
         ...champions.untracked,
         ...playerFriends.untrackedMatchFacts,
+        ...playerCompare.untrackedMatchFacts,
         ...review.extra,
         {
           playerId: 901,

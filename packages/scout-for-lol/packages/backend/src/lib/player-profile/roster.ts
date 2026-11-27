@@ -31,7 +31,7 @@ export const ROSTER_FORM_GAMES = 20;
 const DAY_MS = 86_400_000;
 export const ROSTER_ACTIVITY_DAYS = 7;
 
-type RosterPlayerRow = {
+export type RosterPlayerRow = {
   id: number;
   alias: string;
   serverId: DiscordGuildId;
@@ -47,7 +47,9 @@ type RosterGuild = { id: DiscordGuildId; name: string };
  * two accounts; both collapse here, joined by a shared Discord link or a
  * shared PUUID.
  */
-function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
+export function groupPeople<Player extends RosterPlayerRow>(
+  players: Player[],
+): Player[][] {
   const parent = players.map((_, index) => index);
   const find = (index: number): number => {
     let root = index;
@@ -66,7 +68,7 @@ function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
       else parent[find(index)] = find(first);
     }
   }
-  const people = new Map<number, RosterPlayerRow[]>();
+  const people = new Map<number, Player[]>();
   for (const [index, player] of players.entries()) {
     const root = find(index);
     people.set(root, [...(people.get(root) ?? []), player]);
@@ -74,7 +76,7 @@ function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
   return [...people.values()];
 }
 
-function freshest(
+export function freshest(
   evidence: (RankEvidence | undefined)[],
 ): RankEvidence | undefined {
   return evidence
