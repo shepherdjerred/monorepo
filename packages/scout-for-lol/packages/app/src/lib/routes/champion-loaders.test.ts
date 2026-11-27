@@ -1,27 +1,13 @@
-import { RouterContextProvider, type LoaderFunctionArgs } from "react-router";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { queryClient } from "#src/lib/query/query-client.ts";
+import {
+  loaderArgs,
+  prefetchedKeys,
+} from "#src/lib/routes/loader-test-support.ts";
 import {
   consumerChampionLoader,
   consumerChampionsLoader,
 } from "#src/lib/routes/route-loaders.ts";
-
-function loaderArgs(
-  url: string,
-  params: Record<string, string>,
-): LoaderFunctionArgs {
-  return {
-    request: new Request(url),
-    url: new URL(url),
-    pattern: "/champions",
-    params,
-    context: new RouterContextProvider(),
-  };
-}
-
-function prefetchedKeys(spy: { mock: { calls: unknown[][] } }): string[] {
-  return spy.mock.calls.map((call) => JSON.stringify(call[0]));
-}
 
 afterEach(() => {
   vi.restoreAllMocks();

@@ -1,12 +1,11 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import { Input } from "@scout-for-lol/design-system/components/input";
 import { HeroPanel } from "@scout-for-lol/design-system/domain/profile/hero-panel";
 import { PageState } from "@scout-for-lol/design-system/domain/profile/page-states";
-import { Search } from "lucide-react";
 import {
   PopularList,
   YoursList,
 } from "#src/components/champions/champions-index-lists.tsx";
+import { HeroSearch } from "#src/components/hero-search.tsx";
 import { ChampionsShell } from "#src/components/champions/champions-shell.tsx";
 import { HeroWords } from "#src/components/champions/hero-words.tsx";
 import { ServerChips } from "#src/components/champions/server-chips.tsx";
@@ -70,34 +69,12 @@ export function ChampionsIndexView(props: {
           lead={lines.lead}
           sub={lines.sub}
         >
-          <form
-            role="search"
-            className="relative mt-6 block w-full max-w-[380px] text-scout-subtle"
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
-          >
-            <label className="scout-sr-only" htmlFor="find-champion">
-              Find a champion
-            </label>
-            <Search
-              aria-hidden="true"
-              size={18}
-              className="pointer-events-none absolute top-1/2 left-5 -mt-[9px]"
-            />
-            <Input
-              id="find-champion"
-              name="find"
-              type="search"
-              placeholder="Find a champion"
-              autoComplete="off"
-              value={props.find}
-              onChange={(event) => {
-                props.onFind(event.currentTarget.value);
-              }}
-              className="h-[52px] rounded-full border-0 bg-[var(--scout-surface-inset)] pr-5 pl-12 text-base font-semibold shadow-[var(--scout-ring)] hover:bg-[var(--scout-surface-inset-strong)]"
-            />
-          </form>
+          <HeroSearch
+            id="find-champion"
+            label="Find a champion"
+            value={props.find}
+            onChange={props.onFind}
+          />
         </HeroWords>
       </HeroPanel>
       {showPopular ? null : servers}

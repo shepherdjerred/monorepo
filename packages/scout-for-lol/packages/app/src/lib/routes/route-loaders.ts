@@ -7,6 +7,8 @@ import {
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { championScopeInput } from "#src/lib/champions/champion-pages.ts";
+import { playerHistoryInput } from "#src/lib/player/player-feed.ts";
+import { playerSummaryInput } from "#src/lib/player/player-page.ts";
 import { parsePlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 import { queryClient } from "#src/lib/query/query-client.ts";
 import { trpcOptions } from "#src/lib/query/trpc-options.ts";
@@ -93,21 +95,40 @@ export function operationsLoader(): null {
 
 export function consumerPlayersLoader(): null {
   void preloadQuery(
-    queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),
-  );
-  void preloadQuery(
-    queryClient.query(trpcOptions.consumerPlayer.home.queryOptions()),
+    queryClient.query(trpcOptions.consumerPlayer.roster.queryOptions()),
   );
   return null;
 }
 
-export function consumerPlayerLoader({ params }: LoaderFunctionArgs): null {
+/**
+ * The player page reads with the filters in the URL: the summary, the newest
+ * games and the rank history, the input a visit starts on.
+ */
+export function consumerPlayerLoader({
+  params,
+  request,
+}: LoaderFunctionArgs): null {
   const parsed = PlayerIdSchema.safeParse(Number(params["playerId"]));
   if (!parsed.success) return null;
+  const filters = parsePlayerProfileFilters(new URL(request.url).searchParams);
   void preloadQuery(
     queryClient.query(
-      trpcOptions.consumerPlayer.status.queryOptions(undefined, {
-        staleTime: 0,
+      trpcOptions.consumerPlayer.profileSummary.queryOptions(
+        playerSummaryInput(parsed.data, filters),
+      ),
+    ),
+  );
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerPlayer.matchHistory.queryOptions(
+        playerHistoryInput(parsed.data, filters),
+      ),
+    ),
+  );
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerPlayer.rankHistory.queryOptions({
+        playerId: parsed.data,
       }),
     ),
   );
