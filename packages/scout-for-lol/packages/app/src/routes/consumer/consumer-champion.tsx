@@ -1,478 +1,185 @@
-import {
-  type DiscordGuildId,
-  ChampionComparisonSortSchema,
-  type ChampionComparisonSort,
-} from "@scout-for-lol/data";
+import type { DiscordGuildId, Lane } from "@scout-for-lol/data";
+import { PageState } from "@scout-for-lol/design-system/domain/profile/page-states";
 import { Loaded } from "@shepherdjerred/loaded";
+import { chipVariants } from "@scout-for-lol/design-system/components/surfaces/chip";
+import { keepPreviousData, skipToken, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Button } from "@scout-for-lol/design-system/components/button";
+import { MatchupsPanel } from "#src/components/champions/champion-matchups.tsx";
+import { MasteryPanel } from "#src/components/champions/champion-side.tsx";
+import { ChampionView } from "#src/components/champions/champion-view.tsx";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@scout-for-lol/design-system/components/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@scout-for-lol/design-system/components/table";
-import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
-import {
-  ChampionComparisonTable,
-  type ChampionComparisonRow,
-} from "#src/components/match/champion-comparison-table.tsx";
-import { PageSectionHeading } from "#src/components/chrome/page-section-heading.tsx";
-import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
+  ChampionsLoading,
+  ChampionsUnavailable,
+} from "#src/components/champions/champions-shell.tsx";
+import { ServerChips } from "#src/components/champions/server-chips.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
-  playerProfileSearch,
-  type PlayerProfileFilters,
-} from "#src/lib/player/player-profile-filters.ts";
-import { useConsumerChampionParams } from "#src/lib/routes/route-params.ts";
-import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
+  activeLane,
+  championScopeInput,
+} from "#src/lib/champions/champion-pages.ts";
 import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url-state.ts";
+import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
+import { useConsumerChampionParams } from "#src/lib/routes/route-params.ts";
 
-type Cursor = { offset: number };
-type ComparisonOutput = RouterOutputs["consumerChampion"]["compare"];
-type MasteryOutput = RouterOutputs["consumerChampion"]["masteryLeaderboard"];
-
-function parseComparisonSort(value: string): ChampionComparisonSort {
-  const parsed = ChampionComparisonSortSchema.safeParse(value);
-  return parsed.success ? parsed.data : "win_rate";
-}
-
-function comparisonInput(options: {
-  championId: number;
-  filters: PlayerProfileFilters;
-  sort: ChampionComparisonSort;
-  guildIds: DiscordGuildId[] | undefined;
-}) {
-  return {
-    championId: options.championId,
-    games: options.filters.games,
-    sort: options.sort,
-    ...(options.filters.queues === undefined
-      ? {}
-      : { queues: options.filters.queues }),
-    ...(options.guildIds === undefined ? {} : { guildIds: options.guildIds }),
-  };
-}
-
-function cohortInput<T extends ReturnType<typeof comparisonInput>>(
-  common: T,
-  cohort: "qualified" | "small_sample",
-  cursor: Cursor | undefined,
-) {
-  return {
-    ...common,
-    cohort,
-    ...(cursor === undefined ? {} : { cursor }),
-  };
-}
-
-function useComparisonOpenTracking(isSuccess: boolean, isError: boolean): void {
-  const tracked = useRef(false);
-  useEffect(() => {
-    if (tracked.current || (!isSuccess && !isError)) return;
-    tracked.current = true;
-    track("champion_comparison_opened", {
-      outcome: isSuccess ? "succeeded" : "failed",
-    });
-  }, [isError, isSuccess]);
-}
-
-function comparisonPage(data: ComparisonOutput | undefined) {
-  return {
-    rows: data?.rows ?? [],
-    nextCursor: data?.nextCursor,
-  };
-}
-
-function comparisonHeader(options: {
-  qualified: ComparisonOutput | undefined;
-  small: ComparisonOutput | undefined;
-  guildIds: DiscordGuildId[] | undefined;
-}) {
-  const data = options.qualified ?? options.small;
-  const availableGuilds = data?.availableGuilds ?? [];
-  return {
-    champion: data?.champion,
-    availableGuilds,
-    selectedGuilds:
-      options.guildIds ?? availableGuilds.map((guild) => guild.guildId),
-  };
-}
-
+/** One champion in the viewer's servers: who is best on it, and the viewer's matchups. */
 export function ConsumerChampion() {
   const { championId } = useConsumerChampionParams();
-  const { filters, setFilters } = usePlayerProfileUrlState();
+  const { filters } = usePlayerProfileUrlState();
   const trpc = useTRPC();
-  const [sort, setSort] = useState<ChampionComparisonSort>("win_rate");
   const [guildIds, setGuildIds] = useState<DiscordGuildId[] | undefined>();
-  const [qualifiedCursors, setQualifiedCursors] = useState<
-    (Cursor | undefined)[]
-  >([undefined]);
-  const [smallCursors, setSmallCursors] = useState<(Cursor | undefined)[]>([
-    undefined,
-  ]);
-  const [qualifiedPage, setQualifiedPage] = useState(0);
-  const [smallPage, setSmallPage] = useState(0);
-  const commonInput = comparisonInput({
-    championId,
-    filters,
-    sort,
-    guildIds,
-  });
-  const mastery = useQuery(
-    trpc.consumerChampion.masteryLeaderboard.queryOptions({
-      championId,
-      ...(guildIds === undefined ? {} : { guildIds }),
-    }),
-  );
+  const [chosenLane, setChosenLane] = useState<Lane | undefined>();
+  const scope = championScopeInput(filters, guildIds);
+  const keep = { placeholderData: keepPreviousData };
   const qualified = useQuery(
     trpc.consumerChampion.compare.queryOptions(
-      cohortInput(commonInput, "qualified", qualifiedCursors[qualifiedPage]),
-      { placeholderData: keepPreviousData },
+      { championId, ...scope, cohort: "qualified", sort: "win_rate" },
+      keep,
     ),
   );
   const small = useQuery(
     trpc.consumerChampion.compare.queryOptions(
-      cohortInput(commonInput, "small_sample", smallCursors[smallPage]),
-      { placeholderData: keepPreviousData },
+      { championId, ...scope, cohort: "small_sample", sort: "games" },
+      keep,
     ),
   );
-  useComparisonOpenTracking(qualified.isSuccess, qualified.isError);
-
-  // Both cohorts use `keepPreviousData`, so a failed refetch still has a page
-  // in hand — and that is exactly the hazard here. These cohorts are scoped to
-  // the viewer's currently enabled shared servers, so the failing request is
-  // the access recheck; showing the retained page would outlive the permission
-  // that produced it. `strict` collapses that `degraded` back to `error` so the
-  // comparison disappears rather than going stale.
-  const qualifiedValue = Loaded.strict(
-    Loaded.fromQuery(qualified, ["qualified"]),
+  const index = useQuery(trpc.consumerChampion.index.queryOptions(scope, keep));
+  const lanes =
+    index.data?.champions.find((entry) => entry.championId === championId)
+      ?.lanes ?? [];
+  const lane = activeLane(lanes, chosenLane);
+  const matchups = useQuery(
+    trpc.consumerChampion.matchups.queryOptions(
+      lane === undefined ? skipToken : { championId, lane, ...scope },
+      keep,
+    ),
   );
-  const smallValue = Loaded.strict(Loaded.fromQuery(small, ["small"]));
-  const comparison = Loaded.all({
-    qualified: qualifiedValue,
-    small: smallValue,
+  const mastery = useQuery(
+    trpc.consumerChampion.masteryLeaderboard.queryOptions(
+      guildIds === undefined ? { championId } : { championId, guildIds },
+      keep,
+    ),
+  );
+  const opened = useRef(false);
+  useEffect(() => {
+    if (opened.current || (!qualified.isSuccess && !qualified.isError)) return;
+    opened.current = true;
+    track("champion_comparison_opened", {
+      outcome: qualified.isSuccess ? "succeeded" : "failed",
+    });
+  }, [qualified.isError, qualified.isSuccess]);
+
+  // Every read here is scoped to the viewer's currently enabled shared
+  // servers, so a failed refetch is the access recheck. `strict` drops the
+  // retained page instead of showing one that outlived the permission behind it.
+  const page = Loaded.all({
+    qualified: Loaded.strict(Loaded.fromQuery(qualified, ["qualified"])),
+    small: Loaded.strict(Loaded.fromQuery(small, ["small"])),
+    index: Loaded.strict(Loaded.fromQuery(index, ["index"])),
   });
-
-  function resetPagination(): void {
-    setQualifiedCursors([undefined]);
-    setSmallCursors([undefined]);
-    setQualifiedPage(0);
-    setSmallPage(0);
+  if (page.status === "loading") {
+    return <ChampionsLoading />;
   }
-
-  if (comparison.status === "error") {
+  if (page.status === "error") {
     return (
-      <PageShell>
-        <Card>
-          <CardHeader>
-            <CardTitle>Champion comparison unavailable</CardTitle>
-            <CardDescription>
-              Scout could not verify this champion against your currently
-              enabled shared servers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-2">
-            <Button onClick={() => void qualified.refetch()}>Retry</Button>
-            <Button asChild variant="outline">
-              <Link to="/players">Players</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </PageShell>
+      <ChampionsUnavailable
+        title="Champion unavailable"
+        lead="This champion could not be loaded."
+        onRetry={() => {
+          void qualified.refetch();
+          void small.refetch();
+          void index.refetch();
+        }}
+      />
     );
   }
-
-  const { champion, availableGuilds, selectedGuilds } = comparisonHeader({
-    qualified: Loaded.getOrElse(qualifiedValue, undefined),
-    small: Loaded.getOrElse(smallValue, undefined),
-    guildIds,
-  });
-  const qualifiedResult = comparisonPage(
-    Loaded.getOrElse(qualifiedValue, undefined),
+  const matchupsResult = Loaded.strict(
+    Loaded.fromQuery(matchups, ["matchups"]),
   );
-  const smallResult = comparisonPage(Loaded.getOrElse(smallValue, undefined));
-  const profileSearch = playerProfileSearch(filters);
-
+  const masteryResult = Loaded.strict(Loaded.fromQuery(mastery, ["mastery"]));
+  // The page appears once, whole: matchups and mastery would otherwise pop in
+  // below it and push the page around after the reader has started on it.
+  if (
+    masteryResult.status === "loading" ||
+    (lane !== undefined && matchupsResult.status === "loading")
+  ) {
+    return <ChampionsLoading />;
+  }
   return (
-    <PageShell>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {champion === undefined ? null : (
-            <ChampionIcon
-              championName={champion.name}
-              size="md"
-              className="h-14 w-14"
-            />
-          )}
-          <div>
-            <p className="text-sm font-medium text-primary">
-              Champion comparison
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {champion?.name ?? "Loading champion…"}
-            </h1>
-            <p className="text-sm text-scout-subtle">
-              Each guild registration stays a distinct leaderboard entry.
-            </p>
-          </div>
-        </div>
-        <Button asChild variant="outline">
-          <Link to="/players">Player hub</Link>
-        </Button>
-      </div>
-
-      <PlayerProfileFilterBar
-        filters={filters}
-        onChange={(nextFilters, kind) => {
-          resetPagination();
-          setFilters(nextFilters);
-          track("player_profile_filter_changed", {
-            kind,
-            action: "champion_comparison",
-          });
-        }}
-      />
-
-      <MasteryLeaderboard
-        data={
-          mastery.isSuccess && !mastery.isFetching ? mastery.data : undefined
-        }
-        pending={mastery.isPending}
-        failed={mastery.isError}
-        onRetry={() => void mastery.refetch()}
-      />
-
-      <div className="flex flex-wrap items-end gap-6 rounded-lg border bg-card p-4">
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Guilds</legend>
-          <div className="flex flex-wrap gap-3">
-            {availableGuilds.map((guild) => (
-              <label
-                key={guild.guildId}
-                className="flex items-center gap-2 text-sm"
-              >
-                <input
-                  type="checkbox"
-                  name="guild"
-                  value={guild.guildId}
-                  checked={selectedGuilds.includes(guild.guildId)}
-                  onChange={(event) => {
-                    const next = event.currentTarget.checked
-                      ? [...selectedGuilds, guild.guildId]
-                      : selectedGuilds.filter((id) => id !== guild.guildId);
-                    if (next.length === 0) return;
-                    setGuildIds(next);
-                    resetPagination();
-                  }}
-                />
-                {guild.name}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <label className="space-y-1 text-sm font-medium">
-          <span className="block">Sort by</span>
-          <select
-            name="sort"
-            value={sort}
-            className="h-9 rounded-md border border-input bg-background px-3"
-            onChange={(event) => {
-              setSort(parseComparisonSort(event.currentTarget.value));
-              resetPagination();
-            }}
-          >
-            <option value="win_rate">Win rate</option>
-            <option value="games">Games</option>
-            <option value="kda">KDA</option>
-            <option value="cs_per_minute">CS/min</option>
-            <option value="damage_per_minute">Damage/min</option>
-            <option value="gold_per_minute">Gold/min</option>
-            <option value="vision_per_minute">Vision/min</option>
-            <option value="alias">Alias</option>
-          </select>
-        </label>
-      </div>
-
-      <ComparisonSection
-        title="Leaderboard"
-        description="Players with at least 10 matching games."
-        rows={qualifiedResult.rows}
-        profileSearch={profileSearch}
-        page={qualifiedPage}
-        nextCursor={qualifiedResult.nextCursor}
-        pending={qualified.isPending || qualified.isFetching}
-        empty="No player has ten matching games on this champion yet."
-        onPrevious={() => {
-          setQualifiedPage((page) => page - 1);
-        }}
-        onNext={(cursor) => {
-          setQualifiedCursors((cursors) => [
-            ...cursors.slice(0, qualifiedPage + 1),
-            cursor,
-          ]);
-          setQualifiedPage((page) => page + 1);
-        }}
-      />
-      <ComparisonSection
-        title="Smaller samples"
-        description="Useful context, kept separate from the ranked leaderboard."
-        rows={smallResult.rows}
-        profileSearch={profileSearch}
-        page={smallPage}
-        nextCursor={smallResult.nextCursor}
-        pending={small.isPending || small.isFetching}
-        empty="No smaller samples match these filters."
-        onPrevious={() => {
-          setSmallPage((page) => page - 1);
-        }}
-        onNext={(cursor) => {
-          setSmallCursors((cursors) => [
-            ...cursors.slice(0, smallPage + 1),
-            cursor,
-          ]);
-          setSmallPage((page) => page + 1);
-        }}
-      />
-    </PageShell>
+    <ChampionView
+      championId={championId}
+      name={page.data.qualified.champion.name}
+      qualifyingGames={page.data.qualified.qualifyingGames}
+      qualified={page.data.qualified.rows}
+      small={page.data.small.rows}
+      truncated={page.data.qualified.nextCursor !== null}
+      servers={
+        <ServerChips
+          servers={page.data.qualified.availableGuilds}
+          selected={guildIds}
+          onChange={(next) => {
+            setGuildIds(next);
+            track("champions_filter_changed", { kind: "servers" });
+          }}
+        />
+      }
+      matchups={
+        lane === undefined
+          ? null
+          : matchupsSection({
+              result: matchupsResult,
+              lanes: lanes.map((entry) => entry.lane),
+              lane,
+              onLane: (next) => {
+                setChosenLane(next);
+                track("champions_filter_changed", { kind: "lane" });
+              },
+              onRetry: () => void matchups.refetch(),
+            })
+      }
+      mastery={
+        masteryResult.status === "done" &&
+        masteryResult.data.rows.length > 0 ? (
+          <MasteryPanel rows={masteryResult.data.rows} />
+        ) : null
+      }
+    />
   );
 }
 
-function formatMasteryPoints(points: number): string {
-  return new Intl.NumberFormat(undefined, {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(points);
-}
-
-function MasteryLeaderboard(props: {
-  data: MasteryOutput | undefined;
-  pending: boolean;
-  failed: boolean;
+function matchupsSection(options: {
+  result: Loaded<RouterOutputs["consumerChampion"]["matchups"]>;
+  lanes: Lane[];
+  lane: Lane;
+  onLane: (lane: Lane) => void;
   onRetry: () => void;
 }) {
-  return (
-    <section className="space-y-3">
-      <PageSectionHeading
-        title="Mastery leaderboard"
-        description="All-time champion familiarity from Riot mastery. This is separate from recent match performance."
-      />
-      {props.pending ? (
-        <p className="text-sm text-scout-subtle">Loading mastery…</p>
-      ) : props.failed ? (
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-scout-subtle">
-            Mastery is temporarily unavailable.
-          </p>
-          <Button size="sm" variant="outline" onClick={props.onRetry}>
+  const { result } = options;
+  if (result.status === "loading") return null;
+  if (result.status === "error") {
+    return (
+      <PageState
+        kind="unavailable"
+        id="matchups-unavailable"
+        title="Your matchups"
+        lead="Matchups could not be loaded."
+        actions={
+          <button
+            type="button"
+            className={chipVariants()}
+            onClick={options.onRetry}
+          >
             Retry
-          </Button>
-        </div>
-      ) : props.data === undefined || props.data.rows.length === 0 ? (
-        <p className="text-sm text-scout-subtle">
-          No cached mastery exists for this champion yet.
-        </p>
-      ) : (
-        <div className="space-y-2 overflow-x-auto">
-          <p className="text-xs text-scout-subtle">
-            Cached for {props.data.cachedAccountCount.toString()} of{" "}
-            {props.data.accountCount.toString()} tracked accounts.
-          </p>
-          <Table>
-            <caption className="sr-only">Champion mastery leaderboard</caption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Player</TableHead>
-                <TableHead>Guild</TableHead>
-                <TableHead className="text-right">Mastery</TableHead>
-                <TableHead className="text-right">Points</TableHead>
-                <TableHead className="text-right">Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {props.data.rows.map((row) => (
-                <TableRow
-                  key={`${row.guild.guildId}:${row.playerId.toString()}`}
-                  className={row.viewerLinked ? "bg-primary/10" : "border-b"}
-                >
-                  <TableCell className="font-medium">
-                    <Link to={`/players/${row.playerId.toString()}`}>
-                      {row.alias}
-                    </Link>
-                    {row.viewerLinked && (
-                      <span className="ml-2 text-xs text-primary">You</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{row.guild.name}</TableCell>
-                  <TableCell className="text-right">
-                    M{row.level.toString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatMasteryPoints(row.points)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-scout-subtle">
-                    {row.freshness === "stale" ? "Last known " : ""}
-                    {new Date(row.fetchedAt).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function ComparisonSection(props: {
-  title: string;
-  description: string;
-  rows: ChampionComparisonRow[];
-  profileSearch: string;
-  page: number;
-  nextCursor: Cursor | null | undefined;
-  pending: boolean;
-  empty: string;
-  onPrevious: () => void;
-  onNext: (cursor: Cursor) => void;
-}) {
-  return (
-    <section className="space-y-3">
-      <PageSectionHeading title={props.title} description={props.description} />
-      <ChampionComparisonTable
-        rows={props.rows}
-        profileSearch={props.profileSearch}
-        page={props.page}
-        hasNextPage={
-          props.nextCursor !== null && props.nextCursor !== undefined
+          </button>
         }
-        pending={props.pending}
-        empty={props.empty}
-        onPrevious={props.onPrevious}
-        onNext={() => {
-          if (props.nextCursor !== null && props.nextCursor !== undefined)
-            props.onNext(props.nextCursor);
-        }}
       />
-    </section>
-  );
-}
-
-function PageShell(props: { children: React.ReactNode }) {
+    );
+  }
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
-      {props.children}
-    </div>
+    <MatchupsPanel
+      matchups={result.data.matchups}
+      lanes={options.lanes}
+      lane={options.lane}
+      onLane={options.onLane}
+    />
   );
 }

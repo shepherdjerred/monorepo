@@ -41,14 +41,21 @@ describe("consumer navigation", () => {
       challengesAvailable: true,
       clashAvailable: true,
       daresAvailable: true,
-      expected: ["Explore", "Players", "Challenges", "Clash", "Dares"],
+      expected: [
+        "Explore",
+        "Players",
+        "Champions",
+        "Challenges",
+        "Clash",
+        "Dares",
+      ],
     },
     {
       exploreAvailable: true,
       profilesAvailable: true,
       challengesAvailable: true,
       daresAvailable: true,
-      expected: ["Explore", "Players", "Challenges", "Dares"],
+      expected: ["Explore", "Players", "Champions", "Challenges", "Dares"],
     },
     {
       exploreAvailable: true,
@@ -62,7 +69,7 @@ describe("consumer navigation", () => {
       profilesAvailable: true,
       challengesAvailable: false,
       daresAvailable: false,
-      expected: ["Players"],
+      expected: ["Players", "Champions"],
     },
     {
       exploreAvailable: false,
@@ -85,7 +92,14 @@ describe("consumer navigation", () => {
       challengesAvailable: true,
       daresAvailable: true,
       hallAvailable: true,
-      expected: ["Explore", "Players", "Hall of Fame", "Challenges", "Dares"],
+      expected: [
+        "Explore",
+        "Players",
+        "Champions",
+        "Hall of Fame",
+        "Challenges",
+        "Dares",
+      ],
     },
     {
       exploreAvailable: false,
