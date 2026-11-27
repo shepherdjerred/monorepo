@@ -19,7 +19,7 @@ import {
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { resetFlagOverrides } from "#src/configuration/flags.ts";
 import { countReportSlotsTaken } from "#src/reports/duckdb/instance.ts";
-import type * as FixturesModule from "#src/testing/consumer-player-fixtures.ts";
+import type * as SeedModule from "#src/testing/consumer-player-seed.ts";
 import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -37,8 +37,8 @@ import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 const archivedSnapshots = vi.hoisted(() => new Map<string, object>());
 vi.mock("#src/report-lake/receipted-archive.ts", async () => {
   const { stubArchivedPrematchSnapshots } = await vi.importActual<
-    typeof FixturesModule
-  >("#src/testing/consumer-player-fixtures.ts");
+    typeof SeedModule
+  >("#src/testing/consumer-player-seed.ts");
   return await stubArchivedPrematchSnapshots(archivedSnapshots);
 });
 

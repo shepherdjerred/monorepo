@@ -20,7 +20,7 @@ import {
   addFlagOverride,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
-import type * as FixturesModule from "#src/testing/consumer-player-fixtures.ts";
+import type * as SeedModule from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -31,8 +31,8 @@ import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 const archivedSnapshots = vi.hoisted(() => new Map<string, object>());
 vi.mock("#src/report-lake/receipted-archive.ts", async () => {
   const { stubArchivedPrematchSnapshots } = await vi.importActual<
-    typeof FixturesModule
-  >("#src/testing/consumer-player-fixtures.ts");
+    typeof SeedModule
+  >("#src/testing/consumer-player-seed.ts");
   return await stubArchivedPrematchSnapshots(archivedSnapshots);
 });
 
