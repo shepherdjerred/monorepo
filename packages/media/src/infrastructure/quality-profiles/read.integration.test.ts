@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import { compileQualityGuide } from "#domain/quality-guide/compile.ts";
+import guides from "#domain/quality-guide/guide-fixture.json";
+import { reconcileRetiredQualityProfiles } from "./reconcile.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let app: PrismaMediaApplication;
@@ -15,7 +18,7 @@ afterAll(async () => {
   await cluster.close();
 });
 
-async function fixture() {
+async function fixture(kind: "movie" | "series" = "movie") {
   const db = cluster.database;
   const user = (role: "owner" | "member") =>
     db.mediaUser.create({
@@ -34,8 +37,8 @@ async function fixture() {
     },
   });
   await db.qualityProfileDefault.upsert({
-    where: { kind: "movie" },
-    create: { kind: "movie", profileId: profile.id },
+    where: { kind },
+    create: { kind, profileId: profile.id },
     update: { profileId: profile.id },
   });
   return { db, owner, member, profile };
@@ -85,4 +88,139 @@ test("a session whose account no longer exists reads neither", async () => {
     code: "unauthenticated",
     status: 401,
   });
+});
+
+test("retirement hides a choice and migrates only targets without an active reservation", async () => {
+  const f = await fixture("series");
+  const { db, owner, profile } = f;
+  const { rules } = compileQualityGuide("series", {
+    revision: guides.revision,
+    committedAt: guides.committedAt,
+    ...guides.sources.series,
+  });
+  const legacy = {
+    qualities: ["WEB-1080p"],
+    cutoffQuality: "WEB-1080p",
+    cutoffScore: 0,
+    rejectedCodecs: [],
+    requiredAudioLanguages: [],
+    minimumBytes: 0,
+    maximumBytes: 100_000_000_000,
+    minimumScore: 0,
+    tagScores: {},
+  };
+  await db.qualityProfile.update({
+    where: { id: profile.id },
+    data: { rules: legacy },
+  });
+  await db.qualityProfileVersion.create({
+    data: { profileId: profile.id, version: 0, rules: legacy },
+  });
+  const replacement = await db.qualityProfile.create({
+    data: { name: "TRaSH TV", version: 1, rules },
+  });
+  const input = {
+    expectedVersion: 0,
+    replacementId: replacement.id,
+    kind: "series" as const,
+  };
+  await expect(
+    app.retireProfile(owner, crypto.randomUUID(), profile.id, input),
+  ).rejects.toMatchObject({ code: "profile_is_default" });
+  const defaults = await app.profileDefaults(owner);
+  await app.setProfileDefault(owner, crypto.randomUUID(), "series", {
+    expectedVersion:
+      defaults.find((row) => row.kind === "series")?.version ?? 0,
+    profileId: replacement.id,
+  });
+
+  const series = await db.mediaItem.create({
+    data: { title: "Retirement", kind: "series" },
+  });
+  const [idle, active] = await Promise.all(
+    ["Idle", "Reserved"].map(async (title, index) => {
+      const item = await db.mediaItem.create({
+        data: {
+          title,
+          kind: "episode",
+          parentId: series.id,
+          seasonNumber: 1,
+          episodeNumber: index + 1,
+        },
+      });
+      return await db.mediaIntent.create({
+        data: { mediaId: item.id, profileId: profile.id },
+      });
+    }),
+  );
+  if (idle === undefined || active === undefined)
+    throw new Error("Expected two titles");
+  const release = await db.releaseCandidate.create({
+    data: {
+      providerId: "knaben",
+      providerReleaseId: crypto.randomUUID(),
+      title: "Reserved",
+      attributes: {},
+      evaluation: {},
+      mediaIds: [active.mediaId],
+    },
+  });
+  const sponsor = await db.mediaRequest.create({
+    data: {
+      mediaId: active.mediaId,
+      edition: active.edition,
+      userId: owner.id,
+    },
+  });
+  const attempt = await db.acquisitionAttempt.create({
+    data: {
+      operationId: crypto.randomUUID(),
+      releaseId: release.id,
+      sponsorRequestId: sponsor.id,
+      mediaIds: [active.mediaId],
+      generations: { [active.mediaId]: active.generation },
+      state: "downloading",
+      reservations: {
+        create: { mediaId: active.mediaId, generation: active.generation },
+      },
+    },
+  });
+  const key = crypto.randomUUID();
+  const retired = await app.retireProfile(owner, key, profile.id, input);
+  expect(await app.retireProfile(owner, key, profile.id, input)).toEqual(
+    retired,
+  );
+  const visibleProfiles = await app.profiles(owner);
+  expect(visibleProfiles.some((row) => row.id === profile.id)).toBe(false);
+  await reconcileRetiredQualityProfiles(db);
+  const targets = () =>
+    db.mediaIntent.findMany({
+      where: { mediaId: { in: [idle.mediaId, active.mediaId] } },
+      select: { mediaId: true, profileId: true, generation: true },
+    });
+  expect(await targets()).toEqual(
+    expect.arrayContaining([
+      {
+        mediaId: idle.mediaId,
+        profileId: replacement.id,
+        generation: idle.generation + 1,
+      },
+      {
+        mediaId: active.mediaId,
+        profileId: profile.id,
+        generation: active.generation,
+      },
+    ]),
+  );
+  await db.acquisitionReservation.deleteMany({
+    where: { attemptId: attempt.id },
+  });
+  await reconcileRetiredQualityProfiles(db);
+  const migrated = await targets();
+  expect(migrated.every((row) => row.profileId === replacement.id)).toBe(true);
+  expect(
+    await db.qualityProfileVersion.findUnique({
+      where: { profileId_version: { profileId: profile.id, version: 0 } },
+    }),
+  ).not.toBe(null);
 });

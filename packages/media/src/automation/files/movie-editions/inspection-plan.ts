@@ -112,7 +112,7 @@ export async function prepareMovieFilePlanV4(
       prepared,
     );
   }
-  const previous = await inspectMovieQuality(
+  const { previous, qualityFallbackReasons } = await inspectMovieQuality(
     context,
     authority,
     measured,
@@ -195,6 +195,9 @@ export async function prepareMovieFilePlanV4(
         embeddedSubtitles: embedded.subtitles,
         properties: z.json().parse({
           ...measured,
+          ...(qualityFallbackReasons.length === 0
+            ? {}
+            : { qualityFallback: true, qualityFallbackReasons }),
           sourceQuality: authority.assessment.attributes.quality,
           releaseId: authority.release.id,
           movieAssessment: authority.identity.assessment,

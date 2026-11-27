@@ -1,4 +1,5 @@
 import { chooseUpgrade, evaluateRelease } from "#domain/quality.ts";
+import { acceptedFallbackReasons } from "#domain/release-evaluation.ts";
 import {
   PublicReleaseAttributesSchema,
   QualityRulesSchema,
@@ -67,8 +68,9 @@ export async function assertMeasuredUpgrade(
   measured: ReleaseAttributes,
   mediaIds: readonly string[],
   publishedAssetId?: string,
-): Promise<Record<string, number>> {
+) {
   const profileVersions: Record<string, number> = {};
+  const qualityFallbackReasons: string[] = [];
   for (const mediaId of mediaIds) {
     const intent = await db.mediaIntent.findUniqueOrThrow({
       where: targetWhere(defaultScope(mediaId)),
@@ -83,6 +85,7 @@ export async function assertMeasuredUpgrade(
     const evaluated = evaluateRelease(measured, profile, [mediaId]);
     if (!evaluated.accepted)
       throw measuredQualityError(measured, profile, mediaId, evaluated);
+    qualityFallbackReasons.push(...acceptedFallbackReasons(evaluated));
     const coverage = await db.assetCoverage.findMany(
       currentDefaultCoverageQuery(mediaId),
     );
@@ -105,7 +108,10 @@ export async function assertMeasuredUpgrade(
     }
     profileVersions[mediaId] = profile.version;
   }
-  return profileVersions;
+  return {
+    profileVersions,
+    qualityFallbackReasons: [...new Set(qualityFallbackReasons)].sort(),
+  };
 }
 
 export function storedMeasuredRelease(value: unknown): ReleaseAttributes {

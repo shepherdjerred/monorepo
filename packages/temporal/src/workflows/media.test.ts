@@ -13,6 +13,57 @@ import { compensationExecution } from "#activities/media/compensation-execution.
 
 const workflowsPath = new URL("media/core.ts", import.meta.url).pathname;
 
+test("episode provider deferral resumes the same discovery checkpoint after a durable timer", async () => {
+  const args = {
+    operationId: "episode-operation",
+    mediaId: "episode-target",
+    generation: 2,
+  };
+  const progress = {
+    criteriaDigest: "a".repeat(64),
+    completedProviderIds: [],
+  };
+  let searches = 0;
+  const result = await runScenario({
+    workflow: "reconcileMediaWorkflow",
+    args,
+    files: {},
+    network: {
+      reconcileMediaIntent: async (input) => {
+        searches++;
+        if (searches === 1) {
+          expect(input).toEqual(args);
+          return {
+            status: "waiting",
+            attemptId: null,
+            reason: "provider_deferred",
+            retryAfterSeconds: 60,
+            providerSearchProgress: progress,
+          };
+        }
+        expect(input).toEqual({ ...args, providerSearchProgress: progress });
+        return {
+          status: "waiting",
+          attemptId: null,
+          reason: "no_acceptable_release",
+        };
+      },
+      finishMediaOperation: async (input) => {
+        expect(input).toEqual({
+          operationId: args.operationId,
+          status: "completed",
+          reason: "no_acceptable_release",
+        });
+      },
+    },
+  });
+  expect(searches).toBe(2);
+  expect(result).toEqual({
+    status: "waiting",
+    reason: "no_acceptable_release",
+  });
+}, 60_000);
+
 test("real scheduled Network and Files Activities satisfy the production SDK deadline adapters", async () => {
   const observed: string[] = [];
   const networkBudget = (phase: string) => {

@@ -25,6 +25,7 @@ import { stageSeriesPackMembers } from "./series-pack/staging.ts";
 import { stageOrdinaryMedia } from "./ordinary-staging.ts";
 import { publishAcquisitionFiles } from "./series-pack/publication-flow.ts";
 import { rollbackPublishedSeriesPack } from "./series-pack/bounded-publication.ts";
+import { waitForEpisodeProviders } from "./provider-search.ts";
 import {
   prepareAndInstallSubtitle,
   type SubtitleInput,
@@ -87,6 +88,8 @@ export async function reconcileMediaWorkflow(
 
 async function reconcile(input: MediaOperation): Promise<MediaWorkflowResult> {
   const result = await network.reconcileMediaIntent(input);
+  const wait = waitForEpisodeProviders(input, result);
+  if (wait !== null) return wait;
   if (result.status === "acquire") {
     if (result.attemptId === null)
       throw new Error("Acquisition requires an attempt identity");

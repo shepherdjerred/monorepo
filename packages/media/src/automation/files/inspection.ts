@@ -379,13 +379,14 @@ export async function inspectEntry(input: {
     filename: nodePath.basename(file.name),
     ...seriesPackMeasurementV1(identity, evidence),
   });
-  const profileVersions = await assertInspectedQualityV1(context, {
-    attemptId: attempt.id,
-    measured,
-    mediaIds,
-    attemptMediaIds: attempt.mediaIds,
-    movieAccess: input.movieAccess,
-  });
+  const { profileVersions, qualityFallbackReasons } =
+    await assertInspectedQualityV1(context, {
+      attemptId: attempt.id,
+      measured,
+      mediaIds,
+      attemptMediaIds: attempt.mediaIds,
+      movieAccess: input.movieAccess,
+    });
   const checksum = await sha256File(source.absolute, async () => {
     await context.checkpoint("hashing");
   });
@@ -434,6 +435,9 @@ export async function inspectEntry(input: {
       sourceQuality: attributes.quality,
       releaseId: attempt.releaseId,
       profileVersions,
+      ...(qualityFallbackReasons.length === 0
+        ? {}
+        : { qualityFallback: true, qualityFallbackReasons }),
       embeddedRejectedStreams: embeddedSubtitles.rejectedStreams,
       embeddedStreamFactsV2: captureEmbeddedStreamFacts({
         assetId,

@@ -4,7 +4,6 @@ import {
   ProviderAdmissionDeferred,
   ProviderIdSchema,
 } from "#automation/providers.ts";
-import { MediaError } from "#application/errors.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
   requireMovieChoiceAccess,
@@ -12,7 +11,12 @@ import {
 } from "#infrastructure/movie-editions/access.ts";
 import { movieAssessmentContext } from "#infrastructure/movie-editions/release-assessment.ts";
 import { rejectedMovieSourceHashesV1 } from "#infrastructure/movie-editions/rollback/rejected-sources.ts";
-import { IntegrationError } from "#integrations/http.ts";
+import { isProgressiveQualityProfile } from "#domain/progressive-quality.ts";
+import {
+  collectProviderSearchRound,
+  includeFeedObservation,
+  providerSearchTransition,
+} from "#automation/provider-search/progress.ts";
 import type {
   ProviderCandidate,
   ProviderSearch,
@@ -47,6 +51,7 @@ export async function searchMovieCandidatesV4(
     MovieReconcileOperationV4,
     "operationId" | "generation" | "providerSearchProgress"
   >,
+  feedSourceId?: string,
 ) {
   const context = movieManagementContext(initial);
   const scope = MovieEditionScopeSchema.parse(input);
@@ -77,6 +82,7 @@ export async function searchMovieCandidatesV4(
     generation: continuation?.generation ?? null,
     scope,
     query,
+    ...(feedSourceId === undefined ? {} : { feedSourceId }),
     canonicalHash: target.canonicalHash,
     profile: target.profile,
     rejected: [...rejected].sort(),
@@ -86,35 +92,58 @@ export async function searchMovieCandidatesV4(
       credentialId: provider.credentialId,
     })),
   });
+  const now = () => context.now?.().getTime() ?? Date.now();
+  const progressive = isProgressiveQualityProfile(target.rules);
   const progress = new MovieCandidateSearchProgress(
     criteriaDigest,
     continuation?.providerSearchProgress,
+    progressive ? now() : undefined,
   );
   const providerIds = providers.map(({ id }) => ProviderIdSchema.parse(id));
-  const deferred = await collectMovieProviderPass(context, {
-    providerIds,
+  const pass: SearchPass = {
     scope,
     access,
     query,
     rejected,
-    progress,
     paged: continuation !== undefined,
+  };
+  const search = {
+    providers: providerIds,
+    cipher: context.cipher,
+    now,
+    assess: (source: ProviderCandidate) =>
+      assessMovieProviderListing(context, pass, source),
+  };
+  await includeFeedObservation(progress, {
+    ...search,
+    db: context.db,
+    feedSourceId,
   });
-  if (continuation !== undefined && !progress.atLimit) {
-    if (deferred !== undefined)
-      throw new MovieProviderSearchDeferredV4(deferred, progress.checkpoint());
-    const next = providerIds.filter((id) => !progress.exhausted.has(id));
-    if (next.length > 0) {
-      progress.nextRound();
-      throw new MovieProviderSearchDeferredV4(
-        await nextMovieSearchAdmission(context, next),
-        progress.checkpoint(),
-      );
-    }
-  }
-  const { candidates, earliest } = progress.results(
-    context.now?.().getTime() ?? Date.now(),
-  );
+  const deferred = await collectProviderSearchRound({
+    ...search,
+    progress,
+    readPage: (providerId, round) =>
+      readMovieProviderPage(context, providerId, pass, round),
+  });
+  const result =
+    continuation === undefined
+      ? { state: "selecting" as const, ...progress.results(now()) }
+      : await providerSearchTransition(progress, {
+          db: context.db,
+          providers: providerIds,
+          deferred,
+          now: now(),
+        });
+  if (result.state === "waiting-for-provider")
+    throw new MovieProviderSearchDeferredV4(
+      new ProviderAdmissionDeferred(
+        deferred?.service ?? "movie-search",
+        new Date(result.retryAt),
+        deferred?.admission ?? "cooldown",
+      ),
+      progress.checkpoint(),
+    );
+  const { candidates, earliest } = result;
   if (Number.isFinite(earliest))
     await queueMovieSearchDelay(context, scope, {
       profile: target.profile,
@@ -131,46 +160,12 @@ export async function searchMovieCandidatesV4(
 }
 
 type SearchPass = {
-  providerIds: ProviderCandidate["providerId"][];
   scope: MovieEditionScope;
   access: MovieChoiceAccess;
   query: ProviderSearch;
   rejected: ReadonlySet<string>;
-  progress: MovieCandidateSearchProgress;
   paged: boolean;
 };
-
-async function collectMovieProviderPass(
-  context: ReturnType<typeof movieManagementContext>,
-  pass: SearchPass,
-) {
-  const { providerIds, progress } = pass;
-  const pending = providerIds.filter(
-    (providerId) =>
-      !progress.completed.has(providerId) &&
-      !progress.exhausted.has(providerId),
-  );
-  let deferred: ProviderAdmissionDeferred | undefined;
-  for (const providerId of pending) {
-    if (progress.atLimit) break;
-    try {
-      const page = await readMovieProviderPage(context, providerId, pass);
-      await progress.recordPage(providerId, page, context.cipher, (source) =>
-        assessMovieProviderListing(context, pass, source),
-      );
-    } catch (error) {
-      if (error instanceof ProviderAdmissionDeferred) {
-        if (error.retryAt.getTime() < (deferred?.retryAt.getTime() ?? Infinity))
-          deferred = error;
-      } else if (error instanceof IntegrationError) {
-        // A terminal remote result settles this provider for this search pass;
-        // another provider's local wait must not manufacture remote retries.
-        progress.settle(providerId);
-      } else throw error;
-    }
-  }
-  return deferred;
-}
 
 async function assessMovieProviderListing(
   context: MediaAutomationContext,
@@ -196,9 +191,10 @@ async function assessMovieProviderListing(
 async function readMovieProviderPage(
   context: ReturnType<typeof movieManagementContext>,
   providerId: ProviderCandidate["providerId"],
-  { scope, access, query, paged, progress }: SearchPass,
+  { scope, access, query, paged }: SearchPass,
+  round: number,
 ) {
-  const page = await context.providers.withProvider(
+  return context.providers.withProvider(
     providerId,
     async (client) => {
       const sponsor = await requireMovieAcquisitionAuthorityV4(
@@ -209,8 +205,8 @@ async function readMovieProviderPage(
       );
       sponsor.freshness.assertActive();
       if (paged && client.searchPage !== undefined)
-        return client.searchPage({ ...query, page: progress.round });
-      if (progress.round !== 1)
+        return client.searchPage({ ...query, page: round });
+      if (round !== 1)
         throw new Error("Movie provider lost its search paging capability");
       const candidates = await client.search(query);
       return {
@@ -223,35 +219,4 @@ async function readMovieProviderPage(
     },
     paged ? { deferLocalPacing: true } : undefined,
   );
-  if (page.candidates.length > 100 || page.listingIds.length > 100)
-    throw new MediaError(
-      "movie_candidate_limit",
-      "Provider search exceeded its candidate bound",
-      422,
-    );
-  return page;
-}
-
-/** Start the next pass at the earliest persisted provider pacing deadline. */
-async function nextMovieSearchAdmission(
-  context: MediaAutomationContext,
-  providerIds: string[],
-) {
-  const leases = await context.db.providerLease.findMany({
-    where: { providerId: { in: providerIds } },
-    select: { providerId: true, nextAllowedAt: true },
-  });
-  const deadlines = new Map(
-    leases.map(({ providerId, nextAllowedAt }) => [
-      providerId,
-      nextAllowedAt.getTime(),
-    ]),
-  );
-  const now = Date.now();
-  const retryAt = new Date(
-    Math.min(
-      ...providerIds.map((providerId) => deadlines.get(providerId) ?? now),
-    ),
-  );
-  return new ProviderAdmissionDeferred("movie-search", retryAt, "cooldown");
 }

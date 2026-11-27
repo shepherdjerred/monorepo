@@ -1,6 +1,7 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import type { compileQualityGuide } from "#domain/quality-guide/compile.ts";
+import { QualityRulesSchema } from "#shared/api.ts";
 
 export type CompiledGuide = ReturnType<typeof compileQualityGuide>;
 
@@ -29,6 +30,26 @@ export async function saveCompiledGuide(
       "The profile changed; review the current version",
       409,
     );
+  if (existing !== null) {
+    if (existing.replacedByProfileId !== null)
+      throw new MediaError(
+        "quality_profile_retired",
+        "A retired quality profile cannot be updated",
+        409,
+      );
+    const prior = QualityRulesSchema.parse(existing.rules).managedGuide;
+    const next = compiled.rules.managedGuide;
+    if (
+      next === undefined ||
+      prior?.kind !== next.kind ||
+      (prior.variant ?? "trash") !== next.variant
+    )
+      throw new MediaError(
+        "quality_guide_identity_changed",
+        "Choose the existing guide with this media type and quality preset",
+        409,
+      );
+  }
   if (
     existing !== null &&
     (await tx.acquisitionReservation.findFirst({

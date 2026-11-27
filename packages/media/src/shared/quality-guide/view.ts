@@ -1,9 +1,14 @@
 import { z } from "zod";
 import { QualityRulesSchema } from "#shared/api.ts";
-import { GuideKindSchema, GuideOverridesSchema } from "./contract.ts";
+import {
+  GuideKindSchema,
+  GuideOverridesSchema,
+  QualityGuideVariantSchema,
+} from "./contract.ts";
 
 export const QualityGuidePreviewResultSchema = z.object({
   kind: GuideKindSchema,
+  variant: QualityGuideVariantSchema.default("trash"),
   name: z.string(),
   revision: z.string(),
   contentHash: z.string(),
@@ -22,6 +27,7 @@ export const QualityGuideStatusSchema = z
       name: z.string(),
       version: z.int().nonnegative(),
       kind: GuideKindSchema,
+      variant: QualityGuideVariantSchema.default("trash"),
       revision: z.string(),
       contentHash: z.string(),
       lastSync: QualityGuideSyncSchema.nullable(),

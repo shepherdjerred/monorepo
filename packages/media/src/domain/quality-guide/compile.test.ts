@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import fixture from "./guide-fixture.json";
 import { compileQualityGuide } from "./compile.ts";
 import { GUIDE_PRESETS, GuideBundleSchema } from "./contract.ts";
-import type { QualityGuideKind } from "#shared/quality-guide/contract.ts";
+import {
+  ManagedGuideSchema,
+  type QualityGuideKind,
+} from "#shared/quality-guide/contract.ts";
 
 const bundle = (kind: QualityGuideKind) => ({
   revision: fixture.revision,
@@ -17,6 +20,10 @@ describe("selected living-room guide", () => {
     expect(movie.rules.resolved?.profile.items.at(-1)).toMatchObject({
       quality: { name: "Remux-2160p" },
     });
+    expect(movie.rules.qualities.slice(0, 2)).toEqual([
+      "WEB 720p",
+      "Bluray|WEB-1080p",
+    ]);
     expect(tv.rules.resolved?.profile.items.at(-1)).toMatchObject({
       name: "WEB 2160p",
       items: [
@@ -36,6 +43,72 @@ describe("selected living-room guide", () => {
         (row) => row.quality.name === "WEBDL-2160p",
       ),
     ).toMatchObject({ maxSize: 1100, preferredSize: 900 });
+  });
+  it.each([
+    [
+      "movie",
+      "standard-4k",
+      { name: "Standard 4K Movies", resolution: 2160, sizeTarget: 200 },
+    ],
+    [
+      "series",
+      "standard-4k",
+      { name: "Standard 4K TV", resolution: 2160, sizeTarget: 200 },
+    ],
+    [
+      "movie",
+      "standard-1080p",
+      { name: "Standard 1080p Movies", resolution: 1080, sizeTarget: 80 },
+    ],
+    [
+      "series",
+      "standard-1080p",
+      { name: "Standard 1080p TV", resolution: 1080, sizeTarget: 80 },
+    ],
+  ] as const)(
+    "compiles %s %s with its size target and full fallback definitions",
+    (kind, variant, { name, resolution, sizeTarget }) => {
+      const compiled = compileQualityGuide(kind, bundle(kind), {}, variant);
+      const trash = compileQualityGuide(kind, bundle(kind));
+      const profile = compiled.rules.resolved;
+      if (profile === undefined) throw new Error("Resolved profile missing");
+      const qualities = profile.profile.items.flatMap((item) =>
+        "quality" in item
+          ? [item.quality]
+          : item.items.map(({ quality }) => quality),
+      );
+      expect(compiled.name).toBe(name);
+      expect(compiled.rules.managedGuide?.variant).toBe(variant);
+      expect(compiled.rules.managedGuide?.contentHash).not.toBe(
+        trash.rules.managedGuide?.contentHash,
+      );
+      expect(Math.max(...qualities.map((item) => item.resolution))).toBe(
+        resolution,
+      );
+      expect(qualities.some((item) => item.name.includes("Remux"))).toBe(false);
+      expect(profile.qualityDefinitions).toHaveLength(
+        trash.rules.resolved?.qualityDefinitions.length ?? 0,
+      );
+      for (const item of profile.qualityDefinitions.filter((entry) =>
+        qualities.some((quality) => quality.id === entry.quality.id),
+      )) {
+        expect(item.maxSize).toBe(sizeTarget);
+        expect(item.preferredSize).toBeLessThanOrEqual(sizeTarget);
+        expect(item.minSize).toBe(
+          trash.rules.resolved?.qualityDefinitions.find(
+            (entry) => entry.quality.id === item.quality.id,
+          )?.minSize,
+        );
+      }
+    },
+  );
+  it("accepts old persisted TRaSH metadata without a variant field", () => {
+    const compiled = compileQualityGuide("movie", bundle("movie"));
+    const { variant, ...legacy } = ManagedGuideSchema.parse(
+      compiled.rules.managedGuide,
+    );
+    expect(variant).toBe("trash");
+    expect(ManagedGuideSchema.parse(legacy)).toEqual(legacy);
   });
   it("retains mild DD+ preferences and explicitly neutral lossless scores", () => {
     for (const kind of ["movie", "series"] as const) {

@@ -254,6 +254,9 @@ function mediaFixture() {
     assignProfile() {
       return Promise.resolve({ status: "queued" });
     },
+    retireProfile() {
+      return Promise.resolve({ status: "completed" });
+    },
   };
   return { media, act, createRequest };
 }

@@ -5,8 +5,11 @@ import { useUser } from "#client/shell/user.ts";
 import {
   GuideKindSchema,
   GuideOverridesSchema,
+  QUALITY_GUIDE_VARIANTS,
+  QualityGuideVariantSchema,
   type QualityGuideApply,
   type QualityGuideKind,
+  type QualityGuideVariant,
 } from "#shared/quality-guide/contract.ts";
 import {
   QualityGuideApplyResultSchema,
@@ -19,7 +22,7 @@ import { Callout, LoadError } from "#client/ui/feedback.tsx";
 import { ChoiceField, SelectField } from "#client/ui/forms/field.tsx";
 import { Form } from "#client/ui/forms/form.tsx";
 import { Panel, SkeletonRows } from "#client/ui/panel.tsx";
-import { GuideProfiles } from "./guide-profiles.tsx";
+import { GuideProfiles, guideSizeTarget } from "./guide-profiles.tsx";
 import type { ScoreRow } from "./profile-model.ts";
 import { ScoreRows } from "./score-rows.tsx";
 import styles from "./quality.module.css";
@@ -53,6 +56,7 @@ export function GuideSection() {
     queryFn: () => readApi("/admin/quality-guide", QualityGuideStatusSchema),
   });
   const [kind, setKind] = useState<QualityGuideKind>("movie");
+  const [variant, setVariant] = useState<QualityGuideVariant>("trash");
   const [profileId, setProfileId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<readonly ScoreRow[]>([]);
   const pending = useRef<QualityGuideApply | null>(null);
@@ -63,6 +67,7 @@ export function GuideSection() {
         path: "/admin/quality-guide/preview",
         body: {
           kind,
+          variant,
           scoreOverrides: GuideOverridesSchema.parse(overridesFrom(overrides)),
         },
         schema: QualityGuidePreviewResultSchema,
@@ -80,6 +85,7 @@ export function GuideSection() {
           throw new Error("Refresh the selected profile before applying.");
         pending.current = {
           kind: preview.data.kind,
+          variant: preview.data.variant,
           scoreOverrides: preview.data.rules.managedGuide.scoreOverrides,
           expectedRevision: preview.data.revision,
           expectedContentHash: preview.data.contentHash,
@@ -188,6 +194,21 @@ export function GuideSection() {
               { value: "series", label: "TV" },
             ]}
           />
+          <ChoiceField
+            legend="Quality profile"
+            name="variant"
+            value={variant}
+            onChange={(value) => {
+              setVariant(QualityGuideVariantSchema.parse(value));
+              setProfileId(null);
+              setOverrides([]);
+              resetReview();
+            }}
+            options={QualityGuideVariantSchema.options.map((value) => ({
+              value,
+              label: QUALITY_GUIDE_VARIANTS[value].label,
+            }))}
+          />
           <SelectField
             label="Profile to update"
             name="profile"
@@ -205,9 +226,11 @@ export function GuideSection() {
             }}
             width="medium"
           >
-            <option value="">Create the living-room profile</option>
+            <option value="">Create this profile</option>
             {profiles.data
-              ?.filter((entry) => entry.kind === kind)
+              ?.filter(
+                (entry) => entry.kind === kind && entry.variant === variant,
+              )
               .map((entry) => (
                 <option key={entry.id} value={entry.id}>
                   {entry.name} (version {entry.version})
@@ -266,9 +289,10 @@ export function GuideSection() {
           }
         >
           {formatCount(preview.data.rules.resolved?.customFormats.length)},
-          upgrading up to {preview.data.rules.cutoffQuality}. Audio is checked
-          before a title is published. A release whose listing does not name its
-          language is only downloaded provisionally.
+          upgrading up to {preview.data.rules.cutoffQuality}.{" "}
+          {guideSizeTarget(preview.data.variant)} Audio is checked before a
+          title is published. A release whose listing does not name its language
+          is only downloaded provisionally.
         </Callout>
       )}
       {apply.error !== null && (

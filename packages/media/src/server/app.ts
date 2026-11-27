@@ -94,12 +94,10 @@ import {
   RestrictSchema,
   mediaErrorResponse,
 } from "./validation.ts";
+import { registerQualityProfileRoutes } from "./quality-profile-routes.ts";
 import { registerActivityRoute } from "./household/activity.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
-import {
-  SaveQualityProfileSchema,
-  UpdateNotificationPreferencesSchema,
-} from "#shared/api.ts";
+import { UpdateNotificationPreferencesSchema } from "#shared/api.ts";
 
 export type MediaAppDependencies = {
   auth: Pick<
@@ -343,30 +341,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   app.get("/api/v1/notifications", async (c) =>
     c.json(await dependencies.media.notifications(c.get("actor"))),
   );
-  app.get("/api/v1/profiles", async (c) =>
-    c.json(await dependencies.media.profiles(c.get("actor"))),
-  );
-  app.get("/api/v1/profile-defaults", async (c) =>
-    c.json(await dependencies.media.profileDefaults(c.get("actor"))),
-  );
-  app.put("/api/v1/admin/profile-defaults/:kind", async (c) =>
-    c.json(
-      await dependencies.media.setProfileDefault(
-        c.get("actor"),
-        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
-        parseInput(z.enum(["movie", "series"]), c.req.param("kind")),
-        parseInput(
-          z
-            .object({
-              expectedVersion: z.number().int().nonnegative(),
-              profileId: z.string().min(1),
-            })
-            .strict(),
-          await readJson(c.req.raw),
-        ),
-      ),
-    ),
-  );
+  registerQualityProfileRoutes(app, dependencies.media);
   app.get("/api/v1/admin/users", async (c) =>
     c.json(await dependencies.media.listUsers(c.get("actor"))),
   );
@@ -381,30 +356,6 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
       ),
     );
   });
-  app.post("/api/v1/admin/profiles", async (c) =>
-    c.json(
-      await dependencies.media.saveProfile(
-        c.get("actor"),
-        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
-        parseInput(SaveQualityProfileSchema, await readJson(c.req.raw)),
-      ),
-      202,
-    ),
-  );
-  app.put("/api/v1/media/:id/profile", async (c) =>
-    c.json(
-      await dependencies.media.assignProfile(
-        c.get("actor"),
-        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
-        c.req.param("id"),
-        parseInput(
-          CancelSchema.extend({ profileId: z.string().min(1) }),
-          await readJson(c.req.raw),
-        ),
-      ),
-      202,
-    ),
-  );
   app.get("/api/v1/notifications/preferences", async (c) =>
     c.json(await dependencies.notifications.preferences(c.get("actor"))),
   );

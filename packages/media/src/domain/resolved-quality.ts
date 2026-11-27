@@ -57,9 +57,11 @@ export function bytesPerMinute(mebibytes: number): number {
 function sizeReasons(
   profile: ResolvedProfile,
   release: ResolvedRelease,
+  progressive: boolean,
 ): string[] {
   if (release.sizeBytes === null) return ["size_unknown"];
-  if (profile.source === "sonarr" && release.specialEpisode) return [];
+  if (!progressive && profile.source === "sonarr" && release.specialEpisode)
+    return [];
   const definition = profile.qualityDefinitions.find(
     (item) => item.quality.id === release.qualityId,
   );
@@ -129,11 +131,29 @@ export function evaluateResolvedRelease(
   inputProfile: ResolvedProfile,
   inputRelease: ResolvedRelease,
   matcher: RegexMatcher = () => "unknown",
-  phase: "listing" | "measured" = "measured",
+  mode:
+    | "listing"
+    | "measured"
+    | { progressivePhase: "listing" | "measured" } = "measured",
 ): ResolvedEvaluation {
+  const phase = typeof mode === "string" ? mode : mode.progressivePhase;
+  const progressive = typeof mode !== "string";
   const profile = ResolvedProfileSchema.parse(inputProfile);
   const release = ResolvedReleaseSchema.parse(inputRelease);
-  const quality = profileQuality(profile, release.qualityId);
+  const known = progressive
+    ? profile.qualityDefinitions.find(
+        (item) => item.quality.id === release.qualityId,
+      )
+    : undefined;
+  const quality =
+    profileQuality(profile, release.qualityId) ??
+    (progressive && known !== undefined
+      ? {
+          rank: -1,
+          quality: known.quality,
+          allowed: false,
+        }
+      : undefined);
   if (quality === undefined)
     return {
       status: "protected",
@@ -148,7 +168,7 @@ export function evaluateResolvedRelease(
     phase,
   });
   const reasons = [
-    ...sizeReasons(profile, release),
+    ...sizeReasons(profile, release, progressive),
     ...languageReasons(profile, release, phase),
   ];
   if (

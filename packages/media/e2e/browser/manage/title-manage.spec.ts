@@ -130,6 +130,9 @@ test.describe("a series", () => {
     const version = await mediaVersion(page, series.id);
     const select = page.getByRole("combobox", { name: "Quality profile" });
     await expect(select).toHaveValue("0000000f-0000-4000-8000-000000000003");
+    await expect(
+      select.getByRole("option", { name: "Living room 4K — Movies" }),
+    ).toHaveCount(0);
 
     // The profile already assigned is refused before anything is sent.
     await page.getByRole("button", { name: "Apply profile" }).click();

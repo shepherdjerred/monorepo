@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { QualityRulesSchema } from "#shared/api.ts";
+import { isProgressiveQualityProfile } from "#domain/progressive-quality.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable, queueOperation } from "#automation/store.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
@@ -345,7 +347,12 @@ async function queueSelectedMatch(
     selected.protocol === "library-movie-v4" ||
     selected.protocol === "library-episode"
   )
-    return queueManagedFeedMatchV1(tx, context, { key, current, selected });
+    return queueManagedFeedMatchV1(tx, context, {
+      key,
+      current,
+      selected,
+      sourceId: input.input.input.sourceId,
+    });
   if (selected.protocol === "movie-v4") {
     const movieScope = MovieEditionScopeSchema.parse(scope);
     const sponsor = await requireMovieSponsorV4(
@@ -354,7 +361,7 @@ async function queueSelectedMatch(
       selected.access,
       context.movieManagement?.budget,
     );
-    await assertCurrentMovieAssessment(
+    const assessed = await assertCurrentMovieAssessment(
       tx,
       selected.selected.assessment,
       movieScope,
@@ -370,7 +377,9 @@ async function queueSelectedMatch(
         mediaId: current.mediaId,
         scope: movieScope,
         generation: current.generation,
-        releaseId: selected.selected.releaseId,
+        ...(isProgressiveQualityProfile(assessed.current.rules)
+          ? { feedSourceId: input.input.input.sourceId }
+          : { releaseId: selected.selected.releaseId }),
         cursor: null,
       },
     });
@@ -400,7 +409,9 @@ async function queueSelectedMatch(
       payload: {
         mediaId: current.mediaId,
         generation: current.generation,
-        releaseId: selected.selected.id,
+        ...(isProgressiveQualityProfile(QualityRulesSchema.parse(profile.rules))
+          ? { feedSourceId: input.input.input.sourceId }
+          : { releaseId: selected.selected.id }),
         cursor: null,
       },
     });

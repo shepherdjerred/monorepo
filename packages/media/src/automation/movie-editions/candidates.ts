@@ -1,6 +1,9 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
+import {
+  persistCandidateSnapshot,
+  refreshRetainedAvailability,
+} from "#automation/candidate-evidence.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import {
@@ -39,6 +42,8 @@ export type MovieCandidateV4 = {
   rank: number;
   score: number;
   priority: number;
+  seeders?: number | null | undefined;
+  fallbackDistanceBytes?: number | undefined;
 };
 
 /** Only measured properties of this edition can supply its current quality; another cut is not its predecessor. */
@@ -181,6 +186,8 @@ async function rankMovieCandidateV4(
     releaseId,
     observedSource: source,
   });
+  if (!(await refreshRetainedAvailability(context, releaseId, source)))
+    return null;
   const current = await assertCurrentMovieAssessment(
     context.db,
     assessment.ref,
@@ -220,6 +227,10 @@ async function rankMovieCandidateV4(
         assessment: assessment.ref,
         rank: chosen.evaluation.qualityRank,
         score: chosen.evaluation.score,
+        seeders: source.seeders,
+        ...(chosen.evaluation.fallbackDistanceBytes === undefined
+          ? {}
+          : { fallbackDistanceBytes: chosen.evaluation.fallbackDistanceBytes }),
       }
     : null;
 }

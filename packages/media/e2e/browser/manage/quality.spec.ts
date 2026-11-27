@@ -307,10 +307,18 @@ test.describe("the living-room guide", () => {
     const previews = await answerWrites(page, "/admin/quality-guide/preview", {
       json: {
         kind: "movie",
-        name: movies.name,
+        variant: "standard-4k",
+        name: "Standard 4K Movies",
         revision: guide.revision,
         contentHash: guide.contentHash,
-        rules: movies.rules,
+        rules: {
+          ...movies.rules,
+          qualities: movies.rules.qualities.filter(
+            (quality) => quality !== "Remux-2160p",
+          ),
+          cutoffQuality: "Bluray-2160p",
+          managedGuide: { ...guide, variant: "standard-4k" },
+        },
       },
     });
     const applies = await answerWrites(page, "/admin/quality-guide/apply", {
@@ -318,6 +326,14 @@ test.describe("the living-room guide", () => {
     });
     await openManage(page, "/manage/quality");
     const form = page.getByRole("form", { name: "Review the current guide" });
+    await expect(
+      form.getByRole("radio", { name: "TRaSH", exact: true }),
+    ).toBeChecked();
+    await expect(
+      form.getByRole("radio", { name: "Standard 1080p" }),
+    ).toBeVisible();
+    await form.getByRole("radio", { name: "Standard 4K" }).check();
+    expect(previews).toEqual([]);
     const overrides = form.getByRole("group", { name: "Score overrides" });
     await overrides.getByRole("button", { name: "Add an override" }).click();
     await overrides.getByLabel("TRaSH format ID, row 1").fill("not-an-id");
@@ -331,9 +347,11 @@ test.describe("the living-room guide", () => {
 
     await overrides.getByLabel("TRaSH format ID, row 1").fill(formatId);
     await form.getByRole("button", { name: "Preview current guide" }).click();
-    await expect(page.getByText("upgrading up to Remux-2160p")).toBeVisible();
+    await expect(page.getByText("upgrading up to Bluray-2160p")).toBeVisible();
+    await expect(page.getByText(/about 25 GB for two hours/u)).toBeVisible();
     expect(previews[0]?.body).toEqual({
       kind: "movie",
+      variant: "standard-4k",
       scoreOverrides: { [formatId]: 250 },
     });
 
@@ -342,6 +360,7 @@ test.describe("the living-room guide", () => {
     // The apply carries the reviewed guide's own identity, not the form's.
     expect(applies[0]?.body).toEqual({
       kind: "movie",
+      variant: "standard-4k",
       scoreOverrides: guide.scoreOverrides,
       expectedRevision: guide.revision,
       expectedContentHash: guide.contentHash,

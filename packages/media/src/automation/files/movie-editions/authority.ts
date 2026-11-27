@@ -21,6 +21,7 @@ import {
 import { movieEditionLibraryPath } from "#automation/files/editions/movie-path.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import { chooseUpgrade, evaluateRelease } from "#domain/quality.ts";
+import { acceptedFallbackReasons } from "#domain/release-evaluation.ts";
 import { measuredQualityError } from "#automation/files/content-rejection.ts";
 import {
   fileIdentityEvidence,
@@ -251,7 +252,10 @@ export async function assertMovieMeasuredUpgradeV4(
     if (!decision.upgrade)
       throw new FileGuardError(`measured_upgrade_rejected:${decision.reason}`);
   }
-  return previous;
+  return {
+    previous,
+    qualityFallbackReasons: acceptedFallbackReasons(evaluated),
+  };
 }
 
 /** Exact member/provenance and predecessor recheck before accepting staging or publishing this literal plan. */
@@ -279,6 +283,8 @@ export async function assertMovieFilePlanV4(
     title: z.string(),
     canonicalPolicyHash: z.string().regex(/^[a-f0-9]{64}$/u),
     profileVersions: z.record(z.string(), z.int().nonnegative()),
+    qualityFallback: z.boolean().optional(),
+    qualityFallbackReasons: z.array(z.string()).optional(),
   }).parse(entry.properties);
   if (
     measured.profileVersions[plan.scope.mediaId] !==
@@ -294,7 +300,9 @@ export async function assertMovieFilePlanV4(
     measured.title !== authority.release.title
   )
     throw new FileGuardError("movie_measured_source_changed");
-  const previous = await assertMovieMeasuredUpgradeV4(tx, authority, measured);
+  const { previous, qualityFallbackReasons } =
+    await assertMovieMeasuredUpgradeV4(tx, authority, measured);
+  assertMovieFallbackMetadata(measured, qualityFallbackReasons);
   if (
     (previous?.id ?? null) !== entry.previousAssetId ||
     (previous?.version ?? null) !== entry.previousVersion ||
@@ -306,6 +314,21 @@ export async function assertMovieFilePlanV4(
   authority.freshness.assertActive();
   context.execution.assertActive();
   return plan;
+}
+
+function assertMovieFallbackMetadata(
+  measured: {
+    qualityFallback?: boolean | undefined;
+    qualityFallbackReasons?: string[] | undefined;
+  },
+  reasons: string[],
+) {
+  if (
+    (measured.qualityFallback ?? false) !== reasons.length > 0 ||
+    JSON.stringify(measured.qualityFallbackReasons ?? []) !==
+      JSON.stringify(reasons)
+  )
+    throw new FileGuardError("movie_measured_quality_changed");
 }
 
 function assertMovieSidecarManifest(

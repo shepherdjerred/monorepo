@@ -148,6 +148,7 @@ export function publicAssetProperties(raw: Prisma.JsonValue) {
       sizeBytes: z.number().nonnegative().optional(),
       audioLanguages: z.array(z.string()).optional(),
       hdr: z.boolean().optional(),
+      qualityFallback: z.boolean().optional(),
     })
     .parse(raw);
 }

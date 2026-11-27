@@ -9,6 +9,7 @@ import type { GuideBundle } from "#domain/quality-guide/contract.ts";
 import { compileQualityGuide } from "#domain/quality-guide/compile.ts";
 import { MediaError } from "#application/errors.ts";
 import { saveCompiledGuide } from "#infrastructure/quality-guide/persistence.ts";
+import { reconcileRetiredQualityProfiles } from "#infrastructure/quality-profiles/reconcile.ts";
 import { serializable } from "#automation/store.ts";
 
 type Outcome = "updated" | "unchanged" | "deferred" | "failed";
@@ -38,6 +39,7 @@ export function qualityGuideActivities(
       signal?: AbortSignal,
     ): ReturnType<QualityGuideActivities["refreshMediaQualityGuides"]> {
       signal?.throwIfAborted();
+      await reconcileRetiredQualityProfiles(db, signal);
       const profiles = await db.qualityProfile.findMany({
         where: {
           rules: { path: ["managedGuide", "preset"], equals: "living-room-v1" },
@@ -62,6 +64,7 @@ export function qualityGuideActivities(
             managed.kind,
             await bundleFor(bundles, guide, managed.kind, signal),
             managed.scoreOverrides,
+            managed.variant,
           );
         } catch {
           signal?.throwIfAborted();

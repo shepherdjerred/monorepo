@@ -713,6 +713,9 @@ model QualityProfile {
   intents   MediaIntent[]
   versions  QualityProfileVersion[]
   defaults QualityProfileDefault[]
+  replacedByProfileId String?
+  replacedBy QualityProfile? @relation("RetiredQualityProfile", fields: [replacedByProfileId], references: [id], onDelete: Restrict)
+  replaces QualityProfile[] @relation("RetiredQualityProfile")
 }
 
 model QualityProfileDefault {

@@ -1,6 +1,8 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MediaIntent } from "#generated/prisma/client.ts";
 import { z } from "zod";
+import { QualityRulesSchema } from "#shared/api.ts";
+import { isProgressiveQualityProfile } from "#domain/progressive-quality.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import {
@@ -67,9 +69,15 @@ export async function commitSeriesPackFeedV1(
     const targets = await tx.mediaIntent.findMany({
       where: { mediaId: { in: mediaIds }, edition: "default" },
       orderBy: { mediaId: "asc" },
+      include: { profile: { select: { rules: true } } },
     });
     const primary = currentPackTargetV1(targets, input.target, mediaIds.length);
     if (primary === undefined) return null;
+    const progressive =
+      primary.profile !== null &&
+      isProgressiveQualityProfile(
+        QualityRulesSchema.parse(primary.profile.rules),
+      );
     const parent = await loadSeriesPackInterpretationV1(
       tx,
       input.captured,
@@ -112,7 +120,9 @@ export async function commitSeriesPackFeedV1(
       payload: {
         mediaId: primary.mediaId,
         generation: primary.generation,
-        releaseId: parent.value.releaseId,
+        ...(progressive
+          ? { feedSourceId: input.command.sourceId }
+          : { releaseId: parent.value.releaseId }),
         cursor: null,
       },
       budget: invocation.budget,
@@ -140,23 +150,25 @@ export async function commitSeriesPackFeedV1(
       throw new Error(
         "Series pack feed lost its actual original queued cohort",
       );
-    if (authority.kind === "request")
-      await captureSponsorAuthority(tx, {
-        operationId,
-        sponsorRequestId: authority.sponsor.id,
-        mediaIds,
-        serverMachineId: invocation.access.serverMachineId,
-      });
-    await recordSeriesPackSelectionV1(
-      tx,
-      {
-        operationId,
-        primaryMediaId: coordinator.mediaId,
-        generation: coordinator.generation,
-        captured: input.captured,
-      },
-      invocation,
-    );
+    if (!progressive) {
+      if (authority.kind === "request")
+        await captureSponsorAuthority(tx, {
+          operationId,
+          sponsorRequestId: authority.sponsor.id,
+          mediaIds,
+          serverMachineId: invocation.access.serverMachineId,
+        });
+      await recordSeriesPackSelectionV1(
+        tx,
+        {
+          operationId,
+          primaryMediaId: coordinator.mediaId,
+          generation: coordinator.generation,
+          captured: input.captured,
+        },
+        invocation,
+      );
+    }
     return advanceSeriesPackFeedV1(
       tx,
       {
@@ -175,8 +187,8 @@ export async function commitSeriesPackFeedV1(
   });
 }
 
-function currentPackTargetV1(
-  targets: MediaIntent[],
+function currentPackTargetV1<Target extends MediaIntent>(
+  targets: Target[],
   expected: FeedMatchTarget,
   count: number,
 ) {

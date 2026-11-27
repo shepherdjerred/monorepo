@@ -8,6 +8,7 @@ import type { ProviderCandidate } from "#integrations/providers.ts";
 import type { ReleaseEvaluation } from "#domain/release-evaluation.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { nextProviderAvailability } from "#domain/provider-availability.ts";
+import type { ReleaseCandidate } from "#generated/prisma/client.ts";
 
 function identity(attributes: ReleaseAttributes): string {
   return JSON.stringify({
@@ -38,6 +39,55 @@ export function candidateSourceIdentity(source: ProviderCandidate): string {
       : { editionEvidence: source.editionEvidence }),
   });
 }
+
+/** Refresh only volatile availability after rechecking the exact retained source. */
+export async function refreshRetainedAvailability(
+  context: MediaAutomationContext,
+  releaseId: string,
+  source: ProviderCandidate,
+) {
+  return context.db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "ReleaseCandidate" WHERE id = ${releaseId} FOR UPDATE`;
+    const release = await tx.releaseCandidate.findUniqueOrThrow({
+      where: { id: releaseId },
+    });
+    if (release.encryptedSource === null) return false;
+    const retained = StoredCandidateSchema.parse(
+      JSON.parse(
+        context.cipher.decrypt(
+          release.encryptedSource,
+          `release:${release.providerId}:${release.providerReleaseId}`,
+        ),
+      ),
+    );
+    if (candidateSourceIdentity(retained) !== candidateSourceIdentity(source))
+      return false;
+    await updateAvailability(tx, release, source);
+    return true;
+  });
+}
+
+async function updateAvailability(
+  tx: Prisma.TransactionClient,
+  release: Pick<ReleaseCandidate, "id" | "availability">,
+  source: ProviderCandidate,
+) {
+  const observedAt =
+    source.availabilityObservedAtV1 === undefined
+      ? new Date()
+      : new Date(source.availabilityObservedAtV1);
+  const availability = nextProviderAvailability(
+    release.availability,
+    source,
+    observedAt,
+  );
+  if (availability !== null)
+    await tx.releaseCandidate.update({
+      where: { id: release.id },
+      data: { availability },
+    });
+}
+
 /** Source, metadata and evidence form one snapshot. FK claims serialize against this row lock. */
 export async function persistCandidateSnapshot(
   context: MediaAutomationContext,
@@ -50,10 +100,6 @@ export async function persistCandidateSnapshot(
   },
 ): Promise<ReleaseAttributes | null> {
   const { source, attributes: next, evaluation } = input;
-  const observedAt =
-    source.availabilityObservedAtV1 === undefined
-      ? new Date()
-      : new Date(source.availabilityObservedAtV1);
   if (
     source.title !== next.title ||
     source.sizeBytes !== next.sizeBytes ||
@@ -111,16 +157,7 @@ export async function persistCandidateSnapshot(
         candidateSourceIdentity(source)
     )
       return null;
-    const availability = nextProviderAvailability(
-      row.availability,
-      source,
-      observedAt,
-    );
-    if (availability !== null)
-      await tx.releaseCandidate.update({
-        where: { id: releaseId },
-        data: { availability },
-      });
+    await updateAvailability(tx, row, source);
     if (
       (await tx.acquisitionAttempt.count({ where: { releaseId } })) > 0 ||
       (await tx.movieReleaseAssessment.count({ where: { releaseId } })) > 0

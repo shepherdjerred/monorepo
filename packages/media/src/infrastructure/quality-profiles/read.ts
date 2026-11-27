@@ -29,7 +29,10 @@ export async function readQualityProfiles(
   const current = await currentUser(db, actor);
   return current.role === "owner"
     ? ProfileListSchema.parse(
-        await db.qualityProfile.findMany({ orderBy: { name: "asc" } }),
+        await db.qualityProfile.findMany({
+          where: { replacedByProfileId: null },
+          orderBy: { name: "asc" },
+        }),
       )
     : [];
 }

@@ -17,6 +17,7 @@ const FilePropertiesSchema = z.object({
   sizeBytes: z.number().nonnegative().optional(),
   audioLanguages: z.array(z.string()).optional(),
   hdr: z.boolean().optional(),
+  qualityFallback: z.boolean().optional(),
 });
 
 const GIGABYTE = 1_000_000_000;
@@ -33,7 +34,8 @@ export function fileSize(bytes: number, locale?: string): string {
 export function fileSummary(properties: unknown, locale?: string): string[] {
   const parsed = FilePropertiesSchema.safeParse(properties);
   if (!parsed.success) return [];
-  const { quality, hdr, audioLanguages, sizeBytes } = parsed.data;
+  const { quality, hdr, audioLanguages, sizeBytes, qualityFallback } =
+    parsed.data;
   return [
     ...(quality === undefined
       ? []
@@ -44,6 +46,7 @@ export function fileSummary(properties: unknown, locale?: string): string[] {
           `${audioLanguages.map((code) => languageName(code)).join(", ")} audio`,
         ]),
     ...(sizeBytes === undefined ? [] : [fileSize(sizeBytes, locale)]),
+    ...(qualityFallback === true ? ["Fallback copy"] : []),
   ];
 }
 
