@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { createChampionPageTestEnv } from "#src/testing/consumer-champion-test-env.ts";
+import { expectOneLakeSlot } from "#src/testing/consumer-profile-feature-test.ts";
 import type * as AccessModule from "#src/consumer/access.ts";
-import type * as InstanceModule from "#src/reports/duckdb/instance.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import {
   AHRI,
@@ -15,23 +15,6 @@ import {
   groupGames,
   soloGame,
 } from "#src/testing/consumer-champion-group.ts";
-
-// Counts the DuckDB connections each request opens: a page costs one slot.
-const slots = vi.hoisted(() => ({ opened: 0 }));
-vi.mock("#src/reports/duckdb/instance.ts", async () => {
-  const actual: typeof InstanceModule = await vi.importActual(
-    "#src/reports/duckdb/instance.ts",
-  );
-  return {
-    ...actual,
-    withDuckDBConnection: (
-      ...args: Parameters<typeof actual.withDuckDBConnection>
-    ) => {
-      slots.opened += 1;
-      return actual.withDuckDBConnection(...args);
-    },
-  };
-});
 
 // A Discord lookup that cannot answer is not a denial.
 const discord = vi.hoisted(() => ({ unavailable: false }));
@@ -285,7 +268,7 @@ describe("champion pages: one lake slot per request", () => {
     profileFeature.enable(guildId);
     await seedGroup();
     await writeLobbies(groupGames());
-    const requests = [
+    const requests: (() => Promise<unknown>)[] = [
       () => caller().consumerChampion.index({}),
       () =>
         caller().consumerChampion.matchups({
@@ -295,9 +278,7 @@ describe("champion pages: one lake slot per request", () => {
       () => caller().consumerChampion.compare({ championId: AHRI.id }),
     ];
     for (const request of requests) {
-      slots.opened = 0;
-      await request();
-      expect(slots.opened).toBe(1);
+      await expectOneLakeSlot(request);
     }
   });
 });

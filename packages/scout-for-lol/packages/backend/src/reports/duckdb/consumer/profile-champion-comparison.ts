@@ -7,7 +7,8 @@ import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { withPageLakeSession } from "#src/reports/duckdb/consumer/pages/page-session.ts";
+import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
+import { runSource } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   entryAccountPairs,
   entryGamesSource,
@@ -70,7 +71,7 @@ export async function fetchChampionComparisons(options: {
 }): Promise<LakeChampionComparisonRow[]> {
   const pairs = entryAccountPairs(options.entries);
   if (pairs.length === 0) return [];
-  return await withPageLakeSession(options.lakeDir, async (page) => {
+  return await withLakePage(options.lakeDir, async (page) => {
     const source = entryGamesSource(page.files, {
       pairs,
       queues: options.queues,
@@ -85,7 +86,8 @@ export async function fetchChampionComparisons(options: {
     const scopedSql = `${ranked.sql}, scoped AS (SELECT * FROM ranked ${window.where}) `;
     const requestedParams = ranked.leadingParams;
     const windowParams = window.params;
-    const aggregates = await page.run({
+    const aggregates = await runSource({
+      session: page.session,
       source,
       leadingParams: requestedParams,
       trailingParams: windowParams,
@@ -100,7 +102,8 @@ export async function fetchChampionComparisons(options: {
         `sum(${PLAYED_SECONDS_SQL})::BIGINT AS time_played FROM scoped GROUP BY entry_key`,
       schema: ChampionComparisonRowSchema,
     });
-    const recent = await page.run({
+    const recent = await runSource({
+      session: page.session,
       source,
       leadingParams: requestedParams,
       trailingParams: windowParams,

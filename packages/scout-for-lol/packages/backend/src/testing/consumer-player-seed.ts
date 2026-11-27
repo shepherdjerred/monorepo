@@ -17,9 +17,12 @@ export async function seedConsumerPlayer(
     discordId?: DiscordAccountId;
     puuids: LeaguePuuid[];
     lastMatchTime?: Date | null;
+    /** Row creation time; defaults to now. */
+    createdAt?: Date;
   },
 ) {
   const now = new Date();
+  const created = options.createdAt ?? now;
   const player = await prisma.player.create({
     data: {
       alias: options.alias,
@@ -28,8 +31,8 @@ export async function seedConsumerPlayer(
         : { discordId: options.discordId }),
       serverId: options.serverId,
       creatorDiscordId: creator,
-      createdTime: now,
-      updatedTime: now,
+      createdTime: created,
+      updatedTime: created,
     },
   });
   await prisma.account.createMany({
@@ -46,8 +49,8 @@ export async function seedConsumerPlayer(
       lastMatchTime:
         options.lastMatchTime === undefined ? now : options.lastMatchTime,
       lastCheckedAt: now,
-      createdTime: now,
-      updatedTime: now,
+      createdTime: created,
+      updatedTime: created,
     })),
   });
   return player;

@@ -17,9 +17,9 @@ import type {
 import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   configureConsumerProfileFeatureTest,
-  createTrackedPlayer,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
+import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
@@ -43,10 +43,15 @@ function player(options: {
   puuid: LeaguePuuid;
   discordId?: DiscordAccountId;
 }) {
-  return createTrackedPlayer(trpc.prisma, {
-    ...options,
-    creatorDiscordId: actor,
+  return seedConsumerPlayer(trpc.prisma, actor, {
+    serverId: options.guildId,
+    alias: options.alias,
+    puuids: [options.puuid],
+    ...(options.discordId === undefined
+      ? {}
+      : { discordId: options.discordId }),
     createdAt: created,
+    lastMatchTime: null,
   });
 }
 

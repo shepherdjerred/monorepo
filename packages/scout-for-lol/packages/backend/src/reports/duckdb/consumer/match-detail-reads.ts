@@ -1,7 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { withLakeQueryRetry } from "#src/reports/duckdb/lake.ts";
+import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
 import {
   fetchFullMatch,
   fetchTimelineCheckpointFrames,
@@ -28,26 +26,21 @@ export async function fetchMatchDetailRead(options: {
   lakeDir?: string;
 }) {
   const { matchId } = options;
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) =>
-      await withDuckDBConnection(async (session) => {
-        const scope = { files, session };
-        const rows = await fetchFullMatch({ matchId, scope });
-        const coverage = await fetchTimelineCoverage({ matchId, scope });
-        const keyEvents = await fetchTimelineEventPage({
-          matchId,
-          offset: 0,
-          limit: KEY_EVENT_LIMIT,
-          eventTypes: options.keyEventTypes,
-          scope,
-        });
-        const laneDeltaFrames = await fetchTimelineCheckpointFrames({
-          matchId,
-          checkpointMs: options.checkpointMs,
-          scope,
-        });
-        return { rows, coverage, keyEvents, laneDeltaFrames };
-      }),
-  );
+  return await withLakePage(options.lakeDir, async (page) => {
+    const rows = await fetchFullMatch({ matchId, page });
+    const coverage = await fetchTimelineCoverage({ matchId, page });
+    const keyEvents = await fetchTimelineEventPage({
+      matchId,
+      offset: 0,
+      limit: KEY_EVENT_LIMIT,
+      eventTypes: options.keyEventTypes,
+      page,
+    });
+    const laneDeltaFrames = await fetchTimelineCheckpointFrames({
+      matchId,
+      checkpointMs: options.checkpointMs,
+      page,
+    });
+    return { rows, coverage, keyEvents, laneDeltaFrames };
+  });
 }

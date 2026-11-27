@@ -15,10 +15,10 @@ import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import { rawArchiveReceiptRecord } from "#src/report-lake/durable-receipts.ts";
 import {
   configureConsumerProfileFeatureTest,
+  expectOneLakeSlot,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { resetFlagOverrides } from "#src/configuration/flags.ts";
-import { countReportSlotsTaken } from "#src/reports/duckdb/instance.ts";
 import type * as SeedModule from "#src/testing/consumer-player-seed.ts";
 import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
@@ -494,11 +494,12 @@ describe("consumerPlayer.profileSummary plays with", () => {
       untrackedMatchFacts: entries.flatMap((entry) => entry.strangers),
     });
 
-    const before = countReportSlotsTaken();
-    const summary = await trpc
-      .authedCaller()
-      .consumerPlayer.profileSummary({ playerId: subject.id });
-    expect(countReportSlotsTaken() - before).toBe(1);
+    const summary = await expectOneLakeSlot(
+      async () =>
+        await trpc
+          .authedCaller()
+          .consumerPlayer.profileSummary({ playerId: subject.id }),
+    );
     expect(summary.playsWith.friends).toHaveLength(1);
   });
 });
@@ -852,9 +853,9 @@ describe("consumerPlayer.roster facts", () => {
       participants: [{ puuid: finished, championId: 64 }],
     });
 
-    const before = countReportSlotsTaken();
-    const roster = await trpc.authedCaller().consumerPlayer.roster();
-    expect(countReportSlotsTaken() - before).toBe(1);
+    const roster = await expectOneLakeSlot(
+      async () => await trpc.authedCaller().consumerPlayer.roster(),
+    );
 
     const live = roster.players.find((p) => p.alias === "Live Player");
     expect(live?.lastSevenDays.games).toBe(2);
