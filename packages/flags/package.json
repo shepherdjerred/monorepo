@@ -12,7 +12,8 @@
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bunx eslint --cache . --max-warnings=0"
+    "lint": "bunx eslint --cache . --max-warnings=0",
+    "generate-legacy-flag-dates": "bun scripts/generate-legacy-flag-dates.ts"
   },
   "dependencies": {
     "@hono/bun": "^1.0.1",

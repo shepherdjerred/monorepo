@@ -171,7 +171,7 @@ committer date of the first `main` commit whose `managed-flag-inventory.json`
 declares it. Keys that were already in that file's first commit (`0f6a972c1c`,
 2026-08-25) are marked `onOrBefore`, because they were declared earlier
 elsewhere. The file is frozen evidence: it was generated once with
-`bun packages/flags/scripts/generate-legacy-flag-dates.ts` and is never
+`bun run generate-legacy-flag-dates` in `packages/flags` and is never
 regenerated in CI. Keys added later get a recorded `create` row instead. It is
 Zod-validated when it is imported.
 
