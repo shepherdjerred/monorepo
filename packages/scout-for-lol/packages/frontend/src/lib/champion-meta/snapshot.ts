@@ -33,6 +33,7 @@ export type ChampionSlice = z.infer<typeof ChampionSliceSchema>;
 export const ChampionResponseSchema = ChampionMetaFileSchema.extend({
   slices: z.array(ChampionSliceSchema),
 });
+export type ChampionResponse = z.infer<typeof ChampionResponseSchema>;
 
 /** Lowercase, ASCII, hyphenated: `Kai'Sa` is `kaisa`, `Nunu & Willump` is `nunu-willump`. */
 export function championSlug(name: string): string {
