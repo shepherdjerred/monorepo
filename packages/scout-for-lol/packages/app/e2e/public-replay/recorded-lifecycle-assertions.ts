@@ -49,8 +49,61 @@ export async function verifyRecordedRoster(
       capabilities.descriptor.durationSeconds > 100,
     );
   }
-  if (capabilities.championResources)
+  if (
+    capabilities.descriptor.sha256 ===
+    "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
+  ) {
+    if (capabilities.championHealth || capabilities.championResources)
+      await verifyCurrentChampionStats(page, capabilities, testInfo);
+  } else if (capabilities.championResources)
     await verifyRecordedRosterResources(page, testInfo);
+}
+
+async function verifyCurrentChampionStats(
+  page: Page,
+  capabilities: { championHealth: boolean; championResources: boolean },
+  testInfo: TestInfo,
+) {
+  const roster = page.getByRole("table", { name: "Blue team roster" });
+  const row = roster.getByRole("row").filter({
+    has: page.getByRole("rowheader", { name: /LeeSin/ }),
+  });
+  const health = row.getByRole("meter", { name: "LeeSin health" });
+  const resource = row.getByRole("meter", { name: "LeeSin resource" });
+  const gold = row.getByRole("cell").last();
+  const camera = page.getByRole("combobox", { name: "Camera" });
+  await camera.selectOption("player:1073742162");
+  // Sample the original replication tracks before and after gains and losses.
+  for (const [time, current, max, energy, held] of [
+    [0, "645", "645", "200", "500"],
+    [120, "409.4465026855469", "742.760009765625", "165", "353"],
+    [0, "645", "645", "200", "500"],
+  ] as const) {
+    await seek(page, time);
+    if (capabilities.championHealth) {
+      await expect(health).toHaveAttribute("value", current);
+      await expect(health).toHaveAttribute("max", max);
+    }
+    if (capabilities.championResources) {
+      await expect(resource).toHaveAttribute("value", energy);
+      await expect(resource).toHaveAttribute("max", "200");
+      await expect(gold).toHaveText(held);
+    }
+    if (time === 120) {
+      await roster.screenshot({
+        path: testInfo.outputPath("recorded-current-champion-stats.png"),
+      });
+      if (capabilities.championHealth) {
+        const screenshot = await page
+          .getByLabel("League of Legends replay scene")
+          .screenshot({
+            path: testInfo.outputPath("recorded-current-overhead-health.png"),
+          });
+        expect(await centerChampionHealthFill(page, screenshot)).toBe(29);
+      }
+    }
+  }
+  await page.getByRole("button", { name: "Map overview" }).click();
 }
 
 async function verifyRecordedRosterResources(page: Page, testInfo: TestInfo) {

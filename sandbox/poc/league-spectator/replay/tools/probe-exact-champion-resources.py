@@ -7,11 +7,10 @@ from collections import Counter
 from hashlib import sha256
 from pathlib import Path
 
-from macho import MachImage
+from champion_replication_archive import ARCHIVED_BUILD, SLICE_DIGESTS, read_replication_image
 from unicorn import UC_ARCH_X86, UC_HOOK_CODE, UC_MODE_64, Uc
 from unicorn import x86_const as registers
 
-ARCHIVE_SLICE = "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa"
 ARENA = 0x20000000
 STACK, ENTITY, INPUT, SLOT = (ARENA + n for n in (0x7FF8, 0x9000, 0xE000, 0xF000))
 GROUPS = {
@@ -31,10 +30,10 @@ PROGRESSION_FIELDS = {
 }
 
 
-def verify(archive, groups, progression=False, experience_scene=None):
-    image = MachImage(archive)
-    if sha256(image.binary).hexdigest() != ARCHIVE_SLICE:
-        raise ValueError("Invalid archived resource decoder")
+def verify(archive, groups, progression=False, experience_scene=None, build=ARCHIVED_BUILD):
+    if progression and build != ARCHIVED_BUILD:
+        raise ValueError("Unreviewed champion progression build")
+    image = read_replication_image(archive, build)
     base = image.base
     vm = Uc(UC_ARCH_X86, UC_MODE_64)
     vm.mem_map(base, len(image.image))
@@ -213,10 +212,15 @@ if __name__ == "__main__":
         or scene["identity"]["replaySha256"] != payload["identity"]
     ):
         parser.error("--experience-scene requires --progression and the same exact replay")
-    result = verify(args.archive.read_bytes(), payload["groups"], args.progression, scene)
+    build = payload.get("build", ARCHIVED_BUILD)
+    result = verify(args.archive.read_bytes(), payload["groups"], args.progression, scene, build)
     if scene_bytes is not None:
         result["sceneSha256"] = sha256(scene_bytes).hexdigest()
-    result.update(replaySha256=payload["identity"], groupsSha256=sha256(source).hexdigest(), sliceSha256=ARCHIVE_SLICE)
+    result.update(
+        replaySha256=payload["identity"],
+        groupsSha256=sha256(source).hexdigest(),
+        sliceSha256=SLICE_DIGESTS[build],
+    )
     output = json.dumps(result, sort_keys=True)
     with args.receipt.open("x", encoding="utf-8") as receipt:
         receipt.write(output + "\n")

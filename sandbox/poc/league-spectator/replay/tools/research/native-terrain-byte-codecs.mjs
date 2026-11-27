@@ -1,6 +1,10 @@
 export const terrainPositionBuild = "16.23.840.6595";
 export const currentTerrainPositionBuild = "16.23.841.8428";
 export const terrainPositionProtocol = "8bbfcd5af2bc92db";
+export const currentTerrainClientSliceSha256 =
+  "de6db1683eb61358d0aaf9fac44ef722850a927263eae7f68212add8621a500e";
+export const currentTerrainClientArchiveSha256 =
+  "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7";
 export const preparedBytes = 1024;
 export const preparedSha256 =
   "14d1c21833a71917e12ff44a3ae8d9a6c40ee2401d94f0b3824991022c1c124c";

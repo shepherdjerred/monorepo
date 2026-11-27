@@ -1,4 +1,8 @@
 import type { z } from "zod";
+import {
+  currentTerrainClientSliceSha256,
+  currentTerrainPositionBuild,
+} from "./tools/research/native-terrain-byte-codecs.mjs";
 
 const championStatsDecoderSliceSha256 =
   "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa";
@@ -190,13 +194,22 @@ export function admitRecordedChampionStats(
   roster: Iterable<number>,
   kind: "health" | "resources" | "experience",
 ) {
+  const currentBuild = identity.build === currentTerrainPositionBuild;
+  if (currentBuild && kind === "experience")
+    throw new Error(
+      "Recorded champion experience is unverified for this build.",
+    );
   const { tracks } = schema
     .object({
       kind: schema.literal(`scout-recorded-champion-${kind}`),
       build: schema.literal(identity.build),
       protocol: schema.literal(identity.protocol),
       replaySha256: schema.literal(identity.replaySha256),
-      sliceSha256: schema.literal(championStatsDecoderSliceSha256),
+      sliceSha256: schema.literal(
+        currentBuild
+          ? currentTerrainClientSliceSha256
+          : championStatsDecoderSliceSha256,
+      ),
       tracks: schema.unknown(),
     })
     .parse(artifact);

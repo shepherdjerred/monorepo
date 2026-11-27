@@ -48,10 +48,10 @@ fails with all assertions intact.
 
 ## Recorded champion health
 
-The 16.23.840.6595 extractor projects current and maximum champion health from
-group 32 of replication opcode 309. It uses champion IDs from an independently
-bound `scene.json` for the same replay SHA-256. Points follow the main playback
-stream. The roster and overhead gauges hold the last observed values when
+The extractor supports 16.23.840.6595 and 16.23.841.8428. It projects current and
+maximum champion health from group 32 of replication opcode 309, using champion
+IDs from an independently bound `scene.json` for the same replay SHA-256.
+Points follow the main playback stream. The roster and overhead gauges hold the last observed values when
 seeking or playing. The overhead gauge uses the model's bind-pose bounds and
 the Scout scene camera.
 
@@ -67,7 +67,7 @@ uv run --no-project --with unicorn python sandbox/poc/league-spectator/replay/to
 
 ## Recorded champion resources and gold
 
-The resource extractor uses the same exact-build packet reader. Its native
+The resource extractor supports the same two exact builds. Its native
 probe registers the original group 1 and 32 layouts, consumes the full
 recorded groups, and compares spendable gold and primary resource values
 against their original getters. The roster displays the latest recording at

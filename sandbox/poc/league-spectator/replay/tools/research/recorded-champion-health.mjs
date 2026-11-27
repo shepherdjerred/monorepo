@@ -45,6 +45,7 @@ export function extractRecordedChampionHealth(
   onGroup,
 ) {
   const replication = recordedChampionReplication(binary, rawReplay, scene, {
+    allowCurrentBuild: true,
     accepts: (group, fieldMask) => group === 32 && (fieldMask & 3) !== 0,
     includeSnapshots: onGroup !== undefined,
   });
@@ -108,7 +109,11 @@ if (import.meta.main) {
   if (oracleInput !== undefined) {
     writeFileSync(
       oracleInput,
-      JSON.stringify({ identity: artifact.replaySha256, groups }),
+      JSON.stringify({
+        identity: artifact.replaySha256,
+        build: artifact.build,
+        groups,
+      }),
       { flag: "wx" },
     );
   }

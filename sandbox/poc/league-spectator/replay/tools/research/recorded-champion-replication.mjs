@@ -2,10 +2,15 @@ import { createHash } from "node:crypto";
 import { zstdDecompressSync } from "node:zlib";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
+import {
+  currentTerrainClientArchiveSha256,
+  currentTerrainClientSliceSha256,
+  currentTerrainPositionBuild,
+  isExactTerrainReplay,
+  terrainPositionProtocol,
+} from "./native-terrain-byte-codecs.mjs";
 
-export const replicationBuild = "16.23.840.6595";
-export const replicationProtocol = "8bbfcd5af2bc92db";
-export const replicationSliceSha256 =
+const replicationSliceSha256 =
   "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa";
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const groups = [1, 2, 4, 8, 16, 32, 64];
@@ -97,22 +102,28 @@ export function recordedEntityReplication(
   entityIds,
   options,
 ) {
-  // The archive is inert. This address supplies the original opcode 309
-  // wire substitution table from the verified exact-build slice.
-  const slice = binary.subarray(0x4000, 0x4000 + 39_463_840);
-  if (sha256(slice) !== replicationSliceSha256)
-    throw Error("Wrong archived replication decoder");
-  const substitution = slice.subarray(0x21485c0, 0x21486c0);
   const replay = openReplay(Uint8Array.from(rawReplay).buffer);
   const replaySha256 = sha256(rawReplay);
   if (
-    replay.build !== replicationBuild ||
-    replay.protocol !== replicationProtocol ||
-    sceneIdentity.build !== replicationBuild ||
-    sceneIdentity.protocol !== replicationProtocol ||
+    !isExactTerrainReplay(replay, options) ||
+    sceneIdentity.build !== replay.build ||
+    sceneIdentity.protocol !== terrainPositionProtocol ||
     sceneIdentity.replaySha256 !== replaySha256
   )
     throw Error("Replay and independently bound scene must match the decoder");
+  const currentBuild = replay.build === currentTerrainPositionBuild;
+  const sliceSha256 = currentBuild
+    ? currentTerrainClientSliceSha256
+    : replicationSliceSha256;
+  // The archive is inert. This address supplies the original opcode 309
+  // wire substitution table from the verified exact-build slice.
+  const slice = binary.subarray(0x4000, 0x4000 + 39_463_840);
+  if (
+    sha256(slice) !== sliceSha256 ||
+    (currentBuild && sha256(binary) !== currentTerrainClientArchiveSha256)
+  )
+    throw Error("Wrong archived replication decoder");
+  const substitution = slice.subarray(0x21485c0, 0x21486c0);
   const entities = new Set(entityIds);
   if (
     entities.size === 0 ||
@@ -145,10 +156,10 @@ export function recordedEntityReplication(
   }
   return {
     identity: {
-      build: replicationBuild,
-      protocol: replicationProtocol,
+      build: replay.build,
+      protocol: terrainPositionProtocol,
       replaySha256,
-      sliceSha256: replicationSliceSha256,
+      sliceSha256,
     },
     entities,
     read,

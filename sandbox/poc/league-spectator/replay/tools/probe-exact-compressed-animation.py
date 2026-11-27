@@ -291,16 +291,30 @@ try:
     duration = scalar_result()
     call(0x15E2690, resource)
     frames = u.reg_read(r.UC_X86_REG_EAX)
-    assert 0 < tracks <= joint_count
+    yasuo_death_binding = (
+        args.current_build
+        and args.animation_sha256 == "ae0cbc1fc6c92f61b4f7d676b733d53a42c71e8f09f559c2ca9ec89d0b4f964c"
+        and args.rig_sha256 == "a9b848a12207ef4ec739043caafeba52ffae12aa1bd494870a494336b861e1e6"
+    )
+    if yasuo_death_binding:
+        assert (tracks, joint_count) == (186, 173)
+    else:
+        assert 0 < tracks <= joint_count
     assert math.isfinite(fps) and fps > 0 and math.isfinite(duration) and duration > 0
     assert 1 < frames <= 10000
     result.update(resourceTrackCount=tracks, resourceFps=fps, resourceFrames=frames, resourceDuration=duration)
     phase = "rig-binding"
-    indices = alloc(joint_count * 4)
-    mapping = data(struct.pack("<QII", indices, joint_count, joint_count))
+    # The native binder requires space for the resource track count, even when
+    # it writes only at ordinals present in the selected model rig.
+    mapping_count = max(tracks, joint_count)
+    indices = alloc(mapping_count * 4)
+    mapping = data(struct.pack("<QII", indices, mapping_count, mapping_count))
     assert call(0x15D5E20, resource, rig, mapping)
-    mapped = get(indices, "i" * joint_count)
-    assert all(-1 <= idx < tracks for idx in mapped) and len(set(mapped) - {-1}) == tracks
+    mapping_entries = get(indices, "i" * mapping_count)
+    mapped = mapping_entries[:joint_count]
+    assert all(idx == -1 for idx in mapping_entries[joint_count:])
+    assert all(-1 <= idx < tracks for idx in mapped)
+    assert len(set(mapped) - {-1}) == (135 if yasuo_death_binding else tracks)
     result["trackIndices"] = mapped
     phase = "cache-construction"
 

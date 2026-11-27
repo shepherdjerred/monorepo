@@ -1088,6 +1088,17 @@ steps.
 
 New uploads retain the validated exact build, transport protocol and duration,
 plus map, mode and counted team sizes only when qualified match evidence proves them.
+The opt-in loopback proof in `src/scout-client/real-replay-upload.integration.test.ts`
+can check multiple saved NA1 replays against canonical Match-V5 results for one
+paired account. Set `SCOUT_REPLAY_PROOF_DIRECTORY` to the saved replay directory,
+`SCOUT_REPLAY_PROOF_GAMES` to the requested game descriptors, and
+`SCOUT_REPLAY_PROOF_CANONICAL_MATCH_DIRECTORY` to the private directory containing
+one `NA1_<gameId>.json` result per requested game. Supply the paired account's
+PUUID through `SCOUT_REPLAY_PROOF_OWNER_PUUID`. Each result must match the
+requested game and queue, the exact saved build, and a complete Map11 CLASSIC
+5v5 roster. The original replay is still validated by the normal paired upload
+handler before the proof exercises anonymous readback.
+
 Legacy completed artifacts can lack a platform or other replay metadata. From
 this package, `bun scripts/backfill-replay-metadata.ts --replay-id=<uuid>` downloads
 and checks that exact artifact against its original match provenance and digest,

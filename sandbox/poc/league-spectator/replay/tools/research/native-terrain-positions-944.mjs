@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import {
   assertExactTerrainReplay,
   codecsFromTerrainByteMaps,
+  currentTerrainClientArchiveSha256,
+  currentTerrainClientSliceSha256,
   currentTerrainPositionBuild,
   preparedBytes,
   preparedSha256,
@@ -16,10 +18,6 @@ const sliceSize = 39_463_840;
 const fatSize = 76_111_280;
 const sliceSha256 =
   "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa";
-const currentSliceSha256 =
-  "de6db1683eb61358d0aaf9fac44ef722850a927263eae7f68212add8621a500e";
-const currentFatSha256 =
-  "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7";
 const substitutionOffset = 0x2148f00;
 const replicationSubstitutionOffset = 0x21485c0;
 const substitutionSha256 =
@@ -42,14 +40,19 @@ function createCodecsFromClient(clientBytes, build) {
     throw Error(`Expected local ${build} macOS client bytes`);
   const currentBuild = build === currentTerrainPositionBuild;
   const fat = clientBytes.length === fatSize;
-  if (currentBuild && fat && sha256(clientBytes) !== currentFatSha256)
+  if (
+    currentBuild &&
+    fat &&
+    sha256(clientBytes) !== currentTerrainClientArchiveSha256
+  )
     throw Error("Unexpected current macOS client archive digest");
   const slice = fat
     ? clientBytes.subarray(sliceOffset, sliceOffset + sliceSize)
     : clientBytes;
   if (
     slice.length !== sliceSize ||
-    sha256(slice) !== (currentBuild ? currentSliceSha256 : sliceSha256)
+    sha256(slice) !==
+      (currentBuild ? currentTerrainClientSliceSha256 : sliceSha256)
   )
     throw Error("Unexpected macOS client slice");
   const substitution = Uint8Array.from(

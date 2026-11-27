@@ -7,21 +7,18 @@ from collections import Counter
 from hashlib import sha256
 from pathlib import Path
 
-from macho import MachImage
+from champion_replication_archive import ARCHIVED_BUILD, SLICE_DIGESTS, read_replication_image
 from unicorn import UC_ARCH_X86, UC_MODE_64, Uc
 from unicorn import x86_const as r
 
-SLICE_SHA256 = "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa"
 ARENA = 0x20000000
 STOP, STACK = ARENA, ARENA + 0x3FF8
 ENTITY, DESCRIPTOR, SLOT, INPUT = (ARENA + offset for offset in (0x5000, 0x7000, 0x8000, 0x9000))
 CURRENT, MAXIMUM = 0x920, 0x948
 
 
-def verify(archive, groups):
-    image = MachImage(archive)
-    if sha256(image.binary).hexdigest() != SLICE_SHA256:
-        raise ValueError("Wrong archived health decoder")
+def verify(archive, groups, build=ARCHIVED_BUILD):
+    image = read_replication_image(archive, build)
     vm = Uc(UC_ARCH_X86, UC_MODE_64)
     vm.mem_map(image.base, len(image.image))
     vm.mem_write(image.base, bytes(image.image))
@@ -108,8 +105,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     source = args.groups.read_bytes()
     payload = json.loads(source)
-    result = verify(args.archive.read_bytes(), payload["groups"])
-    result.update(replaySha256=payload["identity"], groupsSha256=sha256(source).hexdigest(), sliceSha256=SLICE_SHA256)
+    build = payload.get("build", ARCHIVED_BUILD)
+    result = verify(args.archive.read_bytes(), payload["groups"], build)
+    result.update(
+        replaySha256=payload["identity"],
+        groupsSha256=sha256(source).hexdigest(),
+        sliceSha256=SLICE_DIGESTS[build],
+    )
     receipt = json.dumps(result, sort_keys=True)
     with args.receipt.open("x", encoding="utf-8") as output:
         output.write(receipt + "\n")
