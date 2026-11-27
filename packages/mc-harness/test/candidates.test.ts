@@ -901,7 +901,7 @@ async function interruptedTournament(
   return workspace;
 }
 
-describe("knockout checkpoint invalidation", () => {
+describe("knockout checkpoint invalidation", { timeout: 60_000 }, () => {
   useCompactRenderTiles();
   it.each([false, true])(
     "ignores unrelated saves with an outside incumbent of %s",
@@ -929,7 +929,6 @@ describe("knockout checkpoint invalidation", () => {
       expect(retry.bouts.map(({ challenger }) => challenger)).toEqual(pending);
       expect(retry.best).toBe("b");
     },
-    60_000,
   );
   it.each(["model", "candidate"])(
     "starts a new tournament after the %s changes",
@@ -953,7 +952,6 @@ describe("knockout checkpoint invalidation", () => {
         "c",
       ]);
     },
-    60_000,
   );
 });
 

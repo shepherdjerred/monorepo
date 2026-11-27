@@ -51,6 +51,8 @@ sourceSets.configureEach {
   }
 }
 
+val sidecarJarOnly = providers.gradleProperty("storm.sidecarJarOnly").isPresent
+
 tasks.withType<JavaCompile>().configureEach {
   options.release = 25
   options.encoding = "UTF-8"
@@ -59,6 +61,7 @@ tasks.withType<JavaCompile>().configureEach {
   options.compilerArgs.addAll(
       listOf("-Xlint:all", "-Xlint:-processing", "-Xlint:-classfile", "-Werror", "-parameters"))
   options.errorprone {
+    isEnabled = !sidecarJarOnly
     disableWarningsInGeneratedCode = true
     excludedPaths = ".*/build/generated/.*"
     error("NullAway")
