@@ -279,7 +279,8 @@ describe("lane partials", () => {
              riot_id_game_name, riot_id_tagline,
              champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score,
              gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills,
-             inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL}
+             inhibitor_kills, baron_kills, dragon_kills, end_of_game_result, early_surrendered,
+             ${MATCH_LOADOUT_LAKE_COLUMNS_SQL}
            FROM read_parquet($1, hive_partitioning = false) ORDER BY match_id, participant_id`,
           [session.list(files(buildDir, "matches_crawl", DAY))],
         ),
