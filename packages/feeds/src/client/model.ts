@@ -1,12 +1,14 @@
 import type { Figure, Severity } from "@shepherdjerred/console-ui";
-import type {
-  AutoReadRule,
-  CreateUserFeedBody,
-  EntryView,
-  FeedHealthItem,
-  MarkAllReadBody,
-  SummaryResponse,
-  UpdateUserFeedBody,
+import {
+  normalizeAutoReadRules,
+  type AutoReadRule,
+  type CreateUserFeedBody,
+  type EntryView,
+  type FeedHealthItem,
+  type MarkAllReadBody,
+  type SingleAutoReadRule,
+  type SummaryResponse,
+  type UpdateUserFeedBody,
 } from "@shepherdjerred/feeds/shared/contract.ts";
 
 export type EntriesRoute = {
@@ -218,9 +220,24 @@ export function feedHealthStatus(
   };
 }
 
-export function formatAutoReadBadge(rule: AutoReadRule): string {
+function formatSingleAutoReadBadge(rule: SingleAutoReadRule): string {
   const prefix = rule.negate === true ? "!~" : "~";
-  return `${prefix} /${rule.pattern}/${rule.flags}`;
+  const fieldPrefix = rule.field === "title" ? "" : `${rule.field} `;
+  const trimmedPattern =
+    rule.pattern.length > 48 ? `${rule.pattern.slice(0, 45)}…` : rule.pattern;
+  return `${fieldPrefix}${prefix} /${trimmedPattern}/${rule.flags}`;
+}
+
+export function formatAutoReadBadge(rule: AutoReadRule): string {
+  const rules = normalizeAutoReadRules(rule);
+  if (rules.length === 1) {
+    const first = rules[0];
+    if (first !== undefined) {
+      return formatSingleAutoReadBadge(first);
+    }
+  }
+  const fields = [...new Set(rules.map((r) => r.field))].join(", ");
+  return `${String(rules.length)} rules (${fields})`;
 }
 
 export function sortFeedsForHealth(
@@ -270,6 +287,10 @@ export function emptyUserFeedDraft(): UserFeedDraft {
 }
 
 export function draftFromFeed(feed: FeedHealthItem): UserFeedDraft {
+  const primaryRule =
+    feed.autoRead === null
+      ? undefined
+      : normalizeAutoReadRules(feed.autoRead)[0];
   return {
     // Never populate stored URL into browser DOM state so secret tokens do not round-trip.
     url: "",
@@ -277,9 +298,9 @@ export function draftFromFeed(feed: FeedHealthItem): UserFeedDraft {
     category: feed.category,
     htmlUrl: feed.htmlUrl ?? "",
     hidden: feed.hidden,
-    autoReadPattern: feed.autoRead?.pattern ?? "",
-    autoReadFlags: feed.autoRead?.flags ?? "i",
-    autoReadNegate: feed.autoRead?.negate ?? false,
+    autoReadPattern: primaryRule?.pattern ?? "",
+    autoReadFlags: primaryRule?.flags ?? "i",
+    autoReadNegate: primaryRule?.negate ?? false,
   };
 }
 

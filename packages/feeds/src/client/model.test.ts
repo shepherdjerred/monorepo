@@ -130,6 +130,20 @@ test("computes feed health status severity, hostnames, and relative timestamps",
       negate: true,
     }),
   ).toBe("!~ /^ai@/i");
+  expect(
+    formatAutoReadBadge({
+      field: "url",
+      pattern: "/case-studies/",
+      flags: "i",
+    }),
+  ).toBe("url ~ //case-studies//i");
+  expect(
+    formatAutoReadBadge([
+      { field: "category", pattern: "^Startup$", flags: "i" },
+      { field: "url", pattern: "/business/", flags: "i" },
+      { field: "title", pattern: "webinar", flags: "i" },
+    ]),
+  ).toBe("3 rules (category, url, title)");
 });
 
 test("validates user feed drafts and keeps stored private URLs out of edit drafts", () => {

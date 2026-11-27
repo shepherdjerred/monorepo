@@ -125,7 +125,7 @@ async function pollOneFeed(options: {
     return { status: "not-modified", newEntries: 0, autoReadEntries: 0 };
   }
 
-  if (response.status !== 200) {
+  if (response.status < 200 || response.status >= 300) {
     const safeError = sanitizeErrorMessage(
       `HTTP ${String(response.status)}`,
       feed.url,

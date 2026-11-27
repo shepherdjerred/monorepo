@@ -5,35 +5,38 @@ sidebar:
   order: 9
 ---
 
-Manage public repository and blog subscriptions in code, and keep private or
-ad-hoc subscriptions in the live Feeds SQLite database.
+Manage public engineering, AI, and personal blog subscriptions in code, and keep
+private or ad-hoc subscriptions in the live Feeds SQLite database.
 
 [`@shepherdjerred/feeds`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/README.md)
-reconciles the code-owned `Repo Stack` and `Blogs` categories transactionally on
-startup. Private subscriptions live in `Uncategorized` or custom categories and
-redact query parameters across logs, errors, and UI tables.
+reconciles the code-owned `Engineering & Infra`, `AI`, and
+`Essays & Personal Blogs` categories transactionally on startup. Private
+subscriptions live in `Uncategorized` or custom categories and redact query
+parameters across logs, errors, and UI tables.
 
 ## 1. Change code-owned feeds
 
 Edit
 [`catalog.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/catalog/catalog.ts).
-Keep each entry in `Repo Stack` or `Blogs` with a unique public `https://` URL
-and non-empty title.
+Assign each entry to `Engineering & Infra`, `AI`, or `Essays & Personal Blogs`
+with a unique public `https://` URL and non-empty title.
 
 :::caution
 Never commit a credential-bearing URL to `catalog.ts`. Add private subscriber
 feeds through the web console or NetNewsWire instead.
 :::
 
-Use `autoRead` on noisy release or firehose feeds to mark matching entries read
-on ingest:
+Use `autoRead` (a single rule or an array of rules evaluated across `title`,
+`url`, or XML `category`) to mark noisy entries read automatically:
 
-- `PRERELEASE_RULE` marks alpha, beta, RC, canary, nightly, preview, dev, and
-  pre tags read automatically.
-- `negate: true` marks every entry read unless the pattern matches, such as
-  `AI_SDK_ONLY_RULE`.
-- `hidden: true` hides high-volume feeds from the default `All` stream while
-  retaining them in search and category filters.
+- `STRICT_RELEASE_RULES` marks snapshots, monorepo sub-module tags, and patch
+  bumps (`x.y.z` where `z >= 1`) read so only `x.y.0` releases surface.
+- `BLOG_PRERELEASE_RULE` marks alpha, beta, RC, and canary blog posts read
+  without matching prose mentions of nightly builds.
+- `negate: true` marks entries read unless the pattern matches, such as
+  `AI_SDK_ONLY_RULE` (negated `category` rules skip entries without categories).
+- `hidden: true` hides high-volume feeds from the default `Unread` and `All`
+  streams while retaining them in search and category filters.
 
 Validate the catalog and server locally:
 
@@ -42,18 +45,20 @@ bunx turbo run build typecheck test lint --filter=@shepherdjerred/feeds
 ```
 
 Merge the pull request. When `feeds/prod` deploys, startup reconciliation
-upserts declared feeds and prunes removed `code` rows without touching `user`
-subscriptions.
+upserts declared feeds, deletes obsolete managed categories, prunes removed
+`code` rows, and retroactively applies `autoRead` rules to unstarred unread
+items without touching `user` subscriptions.
 
 ## 2. Manage private user feeds
 
 Open `https://feeds.tailnet-1a49.ts.net` on the tailnet and click **Add feed**,
 or subscribe from NetNewsWire.
 
-- User-owned feeds cannot use the reserved `Repo Stack` or `Blogs` categories.
+- Managed categories (`Engineering & Infra`, `AI`, `Essays & Personal Blogs`)
+  cannot be renamed or deleted from the UI or Google Reader API.
 - Query strings on `user` feed URLs are stored for polling and rendered as
   `?[REDACTED]` in the **Feeds** health table and logs.
-- Deleting or renaming a `code` feed from the UI or Google Reader API returns
+- Deleting or editing a `code` feed from the UI or Google Reader API returns
   HTTP `403`.
 
 ## 3. Trigger or pause feed polling

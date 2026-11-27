@@ -1,38 +1,39 @@
-import { rm } from "node:fs/promises";
+import { Database } from "bun:sqlite";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
+import { DECLARED_FEEDS } from "@shepherdjerred/feeds/catalog/catalog.ts";
 import {
   AI_SDK_ONLY_RULE,
-  DECLARED_FEEDS,
-  PRERELEASE_RULE,
-} from "@shepherdjerred/feeds/catalog/catalog.ts";
+  STRICT_RELEASE_RULES,
+} from "@shepherdjerred/feeds/catalog/rules.ts";
 import type { DeclaredFeed } from "@shepherdjerred/feeds/shared/contract.ts";
 import { FeedsStore } from "./store.ts";
 
 const SAMPLE_CATALOG: readonly DeclaredFeed[] = [
   {
-    category: "Repo Stack",
+    category: "Engineering & Infra",
     title: "Hono Releases",
     url: "https://github.com/honojs/hono/releases.atom",
     htmlUrl: "https://github.com/honojs/hono/releases",
-    autoRead: PRERELEASE_RULE,
+    autoRead: STRICT_RELEASE_RULES,
   },
   {
-    category: "Repo Stack",
+    category: "AI",
     title: "Vercel News — AI SDK",
     url: "https://vercel.com/atom",
     htmlUrl: "https://vercel.com/ai-sdk",
     autoRead: AI_SDK_ONLY_RULE,
   },
   {
-    category: "Blogs",
+    category: "Essays & Personal Blogs",
     title: "Jerred's Blog",
     url: "https://sjer.red/rss.xml",
     htmlUrl: "https://sjer.red/",
   },
   {
-    category: "Blogs",
+    category: "Engineering & Infra",
     title: "Visual Studio Code",
     url: "https://code.visualstudio.com/feed.xml",
     htmlUrl: "https://code.visualstudio.com/",
@@ -73,8 +74,9 @@ test("FeedsStore reconciles full catalog idempotently, preserves user feeds, and
     expect(
       categories.map((c) => ({ label: c.label, managed: c.managed })),
     ).toEqual([
-      { label: "Repo Stack", managed: true },
-      { label: "Blogs", managed: true },
+      { label: "Engineering & Infra", managed: true },
+      { label: "AI", managed: true },
+      { label: "Essays & Personal Blogs", managed: true },
       { label: "Uncategorized", managed: false },
       { label: "Security", managed: false },
     ]);
@@ -83,9 +85,100 @@ test("FeedsStore reconciles full catalog idempotently, preserves user feeds, and
   }
 });
 
+test("FeedsStore migrates legacy SQLite schemas, cleans up obsolete managed categories, and applies auto-read retroactively", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "feeds-store-migrate-"));
+  const dbPath = path.join(dir, "legacy-feeds.sqlite");
+  try {
+    const rawDb = new Database(dbPath);
+    rawDb.run(
+      "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO meta VALUES ('subscriptions_etag', '1')",
+    );
+    rawDb.run(
+      "CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL UNIQUE, managed INTEGER NOT NULL DEFAULT 0, sort_order INTEGER NOT NULL DEFAULT 100)",
+    );
+    rawDb.run(
+      "INSERT INTO categories (id, label, managed, sort_order) VALUES (1, 'Repo Stack', 1, 10), (2, 'Blogs', 1, 20), (3, 'Uncategorized', 0, 30)",
+    );
+    rawDb.run(
+      "CREATE TABLE feeds (id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT NOT NULL UNIQUE, title TEXT NOT NULL, category_id INTEGER NOT NULL REFERENCES categories(id), html_url TEXT, description TEXT, source TEXT NOT NULL CHECK (source IN ('code', 'user')), hidden INTEGER NOT NULL DEFAULT 0, auto_read_json TEXT, etag TEXT, last_modified TEXT, last_polled_at INTEGER, last_success_at INTEGER, last_status INTEGER, last_error TEXT, consecutive_failures INTEGER NOT NULL DEFAULT 0, next_poll_after INTEGER)",
+    );
+    rawDb.run(
+      "INSERT INTO feeds (id, url, title, category_id, source, hidden) VALUES (10, 'https://github.com/honojs/hono/releases.atom', 'Hono Releases', 1, 'code', 0), (11, 'https://private.example/rss', 'Legacy User In Repo Stack', 1, 'user', 0)",
+    );
+    // Legacy entries table without categories_json column
+    rawDb.run(
+      "CREATE TABLE entries (id INTEGER PRIMARY KEY, feed_id INTEGER NOT NULL REFERENCES feeds(id) ON DELETE CASCADE, guid TEXT NOT NULL, url TEXT NOT NULL, title TEXT NOT NULL, author TEXT NOT NULL DEFAULT '', content_html TEXT NOT NULL DEFAULT '', published_at INTEGER NOT NULL, crawled_at_ms INTEGER NOT NULL, enclosures_json TEXT NOT NULL DEFAULT '[]', is_read INTEGER NOT NULL DEFAULT 0, is_starred INTEGER NOT NULL DEFAULT 0, auto_read_matched INTEGER NOT NULL DEFAULT 0, UNIQUE (feed_id, guid))",
+    );
+    rawDb.run(
+      "INSERT INTO entries (id, feed_id, guid, url, title, published_at, crawled_at_ms, is_read, is_starred) VALUES (1001, 10, 'g-patch', 'https://github.com/honojs/hono/releases/tag/v4.13.21', 'v4.13.21', 1700000001, 1700000001000, 0, 0), (1002, 10, 'g-starred-patch', 'https://github.com/honojs/hono/releases/tag/v4.13.22', 'v4.13.22', 1700000002, 1700000002000, 0, 1), (1003, 10, 'g-minor', 'https://github.com/honojs/hono/releases/tag/v4.14.0', 'v4.14.0', 1700000003, 1700000003000, 0, 0)",
+    );
+    rawDb.close();
+
+    const store = FeedsStore.open(dbPath);
+    store.reconcileCatalog(SAMPLE_CATALOG);
+
+    // Obsolete managed categories ("Repo Stack", "Blogs") removed; user feed moved to Uncategorized
+    expect(store.listAllCategories().map((c) => c.label)).toEqual([
+      "Engineering & Infra",
+      "AI",
+      "Essays & Personal Blogs",
+      "Uncategorized",
+    ]);
+    expect(store.getFeedById(11)?.categoryLabel).toBe("Uncategorized");
+
+    // Unstarred patch release retroactively auto-read; starred patch & .0 minor kept unread
+    const entries = store.getEntriesByIds([1001, 1002, 1003]);
+    expect(entries[0]?.isRead).toBe(true);
+    expect(entries[0]?.autoReadMatched).toBe(true);
+    expect(entries[1]?.isRead).toBe(false);
+    expect(entries[1]?.isStarred).toBe(true);
+    expect(entries[2]?.isRead).toBe(false);
+
+    // Updating a user feed's autoRead rule also sweeps existing unread entries
+    store.recordPollSuccess({
+      feedId: 11,
+      polledAtSeconds: 1_710_000_000,
+      etag: null,
+      lastModified: null,
+      entries: [
+        {
+          guid: "u-promo",
+          url: "https://private.example/webinar",
+          title: "Join our webinar",
+          author: "Marketing",
+          contentHtml: "",
+          publishedAt: 1_710_000_000,
+          enclosures: [],
+          categories: ["Webinar"],
+        },
+        {
+          guid: "u-tech",
+          url: "https://private.example/kernel",
+          title: "Kernel sched_ext deep dive",
+          author: "Eng",
+          contentHtml: "",
+          publishedAt: 1_710_000_010,
+          enclosures: [],
+          categories: ["Engineering"],
+        },
+      ],
+    });
+    const updatedUser = store.updateUserFeed(11, {
+      autoRead: { field: "category", pattern: "^Webinar$", flags: "i" },
+    });
+    expect(updatedUser.ok).toBe(true);
+    const userUnread = store.queryEntries({ view: "unread", feedId: 11 });
+    expect(userUnread.items.map((i) => i.title)).toEqual([
+      "Kernel sched_ext deep dive",
+    ]);
+    store.close();
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("FeedsStore opens on-disk SQLite with WAL mode and persists monotonic 53-bit entry IDs", async () => {
-  const dir = path.join(tmpdir(), `feeds-store-wal-${String(Date.now())}`);
-  await Bun.write(path.join(dir, ".keep"), "");
+  const dir = await mkdtemp(path.join(tmpdir(), "feeds-store-wal-"));
   const dbPath = path.join(dir, "feeds.sqlite");
   try {
     const store1 = FeedsStore.open(dbPath);
@@ -146,7 +239,7 @@ test("FeedsStore applies auto-read on insert without overwriting manual unread/s
     store.reconcileCatalog([
       ...SAMPLE_CATALOG,
       {
-        category: "Blogs",
+        category: "Essays & Personal Blogs",
         title: "No HtmlUrl Blog",
         url: "https://example.org/rss.xml",
       },
@@ -395,6 +488,15 @@ test("FeedsStore supports FTS5 search with tricky punctuation, hidden feed scopi
           publishedAt: 1_720_000_010,
           enclosures: [],
         },
+        {
+          guid: "vs-old",
+          url: "https://code.visualstudio.com/updates/v1_50",
+          title: "VS Code 1.50 Release",
+          author: "Microsoft",
+          contentHtml: "<p>Old Hidden</p>",
+          publishedAt: 1_700_000_000,
+          enclosures: [],
+        },
       ],
     });
 
@@ -403,21 +505,21 @@ test("FeedsStore supports FTS5 search with tricky punctuation, hidden feed scopi
     expect(store.summary().views.unread).toBe(3);
 
     expect(
-      store.queryEntries({ view: "unread", category: "Blogs" }).totalMatching,
-    ).toBe(4);
+      store.queryEntries({ view: "unread", category: "Engineering & Infra" })
+        .totalMatching,
+    ).toBe(2);
     expect(
       store.queryEntries({ view: "unread", feedId: hiddenVsCode.id })
         .totalMatching,
-    ).toBe(1);
+    ).toBe(2);
 
-    const hiddenEntry = store.queryEntries({
-      view: "all",
-      feedId: hiddenVsCode.id,
-    }).items[0];
-    if (hiddenEntry === undefined) {
+    const hiddenRecent = store
+      .queryEntries({ view: "all", feedId: hiddenVsCode.id })
+      .items.find((i) => i.title === "VS Code 1.99 Release");
+    if (hiddenRecent === undefined) {
       throw new Error("Expected hidden entry");
     }
-    store.editEntryTags({ ids: [hiddenEntry.id], markStarred: true });
+    store.editEntryTags({ ids: [hiddenRecent.id], markStarred: true });
     expect(store.queryEntries({ view: "starred" }).totalMatching).toBe(1);
 
     expect(
@@ -453,6 +555,19 @@ test("FeedsStore supports FTS5 search with tricky punctuation, hidden feed scopi
     expect(page2.items).toHaveLength(1);
     expect(page2.nextCursor).toBeNull();
 
+    // Age-cutoff markAllRead across visible + hidden feeds while preserving starred items
+    expect(
+      store.markAllRead({
+        publishedBefore: 1_710_000_000,
+        includeHidden: true,
+        excludeStarred: true,
+      }),
+    ).toBe(1);
+    expect(
+      store.queryEntries({ view: "unread", feedId: hiddenVsCode.id })
+        .totalMatching,
+    ).toBe(1);
+
     expect(store.markAllRead({ view: "unread", q: "v1.4.2" })).toBe(1);
     expect(store.queryEntries({ view: "unread" }).totalMatching).toBe(2);
     expect(store.markAllRead({ view: "unread" })).toBe(2);
@@ -485,11 +600,13 @@ test("FeedsStore enforces source='code' forbidden protection, user feed CRUD, an
       message: "Code-managed feeds cannot be deleted",
     });
 
-    expect(store.renameUserCategory("Repo Stack", "Other")).toMatchObject({
+    expect(
+      store.renameUserCategory("Engineering & Infra", "Other"),
+    ).toMatchObject({
       ok: false,
       kind: "forbidden",
     });
-    expect(store.deleteUserCategory("Blogs")).toMatchObject({
+    expect(store.deleteUserCategory("Essays & Personal Blogs")).toMatchObject({
       ok: false,
       kind: "forbidden",
     });
@@ -647,12 +764,12 @@ test("FeedsStore supports Reader sessions, stream queries, and entry pruning", (
       limit: 100,
     });
     expect(rlAll.ids).toHaveLength(5);
-    const blogsStream = store.queryReaderStreamIds({
-      stream: { kind: "category", label: "Blogs" },
+    const engStream = store.queryReaderStreamIds({
+      stream: { kind: "category", label: "Engineering & Infra" },
       excludeRead: false,
       limit: 100,
     });
-    expect(blogsStream.ids).toHaveLength(1);
+    expect(engStream.ids).toHaveLength(1);
 
     const userItems = store.getEntriesByIds(rlAll.ids);
     const byTitle = new Map(userItems.map((i) => [i.title, i.id]));
