@@ -71,7 +71,31 @@
         ]
       },
       "resolvedDescription": "Brand launches a fireball that deals 70/100/130/160/190 (+65% AP) magic damage to the first enemy hit. If the target is Ablaze, they will be Stunned for 1.75 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "brandqmissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Pillar of Flame",
@@ -122,7 +146,15 @@
         ]
       },
       "resolvedDescription": "Brand creates a pillar of pure fire, dealing 75/120/165/210/255 (+70% AP) magic damage. Units that are Ablaze take 93.75/150/206.25/262.5/318.75 (+87.5% AP) damage instead.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 240,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Conflagration",
@@ -166,7 +198,30 @@
         ]
       },
       "resolvedDescription": "Brand conjures a powerful blast at his target, dealing 55/80/105/130/155 (+60% AP) magic damage to surrounding units. If the target is Ablaze, the spread range is doubled.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 710,
+        "lineWidth": null,
+        "missileSpeed": 1800,
+        "missiles": [
+          {
+            "name": "brandemissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 900,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Pyroclasm",
@@ -210,7 +265,30 @@
         ]
       },
       "resolvedDescription": "Brand unleashes a devastating torrent of fire that can bounce to Brand or another enemy up to 5 times, dealing 100/175/250 (+30% AP) magic damage to enemies each bounce. Bounces prioritize stacking Blaze to max on champions. If the target is Ablaze, they are briefly Slowed by 30/45/60%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 1000,
+        "missiles": [
+          {
+            "name": "brandrmissile",
+            "width": null,
+            "movement": "AcceleratingMovement",
+            "speed": 750,
+            "minSpeed": 250,
+            "maxSpeed": 3000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

@@ -85,7 +85,15 @@
         ]
       },
       "resolvedDescription": "Ivern conjures a vine dealing 80/125/170/215/260 (+70% AP) magic damage and Rooting the first enemy hit for 1.6/1.7/1.8/1.9/2 seconds. Allies that Attack a Rooted enemy dash into Attack Range. Recast: Ivern dashes directly onto the Rooted enemy. Hitting non-epic monsters reduces Rootcaller's cooldown by 50%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 1300,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Brushmaker",
@@ -171,7 +179,44 @@
         ]
       },
       "resolvedDescription": "Passive: While in brush and for 3 seconds after leaving, Ivern's Attacks deal an additional 20/27.5/35/42.5/50 (+20% AP) magic damage. Nearby allies will gain this effect for 1.5 seconds and deal 10/15/20/25/30 (+10% AP) magic damage. Active: Ivern grows a patch of Brush, revealing the area for 8 seconds. The Brush persists until Ivern's team loses vision within it, or up to 45 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "TargetOrLocation",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 1600,
+        "missiles": [
+          {
+            "name": "ivernwmissile",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 3500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ivernwmissile1",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 3500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Triggerseed",
@@ -250,7 +295,15 @@
         ]
       },
       "resolvedDescription": "Ivern grants 75/115/155/195/235 (+50% AP) Shield to an ally champion or Daisy. After 2 seconds, it bursts, dealing 70/90/110/130/150 (+80% AP) magic damage and Slowing enemies by 40/45/50/55/60% for 2 seconds. If Triggerseed detonates and no enemy champions are hit while the shield still persists, the ally will be shielded for 75/115/155/195/235 (+50% AP) for 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 285,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Daisy!",
@@ -324,7 +377,30 @@
         ]
       },
       "resolvedDescription": "Ivern summons his sentinel friend Daisy to leap into the fray for 45 seconds. Daisy, Slam!: Daisy's 3rd consecutive Attack on the same champion or epic monster will launch a shockwave, dealing 90/140/190 (+50% AP) magic damage to all enemies hit as well as Knocking Up for 1 second. This effect can only occur once every 3 seconds. Recast: Instruct Daisy to Attack or move.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.5,
+        "radius": 600,
+        "lineWidth": null,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "ivernrmissile",
+            "width": 100,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

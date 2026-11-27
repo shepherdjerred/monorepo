@@ -27,7 +27,72 @@
         ]
       },
       "resolvedDescription": "Accelerando: Sona gains non-Ultimate ability haste permanently for her basic abilities as she uses her abilities well, up to a cap. Beyond that cap, further successful uses reduce her ultimate's remaining cooldown instead. Power Chord: Every few spell casts, Sona's next attack will deal bonus magic damage in addition to an additional effect based on what basic Ability Sona last activated.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "sonapassiveattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sonapmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1280,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sonapmissile2",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1280,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sonapmissile3",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1280,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Hymn of Valor",
@@ -120,7 +185,44 @@
         ]
       },
       "resolvedDescription": "Sona deals 50/85/120/155/190 (+40% AP) magic damage to the nearest two enemies, prioritizing champions. She then begins a new Melody. Gain a stack of Accelerando for every champion you damage with this. Melody: Sona gains an aura for 3 seconds, granting allied champions an additional 10/15/20/25/30 (+10% AP) magic damage on their next Attack within 5 seconds. Power Chord - Staccato: Power Chord bonus damage (30-360 (based on level) (+30% AP) total magic damage).",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 850,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "sonaqmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sonaqpassiveattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Aria of Perseverance",
@@ -229,7 +331,44 @@
       "resolvedDescription": "Active: Sona restores 30/45/60/75/90 (+30% AP) Health to herself and a nearby allied champion, prioritizing the most wounded. She then begins a new Melody. Melody: Sona gains an aura for 3 seconds, granting allied champions 25/45/65/85/105 (+25% AP) Shield for 1.5 seconds. Gain a stack of Accelerando whenever you heal another injured ally and every time you protect another ally from at least 25/45/65/85/105 damage with this shield. Power Chord - Diminuendo: Power Chord also reduces physical and magic damage dealt by the target by {{ totaldiminuendoweakenpercent }} for 3 seconds.",
       "unresolved": [
         "totaldiminuendoweakenpercent"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "sonawmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sonawpassiveattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Song of Celerity",
@@ -326,7 +465,30 @@
         "totalselfmovementspeed",
         "totalallymovementspeed",
         "totaltempomovespeedslow"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "sonaepassiveattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Crescendo",
@@ -360,7 +522,15 @@
         ]
       },
       "resolvedDescription": "Sona strikes an irresistible chord, Stunning enemy for 1.5 seconds and dealing 150/250/350 (+50% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 600,
+        "lineWidth": 140,
+        "missileSpeed": 2400,
+        "missiles": []
+      }
     }
   }
 }

@@ -71,7 +71,15 @@
         ]
       },
       "resolvedDescription": "Rell thrusts her lance, Stunning targets for 0.65 seconds, destroying all Shields, and dealing 60/100/140/180/220 (+60% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.4,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Ferromancy: Crash Down",
@@ -213,7 +221,15 @@
         ]
       },
       "resolvedDescription": "Passive - Mounted Alacrity: Rell gains 20/25/30/35/40 Move Speed while mounted. Active - Ferromancy: Crash Down: Rell leaps off her mount, Knocking Up enemies and dealing 60/90/120/150/180 (+60% AP) magic damage. Rell gains 20/40/60/80/100 (+11% max Health) Shield, which lasts until she remounts. Rell then enters her armored form, gaining 15% increased Armor and Magic Resist, 20% Attack Speed and 75 Attack Range. In this armored form, she can use Ferromancy: Mount Up.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "AreaClamped",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Full Tilt",
@@ -308,7 +324,71 @@
       "resolvedDescription": "Rell and an ally charge, gaining 15% Move Speed, increased to 30% when facing enemy champions or each other for 3 seconds. Rell's next Attack or Shattering Strike explodes in an area for {{ maxhealthdamagecalc }} max Health magic damage.",
       "unresolved": [
         "maxhealthdamagecalc"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "relle_ready",
+            "width": 70,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "relle_target1",
+            "width": 70,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "relle_vfxmis",
+            "width": 70,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "relle_vfxmis2",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 3300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Magnet Storm",
@@ -362,7 +442,15 @@
         ]
       },
       "resolvedDescription": "Rell explodes in a magnetic fury, violently Pulling nearby enemies towards herself. Then Rell constantly Drags nearby enemies towards herself and deals 150/250/350 (+110% AP) magic damage over the next 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

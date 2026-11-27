@@ -24,7 +24,15 @@
         ]
       },
       "resolvedDescription": "Talon's spells Wound champions and large monsters, stacking up to 3 times. When Talon attacks a champion with 3 stacks of Wound, they bleed for heavy damage over time.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Noxian Diplomacy",
@@ -84,7 +92,15 @@
       "resolvedDescription": "Talon leaps to a target and deals 65/85/105/125/145 (+100% bonus AD) physical damage. If used in melee range, this Ability instead critically strikes for {{ criticaldamage }} physical damage. If this Ability kills the target, Talon restores 9-55 (based on level) Health and refunds 50% of its Cooldown.",
       "unresolved": [
         "criticaldamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 250,
+        "lineWidth": null,
+        "missileSpeed": 2000,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Rake",
@@ -170,7 +186,44 @@
         ]
       },
       "resolvedDescription": "Talon tosses a volley of blades, dealing 50/60/70/80/90 (+40% bonus AD) physical damage. The blades then return to him, dealing 60/90/120/150/180 (+90% bonus AD) physical damage and Slowing by 40/45/50/55/60% for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Cone",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 902,
+        "missiles": [
+          {
+            "name": "talonwmissileone",
+            "width": 75,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "talonwmissiletwo",
+            "width": 75,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Assassin's Path",
@@ -228,7 +281,15 @@
         ]
       },
       "resolvedDescription": "Talon vaults over the nearest terrain or structure. Talon cannot dash over the same terrain more than once every 160/135/110/85/60 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Shadow Assault",
@@ -267,7 +328,44 @@
         ]
       },
       "resolvedDescription": "Talon disperses a ring of blades that deal 90/135/180 (+100% bonus AD) physical damage, gains 40/55/70% Move Speed, and becomes Invisible for 2.5 seconds. When the Invisibility ends, the blades return to Talon, dealing 90/135/180 (+100% bonus AD) physical damage again. If Talon cancels the Invisibility with an Attack or with Noxian Diplomacy, the blades return to the target instead.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 650,
+        "lineWidth": null,
+        "missileSpeed": 902,
+        "missiles": [
+          {
+            "name": "talonrmisone",
+            "width": 140,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "talonrmistwo",
+            "width": 140,
+            "movement": "FixedSpeedMovement",
+            "speed": 4000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

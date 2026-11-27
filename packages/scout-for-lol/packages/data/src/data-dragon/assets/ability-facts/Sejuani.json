@@ -98,7 +98,15 @@
         ]
       },
       "resolvedDescription": "Sejuani charges, dealing 90/140/190/240/290 (+75% AP) magic damage to enemies and Knocking them Up for 0.5 seconds. The charge ends after hitting an enemy champion.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 150,
+        "lineWidth": 75,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Winter's Wrath",
@@ -184,7 +192,15 @@
         ]
       },
       "resolvedDescription": "Sejuani swings her flail, dealing 5/15/25/35/45 (+30% AP) (+4% max Health) physical damage and Knocking Back minions and jungle monsters. She then lashes out again, dealing 5/25/45/65/85 (+60% AP) (+8% max Health) physical damage and briefly Slowing targets. Both swings apply stacks of Permafrost.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": 130,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Permafrost",
@@ -263,7 +279,44 @@
         ]
       },
       "resolvedDescription": "Passive: Nearby melee allied champions' Attacks apply a stack to champions and jungle monsters. Active: Sejuani deals 55/105/155/205/255 (+70% AP) magic damage to target enemy with 4 stacks and Stuns them for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "sejuanie2",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sejuaniepassivemissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Glacial Prison",
@@ -327,7 +380,30 @@
         ]
       },
       "resolvedDescription": "Sejuani throws her True Ice bola, Stunning and revealing the first enemy champion hit for 1 second and dealing 125/150/175 (+40% AP) magic damage. If the bola travels at least 25% of its range, it Stuns and reveals for 1.5 seconds instead. It then also creates an ice storm that Slows surrounding enemies by 80% for 2 seconds. All affected enemies take 200/300/400 (+80% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 550,
+        "lineWidth": 120,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "sejuanirmissile",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

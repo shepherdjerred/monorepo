@@ -24,7 +24,15 @@
         ]
       },
       "resolvedDescription": "Singed drafts off nearby champions, gaining a burst of Move Speed when passing them.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 347.8,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Poison Trail",
@@ -103,7 +111,15 @@
         ]
       },
       "resolvedDescription": "Toggle: Singed lays a poisonous trail that deals 20/30/40/50/60 (+42.5% AP) magic damage per second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 347.8,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Mega Adhesive",
@@ -161,7 +177,15 @@
         ]
       },
       "resolvedDescription": "Singed hurls a cask of sticky liquid, Grounding and Slowing enemies in the area by 50/55/60/65/70% for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 265,
+        "lineWidth": null,
+        "missileSpeed": 700,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Fling",
@@ -226,7 +250,15 @@
         ]
       },
       "resolvedDescription": "Singed flings an enemy over his shoulder, dealing 50/60/70/80/90 (+55% AP) plus 6/6.5/7/7.5/8% max Health magic damage. If Singed flings a target into his Mega Adhesive, they are Rooted for 1/1.25/1.5/1.75/2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Insanity Potion",
@@ -270,7 +302,15 @@
         ]
       },
       "resolvedDescription": "Singed drinks a potent brew of chemicals, granting him 25/55/85 Ability Power, Armor, Magic Resist, Move Speed, Health Regen, and Mana Regen for 25 seconds. During this effect, Singed's Poison Trail also applies 40% Grievous Wounds for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": []
+      }
     }
   }
 }
