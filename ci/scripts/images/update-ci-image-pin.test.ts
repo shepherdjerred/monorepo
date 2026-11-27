@@ -437,6 +437,7 @@ describe("Playwright candidate promotion", () => {
       "packages/alert-dashboard/package.json",
       "packages/scout-for-lol/packages/app/package.json",
       "packages/tracker/package.json",
+      "packages/tasknotes-web/package.json",
       "packages/delivery/package.json",
       "packages/media/package.json",
       "bun.lock",

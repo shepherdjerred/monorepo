@@ -63,6 +63,11 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     dependency: "@playwright/test",
   },
   {
+    path: "packages/tasknotes-web/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
     path: "packages/delivery/package.json",
     section: "devDependencies",
     dependency: "@playwright/test",

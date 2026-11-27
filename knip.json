@@ -485,6 +485,9 @@
     "packages/tasknotes-server": {
       "project": ["src/**/*.ts", "prisma/**/*.prisma"]
     },
+    "packages/tasknotes-web": {
+      "entry": ["playwright.config.ts", "e2e/server.ts", "e2e/**/*.spec.ts"]
+    },
     "packages/homelab": {
       "entry": ["scripts/**/*.ts"],
       "project": ["scripts/**/*.ts"]
