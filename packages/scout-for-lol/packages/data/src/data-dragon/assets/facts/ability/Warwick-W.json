@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Warwick-W",
+  "name": "Blood Hunt",
+  "description": "Passive: Warwick can sense champions below 50% Health, gaining 35/42.5/50/57.5/65% Move Speed towards them. Spells and attacks against enemies below 50% Health grant 70/80/90/100/110% Attack Speed.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "4000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Warwick-W.png",
+  "slot": "W",
+  "championKey": "Warwick",
+  "championName": "Warwick",
+  "maxRank": 5,
+  "cooldownByRank": [
+    80,
+    70,
+    60,
+    50,
+    40
+  ],
+  "costByRank": [
+    55,
+    55,
+    55,
+    55,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    4000,
+    4000,
+    4000,
+    4000,
+    4000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "80/70/60/50/40 s"
+  }
+}

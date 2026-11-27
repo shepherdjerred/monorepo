@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Talon-R",
+  "name": "Shadow Assault",
+  "description": "Talon disperses a ring of blades that deal 90/135/180 (+100% bonus AD) physical damage, gains 40/55/70% Move Speed, and becomes Invisible for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Talon-R.png",
+  "slot": "R",
+  "championKey": "Talon",
+  "championName": "Talon",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    80,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/80/60 s"
+  }
+}
