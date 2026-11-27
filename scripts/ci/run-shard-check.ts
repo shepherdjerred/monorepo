@@ -12,6 +12,7 @@
  * traversed them.
  */
 
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { run } from "../lib/run.ts";
 import { preparePrettierCache } from "./prettier-cache.ts";
@@ -19,6 +20,7 @@ import { assertRootCheckInputs } from "./root-check-inputs.ts";
 import {
   matchShard,
   parseShardName,
+  SHARD_NAMES,
   shardPathspecs,
   type ShardName,
 } from "./repo-shards.ts";
@@ -57,11 +59,21 @@ export async function shardTrackedFiles(shard: ShardName): Promise<string[]> {
   return trackedFiles(shardPathspecs(shard));
 }
 
-async function trackedFiles(pathspecs: readonly string[]): Promise<string[]> {
+/**
+ * Tracked, regular, still-existing files matching `pathspecs`. An empty
+ * pathspec list selects nothing: `git ls-files` with no pathspec lists the
+ * whole repository, which turned "no changed files in this shard" into a
+ * full-repository Prettier run.
+ */
+export async function trackedFiles(
+  pathspecs: readonly string[],
+  repository = REPO_ROOT,
+): Promise<string[]> {
+  if (pathspecs.length === 0) return [];
   const lsFiles = Bun.spawnSync(
     ["git", "ls-files", "-sz", "--", ...pathspecs],
     {
-      cwd: REPO_ROOT,
+      cwd: repository,
     },
   );
   if (lsFiles.exitCode !== 0) {
@@ -77,7 +89,7 @@ async function trackedFiles(pathspecs: readonly string[]): Promise<string[]> {
   }
   const checks = await Promise.all(
     candidates.map(async (file) => ({
-      exists: await Bun.file(path.join(REPO_ROOT, file)).exists(),
+      exists: await Bun.file(path.join(repository, file)).exists(),
       file,
     })),
   );
@@ -154,6 +166,183 @@ export function changedFilesForShard(
       ))
     ? null
     : changed.filter((file) => matchShard(file) === shard);
+}
+
+/** One Turbo hash input per shard; see prettierChangedDigest. */
+export const PRETTIER_CHANGED_ENV_KEYS: Record<ShardName, string> = {
+  scout: "CI_PRETTIER_SCOUT_CHANGED_SHA256",
+  homelab: "CI_PRETTIER_HOMELAB_CHANGED_SHA256",
+  packages: "CI_PRETTIER_PACKAGES_CHANGED_SHA256",
+  root: "CI_PRETTIER_ROOT_CHANGED_SHA256",
+};
+
+/**
+ * Files outside the shard whose content decides whether the shard runs in
+ * full or how Prettier formats a file: the global inputs and every
+ * `.editorconfig` (Prettier reads them up the tree). The scout, homelab and
+ * packages tasks do not list all of these as Turbo inputs, so the digest
+ * carries their blob ids.
+ */
+const PRETTIER_CONFIG_PATHSPECS: readonly string[] = [
+  ...CHECK_GLOBAL_INPUTS.prettier.map((file) => `:(literal)${file}`),
+  ":(glob)**/.editorconfig",
+];
+
+function listGit(repository: string, args: string[]): string[] {
+  const result = Bun.spawnSync(["git", ...args], { cwd: repository });
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `git ${args.join(" ")} failed: ${result.stderr.toString()}`,
+    );
+  }
+  return result.stdout
+    .toString()
+    .split("\0")
+    .filter((entry) => entry !== "");
+}
+
+function shardIndexEntries(
+  shard: ShardName,
+  changed: readonly string[] | null,
+  repository: string,
+): { entry: string; path: string }[] {
+  const selected = changed === null ? null : new Set(changed);
+  const entries: { entry: string; path: string }[] = [];
+  for (const entry of listGit(repository, [
+    "ls-files",
+    "-sz",
+    "--",
+    ...shardPathspecs(shard),
+  ])) {
+    const parsed = parseTrackedEntry(entry);
+    if (parsed !== null && (selected === null || selected.has(parsed.path))) {
+      entries.push({ entry, path: parsed.path });
+    }
+  }
+  return entries;
+}
+
+/** Paths whose index entries a digest over `changed` covers. */
+export function prettierDigestedFiles(
+  shard: ShardName,
+  changed: readonly string[] | null,
+  repository = REPO_ROOT,
+): string[] {
+  return shardIndexEntries(shard, changed, repository).map(
+    ({ path: file }) => file,
+  );
+}
+
+/**
+ * The content a Prettier shard check depends on, as a Turbo hash input.
+ *
+ * Turbo hashes the shard's files, but its input globs exclude some paths that
+ * Prettier still checks (`!**\/build/**` versus the un-ignored
+ * `packages/mc-harness/src/build/`), and a root `.editorconfig` can force a
+ * full run without being an input of every shard task. The digest is content
+ * addressed instead of relying on those globs being a perfect superset: it
+ * covers the index entries (mode, blob id, path) of the files the check
+ * touches, the working bytes of any that differ from the index, and the
+ * config files above. When only some files are checked it also covers their
+ * sorted path list; `full` covers every tracked file in the shard. It does not
+ * cover the base commit, which is why identical diffs keep hitting the cache
+ * after the target branch moves. `changed` comes from `changedFilesForShard`,
+ * the function the check itself uses, so the hash cannot disagree with the
+ * work done.
+ */
+export async function prettierDigestForFiles(
+  shard: ShardName,
+  changed: readonly string[] | null,
+  repository = REPO_ROOT,
+): Promise<string> {
+  const selected = changed === null ? null : new Set(changed);
+  const inSelection = (file: string) => selected === null || selected.has(file);
+  const hash = createHash("sha256");
+  const shardSpecs = [...shardPathspecs(shard)];
+  for (const { entry } of shardIndexEntries(shard, changed, repository)) {
+    hash.update("index\0").update(entry).update("\0");
+  }
+  // Index entries do not see unstaged edits, which Prettier does read.
+  for (const file of listGit(repository, [
+    "ls-files",
+    "-mz",
+    "--",
+    ...shardSpecs,
+  ])) {
+    if (!inSelection(file)) continue;
+    const input = Bun.file(path.join(repository, file));
+    hash.update("worktree\0").update(JSON.stringify(file)).update("\0");
+    hash.update(
+      (await input.exists())
+        ? createHash("sha256")
+            .update(new Uint8Array(await input.arrayBuffer()))
+            .digest("hex")
+        : "missing",
+    );
+  }
+  for (const entry of listGit(repository, [
+    "ls-files",
+    "-sz",
+    "--",
+    ...PRETTIER_CONFIG_PATHSPECS,
+  ])) {
+    hash.update("config\0").update(entry).update("\0");
+  }
+  if (selected !== null) {
+    for (const file of [...selected].sort()) {
+      hash.update("changed\0").update(JSON.stringify(file)).update("\0");
+    }
+  }
+  return `${selected === null ? "full" : "changed"}-${hash.digest("hex")}`;
+}
+
+export async function prettierChangedDigest(
+  shard: ShardName,
+  environment: Readonly<Record<string, string | undefined>>,
+): Promise<string> {
+  return prettierDigestForFiles(
+    shard,
+    changedFilesForShard("prettier", shard, environment),
+  );
+}
+
+export async function prettierChangedEnvironment(
+  environment: Readonly<Record<string, string | undefined>>,
+): Promise<Record<string, string>> {
+  return Object.fromEntries(
+    await Promise.all(
+      SHARD_NAMES.map(
+        async (shard) =>
+          [
+            PRETTIER_CHANGED_ENV_KEYS[shard],
+            await prettierChangedDigest(shard, environment),
+          ] as const,
+      ),
+    ),
+  );
+}
+
+/**
+ * Under Turbo the shard digest must have been computed by scripts/verify.ts
+ * from this checkout. Without it every changed list would hash identically and
+ * a cached pass could replay for different work, so refuse to run.
+ */
+export async function assertPrettierChangedDigest(
+  shard: ShardName,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): Promise<void> {
+  const turboHash = environment["TURBO_HASH"];
+  if (turboHash === undefined || turboHash === "") return;
+  const key = PRETTIER_CHANGED_ENV_KEYS[shard];
+  const expected = environment[key];
+  if (
+    expected === undefined ||
+    expected !== (await prettierChangedDigest(shard, environment))
+  ) {
+    throw new Error(
+      `prettier-${shard} under Turbo requires a freshly computed ${key}. Use bun run verify, or run bun run prettier-${shard} outside Turbo.`,
+    );
+  }
 }
 
 export function chunk<T>(items: readonly T[], size: number): T[][] {
@@ -253,7 +442,12 @@ if (import.meta.main) {
     throw new Error("usage: run-shard-check.ts <check> <shard>");
   }
   const shard = parseShardName(shardArg);
-  if (shard === "root") await assertRootCheckInputs();
-  await runShardCheck(parseCheckName(checkArg), shard);
-  if (shard === "root") await assertRootCheckInputs();
+  const check = parseCheckName(checkArg);
+  const assertInputs = async () => {
+    if (shard === "root") await assertRootCheckInputs();
+    if (check === "prettier") await assertPrettierChangedDigest(shard);
+  };
+  await assertInputs();
+  await runShardCheck(check, shard);
+  await assertInputs();
 }

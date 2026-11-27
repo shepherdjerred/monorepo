@@ -1,5 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 
 const defaultTestInclude = ["**/*.{test,spec}.?(c|m)[jt]s?(x)"];
 const defaultTestExclude = ["**/node_modules/**", "**/.git/**"];
@@ -59,6 +60,16 @@ const coverageExclusions =
           "**/__tests__/**",
         ]
       : ["**/node_modules/**"];
+
+// Vitest's transformed-module cache defaults to node_modules/.vitest-cache,
+// ~240 MB per verify written to the CI workspace volume. CI's TMPDIR is
+// disposable scratch (tmpfs in verify), and the cache is keyed by lockfile and
+// source hashes, so moving it changes only where cached transforms live, never
+// test results. Local runs keep the default so the cache persists.
+const ciFsModuleCachePath =
+  (process.env["CI"] ?? "") === ""
+    ? undefined
+    : path.join(tmpdir(), "vitest-cache");
 
 function vitestMaxWorkers(value: string | undefined): number {
   if (value === undefined) return 4;
@@ -202,6 +213,9 @@ export default {
   test: {
     env: { TZ: "UTC" },
     pool: "forks",
+    ...(ciFsModuleCachePath === undefined
+      ? {}
+      : { fsModuleCachePath: ciFsModuleCachePath }),
     // Verify runs several package tasks at once on a 12-CPU pod and sets
     // CI_VITEST_MAX_WORKERS so nested worker pools cannot oversubscribe it.
     maxWorkers: vitestMaxWorkers(process.env["CI_VITEST_MAX_WORKERS"]),
