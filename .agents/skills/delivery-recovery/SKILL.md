@@ -48,10 +48,9 @@ toolkit deploy recovery --pending --json
 2. Read the Workflow:
    `toolkit temporal workflow show -w delivery/<DEPLOYMENT_ID> -o json`, then
    the failed Activity's message and stack.
-3. A refused apply-safety preflight can be reproduced read-only with the
-   workstation ArgoCD token and
-   `bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>`.
-   For "still co-owns", use the wiki's `how-to/clear-a-stale-field-manager.md`.
+3. Reproduce a refused apply-safety preflight read-only with the workstation
+   ArgoCD token (`bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>`);
+   for "still co-owns", see `how-to/clear-a-stale-field-manager.md`.
 4. A worker sync that failed with `exceeded its progress deadline` is usually
    capacity: look for a Pending `*-wf-retained-*` pod in the Application's
    namespace and `Insufficient cpu` on torvalds. The worker reader then
@@ -64,12 +63,10 @@ toolkit deploy recovery --pending --json
 Fix a defective check or chart in source first (a false positive must not be
 worked around), then settle the deployment.
 
-When a platform recovery inspection keeps failing for a reason already fixed
-on main, the running worker still builds its Jobs from the old source
-(AI-598). Pause `delivery-dispatch`, then run the operator script in
-`packages/temporal/README.md` (`platform-delivery-recovery.ts --action
-inspect`) from a checkout that has the fix. On macOS its Kubernetes client
-may reject the cluster certificate chain (AI-320).
+When a platform recovery inspection keeps failing for a reason already fixed on
+main, the running worker still builds Jobs from old source (AI-598). Pause
+`delivery-dispatch`, then run `platform-delivery-recovery.ts --action inspect`
+(`packages/temporal/README.md`) from a fixed checkout (macOS may hit AI-320).
 
 ## 3. Settle it with its own reader
 
