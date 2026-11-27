@@ -121,13 +121,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         },
       );
     },
-    refreshStaleRanks: async () => {
+    refreshStaleRanks: async (input) => {
       return await heartbeatWhile(
         { phase: "refreshing-ranks" },
         async (updateDetails) => {
           const { runRankRefreshActivity } =
             await import("#src/league/rank-refresh/rank-refresh-activity.ts");
-          return await runRankRefreshActivity((progress) => {
+          return await runRankRefreshActivity(input, (progress) => {
             updateDetails({ phase: "refreshing-ranks", ...progress });
           });
         },

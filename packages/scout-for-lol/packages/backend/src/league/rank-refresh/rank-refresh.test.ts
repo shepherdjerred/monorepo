@@ -112,8 +112,15 @@ async function rankedGame(
   });
 }
 
-async function due(limit = 100): Promise<LeaguePuuid[]> {
-  const players = await selectDueRankPlayers(prisma, { now: NOW, limit });
+async function due(
+  limit = 100,
+  excluded: LeaguePuuid[] = [],
+): Promise<LeaguePuuid[]> {
+  const players = await selectDueRankPlayers(prisma, {
+    now: NOW,
+    limit,
+    excluded,
+  });
   return players.map((player) => player.puuid);
 }
 
@@ -145,9 +152,19 @@ describe("selectDueRankPlayers", () => {
   test("a PUUID tracked by several servers is one player, in its region", async () => {
     const shared = await track("shared", { region: REGION });
     await track("shared", { serverId: OTHER_SERVER, region: REGION });
-    expect(await selectDueRankPlayers(prisma, { now: NOW, limit: 10 })).toEqual(
-      [{ puuid: shared, region: REGION }],
-    );
+    expect(
+      await selectDueRankPlayers(prisma, {
+        now: NOW,
+        limit: 10,
+        excluded: [],
+      }),
+    ).toEqual([{ puuid: shared, region: REGION }]);
+  });
+
+  test("players excluded for the run are not selected", async () => {
+    const kept = await track("kept");
+    const rejected = await track("rejected");
+    expect(await due(100, [rejected])).toEqual([kept]);
   });
 
   test("never-asked players come first, then the longest unrefreshed, bounded by the limit", async () => {
@@ -167,22 +184,24 @@ type Fetch = RankRefreshDependencies["fetchRanks"];
 function dependencies(
   fetchRanks: Fetch,
   batchSize?: number,
+  excluded: LeaguePuuid[] = [],
 ): RankRefreshDependencies {
   return {
     prisma,
     fetchRanks,
     now: () => NOW,
     onProgress: vi.fn(),
+    excluded,
     ...(batchSize === undefined ? {} : { batchSize }),
   };
 }
 
 const fetchGold: Fetch = () => Promise.resolve(SOLO_GOLD);
 
-function notFound(): RiotHttpError {
+function riotStatus(status: number): RiotHttpError {
   return new RiotHttpError({
-    status: 404,
-    statusText: "Not Found",
+    status,
+    statusText: "status",
     body: undefined,
     url: "https://na1.api.riotgames.com/lol/league/v4/entries/by-puuid/x",
     headers: new Headers(),
@@ -208,7 +227,12 @@ describe("refreshDueRanks", () => {
     expect(new Set(calls.map((call) => call.priority))).toEqual(
       new Set(["backfill"]),
     );
-    expect(batch).toEqual({ refreshed: 2, unranked: 0, more: false });
+    expect(batch).toEqual({
+      refreshed: 2,
+      unranked: 0,
+      failed: [],
+      more: false,
+    });
     const stored = await prisma.currentRankSnapshot.findUniqueOrThrow({
       where: { puuid: first },
     });
@@ -230,7 +254,12 @@ describe("refreshDueRanks", () => {
     expect(fetches).toBe(2);
     const second = await refreshDueRanks(dependencies(fetchRanks));
     expect(fetches).toBe(2);
-    expect(second).toEqual({ refreshed: 0, unranked: 0, more: false });
+    expect(second).toEqual({
+      refreshed: 0,
+      unranked: 0,
+      failed: [],
+      more: false,
+    });
   });
 
   test("a Riot 404 records the player as unranked instead of failing", async () => {
@@ -244,10 +273,15 @@ describe("refreshDueRanks", () => {
     });
 
     const batch = await refreshDueRanks(
-      dependencies(() => Promise.reject(notFound())),
+      dependencies(() => Promise.reject(riotStatus(404))),
     );
 
-    expect(batch).toEqual({ refreshed: 0, unranked: 1, more: false });
+    expect(batch).toEqual({
+      refreshed: 0,
+      unranked: 1,
+      failed: [],
+      more: false,
+    });
     const stored = await prisma.currentRankSnapshot.findUniqueOrThrow({
       where: { puuid },
     });
@@ -258,40 +292,87 @@ describe("refreshDueRanks", () => {
     expect(await due()).toEqual([]);
   });
 
-  test("any other failure propagates, and a retry covers only the players it did not reach", async () => {
-    const first = await track("aaa-reached");
-    const second = await track("bbb-failing");
-    await track("ccc-after");
-    const asked: string[] = [];
+  test.each([
+    ["a 5xx", riotStatus(503)],
+    ["a 429", riotStatus(429)],
+    ["a 408", riotStatus(408)],
+    ["a transport error", new Error("fetch failed")],
+  ])(
+    "%s is transient: it propagates, and a retry covers only the players it did not reach",
+    async (_name, failure) => {
+      const first = await track("aaa-reached");
+      const second = await track("bbb-failing");
+      await track("ccc-after");
+      const asked: string[] = [];
 
-    await expect(
-      refreshDueRanks(
-        dependencies((input) => {
-          asked.push(input.puuid);
-          return input.puuid === second
-            ? Promise.reject(new Error("Riot API HTTP 500"))
-            : Promise.resolve(SOLO_GOLD);
+      await expect(
+        refreshDueRanks(
+          dependencies((input) => {
+            asked.push(input.puuid);
+            return input.puuid === second
+              ? Promise.reject(failure)
+              : Promise.resolve(SOLO_GOLD);
+          }),
+        ),
+      ).rejects.toBe(failure);
+      expect(asked).toEqual([first, second]);
+      await expectRetryCoversRemaining(first, second);
+    },
+  );
+
+  test.each([400, 401, 403])(
+    "a permanent %s for one of 50 players leaves the other 49 refreshed and reports it",
+    async (status) => {
+      const puuids: LeaguePuuid[] = [];
+      for (let index = 0; index < 50; index += 1) {
+        puuids.push(await track(`player-${index.toString().padStart(2, "0")}`));
+      }
+      const rejected = puuids[17];
+      if (rejected === undefined) throw new Error("no rejected player");
+
+      const batch = await refreshDueRanks(
+        dependencies((input) =>
+          input.puuid === rejected
+            ? Promise.reject(riotStatus(status))
+            : Promise.resolve(SOLO_GOLD),
+        ),
+      );
+
+      expect(batch).toEqual({
+        refreshed: 49,
+        unranked: 0,
+        failed: [{ puuid: rejected, status }],
+        more: true,
+      });
+      expect(await prisma.currentRankSnapshot.count()).toBe(49);
+      expect(
+        await prisma.currentRankSnapshot.findUnique({
+          where: { puuid: rejected },
         }),
-      ),
-    ).rejects.toThrow("Riot API HTTP 500");
-    expect(asked).toEqual([first, second]);
-    expect(
-      await prisma.currentRankSnapshot.findUnique({ where: { puuid: first } }),
-    ).not.toBeNull();
-    expect(
-      await prisma.currentRankSnapshot.findUnique({ where: { puuid: second } }),
-    ).toBeNull();
+      ).toBeNull();
+    },
+  );
 
-    const retried: string[] = [];
+  test("a player excluded for the run is not asked again, so the next batch moves past it", async () => {
+    const rejected = await track("aaa-rejected");
+    const other = await track("bbb-other");
+    const asked: string[] = [];
+    const fetchRanks: Fetch = (input) => {
+      asked.push(input.puuid);
+      return Promise.resolve(SOLO_GOLD);
+    };
+
     const batch = await refreshDueRanks(
-      dependencies((input) => {
-        retried.push(input.puuid);
-        return Promise.resolve(SOLO_GOLD);
-      }),
+      dependencies(fetchRanks, 1, [rejected]),
     );
-    expect(retried).not.toContain(first);
-    expect(retried).toHaveLength(2);
-    expect(batch).toEqual({ refreshed: 2, unranked: 0, more: false });
+
+    expect(asked).toEqual([other]);
+    expect(batch).toEqual({
+      refreshed: 1,
+      unranked: 0,
+      failed: [],
+      more: true,
+    });
   });
 
   test("a full batch reports that more players may be due", async () => {
@@ -302,12 +383,42 @@ describe("refreshDueRanks", () => {
     expect(await refreshDueRanks(dependencies(fetchGold, 2))).toEqual({
       refreshed: 2,
       unranked: 0,
+      failed: [],
       more: true,
     });
     expect(await refreshDueRanks(dependencies(fetchGold, 2))).toEqual({
       refreshed: 1,
       unranked: 0,
+      failed: [],
       more: false,
     });
   });
 });
+
+async function expectRetryCoversRemaining(
+  first: LeaguePuuid,
+  second: LeaguePuuid,
+): Promise<void> {
+  expect(
+    await prisma.currentRankSnapshot.findUnique({ where: { puuid: first } }),
+  ).not.toBeNull();
+  expect(
+    await prisma.currentRankSnapshot.findUnique({ where: { puuid: second } }),
+  ).toBeNull();
+
+  const retried: string[] = [];
+  const batch = await refreshDueRanks(
+    dependencies((input) => {
+      retried.push(input.puuid);
+      return Promise.resolve(SOLO_GOLD);
+    }),
+  );
+  expect(retried).not.toContain(first);
+  expect(retried).toHaveLength(2);
+  expect(batch).toEqual({
+    refreshed: 2,
+    unranked: 0,
+    failed: [],
+    more: false,
+  });
+}

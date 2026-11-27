@@ -2906,8 +2906,12 @@ pages (which read ranks through `latestRanksByPuuid`) are not blank or stale.
   and a retried call re-selects only the players it did not reach.
 - **Riot.** The existing `fetchCurrentRanks` league-entry call at `backfill`
   priority: below `realtime` and `interactive`, above `crawl`. A Riot 404 is
-  recorded as unranked; any other failure fails the Activity and uses the
-  background retry policy.
+  recorded as unranked. A transient failure (429, 408, 5xx, transport, a
+  deferred budget) fails the Activity at once and uses the background retry
+  policy. A permanent per-player rejection (any other 4xx, such as 400, 401 or 403) is reported and the batch continues; the Workflow excludes that player
+  for the rest of the run, so one bad player cannot block the others, and fails
+  the run at the end with one error naming the count and the first 8 characters
+  of each PUUID.
 - **Kill switch.** `scout-rank-refresh-enabled`, read per batch: on in beta,
   off in production until an operator turns it on (AI-1093).
 

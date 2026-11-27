@@ -37,16 +37,23 @@ const DueRowsSchema = z.array(
  * player is asked once a window rather than once a day, and a player refreshed
  * today is not due again.
  *
+ * `excluded` are players an earlier batch of the same run found permanently
+ * rejected: they are never written, so without it they would be selected again.
+ *
  * Players never asked come first, then the longest-unrefreshed, with the PUUID
  * as the tie-break so a retried batch selects in the same order.
  */
 export async function selectDueRankPlayers(
   prisma: ExtendedPrismaClient,
-  input: { now: Date; limit: number },
+  input: { now: Date; limit: number; excluded: readonly LeaguePuuid[] },
 ): Promise<DueRankPlayer[]> {
   const cutoff = new Date(
     input.now.getTime() - RANK_EVIDENCE_WINDOW_DAYS * DAY_MS,
   );
+  const excludedClause =
+    input.excluded.length === 0
+      ? Prisma.empty
+      : Prisma.sql`AND a.puuid NOT IN (${Prisma.join(input.excluded)})`;
   return DueRowsSchema.parse(
     await prisma.$queryRaw(
       Prisma.sql`
@@ -54,6 +61,7 @@ export async function selectDueRankPlayers(
         FROM "Account" a
         LEFT JOIN "CurrentRankSnapshot" s ON s.puuid = a.puuid
         WHERE (s.puuid IS NULL OR s."fetchedAt" < ${cutoff})
+          ${excludedClause}
           AND NOT EXISTS (
             SELECT 1
             FROM "MatchRankHistory" h

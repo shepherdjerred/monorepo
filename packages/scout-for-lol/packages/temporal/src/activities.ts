@@ -77,8 +77,8 @@ import type {
   ScoutTournamentResultResult,
 } from "./activity-contracts.ts";
 import type {
+  ScoutRankRefreshBatchInput,
   ScoutRankRefreshBatchResult,
-  ScoutRankRefreshInput,
 } from "./rank-refresh-contracts.ts";
 import type { ScoutSilentPostmatchBackfillResult } from "./silent-postmatch-backfill.ts";
 
@@ -96,7 +96,7 @@ export type ScoutTemporalActivities = {
     input: ScoutCrawlFrontierPruneInput,
   ) => Promise<ScoutCrawlFrontierPruneBatchResult>;
   refreshStaleRanks: (
-    input: ScoutRankRefreshInput,
+    input: ScoutRankRefreshBatchInput,
   ) => Promise<ScoutRankRefreshBatchResult>;
   fetchInitialHistoryPage: (
     input: ScoutInitialHistoryInput,
