@@ -3,6 +3,7 @@
 @import "./components.css";
 @import "./friendly.css";
 @import "./tooltips.css";
+@import "./generated-tips.css";
 
 * {
   border-color: var(--scout-color-border);
