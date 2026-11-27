@@ -5,7 +5,7 @@ import {
   LlmArchiveWatermarksResponseSchema,
   type ArchiveWatermark,
   type ArchivedSpanIndexRow,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import {
   createStructuredLogger,
   type StructuredLogger,

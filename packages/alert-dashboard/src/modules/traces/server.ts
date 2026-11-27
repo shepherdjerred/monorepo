@@ -25,7 +25,7 @@ import {
   type TraceListItem,
   type TracesSearchQuery,
   type TracesSearchResponse,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import { bodyLimit } from "hono/body-limit";
 import type { Context } from "hono";
 

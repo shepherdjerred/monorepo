@@ -3,7 +3,7 @@ import type {
   TrajectoryItem,
   TrajectoryMessage,
   TrajectoryMessagePart,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 
 import { statusPill } from "#client/ops/pages/cluster-page.tsx";
 import { formatValue } from "#shared/ops-format";

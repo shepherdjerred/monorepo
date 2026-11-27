@@ -7,7 +7,7 @@ import {
   type ArchivedSpanIndexRow,
   type TraceListItem,
   type TracesSearchQuery,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "./llm-traces/index.ts";
 
 export const ARCHIVE_INDEX_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS archived_spans (

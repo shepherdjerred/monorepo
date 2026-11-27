@@ -1,4 +1,4 @@
-import type { ArchivedSpanIndexRow } from "@shepherdjerred/ops-model/llm-traces.ts";
+import type { ArchivedSpanIndexRow } from "@shepherdjerred/llm-observability/llm-traces";
 
 export const FIXTURE_TRACE_IDS = {
   aiSdkChat: "a1f4c8e29b304d178e65c20194ab7701",

@@ -8,7 +8,7 @@ import {
   LlmArchiveIngestRequestSchema,
   type ArchiveWatermark,
   type LlmArchiveIngestRequest,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import {
   computeStartDateKey,
   runLlmArchiveIndexSync,

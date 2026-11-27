@@ -9,7 +9,7 @@ import type {
   TraceDetail,
   TraceListItem,
   TracesSearchQuery,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import { z } from "zod";
 
 const LooseRecordSchema = z.record(z.string(), z.unknown());

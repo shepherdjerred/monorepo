@@ -5,7 +5,7 @@ import type {
   TraceRange,
   TraceSource,
   TracesFacetsResponse,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   useInfiniteQuery,

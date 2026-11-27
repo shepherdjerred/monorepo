@@ -2,7 +2,7 @@ import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { pillSeverity } from "#client/visuals/pill.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
-import type { TraceDetail } from "@shepherdjerred/ops-model/llm-traces.ts";
+import type { TraceDetail } from "@shepherdjerred/llm-observability/llm-traces";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   grafanaLokiTraceExploreUrl,

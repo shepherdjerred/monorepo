@@ -1,7 +1,4 @@
-import type {
-  ArchivedSpanIndexRow,
-  TraceDetail,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+import type { ArchivedSpanIndexRow, TraceDetail } from "./llm-traces/index.ts";
 import { buildTraceDetailFromInternalSpans } from "./trajectory/trajectory-otlp.ts";
 import {
   archivedRowsToInternalSpans,

@@ -4,7 +4,7 @@ import type {
   TraceRange,
   TracesFacetsResponse,
   TracesSearchQuery,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import { SearchIcon } from "lucide-react";
 import { Link, useLocation } from "react-router";
 

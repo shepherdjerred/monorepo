@@ -8,7 +8,7 @@ import {
 import {
   ArchiveDateKeySchema,
   type ArchivedSpanIndexRow,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import type { StructuredLogger } from "#observability/logging.ts";
 import { parseArchiveEnvelopeToIndexRow } from "./llm-archive-envelope.ts";
 

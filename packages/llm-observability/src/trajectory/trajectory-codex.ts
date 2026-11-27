@@ -3,7 +3,7 @@ import type {
   CodexCommandCall,
   CodexTurnItem,
   TrajectoryItem,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "#src/llm-traces/index.ts";
 import {
   parseTrajectoryMessages,
   safeJsonParse,

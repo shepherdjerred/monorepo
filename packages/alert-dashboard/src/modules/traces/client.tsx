@@ -1,7 +1,7 @@
 import {
   TraceIdTextSchema,
   TracesSearchResponseSchema,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import { WaypointsIcon } from "lucide-react";
 import { lazy } from "react";
 

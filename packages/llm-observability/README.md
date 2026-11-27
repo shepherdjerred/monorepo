@@ -105,13 +105,16 @@ configuration.
 
 ## Archive index and trajectory normalization
 
-Two subpath exports serve Hub's `/traces` module without pulling `bun:sqlite` or
+Three subpath exports serve Hub's `/traces` module without pulling `bun:sqlite` or
 `@shepherdjerred/llm-models` into producer processes:
 
 - `./archive-index` (`LlmTraceArchiveStore`): self-contained `bun:sqlite` WAL
   store (`archived_spans`, `archived_traces`, `archive_watermarks`) supporting
   transactional batch upserts, 366-day retention pruning, facet summaries,
   keyset-paginated search, and per-trace span lookups.
+- `./llm-traces`: zod-only trace, span-index, and archive-ingest schemas shared by
+  the archive writer (Temporal), the index store, and Hub. They live here, not in
+  `ops-model`, so catalog edits do not invalidate LLM runtime tasks.
 - `./trajectory` (`normalizeOtlpTrace`, `normalizeArchivedTrace`): pure
   normalizers that build the parent-child span waterfall, leaf-only token and
   catalog-cost rollups, and typed trajectory steps across the repository's four

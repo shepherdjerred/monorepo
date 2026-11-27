@@ -1,7 +1,7 @@
 import type {
   TrajectoryDecisionAnswer,
   TrajectoryItem,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 
 import { statusPill } from "#client/ops/pages/cluster-page.tsx";
 import { BudgetMeter } from "#client/visuals/index.ts";

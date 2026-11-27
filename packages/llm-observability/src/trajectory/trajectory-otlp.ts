@@ -6,7 +6,7 @@ import {
   type TraceSubject,
   type TrajectoryItem,
   type WaterfallSpan,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "#src/llm-traces/index.ts";
 import { extractCodexGroups, isCodexSystem } from "./trajectory-codex.ts";
 import {
   buildLeafTrajectoryItem,

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, expect, test } from "vitest";
 import { LlmTraceArchiveStore } from "#src/archive-index-store.ts";
-import type { ArchivedSpanIndexRow } from "@shepherdjerred/ops-model/llm-traces.ts";
+import type { ArchivedSpanIndexRow } from "#src/llm-traces/index.ts";
 
 const NOW_MS = 1_790_361_600_000;
 const HOUR_MS = 3_600_000;

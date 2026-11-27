@@ -7,7 +7,7 @@ import {
 import type {
   TrajectoryItem,
   TrajectoryMessage,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "#src/llm-traces/index.ts";
 import { z } from "zod";
 import type { CodexCandidateSpan } from "./trajectory-codex.ts";
 import {

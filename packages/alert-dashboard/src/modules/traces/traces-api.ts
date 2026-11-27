@@ -9,7 +9,7 @@ import {
   TracesSearchResponseSchema,
   type TraceRange,
   type TracesSearchQuery,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 
 import { fetchReportsJson } from "#client/reports/reports-api.ts";
 
