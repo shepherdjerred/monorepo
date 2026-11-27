@@ -26,14 +26,18 @@ export type RosterGameRow = z.infer<typeof RosterGameRowSchema>;
 
 /**
  * Each account's newest `newestPerAccount` games, plus every game since
- * `sinceMs`, newest first per account. The PUUID list is the caller's whole
+ * `sinceMs` when given, newest first per account. The PUUID list is the caller's whole
  * authorization surface, as for every profile read. One account can appear
  * twice in a match under two PUUIDs of the same person; the caller merges by
  * match id.
  */
 export async function readRosterGames(
   page: LakePage,
-  options: { puuids: string[]; newestPerAccount: number; sinceMs: number },
+  options: {
+    puuids: string[];
+    newestPerAccount: number;
+    sinceMs?: number | undefined;
+  },
 ): Promise<RosterGameRow[]> {
   if (options.puuids.length === 0) return [];
   const source = buildMatchesSource(
@@ -50,7 +54,7 @@ export async function readRosterGames(
     source,
     trailingParams: [
       scalarParam(options.newestPerAccount),
-      scalarParam(options.sinceMs),
+      scalarParam(options.sinceMs ?? Number.MAX_SAFE_INTEGER),
     ],
     sql:
       `SELECT puuid, match_id, game_creation_ms, champion_id, champion_name, queue, queue_id, win FROM (` +

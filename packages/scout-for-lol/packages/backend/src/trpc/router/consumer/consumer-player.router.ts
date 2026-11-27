@@ -19,12 +19,18 @@ import {
 } from "#src/consumer/player-access.ts";
 import { getConsumerPlayerMatchHistory } from "#src/lib/player-profile/queries.ts";
 import { getConsumerPlayerProfileSummary } from "#src/lib/player-profile/profile-summary.ts";
+import { getConsumerCompare } from "#src/trpc/router/consumer/compare/compare.ts";
 import { getConsumerRoster } from "#src/lib/player-profile/roster.ts";
 import { getConsumerPlayerRankHistory } from "#src/lib/player-profile/rank-history.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const ConsumerPlayerInput = z.object({
   playerId: PlayerIdSchema,
+});
+
+const CompareInput = z.object({
+  leftPlayerId: PlayerIdSchema,
+  rightPlayerId: PlayerIdSchema,
 });
 
 const ConsumerPlayerStatusInput = z
@@ -261,6 +267,18 @@ export const consumerPlayerRouter = router({
       viewerDiscordId: ctx.user.discordId,
     });
   }),
+
+  compare: protectedProcedure
+    .input(CompareInput)
+    .query(async ({ ctx, input }) => {
+      const guilds = await assertConsumerPlayerScope(ctx.user);
+      return getConsumerCompare({
+        guildIds: guilds.map((guild) => DiscordGuildIdSchema.parse(guild.id)),
+        leftId: input.leftPlayerId,
+        rightId: input.rightPlayerId,
+        viewerDiscordId: ctx.user.discordId,
+      });
+    }),
 
   // Deprecated: replaced by `roster`. Kept, untouched, until the app's Players
   // page switches over; then it is removed. (A `@deprecated` tag would fail
