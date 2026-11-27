@@ -21,7 +21,9 @@ async function verifyCurrentTeamVision(page: Page, testInfo: TestInfo) {
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   const heimerdinger = [1_073_742_161, 16_356] as const;
   const illaoi = [1_073_742_166, 43_938] as const;
-  await page.goto(`${replayPath}?t=32.8&perspective=red`);
+  await page.getByRole("combobox", { name: "Camera" }).selectOption("free");
+  await seek(page, 32.8);
+  await vision.selectOption("red");
   await expect(vision).toHaveValue("red");
   await expectActor(page, heimerdinger, false);
   await expectActor(page, illaoi, true);

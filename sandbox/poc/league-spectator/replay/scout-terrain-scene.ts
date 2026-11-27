@@ -135,6 +135,33 @@ const modelBinding = z.object({
       /^\/(?:champion|structure|nexus|inhibitor|world-unit)-models\/[a-f0-9]{64}\.glb$/,
     ),
 });
+const ChampionModelsSchema = z.object({
+  bindings: z
+    .array(modelBinding.extend({ skinId: z.number().int().nonnegative() }))
+    .length(10),
+});
+const championAssetKey = /^[a-z0-9_]+-(?:0|[1-9]\d{0,4})$/;
+const ChampionModelCatalogSchema = z.strictObject({
+  schema: z.literal(1),
+  kind: z.literal("exact-native-terrain-champion-catalog"),
+  build: z.literal(currentTerrainPositionBuild),
+  protocol: z.literal(terrainPositionProtocol),
+  selectionKind: z.literal("archive"),
+  assets: z.record(
+    z.string().regex(championAssetKey),
+    z.strictObject({
+      champion: z.string().regex(/^[a-z0-9_]+$/i),
+      skinId: z.number().int().nonnegative().max(10000),
+      skinScale: z.number().positive().nullable(),
+      hiddenRanges: z.array(z.string().min(1)),
+      model: z.strictObject({
+        file: z.string().regex(/^[a-z0-9_]+-(?:0|[1-9]\d{0,4})\/model\.glb$/),
+        sha256: z.string().regex(/^[a-f0-9]{64}$/),
+        bytes: z.number().int().positive(),
+      }),
+    }),
+  ),
+});
 const worldModelInstance = z.object({
   context: z.number().int().positive(),
   participantId,
@@ -390,13 +417,7 @@ const TerrainSceneFields = z.object({
     })
     .optional(),
   terrainVisibility: TerrainVisibilitySchema.optional(),
-  championModels: z
-    .object({
-      bindings: z
-        .array(modelBinding.extend({ skinId: z.number().int().nonnegative() }))
-        .length(10),
-    })
-    .optional(),
+  championModels: ChampionModelsSchema.optional(),
   structureModels: z
     .object({
       bindings: z.array(modelBinding).min(1),
@@ -481,6 +502,7 @@ const TerrainSceneFields = z.object({
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
+      championModelCatalog: ChampionModelCatalogSchema.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       laneMinionCatalog: LaneMinionCatalogSchema.optional(),
@@ -591,6 +613,24 @@ export const SceneSchema = TerrainSceneFields.refine(
   )
   .refine(
     (scene) => {
+      const catalog = scene.workerMotion?.championModelCatalog;
+      return (
+        catalog === undefined ||
+        (scene.identity.build === catalog.build &&
+          scene.identity.protocol === catalog.protocol &&
+          scene.workerMotion?.allowCurrentBuild === true &&
+          scene.motion === undefined &&
+          scene.championModels === undefined)
+      );
+    },
+    {
+      path: ["workerMotion", "championModelCatalog"],
+      message:
+        "Replay-derived champion models require an exact current archive catalog and worker motion.",
+    },
+  )
+  .refine(
+    (scene) => {
       const catalog = scene.workerMotion?.championAnimationCatalog;
       return (
         catalog === undefined ||
@@ -598,12 +638,13 @@ export const SceneSchema = TerrainSceneFields.refine(
           scene.workerMotion?.allowCurrentBuild === true &&
           scene.motion === undefined &&
           scene.championAnimationCues === undefined &&
-          scene.championModels !== undefined &&
-          matchesRenderedAnimationCatalog(
-            catalog,
-            scene.participants,
-            scene.championModels.bindings,
-          ))
+          (scene.workerMotion?.championModelCatalog !== undefined ||
+            (scene.championModels !== undefined &&
+              matchesRenderedAnimationCatalog(
+                catalog,
+                scene.participants,
+                scene.championModels.bindings,
+              ))))
       );
     },
     {
@@ -871,6 +912,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     neutralObjectiveKills: NeutralObjectiveWorkerKillsSchema.optional(),
     neutralObjectiveOmissions: NeutralObjectiveOmissionsSchema.optional(),
     neutralCampCoverage: NeutralCampCoverageSchema.optional(),
+    championModels: ChampionModelsSchema.optional(),
     recordedPlayerState: z
       .strictObject({
         playerState: PlayerStateSchema,
@@ -998,6 +1040,11 @@ async function loadWorkerMotion(
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    if (
+      (result.championModels !== undefined) !==
+      (workerMotion.championModelCatalog !== undefined)
+    )
+      throw Error("Replay motion worker returned unexpected champion models.");
     if (
       (result.recordedPlayerState !== undefined) !==
       (workerMotion.decodePlayerState === true)
@@ -1334,6 +1381,56 @@ function loadNeutralObjectives(
   };
 }
 
+function validateSelectedChampionModels(
+  scene: TerrainScene,
+  models: z.infer<typeof ChampionModelsSchema>,
+) {
+  const catalog = scene.workerMotion?.championModelCatalog;
+  const participants = new Map(
+    scene.participants.map(({ participantId, championName }) => [
+      participantId,
+      championName,
+    ]),
+  );
+  for (const binding of models.bindings) {
+    const champion = participants.get(binding.participantId);
+    const key = `${champion?.toLowerCase()}-${String(binding.skinId)}`;
+    const asset = catalog?.assets[key];
+    if (
+      champion === undefined ||
+      asset?.champion !== champion ||
+      asset.skinId !== binding.skinId ||
+      asset.model.file !== `${key}/model.glb` ||
+      binding.url !== `/champion-models/${asset.model.sha256}.glb` ||
+      binding.skinScale !== (asset.skinScale ?? 1) ||
+      binding.hiddenRanges.length !== asset.hiddenRanges.length ||
+      binding.hiddenRanges.some(
+        (range, index) => range !== asset.hiddenRanges[index],
+      )
+    )
+      throw Error(
+        "Worker-selected champion models disagree with the roster or archive catalog.",
+      );
+    participants.delete(binding.participantId);
+  }
+  if (participants.size !== 0)
+    throw Error(
+      "Worker-selected champion models do not cover the replay roster.",
+    );
+  const animation = scene.workerMotion?.championAnimationCatalog;
+  if (
+    animation !== undefined &&
+    !matchesRenderedAnimationCatalog(
+      animation,
+      scene.participants,
+      models.bindings,
+    )
+  )
+    throw Error(
+      "Worker-selected champion models disagree with the animation catalog.",
+    );
+}
+
 export async function loadSceneMotion(
   scene: TerrainScene,
   signal: AbortSignal,
@@ -1356,6 +1453,9 @@ export async function loadSceneMotion(
         ),
   ]);
   if (decoded === undefined) return { scene, heights };
+  const championModels = decoded.championModels;
+  if (championModels !== undefined)
+    validateSelectedChampionModels(scene, championModels);
   const ground = createNavgridGroundHeight(
     scene.mapBounds,
     scene.navgrid,
@@ -1490,6 +1590,9 @@ export async function loadSceneMotion(
       ...(decoded.recordedPlayerState === undefined
         ? {}
         : { ...decoded.recordedPlayerState, workerMotion: undefined }),
+      ...(championModels === undefined
+        ? {}
+        : { championModels, workerMotion: undefined }),
     },
     heights,
     announcerCues: decoded.announcerCues,

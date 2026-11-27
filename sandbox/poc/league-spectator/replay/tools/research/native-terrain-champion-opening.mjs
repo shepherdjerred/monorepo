@@ -147,3 +147,45 @@ export function readSelectedChampionAsset(catalog, selection) {
   );
   return asset;
 }
+
+export function prepareCurrentChampionModelBindings(
+  catalog,
+  observations,
+  creations,
+) {
+  return {
+    bindings: [
+      ...indexCurrentChampionOpening(catalog, observations, creations),
+    ].map(([participantId, asset]) => {
+      const { champion, skinId, skinScale, hiddenRanges, model } = asset;
+      const key = championSkinKey({ champion, skinId });
+      requireSelection(
+        model?.file === `${key}/model.glb` &&
+          typeof model.sha256 === "string" &&
+          /^[0-9a-f]{64}$/.test(model.sha256) &&
+          Number.isSafeInteger(model.bytes) &&
+          model.bytes > 0,
+        "Invalid build-scoped champion model resource",
+      );
+      requireSelection(
+        skinScale === null || (Number.isFinite(skinScale) && skinScale > 0),
+        "Invalid build-scoped champion skin scale",
+      );
+      requireSelection(
+        Array.isArray(hiddenRanges) &&
+          hiddenRanges.every(
+            (name) => typeof name === "string" && name.length > 0,
+          ) &&
+          new Set(hiddenRanges).size === hiddenRanges.length,
+        "Invalid build-scoped champion hidden ranges",
+      );
+      return {
+        participantId,
+        skinId,
+        skinScale: skinScale ?? 1,
+        hiddenRanges,
+        url: `/champion-models/${model.sha256}.glb`,
+      };
+    }),
+  };
+}

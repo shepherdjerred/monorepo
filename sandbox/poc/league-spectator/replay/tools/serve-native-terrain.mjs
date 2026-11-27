@@ -20,8 +20,10 @@ import { currentTerrainPositionBuild } from "./research/native-terrain-byte-code
 import { bindNativeTerrainChampionIdentities } from "./research/native-terrain-champion-identities.mjs";
 import {
   loadChampionModelCatalog,
+  loadChampionModelCatalogIndex,
   readChampionModelSelections,
 } from "./research/native-terrain-champion-model-catalog.mjs";
+import { prepareCurrentChampionModelBindings } from "./research/native-terrain-champion-opening.mjs";
 import {
   projectRecordedPlayerState,
   readCurrentRecordedPlayerState,
@@ -64,6 +66,7 @@ const { positionals, values } = parseArgs({
     "infernal-terrain-export": { type: "string" },
     "champion-models": { type: "string" },
     "champion-catalog-sha256": { type: "string" },
+    "champion-models-from-replay": { type: "boolean" },
     "champion-animation-cues": { type: "string" },
     "champion-animation-cues-sha256": { type: "string" },
     "champion-animation-catalog": { type: "string" },
@@ -1345,6 +1348,18 @@ const [bytes, receipts, , baseMetadata, baseMesh, projection] =
 const replayBuffer = new Uint8Array(bytes).buffer;
 const replay = openReplay(replayBuffer);
 const currentBuild = replay.build === currentTerrainPositionBuild;
+const decodeChampionModels = values["champion-models-from-replay"] === true;
+assert.ok(
+  !decodeChampionModels ||
+    (currentBuild &&
+      rawReplayOnly &&
+      privatePackageOutput !== undefined &&
+      values["position-decoder"] !== undefined &&
+      values["worker-decompressor"] !== undefined &&
+      values["champion-models"] !== undefined &&
+      values["champion-catalog-sha256"] !== undefined),
+  "Replay-derived champion models require a private exact current worker package and a pinned archive catalog",
+);
 assert.ok(
   !values["player-state-from-replay"] ||
     (currentBuild &&
@@ -1708,7 +1723,22 @@ if (terrainVisibilityPath !== undefined) {
   };
 }
 let championModelRoutes;
-if (values["champion-models"] !== undefined) {
+let championModelCatalog;
+let verifiedChampionModels;
+if (decodeChampionModels) {
+  const index = await loadChampionModelCatalogIndex(
+    values["champion-models"],
+    values["champion-catalog-sha256"],
+    identity,
+  );
+  championModelCatalog = index.championModelCatalog;
+  championModelRoutes = index.routes;
+  verifiedChampionModels = prepareCurrentChampionModelBindings(
+    championModelCatalog,
+    observations,
+    championModelSelections,
+  );
+} else if (values["champion-models"] !== undefined) {
   const pin = values["champion-catalog-sha256"];
   const models =
     pin === undefined
@@ -1945,6 +1975,7 @@ if (decoderBytes !== undefined) {
       ...(decodeChampionStats ? { decodeChampionStats: true } : {}),
       ...(decodeChampionInventory ? { decodeChampionInventory: true } : {}),
       ...(decodeChampionExperience ? { decodeChampionExperience: true } : {}),
+      ...(championModelCatalog === undefined ? {} : { championModelCatalog }),
     };
   } else {
     const [
@@ -2516,13 +2547,17 @@ if (decodeTeamVision) {
   scene.workerMotion.decodeTeamVision = true;
 }
 let championAnimationRoutes;
+const animationScene =
+  verifiedChampionModels === undefined
+    ? scene
+    : { ...scene, championModels: verifiedChampionModels };
 if (animationCatalogPath !== undefined) {
   const { readCurrentChampionAnimationCatalog } =
     await import("./research/recorded-champion-animation-resources.mjs");
   const { bindings, routes } = await readCurrentChampionAnimationCatalog(
     animationCatalogPath,
     animationCatalogDigest,
-    scene,
+    animationScene,
   );
   assert.ok(
     scene.workerMotion && bindings.length > 0,
@@ -2536,7 +2571,7 @@ if (animationCatalogPath !== undefined) {
   const { cues, routes } = await readRecordedChampionAnimations(
     animationPath,
     animationDigest,
-    scene,
+    animationScene,
     replay,
     decompress,
   );

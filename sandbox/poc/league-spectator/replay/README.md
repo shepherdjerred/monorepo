@@ -418,6 +418,13 @@ check each selected model through the runtime loader. The report lists
 uncovered archive keys. Match legality and native presentation require
 independent evidence.
 
+Add `--champion-models-from-replay` with the archive-scoped `--champion-models`
+and its `--champion-catalog-sha256` to verify every catalog model at build time
+and include the build-scoped index in the private package. The browser worker
+reads the ten exact opening skin selectors. The renderer requests the selected
+GLBs by digest and checks their bindings against any authored animation catalog
+before drawing. The rest of the private package is still tied to the saved replay.
+
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose

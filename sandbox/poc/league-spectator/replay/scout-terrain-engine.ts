@@ -172,6 +172,18 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "incompatible-build",
       "The saved terrain scene does not match this rendering package.",
     );
+  const modelCatalog = scene.workerMotion?.championModelCatalog;
+  if (modelCatalog !== undefined) {
+    const files = new Map(localManifest.files.map((file) => [file.path, file]));
+    for (const { model } of Object.values(modelCatalog.assets)) {
+      const file = files.get(`champion-models/${model.sha256}.glb`);
+      if (file?.sha256 !== model.sha256 || file.bytes !== model.bytes)
+        throw new ReplayCapabilityError(
+          "invalid-package",
+          "A champion catalog model disagrees with the rendering package inventory.",
+        );
+    }
+  }
   const announcerProfile = localManifest.capabilities.announcerPreview;
   if (
     announcerProfile === undefined &&

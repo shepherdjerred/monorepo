@@ -8,9 +8,13 @@ import {
   corroborateChampionModelSelections,
   currentChampionBuild,
   loadChampionModelCatalog,
+  loadChampionModelCatalogIndex,
   openChampionModelCatalog,
 } from "./native-terrain-champion-model-catalog.mjs";
-import { indexCurrentChampionOpening } from "./native-terrain-champion-opening.mjs";
+import {
+  indexCurrentChampionOpening,
+  prepareCurrentChampionModelBindings,
+} from "./native-terrain-champion-opening.mjs";
 
 const identity = { build: "16.23.840.6595", protocol: "8bbfcd5af2bc92db" };
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -29,6 +33,77 @@ const observations = {
     })),
   },
 };
+
+test("authenticates all archive models before exporting a replay-independent index", async () => {
+  const root = await mkdtemp(join(tmpdir(), "scout-champion-index-"));
+  try {
+    const current = { ...identity, build: currentChampionBuild };
+    const manifest = join(root, "catalog.json");
+    const file = "ahri-27/model.glb";
+    const bytes = Buffer.alloc(16);
+    bytes.write("glTF");
+    bytes.writeUInt32LE(2, 4);
+    bytes.writeUInt32LE(bytes.length, 8);
+    const model = { file, sha256: sha256(bytes), bytes: bytes.length };
+    const asset = {
+      champion: "Ahri",
+      skinId: 27,
+      skinScale: null,
+      hiddenRanges: [],
+      model,
+    };
+    const catalog = {
+      schema: 1,
+      kind: "exact-native-terrain-champion-catalog",
+      ...current,
+      selectionKind: "archive",
+      installedExeSha256: championArchiveExecutableHashes[current.build],
+      sourceManifestSha256: "a".repeat(64),
+      sourceCensusSha256: "b".repeat(64),
+      selectionSha256: "c".repeat(64),
+      assets: { "ahri-27": { ...asset, archiveIndexSha256: "d".repeat(64) } },
+    };
+    const write = async (value) => {
+      const content = JSON.stringify(value);
+      await writeFile(manifest, content);
+      return sha256(content);
+    };
+    await mkdir(join(root, "ahri-27"));
+    await writeFile(join(root, file), bytes);
+    const pin = await write(catalog);
+    const { championModelCatalog, routes } =
+      await loadChampionModelCatalogIndex(manifest, pin, current);
+    expect(championModelCatalog.assets).toEqual({ "ahri-27": asset });
+    expect(championModelCatalog).not.toHaveProperty("installedExeSha256");
+    expect(routes.get(`/champion-models/${model.sha256}.glb`)).toEqual([
+      bytes,
+      "model/gltf-binary",
+    ]);
+    await writeFile(join(root, file), Buffer.alloc(16));
+    await expect(
+      loadChampionModelCatalogIndex(manifest, pin, current),
+    ).rejects.toThrow("model digest differs");
+    await expect(
+      loadChampionModelCatalogIndex(
+        manifest,
+        await write({
+          ...catalog,
+          assets: { "ahri-9": catalog.assets["ahri-27"] },
+        }),
+        current,
+      ),
+    ).rejects.toThrow("model key differs");
+    await expect(
+      loadChampionModelCatalogIndex(
+        manifest,
+        await write({ ...catalog, selectionKind: undefined }),
+        current,
+      ),
+    ).rejects.toThrow("build-scoped archive catalog");
+  } finally {
+    await rm(root, { recursive: true });
+  }
+});
 
 test("requires a one-to-one corroborated opening roster", () => {
   const reordered = heroes.toReversed();
@@ -106,6 +181,54 @@ test("indexes only original selections from the independent exact-build catalog"
       heroes,
     ),
   ).toThrow("disagrees with its opening skin selector");
+});
+
+test("projects only digest-bound models in opening packet order", () => {
+  const current = { ...observations, ...identity, build: currentChampionBuild };
+  const modelSha256 = "a".repeat(64);
+  const assets = Object.fromEntries(
+    heroes.map(({ champion, skinId }) => {
+      const key = `${champion.toLowerCase()}-${skinId}`;
+      return [
+        key,
+        {
+          champion,
+          skinId,
+          skinScale: null,
+          hiddenRanges: ["Hidden"],
+          model: { file: `${key}/model.glb`, sha256: modelSha256, bytes: 16 },
+        },
+      ];
+    }),
+  );
+  const catalog = {
+    schema: 1,
+    kind: "exact-native-terrain-champion-catalog",
+    build: current.build,
+    protocol: current.protocol,
+    selectionKind: "archive",
+    assets,
+  };
+  const reversed = heroes.toReversed();
+  expect(
+    prepareCurrentChampionModelBindings(catalog, current, reversed).bindings,
+  ).toEqual(
+    reversed.map(({ context, skinId }) => ({
+      participantId: context,
+      skinId,
+      skinScale: 1,
+      hiddenRanges: ["Hidden"],
+      url: `/champion-models/${modelSha256}.glb`,
+    })),
+  );
+  const entry = assets["champion0-0"];
+  assets["champion0-0"] = {
+    ...entry,
+    model: { ...entry.model, sha256: "../wrong" },
+  };
+  expect(() =>
+    prepareCurrentChampionModelBindings(catalog, current, heroes),
+  ).toThrow("Invalid build-scoped champion model resource");
 });
 
 test("loads pinned build-authored GLBs for the decoded skin selectors", async () => {

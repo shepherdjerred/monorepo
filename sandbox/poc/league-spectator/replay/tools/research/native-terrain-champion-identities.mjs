@@ -144,7 +144,11 @@ export function createNativeTerrainChampionCreation88Reader(
 }
 
 /** Corroborate actor identities by opening creation and independent team packets. */
-export function bindNativeTerrainChampionIdentities(prepared, codecs, options) {
+export function bindNativeTerrainChampionIdentities(
+  prepared,
+  codecs,
+  { includeSkin = false, ...options } = {},
+) {
   const { packetReader, observations } = prepared;
   assertExactTerrainReplay(observations, options);
   if (
@@ -165,6 +169,7 @@ export function bindNativeTerrainChampionIdentities(prepared, codecs, options) {
     throw Error("Expected a time-zero keyframe for champion identities");
   const teams = new Map();
   const creations = new Map();
+  const openingCreations = includeSkin ? [] : undefined;
   let opcode = null;
   let context = 0;
   for (const packet of packets) {
@@ -177,10 +182,11 @@ export function bindNativeTerrainChampionIdentities(prepared, codecs, options) {
         : packet.paramBits;
     if (opcode === 88) {
       if (context !== 0) throw Error("Unexpected opcode 88 envelope context");
-      const creation = readCreation(packet.payload);
+      const creation = readCreation(packet.payload, { includeSkin });
       if (creations.has(creation.context))
         throw Error("Duplicate opcode 88 hero context");
       creations.set(creation.context, creation.champion);
+      openingCreations?.push(creation);
     } else if (opcode === 313) {
       const { payload } = packet;
       if (
@@ -246,6 +252,7 @@ export function bindNativeTerrainChampionIdentities(prepared, codecs, options) {
   const unresolved = [...expected].filter((context) => !known.has(context));
   return {
     binding: { ...binding, verified, unresolved },
+    ...(openingCreations === undefined ? {} : { openingCreations }),
     coverage: {
       openingCreations: creations.size,
       independentlyMatched: matches.size,

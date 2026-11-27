@@ -174,6 +174,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionInventory: boolean;
     directChampionExperience: boolean;
     directChampionAnimation: boolean;
+    directChampionModels: boolean;
     directReplayObservations: boolean;
     championAnimationCueCount: number;
     announcerEvents?: unknown;
@@ -213,6 +214,7 @@ export async function verifyDirectChampionStatsWorker(
   const optionalKeys = Object.entries({
     announcerEvents: fixture.announcerEvents !== undefined,
     championAnimationCatalog: directChampionAnimation,
+    championModelCatalog: fixture.directChampionModels,
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
     decodeChampionStats: directChampionStats,

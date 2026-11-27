@@ -115,11 +115,12 @@ async function verifyCurrentNeutralCamps(page: Page, testInfo: TestInfo) {
     ).toHaveCount(1);
   }
 
-  await page.goto(`${replayPath}?t=232&perspective=red`);
   await expect(
     page.getByRole("button", { name: "Play", exact: true }),
   ).toBeVisible();
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  await seek(page, 232);
+  await vision.selectOption("red");
   await expect(vision).toHaveValue("red");
   const scuttleIndexCount = 12_654;
   const opening = [10_943.7421, 5161.8778] as const;
@@ -231,9 +232,12 @@ async function verifyAuthoredCampSkins(page: Page, testInfo: TestInfo) {
       perspective: "blue",
     },
   ] as const) {
-    await page.goto(
-      `${replayPath}?t=${String(clock)}&perspective=${perspective}`,
-    );
+    if (typeof clock === "string")
+      await page.goto(`${replayPath}?t=${clock}&perspective=${perspective}`);
+    else {
+      await seek(page, clock);
+      await vision.selectOption(perspective);
+    }
     await expect(play).toBeVisible();
     await expect(vision).toHaveValue(perspective);
     await expect.poll(() => drawsNear(page, indices, position)).toBe(true);

@@ -106,6 +106,7 @@ const SceneIdentitySchema = z.object({
   championResourceTracks: z.array(z.unknown()).optional(),
   playerState: z.unknown().optional(),
   championEliminations: z.unknown().optional(),
+  championModels: z.unknown().optional(),
   winningTeam: z.unknown().optional(),
   workerMotion: z
     .object({
@@ -118,6 +119,7 @@ const SceneIdentitySchema = z.object({
         .array(z.tuple([z.string(), z.number().int().nonnegative()]))
         .optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
+      championModelCatalog: z.object({}).optional(),
       terrainControllerGraph: z.object({}).optional(),
       laneMinionCatalog: z
         .object({
@@ -270,9 +272,20 @@ function usesDirectPlayerState({
   return direct;
 }
 
+function usesDirectChampionModels(scene: z.infer<typeof SceneIdentitySchema>) {
+  const { workerMotion } = scene;
+  const directChampionModels = workerMotion?.championModelCatalog !== undefined;
+  if (directChampionModels && scene.championModels !== undefined)
+    throw new Error(
+      "Direct champion models require a scene without prepared bindings.",
+    );
+  return directChampionModels;
+}
+
 function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
   const { workerMotion, terrainVisibility, teamVision } = scene;
   const directPlayerState = usesDirectPlayerState(scene);
+  const directChampionModels = usesDirectChampionModels(scene);
   const directTerrainVisibility =
     workerMotion?.terrainControllerGraph !== undefined;
   if (directTerrainVisibility && terrainVisibility !== undefined)
@@ -291,7 +304,10 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
     directNeutralCamps: workerMotion?.decodeNeutralCamps === true,
     directNeutralCampSkins: workerMotion?.neutralCampSkins,
     directPlayerState,
+    directChampionModels,
+    preparedChampionModels: scene.championModels,
     directWorldObservations:
+      directChampionModels ||
       directPlayerState ||
       directTerrainVisibility ||
       directTeamVision ||

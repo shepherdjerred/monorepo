@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
+import { verifyRecordedChampionModels } from "./proof/champion-model-oracle.ts";
 import { observeRecordedItemBlobs } from "./proof/current-inventory.ts";
 import { verifyRecordedInhibitorReturns } from "./recorded-inhibitor-assertions.ts";
 import { verifyDirectChampionStatsWorker } from "./proof/champion-stats-worker.ts";
@@ -237,6 +238,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   const terrainRanges = await readRecordedTerrainRanges(terrain);
   await verifyRecordedRoster(page, fixture, testInfo);
   const opening = await readRecordedDraw(page);
+  await verifyRecordedChampionModels(page, fixture, traffic.requested, opening);
   verifyCameraProjection(opening, undefined, 1, false);
   verifyOpeningTerrain(
     opening,

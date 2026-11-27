@@ -10,6 +10,7 @@ import {
   recoverTerrainByteSubstitution,
 } from "./native-terrain-byte-codecs.mjs";
 import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-identities.mjs";
+import { prepareCurrentChampionModelBindings } from "./native-terrain-champion-opening.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
 import {
   createCurrentMap11ControllerObserver,
@@ -280,6 +281,7 @@ async function prepareMotion({
   decodeChampionInventory,
   decodeChampionExperience,
   championAnimationCatalog,
+  championModelCatalog,
   announcerEvents,
   decodeTeamVision,
   teamVisionWorldActors,
@@ -306,6 +308,13 @@ async function prepareMotion({
   )
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
+  if (
+    championModelCatalog !== undefined &&
+    (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
+  )
+    throw Error(
+      "Replay-derived champion models require the reviewed current build.",
+    );
   if (
     decodePlayerState !== undefined &&
     (decodePlayerState !== true ||
@@ -436,10 +445,10 @@ async function prepareMotion({
     decompress,
     options,
   );
-  const { binding } = bindNativeTerrainChampionIdentities(
+  const { binding, openingCreations } = bindNativeTerrainChampionIdentities(
     replayPreparation,
     codecs,
-    options,
+    { ...options, includeSkin: championModelCatalog !== undefined },
   );
   const prepared = {
     ...replayPreparation,
@@ -453,6 +462,14 @@ async function prepareMotion({
           binding,
         )
       : undefined;
+  const championModels =
+    championModelCatalog === undefined
+      ? undefined
+      : prepareCurrentChampionModelBindings(
+          championModelCatalog,
+          prepared.observations,
+          openingCreations,
+        );
   const keyframes = prepareNativeTerrainChampionKeyframes(
     prepared,
     createPosition944ReaderFromCodecs(codecs),
@@ -631,6 +648,7 @@ async function prepareMotion({
     coverage,
     ...(championStats === undefined ? {} : { championStats }),
     ...(recordedPlayerState === undefined ? {} : { recordedPlayerState }),
+    ...(championModels === undefined ? {} : { championModels }),
     ...(inventory === undefined
       ? {}
       : { championInventoryTracks: inventory.finish() }),

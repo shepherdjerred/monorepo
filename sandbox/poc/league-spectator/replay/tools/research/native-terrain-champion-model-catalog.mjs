@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
+import { terrainPositionProtocol } from "./native-terrain-byte-codecs.mjs";
 import { readSelectedChampionAsset } from "./native-terrain-champion-opening.mjs";
 
 export {
@@ -72,7 +73,7 @@ export async function openChampionModelCatalog(
   expectedSha256,
   identity,
   selections,
-  { maxManifestBytes, maxModelBytes } = {},
+  { maxManifestBytes, maxModelBytes, requireArchive = false } = {},
 ) {
   assert.match(expectedSha256, digestPattern);
   const root = await realpath(dirname(manifestPath));
@@ -99,6 +100,11 @@ export async function openChampionModelCatalog(
   const buildScoped =
     identity.build === currentChampionBuild &&
     catalog.selectionKind === "archive";
+  assert.ok(
+    !requireArchive ||
+      (buildScoped && identity.protocol === terrainPositionProtocol),
+    "Champion model index requires the exact current build-scoped archive catalog",
+  );
   assert.ok(
     catalog.selectionKind === undefined || buildScoped,
     "Unknown champion catalog selection kind",
@@ -187,4 +193,54 @@ export async function loadChampionModelCatalog(
     bindings.push(binding);
   }
   return { bindings, routes };
+}
+
+/** Project all authenticated archive entries into the browser-safe model index. */
+export async function loadChampionModelCatalogIndex(
+  manifestPath,
+  expectedSha256,
+  identity,
+) {
+  const { catalog, readModel } = await openChampionModelCatalog(
+    manifestPath,
+    expectedSha256,
+    identity,
+    undefined,
+    { requireArchive: true },
+  );
+  const assets = {};
+  const routes = new Map();
+  const entries = Object.entries(catalog.assets);
+  assert.ok(entries.length > 0, "Champion model index is empty");
+  for (const [key, asset] of entries) {
+    const { champion, skinId, skinScale, hiddenRanges, model } = asset;
+    assert.match(champion, /^[a-z0-9_]+$/i);
+    assert.equal(
+      key,
+      `${champion.toLowerCase()}-${skinId}`,
+      "Champion archive model key differs",
+    );
+    assert.match(asset.archiveIndexSha256, digestPattern);
+    const { bytes, binding } = await readModel({ champion, skinId });
+    routes.set(binding.url, [bytes, "model/gltf-binary"]);
+    assets[key] = {
+      champion,
+      skinId,
+      skinScale,
+      hiddenRanges,
+      model: { file: model.file, sha256: model.sha256, bytes: model.bytes },
+    };
+  }
+  const { schema, kind, build, protocol, selectionKind } = catalog;
+  return {
+    championModelCatalog: {
+      schema,
+      kind,
+      build,
+      protocol,
+      selectionKind,
+      assets,
+    },
+    routes,
+  };
 }
