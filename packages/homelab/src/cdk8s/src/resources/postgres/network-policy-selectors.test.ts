@@ -5,7 +5,6 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
 import { createBugsinkChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/bugsink.ts";
-import { createPhoenixChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/phoenix.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
@@ -72,7 +71,6 @@ describe("database NetworkPolicy selectors", () => {
     ["temporal", createTemporalChart, "temporal-postgresql"],
     ["temporal-data", createTemporalDataChart, "temporal-postgresql"],
     ["bugsink", createBugsinkChart, "bugsink-postgresql"],
-    ["phoenix", createPhoenixChart, "phoenix-postgresql"],
     ["woodpecker", createWoodpeckerChart, "woodpecker-postgresql"],
   ] as const)(
     "%s selects its PostgreSQL pods by the operator's cluster label",

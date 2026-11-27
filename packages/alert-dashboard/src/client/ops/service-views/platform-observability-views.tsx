@@ -27,7 +27,7 @@ import { formatValue } from "#shared/ops-format";
 import type { SeriesRange } from "#shared/ops-schema";
 
 const PROM_TSDB_CAP_BYTES = 200 * 1024 * 1024 * 1024;
-const OBS_TABS = ["prometheus", "loki", "tempo", "grafana", "phoenix"] as const;
+const OBS_TABS = ["prometheus", "loki", "tempo", "grafana", "alloy"] as const;
 const ObsTabSchema = z.enum(OBS_TABS);
 type ObsTab = z.infer<typeof ObsTabSchema>;
 
@@ -36,7 +36,7 @@ const OBS_TAB_LABELS: Record<ObsTab, string> = {
   loki: "Loki",
   tempo: "Tempo",
   grafana: "Grafana",
-  phoenix: "Phoenix & Alloy",
+  alloy: "LLM & Alloy",
 };
 
 const DOWN_COLS: readonly DataTableColumn<
@@ -324,19 +324,19 @@ export function ObservabilityServiceView({
         ) : (
           <ChartGrid
             range={range}
-            syncKey="obs-phoenix"
+            syncKey="obs-alloy"
             charts={[
               { preset: "llm-token-cache-mix", mode: "stacked-area" },
               "llm-p95-latency",
               {
                 preset: "namespace-cpu",
-                target: "phoenix|alloy|alloy-gateway",
-                title: "Phoenix & Alloy CPU",
+                target: "alloy|alloy-gateway",
+                title: "Alloy CPU",
               },
               {
                 preset: "namespace-memory",
-                target: "phoenix|alloy|alloy-gateway",
-                title: "Phoenix & Alloy memory",
+                target: "alloy|alloy-gateway",
+                title: "Alloy memory",
               },
             ]}
           />

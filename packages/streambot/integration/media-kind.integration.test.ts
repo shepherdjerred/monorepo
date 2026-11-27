@@ -1,4 +1,8 @@
-import { runCommand } from "./run-command.ts";
+import {
+  loadIntegrationConfig,
+  NEVER_ABORT,
+  runCommand,
+} from "./run-command.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
@@ -7,7 +11,6 @@ import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { httpHeaderInputOptions } from "@shepherdjerred/streambot/sources/format-select.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
-import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 
 /**
  * Real-ffmpeg/ffprobe integration tests for the music-vs-video decision, run ONLY via
@@ -21,13 +24,7 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
  * way to cover the wiring is to run it for real against real media.
  */
 
-const config = loadConfig({
-  BOT_TOKEN: "bot-token",
-  USER_TOKENS: "user-token",
-  VIDEOS_DIR: "/tmp/videos",
-});
-
-const NEVER_ABORT = new AbortController().signal;
+const config = loadIntegrationConfig();
 
 /** A pre-resolution that CLAIMS to be video, whatever `input` actually turns out to contain. */
 function videoTypedButAudioOnly(input: string): ResolvedSource {

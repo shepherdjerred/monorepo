@@ -1,6 +1,6 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { mkdtemp, readdir, rename, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -22,7 +22,6 @@ import { z } from "zod";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import {
-  reportLakeMigrationPending,
   runReportLakeFold,
   runReportLakeRebuild,
 } from "#src/report-lake/compactor.ts";
@@ -32,11 +31,7 @@ import {
   flattenMatchTeams,
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
-import { MATCH_MIGRATION_GATED_COLUMNS } from "@scout-for-lol/data/model/reports/match-rebuild-gated-columns.ts";
-import {
-  LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
-  lakeSchemaFingerprint,
-} from "#src/report-lake/schema.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import { readRawDocuments } from "#src/explore/analysis/raw-lake-read.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
@@ -221,40 +216,10 @@ async function countSourceRows(source: SqlFragment): Promise<number> {
   });
 }
 
-/**
- * Rewrite a build into the predecessor's physical layout: its match Parquet
- * without the migration's columns, and its manifest naming that schema. This
- * is the build Beta and Prod have published when the migration deploys.
- */
-async function downgradeToPredecessorLayout(
+/** The participant-kind and coverage pairs an ordinary match read sees. */
+async function readParticipantKindCoverage(
   lakeDir: string,
-  buildDir: string,
-): Promise<void> {
-  const files = await Array.fromAsync(
-    new Bun.Glob("matches/**/*.parquet").scan({
-      cwd: buildDir,
-      absolute: true,
-    }),
-  );
-  expect(files).not.toHaveLength(0);
-  const dropped = MATCH_MIGRATION_GATED_COLUMNS.join(", ");
-  await withDuckDBConnection(async (session) => {
-    for (const file of files) {
-      await session.run(
-        `COPY (SELECT * EXCLUDE (${dropped}) FROM read_parquet($1)) TO '${file}.old' (FORMAT PARQUET)`,
-        [file],
-      );
-    }
-  });
-  for (const file of files) await rename(`${file}.old`, file);
-  await rewritePublishedFingerprint(
-    lakeDir,
-    LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
-  );
-}
-
-/** Every participant row an ordinary read sees, in a stable order. */
-async function readAllMatchRows(lakeDir: string): Promise<unknown[]> {
+): Promise<unknown[]> {
   const source = buildMatchesSource(await resolveLakeFiles(lakeDir), {
     sql: "",
     params: [],
@@ -263,22 +228,10 @@ async function readAllMatchRows(lakeDir: string): Promise<unknown[]> {
   return await withDuckDBConnection(
     async (session) =>
       await session.run(
-        `SELECT * EXCLUDE (src) FROM (${source.sql}) ORDER BY match_id, participant_id`,
+        `SELECT DISTINCT participant_kind, coverage FROM (${source.sql})`,
         source.params.map((param) =>
           param.kind === "list" ? session.list(param.values) : param.value,
         ),
-      ),
-  );
-}
-
-async function readMigratedColumns(lakeDir: string): Promise<unknown[]> {
-  const buildDir = await readCurrentBuildDir(lakeDir);
-  if (buildDir === undefined) throw new Error("no build dir");
-  return await withDuckDBConnection(
-    async (session) =>
-      await session.run(
-        `SELECT DISTINCT participant_kind, coverage FROM read_parquet($1)`,
-        [path.join(buildDir, "matches", "**", "*.parquet")],
       ),
   );
 }
@@ -931,7 +884,13 @@ describe("compactor idempotency and schema transitions", () => {
     }
   });
 
-  test.each(["stale-fingerprint", "c0d6dcb0944686f1", "1a45b23ce7f086cb"])(
+  // e086a72a1a8176aa is the retired #4512 predecessor: no longer accepted.
+  test.each([
+    "stale-fingerprint",
+    "c0d6dcb0944686f1",
+    "1a45b23ce7f086cb",
+    "e086a72a1a8176aa",
+  ])(
     "an incompatible schema %s is rejected before fold or rebuild",
     async (fingerprint) => {
       const match = await loadMatchFixture();
@@ -949,30 +908,14 @@ describe("compactor idempotency and schema transitions", () => {
     },
   );
 
-  test("a predecessor-schema lake is rebuilt by the next fold and reads identically", async () => {
+  test("an ordinary match read selects participant_kind and coverage", async () => {
     const match = await loadMatchFixture();
     const lakeDir = await makeLakeDir();
     try {
-      const predecessor = await seedCurrentLake(lakeDir, match);
-      await downgradeToPredecessorLayout(lakeDir, predecessor);
-      // Reads name no migration-gated column, so the old layout still serves.
-      const before = await readAllMatchRows(lakeDir);
-      expect(before).toHaveLength(match.info.participants.length);
-      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      // Inline folders (boot, imports) see the pending migration and skip.
-      expect(await reportLakeMigrationPending(lakeDir)).toBe(true);
-
-      const migrated = await runReportLakeFold({ prisma, lakeDir });
-
-      expect(migrated.tier).toBe("rebuild");
-      expect(await reportLakeMigrationPending(lakeDir)).toBe(false);
-      expect(await readCurrentBuildDir(lakeDir)).not.toBe(predecessor);
-      await expectCurrentSchemaFingerprint(lakeDir);
-      expect(await readAllMatchRows(lakeDir)).toEqual(before);
-      expect(await readMigratedColumns(lakeDir)).toEqual([
+      await seedCurrentLake(lakeDir, match);
+      expect(await readParticipantKindCoverage(lakeDir)).toEqual([
         { participant_kind: "player", coverage: "complete" },
       ]);
-      // The migration is one-time: the next fold is an ordinary fold.
       const next = await runReportLakeFold({ prisma, lakeDir });
       expect(next.tier).toBe("fold");
     } finally {

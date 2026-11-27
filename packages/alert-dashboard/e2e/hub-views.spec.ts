@@ -290,14 +290,14 @@ for (const viewport of [PHONE, DESKTOP]) {
 }
 
 for (const colorScheme of ["light", "dark"] as const) {
-  test(`Hub 2.0 pages have zero axe-core WCAG 2.2 AA violations in ${colorScheme} mode`, async ({
-    page,
-  }) => {
-    await page.emulateMedia({ colorScheme });
-    await page.setViewportSize(DESKTOP);
-    for (const path of HUB_PATHS) {
+  for (const path of HUB_PATHS) {
+    test(`${path} has zero axe-core WCAG 2.2 AA violations in ${colorScheme} mode`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ colorScheme });
+      await page.setViewportSize(DESKTOP);
       await gotoLoadedPage(page, path);
-      expect(await violations(page), path).toEqual([]);
-    }
-  });
+      expect(await violations(page)).toEqual([]);
+    });
+  }
 }

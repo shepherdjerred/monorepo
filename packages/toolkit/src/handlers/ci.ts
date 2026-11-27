@@ -1,5 +1,4 @@
 import { parseArgs } from "node:util";
-import { z } from "zod";
 import { ciCommand } from "#commands/ci.ts";
 import { parseTimeout } from "#lib/ci/arguments.ts";
 import { ciBenchmarkCommand } from "#commands/ci-benchmark.ts";
@@ -7,6 +6,71 @@ import { ciSourceProofCommand } from "#commands/ci-source-proof.ts";
 import { ciAnalyzeCommand } from "#commands/ci-analyze.ts";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
+
+const CI_ACTIONS = [
+  "wait",
+  "explain",
+  "main",
+  "load",
+  "timings",
+  "maintenance",
+] as const;
+
+type CiAction = (typeof CI_ACTIONS)[number];
+
+function parseCiAction(value: string): CiAction {
+  for (const candidate of CI_ACTIONS) {
+    if (value === candidate) return candidate;
+  }
+  throw new Error(
+    `Unknown ci subcommand '${value}' (expected: ${CI_ACTIONS.join(", ")}, analyze, benchmark, source-proof)`,
+  );
+}
+
+function parseUntil(value: string): "first-failure" | "settled" {
+  if (value === "first-failure" || value === "settled") return value;
+  throw new Error("--until must be 'first-failure' or 'settled'");
+}
+
+function isHelpRequest(
+  subcommand: string | undefined,
+  args: string[],
+): boolean {
+  return (
+    subcommand === undefined ||
+    subcommand === "--help" ||
+    subcommand === "-h" ||
+    args.includes("--help") ||
+    args.includes("-h")
+  );
+}
+
+function validateHeadSha(
+  action: CiAction,
+  main: boolean,
+  head: string | undefined,
+): void {
+  if (head === undefined) return;
+  if (action === "wait" && main) {
+    if (!/^[a-f\d]{7,40}$/iu.test(head)) {
+      throw new Error(
+        "--head must be a 7 to 40-character hexadecimal commit SHA",
+      );
+    }
+    return;
+  }
+  if (!/^[a-f\d]{40}$/iu.test(head)) {
+    throw new Error(
+      "--head must be a full 40-character hexadecimal commit SHA",
+    );
+  }
+}
+
+function validatePositionalPr(pr: string | undefined): void {
+  if (pr !== undefined && !/^[1-9]\d*$/u.test(pr)) {
+    throw new Error("PR must be a positive number");
+  }
+}
 
 type OptionValues = {
   main: boolean;
@@ -87,13 +151,7 @@ export async function handleCiCommand(
   }
   const json = args.includes("--json");
   try {
-    if (
-      subcommand === undefined ||
-      subcommand === "--help" ||
-      subcommand === "-h" ||
-      args.includes("--help") ||
-      args.includes("-h")
-    ) {
+    if (isHelpRequest(subcommand, args)) {
       console.log(`toolkit ci - foreground PR waits and failure evidence
 
   wait [PR]       Wait for merge readiness; return on the first actionable blocker
@@ -130,9 +188,7 @@ then merge, use toolkit pr land.
 `);
       return;
     }
-    const action = z
-      .enum(["wait", "explain", "main", "load", "timings", "maintenance"])
-      .parse(subcommand);
+    const action = parseCiAction(subcommand ?? "");
     const { values, positionals } = parseArgs({
       args,
       allowPositionals: true,
@@ -147,18 +203,14 @@ then merge, use toolkit pr land.
       },
     });
     validateOptions(action, values, positionals);
-    if (values.head !== undefined)
-      z.string()
-        .regex(/^[a-f\d]{40}$/i)
-        .parse(values.head);
-    if (positionals[0] !== undefined)
-      z.coerce.number().int().positive().parse(positionals[0]);
+    validateHeadSha(action, values.main, values.head);
+    validatePositionalPr(positionals[0]);
     const options = {
       json: values.json,
       head: values.head?.toLowerCase(),
       timeoutMs:
         values.timeout === undefined ? undefined : parseTimeout(values.timeout),
-      until: z.enum(["first-failure", "settled"]).parse(values.until),
+      until: parseUntil(values.until),
       main: values.main,
       follow: values.follow,
       sinceMs: parseTimeout(values.since ?? "72h", "--since"),

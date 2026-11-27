@@ -546,6 +546,15 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
     expect(freshProfile?.gameplay?.questsCompleted).toBe(9);
     expect(freshProfile?.player.online).toBe(true);
     expect(store.getGameplayOverview(freshNow).towns).toEqual([]);
+    expect(store.getGameplayOverview(freshNow).economyTop).toEqual([
+      {
+        uuid: playerUuid,
+        name: "Chrono",
+        crystals: 950,
+        townName: "Chrono",
+        townKind: "camp",
+      },
+    ]);
     expect(store.getOverview(freshNow).onlineNow).toBe(1);
     expect(store.onlineCount(freshNow)).toBe(1);
 
@@ -828,6 +837,7 @@ test("migrates legacy v1 SQLite database on disk cleanly to v2 schema and scrubs
       await requestJson(publicApp, "/api/v1/gameplay"),
     );
     expect(gameplay.economyTop[0]?.crystals).toBe(500);
+    expect(gameplay.economyTop[0]?.townKind).toBeNull();
     expect(gameplay.towns).toEqual([
       { name: "Altaria", members: 7, claims: 64, kind: "player" },
     ]);
@@ -839,5 +849,250 @@ test("migrates legacy v1 SQLite database on disk cleanly to v2 schema and scrubs
         await file.delete();
       }
     }
+  }
+});
+
+function makePveKillEvent(opts: {
+  readonly seq: number;
+  readonly killerUuid: string;
+  readonly killerName: string;
+  readonly mobType: string;
+  readonly weapon: string;
+}): IngestBatch["events"][number] {
+  return {
+    type: "combat_event",
+    eventId: `dddddddd-dddd-4000-8000-${String(opts.seq).padStart(12, "0")}`,
+    occurredAt: `2026-11-22T17:${String(49 + opts.seq).padStart(2, "0")}:00Z`,
+    sessionId: null,
+    combatKind: "pve_kill",
+    killerUuid: opts.killerUuid,
+    killerName: opts.killerName,
+    victimUuid: null,
+    victimName: null,
+    mobType: opts.mobType,
+    weapon: opts.weapon,
+    world: "frontier",
+  };
+}
+
+function makePlayerSnapshot(opts: {
+  readonly playerUuid: string;
+  readonly playerName: string;
+  readonly crystals: number;
+  readonly townName: string | null;
+  readonly townKind: "camp" | "town" | null;
+}): IngestBatch["playerSnapshots"][number] {
+  return {
+    playerUuid: opts.playerUuid,
+    playerName: opts.playerName,
+    capturedAt: "2026-11-22T18:00:00Z",
+    nickname: null,
+    primaryGroup: "default",
+    crystals: opts.crystals,
+    rwfCredits: 0,
+    townName: opts.townName,
+    townKind: opts.townKind,
+    townRole: opts.townName === null ? null : "owner",
+    townClaims: opts.townName === null ? 0 : 4,
+    powerLevel: 15,
+    topSkill: "swords",
+    topSkillLevel: 9,
+    skills: { swords: 9, mining: 6 },
+    tracks: {},
+    questsCompleted: 2,
+    arenaBestWaves: {},
+    rwfMatches: 0,
+    rwfWins: 0,
+    rwfLosses: 0,
+    rwfKills: 0,
+    rwfDeaths: 0,
+  };
+}
+
+test("populates economyTop townKind and falls back PvP weapons to PvE kills until PvP kills exist", async () => {
+  const store = StormStatsStore.open(":memory:");
+  try {
+    const campPlayerUuid = "bbbbbbbb-bbbb-4000-8000-000000000001";
+    const townPlayerUuid = "bbbbbbbb-bbbb-4000-8000-000000000002";
+
+    store.ingestBatch({
+      schemaVersion: 2,
+      batchId: "cccccccc-cccc-4000-8000-000000000001",
+      serverName: "The Storm",
+      sentAt: "2026-11-22T18:00:00Z",
+      events: [
+        makePveKillEvent({
+          seq: 1,
+          killerUuid: campPlayerUuid,
+          killerName: "goodgamergg556",
+          mobType: "ZOMBIE",
+          weapon: "IRON_SWORD",
+        }),
+        makePveKillEvent({
+          seq: 2,
+          killerUuid: campPlayerUuid,
+          killerName: "goodgamergg556",
+          mobType: "CREEPER",
+          weapon: "IRON_SWORD",
+        }),
+        makePveKillEvent({
+          seq: 3,
+          killerUuid: townPlayerUuid,
+          killerName: "DuelistTwo",
+          mobType: "SKELETON",
+          weapon: "DIAMOND_SWORD",
+        }),
+        makePveKillEvent({
+          seq: 4,
+          killerUuid: townPlayerUuid,
+          killerName: "DuelistTwo",
+          mobType: "WITHER_SKELETON",
+          weapon: "DIAMOND_SWORD",
+        }),
+        makePveKillEvent({
+          seq: 5,
+          killerUuid: townPlayerUuid,
+          killerName: "DuelistTwo",
+          mobType: "BLAZE",
+          weapon: "DIAMOND_SWORD",
+        }),
+      ],
+      playerSnapshots: [
+        makePlayerSnapshot({
+          playerUuid: campPlayerUuid,
+          playerName: "goodgamergg556",
+          crystals: 1200,
+          townName: "goodgamergg556",
+          townKind: "camp",
+        }),
+        makePlayerSnapshot({
+          playerUuid: townPlayerUuid,
+          playerName: "DuelistTwo",
+          crystals: 800,
+          townName: "Altaria",
+          townKind: "town",
+        }),
+      ],
+      serverSnapshot: null,
+    });
+
+    const publicApp = createPublicApp({
+      store,
+      publicEnabled: async () => true,
+      now: () => FIXED_NOW,
+    });
+
+    const gameplay = GameplayOverviewResponseSchema.parse(
+      await requestJson(publicApp, "/api/v1/gameplay"),
+    );
+    expect(gameplay.economyTop).toEqual([
+      {
+        uuid: campPlayerUuid,
+        name: "goodgamergg556",
+        crystals: 1200,
+        townName: "goodgamergg556",
+        townKind: "camp",
+      },
+      {
+        uuid: townPlayerUuid,
+        name: "DuelistTwo",
+        crystals: 800,
+        townName: "Altaria",
+        townKind: "town",
+      },
+    ]);
+
+    const pveOnlyPvp = PvpOverviewResponseSchema.parse(
+      await requestJson(publicApp, "/api/v1/pvp"),
+    );
+    expect(pveOnlyPvp.kpis.totalPvpKills).toBe(0);
+    expect(pveOnlyPvp.kpis.totalMobKills).toBe(5);
+    expect(pveOnlyPvp.kpis.deadliestWeapon).toBe("DIAMOND_SWORD");
+    expect(pveOnlyPvp.topWeapons).toEqual([
+      { weapon: "DIAMOND_SWORD", kills: 3, sharePercent: 60 },
+      { weapon: "IRON_SWORD", kills: 2, sharePercent: 40 },
+    ]);
+    expect(
+      pveOnlyPvp.topWarriors.map((w) => ({
+        name: w.name,
+        kills: w.kills,
+        mobKills: w.mobKills,
+        topWeapon: w.topWeapon,
+      })),
+    ).toEqual([
+      {
+        name: "DuelistTwo",
+        kills: 0,
+        mobKills: 3,
+        topWeapon: "DIAMOND_SWORD",
+      },
+      {
+        name: "goodgamergg556",
+        kills: 0,
+        mobKills: 2,
+        topWeapon: "IRON_SWORD",
+      },
+    ]);
+
+    // Once a PvP kill occurs, topWeapons and killer's topWeapon prefer PvP while PvE-only combatants retain their PvE weapon
+    store.ingestBatch({
+      schemaVersion: 2,
+      batchId: "cccccccc-cccc-4000-8000-000000000002",
+      serverName: "The Storm",
+      sentAt: "2026-11-22T18:05:00Z",
+      events: [
+        {
+          type: "combat_event",
+          eventId: "dddddddd-dddd-4000-8000-000000000006",
+          occurredAt: "2026-11-22T18:04:00Z",
+          sessionId: null,
+          combatKind: "pvp",
+          killerUuid: townPlayerUuid,
+          killerName: "DuelistTwo",
+          victimUuid: campPlayerUuid,
+          victimName: "goodgamergg556",
+          mobType: null,
+          weapon: "IRON_AXE",
+          world: "frontier",
+        },
+      ],
+      playerSnapshots: [],
+      serverSnapshot: null,
+    });
+
+    const afterPvp = PvpOverviewResponseSchema.parse(
+      await requestJson(publicApp, "/api/v1/pvp"),
+    );
+    expect(afterPvp.kpis.totalPvpKills).toBe(1);
+    expect(afterPvp.kpis.deadliestWeapon).toBe("IRON_AXE");
+    expect(afterPvp.topWeapons).toEqual([
+      { weapon: "IRON_AXE", kills: 1, sharePercent: 100 },
+    ]);
+    expect(
+      afterPvp.topWarriors.map((w) => ({
+        name: w.name,
+        kills: w.kills,
+        deaths: w.deaths,
+        mobKills: w.mobKills,
+        topWeapon: w.topWeapon,
+      })),
+    ).toEqual([
+      {
+        name: "DuelistTwo",
+        kills: 1,
+        deaths: 0,
+        mobKills: 3,
+        topWeapon: "IRON_AXE",
+      },
+      {
+        name: "goodgamergg556",
+        kills: 0,
+        deaths: 1,
+        mobKills: 2,
+        topWeapon: "IRON_SWORD",
+      },
+    ]);
+  } finally {
+    store.close();
   }
 });

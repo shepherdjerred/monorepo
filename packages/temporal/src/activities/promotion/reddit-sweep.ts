@@ -9,6 +9,7 @@ import {
   validateRedditOutreachSubreddits,
   type RedditOutreachSettings,
 } from "#config/reddit-outreach.ts";
+import { REDDIT_OUTREACH_INTERVAL_MS } from "#shared/promotion/cadence.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import { PromotionSnapshotBlocked } from "./access/browser-snapshot.ts";
 import { promotionStore, type PromotionStore } from "./store.ts";
@@ -260,7 +261,8 @@ export async function runRedditOutreachSweep(input: SweepInput) {
 }
 
 function rotateCommunities(subreddits: readonly string[], now: number) {
-  const offset = Math.floor(now / (15 * 60_000)) % subreddits.length;
+  const offset =
+    Math.floor(now / REDDIT_OUTREACH_INTERVAL_MS) % subreddits.length;
   return [...subreddits.slice(offset), ...subreddits.slice(0, offset)];
 }
 

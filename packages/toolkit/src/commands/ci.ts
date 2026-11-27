@@ -18,9 +18,11 @@ import { pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import {
   assertOnMain,
+  getFollowedMainSnapshot,
   getMainRun,
   getMainStatus,
   readMainTip,
+  resolveMainHeadSha,
   type MainRunSnapshot,
 } from "#lib/ci/main.ts";
 import {
@@ -276,14 +278,15 @@ async function runMainWait(
     // The pinned commit and its ancestry are GitHub reads too; a quota
     // refusal before the loop starts must wait, not end the command.
     const callbacks = quotaCallbacks(observer);
-    const sha =
-      options.head ??
-      (await readThroughQuota(
-        () => readMainTip(observer.github, signal),
-        signal,
-        deadline,
-        callbacks,
-      ));
+    const sha = await readThroughQuota(
+      () =>
+        options.head === undefined
+          ? readMainTip(observer.github, signal)
+          : resolveMainHeadSha(observer.github, options.head, signal),
+      signal,
+      deadline,
+      callbacks,
+    );
     const onMain =
       sha === null || follow
         ? sha
@@ -318,13 +321,15 @@ async function runMainWait(
         signal,
       },
       {
-        snapshot: async (read) =>
-          getMainRun(
-            observer.github,
-            observer.woodpecker,
-            follow ? await readMainTip(observer.github, read) : sha,
-            read,
-          ),
+        snapshot: (read) =>
+          follow
+            ? getFollowedMainSnapshot(
+                observer.github,
+                observer.woodpecker,
+                sha,
+                read,
+              )
+            : getMainRun(observer.github, observer.woodpecker, sha, read),
         evaluate: (snapshot) =>
           Promise.resolve({
             snapshot,
@@ -397,9 +402,15 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
   };
   const text = [
     `MAIN ${main.state.toUpperCase()} @ ${main.headSha.slice(0, 12)}`,
-    ...diagnostics.map(
-      (diagnostic) =>
-        `${diagnostic.workflow}\n${diagnostic.logs}\n${diagnostic.command}`,
+    ...diagnostics.map((diagnostic) =>
+      [
+        diagnostic.workflow,
+        ...(diagnostic.error === null || diagnostic.error === ""
+          ? []
+          : [diagnostic.error]),
+        ...(diagnostic.logs === "" ? [] : [diagnostic.logs]),
+        diagnostic.command,
+      ].join("\n"),
     ),
     report.guidance,
     formatCoordination(report.coordination),
@@ -430,14 +441,19 @@ async function execute(
     return;
   }
   const snapshot = await observer.snapshot(number, undefined, true);
+  const verdict = evaluateReadiness(
+    snapshot,
+    options.head ?? snapshot.pr.head.sha,
+    options.until,
+  );
+  const selfExplain = `toolkit ci explain ${String(snapshot.pr.number)}`;
   await reportResult(
     {
       snapshot,
-      verdict: evaluateReadiness(
-        snapshot,
-        options.head ?? snapshot.pr.head.sha,
-        options.until,
-      ),
+      verdict: {
+        ...verdict,
+        commands: verdict.commands.filter((command) => command !== selfExplain),
+      },
       elapsedMs: 0,
     },
     observer,

@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
 import { runWithPreparedSportsInput } from "@shepherdjerred/streambot/sources/prepared-sports.ts";
 import { buildPlaybackPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
@@ -10,7 +9,7 @@ import {
   ChannelIdSchema,
   GuildIdSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
-import { runCommand } from "./run-command.ts";
+import { loadIntegrationConfig, runCommand } from "./run-command.ts";
 import { prepareClearKey } from "@shepherdjerred/streambot/sports/clearkey.ts";
 
 // Deliberately public synthetic fixture keys, never provider credentials.
@@ -21,11 +20,7 @@ const AUDIO_KEY = Array.from({ length: 32 }, (_, index) =>
   (15 - (index % 16)).toString(16),
 ).join("");
 const SINGLE_KEY = { "11111111111111111111111111111111": VIDEO_KEY };
-const config = loadConfig({
-  BOT_TOKEN: "fixture-bot",
-  USER_TOKENS: "fixture-user",
-  VIDEOS_DIR: "/tmp/videos",
-});
+const config = loadIntegrationConfig();
 let directory: string;
 let hls: string;
 let cencHlsDirectory: string;

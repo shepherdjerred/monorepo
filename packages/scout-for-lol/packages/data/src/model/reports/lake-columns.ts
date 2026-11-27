@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import { ParticipantKindSchema } from "#src/league/participant-identity.ts";
-import {
-  MATCH_MIGRATION_GATED_COLUMNS,
-  MATCH_REBUILD_GATED_COLUMNS,
-} from "#src/model/reports/match-rebuild-gated-columns.ts";
+import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
 import {
   RUNE_SPELL_COLUMNS,
   SCOUTQL_LOADOUT_LAKE_COLUMNS,
@@ -405,11 +402,9 @@ export const ITEM_SLOT_COLUMNS = [
   "item6",
 ] as const;
 
-const MIGRATION_GATED_COLUMNS = new Set<string>(MATCH_MIGRATION_GATED_COLUMNS);
 const REBUILD_GATED_COLUMNS = new Set<string>([
   ...ITEM_SLOT_COLUMNS,
   ...MATCH_REBUILD_GATED_COLUMNS,
-  ...MIGRATION_GATED_COLUMNS,
 ]);
 const UI_REBUILD_GATED_COLUMNS = new Set<string>(MATCH_REBUILD_GATED_COLUMNS);
 /**
@@ -440,10 +435,7 @@ export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
     ),
   );
 
-/**
- * MATCH_READ_COLUMNS plus explicitly named loadout or UI rebuild columns.
- * A migration-gated column is never read, even when named.
- */
+/** MATCH_READ_COLUMNS plus explicitly named loadout or UI rebuild columns. */
 export function matchReadColumns(
   loadout: readonly string[],
 ): Record<string, DuckDbColumnType> {
@@ -451,9 +443,8 @@ export function matchReadColumns(
   return Object.fromEntries(
     Object.entries(MATCH_LAKE_COLUMNS).filter(
       ([name]) =>
-        !MIGRATION_GATED_COLUMNS.has(name) &&
-        ((!UI_REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name)) ||
-          selected.has(name)),
+        (!UI_REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name)) ||
+        selected.has(name),
     ),
   );
 }

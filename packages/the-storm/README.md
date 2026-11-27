@@ -4205,10 +4205,16 @@ and progression snapshots across economy, towns, skills, tracks, quests, Mob Are
 Destroy. Citizens NPCs are excluded from every session, combat, and snapshot surface.
 
 - `/stats` displays live online humans, total tracked players, and a clickable link to the
-  configured `publicUrl` (`stats.ts-mc.net` once active, defaulting to `https://ts-mc.net`).
+  configured `publicUrl` (`https://stats.ts-mc.net`).
 - `/stats <player>` (and `/stats player <player>`) queries SQLite asynchronously off Paper's main
   thread and displays first/last seen timestamps, active and connected playtime, session count,
   survival PvP K/D, mob kills, and the player's web profile link.
+- Joining players' peer `InetAddress` (populated by `mc-router` PROXY protocol on `tsmc`) is
+  resolved in-memory against a bundled offline RIR allocation table
+  (`plugin/modules/stats/src/main/resources/geoip-rir.bin.gz`, refreshed via
+  `bun run stats:refresh-geoip` and loaded off-thread via `ComputePool` during module startup) into
+  `(countryCode, countryName)` on `session_started`; private/CGNAT/loopback peers are ignored and
+  raw IP addresses are never stored or exported.
 - When `STORM_STATS_INGEST_URL` and `STORM_STATS_INGEST_TOKEN` are set and the managed flag
   `the-storm-stats-export-enabled` evaluates true, queued outbox events and latest snapshots are
   exported in bounded HTTP batches (`../storm-stats/contracts/ingest-v1.json`) on virtual threads.

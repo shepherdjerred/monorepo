@@ -442,13 +442,17 @@ export class FixtureSeries implements SeriesPort {
 
   range(request: SeriesRangeRequest, _signal?: AbortSignal) {
     this.requests.push(request);
-    const names = request.promql.includes("by (source)")
-      ? ["claude-code", "codex", "cursor"]
-      : request.promql.includes("by (instance)")
-        ? ["node-1"]
-        : request.promql.includes("by (")
-          ? ["alpha", "beta"]
-          : ["total"];
+    const names = request.promql.includes("pr_code_review_assignments_total")
+      ? ["coderabbit", "codex"]
+      : request.promql.includes("pr_code_review_outcomes_total")
+        ? ["clean", "prior-round", "provider-timeout", "quota-exempt"]
+        : request.promql.includes("by (source)")
+          ? ["claude-code", "codex", "cursor"]
+          : request.promql.includes("by (instance)")
+            ? ["node-1"]
+            : request.promql.includes("by (")
+              ? ["alpha", "beta"]
+              : ["total"];
     const label = /by \((\w+)/u.exec(request.promql)?.[1] ?? "series";
     const count = Math.floor(
       (request.endSeconds - request.startSeconds) / request.stepSeconds,

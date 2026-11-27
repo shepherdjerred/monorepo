@@ -31,13 +31,17 @@ final class SessionLedgerTest {
                     "ts-mc.net:25565",
                     WorldBucket.WORLD,
                     GameModeBucket.SURVIVAL,
-                    false))
+                    false,
+                    "US",
+                    "United States"))
             .orElseThrow();
 
     assertThat(joined.sessionsDelta()).isEqualTo(1);
     assertThat(joined.events()).hasSize(1);
     var started = (SessionLedger.LedgerEvent.Started) joined.events().getFirst();
     assertThat(started.joinAddress()).isEqualTo("ts-mc.net");
+    assertThat(started.countryCode()).isEqualTo("US");
+    assertThat(started.countryName()).isEqualTo("United States");
 
     // Same state at t0+10s only records ping without splitting interval prematurely
     assertThat(
@@ -107,7 +111,9 @@ final class SessionLedgerTest {
             null,
             WorldBucket.WORLD,
             GameModeBucket.SURVIVAL,
-            false));
+            false,
+            null,
+            null));
 
     // Clock moves backwards -> clamped to 0, no negative durations
     assertThat(
@@ -159,7 +165,9 @@ final class SessionLedgerTest {
             "ts-mc.net",
             WorldBucket.WORLD,
             GameModeBucket.SURVIVAL,
-            false));
+            false,
+            null,
+            null));
 
     // Active for 12s, then enters AFK
     var enteredAfk = ledger.updateAfk(ALICE, t0.plusSeconds(12), true).orElseThrow();
