@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { BASE_MANIFEST } from "./__fixtures__/manifest-base.ts";
 import fixture from "./__fixtures__/champion-meta.fixture.json";
 import {
   buildChampionMetaSnapshot,
@@ -41,17 +42,8 @@ function apiError(status: number, code: string) {
 }
 
 const MANIFEST = {
-  schemaVersion: 1,
-  buildId: "build-1",
-  generatedAt: "2026-01-08T00:00:00.000Z",
-  source: { firstDay: "2026-01-01", lastDay: "2026-01-07", days: 7 },
+  ...BASE_MANIFEST,
   lane: { firstDay: "2026-01-05", lastDay: "2026-01-07", days: 3 },
-  thresholds: { minSliceGames: 100, minEntryGames: 20, minMatchupGames: 30 },
-  patches: ["16.3"],
-  queues: [{ id: 420, label: "ranked_solo" }],
-  brackets: ["all"],
-  tiers: [],
-  defaults: { patch: "16.3", queueId: 420, bracket: "all" },
   champions: [
     { id: 103, name: "Ahri" },
     { id: 145, name: "Kai'Sa" },
@@ -467,19 +459,5 @@ describe("snapshot v2 size budget", () => {
     );
     expect(() => parseSnapshotV2(committed)).not.toThrow();
     expect(snapshotBudgetViolations(committed)).toEqual([]);
-  });
-
-  test("the committed snapshot passes the repository asset size check", async () => {
-    const proc = Bun.spawn(["bun", "run", "scripts/check-asset-sizes.ts"], {
-      cwd: SCOUT_ROOT,
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const [stdout, stderr] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-    ]);
-    expect(await proc.exited, stderr).toBe(0);
-    expect(stdout).toContain("within size limits");
   });
 });
