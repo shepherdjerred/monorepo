@@ -33,12 +33,16 @@ COPY packages/storm-theme /app/packages/storm-theme
 COPY packages/the-storm/public-status.json /app/packages/the-storm/public-status.json
 RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/packages/storm-theme/src/browser.ts --target browser --minify --outdir /app/packages/storm-theme/dist
 
-FROM php:8.5.13-fpm-bookworm@sha256:bad1d3498eaa489efe88c1d532e47e2f4111304c3f0b19fbc428842c39ec155c AS runtime
+FROM php:8.6.0-fpm-bookworm@sha256:ca011d23187931fef48cac15c66a298cf16ee0bc3b83830ccaa5f0daa699dab3 AS runtime
 # Distribution packages receive security updates when the pinned base is rebuilt.
+# PHP 8.6 images no longer compile in mbstring (docker-library/php#1654), which
+# XenForo requires. Its Oniguruma-backed regex functions are deprecated in 8.6
+# and unused, so build it without them.
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j2 gd mysqli zip intl exif \
+    && docker-php-ext-configure mbstring --disable-mbregex \
+    && docker-php-ext-install -j2 gd mysqli zip intl exif mbstring \
     && rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache \
     && mkdir -p /app/forum /var/lib/storm-forum /tmp/storm-forum \
     && chown -R 1000:1000 /app /var/lib/storm-forum /tmp/storm-forum
