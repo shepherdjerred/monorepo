@@ -387,7 +387,9 @@ public final class StatsService implements AutoCloseable {
               started.platform().wire(),
               started.clientVersion(),
               started.clientBrand(),
-              started.joinAddress());
+              started.joinAddress(),
+              started.countryCode(),
+              started.countryName());
       case SessionLedger.LedgerEvent.Interval interval ->
           new StatsWrite.OutboxDraft.Ready(
               interval.eventId(),
