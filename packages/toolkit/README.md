@@ -814,12 +814,20 @@ and 143. The command does not merge or mutate the PR.
 
 ### Wait, then merge
 
-`toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--json]`
+`toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--allow-stale-base] [--json]`
 merges, so run it only when the task authorizes merging. It runs the same
 pinned wait as `ci wait`, but treats a red main as a reason to keep waiting
 rather than a result. `--allow-red-main` merges while main is red. When the PR
-is ready, it rechecks the head and the shared GraphQL budget, then runs
+is ready, it rechecks the head, evaluates asymmetric workspace and global-input
+overlap between the PR diff and `merge-base(head, main)..main` (appending a
+sanitized receipt to `${TOOLKIT_STATE_DIR:-~/.local/state/toolkit}/pr-land.ndjson`),
+checks the shared GraphQL budget, and runs
 `git-spice branch merge --method squash --ready-timeout 0 --branch <head>`.
+If `main` advanced with overlapping workspace dependencies, shared synthesis
+inputs, global root verification files, or same-directory file additions, `pr land`
+exits `1` (`outcome: "failure"`) with git-spice restack commands so callers
+restack and re-verify before merging; `--allow-stale-base` bypasses that guard
+when authorized.
 When fewer than 200 GraphQL points remain, it waits for the reset and proves
 readiness again before merging. A merge that fails while the bucket is
 exhausted is retried once after the reset, again after a fresh readiness
@@ -828,11 +836,11 @@ git-spice output goes to stderr, so `--json` keeps stdout for one report. The
 report includes `mergeCommitSha` and a `ci wait --main --head` command for the
 merge commit.
 
-| Land exit | Meaning                                                         |
-| --------- | --------------------------------------------------------------- |
-| 0         | Merged, confirmed on GitHub                                     |
-| 1–4, 6, 7 | As for `ci wait`; nothing was merged. Fix, push, run land again |
-| 8         | Ready, but `git-spice branch merge` failed or did not merge     |
+| Land exit | Meaning                                                      |
+| --------- | ------------------------------------------------------------ |
+| 0         | Merged, confirmed on GitHub                                  |
+| 1–4, 6, 7 | As for `ci wait` (plus `1` for stale-base overlap); unmerged |
+| 8         | Ready, but `git-spice branch merge` failed or did not merge  |
 
 Run `pr land` from a checkout where git-spice tracks the PR branch. To get a PR
 green and then merge, run `pr land`, fix whatever it reports, push, and run it
@@ -874,7 +882,9 @@ brokered token as `toolkit prom`.
 GitHub’s status can lag or describe a different state. The exact-head
 Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;
 unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
-`overallStatus`, `checks`, and `nextSteps` fields.
+`overallStatus`, `checks`, and `nextSteps` fields, plus an informational
+`staleBase` summary (`up_to_date`, `disjoint_clean`, or `stale_overlap`) that
+does not change `CI Status` or the report's exit status.
 
 `toolkit pr review list [PR] [--json] [--all] [--provider NAME]` lists current,
 unresolved feedback across human reviewers and registered providers. Each item

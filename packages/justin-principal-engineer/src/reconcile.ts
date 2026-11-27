@@ -232,6 +232,14 @@ export class Reconciler {
             "--runner-source",
             path.dirname(path.dirname(this.cliPath)),
           ],
+          restackTask: (input) =>
+            reconcileMerge.restackStaleMergeTask({
+              ...input,
+              git: this.git,
+              telemetry: this.telemetry,
+              save: this.save.bind(this),
+              writeInfo,
+            }),
           confirmMerged: (sha, env) =>
             this.git.confirmMerged(state.checkoutPath, sha, env),
         });
@@ -474,9 +482,8 @@ export class Reconciler {
       `${state.issue.identifier}: exact-head approval observed; merge queued`,
     );
   }
-
-  public async mergeReady(state: TaskState): Promise<boolean> {
-    return await this.authorization.mergeReady(state);
+  public mergeReady(state: TaskState): Promise<boolean> {
+    return this.authorization.mergeReady(state);
   }
   public async retryTask(identifier: string): Promise<void> {
     await retryBlockedTask({
