@@ -43,9 +43,9 @@ test("unknown/zero seeders and a previously rejected source cannot use the quali
 });
 test("private priority breaks equal quality and score ties without overriding quality", () => {
   const candidates = [
-    { id: "public", rank: 2, score: 30, priority: 25 },
-    { id: "private", rank: 2, score: 30, priority: 1 },
-    { id: "lower", rank: 1, score: 300, priority: 1 },
+    { id: "public", rank: 2, score: 30, priority: 25, seeders: 100 },
+    { id: "private", rank: 2, score: 30, priority: 1, seeders: 1 },
+    { id: "lower", rank: 1, score: 300, priority: 1, seeders: 300 },
   ];
   expect(
     candidates.sort(compareProviderCandidates).map((item) => item.id),

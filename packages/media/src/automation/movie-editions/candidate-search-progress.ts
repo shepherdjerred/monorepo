@@ -140,21 +140,33 @@ export class MovieCandidateSearchProgress {
   }
 
   results(now: number) {
-    const candidates: MovieCandidateV4[] = [];
+    const ranked: {
+      candidate: MovieCandidateV4;
+      seeders: Listing["seeders"];
+    }[] = [];
     let earliest = Infinity;
     for (const listing of this.listings.values()) {
       if (listing.candidate === undefined) continue;
       if (listing.eligibleAt !== undefined && listing.eligibleAt > now)
         earliest = Math.min(earliest, listing.eligibleAt);
-      else candidates.push(listing.candidate);
+      else
+        ranked.push({ candidate: listing.candidate, seeders: listing.seeders });
     }
-    candidates.sort((left, right) =>
+    ranked.sort((left, right) =>
       compareProviderCandidates(
-        { ...left, id: left.releaseId },
-        { ...right, id: right.releaseId },
+        {
+          ...left.candidate,
+          id: left.candidate.releaseId,
+          seeders: left.seeders,
+        },
+        {
+          ...right.candidate,
+          id: right.candidate.releaseId,
+          seeders: right.seeders,
+        },
       ),
     );
-    return { candidates, earliest };
+    return { candidates: ranked.map(({ candidate }) => candidate), earliest };
   }
 
   checkpoint(): MovieProviderSearchProgressV4 {
