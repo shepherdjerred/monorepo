@@ -225,6 +225,7 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "woodpecker-ci/temporal-maintenance-worker/temporal-maintenance-worker",
   "woodpecker/woodpecker-woodpecker-agent-completion/woodpecker-agent",
   "woodpecker/woodpecker-woodpecker-agent-main/woodpecker-agent",
+  "woodpecker/woodpecker-woodpecker-agent-maintenance/woodpecker-agent",
   "woodpecker/woodpecker-woodpecker-agent-pr/woodpecker-agent",
   "woodpecker/woodpecker-woodpecker-agent-review/woodpecker-agent",
   "woodpecker/woodpecker-woodpecker-config-extension/woodpecker-config-extension",

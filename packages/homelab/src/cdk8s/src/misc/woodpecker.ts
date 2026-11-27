@@ -1,4 +1,7 @@
-import { PooledAdmissionBudgetSchema } from "@shepherdjerred/root-scripts/lib/ci/admission-budget.ts";
+import {
+  PooledAdmissionBudgetSchema,
+  queueWorkflows,
+} from "@shepherdjerred/root-scripts/lib/ci/admission-budget.ts";
 import rawCiAdmissionBudget from "./ci-admission-budget.json" with { type: "json" };
 
 /**
@@ -17,14 +20,15 @@ export const WOODPECKER_MAX_WORKFLOWS = CI_ADMISSION_BUDGET.legacyMaxWorkflows;
 
 export type CiAgentPool = keyof typeof CI_ADMISSION_BUDGET.pools;
 
+/** Every pool whose pods queue for compute quota: PR, main and maintenance. */
 export const CI_COMPUTE_WORKFLOWS =
   CI_ADMISSION_BUDGET.legacyMaxWorkflows +
-  CI_ADMISSION_BUDGET.pools.pr.maxWorkflows +
-  CI_ADMISSION_BUDGET.pools.main.maxWorkflows;
+  queueWorkflows(CI_ADMISSION_BUDGET.pools, "default");
 
-export const CI_GATE_WORKFLOWS =
-  CI_ADMISSION_BUDGET.pools.review.maxWorkflows +
-  CI_ADMISSION_BUDGET.pools.completion.maxWorkflows;
+export const CI_GATE_WORKFLOWS = queueWorkflows(
+  CI_ADMISSION_BUDGET.pools,
+  "ci-gates",
+);
 
 /**
  * Label on every agent Deployment carrying its `WOODPECKER_MAX_WORKFLOWS`.

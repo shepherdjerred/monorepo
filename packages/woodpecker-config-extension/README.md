@@ -419,12 +419,16 @@ Deploy the ready-event compatibility path and server status-context template
 before enabling draft preflight. The server change requires a drained rollout;
 observe a real ready transition through full CI before changing draft coverage.
 
-`routing.ts` assigns Kubernetes workflows to PR, main, or completion
-agents. A PR targeting the default branch still uses the PR pool; only a push
-or manual run on that branch uses main capacity. Manual maintenance,
-benchmark and extended-tier runs on the default branch are background work:
-they use the PR pool at draft priority, below every ready PR, and leave main's
-reservation intact. Native workflows keep their host labels.
+`routing.ts` assigns Kubernetes workflows to PR, main, maintenance, or
+completion agents. A PR targeting the default branch still uses the PR pool;
+only a push or manual run on that branch uses main capacity. Benchmark and
+extended-tier runs on the default branch are background work in the PR pool
+at draft priority, below every ready PR, and leave main's reservation intact.
+Temporal maintenance (`CI_MAINTENANCE_KIND`) uses its own one-slot
+`maintenance` agent, so it never waits behind the PR backlog, and is admitted
+at main's priority. It is rare, capped at one workflow, and Kueue never
+preempts, so it only passes waiting work. Native workflows keep their host
+labels.
 
 The checkout-free `ci-complete` workflow uses its reserved `completion` pool
 with the trusted `CI_GATE_IMAGE` policy image and no checkout or services. It
@@ -635,8 +639,11 @@ before its pipelines finish. Woodpecker still starts the manual pipeline at the
 tip. When the source is still that verified commit, the extension checks it out
 through the source cache in place of the tip. Otherwise, or without the source
 cache, it emits a no-work receipt and the dispatcher selects again.
-Maintenance runs in the PR pool at draft priority, sharing one concurrency
-group across all kinds. It leaves the main and ready-PR reservations intact.
+Maintenance runs on its own one-slot `maintenance` agent at main's admission
+priority, sharing one concurrency group across all kinds. Its pods queue for
+compute quota like any other workflow and take no slot from the main or PR
+agents. `bun src/dump-steps.ts` includes every kind so the admission-budget and
+credential checks cover them.
 
 The production inventory also enables the separate
 `ci-maintenance-dispatch-enabled` Temporal flag. Both runtime fallbacks remain

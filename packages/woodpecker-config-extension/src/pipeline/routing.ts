@@ -5,8 +5,10 @@ export type RoutingContext = {
   readonly branch: string;
   readonly defaultBranch: string;
   readonly draft: boolean;
-  /** Manual maintenance or benchmark work on the default branch. */
+  /** A Temporal-dispatched maintenance request (`CI_MAINTENANCE_KIND`). */
   readonly maintenance?: boolean;
+  /** A manual performance benchmark or lane reproduction. */
+  readonly canary?: boolean;
   /** The manual extended test tier (`CI_EXTENDED_REQUEST`) on the default branch. */
   readonly extended?: boolean;
 };
@@ -18,18 +20,30 @@ export function routeSteps(
   trustedGateImage?: string,
 ): CiStep[] {
   // Background work runs on the default branch yet must never take main's
-  // reserved capacity or outrank a ready pull request: it shares the PR pool
-  // at the lowest admission priority.
-  const background = context.maintenance === true || context.extended === true;
+  // reserved agent capacity. Benchmarks, reproductions and the extended tier
+  // must not outrank a ready pull request either: they are admitted at the
+  // lowest priority.
+  //
+  // Maintenance is admitted at main's priority instead. Its own agent removes
+  // the wait for a slot, but at draft priority its pods would still sit in
+  // the compute queue behind a standing backlog of ready PR pods. That is
+  // safe to skip: maintenance is rare (one to a few runs a day), its pool
+  // caps it at one concurrent workflow, and Kueue preemption is off, so it
+  // only moves ahead of waiting work and never evicts running work. The
+  // golden workspace refresh it carries is also CI's largest SSD-write lever.
+  const maintenance = context.maintenance === true;
+  const background =
+    maintenance || context.canary === true || context.extended === true;
   const main =
     !background &&
     (context.event === "push" || context.event === "manual") &&
     context.branch === context.defaultBranch;
-  const priority = main
-    ? "ci-main"
-    : background || context.draft
-      ? "ci-draft"
-      : "ci-ready";
+  const priority =
+    main || maintenance
+      ? "ci-main"
+      : background || context.draft
+        ? "ci-draft"
+        : "ci-ready";
   return steps.map((step) => {
     if (step.backend === "local") return step;
     const gate =
@@ -41,7 +55,17 @@ export function routeSteps(
         `${step.key}: reserved gate capacity requires no checkout or services`,
       );
     }
-    const pool = gate ? "completion" : main ? "main" : "pr";
+    // Maintenance has its own one-slot agent, so the golden workspace refresh
+    // never waits behind the PR backlog in the `pr` agent's first-in-first-out
+    // queue. Its pods still share the compute quota. Benchmarks,
+    // reproductions and the extended tier stay in the PR pool.
+    const pool = gate
+      ? "completion"
+      : main
+        ? "main"
+        : maintenance
+          ? "maintenance"
+          : "pr";
     return {
       ...step,
       agentLabels: {
