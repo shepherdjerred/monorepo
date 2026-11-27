@@ -852,7 +852,7 @@
       "dependencies": {
         "@discord-plays-pokemon/common": "workspace:*",
         "@modelcontextprotocol/sdk": "1.32.2",
-        "@openai/codex-sdk": "0.162.1",
+        "@openai/codex-sdk": "0.172.0",
         "@opentelemetry/api": "^1.9.1",
         "@opentelemetry/sdk-node": "^0.223.0",
         "@opentelemetry/sdk-trace-base": "^2.12.0",
@@ -1542,7 +1542,7 @@
         "justin-principal-engineer": "./src/cli.ts",
       },
       "dependencies": {
-        "@openai/codex-sdk": "0.162.1",
+        "@openai/codex-sdk": "0.172.0",
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
@@ -2810,7 +2810,7 @@
         "@kubernetes/client-node": "^2.0.0",
         "@modelcontextprotocol/sdk": "1.32.2",
         "@octokit/webhooks-methods": "^6.0.0",
-        "@openai/codex-sdk": "0.162.1",
+        "@openai/codex-sdk": "0.172.0",
         "@opentelemetry/api": "^1.9.1",
         "@opentelemetry/api-logs": "^0.223.0",
         "@opentelemetry/core": "^2.12.0",
@@ -3254,7 +3254,7 @@
     "scripts": {
       "name": "@shepherdjerred/root-scripts",
       "dependencies": {
-        "@openai/codex-sdk": "0.162.1",
+        "@openai/codex-sdk": "0.172.0",
         "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/delivery": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
@@ -4295,21 +4295,21 @@
 
     "@openai/agents-realtime": ["@openai/agents-realtime@0.22.0", "", { "dependencies": { "@openai/agents-core": "0.22.0", "@types/ws": "^8.18.2", "openai": "^7.45.1", "ws": "^8.22.0" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-orY61QWNz6QaNfcu6RqPfaJ2QtXLB4Yw3ErVfOzIcMo/UxPRlZejrSiv5MqTyCNqy/J9s2tKgqdrrRGdjdnucg=="],
 
-    "@openai/codex": ["@openai/codex@0.162.1", "", { "optionalDependencies": { "@openai/codex-darwin-arm64": "npm:@openai/codex@0.162.1-darwin-arm64", "@openai/codex-darwin-x64": "npm:@openai/codex@0.162.1-darwin-x64", "@openai/codex-linux-arm64": "npm:@openai/codex@0.162.1-linux-arm64", "@openai/codex-linux-x64": "npm:@openai/codex@0.162.1-linux-x64", "@openai/codex-win32-arm64": "npm:@openai/codex@0.162.1-win32-arm64", "@openai/codex-win32-x64": "npm:@openai/codex@0.162.1-win32-x64" }, "bin": { "codex": "bin/codex.js" } }, "sha512-NWZdi/kxyjv/8EUGFupziGU38YyleugZRM4JXgY5XFH7FUmaFA33NZS2Bmq0HPazf7S3jJQQWsZ/jAK9jsrV3Q=="],
+    "@openai/codex": ["@openai/codex@0.172.0", "", { "optionalDependencies": { "@openai/codex-darwin-arm64": "npm:@openai/codex@0.172.0-darwin-arm64", "@openai/codex-darwin-x64": "npm:@openai/codex@0.172.0-darwin-x64", "@openai/codex-linux-arm64": "npm:@openai/codex@0.172.0-linux-arm64", "@openai/codex-linux-x64": "npm:@openai/codex@0.172.0-linux-x64", "@openai/codex-win32-arm64": "npm:@openai/codex@0.172.0-win32-arm64", "@openai/codex-win32-x64": "npm:@openai/codex@0.172.0-win32-x64" }, "bin": { "codex": "bin/codex.js" } }, "sha512-yHf/6wbw4Zvha2M2ylDhDrU9FgfKLYgV6xSzSjlz3gxQNsiVLkXo+fPGwBqvP0A5geLtZs9wAbq+1v7+ZVWJ0g=="],
 
-    "@openai/codex-darwin-arm64": ["@openai/codex@0.162.1-darwin-arm64", "", { "os": "darwin", "cpu": "arm64" }, "sha512-YVXpg57itBuQxjofay3KDF5UbnZF4Y1ZmNFzUCz0ZQiQN+DndxOjN5V87rnXvPaC4qCPO2El74DzewoBP8JyPQ=="],
+    "@openai/codex-darwin-arm64": ["@openai/codex@0.172.0-darwin-arm64", "", { "os": "darwin", "cpu": "arm64" }, "sha512-B239wE7pGeOmjylfqLymDIwuL4QgQR7pQZc5phHpZ3t8UVkno9AS3dNPEprm7AzZHw3kf2I6Uf+uOFfjGegELQ=="],
 
-    "@openai/codex-darwin-x64": ["@openai/codex@0.162.1-darwin-x64", "", { "os": "darwin", "cpu": "x64" }, "sha512-0/WHRhbUnM1wAjfyCO54Q8s4vQRxLVBbqW6XuQf7rZTEMTYPKRIQU9aPeRgjG653ZCSjtBrslWQ+G9urY9CksQ=="],
+    "@openai/codex-darwin-x64": ["@openai/codex@0.172.0-darwin-x64", "", { "os": "darwin", "cpu": "x64" }, "sha512-hrL9NQwH9E0WqK8Yofqe6fipE1XDSXx/C2fwSOagXdTRcjYXOrfQ9fSCKaKZXr/xm43ATdsRSjGGAn8IJhGmhA=="],
 
-    "@openai/codex-linux-arm64": ["@openai/codex@0.162.1-linux-arm64", "", { "os": "linux", "cpu": "arm64" }, "sha512-Ss7W/SrKtQFNaMtSojNoiykJgX+iDC8daM+YrcvgmJADtQPk0cd3w6Dna4CYH2CYvf9nQranj69fpcTzZ3sQIQ=="],
+    "@openai/codex-linux-arm64": ["@openai/codex@0.172.0-linux-arm64", "", { "os": "linux", "cpu": "arm64" }, "sha512-qLH5VdeTkPlknWgKkU11IlGMyyxKXp9vcj65libT3Zp4P3Kt7gEbK4YDXlDBqWtA09+fGnIUpWERs6BaNo86DA=="],
 
-    "@openai/codex-linux-x64": ["@openai/codex@0.162.1-linux-x64", "", { "os": "linux", "cpu": "x64" }, "sha512-cjK2mdHIfEepZ1lQ1MX3aTQC+8ncIsvnacl/6vI2dIIcfP8/MrhTQ2+qRlkXFNDzJSj1d36quIszP+3/4CUJWQ=="],
+    "@openai/codex-linux-x64": ["@openai/codex@0.172.0-linux-x64", "", { "os": "linux", "cpu": "x64" }, "sha512-YJq6Wz3PFXV5LZ0OQc3/o+gpM3pLmQ/8n8uM2zF/m0O/8zED+uSPT8Ln1KGRrqR8Q6eon9YdWlhueAunVTZ+eg=="],
 
-    "@openai/codex-sdk": ["@openai/codex-sdk@0.162.1", "", { "dependencies": { "@openai/codex": "0.162.1" } }, "sha512-oG3u4y8Zq9t5QvlABcGo0cby/E2d6nrYZq71F/JBy2VOsOoqhhaMlbA7/35SWsykYGouL+T+3RgRT2X/xE+Y1g=="],
+    "@openai/codex-sdk": ["@openai/codex-sdk@0.172.0", "", { "dependencies": { "@openai/codex": "0.172.0" } }, "sha512-1kRbVEmN/WCBh5xr2gSK+UUiANhnOzaAPWtELHdxdycxf6Iv6fC14s/Z9rEgC5sBo9TzyC5Z6mfX3bU+Z1J4sQ=="],
 
-    "@openai/codex-win32-arm64": ["@openai/codex@0.162.1-win32-arm64", "", { "os": "win32", "cpu": "arm64" }, "sha512-teVVACnEcupkR6XSmUQKwlGg/oA15d1DQDPVSoAfilHgctPEpTi5y11jYS6JhJO+AFnYM84gyo5SOS5vlnCQSg=="],
+    "@openai/codex-win32-arm64": ["@openai/codex@0.172.0-win32-arm64", "", { "os": "win32", "cpu": "arm64" }, "sha512-lO+hS8rLV3xS5ZZZCBVfPTAqpI1VENId12qhzZ1jNPUBSzKQBOGKs+GHNplak1RHXXXpgK9UHkPQ3A2IvQ8lJg=="],
 
-    "@openai/codex-win32-x64": ["@openai/codex@0.162.1-win32-x64", "", { "os": "win32", "cpu": "x64" }, "sha512-dfl4MhHuEi0ARKyNmrTxk+RQmsWNCQAoVLUtrYq+yrW1C8P2sg5ziwgHUUACHjYLKuACV7ARH5Nq5pnCz3GlaQ=="],
+    "@openai/codex-win32-x64": ["@openai/codex@0.172.0-win32-x64", "", { "os": "win32", "cpu": "x64" }, "sha512-48pULjlTwpBZ/TfbOnpnmloHaTQAYELbaiKHEX7qmrtLFIcnPigaNN3omyetPdAuvrRXrmNFRlKfvQme19ZmRA=="],
 
     "@openfeature/core": ["@openfeature/core@1.12.0", "", {}, "sha512-7PCPzyd1OC19begz30+CRknFB0ChtyaZUhk7YWrk+Bov1fpVw0HYkTXtoxxsvPfDZB9P9WsT7uixN+Z8f9+bcA=="],
 

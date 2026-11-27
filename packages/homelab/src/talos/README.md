@@ -189,12 +189,12 @@ all four observed runtime versions; the current reviewed invocation is:
 
 ```bash
 /tmp/promotion-seccomp-generator \
-  --profile-name promotion-codex-01621-containerd-237-v1.json \
+  --profile-name promotion-codex-01720-containerd-237-v1.json \
   --talos-version 1.14.6 \
   --containerd-version 2.3.7 \
-  --codex-version 0.162.1 \
+  --codex-version 0.172.0 \
   --bubblewrap-version 0.12.0 \
-  --codex-cli /app/node_modules/.bun/@openai+codex@0.162.1/node_modules/@openai/codex/bin/codex.js
+  --codex-cli /app/node_modules/.bun/@openai+codex@0.172.0/node_modules/@openai/codex/bin/codex.js
 ```
 
 Talos/containerd values come from node readback, or from the target release's
@@ -215,7 +215,7 @@ generation only; runtime acceptance uses the actual production architecture.
 The system Bubblewrap probe records installed software; it does not establish
 sandbox startup. The native ARM64 Codex sandbox proof used Codex's official
 bundled platform helper, not the system Bubblewrap executable. Promotion's
-follow-on workload change selects the official Codex 0.162.1 platform helper.
+follow-on workload change selects the official Codex 0.172.0 platform helper.
 Accept that selected helper and its isolation boundaries on the production
 architecture before resuming promotion work.
 

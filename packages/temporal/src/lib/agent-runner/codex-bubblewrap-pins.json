@@ -1,19 +1,19 @@
 {
-  "codexVersion": "0.162.1",
+  "codexVersion": "0.172.0",
   "platforms": {
     "arm64": {
       "package": "@openai/codex-linux-arm64",
-      "packageVersion": "0.162.1-linux-arm64",
+      "packageVersion": "0.172.0-linux-arm64",
       "targetTriple": "aarch64-unknown-linux-musl",
-      "helperSha256": "c547cbdc762a70ed216789ffaa4c6c0e7d2beabe32245a498f8e365a9fc8dab4",
-      "packageIntegrity": "sha512-Ss7W/SrKtQFNaMtSojNoiykJgX+iDC8daM+YrcvgmJADtQPk0cd3w6Dna4CYH2CYvf9nQranj69fpcTzZ3sQIQ=="
+      "helperSha256": "f5065eb8b9ddd9c89cac0ce79ed1aafab5841c7d9c3e73674c94724d6bf8f7c0",
+      "packageIntegrity": "sha512-qLH5VdeTkPlknWgKkU11IlGMyyxKXp9vcj65libT3Zp4P3Kt7gEbK4YDXlDBqWtA09+fGnIUpWERs6BaNo86DA=="
     },
     "x64": {
       "package": "@openai/codex-linux-x64",
-      "packageVersion": "0.162.1-linux-x64",
+      "packageVersion": "0.172.0-linux-x64",
       "targetTriple": "x86_64-unknown-linux-musl",
-      "helperSha256": "01fb705f067bd5365b63d8ad2323a61c8d007733ca5e649437e086f3fb9935d8",
-      "packageIntegrity": "sha512-cjK2mdHIfEepZ1lQ1MX3aTQC+8ncIsvnacl/6vI2dIIcfP8/MrhTQ2+qRlkXFNDzJSj1d36quIszP+3/4CUJWQ=="
+      "helperSha256": "512b7d47b27de10e13e86525a03d43c1a85422021b013bb15dc6384ae51f6425",
+      "packageIntegrity": "sha512-YJq6Wz3PFXV5LZ0OQc3/o+gpM3pLmQ/8n8uM2zF/m0O/8zED+uSPT8Ln1KGRrqR8Q6eon9YdWlhueAunVTZ+eg=="
     }
   }
 }
