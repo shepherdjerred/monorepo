@@ -677,5 +677,98 @@ describe("Hub 2.0 OpsFacets schemas", () => {
     expect(ClusterFacetSchema).toBe(FACET_SCHEMAS.cluster);
     expect(ObservabilityFacetSchema).toBe(FACET_SCHEMAS.observability);
     expect(TemporalFacetSchema).toBe(FACET_SCHEMAS.temporal);
+
+    const withCodeReview = MonorepoFacetSchema.parse({
+      ...sampleDeliveryFacets().monorepo,
+      codeReview: {
+        enabled: true,
+        coordinatorRunning: true,
+        coordinatorProcessedCount: 195,
+        activeProvidersCount: 2,
+        readyProvidersCount: 1,
+        coolingDownProvidersCount: 1,
+        outcomes7d: {
+          clean: 36,
+          priorRound: 31,
+          threadsResolved: 4,
+          quotaExempt: 5,
+          providerTimeout: 12,
+          allSkipped: 2,
+          blockingFindings: 3,
+          p0Veto: 0,
+          reviewWithdrawn: 0,
+        },
+        medianDurationSeconds7d: 14.2,
+        p95DurationSeconds7d: 248.5,
+        providers: [
+          {
+            id: "coderabbit",
+            displayName: "CodeRabbit",
+            tier: "free",
+            configuredWeight: 3,
+            targetShareRatio: 0.75,
+            currentSmoothWeight: 2,
+            status: "cooldown",
+            cooldownUntil: "2026-11-26T19:00:00Z",
+            assignments7d: 28,
+            completed7d: 21,
+            usageLimited7d: 5,
+            timedOut7d: 2,
+            skipped7d: 0,
+            cooldowns7d: 5,
+          },
+        ],
+      },
+    });
+    expect(withCodeReview.codeReview?.coordinatorObserved).toBe(true);
+    expect(withCodeReview.codeReview?.providers[0]?.status).toBe("cooldown");
+
+    const unavailableCoordinator = MonorepoFacetSchema.parse({
+      ...sampleDeliveryFacets().monorepo,
+      codeReview: {
+        enabled: true,
+        coordinatorObserved: false,
+        coordinatorRunning: false,
+        coordinatorProcessedCount: 0,
+        activeProvidersCount: 1,
+        readyProvidersCount: 0,
+        coolingDownProvidersCount: 0,
+        outcomes7d: {
+          clean: 0,
+          priorRound: 0,
+          threadsResolved: 0,
+          quotaExempt: 0,
+          providerTimeout: 0,
+          allSkipped: 0,
+          blockingFindings: 0,
+          p0Veto: 0,
+          reviewWithdrawn: 0,
+        },
+        medianDurationSeconds7d: null,
+        p95DurationSeconds7d: null,
+        providers: [
+          {
+            id: "coderabbit",
+            displayName: "CodeRabbit",
+            tier: "free",
+            configuredWeight: 3,
+            targetShareRatio: 1,
+            currentSmoothWeight: 0,
+            status: "unknown",
+            cooldownUntil: null,
+            assignments7d: 0,
+            completed7d: 0,
+            usageLimited7d: 0,
+            timedOut7d: 0,
+            skipped7d: 0,
+            cooldowns7d: 0,
+          },
+        ],
+      },
+    });
+    expect(unavailableCoordinator.codeReview?.coordinatorObserved).toBe(false);
+    expect(unavailableCoordinator.codeReview?.providers[0]?.status).toBe(
+      "unknown",
+    );
   });
 });

@@ -1,36 +1,28 @@
 import path from "node:path";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
+import {
+  COMPONENT_METADATA,
+  componentForSource,
+  isPermittedDeclarationOnlySource,
+} from "./lib/coverage-source-inclusion.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
 const repositoryRoot = path.resolve(packageRoot, "..", "..");
 const baselinePath = path.join(packageRoot, "coverage-baseline.json");
-const portableOnly = Bun.argv.includes("--portable");
-const ciReports = Bun.argv.includes("--ci");
-if (ciReports && !portableOnly)
-  throw new Error("CI coverage reports only cover portable suites.");
+
+const ThresholdSchema = z.object({
+  line: z.number().min(0).max(100),
+  branch: z.number().min(0).max(100),
+});
 const BaselineSchema = z.object({
   schemaVersion: z.literal(1),
-  components: z.record(
-    z.string(),
-    z.object({
-      line: z.number().min(0).max(100),
-      branch: z.number().min(0).max(100),
-    }),
-  ),
-  portableComponents: z.record(
-    z.string(),
-    z.object({
-      line: z.number().min(0).max(100),
-      branch: z.number().min(0).max(100),
-    }),
-  ),
+  components: z.record(z.string(), ThresholdSchema),
+  portableComponents: z.record(z.string(), ThresholdSchema),
   changedLineMinimums: z.record(z.string(), z.number().min(0).max(100)),
 });
 const DocumentSchema = z.object({
-  coverage: z.object({
-    packages: z.object({ package: z.unknown() }),
-  }),
+  coverage: z.object({ packages: z.object({ package: z.unknown() }) }),
 });
 const PackageSchema = z.object({
   "@_name": z.string(),
@@ -45,15 +37,18 @@ const LineSchema = z.object({
   "@_hits": z.coerce.number().int().nonnegative(),
   "@_condition-coverage": z.string().optional(),
 });
+
+type Baseline = z.infer<typeof BaselineSchema>;
 type LineReading = {
   hits: number;
   branchesCovered: number;
   branchesValid: number;
 };
 
-function many(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [value];
-}
+const many = (value: unknown): unknown[] =>
+  Array.isArray(value) ? value : [value];
+const percent = (covered: number, valid: number): number =>
+  valid === 0 ? 100 : Math.round((covered / valid) * 1000) / 10;
 
 function branchReading(raw: string | undefined): {
   covered: number;
@@ -69,248 +64,37 @@ function branchReading(raw: string | undefined): {
   return { covered: Number(match[1]), valid: Number(match[2]) };
 }
 
-const requiredSuites = portableOnly
-  ? ["unit", "integration"]
-  : ["unit", "integration", "winui"];
-const coverageFiles = ciReports
-  ? ["unit", "integration"].map((suite) =>
-      path.join(
-        repositoryRoot,
-        ".ci-reports",
-        "coverage",
-        "raw",
-        "tasknotes-windows",
-        suite,
-        "coverage.cobertura.xml",
-      ),
-    )
-  : requiredSuites.map((suite) =>
-      path.join(
-        packageRoot,
-        "artifacts",
-        "test-results",
-        suite,
-        "coverage.cobertura.xml",
-      ),
-    );
-const parser = new XMLParser({ ignoreAttributes: false });
-const suiteComponents: ReadonlyMap<string, Map<string, LineReading>>[] = [];
-for (const coverageFile of coverageFiles) {
-  if (!(await Bun.file(coverageFile).exists())) {
+function mergeLineReading(
+  target: Map<string, LineReading>,
+  key: string,
+  reading: LineReading,
+): void {
+  const prev = target.get(key);
+  target.set(key, {
+    hits: Math.max(prev?.hits ?? 0, reading.hits),
+    branchesCovered: Math.max(
+      prev?.branchesCovered ?? 0,
+      reading.branchesCovered,
+    ),
+    branchesValid: Math.max(prev?.branchesValid ?? 0, reading.branchesValid),
+  });
+}
+
+function runGit(args: string[], errorMessage: string): string {
+  const res = Bun.spawnSync(["git", ...args], {
+    cwd: repositoryRoot,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (res.exitCode !== 0) {
     throw new Error(
-      `Missing required Cobertura artifact ${path.relative(packageRoot, coverageFile)}.`,
+      `${errorMessage}: ${new TextDecoder().decode(res.stderr).trim()}`,
     );
   }
-  const parsed: unknown = parser.parse(await Bun.file(coverageFile).text());
-  const document = DocumentSchema.parse(parsed);
-  const suiteLines = new Map<string, Map<string, LineReading>>();
-  suiteComponents.push(suiteLines);
-  for (const packageValue of many(document.coverage.packages.package)) {
-    const packageReading = PackageSchema.parse(packageValue);
-    for (const classValue of many(packageReading.classes.class)) {
-      const classReading = ClassSchema.parse(classValue);
-      const relative = path
-        .relative(repositoryRoot, classReading["@_filename"])
-        .replaceAll("\\", "/");
-      if (relative.includes("/obj/") || relative.includes("/bin/")) {
-        continue;
-      }
-      const component = componentForSource(relative);
-      if (
-        component === undefined ||
-        (portableOnly && component === "TaskNotes.Windows.AppAdapters")
-      ) {
-        continue;
-      }
-      let lines = suiteLines.get(component);
-      if (lines === undefined) {
-        lines = new Map();
-        suiteLines.set(component, lines);
-      }
-      for (const lineValue of many(classReading.lines.line)) {
-        const line = LineSchema.parse(lineValue);
-        const key = `${relative}:${String(line["@_number"])}`;
-        const branch = branchReading(line["@_condition-coverage"]);
-        const previous = lines.get(key);
-        lines.set(key, {
-          hits: Math.max(previous?.hits ?? 0, line["@_hits"]),
-          branchesCovered: Math.max(
-            previous?.branchesCovered ?? 0,
-            branch.covered,
-          ),
-          branchesValid: Math.max(previous?.branchesValid ?? 0, branch.valid),
-        });
-      }
-    }
-  }
-}
-const componentLines = new Map<string, Map<string, LineReading>>();
-for (const suite of suiteComponents) {
-  for (const [component, suiteLines] of suite) {
-    let merged = componentLines.get(component);
-    if (merged === undefined) {
-      merged = new Map();
-      componentLines.set(component, merged);
-    }
-    // Cobertura reports a line's branch coverage as an aggregate count, and its
-    // <condition> children carry only a percentage — neither identifies *which*
-    // branch ran. Suites instrument overlapping assemblies, so adding their
-    // counts turns two suites that both took the same 1-of-2 branch into 2/2.
-    // Take the maximum instead: it can only under-report a branch that two
-    // suites genuinely split, which leaves the gate stricter rather than
-    // letting an uncovered branch satisfy the baseline.
-    for (const [key, reading] of suiteLines) {
-      const previous = merged.get(key);
-      merged.set(key, {
-        hits: Math.max(previous?.hits ?? 0, reading.hits),
-        branchesCovered: Math.max(
-          previous?.branchesCovered ?? 0,
-          reading.branchesCovered,
-        ),
-        branchesValid: Math.max(
-          previous?.branchesValid ?? 0,
-          reading.branchesValid,
-        ),
-      });
-    }
-  }
-}
-if (componentLines.size === 0) {
-  throw new Error(
-    "No Windows Cobertura artifacts were found. Run windows:coverage first.",
-  );
+  return new TextDecoder().decode(res.stdout);
 }
 
-function percent(covered: number, valid: number): number {
-  return valid === 0 ? 100 : Math.round((covered / valid) * 1000) / 10;
-}
-
-const failures: string[] = [];
-const baseline = BaselineSchema.parse(await Bun.file(baselinePath).json());
-const baseReference = Bun.env["TASKNOTES_COVERAGE_BASE"] ?? "origin/main";
-const baseRevision = Bun.spawnSync(
-  ["git", "rev-parse", "--verify", `${baseReference}^{commit}`],
-  { cwd: repositoryRoot, stdout: "ignore", stderr: "pipe" },
-);
-if (baseRevision.exitCode !== 0) {
-  throw new Error(
-    `Could not resolve coverage baseline reference ${baseReference}: ${new TextDecoder().decode(baseRevision.stderr).trim()}`,
-  );
-}
-const baselineRepositoryPath =
-  "packages/tasknotes-windows/coverage-baseline.json";
-const previousBaselineExists = Bun.spawnSync(
-  ["git", "cat-file", "-e", `${baseReference}:${baselineRepositoryPath}`],
-  { cwd: repositoryRoot, stdout: "ignore", stderr: "ignore" },
-).exitCode;
-if (previousBaselineExists === 0) {
-  const previousDocument = Bun.spawnSync(
-    ["git", "show", `${baseReference}:${baselineRepositoryPath}`],
-    { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
-  );
-  if (previousDocument.exitCode !== 0) {
-    throw new Error(
-      `Could not read the prior coverage baseline: ${new TextDecoder().decode(previousDocument.stderr).trim()}`,
-    );
-  }
-  const previous = BaselineSchema.parse(
-    JSON.parse(new TextDecoder().decode(previousDocument.stdout)),
-  );
-  requireNondecreasingBaselines(previous, baseline);
-}
-const expectedComponents = portableOnly
-  ? baseline.portableComponents
-  : baseline.components;
-for (const [component, expected] of Object.entries(expectedComponents)) {
-  const lines = componentLines.get(component);
-  if (lines === undefined) {
-    failures.push(`${component} has no coverage artifact.`);
-    continue;
-  }
-  const values = [...lines.values()];
-  const line = percent(
-    values.filter((reading) => reading.hits > 0).length,
-    values.length,
-  );
-  const branchesCovered = values.reduce(
-    (total, reading) => total + reading.branchesCovered,
-    0,
-  );
-  const branchesValid = values.reduce(
-    (total, reading) => total + reading.branchesValid,
-    0,
-  );
-  const branch = percent(branchesCovered, branchesValid);
-  await Bun.write(
-    Bun.stdout,
-    `${component}: ${line.toFixed(1)}% lines, ${branch.toFixed(1)}% branches\n`,
-  );
-  if (line + 0.0001 < expected.line) {
-    failures.push(
-      `${component} line coverage ${line.toFixed(1)}% is below baseline ${expected.line.toFixed(1)}%.`,
-    );
-  }
-  if (branch + 0.0001 < expected.branch) {
-    failures.push(
-      `${component} branch coverage ${branch.toFixed(1)}% is below baseline ${expected.branch.toFixed(1)}%.`,
-    );
-  }
-}
-
-const diff = Bun.spawnSync(
-  [
-    "git",
-    "diff",
-    "--unified=0",
-    "--no-color",
-    `${baseReference}...HEAD`,
-    "--",
-    "packages/tasknotes-windows",
-  ],
-  { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
-);
-if (diff.exitCode !== 0) {
-  throw new Error(
-    `Could not calculate changed lines from ${baseReference}: ${new TextDecoder().decode(diff.stderr).trim()}`,
-  );
-}
-const workingDiff = Bun.spawnSync(
-  [
-    "git",
-    "diff",
-    "--unified=0",
-    "--no-color",
-    "HEAD",
-    "--",
-    "packages/tasknotes-windows",
-  ],
-  { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
-);
-if (workingDiff.exitCode !== 0) {
-  throw new Error(
-    `Could not calculate working-tree changed lines: ${new TextDecoder().decode(workingDiff.stderr).trim()}`,
-  );
-}
-const stagedDiff = Bun.spawnSync(
-  [
-    "git",
-    "diff",
-    "--cached",
-    "--unified=0",
-    "--no-color",
-    "HEAD",
-    "--",
-    "packages/tasknotes-windows",
-  ],
-  { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
-);
-if (stagedDiff.exitCode !== 0) {
-  throw new Error(
-    `Could not calculate staged changed lines: ${new TextDecoder().decode(stagedDiff.stderr).trim()}`,
-  );
-}
-
-function changedLines(raw: string): Set<string> {
+export function changedLines(raw: string): Set<string> {
   const changed = new Set<string>();
   let file: string | undefined;
   for (const line of raw.split(/\r?\n/u)) {
@@ -331,135 +115,10 @@ function changedLines(raw: string): Set<string> {
   return changed;
 }
 
-const changed = changedLines(
-  `${new TextDecoder().decode(diff.stdout)}\n${new TextDecoder().decode(workingDiff.stdout)}\n${new TextDecoder().decode(stagedDiff.stdout)}`,
-);
-const untracked = Bun.spawnSync(
-  [
-    "git",
-    "ls-files",
-    "--others",
-    "--exclude-standard",
-    "--",
-    "packages/tasknotes-windows",
-  ],
-  { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
-);
-if (untracked.exitCode !== 0) {
-  throw new Error(
-    `Could not enumerate untracked Windows sources: ${new TextDecoder().decode(untracked.stderr).trim()}`,
-  );
-}
-for (const file of new TextDecoder()
-  .decode(untracked.stdout)
-  .split(/\r?\n/u)
-  .filter(Boolean)) {
-  if (!file.endsWith(".cs")) {
-    continue;
-  }
-  const contents = await Bun.file(path.join(repositoryRoot, file)).text();
-  const count = contents.split(/\r?\n/u).length;
-  for (let line = 1; line <= count; line++) {
-    changed.add(`${file}:${String(line)}`);
-  }
-}
-for (const [component, minimum] of Object.entries(
-  baseline.changedLineMinimums,
-)) {
-  if (portableOnly && component === "TaskNotes.Windows.AppAdapters") {
-    continue;
-  }
-  const lines = componentLines.get(component);
-  const coveredLines =
-    lines === undefined
-      ? []
-      : [...lines.entries()].filter(([key]) => changed.has(key));
-  const changedComponentLines = [...changed].filter(
-    (key) =>
-      componentForSource(key.slice(0, key.lastIndexOf(":"))) === component,
-  );
-  if (changedComponentLines.length === 0) {
-    continue;
-  }
-  // The guard here is that a changed source *file* reached the coverage run at
-  // all: a file left out of the portable solution, or excluded by the coverage
-  // settings, would otherwise pass this gate by producing no data to measure.
-  // Whether the individual changed lines are executable is a different
-  // question — a comment, an attribute, or an accessibility modifier changes
-  // real source and instruments nothing, and must not read as uninstrumented.
-  const instrumentedFiles = new Set(
-    [...(lines?.keys() ?? [])].map((key) => key.slice(0, key.lastIndexOf(":"))),
-  );
-  const uninstrumentedFiles = [
-    ...new Set(
-      changedComponentLines.map((key) => key.slice(0, key.lastIndexOf(":"))),
-    ),
-  ]
-    .filter((file) => !instrumentedFiles.has(file))
-    .sort();
-  if (uninstrumentedFiles.length > 0) {
-    failures.push(
-      `${component} has changed source that the coverage run never instrumented: ${uninstrumentedFiles.join(", ")}.`,
-    );
-    continue;
-  }
-  if (coveredLines.length === 0) {
-    continue;
-  }
-  const coverage = percent(
-    coveredLines.filter(([, reading]) => reading.hits > 0).length,
-    coveredLines.length,
-  );
-  await Bun.write(
-    Bun.stdout,
-    `${component}: ${coverage.toFixed(1)}% changed executable lines (${String(coveredLines.length)} lines)\n`,
-  );
-  if (coverage + 0.0001 < minimum) {
-    failures.push(
-      `${component} changed-line coverage ${coverage.toFixed(1)}% is below ${minimum.toFixed(1)}%.`,
-    );
-  }
-}
-
-function componentForSource(relative: string): string | undefined {
-  // Build manifests are tracked source but coverage can never instrument
-  // them: a dependency-only update (NuGet lockfiles, MSBuild project files)
-  // must not read as untested changes.
-  if (
-    relative.endsWith("/packages.lock.json") ||
-    relative.endsWith(".csproj") ||
-    relative.endsWith(".props") ||
-    relative.endsWith(".targets")
-  ) {
-    return undefined;
-  }
-  if (
-    relative.includes("/src/TaskNotes.Windows.Host/") ||
-    relative.startsWith(
-      "packages/tasknotes-windows/src/TaskNotes.Windows.Host/",
-    )
-  ) {
-    return "TaskNotes.Windows.Host";
-  }
-  if (
-    relative.includes("/src/TaskNotes.Windows.Presentation/") ||
-    relative.startsWith(
-      "packages/tasknotes-windows/src/TaskNotes.Windows.Presentation/",
-    )
-  ) {
-    return "TaskNotes.Windows.Presentation";
-  }
-  return relative.endsWith("/src/TaskNotes.Windows.App/HotkeyBinding.cs") ||
-    relative.endsWith("/src/TaskNotes.Windows.App/ShellPreferencesCodec.cs") ||
-    relative.endsWith("/src/TaskNotes.Windows.App/UiOperationQueue.cs") ||
-    relative.endsWith("/src/TaskNotes.Windows.App/WinUiDispatcher.cs")
-    ? "TaskNotes.Windows.AppAdapters"
-    : undefined;
-}
-
 function requireNondecreasingBaselines(
-  previous: z.infer<typeof BaselineSchema>,
-  current: z.infer<typeof BaselineSchema>,
+  previous: Baseline,
+  current: Baseline,
+  failures: string[],
 ): void {
   for (const key of ["components", "portableComponents"] as const) {
     for (const [component, expected] of Object.entries(previous[key])) {
@@ -468,9 +127,10 @@ function requireNondecreasingBaselines(
         failures.push(
           `${key}.${component} was removed from the coverage baseline.`,
         );
-        continue;
-      }
-      if (actual.line < expected.line || actual.branch < expected.branch) {
+      } else if (
+        actual.line < expected.line ||
+        actual.branch < expected.branch
+      ) {
         failures.push(
           `${key}.${component} decreased from ${expected.line.toFixed(1)}% lines/${expected.branch.toFixed(1)}% branches to ${actual.line.toFixed(1)}%/${actual.branch.toFixed(1)}%.`,
         );
@@ -479,8 +139,342 @@ function requireNondecreasingBaselines(
   }
 }
 
-if (failures.length > 0) {
-  throw new Error(
-    `Windows coverage ratchet failed:\n\n${failures.map((failure) => `- ${failure}`).join("\n")}`,
+function recordClassLines(
+  classValue: unknown,
+  portableOnly: boolean,
+  suiteLines: Map<string, Map<string, LineReading>>,
+): void {
+  const classReading = ClassSchema.parse(classValue);
+  const relative = path
+    .relative(repositoryRoot, classReading["@_filename"])
+    .replaceAll("\\", "/");
+  const component =
+    relative.includes("/obj/") || relative.includes("/bin/")
+      ? undefined
+      : componentForSource(relative);
+  if (
+    component === undefined ||
+    (portableOnly && component === "TaskNotes.Windows.AppAdapters")
+  ) {
+    return;
+  }
+  let lines = suiteLines.get(component);
+  if (lines === undefined) {
+    lines = new Map();
+    suiteLines.set(component, lines);
+  }
+  for (const lineValue of many(classReading.lines.line)) {
+    const line = LineSchema.parse(lineValue);
+    const branch = branchReading(line["@_condition-coverage"]);
+    mergeLineReading(lines, `${relative}:${String(line["@_number"])}`, {
+      hits: line["@_hits"],
+      branchesCovered: branch.covered,
+      branchesValid: branch.valid,
+    });
+  }
+}
+
+function mergeSuiteComponents(
+  suiteLines: ReadonlyMap<string, Map<string, LineReading>>,
+  componentLines: Map<string, Map<string, LineReading>>,
+): void {
+  for (const [component, lines] of suiteLines) {
+    let merged = componentLines.get(component);
+    if (merged === undefined) {
+      merged = new Map();
+      componentLines.set(component, merged);
+    }
+    for (const [key, reading] of lines) {
+      mergeLineReading(merged, key, reading);
+    }
+  }
+}
+
+async function collectComponentLines(
+  coverageFiles: readonly string[],
+  portableOnly: boolean,
+): Promise<Map<string, Map<string, LineReading>>> {
+  const parser = new XMLParser({ ignoreAttributes: false });
+  const componentLines = new Map<string, Map<string, LineReading>>();
+  for (const coverageFile of coverageFiles) {
+    if (!(await Bun.file(coverageFile).exists())) {
+      throw new Error(
+        `Missing required Cobertura artifact ${path.relative(packageRoot, coverageFile)}.`,
+      );
+    }
+    const doc = DocumentSchema.parse(
+      parser.parse(await Bun.file(coverageFile).text()),
+    );
+    const suiteLines = new Map<string, Map<string, LineReading>>();
+    for (const pkg of many(doc.coverage.packages.package)) {
+      for (const cls of many(PackageSchema.parse(pkg).classes.class)) {
+        recordClassLines(cls, portableOnly, suiteLines);
+      }
+    }
+    mergeSuiteComponents(suiteLines, componentLines);
+  }
+  if (componentLines.size === 0) {
+    throw new Error(
+      "No Windows Cobertura artifacts were found. Run windows:coverage first.",
+    );
+  }
+  return componentLines;
+}
+
+async function collectChangedSet(baseRef: string): Promise<Set<string>> {
+  const scope = ["--unified=0", "--no-color"];
+  const branch = runGit(
+    ["diff", ...scope, `${baseRef}...HEAD`, "--", "packages/tasknotes-windows"],
+    `Could not calculate changed lines from ${baseRef}`,
   );
+  const working = runGit(
+    ["diff", ...scope, "HEAD", "--", "packages/tasknotes-windows"],
+    "Could not calculate working-tree changed lines",
+  );
+  const staged = runGit(
+    ["diff", "--cached", ...scope, "HEAD", "--", "packages/tasknotes-windows"],
+    "Could not calculate staged changed lines",
+  );
+  const changed = changedLines(`${branch}\n${working}\n${staged}`);
+  const untracked = runGit(
+    [
+      "ls-files",
+      "--others",
+      "--exclude-standard",
+      "--",
+      "packages/tasknotes-windows",
+    ],
+    "Could not enumerate untracked Windows sources",
+  );
+  for (const file of untracked
+    .split(/\r?\n/u)
+    .filter((f) => f.endsWith(".cs"))) {
+    const contents = await Bun.file(path.join(repositoryRoot, file)).text();
+    const count = contents.split(/\r?\n/u).length;
+    for (let line = 1; line <= count; line++) {
+      changed.add(`${file}:${String(line)}`);
+    }
+  }
+  return changed;
+}
+
+async function isPermittedZeroLineFile(
+  component: string,
+  relativePath: string,
+  portableOnly: boolean,
+): Promise<boolean> {
+  const meta = COMPONENT_METADATA[component];
+  if (meta === undefined) {
+    return false;
+  }
+  const sourceFile = Bun.file(path.join(repositoryRoot, relativePath));
+  const solutionFile = Bun.file(
+    path.join(
+      packageRoot,
+      portableOnly
+        ? "TaskNotes.Windows.Portable.slnx"
+        : "TaskNotes.Windows.slnx",
+    ),
+  );
+  const csprojFile = Bun.file(path.join(packageRoot, meta.projectPath));
+  const settingsFile = Bun.file(
+    path.join(packageRoot, "coverage.settings.xml"),
+  );
+  if (
+    !(await sourceFile.exists()) ||
+    !(await solutionFile.exists()) ||
+    !(await csprojFile.exists()) ||
+    !(await settingsFile.exists())
+  ) {
+    return false;
+  }
+  return isPermittedDeclarationOnlySource({
+    relativePath,
+    component,
+    sourceText: await sourceFile.text(),
+    solutionXml: await solutionFile.text(),
+    csprojXml: await csprojFile.text(),
+    coverageSettingsXml: await settingsFile.text(),
+  });
+}
+
+async function verifyComponentBaselines(
+  expectedComponents: Baseline["components"],
+  componentLines: ReadonlyMap<string, Map<string, LineReading>>,
+  failures: string[],
+): Promise<void> {
+  for (const [component, expected] of Object.entries(expectedComponents)) {
+    const lines = componentLines.get(component);
+    if (lines === undefined) {
+      failures.push(`${component} has no coverage artifact.`);
+      continue;
+    }
+    const vals = [...lines.values()];
+    const line = percent(vals.filter((r) => r.hits > 0).length, vals.length);
+    const branch = percent(
+      vals.reduce((sum, r) => sum + r.branchesCovered, 0),
+      vals.reduce((sum, r) => sum + r.branchesValid, 0),
+    );
+    await Bun.write(
+      Bun.stdout,
+      `${component}: ${line.toFixed(1)}% lines, ${branch.toFixed(1)}% branches\n`,
+    );
+    if (line + 0.0001 < expected.line) {
+      failures.push(
+        `${component} line coverage ${line.toFixed(1)}% is below baseline ${expected.line.toFixed(1)}%.`,
+      );
+    }
+    if (branch + 0.0001 < expected.branch) {
+      failures.push(
+        `${component} branch coverage ${branch.toFixed(1)}% is below baseline ${expected.branch.toFixed(1)}%.`,
+      );
+    }
+  }
+}
+
+async function findUninstrumentedComponentFiles(
+  component: string,
+  changedComponentLines: readonly string[],
+  lines: ReadonlyMap<string, LineReading> | undefined,
+  portableOnly: boolean,
+): Promise<string[]> {
+  const instrumented = new Set(
+    [...(lines?.keys() ?? [])].map((key) => key.slice(0, key.lastIndexOf(":"))),
+  );
+  const candidates = [
+    ...new Set(
+      changedComponentLines.map((key) => key.slice(0, key.lastIndexOf(":"))),
+    ),
+  ].filter((file) => !instrumented.has(file));
+  const missing: string[] = [];
+  for (const file of candidates) {
+    if (!(await isPermittedZeroLineFile(component, file, portableOnly))) {
+      missing.push(file);
+    }
+  }
+  return missing.toSorted((a, b) => a.localeCompare(b));
+}
+
+async function verifyChangedLines(
+  minimums: Readonly<Record<string, number>>,
+  componentLines: ReadonlyMap<string, Map<string, LineReading>>,
+  changed: ReadonlySet<string>,
+  options: { readonly portableOnly: boolean; readonly failures: string[] },
+): Promise<void> {
+  for (const [component, minimum] of Object.entries(minimums)) {
+    if (component === "TaskNotes.Windows.AppAdapters" && options.portableOnly) {
+      continue;
+    }
+    const lines = componentLines.get(component);
+    const changedComp = [...changed].filter(
+      (k) => componentForSource(k.slice(0, k.lastIndexOf(":"))) === component,
+    );
+    if (changedComp.length === 0) {
+      continue;
+    }
+    const uninstrumented = await findUninstrumentedComponentFiles(
+      component,
+      changedComp,
+      lines,
+      options.portableOnly,
+    );
+    if (uninstrumented.length > 0) {
+      options.failures.push(
+        `${component} has changed source that the coverage run never instrumented: ${uninstrumented.join(", ")}.`,
+      );
+      continue;
+    }
+    const covered =
+      lines === undefined
+        ? []
+        : [...lines.entries()].filter(([k]) => changed.has(k));
+    if (covered.length === 0) {
+      continue;
+    }
+    const cov = percent(
+      covered.filter(([, r]) => r.hits > 0).length,
+      covered.length,
+    );
+    await Bun.write(
+      Bun.stdout,
+      `${component}: ${cov.toFixed(1)}% changed executable lines (${String(covered.length)} lines)\n`,
+    );
+    if (cov + 0.0001 < minimum) {
+      options.failures.push(
+        `${component} changed-line coverage ${cov.toFixed(1)}% is below ${minimum.toFixed(1)}%.`,
+      );
+    }
+  }
+}
+
+async function main(): Promise<void> {
+  const portableOnly = Bun.argv.includes("--portable");
+  const ciReports = Bun.argv.includes("--ci");
+  if (ciReports && !portableOnly) {
+    throw new Error("CI coverage reports only cover portable suites.");
+  }
+  const suites = portableOnly
+    ? ["unit", "integration"]
+    : ["unit", "integration", "winui"];
+  const files = suites.map((s) =>
+    ciReports
+      ? path.join(
+          repositoryRoot,
+          ".ci-reports/coverage/raw/tasknotes-windows",
+          s,
+          "coverage.cobertura.xml",
+        )
+      : path.join(
+          packageRoot,
+          "artifacts/test-results",
+          s,
+          "coverage.cobertura.xml",
+        ),
+  );
+  const componentLines = await collectComponentLines(files, portableOnly);
+  const failures: string[] = [];
+  const baseline = BaselineSchema.parse(await Bun.file(baselinePath).json());
+  const baseRef = Bun.env["TASKNOTES_COVERAGE_BASE"] ?? "origin/main";
+  runGit(
+    ["rev-parse", "--verify", `${baseRef}^{commit}`],
+    `Could not resolve coverage baseline reference ${baseRef}`,
+  );
+  const baselineRel = "packages/tasknotes-windows/coverage-baseline.json";
+  if (
+    Bun.spawnSync(["git", "cat-file", "-e", `${baseRef}:${baselineRel}`], {
+      cwd: repositoryRoot,
+      stdout: "ignore",
+      stderr: "ignore",
+    }).exitCode === 0
+  ) {
+    const prev = BaselineSchema.parse(
+      JSON.parse(
+        runGit(
+          ["show", `${baseRef}:${baselineRel}`],
+          "Could not read the prior coverage baseline",
+        ),
+      ),
+    );
+    requireNondecreasingBaselines(prev, baseline, failures);
+  }
+  await verifyComponentBaselines(
+    portableOnly ? baseline.portableComponents : baseline.components,
+    componentLines,
+    failures,
+  );
+  await verifyChangedLines(
+    baseline.changedLineMinimums,
+    componentLines,
+    await collectChangedSet(baseRef),
+    { portableOnly, failures },
+  );
+  if (failures.length > 0) {
+    throw new Error(
+      `Windows coverage ratchet failed:\n\n${failures.map((f) => `- ${f}`).join("\n")}`,
+    );
+  }
+}
+
+if (import.meta.main) {
+  await main();
 }

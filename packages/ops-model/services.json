@@ -595,8 +595,7 @@
         "pyroscope",
         "alloy",
         "alloy-gateway",
-        "promtail",
-        "phoenix"
+        "promtail"
       ],
       "argoApps": [
         "prometheus",
@@ -609,8 +608,7 @@
         "pyroscope",
         "alloy",
         "alloy-gateway",
-        "promtail",
-        "phoenix"
+        "promtail"
       ],
       "charts": [
         "prometheus-companion",

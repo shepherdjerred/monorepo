@@ -1412,13 +1412,15 @@ existed carry no `livenessChecks` and render their original report.
 
 ### Reddit request outreach
 
-`the-storm-reddit-outreach` runs `runStormRedditOutreach` every 15 minutes in
+`the-storm-reddit-outreach` runs `runStormRedditOutreach` every five minutes in
 `prod`, on the existing workflow and promotion worker queues. Overlapping runs
 and missed schedule ticks are skipped. It uses the signed-in
 `storm-promotion-reddit` PinchTab profile to scan MinecraftServer,
 MinecraftServerFinder, MinecraftSMPs and MinecraftServers in turn. The first
 sweep starts with the last 15 minutes of posts. Later sweeps resume from
-per-community checkpoints and catch up within 24 hours.
+per-community checkpoints and catch up within 24 hours. New windows revisit
+at least the past 30 minutes to catch late-visible posts and skip IDs with a
+durable disposition.
 
 The listing ceiling is 1,500 distinct posts per sweep. The default browser
 budget is 12 listing pages, 20 first-time thread reads, and 60 page opens across

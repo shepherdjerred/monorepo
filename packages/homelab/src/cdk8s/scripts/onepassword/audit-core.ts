@@ -150,11 +150,11 @@ export function sourceAuditReferences(
   source: string,
 ): AuditReference[] {
   const references: AuditReference[] = [];
-  const pattern = /(["'`])(op:\/\/[^\n"'`]+)\1|op:\/\/[^\s"'`)}]+/gu;
+  const pattern =
+    /(?:^|[\r\n])[ \t]*(?:export[ \t]+)?[A-Za-z_]\w*=(op:\/\/[^\r\n"'`#]+)(?:#[^\r\n]*)?(?=\r?\n|$)|(["'`])(op:\/\/[^\n"'`]+)\2|op:\/\/[^\s"'`)}]+/gu;
   for (const match of text.matchAll(pattern)) {
-    const parsed = /^op:\/\/([^/]+)\/([^/]+)\/([^?]+)(?:\?.*)?$/u.exec(
-      match[2] ?? match[0],
-    );
+    const raw = (match[1] ?? match[3] ?? match[0]).trimEnd();
+    const parsed = /^op:\/\/([^/]+)\/([^/]+)\/([^?]+)(?:\?.*)?$/u.exec(raw);
     if (
       parsed?.[1] === undefined ||
       parsed[2] === undefined ||

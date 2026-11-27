@@ -4,6 +4,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rename,
   rm,
   stat,
   writeFile,
@@ -220,12 +221,56 @@ async function abandoned(
   }
 }
 
+const CONTENTION_CODES: ReadonlySet<unknown> = new Set([
+  "EEXIST",
+  "ENOTEMPTY",
+  "ENOENT",
+  "EPERM",
+  "EACCES",
+]);
+
+async function tryClaimDirectory(
+  root: string,
+  directory: string,
+  mine: string,
+): Promise<boolean> {
+  const staging = `${directory}.claim-${randomUUID()}`;
+  try {
+    await mkdir(root, { recursive: true, mode: 0o700 });
+    await mkdir(staging, { mode: 0o700 });
+    await writeFile(path.join(staging, OWNER_FILE), mine, { mode: 0o600 });
+    await rename(staging, directory);
+    return true;
+  } catch (error) {
+    await rm(staging, { recursive: true, force: true });
+    if (!CONTENTION_CODES.has(errorCode(error))) {
+      throw error;
+    }
+    return false;
+  }
+}
+
+async function retireDirectory(directory: string): Promise<void> {
+  const retired = `${directory}.retire-${randomUUID()}`;
+  try {
+    await rename(directory, retired);
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") {
+      return;
+    }
+    await rm(directory, { recursive: true, force: true });
+    return;
+  }
+  await rm(retired, { recursive: true, force: true });
+}
+
 /**
- * A lock held as a directory per reference (`mkdir` is atomic) with an owner
- * record of `pid:token`. A waiter takes over only from a dead owner, or from
- * an unclaimed directory older than `staleMs`, and a holder releases only its
- * own lock. A waiter that runs out of `maxWaitMs` proceeds without the lock:
- * the lock saves budget, it does not guard correctness.
+ * A lock held as a directory per reference (atomically staged and renamed in
+ * place) with an owner record of `pid:token`. A waiter takes over only from a
+ * dead owner, or from an unclaimed directory older than `staleMs`, and a
+ * holder releases only its own lock. A waiter that runs out of `maxWaitMs`
+ * proceeds without the lock: the lock saves budget, it does not guard
+ * correctness.
  */
 export function directoryLock(options: {
   readonly root: string;
@@ -246,20 +291,14 @@ export function directoryLock(options: {
     const deadline = Date.now() + maxWaitMs;
     let held = false;
     while (!held && Date.now() < deadline) {
-      try {
-        await mkdir(directory);
-        await writeFile(path.join(directory, OWNER_FILE), mine, {
-          mode: 0o600,
-        });
-        held = true;
-      } catch (error) {
-        if (errorCode(error) !== "EEXIST") throw error;
+      held = await tryClaimDirectory(options.root, directory, mine);
+      if (!held) {
         const owner = await lockOwner(directory);
         const takeOver =
           (await abandoned(directory, owner, staleMs)) &&
           (await lockOwner(directory)) === owner;
         if (takeOver) {
-          await rm(directory, { recursive: true, force: true });
+          await retireDirectory(directory);
         } else {
           await Bun.sleep(pollMs);
         }
@@ -269,7 +308,7 @@ export function directoryLock(options: {
       return await body();
     } finally {
       if (held && (await lockOwner(directory)) === mine) {
-        await rm(directory, { recursive: true, force: true });
+        await retireDirectory(directory);
       }
     }
   };

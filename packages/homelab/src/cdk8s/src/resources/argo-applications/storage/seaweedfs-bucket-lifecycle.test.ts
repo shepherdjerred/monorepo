@@ -13,6 +13,7 @@ const SEAWEEDFS_TOFU_STACK = path.join(
 
 const LifecycleResourceSchema = z.looseObject({
   input: z.record(z.string(), z.unknown()),
+  triggers_replace: z.record(z.string(), z.unknown()),
   provisioner: z
     .array(
       z.strictObject({
@@ -56,12 +57,13 @@ function lifecycleConfiguration(command: string) {
 }
 
 describe("SeaweedFS ci-handoff bucket", () => {
-  test("expires every object after 7 days", async () => {
+  test("expires every object after 7 days and replaces when lifecycle inputs change", async () => {
     const resource = await lifecycleResource("ci_handoff_lifecycle");
 
     expect(resource.input["bucket"]).toBe("${aws_s3_bucket.ci_handoff.id}");
     // Handoffs are build-scoped; 7 days leaves room to inspect a failed run.
     expect(resource.input["expire_days"]).toBe(7);
+    expect(resource.triggers_replace).toEqual(resource.input);
     expect(
       lifecycleConfiguration(
         resource.provisioner[0]?.["local-exec"].command ?? "",
@@ -74,5 +76,10 @@ describe("SeaweedFS ci-handoff bucket", () => {
         Expiration: { Days: "expire_days" },
       },
     ]);
+  });
+
+  test("triggers replacement on static-site asset lifecycle prefix or TTL changes", async () => {
+    const resource = await lifecycleResource("static_site_asset_lifecycle");
+    expect(resource.triggers_replace).toEqual(resource.input);
   });
 });

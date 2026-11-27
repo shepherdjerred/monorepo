@@ -9,7 +9,7 @@ import {
 import { Password } from "#generated/providers/random/password/index.ts";
 import { RandomProvider } from "#generated/providers/random/provider/index.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 
 const ADOPTING = "each.value.revision == 0";
 
@@ -24,7 +24,9 @@ export class ApplicationSecretsStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "application-secrets", {
       requiredVersion: ">= 1.12.0",
-      providerConstraints: { random: "3.9.1" },
+      providerConstraints: {
+        random: pinnedProviderVersion("registry.opentofu.org/hashicorp/random"),
+      },
     });
 
     encryptStateAndPlans(this, {

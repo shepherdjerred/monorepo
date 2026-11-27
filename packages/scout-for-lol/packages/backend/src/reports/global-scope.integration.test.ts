@@ -342,7 +342,7 @@ async function globalPrematchCount(where: string) {
 }
 
 describe("global scope and non-player rows", () => {
-  test("aggregates leave out bot and unresolved rows; guild scope never sees them", async () => {
+  test("aggregates leave out bot rows and keep unresolved players; guild scope sees neither", async () => {
     const matchId = RiotMatchIdSchema.parse("NA1_1");
     await writeTestLake(lakeDir, {
       serverId,
@@ -365,8 +365,9 @@ describe("global scope and non-player rows", () => {
         nonPlayer(matchId, "unresolved", 8),
       ],
     });
-    // Five Jinx rows are in the lake; two are players.
-    expect(await jinxCount(GLOBAL_SCOPE)).toEqual([2]);
+    // Five Jinx rows are in the lake: two bots, one unresolved player, and
+    // two identified players, one of them tracked.
+    expect(await jinxCount(GLOBAL_SCOPE)).toEqual([3]);
     expect(await jinxCount(guildScope(serverId))).toEqual([1]);
   });
 

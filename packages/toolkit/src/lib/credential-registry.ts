@@ -25,6 +25,7 @@ const SEAWEEDFS_S3_ITEM_ID = "vet52jaeh75chsalu6lulugium";
 const BACKBLAZE_VELERO_ITEM_ID = "i3upt4mhwczcau7ojyxfpw2s6e";
 const BACKBLAZE_POSTGRES_WAL_ITEM_ID = "ydap5smx2eirpq73oklmhkzxfm";
 const BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID = "q3t3h5dkrqwtbllgybca7pjvke";
+const CLOUDFLARE_R2_ARCHIVES_ITEM_ID = "du6dxzjfiml7f7qnj2peyff3ba";
 const BUGSINK_ITEM = "jeuqmwh3r4nwu2ivo4pa3gr7om";
 const WOODPECKER_ITEM = "covttsojandjk7fx62a3dbk7em";
 const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
@@ -296,6 +297,22 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "op",
       ref: `${HOMELAB_VAULT_REF}/${BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID}/B2_SECRET_ACCESS_KEY`,
+    },
+  },
+  CLOUDFLARE_R2_ACCESS_KEY_ID: {
+    description:
+      "Cloudflare R2 personal-archives access key ID (aws profiles r2-archives, r2)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${CLOUDFLARE_R2_ARCHIVES_ITEM_ID}/CLOUDFLARE_R2_ACCESS_KEY_ID`,
+    },
+  },
+  CLOUDFLARE_R2_SECRET_ACCESS_KEY: {
+    description:
+      "Cloudflare R2 personal-archives secret access key (aws profiles r2-archives, r2)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${CLOUDFLARE_R2_ARCHIVES_ITEM_ID}/CLOUDFLARE_R2_SECRET_ACCESS_KEY`,
     },
   },
   ...BRIM_SYNC_CREDENTIALS,

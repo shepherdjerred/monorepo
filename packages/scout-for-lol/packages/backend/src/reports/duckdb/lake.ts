@@ -366,6 +366,8 @@ const PARTICIPANT_DIMENSION_LAKE_COLUMNS = {
   win: MATCH_LAKE_COLUMNS.win,
   riot_id_game_name: MATCH_LAKE_COLUMNS.riot_id_game_name,
   riot_id_tagline: MATCH_LAKE_COLUMNS.riot_id_tagline,
+  // Global scope leaves a bot's frames and actions out by it.
+  participant_kind: MATCH_LAKE_COLUMNS.participant_kind,
 } as const;
 
 export function buildParticipantDimensionSource(

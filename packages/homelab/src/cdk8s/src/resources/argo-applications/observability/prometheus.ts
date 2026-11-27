@@ -206,6 +206,13 @@ export async function createPrometheusApp(chart: Chart) {
       resources: {
         requests: { cpu: "100m", memory: "128Mi" },
       },
+      admissionWebhooks: {
+        patch: {
+          resources: {
+            requests: { cpu: "10m", memory: "64Mi" },
+          },
+        },
+      },
       prometheusConfigReloader: {
         resources: {
           requests: { cpu: "10m", memory: "64Mi" },

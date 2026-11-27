@@ -156,6 +156,13 @@ export function CiServiceView({
           title="Turborepo cache throughput"
           syncKey="svc-ci"
         />
+        <SeriesChart
+          preset="pr-code-review-outcomes"
+          range={range}
+          mode="bar"
+          title="PR code review gate outcomes"
+          syncKey="svc-ci"
+        />
       </div>
       {github === null ? null : (
         <div className="eng-flow-panel">

@@ -1,5 +1,18 @@
-import { costForTextUsage } from "@shepherdjerred/llm-models";
-import type { UsageEventEntry } from "./types.ts";
+import type { Database } from "bun:sqlite";
+import {
+  MODELS,
+  costForTextUsage,
+  type Catalog,
+  type TextPricing,
+} from "@shepherdjerred/llm-models";
+import { z } from "zod";
+import {
+  UsageStoredColumnsSchema,
+  parseHistorySourceName,
+  usageTokenCountsFromRow,
+  type HistorySourceName,
+  type UsageEventEntry,
+} from "./types.ts";
 
 export type UsageCounts = {
   readonly inputTokens: number;
@@ -25,6 +38,7 @@ export const ZERO_USAGE: UsageCounts = {
 export type UsageCost = {
   readonly costUsd: number | null;
   readonly costComplete: boolean;
+  readonly costReported?: boolean;
 };
 
 function hasBillableTokens(usage: UsageCounts): boolean {
@@ -34,6 +48,55 @@ function hasBillableTokens(usage: UsageCounts): boolean {
     usage.cacheReadTokens > 0 ||
     usage.cacheCreationTokens > 0
   );
+}
+
+function customTextPricingCost(
+  pricing: TextPricing,
+  usage: UsageCounts,
+): number {
+  const uncachedInput = Math.max(
+    0,
+    usage.inputTokens - usage.cachedInputTokens,
+  );
+  const billedInput =
+    usage.inputTokens + usage.cacheReadTokens + usage.cacheCreationTokens;
+  const surcharge = pricing.longContextSurcharge;
+  const over =
+    surcharge !== undefined && billedInput > surcharge.thresholdInputTokens;
+  const inputMult = over ? surcharge.inputMultiplier : 1;
+  const outputMult = over ? surcharge.outputMultiplier : 1;
+  const cacheReadRate =
+    pricing.cacheRead ?? pricing.cachedInput ?? pricing.input;
+  const cacheWriteRate = pricing.cacheWrite ?? pricing.input;
+  const cachedInputRate = pricing.cachedInput ?? pricing.input;
+  const tokenCost =
+    (uncachedInput * pricing.input +
+      usage.cachedInputTokens * cachedInputRate +
+      usage.cacheReadTokens * cacheReadRate +
+      usage.cacheCreationTokens * cacheWriteRate) *
+      inputMult +
+    usage.outputTokens * pricing.output * outputMult;
+  return tokenCost / 1_000_000;
+}
+
+function candidateCatalogCost(
+  candidate: string,
+  usage: UsageCounts,
+  models: Catalog,
+): number | undefined {
+  if (models === MODELS) {
+    return costForTextUsage(candidate, {
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      cacheReadTokens: usage.cacheReadTokens,
+      cacheWriteTokens: usage.cacheCreationTokens,
+      cachedInputTokens: usage.cachedInputTokens,
+    });
+  }
+  const pricing = models[candidate]?.pricing;
+  return pricing?.modality === "text"
+    ? customTextPricingCost(pricing, usage)
+    : undefined;
 }
 
 /**
@@ -50,15 +113,10 @@ function hasBillableTokens(usage: UsageCounts): boolean {
 export function catalogCost(
   candidates: readonly string[],
   usage: UsageCounts,
+  models: Catalog = MODELS,
 ): UsageCost {
   for (const candidate of candidates) {
-    const cost = costForTextUsage(candidate, {
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-      cacheReadTokens: usage.cacheReadTokens,
-      cacheWriteTokens: usage.cacheCreationTokens,
-      cachedInputTokens: usage.cachedInputTokens,
-    });
+    const cost = candidateCatalogCost(candidate, usage, models);
     if (cost !== undefined) {
       return { costUsd: cost, costComplete: true };
     }
@@ -66,9 +124,172 @@ export function catalogCost(
   return { costUsd: null, costComplete: !hasBillableTokens(usage) };
 }
 
+/** Stable SHA-256 fingerprint of all model pricing entries in the catalog. */
+export function pricingCatalogFingerprint(models: Catalog = MODELS): string {
+  const entries = Object.keys(models)
+    .toSorted()
+    .map((id) => [id, models[id]?.pricing ?? null] as const);
+  return new Bun.CryptoHasher("sha256")
+    .update(JSON.stringify(entries))
+    .digest("hex");
+}
+
+/**
+ * Model ids to try against the shared catalog for Grok: as reported, without
+ * a provider prefix, and without the `-build` agent suffix.
+ */
+export function grokModelCandidates(model: string): readonly string[] {
+  const unprefixed = model.replace(/^(?:x-ai|xai)\//u, "");
+  const base = unprefixed.replace(/-build$/u, "");
+  return [...new Set([model, unprefixed, base])];
+}
+
+/**
+ * Candidate catalog ids for a logged Kimi model (`kimi-code/<id>` -> `kimi-<id>`).
+ */
+export function resolveKimiModelCandidates(model: string): readonly string[] {
+  const bare = model.replace(/^kimi-code\//u, "");
+  const api = bare.startsWith("kimi-") ? bare : `kimi-${bare}`;
+  return [...new Set([model, api])];
+}
+
+function storedModelCandidates(
+  source: HistorySourceName,
+  model: string,
+): readonly string[] {
+  switch (source) {
+    case "grok":
+    case "grok-mirror": {
+      return grokModelCandidates(model);
+    }
+    case "kimi":
+    case "kimi-mirror": {
+      return resolveKimiModelCandidates(model);
+    }
+    case "antigravity":
+    case "antigravity-mirror": {
+      return model.startsWith("gemini-")
+        ? [
+            model,
+            `google/${model}`,
+            `gemini/${model}`,
+            `vertex_ai/${model}`,
+            `openrouter/google/${model}`,
+          ]
+        : [model];
+    }
+    case "claude":
+    case "claude-mirror":
+    case "codex":
+    case "codex-mirror":
+    case "conductor":
+    case "cursor":
+    case "muse":
+    case "muse-mirror": {
+      return [model];
+    }
+  }
+}
+
+/** Recomputes catalog cost from a stored `usage_events` row without re-scanning transcripts. */
+export function repriceStoredUsageEvent(
+  source: HistorySourceName,
+  model: string,
+  counts: UsageCounts,
+  models: Catalog = MODELS,
+): UsageCost {
+  const effectiveCounts =
+    source === "grok" || source === "grok-mirror"
+      ? {
+          ...counts,
+          cacheReadTokens: 0,
+          cachedInputTokens: counts.cacheReadTokens,
+        }
+      : counts;
+  return catalogCost(
+    storedModelCandidates(source, model),
+    effectiveCounts,
+    models,
+  );
+}
+
+const PRICING_FINGERPRINT_KEY = "pricing_fingerprint";
+
+const StoredUsageRowSchema = UsageStoredColumnsSchema.extend({
+  rowid: z.number(),
+  source: z.string(),
+  cost_reported: z.number(),
+});
+
+function repriceUsageRows(database: Database, models: Catalog): void {
+  const rows = database
+    .prepare(
+      `SELECT rowid, source, model, input_tokens, output_tokens,
+              cache_read_tokens, cache_creation_tokens, cached_input_tokens,
+              reasoning_tokens, cost_usd, cost_complete, cost_reported
+         FROM usage_events`,
+    )
+    .all()
+    .map((row: unknown) => StoredUsageRowSchema.parse(row));
+  const update = database.prepare(
+    "UPDATE usage_events SET cost_usd = ?, cost_complete = ? WHERE rowid = ?",
+  );
+  for (const row of rows) {
+    // Preserve rows already settled from exact provider-reported billing (e.g. Grok `costUsdTicks`).
+    if (row.cost_reported === 1) {
+      continue;
+    }
+    const source = parseHistorySourceName(row.source, "in usage_events");
+    const next = repriceStoredUsageEvent(
+      source,
+      row.model,
+      usageTokenCountsFromRow(row),
+      models,
+    );
+    const nextComplete = next.costComplete ? 1 : 0;
+    if (row.cost_usd !== next.costUsd || row.cost_complete !== nextComplete) {
+      update.run(next.costUsd, nextComplete, row.rowid);
+    }
+  }
+}
+
+/**
+ * Ensures `index_meta.pricing_fingerprint` matches `models`, repricing stored
+ * `usage_events` rows in-place when the catalog pricing changed (or `forceReprice` is true).
+ */
+export function reconcileUsagePricing(
+  database: Database,
+  models: Catalog = MODELS,
+  forceReprice = false,
+): boolean {
+  database.run(
+    "CREATE TABLE IF NOT EXISTS index_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+  );
+  const fingerprint = pricingCatalogFingerprint(models);
+  const stored = database
+    .prepare("SELECT value FROM index_meta WHERE key = ?")
+    .get(PRICING_FINGERPRINT_KEY);
+  const previous =
+    stored == null ? null : z.object({ value: z.string() }).parse(stored).value;
+  if (!forceReprice && previous === fingerprint) {
+    return false;
+  }
+  repriceUsageRows(database, models);
+  database
+    .prepare(
+      "INSERT INTO index_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    )
+    .run(PRICING_FINGERPRINT_KEY, fingerprint);
+  return true;
+}
+
 /** Cost a source already computed and reported itself (e.g. Grok's costUsdTicks). */
 export function reportedCost(costUsd: number | null): UsageCost {
-  return { costUsd, costComplete: costUsd !== null };
+  return {
+    costUsd,
+    costComplete: costUsd !== null,
+    ...(costUsd === null ? {} : { costReported: true }),
+  };
 }
 
 export type UsageFieldLocation = {
@@ -202,5 +423,6 @@ export function usageEventEntry(
     reasoningTokens: usage.reasoningTokens,
     costUsd: cost.costUsd,
     costComplete: cost.costComplete,
+    ...(cost.costReported === true ? { costReported: true } : {}),
   };
 }

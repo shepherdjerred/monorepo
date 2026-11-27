@@ -443,6 +443,7 @@ test("fresh SLO samples deduplicate heads and exclude reruns and quota-only gate
     count: 1,
     missing: 0,
     p50Seconds: 300,
+    p90Seconds: 300,
     p95Seconds: 300,
   });
   expect(report.cohorts).toHaveLength(3);
@@ -486,6 +487,7 @@ test("mixed gates contribute fresh heads without losing cohort or deduplication"
     count: 2,
     missing: 0,
     p50Seconds: 320,
+    p90Seconds: 350,
     p95Seconds: 350,
   });
   expect(report.cohorts).toHaveLength(5);

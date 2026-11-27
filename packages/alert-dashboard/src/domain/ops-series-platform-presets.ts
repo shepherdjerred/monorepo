@@ -68,6 +68,18 @@ export const PLATFORM_SERIES_PRESETS = {
     "sum by (reason) (rate(feature_flag_evaluations_total[{window}]))",
     { legendLabel: "reason", name: "eval/s" },
   ),
+  "pr-code-review-assignments": single(
+    "PR code review assignments by provider",
+    "count",
+    "sum by (provider) (increase(pr_code_review_assignments_total[{window}]))",
+    { legendLabel: "provider", name: "assignments" },
+  ),
+  "pr-code-review-outcomes": single(
+    "PR code review gate outcomes",
+    "count",
+    "sum by (reason) (increase(pr_code_review_outcomes_total[{window}]))",
+    { legendLabel: "reason", name: "outcomes" },
+  ),
   "cloudflare-r2-bytes": single(
     "Cloudflare R2 storage by bucket",
     "bytes",

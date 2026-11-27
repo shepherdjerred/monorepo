@@ -12,7 +12,6 @@ export const TOOL_HOSTS = {
   grafana: "https://grafana.tailnet-1a49.ts.net",
   temporal: "https://temporal-ui.tailnet-1a49.ts.net",
   bugsink: "https://bugsink.sjer.red",
-  phoenix: "https://phoenix.tailnet-1a49.ts.net",
   posthog: "https://us.posthog.com",
   prometheus: "https://prometheus.tailnet-1a49.ts.net",
   alertmanager: "https://alertmanager.tailnet-1a49.ts.net",
@@ -94,7 +93,6 @@ export const CONSOLE_LINKS: readonly ConsoleLink[] = [
   },
   { id: "github", label: "GitHub", url: TOOL_HOSTS.github, group: "Tools" },
   { id: "bugsink", label: "Bugsink", url: TOOL_HOSTS.bugsink, group: "Tools" },
-  { id: "phoenix", label: "Phoenix", url: TOOL_HOSTS.phoenix, group: "Tools" },
   {
     id: "posthog",
     label: "PostHog",

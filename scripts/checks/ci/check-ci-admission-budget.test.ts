@@ -240,7 +240,7 @@ describe("pooled CI admission budget", () => {
 
   test("checks the overlap rather than only the new workflow cap", () => {
     const largeServices = step({
-      services: [{ name: "db", resources: { ...SMALL, memoryRequest: "4Gi" } }],
+      services: [{ name: "db", resources: { ...SMALL, memoryRequest: "3Gi" } }],
     });
     expect(
       pooledAdmissionBudgetViolations([largeServices], {

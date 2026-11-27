@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   clusterFacetShape,
+  monorepoCodeReviewProviderShape,
+  monorepoCodeReviewShape,
   monorepoFacetShape,
   observabilityFacetShape,
   temporalFacetShape,
@@ -235,6 +237,28 @@ export const MonorepoAuditStatusSchema = z.enum([
   "unknown",
 ]);
 export type MonorepoAuditStatus = z.infer<typeof MonorepoAuditStatusSchema>;
+export const CodeReviewProviderTierSchema = z.enum(["free", "paid"]);
+export type CodeReviewProviderTier = z.infer<
+  typeof CodeReviewProviderTierSchema
+>;
+export const CodeReviewProviderPoolStatusSchema = z.enum([
+  "ready",
+  "cooldown",
+  "standby",
+  "disabled",
+  "unknown",
+]);
+export type CodeReviewProviderPoolStatus = z.infer<
+  typeof CodeReviewProviderPoolStatusSchema
+>;
+export const MonorepoCodeReviewProviderSchema = z.object(
+  monorepoCodeReviewProviderShape,
+);
+export type MonorepoCodeReviewProvider = z.infer<
+  typeof MonorepoCodeReviewProviderSchema
+>;
+export const MonorepoCodeReviewSchema = z.object(monorepoCodeReviewShape);
+export type MonorepoCodeReview = z.infer<typeof MonorepoCodeReviewSchema>;
 export const MonorepoFacetSchema = z.object(monorepoFacetShape);
 export type MonorepoFacet = z.infer<typeof MonorepoFacetSchema>;
 export type MonorepoPackage = MonorepoFacet["packages"][number];

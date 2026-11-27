@@ -5,7 +5,7 @@ import { DataDockerAccessTokens } from "#generated/providers/docker/data-docker-
 import { DataDockerLogin } from "#generated/providers/docker/data-docker-login/index.ts";
 import { DockerProvider } from "#generated/providers/docker/provider/index.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 
 const TOKENS = {
   management: { scopes: ["repo:read", "repo:write", "repo:admin"] },
@@ -22,7 +22,9 @@ export class DockerhubTokensStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "dockerhub-tokens", {
       requiredVersion: ">= 1.11.0",
-      providerConstraints: { docker: "0.8.0" },
+      providerConstraints: {
+        docker: pinnedProviderVersion("registry.opentofu.org/docker/docker"),
+      },
     });
 
     encryptStateAndPlans(this, {

@@ -176,7 +176,6 @@ describe("applyApplicationReleasePolicy", () => {
       ["scout-prod", "4"],
       ["grafana-db", "4"],
       ["bugsink", "4"],
-      ["phoenix", "4"],
       ["worker", "4"],
     ]);
     const applications = [...expectedWaves.keys()].map((name) =>

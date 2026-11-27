@@ -116,20 +116,18 @@ export type FactsCteInput = {
  * left out unless the query names the column that tells them apart. Tracked
  * scopes need no filter, because the accounts join drops every NULL puuid.
  *
- * `participant_kind` cannot be read until the migration's read gate lifts
- * (MATCH_MIGRATION_GATED_COLUMNS), so for now a non-player is recognized by
- * its NULL puuid, which also leaves out unresolved players. The follow-up
- * that lifts the gate narrows the match and frame predicates to bots.
+ * A bot is named by `participant_kind`, so an unresolved player stays.
  */
 function globalPlayerFilter(source: PlanColumnSource): string | null {
   return (
     match(source)
-      .with("match", "timeline-frame", () => "m.puuid IS NOT NULL")
+      .with("match", () => "m.participant_kind <> 'bot'")
+      .with("timeline-frame", () => "p.participant_kind <> 'bot'")
       .with("prematch", () => "NOT m.bot")
       // An event without an acting participant (a tower's, a minion's) stays.
       .with(
         "timeline-event",
-        () => "(p.participant_id IS NULL OR p.puuid IS NOT NULL)",
+        () => "(p.participant_id IS NULL OR p.participant_kind <> 'bot')",
       )
       .with("match-team", "match-team-ban", () => null)
       .exhaustive()
@@ -231,7 +229,7 @@ function participantDimensionCte(dimension: SqlFragment): SqlFragment {
   return seq(
     `part_dim AS (SELECT match_id, ${participantKey("d")} AS participant_key, any_value(puuid) AS puuid, any_value(game_creation_at) AS game_creation_at, any_value(queue) AS queue, any_value(`,
     frag(String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`),
-    ") AS patch, any_value(map_id) AS map_id, any_value(participant_id) AS participant_id, any_value(team_id) AS team_id, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(win) AS win, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id FROM (",
+    ") AS patch, any_value(map_id) AS map_id, any_value(participant_id) AS participant_id, any_value(team_id) AS team_id, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(win) AS win, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id, any_value(participant_kind) AS participant_kind FROM (",
     dimension,
     ") d GROUP BY match_id, participant_key)",
   );
@@ -323,7 +321,7 @@ type Lookups = {
  */
 function actorDimensionCte(dimension: SqlFragment): SqlFragment {
   return seq(
-    "actor_dim AS (SELECT match_id, participant_id, any_value(puuid) AS puuid, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id FROM (",
+    "actor_dim AS (SELECT match_id, participant_id, any_value(puuid) AS puuid, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id, any_value(participant_kind) AS participant_kind FROM (",
     dimension,
     ") GROUP BY match_id, participant_id)",
   );

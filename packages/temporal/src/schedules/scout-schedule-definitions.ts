@@ -24,10 +24,14 @@ const INITIAL_PAUSE_NOTE =
 const CRAWL_PAUSE_NOTE =
   "Paused until the Scout beta worker bundle exports scoutParticipantCrawlWorkflow and the crawl is enabled";
 
-// The crawl's pause is retired on beta only: its worker bundle is live and the
-// crawl flag is on. Production keeps it paused.
+const CRAWL_FRONTIER_PRUNE_PAUSE_NOTE =
+  "Paused until the Scout worker bundle exports scoutCrawlFrontierPruneWorkflow and the crawl is enabled";
+
+// The crawl's pauses are retired on beta only: its worker bundle is live and
+// the crawl flag is on. Production keeps them until its crawl is enabled.
 const BETA_RETIRED_PAUSE_NOTES = [
   CRAWL_PAUSE_NOTE,
+  CRAWL_FRONTIER_PRUNE_PAUSE_NOTE,
   INITIAL_PAUSE_NOTE,
   "Paused until the matching Scout Temporal feature family is enabled",
 ];
@@ -153,6 +157,17 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage, trigger: "schedule" }],
       every: "1 minute",
       catchupWindow: CATCHUP_LIVE,
+    }),
+    intervalSchedule(stage, {
+      // Bounds the crawl's work queue (`CrawlFrontier`). It ships paused for
+      // the same reason as the crawl: the schedule deploys with the central
+      // worker, independently of the Scout images that export the Workflow.
+      pauseNote: CRAWL_FRONTIER_PRUNE_PAUSE_NOTE,
+      name: "crawl-frontier-prune",
+      workflowType: SCOUT_WORKFLOW_NAMES.crawlFrontierPrune,
+      args: [{ stage, trigger: "schedule" }],
+      every: "15 minutes",
+      catchupWindow: CATCHUP_RELAXED,
     }),
     intervalSchedule(stage, {
       name: "ingestion-reconciliation",

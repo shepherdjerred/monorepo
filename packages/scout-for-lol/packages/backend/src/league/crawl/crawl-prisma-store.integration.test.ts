@@ -27,6 +27,12 @@ function player(letter: string, depth = 0) {
   };
 }
 
+/** A frontier row as the table stores it: the player without the match that surfaced them. */
+function storedRow(letter: string, depth = 0) {
+  const { seedMatchId: _surfacedBy, ...stored } = player(letter, depth);
+  return stored;
+}
+
 async function expectRejected(promise: Promise<unknown>, constraint: string) {
   await expect(promise).rejects.toThrow(constraint);
 }
@@ -35,7 +41,7 @@ describe("crawl schema constraints", () => {
   test("cap frontier depth at 2", async () => {
     await expectRejected(
       prisma.crawlFrontier.create({
-        data: { ...player("d", 3), puuid: puuid("d"), nextEligibleAt: NOW },
+        data: { ...storedRow("d", 3), nextEligibleAt: NOW },
       }),
       "CrawlFrontier_depth_check",
     );
@@ -45,7 +51,7 @@ describe("crawl schema constraints", () => {
     await expectRejected(
       prisma.crawlFrontier.create({
         data: {
-          ...player("c"),
+          ...storedRow("c"),
           lastVisitedAt: NOW,
           nextEligibleAt: new Date(NOW.getTime() + 6 * 86_400_000),
         },
@@ -54,7 +60,7 @@ describe("crawl schema constraints", () => {
     );
     await prisma.crawlFrontier.create({
       data: {
-        ...player("e"),
+        ...storedRow("e"),
         lastVisitedAt: NOW,
         nextEligibleAt: crawlCooldownEnd(NOW),
       },
@@ -159,7 +165,7 @@ describe("PostgreSQL crawl store", () => {
     expect(visited).toMatchObject({
       rankTier: "GOLD",
       rankDivision: "II",
-      visitCount: 1,
+      lastVisitedAt: NOW,
     });
     const child = await prisma.crawlFrontier.findUniqueOrThrow({
       where: { puuid: puuid("w") },
