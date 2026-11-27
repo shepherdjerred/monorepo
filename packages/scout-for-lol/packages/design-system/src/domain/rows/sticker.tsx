@@ -1,3 +1,4 @@
+import type { MouseEventHandler } from "react";
 import { cn } from "#src/lib/cn.ts";
 import { ChampionFace } from "#src/domain/profile/champion-face.tsx";
 import { PersonInitial } from "#src/domain/profile/person-initial.tsx";
@@ -14,11 +15,20 @@ export type StickerProps = {
   /** The face on the left: a person, or a champion. */
   who: StickerWho;
   href?: string;
+  /** For a link a router takes over: the sticker stays an anchor with its `href`. */
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
   className?: string;
 };
 
 /** A weekly award: a face with a spark, the award, then who and how much. */
-export function Sticker({ title, detail, who, href, className }: StickerProps) {
+export function Sticker({
+  title,
+  detail,
+  who,
+  href,
+  onClick,
+  className,
+}: StickerProps) {
   const content = (
     <>
       <span className="scout-sticker__face">
@@ -41,7 +51,7 @@ export function Sticker({ title, detail, who, href, className }: StickerProps) {
   return href === undefined ? (
     <div className={classes}>{content}</div>
   ) : (
-    <a className={classes} href={href}>
+    <a className={classes} href={href} onClick={onClick}>
       {content}
     </a>
   );

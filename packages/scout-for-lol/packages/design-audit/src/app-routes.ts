@@ -20,6 +20,7 @@ export function appRoutes(): AuditRoute[] {
   const alias = encodeURIComponent(
     envValue("SCOUT_DESIGN_AUDIT_PLAYER_ALIAS", "Scout Classic"),
   );
+  const playerId = envValue("SCOUT_DESIGN_AUDIT_PLAYER_ID", "1");
   const competitionId = envValue("SCOUT_DESIGN_AUDIT_COMPETITION_ID", "1");
   const reportId = envValue("SCOUT_DESIGN_AUDIT_REPORT_ID", "1");
   const exploreConversationId = envValue(
@@ -115,6 +116,23 @@ export function appRoutes(): AuditRoute[] {
       name: "champion",
       surface: "app",
       path: "/app/champions/103",
+      authenticated: true,
+      golden: true,
+    },
+    // The viewer's own player in the design-audit seed: the first Player row of
+    // a freshly seeded database. A shared database that other boots have
+    // reseeded needs SCOUT_DESIGN_AUDIT_PLAYER_ID.
+    {
+      name: "consumer-players",
+      surface: "app",
+      path: "/app/players",
+      authenticated: true,
+      golden: true,
+    },
+    {
+      name: "consumer-player",
+      surface: "app",
+      path: `/app/players/${playerId}`,
       authenticated: true,
       golden: true,
     },

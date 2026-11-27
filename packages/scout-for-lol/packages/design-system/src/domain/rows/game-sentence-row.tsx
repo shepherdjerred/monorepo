@@ -1,3 +1,4 @@
+import type { MouseEventHandler } from "react";
 import { getBrowserChampionName } from "@scout-for-lol/data/browser-assets";
 import { cn } from "#src/lib/cn.ts";
 import { ChampionFace } from "#src/domain/profile/champion-face.tsx";
@@ -28,6 +29,8 @@ export type GameSentenceRowProps = {
   /** A highlight worth a mark, such as "Quadra kill". */
   highlight?: string;
   href?: string;
+  /** For a link a router takes over: the row stays an anchor with its `href`. */
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
   className?: string;
 };
 
@@ -82,6 +85,7 @@ export function GameSentenceRow({
   detail,
   highlight,
   href,
+  onClick,
   className,
 }: GameSentenceRowProps) {
   const { lead, rest } = gameSentence({
@@ -128,7 +132,7 @@ export function GameSentenceRow({
   return href === undefined ? (
     <div className={classes}>{content}</div>
   ) : (
-    <a className={classes} href={href}>
+    <a className={classes} href={href} onClick={onClick}>
       {content}
     </a>
   );
