@@ -68,6 +68,10 @@ export type FailedUnit = { unitId: string; issues: string[] };
 
 const laneRank = (lane: Lane): number => LANE_ORDER.indexOf(lane);
 
+/** Code-unit order, the same on every machine (a locale compare orders "Kaisa" before "KSante", a plain sort does not). */
+const byCode = (left: string, right: string): number =>
+  left < right ? -1 : left > right ? 1 : 0;
+
 const round2 = (value: number): number => Math.round(value * 100) / 100;
 
 function stepOf(
@@ -211,7 +215,7 @@ export function buildChampionFiles(
         matchups: (matchups.get(champion) ?? []).toSorted(
           (a, b) =>
             laneRank(a.lane) - laneRank(b.lane) ||
-            a.opponent.localeCompare(b.opponent),
+            byCode(a.opponent, b.opponent),
         ),
       }),
     );
@@ -229,7 +233,7 @@ export function buildIndex(
     schemaVersion: CHAMPION_TIPS_SCHEMA_VERSION,
     ...meta,
     champions: [...files.entries()]
-      .toSorted(([a], [b]) => a.localeCompare(b))
+      .toSorted(([a], [b]) => byCode(a, b))
       .map(([key, file]) => {
         const tips = [...file.general, ...file.matchups].flatMap(
           (set) => set.tips,

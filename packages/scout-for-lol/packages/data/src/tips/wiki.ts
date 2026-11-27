@@ -338,7 +338,9 @@ export function createWikiClient(options: WikiClientOptions): WikiClient {
         oldid: revision.revid.toString(),
         prop: "text",
         disablelimitreport: "1",
-        ...(abilities === undefined ? {} : { section: abilities.index }),
+        ...(abilities === undefined || abilities.index === ""
+          ? {}
+          : { section: abilities.index }),
       },
       ParseResponseSchema,
     );
