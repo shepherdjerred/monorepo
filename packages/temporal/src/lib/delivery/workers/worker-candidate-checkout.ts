@@ -1,5 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
 import {
@@ -166,20 +165,81 @@ export type ExecutorCheckout = { root: string; revision: string };
 const MONOREPO = "https://github.com/shepherdjerred/monorepo.git";
 
 /**
+ * Bring the kept candidate tree at `directory` to exactly `source`, writing
+ * only what differs from the previous candidate.
+ *
+ * The repository metadata is created fresh, as the bootstrap does for the
+ * executor: its objects come from the executor's repository (and through it
+ * the claim's verified store) by alternates, so a blobless fetch negotiates
+ * against the executor's revision and adds only the candidate's new commit
+ * and trees, and the checkout fetches just the blobs neither holds. The index
+ * starts with no stat data, so `update-index --refresh` hashes every tracked
+ * file against the candidate's tree and `reset --hard` rewrites only the files
+ * whose content differs; everything untracked except `node_modules`, nested
+ * repositories included, is then removed. `requireReplayCheckout` still
+ * proves the revision and a clean tracked tree afterwards.
+ */
+async function prepareCandidateCheckout(
+  directory: string,
+  source: string,
+  executor: ExecutorCheckout,
+  run: RolloutCommandRunner,
+) {
+  const git = path.join(directory, ".git");
+  await rm(git, { recursive: true, force: true });
+  await mkdir(directory, { recursive: true });
+  await run(["git", "init", "--quiet"]);
+  await mkdir(path.join(git, "objects/info"), { recursive: true });
+  await writeFile(
+    path.join(git, "objects/info/alternates"),
+    `${path.join(executor.root, ".git/objects")}\n`,
+  );
+  // The executor's revision is shallow; without its boundary Git would walk
+  // to that revision's missing parent while negotiating.
+  const shallow = path.join(executor.root, ".git/shallow");
+  if (await Bun.file(shallow).exists())
+    await copyFile(shallow, path.join(git, "shallow"));
+  for (const [key, value] of [
+    ["remote.origin.url", MONOREPO],
+    ["remote.origin.promisor", "true"],
+    ["remote.origin.partialclonefilter", "blob:none"],
+  ] as const)
+    await run(["git", "config", key, value]);
+  await run([
+    "git",
+    "fetch",
+    "--quiet",
+    "--no-tags",
+    "--depth=1",
+    "--filter=blob:none",
+    "origin",
+    source,
+  ]);
+  await run(["git", "update-ref", "--no-deref", "HEAD", source]);
+  await run(["git", "read-tree", "HEAD"]);
+  await run(["git", "update-index", "-q", "--refresh"]);
+  await run(["git", "reset", "-q", "--hard"]);
+  await run(["git", "clean", "-ffdxq", "-e", "node_modules"]);
+}
+
+/**
  * Prepare the exact candidate source without moving controller HEAD.
  *
  * A candidate at the executor's revision reuses the checkout the bootstrap
- * already installed and generated. Any other candidate becomes a detached
- * worktree of the executor's object store: a blobless fetch adds only its
- * commit and trees, and checkout downloads just the blobs the executor lacks.
- * Its install shares the Job's Bun cache on the same filesystem, so packages
- * the executor already extracted are linked rather than written again.
+ * already installed and generated. Any other candidate is prepared in
+ * `candidateRoot`, a tree the stage claim keeps across Jobs beside the
+ * executor's (see prepareCandidateCheckout): consecutive Jobs of one rollout
+ * name the same candidate and successive rollouts' candidates differ by a few
+ * commits, so the checkout and `bun install --frozen-lockfile` write only that
+ * difference instead of a whole tree and `node_modules`. Its install shares
+ * the Job's Bun cache.
  */
 export async function withWorkerCandidateCheckout<T>(
   checkout: {
     sourceRevision: unknown;
     target: z.infer<typeof WorkerDeploymentRolloutTargetSchema>;
     executor: ExecutorCheckout;
+    candidateRoot: string;
   },
   use: (candidate: RolloutCommandRunner) => Promise<T>,
   effects: {
@@ -196,12 +256,10 @@ export async function withWorkerCandidateCheckout<T>(
       candidateCommand(argv, cwd, workerReplayRoute(target).namespace));
   const replayArguments = effects.replayArguments ?? workerReplayArguments;
   const reuse = source === executor.revision;
-  const directory = reuse
-    ? executor.root
-    : await mkdtemp(path.join(tmpdir(), "delivery-worker-candidate-"));
+  const directory = reuse ? executor.root : checkout.candidateRoot;
+  if (!reuse && path.resolve(directory) === path.resolve(executor.root))
+    throw new Error("Candidate checkout must not replace the executor's");
   const run: RolloutCommandRunner = (argv) => execute(argv, directory);
-  const inExecutor: RolloutCommandRunner = (argv) =>
-    execute(argv, executor.root);
   const cwd = path.join(directory, "packages/temporal");
   const candidate: RolloutCommandRunner = async (argv) => {
     if (argv[0] === "git") return await execute(argv, cwd);
@@ -219,80 +277,40 @@ export async function withWorkerCandidateCheckout<T>(
     );
   };
   const preparation = { reuse: String(reuse) };
-  const added = { worktree: false };
-  try {
-    await timedWorkerPhase("candidate-checkout", preparation, async () => {
-      if (!reuse) {
-        for (const [key, value] of [
-          ["remote.origin.url", MONOREPO],
-          ["remote.origin.promisor", "true"],
-          ["remote.origin.partialclonefilter", "blob:none"],
-        ] as const)
-          await inExecutor(["git", "config", key, value]);
-        await inExecutor([
-          "git",
-          "fetch",
-          "--quiet",
-          "--no-tags",
-          "--depth=1",
-          "--filter=blob:none",
-          "origin",
-          source,
-        ]);
-        await inExecutor([
-          "git",
-          "worktree",
-          "add",
-          "--quiet",
-          "--detach",
-          directory,
-          source,
-        ]);
-        added.worktree = true;
-      }
-      await requireReplayCheckout(source, run);
-    });
+  // The kept candidate tree is not removed afterwards: the next Job resets it
+  // to its own candidate before using it (prepareCandidateCheckout).
+  await timedWorkerPhase("candidate-checkout", preparation, async () => {
     if (!reuse)
-      await timedWorkerPhase("candidate-install", preparation, async () => {
-        await run(["mise", "trust", ".mise.toml"]);
-        await run(["mise", "install", "--yes", "bun", "node"]);
-        await run([
-          "mise",
-          "exec",
-          "--",
-          "bun",
-          "install",
-          "--frozen-lockfile",
-        ]);
-        await run([
-          "mise",
-          "exec",
-          "--",
-          "bunx",
-          "turbo",
-          "run",
-          "generate",
-          "--filter=@shepherdjerred/temporal^...",
-        ]);
-      });
-    await timedWorkerPhase("candidate-build", preparation, async () => {
-      for (const packageName of [
-        "home-assistant",
-        "llm-models",
-        "glitter-context",
-      ])
-        await execute(
-          ["mise", "exec", "--", "bun", "run", "build"],
-          path.join(directory, "packages", packageName),
-        );
+      await prepareCandidateCheckout(directory, source, executor, run);
+    await requireReplayCheckout(source, run);
+  });
+  if (!reuse)
+    await timedWorkerPhase("candidate-install", preparation, async () => {
+      await run(["mise", "trust", ".mise.toml"]);
+      await run(["mise", "install", "--yes", "bun", "node"]);
+      await run(["mise", "exec", "--", "bun", "install", "--frozen-lockfile"]);
+      await run([
+        "mise",
+        "exec",
+        "--",
+        "bunx",
+        "turbo",
+        "run",
+        "generate",
+        "--filter=@shepherdjerred/temporal^...",
+      ]);
     });
-    await requireReplayCheckout(source, candidate);
-    return await use(candidate);
-  } finally {
-    if (!reuse) {
-      if (added.worktree)
-        await inExecutor(["git", "worktree", "remove", "--force", directory]);
-      await rm(directory, { recursive: true, force: true });
-    }
-  }
+  await timedWorkerPhase("candidate-build", preparation, async () => {
+    for (const packageName of [
+      "home-assistant",
+      "llm-models",
+      "glitter-context",
+    ])
+      await execute(
+        ["mise", "exec", "--", "bun", "run", "build"],
+        path.join(directory, "packages", packageName),
+      );
+  });
+  await requireReplayCheckout(source, candidate);
+  return await use(candidate);
 }

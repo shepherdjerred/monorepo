@@ -38,10 +38,12 @@ export const DELIVERY_STAGE_REQUESTS = {
  * Persistent stage workspaces, one claim per install profile and Job
  * namespace, on liskov's ZFS pool instead of an emptyDir on its OS disk.
  *
- * A Job reuses the previous Job's checkout and `node_modules`: it fetches its
- * revision, checks it out by force, removes everything untracked except
- * `node_modules`, and `bun install --frozen-lockfile` then writes only what
- * the lockfile changed. The two install profiles never share a claim, because
+ * A Job reuses the previous Job's checkout, `node_modules`, verified Git
+ * object store and verified prepared outputs: it fetches only what its
+ * revision changed, rewrites only tracked files whose content differs,
+ * removes everything untracked except `node_modules`, and
+ * `bun install --frozen-lockfile` then writes only what the lockfile changed
+ * (DELIVERY_JOB_BOOTSTRAP). The two install profiles never share a claim, because
  * alternating a production subset with a full install would rewrite the
  * difference every time. Bun copies rather than hardlinks from its cache, so a
  * shared cache alone would only have moved the writes.

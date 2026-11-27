@@ -26,10 +26,14 @@ const TOOL_INSTALL_START = "MISE_LOCKED=1 mise install --yes jq\n";
 const TOOL_PATH_EXPORT =
   'export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"\n';
 
-/** Runs the bootstrap from the first mise install onward with fake tools. */
+/**
+ * Runs the bootstrap from the first mise install onward with fake tools. The
+ * fake prepared-outputs `restore` reports a miss unless `restored` is set.
+ */
 function runPreparation(
   jobRequest: DeliveryJobRequest,
   stopAfter: string | undefined,
+  restored = false,
 ) {
   const start = DELIVERY_JOB_BOOTSTRAP.indexOf(TOOL_INSTALL_START);
   if (start === -1) throw new Error("Missing tool installation");
@@ -43,8 +47,12 @@ function runPreparation(
       "bash",
       "-c",
       String.raw`set -euo pipefail
-bun() { printf 'bun:%s\n' "$*"; }
+bun() {
+  printf 'bun:%s\n' "$*"
+  case "$*" in *prepared-outputs.ts\ restore\ *) return "$FAKE_RESTORE_EXIT" ;; esac
+}
 bunx() { printf 'bunx:%s\n' "$*"; }
+rm() { printf 'rm:%s\n' "$*"; }
 # BSD paste (macOS) needs an operand where the GNU paste in the image reads stdin.
 paste() { tr '\n' ':' | sed 's/:$//'; echo; }
 mise() {
@@ -60,6 +68,8 @@ ${preparation}`,
       env: {
         PATH: Bun.env["PATH"],
         DELIVERY_JOB_REQUEST: JSON.stringify(jobRequest),
+        DELIVERY_SOURCE_REVISION: jobRequest.sourceRevision,
+        FAKE_RESTORE_EXIT: restored ? "0" : "1",
       },
       stdout: "pipe",
       stderr: "pipe",
@@ -76,37 +86,87 @@ const install = (jobRequest: DeliveryJobRequest) =>
     line.startsWith("mise-install"),
   );
 
-it.each(["worker-images", "worker-step", "test"] as const)(
-  "prepares only the dependencies needed by %s",
-  (recipe) => {
+/** The preparation commands after tool installation, with the prepared-outputs key elided. */
+const prepared = (recipe: DeliveryJobRequest["recipe"], restored: boolean) =>
+  runPreparation(
+    {
+      ...request,
+      recipe,
+      ...(recipe === "test"
+        ? { input: { suite: "test", workspace: "packages/delivery" } }
+        : {}),
+    },
+    undefined,
+    restored,
+  )
+    .filter((line) => !line.startsWith("mise-install"))
+    .map((line) => line.replace(/\b[a-f0-9]{64}\b/u, "<key>"));
+/** The prepared-outputs key the bootstrap computes for a request. */
+const preparedKey = (jobRequest: DeliveryJobRequest) =>
+  runPreparation(jobRequest, undefined)
+    .find((line) => line.includes("prepared-outputs.ts restore"))
+    ?.split(" ")
+    .at(-1);
+const GENERATE = [
+  "rm:-rf /workspace/prepared",
+  "bunx:turbo run generate --filter=@shepherdjerred/temporal^...",
+  "bun:run --cwd packages/llm-models build:runtime",
+  "bun:build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit",
+];
+
+describe("prepared dependencies and outputs", () => {
+  it("installs only the Temporal runtime closure for image provenance", () => {
+    for (const restored of [false, true])
+      expect(prepared("worker-images", restored)).toEqual([
+        "bun:install --frozen-lockfile --production --filter=@shepherdjerred/temporal",
+      ]);
+  });
+  it("generates, builds and keeps the outputs when no kept outputs match", () => {
+    expect(prepared("worker-step", false)).toEqual([
+      "bun:install --frozen-lockfile",
+      "bun:packages/temporal/scripts/jobs/prepared-outputs.ts restore <key>",
+      ...GENERATE,
+      "bun:packages/temporal/scripts/jobs/prepared-outputs.ts keep <key>",
+    ]);
+  });
+  it("skips generation, the runtime build and the toolkit compile when kept outputs are restored", () => {
+    expect(prepared("worker-step", true)).toEqual([
+      "bun:install --frozen-lockfile",
+      "bun:packages/temporal/scripts/jobs/prepared-outputs.ts restore <key>",
+    ]);
+  });
+  it("always regenerates for a test recipe and keeps nothing it generated", () => {
+    for (const restored of [false, true])
+      expect(prepared("test", restored)).toEqual([
+        "bun:install --frozen-lockfile",
+        ...GENERATE,
+        "bunx:turbo run generate --filter={./packages/delivery}...",
+      ]);
+  });
+  it("keys kept outputs by the revision, the runner image and the bootstrap", () => {
+    const base = preparedKey({ ...request, recipe: "worker-step" });
+    expect(base).toMatch(/^[a-f0-9]{64}$/u);
+    // Every full-install recipe of one revision shares the kept outputs.
+    expect(preparedKey({ ...request, recipe: "worker-preflight" })).toBe(base);
     expect(
-      runPreparation(
-        {
-          ...request,
-          recipe,
-          ...(recipe === "test"
-            ? { input: { suite: "test", workspace: "packages/delivery" } }
-            : {}),
-        },
-        undefined,
-      ).filter((line) => !line.startsWith("mise-install")),
-    ).toEqual(
-      recipe === "worker-images"
-        ? [
-            "bun:install --frozen-lockfile --production --filter=@shepherdjerred/temporal",
-          ]
-        : [
-            "bun:install --frozen-lockfile",
-            "bunx:turbo run generate --filter=@shepherdjerred/temporal^...",
-            "bun:run --cwd packages/llm-models build:runtime",
-            "bun:build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit",
-            ...(recipe === "test"
-              ? ["bunx:turbo run generate --filter={./packages/delivery}..."]
-              : []),
-          ],
+      preparedKey({
+        ...request,
+        recipe: "worker-step",
+        sourceRevision: "c".repeat(40),
+      }),
+    ).not.toBe(base);
+    expect(
+      preparedKey({
+        ...request,
+        recipe: "worker-step",
+        runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"d".repeat(64)}`,
+      }),
+    ).not.toBe(base);
+    expect(DELIVERY_JOB_BOOTSTRAP).toContain(
+      String.raw`prepared_key=$(printf '%s\n' "$DELIVERY_SOURCE_REVISION" "$(jq -er '.runnerImage' <<< "$DELIVERY_JOB_REQUEST")" "$BASH_EXECUTION_STRING" | sha256sum | cut -d' ' -f1)`,
     );
-  },
-);
+  });
+});
 
 describe("Job tool installation under the checked-out revision's lockfile", () => {
   // A retained executor's revision can predate the CI image's pins. Locked
@@ -460,43 +520,57 @@ describe("persistent stage workspace", () => {
       );
     },
   );
-  it("serializes Jobs on the claim and reuses only node_modules from the previous checkout", () => {
+  it("serializes Jobs on the claim and keeps only verified objects, node_modules and verified outputs", () => {
     const lines = DELIVERY_JOB_BOOTSTRAP.split("\n");
     const at = (line: string) => {
       const index = lines.indexOf(line);
       if (index === -1) throw new Error(`Bootstrap lacks: ${line}`);
       return index;
     };
+    const order = (...expected: string[]) => {
+      const indexes = expected.map((line) => at(line));
+      expect(indexes).toEqual(indexes.toSorted((a, b) => a - b));
+    };
     expect(at("flock 9")).toBe(at("exec 9>/workspace/.lock") + 1);
-    // Previous scratch goes before anything is prepared; the previous
-    // repository goes before the fetch, so the claim keeps one revision's
-    // objects. The checkout is forced over the previous tree, then everything
-    // untracked except node_modules is removed before the revision check.
+    // Previous scratch goes before anything is prepared.
     expect(
       at(
         "rm -rf /workspace/tmp /workspace/bin /workspace/buildx /workspace/stack",
       ),
     ).toBe(at("flock 9") + 1);
-    expect(at("git init -q /workspace/source")).toBe(
-      at("rm -rf /workspace/source/.git") + 1,
+    // The store keeps only objects, its shallow boundary and the negotiation
+    // ref, which must pass fsck before anything is fetched into it; the
+    // checkout's own repository is new for every Job and borrows the store.
+    order(
+      "previous=",
+      "[ ! -f /workspace/git/refs/heads/delivery-checkout ] || previous=$(cat /workspace/git/refs/heads/delivery-checkout)",
+      "find /workspace/git -mindepth 1 -maxdepth 1 ! -name objects ! -name shallow -exec rm -rf {} +",
+      "rm -rf /workspace/git/objects/info",
+      "find /workspace/git/objects/pack -type f ! -name 'pack-*.idx' ! -name 'pack-*.pack' -delete",
+      "git init -q --bare --initial-branch=delivery-checkout /workspace/git",
+      'if [ -n "$previous" ] && ! { [[ $previous =~ ^[0-9a-f]{40}$ ]] && git --git-dir=/workspace/git update-ref refs/heads/delivery-checkout "$previous" && git --git-dir=/workspace/git fsck --full --no-dangling --no-progress; }; then',
+      '  echo "Delivery stage workspace: the kept Git object store failed verification; this Job fetches a fresh one" >&2',
+      "  rm -rf /workspace/git",
+      'git --git-dir=/workspace/git fetch --quiet --no-tags --no-auto-maintenance --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"',
+      'git --git-dir=/workspace/git update-ref refs/heads/delivery-checkout "$DELIVERY_SOURCE_REVISION"',
+      "rm -rf /workspace/source/.git",
+      "git init -q /workspace/source",
+      "echo /workspace/git/objects >/workspace/source/.git/objects/info/alternates",
+      // An index with no stat data: every tracked file is hashed against the
+      // revision, and only differing content is rewritten.
+      'git -C /workspace/source update-ref --no-deref HEAD "$DELIVERY_SOURCE_REVISION"',
+      "git -C /workspace/source read-tree HEAD",
+      "git -C /workspace/source update-index -q --refresh",
+      "git -C /workspace/source reset -q --hard",
+      "git -C /workspace/source clean -ffdxq -e node_modules",
+      'test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"',
+      'test -z "$(git -C /workspace/source status --porcelain=v1 --untracked-files=no)"',
+      "  git --git-dir=/workspace/git -c repack.writeBitmaps=false repack -a -d -q",
+      "git --git-dir=/workspace/git prune --expire=now",
+      "cd /workspace/source",
     );
-    expect(at("git init -q /workspace/source")).toBeLessThan(
-      at(
-        'git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"',
-      ),
-    );
-    expect(
-      at(
-        "git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD",
-      ),
-    ).toBeLessThan(at("git -C /workspace/source clean -fdxq -e node_modules"));
-    expect(
-      at("git -C /workspace/source clean -fdxq -e node_modules"),
-    ).toBeLessThan(
-      at(
-        'test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"',
-      ),
-    );
+    expect(DELIVERY_JOB_BOOTSTRAP).not.toContain("checkout --quiet");
+    expect(DELIVERY_JOB_BOOTSTRAP).not.toContain("FETCH_HEAD");
     expect(lines).not.toContain("cp -R /opt/mise/. /workspace/mise/");
     expect(lines).not.toContain("cp -Rs /opt/mise/. /workspace/mise/");
     // Re-linked on every Job over the previous links; only mise's per-tool
@@ -552,7 +626,8 @@ describe("persistent stage workspace", () => {
     // workspace, then linked toolchains with no test or stack-archive step,
     // then the copied toolchain, then the repository that kept every fetched
     // revision, then the stack archive extracted over the previous one, then the
-    // full tool set with awscli installed for every recipe. A
+    // full tool set with awscli installed for every recipe, then the fresh
+    // repository that fetched the whole tree for every Job. A
     // changed digest means a retained Job could no longer be adopted.
     expect(
       PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.map((script) =>
@@ -565,6 +640,7 @@ describe("persistent stage workspace", () => {
       "3fd9e4b9b8d049d2c56fabbf38f78eff2f10eeebfccd8419e97f98bcd85cb40a",
       "99e8cdfb302e6f2eb709ae86fd55b1bfd396008f6bb54186de14ae7b4f9920cd",
       "6fd3b334472369b36e0765e45b7a0d1d0c3afce213ce8a2f8f93f987eff3c2bb",
+      "be234cbc4a7e76b69e3b1ac1216b46a5f137c14c829f8545ef18e892a56f19cc",
     ]);
     for (const recipe of [
       "worker-images",

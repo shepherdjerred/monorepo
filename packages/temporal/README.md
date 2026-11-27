@@ -223,12 +223,25 @@ Every stage Job runs in a persistent workspace claim on liskov's ZFS pool,
 one per install profile and Job namespace (`delivery-stage-workspace-full` and,
 for image provenance, `delivery-stage-workspace-production`;
 `DELIVERY_STAGE_WORKSPACE_CLAIMS`), never in an emptyDir on the OS disk. A Job
-locks the claim, discards the previous Job's scratch and Git repository (a
-depth-1 fetch downloads the whole tree anyway, so keeping old revisions'
-objects only fills the claim), fetches and force-checks out its exact
-revision over the previous checkout and removes everything
-untracked except `node_modules`, so the tree equals the revision and
-`bun install --frozen-lockfile` writes only what the lockfile changed. It
+locks the claim and discards the previous Job's scratch. The claim keeps a
+bare Git object store (`/workspace/git`) whose `delivery-checkout` branch
+names the previous revision, so a depth-1 fetch negotiates against it and
+downloads only what changed; without that ref the fetch is the whole ~670 MB
+tree. Everything in the store except its objects, shallow boundary and that
+ref is rebuilt for every Job, and `git fsck --full` must pass, or the Job
+says so on stderr and fetches into an empty store. The checkout's own
+repository is new for every Job and borrows the store's objects through
+alternates. Its index starts without stat data, so every tracked file is
+hashed against the revision and `reset --hard` rewrites only files whose
+content differs; everything untracked except `node_modules`, nested
+repositories included, is removed and the tracked tree must report no
+change. The tree therefore equals the revision whatever an earlier Job left,
+and `bun install --frozen-lockfile` writes only what the lockfile changed.
+The store is repacked to one revision once it holds more than eight packs.
+Generated code, the `llm-models` runtime build and the toolkit binary are kept
+as hard links in `/workspace/prepared` with a sha256 manifest, keyed by the
+revision, runner image and bootstrap; a Job with the same key restores them
+only if every file still matches, and test recipes always regenerate. It
 re-links the CI image's mise toolchain instead of copying it, and copies only
 mise's per-tool metadata, so a missing tool version still installs beside the
 image's. Image provenance installs only the Temporal workspace's production
@@ -241,8 +254,11 @@ installs a version the image lacks only from a checksum that revision's
 archive downloads, the only places `aws` runs.
 A worker
 candidate at the executor's own revision reuses the prepared checkout. Any other
-candidate is a detached worktree with a blobless fetch into the executor's
-object store, sharing the Job's Bun cache. Candidate `mise exec` never
+candidate is prepared the same way in `/workspace/candidate`, a tree the claim
+keeps beside the executor's: a fresh repository borrows the executor's
+objects, a blobless fetch adds the candidate's commit and trees, and the
+content-verified reset, clean and `bun install --frozen-lockfile` write only
+its difference from the previous candidate. Candidate `mise exec` never
 auto-installs tools that the unprivileged Job cannot read from the image, such
 as Rust. Adoption and recovery accept only the current bootstrap and the exact
 earlier ones listed in `PREVIOUS_DELIVERY_JOB_BOOTSTRAPS`, and the retired

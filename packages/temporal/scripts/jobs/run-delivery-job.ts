@@ -6,6 +6,7 @@ import type { WorkerRolloutSnapshot } from "@shepherdjerred/delivery/contract";
 import { z } from "zod";
 import {
   DeliveryJobRequestSchema,
+  DELIVERY_JOB_CANDIDATE_CHECKOUT,
   DELIVERY_JOB_RESULT_PREFIX,
 } from "#shared/delivery-job.ts";
 import {
@@ -196,6 +197,7 @@ async function main() {
       root: toplevel.stdout.trim(),
       revision: request.sourceRevision,
     },
+    candidateRoot: DELIVERY_JOB_CANDIDATE_CHECKOUT,
   });
   let result: unknown;
   switch (request.recipe) {
