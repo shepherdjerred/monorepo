@@ -1888,6 +1888,7 @@ model HallRecordCell {
   currentValue        Float?
   holdersJson         String    @default("[]")
   evidenceJson        String    @default("[]")
+  rankingsJson        String?
   errorMessage        String?
   baselineStartedAt   DateTime?
   baselineCompletedAt DateTime?

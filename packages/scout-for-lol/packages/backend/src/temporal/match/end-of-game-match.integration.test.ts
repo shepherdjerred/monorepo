@@ -13,8 +13,10 @@ import path from "node:path";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
+  COMPETITIVE_PROGRESSION_CATALOG_VERSION,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  HallSettingsSchema,
 } from "@scout-for-lol/data";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
 import {
@@ -25,6 +27,9 @@ import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-cli
 import { makeRiotTransportFailure } from "#src/testing/riot-mocks.ts";
 import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { testChannelId } from "#src/testing/test-ids.ts";
+import type * as PolicyFlags from "#src/configuration/flags.ts";
 
 /**
  * An end-of-game-only game through the per-match core, against real rows.
@@ -48,6 +53,16 @@ vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 vi.mock("#src/evidence/recovery-gate.ts", () => ({
   evidenceRecoveryEnabled: () => true,
 }));
+vi.mock("#src/configuration/flags.ts", async (original) => {
+  const actual = await original<typeof PolicyFlags>();
+  const isPolicyEnabled: typeof actual.isPolicyEnabled = async (
+    name,
+    attributes,
+  ) =>
+    name === "hall_of_fame_enabled" ||
+    (await actual.isPolicyEnabled(name, attributes));
+  return { ...actual, isPolicyEnabled };
+});
 vi.mock("#src/configuration.ts", async (original) => {
   const actual = await original<{ default: object }>();
   return {
@@ -121,6 +136,11 @@ const { planMatchFanOut } = await import("./match-reads.ts");
 const { stageLakeProjection } = await import("../lake/lake-projection.ts");
 const { reconcileScoreboardReport } = await import("./scoreboard-recovery.ts");
 const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
+const { runHallBaseline } = await import("#src/progression/hall/baseline.ts");
+const { evaluateHallMatch } =
+  await import("#src/progression/hall/evaluate-match.ts");
+const { updateHallSettings } =
+  await import("#src/progression/hall/settings.ts");
 const { gameResultFromMatch } =
   await import("#src/scout-client/canonical/riot-result.ts");
 const { classicEndOfGameMatch, classicMatchId } =
@@ -167,6 +187,7 @@ beforeEach(async () => {
   io.render.mockClear();
   uploads.reset();
   await rm(io.lakeDir, { recursive: true, force: true });
+  await prisma.hallSettings.deleteMany();
   await clearMatchPipelineRows(prisma);
   const observer = LeaguePuuidSchema.parse(
     observerOf(await classicEndOfGameBlock()),
@@ -252,6 +273,71 @@ async function intentCount(): Promise<number> {
 }
 
 describe("an end-of-game-only Classic game through the match core", () => {
+  test("a Classic record break reaches notification fan-out before lake projection", async () => {
+    const channelId = testChannelId("4310");
+    const { baseline } = await updateHallSettings(prisma, {
+      settings: HallSettingsSchema.parse({
+        guildId: guild,
+        catalogVersion: COMPETITIVE_PROGRESSION_CATALOG_VERSION,
+        channelId,
+        enabledQueueFamilies: ["classic_sr"],
+        enabledRecords: ["kills"],
+      }),
+      actorDiscordId: owner,
+      stage: "beta",
+    });
+    if (baseline === null)
+      throw new Error("Expected a new Classic Hall baseline");
+    await runHallBaseline({
+      stage: "beta",
+      guildId: guild,
+      revision: baseline.revision,
+    });
+    await prisma.account.updateMany({
+      data: { createdTime: new Date(Date.now() - 60 * MINUTE) },
+    });
+
+    const prior = await classicEndOfGameMatch((block) => {
+      endedRecently(block);
+      block.endOfGameTimestamp -= MINUTE;
+    });
+    await evaluateHallMatch({
+      metadata: {
+        ...prior.metadata,
+        matchId: RiotMatchIdSchema.parse("NA1_4310000001"),
+      },
+      info: {
+        ...prior.info,
+        gameId: 4_310_000_001,
+        participants: prior.info.participants.map((participant) => ({
+          ...participant,
+          kills: 0,
+        })),
+      },
+    });
+    expect(
+      await prisma.hallRecordCell.findFirstOrThrow({
+        where: { guildId: guild },
+      }),
+    ).toMatchObject({ currentValue: 0 });
+    expect(await prisma.matchNotificationIntent.count()).toBe(0);
+
+    await uploads.uploadEndOfGame(deviceId, pastDeadline(), endedRecently);
+    const { plan } = await processMatch();
+    const intentKey = `hall-record-break:${matchId}:${guild}`;
+
+    expect(plan.notificationIntentKeys).toContain(intentKey);
+    expect(
+      await prisma.matchNotificationIntent.findUniqueOrThrow({
+        where: { intentKey },
+      }),
+    ).toMatchObject({ state: "pending", targetId: channelId });
+    const cell = await prisma.hallRecordCell.findFirstOrThrow({
+      where: { guildId: guild },
+    });
+    expect(cell.currentValue).toBeGreaterThan(0);
+  });
+
   test("becomes the canonical match: archived, observed, announced and in the lake", async () => {
     const observationId = await uploads.uploadEndOfGame(
       deviceId,

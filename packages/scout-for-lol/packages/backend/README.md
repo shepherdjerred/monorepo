@@ -2277,17 +2277,20 @@ intent leaves it.
 
 ### Hall record breaks are intents
 
-`evaluateHallMatch` announces a guild's record breaks inside its own Hall
-transaction through `announceHallRecordBreak`
-(`src/progression/hall/break-announcement.ts`), which mints one `pending`
-`hall-record-break` intent per (guild, match) with a freshness deadline of
-creation plus 24 hours. A standing intent is left as it is; one whose records
-differ from this evaluation's throws instead of choosing.
+`evaluateHallMatch` scores the canonical match during progression with the same
+participant conversion as report-lake staging. It maintains the three highest
+distinct scores for each guild, queue family, and record. Baseline builds and
+roster recomputations calculate those standings from report-lake history.
+Existing Hall cells initialize their standings from eligible earlier matches
+and the stored record on first evaluation.
 
-The committed observation decides silence: a `silent-backfill` match updates
-its records and announces nothing, and a match with no observation throws,
-because an intent without an observed match could never enter the post-commit
-fan-out.
+A live match must beat an existing #1 to announce a break. First scores, ties,
+lower placements, and silent backfill update standings without an alert. The
+Hall transaction commits the updated cells and one pending
+`hall-record-break` intent per guild and match together. The intent captures
+each broken record's previous #1 and resulting standings so that every attempt
+renders the same values and holders. Its freshness deadline is 24 hours after
+creation.
 
 Progression runs before the match core's post-commit fan-out, and
 `planMatchFanOut` starts a notification child for every drivable non-prematch
