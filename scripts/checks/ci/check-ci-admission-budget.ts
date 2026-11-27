@@ -24,6 +24,7 @@ import {
 import {
   type AdmissionBudgetSchema,
   PooledAdmissionBudgetSchema,
+  queueWorkflows,
 } from "../../lib/ci/admission-budget.ts";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
@@ -146,16 +147,37 @@ function heldServices(
   return total;
 }
 
+/**
+ * Compute slots that take only the workflows routed to them, every one of
+ * which the step model lists. They can hold only those workflows' services.
+ */
+export type DedicatedSlots = {
+  readonly steps: readonly AdmissionStep[];
+  readonly workflows: number;
+};
+
+// macOS lanes run on the Mac's local backend: no pod, nothing to admit.
+const kubernetesSteps = (steps: readonly AdmissionStep[]) =>
+  steps.filter((step) => step.backend !== "local");
+
 export function admissionBudgetViolations(
   steps: readonly AdmissionStep[],
   budget: AdmissionBudget,
+  dedicated: readonly DedicatedSlots[] = [],
 ): string[] {
   const violations: string[] = [];
-  // macOS lanes run on the Mac's local backend: no pod, nothing to admit.
-  const podSteps = steps.filter((step) => step.backend !== "local");
+  const slots = [
+    { steps: kubernetesSteps(steps), workflows: budget.maxWorkflows },
+    ...dedicated.map((group) => ({
+      steps: kubernetesSteps(group.steps),
+      workflows: group.workflows,
+    })),
+  ];
+  const podSteps = slots.flatMap((group) => group.steps);
   if (podSteps.length === 0) {
     return ["the step model has no Kubernetes steps; is the dump empty?"];
   }
+  const workflows = slots.reduce((sum, group) => sum + group.workflows, 0);
 
   for (const step of podSteps) {
     const services = step.services ?? [];
@@ -171,17 +193,74 @@ export function admissionBudgetViolations(
     const largestStep = Math.max(
       ...podSteps.map((step) => request(step.resources, resource)),
     );
-    const services = heldServices(podSteps, budget.maxWorkflows, resource);
+    const services = slots.reduce(
+      (sum, group) =>
+        sum + heldServices(group.steps, group.workflows, resource),
+      0,
+    );
     // Every in-flight workflow holding its services, while one more step
     // still needs admitting.
     const worstCase = services + largestStep;
     if (worstCase > quota) {
       violations.push(
-        `${resource}: ${budget.maxWorkflows.toString()} workflows' held services (${String(services)}) plus the largest step (${String(largestStep)}) need ${String(worstCase)}, over the ${budget.quota[resource]} quota; admitted services could starve every step`,
+        `${resource}: ${workflows.toString()} workflows' held services (${String(services)}) plus the largest step (${String(largestStep)}) need ${String(worstCase)}, over the ${budget.quota[resource]} quota; admitted services could starve every step`,
       );
     }
   }
   return violations;
+}
+
+/**
+ * A workflow whose pool has no agent waits in Woodpecker forever, so every
+ * routed Kubernetes workflow must name a pool the budget gives an agent.
+ */
+function unroutableViolations(
+  steps: readonly AdmissionStep[],
+  poolQueue: ReadonlyMap<string, string>,
+): string[] {
+  return steps.flatMap((step) => {
+    const pool = step.agentLabels?.["ci-pool"];
+    return pool === undefined || step.backend === "local" || poolQueue.has(pool)
+      ? []
+      : [
+          `${step.key}: routed to the ${pool} pool, which has no agent in the budget`,
+        ];
+  });
+}
+
+/**
+ * PR and main run the ordinary graph, which the step model routes once as a
+ * pull request, so any of their slots may hold any of its workflows.
+ */
+const SHARED_COMPUTE_POOLS: ReadonlySet<string> = new Set(["pr", "main"]);
+
+/**
+ * Split compute slots by what they can run. Every other compute pool, such as
+ * maintenance, takes only the workflows routed to it, so its slots never hold
+ * an ordinary workflow's services.
+ */
+function computeSlots(
+  computeSteps: readonly AdmissionStep[],
+  pools: PooledAdmissionBudget["pools"],
+): { shared: DedicatedSlots; dedicated: DedicatedSlots[] } {
+  const pool = (step: AdmissionStep) => step.agentLabels?.["ci-pool"] ?? "";
+  const dedicated = Object.entries(pools).filter(
+    ([name, entry]) =>
+      entry.queue === "default" && !SHARED_COMPUTE_POOLS.has(name),
+  );
+  const dedicatedNames = new Set(dedicated.map(([name]) => name));
+  return {
+    shared: {
+      steps: computeSteps.filter((step) => !dedicatedNames.has(pool(step))),
+      workflows:
+        queueWorkflows(pools, "default") -
+        dedicated.reduce((sum, [, entry]) => sum + entry.maxWorkflows, 0),
+    },
+    dedicated: dedicated.map(([name, entry]) => ({
+      steps: computeSteps.filter((step) => pool(step) === name),
+      workflows: entry.maxWorkflows,
+    })),
+  };
 }
 
 /** Prove both the steady pools and their bounded overlap with the old agent. */
@@ -218,8 +297,12 @@ export function pooledAdmissionBudgetViolations(
     }
   }
 
-  const gateSteps = steps.filter((step) =>
-    ["review", "completion"].includes(step.agentLabels?.["ci-pool"] ?? ""),
+  const poolQueue = new Map(
+    Object.entries(pools).map(([name, pool]) => [name, pool.queue]),
+  );
+  violations.push(...unroutableViolations(steps, poolQueue));
+  const gateSteps = steps.filter(
+    (step) => poolQueue.get(step.agentLabels?.["ci-pool"] ?? "") === "ci-gates",
   );
   const computeSteps = steps.filter((step) => !gateSteps.includes(step));
   // Before routing activates, the old agent may still hold configurations
@@ -241,19 +324,20 @@ export function pooledAdmissionBudgetViolations(
   // Old configurations still select the legacy agent. They retain their
   // services while the newly routed compute workflows start, so include both
   // caps until that agent is drained and removed from the source.
+  const { shared, dedicated } = computeSlots(computeSteps, pools);
   violations.push(
-    ...admissionBudgetViolations(computeSteps, {
-      maxWorkflows:
-        budget.legacyMaxWorkflows +
-        pools.pr.maxWorkflows +
-        pools.main.maxWorkflows,
-      maxServicesPerWorkflow: budget.maxServicesPerWorkflow,
-      quota: budget.computeQuota,
-    }),
+    ...admissionBudgetViolations(
+      shared.steps,
+      {
+        maxWorkflows: budget.legacyMaxWorkflows + shared.workflows,
+        maxServicesPerWorkflow: budget.maxServicesPerWorkflow,
+        quota: budget.computeQuota,
+      },
+      dedicated,
+    ),
   );
 
-  const gateWorkflows =
-    pools.review.maxWorkflows + pools.completion.maxWorkflows;
+  const gateWorkflows = queueWorkflows(pools, "ci-gates");
   for (const step of gateSteps) {
     if (
       step.backend === "local" ||

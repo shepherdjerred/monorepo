@@ -51,7 +51,7 @@ export async function benchmarkResponse(
           branch: pipeline.branch,
           defaultBranch: identity.defaultBranch,
           draft: false,
-          maintenance: true,
+          canary: true,
         }),
         {
           commit: pipeline.commit,
