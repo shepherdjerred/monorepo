@@ -137,6 +137,29 @@ describe("the per-champion files", () => {
     ]);
   });
 
+  test("orders the index by code unit, not by locale, so a plain sort of the files matches it", () => {
+    const { files } = buildChampionFiles([UNIT], META, context);
+    const ahri = files.get("Ahri");
+    if (ahri === undefined) {
+      throw new Error("the fixture has no Ahri file");
+    }
+    const built = buildIndex(
+      new Map([
+        ["Kaisa", ahri],
+        ["KSante", ahri],
+      ]),
+      new Map([
+        ["Kaisa", 1],
+        ["KSante", 1],
+      ]),
+      META,
+    );
+    expect(built.champions.map((entry) => entry.key)).toEqual([
+      "KSante",
+      "Kaisa",
+    ]);
+  });
+
   test("a unit whose reference does not resolve fails whole and is left out", () => {
     const broken: StoredUnit = {
       ...UNIT,

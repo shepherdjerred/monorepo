@@ -65,7 +65,7 @@ describe("the wiki host restriction", () => {
 });
 
 /** A MediaWiki that answers the three calls the client makes, and records them. */
-function mediaWiki(revid: number) {
+function mediaWiki(revid: number, abilitiesIndex = "1") {
   const requests: URL[] = [];
   const headers: Record<string, string>[] = [];
   const handler: WikiFetch = (url, init) => {
@@ -105,7 +105,11 @@ function mediaWiki(revid: number) {
     if (action === "parse" && prop === "sections") {
       return Promise.resolve(
         Response.json({
-          parse: { sections: [{ index: "1", line: "Abilities", level: "2" }] },
+          parse: {
+            sections: [
+              { index: abilitiesIndex, line: "Abilities", level: "2" },
+            ],
+          },
         }),
       );
     }
@@ -155,6 +159,24 @@ describe("the wiki client", () => {
     for (const url of wiki.requests) {
       expect(url.hostname).toBe(WIKI_HOST);
     }
+  });
+
+  test("reads the whole page when the Abilities section is transcluded and has no index", async () => {
+    // Illaoi's page: its Abilities heading comes from a template, so the
+    // section list gives it an empty index, and `section=` with nothing is an
+    // API error that returns no `parse` at all.
+    const wiki = mediaWiki(7, "");
+    const client = createWikiClient({
+      cacheDirectory: directory,
+      delayMs: 0,
+      fetch: wiki.handler,
+    });
+    const page = await client.page("Ahri");
+    expect(page?.text).toContain("The orb passes through minions.");
+    const parse = wiki.requests.find(
+      (url) => url.searchParams.get("prop") === "text",
+    );
+    expect(parse?.searchParams.has("section")).toBe(false);
   });
 
   test("reads the Abilities section by revision and caches it by page and revision", async () => {
