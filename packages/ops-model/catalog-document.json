@@ -3329,7 +3329,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/2",
-      "configurationRevisionId": "prometheus/prod/13"
+      "configurationRevisionId": "prometheus/prod/14"
     },
     {
       "id": "prometheus-adapter/prod",
