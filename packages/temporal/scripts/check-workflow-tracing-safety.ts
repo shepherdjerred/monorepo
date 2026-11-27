@@ -42,8 +42,6 @@ export async function findTracingSafetyViolations(
 }
 
 async function main(): Promise<void> {
-  const packageRoot = fileURLToPath(new URL("..", import.meta.url));
-  const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
   const roots = [
     fileURLToPath(new URL("../src/workflows/", import.meta.url)),
     fileURLToPath(

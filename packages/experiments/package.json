@@ -19,6 +19,7 @@
     "dev": "bun src/dev.ts",
     "generate": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
+    "smoke": "bun src/smoke.ts",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src --exclude '**/*.integration.test.ts'",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "test:extended": "bun ../../scripts/ci/run-ci-test.ts --tier extended",

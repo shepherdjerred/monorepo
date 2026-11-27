@@ -8,13 +8,14 @@ const Manifest = z.looseObject({ kind: z.string() });
 
 beforeEach(resetProbeRegistry);
 
-test("a prepared service renders only its activation marker", () => {
-  const resources = createExperimentsChart(new App(), false).toJson();
-  expect(resources).toHaveLength(1);
-  expect(resources[0]).toMatchObject({
-    kind: "ConfigMap",
-    data: { active: "false" },
-  });
+test("the prepared Experiments chart publishes only its namespaced activation marker", () => {
+  expect(createExperimentsChart(new App(), false).toJson()).toEqual([
+    expect.objectContaining({
+      kind: "ConfigMap",
+      metadata: { name: "experiments-activation", namespace: "experiments" },
+      data: { active: "false" },
+    }),
+  ]);
 });
 
 test("an activated service renders its workload", () => {

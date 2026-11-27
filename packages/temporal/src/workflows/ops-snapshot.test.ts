@@ -19,6 +19,7 @@ import {
 } from "./ops/ci-dashboard.ts";
 import { runWorkflowWithActivityWorker } from "./test-support.ts";
 
+// Keep the worker entrypoints as URL literals so Knip can follow them.
 const workflowPath = fileURLToPath(new URL("index.ts", import.meta.url));
 
 const summary: OpsPublishSummary = {
