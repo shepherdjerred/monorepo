@@ -5,6 +5,7 @@ import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import { completionStep } from "#src/pipeline/completion.ts";
 import { SOURCE_CACHE_PREPARATION_IMAGE } from "#src/pipeline/source-cache.ts";
+import { CHECKOUT_TIER, LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import type { CiCommandStep, CiStep } from "#src/pipeline/model.ts";
 import {
   WORKFLOW_TIMEOUT_MINUTES,
@@ -263,9 +264,31 @@ const EmittedPodOptions = z.object({
 
 const EmittedServices = z.object({
   steps: z.array(EmittedPodOptions.extend({ name: z.string() }).loose()),
-  clone: z.array(EmittedPodOptions.loose()).optional(),
+  clone: z
+    .array(EmittedPodOptions.extend({ name: z.string() }).loose())
+    .optional(),
   services: z.array(EmittedPodOptions.loose()).optional(),
 });
+
+/**
+ * Only the Git checkout itself carries a measured working set above the light
+ * tier; the ownership containers around it stay light.
+ */
+function expectCloneRequests(
+  stepKey: string,
+  clones: z.infer<typeof EmittedServices>["clone"] & object,
+): void {
+  for (const clone of clones) {
+    expect(
+      clone.backend_options.kubernetes.resources.requests["memory"],
+      `${stepKey} ${clone.name}`,
+    ).toBe(
+      clone.name === "clone"
+        ? CHECKOUT_TIER.memoryRequest
+        : LIGHT_TIER.memoryRequest,
+    );
+  }
+}
 
 describe("pod shape", () => {
   /**
@@ -308,6 +331,7 @@ describe("pod shape", () => {
       const pods = [...(emitted.services ?? []), ...(emitted.clone ?? [])];
       services += emitted.services?.length ?? 0;
       clones += emitted.clone?.length ?? 0;
+      expectCloneRequests(step.key, emitted.clone ?? []);
       for (const pod of pods) {
         const options = pod.backend_options.kubernetes;
         for (const resource of ["cpu", "memory", "ephemeral-storage"]) {

@@ -29,13 +29,14 @@ test("the admission graph includes bounded RAM scratch alongside ordinary workfl
     generated
       .filter((entry) => entry.key === "verify")
       .map((entry) => entry.resources.memoryRequest),
-  ).toEqual(["18Gi", "30Gi", "30Gi"]);
-  // Ordinary verify and browser lanes reserve their own RAM scratch profiles.
+  ).toEqual(["20Gi", "20Gi", "20Gi"]);
+  // RAM scratch raises only the limit: the request is the lane's measured
+  // working set, tmpfs pages included, with or without the profile.
   expect(
     generated
       .filter((entry) => entry.key === "playwright-e2e")
       .map((entry) => entry.resources.memoryRequest),
-  ).toEqual(["6Gi", "10Gi"]);
+  ).toEqual(["4Gi", "4Gi"]);
   expect(
     pooledAdmissionBudgetViolations(
       generated,
