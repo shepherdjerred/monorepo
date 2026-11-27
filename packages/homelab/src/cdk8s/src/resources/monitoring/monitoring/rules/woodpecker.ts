@@ -1,5 +1,6 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { getWoodpeckerQueueAlertRules } from "./woodpecker-queue.ts";
 import { escapePrometheusTemplate } from "./shared.ts";
 
 /**
@@ -423,36 +424,7 @@ unless on (namespace, pod)
             namespace: "woodpecker-ci",
           },
         },
-        {
-          // The agent is a plain Deployment holding a gRPC stream to the
-          // server, so the health question is whether an available agent is
-          // actually connected to the server.
-          alert: "WoodpeckerAgentDisconnected",
-          annotations: {
-            summary:
-              "Woodpecker CI agents are running but disconnected from server",
-            description:
-              "Woodpecker agent pods are running, but the server has reported zero connected agents for 5 minutes, leaving CI pipelines stuck in queue. Check woodpecker-agent and woodpecker-server logs for gRPC connectivity or authentication errors.",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
-  sum(kube_deployment_status_replicas_available{
-    namespace="woodpecker",
-    deployment="woodpecker-agent"
-  }) > 0
-)
-and on ()
-  (
-    absent(woodpecker_worker_count{namespace="woodpecker"})
-    or on ()
-    max(woodpecker_worker_count{namespace="woodpecker"}) == 0
-  )`),
-          for: "5m",
-          labels: {
-            severity: "info",
-            category: "ci",
-            namespace: "woodpecker",
-          },
-        },
+        ...getWoodpeckerQueueAlertRules(),
         {
           // Bun cache GC prunes at 60% usage; crossing 75% means GC is falling
           // behind or blocked by active job locks.
