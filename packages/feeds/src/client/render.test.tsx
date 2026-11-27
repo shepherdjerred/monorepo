@@ -39,23 +39,30 @@ const summary: SummaryResponse = {
   categories: [
     {
       id: 1,
-      label: "Repo Stack",
+      label: "Engineering & Infra",
       managed: true,
       unreadCount: 11,
-      feedCount: 24,
+      feedCount: 36,
     },
     {
       id: 2,
-      label: "Blogs",
+      label: "AI",
       managed: true,
-      unreadCount: 5,
-      feedCount: 14,
+      unreadCount: 2,
+      feedCount: 4,
     },
     {
       id: 3,
+      label: "Essays & Personal Blogs",
+      managed: true,
+      unreadCount: 5,
+      feedCount: 25,
+    },
+    {
+      id: 4,
       label: "Uncategorized",
       managed: false,
-      unreadCount: 2,
+      unreadCount: 0,
       feedCount: 1,
     },
   ],
@@ -156,7 +163,11 @@ test("the sidebar renders view counts, failing badge, categories, and theme swit
   const html = renderToStaticMarkup(
     <FeedsSidebar
       summary={summary}
-      route={{ kind: "entries", view: "unread", category: "Repo Stack" }}
+      route={{
+        kind: "entries",
+        view: "unread",
+        category: "Engineering & Infra",
+      }}
       theme={theme}
     />,
   );
@@ -171,10 +182,15 @@ test("the sidebar renders view counts, failing badge, categories, and theme swit
   expect(html).toMatch(
     />Feeds &amp; Health<\/span><span class="ui-nav-count">2</,
   );
-  expect(html).toMatch(/>Repo Stack<\/span><span class="ui-nav-count">11</);
-  expect(html).toMatch(/>Blogs<\/span><span class="ui-nav-count">5</);
+  expect(html).toMatch(
+    />Engineering &amp; Infra<\/span><span class="ui-nav-count">11</,
+  );
+  expect(html).toMatch(/>AI<\/span><span class="ui-nav-count">2</);
+  expect(html).toMatch(
+    />Essays &amp; Personal Blogs<\/span><span class="ui-nav-count">5</,
+  );
   expect(html.match(/aria-current="page"/g)).toHaveLength(1);
-  expect(html).toContain('href="/category/Repo%20Stack"');
+  expect(html).toContain('href="/category/Engineering%20%26%20Infra"');
   expect(html).toContain("Theme");
 
   // Failing badge disappears when failingFeeds === 0.
@@ -203,7 +219,7 @@ test("the narrow-width picker renders the app switcher and native select", () =>
   expect(html).toContain(
     '<option value="/starred" selected="">Starred (6)</option>',
   );
-  expect(html).toContain("Repo Stack (11)");
+  expect(html).toContain("Engineering &amp; Infra (11)");
 });
 
 test("the entry table renders external links, feed filter chips, star/read states, auto-read badge, and load more", () => {

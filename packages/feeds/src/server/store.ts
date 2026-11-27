@@ -37,9 +37,9 @@ import {
   queryReaderStreamIdsFromDb,
   querySummaryFromDb,
 } from "./store-queries.ts";
+import { reconcileCatalogInDb } from "./store-reconcile.ts";
 import {
-  bumpSubscriptionsEtagInDb,
-  ensureCategoryInDb,
+  ensureSchemaMigrationsInDb,
   FEED_SELECT_SQL,
   getFeedByIdFromDb,
   getFeedByUrlFromDb,
@@ -82,6 +82,7 @@ export class FeedsStore implements FeedsRepository {
       db.run("PRAGMA synchronous = NORMAL");
     }
     db.run(SCHEMA_SQL);
+    ensureSchemaMigrationsInDb(db);
     return new FeedsStore(db);
   }
 
@@ -102,54 +103,7 @@ export class FeedsStore implements FeedsRepository {
     readonly upserted: number;
     readonly pruned: number;
   } {
-    const upsertStmt = this.db.query(`
-      INSERT INTO feeds (url, title, category_id, html_url, description, source, hidden, auto_read_json) VALUES (?, ?, ?, ?, ?, 'code', ?, ?)
-      ON CONFLICT(url) DO UPDATE SET title = excluded.title, category_id = excluded.category_id, html_url = COALESCE(excluded.html_url, feeds.html_url),
-        description = excluded.description, source = 'code', hidden = excluded.hidden, auto_read_json = excluded.auto_read_json
-      WHERE feeds.title IS NOT excluded.title OR feeds.category_id IS NOT excluded.category_id OR (excluded.html_url IS NOT NULL AND feeds.html_url IS NOT excluded.html_url)
-         OR feeds.description IS NOT excluded.description OR feeds.source IS NOT excluded.source OR feeds.hidden IS NOT excluded.hidden OR feeds.auto_read_json IS NOT excluded.auto_read_json
-    `);
-    return this.db.transaction(() => {
-      const repoCat = ensureCategoryInDb(this.db, "Repo Stack", 1, 10);
-      const blogsCat = ensureCategoryInDb(this.db, "Blogs", 1, 20);
-      const uncat = ensureCategoryInDb(this.db, "Uncategorized", 0, 30);
-      let changed = repoCat.changed || blogsCat.changed || uncat.changed;
-      const declaredUrls = new Set<string>();
-      for (const feed of feeds) {
-        declaredUrls.add(feed.url);
-        const categoryId =
-          feed.category === "Repo Stack" ? repoCat.id : blogsCat.id;
-        const autoJson =
-          feed.autoRead === undefined ? null : JSON.stringify(feed.autoRead);
-        const res = upsertStmt.run(
-          feed.url,
-          feed.title,
-          categoryId,
-          feed.htmlUrl ?? null,
-          feed.description ?? null,
-          feed.hidden === true ? 1 : 0,
-          autoJson,
-        );
-        changed = changed || res.changes > 0;
-      }
-      const existingCode = this.db
-        .query<{ readonly id: number; readonly url: string }, []>(
-          "SELECT id, url FROM feeds WHERE source = 'code'",
-        )
-        .all();
-      const delStmt = this.db.query("DELETE FROM feeds WHERE id = ?");
-      let pruned = 0;
-      for (const row of existingCode) {
-        if (!declaredUrls.has(row.url)) {
-          delStmt.run(row.id);
-          pruned += 1;
-        }
-      }
-      if (changed || pruned > 0) {
-        bumpSubscriptionsEtagInDb(this.db);
-      }
-      return { upserted: feeds.length, pruned };
-    })();
+    return reconcileCatalogInDb(this.db, feeds);
   }
 
   pruneOldEntries(options?: {
@@ -215,10 +169,10 @@ export class FeedsStore implements FeedsRepository {
       "SELECT id FROM entries WHERE feed_id = ? AND guid = ?",
     );
     const insertEntry = this.db.query(
-      "INSERT INTO entries (id, feed_id, guid, url, title, author, content_html, published_at, crawled_at_ms, enclosures_json, is_read, is_starred, auto_read_matched) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
+      "INSERT INTO entries (id, feed_id, guid, url, title, author, content_html, published_at, crawled_at_ms, enclosures_json, categories_json, is_read, is_starred, auto_read_matched) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
     );
     const updateEntry = this.db.query(
-      "UPDATE entries SET title = ?, url = ?, author = ?, content_html = ?, enclosures_json = ? WHERE id = ?",
+      "UPDATE entries SET title = ?, url = ?, author = ?, content_html = ?, enclosures_json = ?, categories_json = ? WHERE id = ?",
     );
     return this.db.transaction(() => {
       const feed = this.getFeedById(input.feedId);
@@ -230,6 +184,7 @@ export class FeedsStore implements FeedsRepository {
       let autoRead = 0;
       for (const entry of input.entries) {
         const encJson = JSON.stringify(entry.enclosures);
+        const catJson = JSON.stringify(entry.categories ?? []);
         const existing = findExisting.get(input.feedId, entry.guid);
         if (existing !== null) {
           updateEntry.run(
@@ -238,6 +193,7 @@ export class FeedsStore implements FeedsRepository {
             entry.author,
             entry.contentHtml,
             encJson,
+            catJson,
             existing.id,
           );
           continue;
@@ -254,6 +210,7 @@ export class FeedsStore implements FeedsRepository {
           entry.publishedAt,
           crawledAtMs,
           encJson,
+          catJson,
           matched ? 1 : 0,
           matched ? 1 : 0,
         );
