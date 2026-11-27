@@ -3,6 +3,7 @@ import { mkdtemp, rm, symlink, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { createTempGitRepo, type TempGitRepo } from "../lib/test-git.ts";
 import { SHARD_NAMES } from "./repo-shards.ts";
 import {
   assertPrettierChangedDigest,
@@ -292,19 +293,14 @@ describe("changedFilesForShard", () => {
 const BUILD_FILE = "packages/mc-harness/src/build/apply.ts";
 
 async function withShardRepository(
-  body: (
-    repository: string,
-    git: (...args: string[]) => string,
-  ) => Promise<void>,
+  body: (repository: string, git: TempGitRepo["git"]) => Promise<void>,
 ): Promise<void> {
-  const repository = await mkdtemp(path.join(tmpdir(), "prettier-digest-"));
-  const git = (...args: string[]) => {
-    const result = Bun.spawnSync(["git", ...args], { cwd: repository });
-    expect(result.exitCode, result.stderr.toString()).toBe(0);
-    return result.stdout.toString().trim();
-  };
+  const {
+    directory: repository,
+    git,
+    cleanup,
+  } = await createTempGitRepo("prettier-digest-");
   try {
-    git("init", "--quiet");
     for (const [file, content] of Object.entries({
       [BUILD_FILE]: "const a = 1;\n",
       "packages/other/src/index.ts": "const b = 1;\n",
@@ -315,10 +311,10 @@ async function withShardRepository(
     })) {
       await Bun.write(path.join(repository, file), content);
     }
-    git("add", ".");
+    await git(["add", "."]);
     await body(repository, git);
   } finally {
-    await rm(repository, { recursive: true, force: true });
+    await cleanup();
   }
 }
 
@@ -342,20 +338,9 @@ describe("prettierChangedDigest", () => {
 
   test("an unchanged shard hashes the same whichever base reached the same diff", async () => {
     await withShardRepository(async (repository, git) => {
-      git(
-        "-c",
-        "user.name=Test Fixture",
-        "-c",
-        "user.email=fixture@example.invalid",
-        "-c",
-        "core.hooksPath=/dev/null",
-        "commit",
-        "--quiet",
-        "--no-gpg-sign",
-        "-m",
-        "base",
-      );
-      const head = git("rev-parse", "HEAD");
+      await git(["commit", "--quiet", "-m", "base"]);
+      const commit = await git(["rev-parse", "HEAD"]);
+      const head = commit.trim();
       const symbolic = await prettierChangedDigest(
         "scout",
         { CI_CHANGED_BASE: "HEAD" },
@@ -397,7 +382,7 @@ describe("prettierDigestForFiles is content addressed", () => {
         repository,
       );
       expect(unstaged).not.toBe(before);
-      git("add", BUILD_FILE);
+      await git(["add", BUILD_FILE]);
       const staged = await prettierDigestForFiles(
         "packages",
         [BUILD_FILE],
@@ -444,7 +429,7 @@ describe("prettierDigestForFiles is content addressed", () => {
         path.join(repository, ".editorconfig"),
         "root = true\n[*]\n",
       );
-      git("add", ".editorconfig");
+      await git(["add", ".editorconfig"]);
       expect(
         await prettierDigestForFiles("packages", null, repository),
       ).not.toBe(afterFile);
