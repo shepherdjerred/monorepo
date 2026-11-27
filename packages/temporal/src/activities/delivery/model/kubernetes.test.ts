@@ -1143,9 +1143,6 @@ describe("cluster-observability prune guard (AI-908)", () => {
 
 describe("tracked worker compatibility (AI-833)", () => {
   test("apply-safety refuses an incompatible chart:media and tracked worker before writeBody (AI-833)", async () => {
-    const { createHash } = await import("node:crypto");
-    const { DeploymentDetailSchema } =
-      await import("@shepherdjerred/delivery/contract");
     const { requireModelRecipe } =
       await import("#lib/delivery/model/recipe.ts");
     const { buildChartTgz } = await import("#lib/delivery/model/testing.ts");
