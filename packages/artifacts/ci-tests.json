@@ -10,6 +10,7 @@
         "src/application",
         "src/bridge",
         "src/server",
+        "src/client",
         "--testTimeout",
         "30000",
         "--hookTimeout",
@@ -27,6 +28,12 @@
         "--hookTimeout",
         "60000"
       ]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "e2e",
+      "reason": "Playwright acceptance runs in the browser E2E lane."
     }
   ]
 }
