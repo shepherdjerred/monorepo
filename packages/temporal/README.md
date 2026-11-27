@@ -1951,6 +1951,39 @@ occurrence.
 Publishing still requires the production flag and a target allowlist; these
 source capabilities do not establish production deployment or live acceptance.
 
+### Daily dependency upgrades
+
+`renovate-ranking-daily` ranks the repository's dependency updates at 03:15
+Pacific. The repo worker runs a read-only Renovate lookup on a pinned `main`
+checkout, checks release age and advisories, and records the ranked snapshot in
+`renovate-ranking/v1/latest.json` in the report receipt bucket. Hub's Renovate
+page shows the ranking, lookup coverage, bake status, and linked bundle PRs.
+
+`renovate-bundle-dispatch` drains the same backlog as Woodpecker has room.
+Needed, aged updates estimated at XS, S, or M qualify. An isolated Codex turn
+groups compatible candidates and prepares the upgrade. The repo worker verifies
+the exact pins, changed paths, lockfiles, and affected checks before publishing.
+Each GitHub write is journaled in `renovate-ranking/v1/dispatch.json`. The next
+bundle can proceed after the exact head has a Woodpecker receipt. Open work
+reserves its changed paths and lockfiles until it merges or closes. A native or
+operator check the worker cannot complete is shown as a blocker in Hub.
+Python verification downloads locked wheels before running builds and tests
+offline. A dependency that requires an uncached source build stays blocked.
+.NET verification requires the SDK and a populated NuGet cache so MSBuild
+runs offline.
+
+Both schedules register paused for worker cutover. Once the new workflow and
+repo workers are active, trigger `renovate-ranking-daily` and read the resulting
+snapshot in Hub. Start `runRenovateBundleDispatch` on `monorepo-workflows` with
+`{"preview":true}` to validate a bundle without publishing it. Check that
+`temporal-renovate-publishing-enabled` resolves to `true` in the production
+Flags deployment and the credentialless exact-head approval policy in the
+deployed Woodpecker config extension before triggering the first live dispatch.
+Verify the PR and exact Woodpecker head, then trigger again to confirm the first
+head is unchanged.
+Unpause the schedules after those checks. Set the publishing flag to `false` to
+pause submissions while keeping ranking and PR status readback active.
+
 ### Scheduled report PR remediation
 
 `temporal-report-auto-remediation-enabled` (`src/config/report-remediation.ts`,

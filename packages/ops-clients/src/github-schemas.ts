@@ -117,6 +117,28 @@ export const RestReleaseSchema = z.object({
   created_at: z.string(),
 });
 
+type GitHubReleaseNote = {
+  tagName: string;
+  name: string;
+  body: string;
+  url: string;
+  prerelease: boolean;
+  publishedAt: string | null;
+};
+
+export function toGitHubReleaseNote(
+  release: z.infer<typeof RestReleaseSchema>,
+): GitHubReleaseNote {
+  return {
+    tagName: release.tag_name,
+    name: release.name ?? release.tag_name,
+    body: release.body ?? "",
+    url: release.html_url,
+    prerelease: release.prerelease,
+    publishedAt: release.published_at ?? release.created_at,
+  };
+}
+
 export const RestCompareSchema = z.object({
   ahead_by: z.number().int().nonnegative(),
   html_url: z.url(),

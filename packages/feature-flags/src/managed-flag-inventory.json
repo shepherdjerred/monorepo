@@ -4813,6 +4813,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "temporal-renovate-publishing-enabled",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "temporal",
+      "purpose": "Allow the Renovate bundle workflow to submit independently verified dependency upgrades to GitHub and Woodpecker.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "temporal-report-auto-remediation-enabled",
       "owner": "temporal",
       "namespace": "temporal",

@@ -22,6 +22,7 @@ import {
   talosServiceHealthy,
 } from "#observability/metrics-ops.ts";
 import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
+import { readLatestRenovateQueue } from "#activities/renovate/store.ts";
 import { aiQueries, mapAi, monthToDateWindow } from "./ai.ts";
 import { mapAlerts } from "./alerts.ts";
 import { mapArgoApplications, updateOutOfSyncSince } from "./argocd.ts";
@@ -184,16 +185,19 @@ export async function collectRenovate(
   options?: {
     now?: Date;
     readDeltas?: RenovateDeltaReader;
+    readRanking?: typeof readLatestRenovateQueue;
   },
 ): Promise<OpsCollection> {
   const now = options?.now ?? new Date();
   const readDeltas = options?.readDeltas ?? readLatestRenovateDeltas;
-  const [dashboard, open, merged30d, deltasByBranch] = await Promise.all([
-    github.openIssueByTitle(DEPENDENCY_DASHBOARD_TITLE),
-    github.openPullRequests(),
-    github.mergedPullRequests(daysBefore(now, 30)),
-    readDeltas(),
-  ]);
+  const [dashboard, open, merged30d, deltasByBranch, ranking] =
+    await Promise.all([
+      github.openIssueByTitle(DEPENDENCY_DASHBOARD_TITLE),
+      github.openPullRequests(),
+      github.mergedPullRequests(daysBefore(now, 30)),
+      readDeltas(),
+      (options?.readRanking ?? readLatestRenovateQueue)(),
+    ]);
   const { counts: legacyCounts, ...collection } = mapRenovate(dashboard, open);
   const renovateFacet = buildRenovateFacet({
     dashboard,
@@ -209,7 +213,12 @@ export async function collectRenovate(
   renovateUpdatesPending.set({ state: "open-pr" }, legacyCounts["open-pr"]);
   return {
     ...collection,
-    facets: { renovate: renovateFacet },
+    facets: {
+      renovate: {
+        ...renovateFacet,
+        ...(ranking === undefined ? {} : { ranking }),
+      },
+    },
   };
 }
 

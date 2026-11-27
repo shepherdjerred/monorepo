@@ -400,9 +400,12 @@ consistency, conflict markers and secrets in the proposed commit history.
 The filtered install includes root formatting plugins and script dependencies,
 with lifecycle scripts disabled.
 They create no merge verdict or browser/Tofu/rehearsal jobs.
-Hosted automation without exact-head approval keeps a credentialless preflight.
-Ready PRs run the full affected verification graph, while automated PR review runs
-outside Woodpecker in Temporal (`ci/code-review`).
+Hosted automation and dependency proposals from the repository bot stay
+credentialless until the owner's approval covers the exact head commit. The
+extension identifies dependency proposals by the signed GitHub source ref
+`chore/renovate-bundle-<16 lowercase hex digits>`.
+Once approved, these ready PRs run the full affected verification graph.
+Automated PR review runs outside Woodpecker in Temporal (`ci/code-review`).
 
 Deploy the ready-event compatibility path and server status-context template
 before enabling draft preflight. The server change requires a drained rollout;

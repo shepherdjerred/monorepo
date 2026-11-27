@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
-import { sequence } from "@shepherdjerred/ops-clients/test-support/fake-fetch.ts";
+import {
+  fakeFetch,
+  sequence,
+} from "@shepherdjerred/ops-clients/test-support/fake-fetch.ts";
 
 function github(...bodies: unknown[]) {
   const fake = sequence(...bodies);
@@ -335,6 +338,41 @@ describe("GitHubClient rate limits and release deltas", () => {
       },
     });
     expect(requests[1]?.url).toBe("https://api.github.com/rate_limit");
+  });
+
+  test("reports release pagination coverage from Link headers even with a full final page", async () => {
+    const release = {
+      tag_name: "v2.0.0",
+      name: null,
+      body: null,
+      html_url: "https://github.com/acme/foo/releases/tag/v2.0.0",
+      draft: false,
+      prerelease: false,
+      published_at: null,
+      created_at: "2026-09-20T00:00:00Z",
+    };
+    const fullPage = Array.from({ length: 100 }, () => release);
+    const lookup = (maxPages: number) => {
+      const fake = fakeFetch((_request, index) =>
+        index === 0
+          ? Response.json([release], {
+              headers: { link: '<next-page>; rel="next"' },
+            })
+          : Response.json(fullPage),
+      );
+      return new GitHubClient({
+        owner: "acme",
+        name: "foo",
+        token: () => Promise.resolve("test"),
+        fetch: fake.fetch,
+      }).releasesBetweenWithCoverage({ owner: "acme", name: "foo", maxPages });
+    };
+    const limited = await lookup(1);
+    expect(limited.complete).toBe(false);
+    expect(limited.releases).toHaveLength(1);
+    const all = await lookup(2);
+    expect(all.complete).toBe(true);
+    expect(all.releases).toHaveLength(101);
   });
 
   test("fetches pull request body, release notes, and commit comparisons", async () => {

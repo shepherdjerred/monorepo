@@ -46,6 +46,7 @@ import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { llmArchiveIndexActivities } from "./ops/llm-archive/llm-archive-index.ts";
 import { renovateDeltaActivities } from "./ops/renovate-delta/renovate-delta.ts";
+import { renovateAutomationActivities } from "./renovate/index.ts";
 import { stormPlotActivities } from "./homelab/storm-plots.ts";
 import { rwfRecordingArchiveActivities } from "./homelab/rwf/recording-archive.ts";
 import { stormCompanionActivities } from "./homelab/storm-companions.ts";
@@ -115,6 +116,7 @@ export const opsWorkerActivities = {
 };
 
 export const repoActivities = {
+  ...renovateAutomationActivities,
   ...gitBackupActivities,
   ...ciMaintenanceActivities,
   ...ciExtendedVerifyActivities,
