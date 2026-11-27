@@ -153,6 +153,7 @@ describe("SeaweedFS backup to Backblaze", () => {
 
   test("buckets that must survive a SeaweedFS loss are backed up", () => {
     for (const bucket of [
+      "artifacts-blobs",
       "delivery-artifacts",
       "glitter-discord-corpus",
       "homelab-tofu-state",

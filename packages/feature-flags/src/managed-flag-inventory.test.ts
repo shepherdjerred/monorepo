@@ -307,6 +307,7 @@ describe("ManagedFlagInventorySchema", () => {
       "feeds",
       "mail",
       "errors",
+      "artifacts",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(

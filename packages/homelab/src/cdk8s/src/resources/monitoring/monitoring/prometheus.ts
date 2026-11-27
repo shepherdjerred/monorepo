@@ -12,6 +12,7 @@ import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getSeaweedfsRuleGroups } from "./rules/storage/seaweedfs.ts";
+import { getArtifactsRuleGroups } from "./rules/platform/artifacts.ts";
 import { getMailRuleGroups } from "./rules/mail.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
 import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
@@ -263,6 +264,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getMailRuleGroups(),
+    },
+  });
+
+  // Create Artifacts rules
+  new PrometheusRule(chart, "prometheus-artifacts-rules", {
+    metadata: {
+      name: "prometheus-artifacts-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getArtifactsRuleGroups(),
     },
   });
 

@@ -22,6 +22,7 @@ describe("workflow bundle", () => {
     for (const name of [
       "maintainStormForumWorkflow",
       "runTrackerAttachmentCleanup",
+      "runArtifactsCleanup",
       "agentChatWorkflow",
       "agentChatTurnReceiptWorkflow",
       "agentChatCatalogWorkflow",

@@ -23,6 +23,7 @@ import {
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import {
+  ARTIFACTS_ENDPOINT,
   FEEDS_ENDPOINT,
   GOLINK_ENDPOINT,
   MAIL_API_ENDPOINT,
@@ -279,6 +280,23 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       podSelector: { matchLabels: { component: "repo-worker" } },
       policyTypes: ["Egress"],
       egress: [{ to: [FEEDS_ENDPOINT.peer()], ports: [FEEDS_ENDPOINT.tcp()] }],
+    },
+  });
+
+  // The hourly artifacts-cleanup Activity runs on the infra queue and calls
+  // the Service's internal host class. The matching ingress rule is in
+  // `resources/artifacts`.
+  new KubeNetworkPolicy(chart, "temporal-worker-artifacts-netpol", {
+    metadata: { name: "temporal-worker-artifacts-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "infra-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [ARTIFACTS_ENDPOINT.peer()],
+          ports: [ARTIFACTS_ENDPOINT.tcp()],
+        },
+      ],
     },
   });
 

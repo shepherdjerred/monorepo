@@ -242,6 +242,16 @@
       "exposure": "ingress"
     },
     {
+      "host": "artifacts",
+      "namespace": "artifacts",
+      "exposure": "ingress"
+    },
+    {
+      "host": "artifacts-content",
+      "namespace": "artifacts",
+      "exposure": "ingress"
+    },
+    {
       "host": "bazarr",
       "namespace": "media",
       "exposure": "ingress"
@@ -525,6 +535,11 @@
     }
   ],
   "bucketConsumers": [
+    {
+      "bucket": "artifacts-blobs",
+      "namespace": "artifacts",
+      "env": "S3_BUCKET"
+    },
     {
       "bucket": "better-skill-capped",
       "namespace": "temporal",
