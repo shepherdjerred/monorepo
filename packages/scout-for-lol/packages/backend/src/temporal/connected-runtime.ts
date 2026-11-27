@@ -188,7 +188,10 @@ type LakeActivities = Pick<
 > &
   ScoutLakeActivities;
 
-type CrawlActivities = Pick<ScoutTemporalActivities, "runParticipantCrawl">;
+type CrawlActivities = Pick<
+  ScoutTemporalActivities,
+  "runParticipantCrawl" | "pruneCrawlFrontier"
+>;
 
 export type ScoutTemporalActivityGroups = {
   readonly gateway: Pick<ScoutTemporalActivities, "probeQueue">;

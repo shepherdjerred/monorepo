@@ -24,10 +24,6 @@
       "clones": 1,
       "tokens": 127
     },
-    "packages/birmel/scripts/smoke.ts|packages/streambot/scripts/smoke.ts": {
-      "clones": 2,
-      "tokens": 242
-    },
     "packages/birmel/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
       "clones": 1,
       "tokens": 142

@@ -393,6 +393,101 @@ describe("incremental Reddit scan boundaries", () => {
   });
 });
 
+it("includes late-visible posts in a 30-minute rescan without resettling previous posts", async () => {
+  const input = fixture();
+  const settled = post("settled");
+  const late = post("late", now - 9 * 60_000);
+  const fresh = post("fresh", now + 60_000);
+  const older = post("older", now - 26 * 60_000);
+  await runIncrementalRedditDiscovery({
+    ...input,
+    readPage: async () => ({ posts: [settled], after: null }),
+  });
+  const process = vi.fn(input.process);
+  const onCoverage = vi.fn<NonNullable<typeof input.onCoverage>>();
+  await runIncrementalRedditDiscovery({
+    ...input,
+    now: now + 5 * 60_000,
+    readPage: async () => ({
+      posts: [fresh, settled, late, older],
+      after: null,
+    }),
+    process,
+    onCoverage,
+  });
+  expect(process).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ since: now - 25 * 60_000, posts: [fresh, late] }),
+  );
+  expect(onCoverage).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      found: 2,
+      skipped: 2,
+      pending: 0,
+      complete: true,
+    }),
+  );
+});
+
+it("recognizes the cutoff from an already settled row without requesting another page", async () => {
+  const input = fixture();
+  const previousSweep = now - 35 * 60_000;
+  const settled = post("settled", previousSweep - 60_000);
+  await runIncrementalRedditDiscovery({
+    ...input,
+    now: previousSweep,
+    readPage: async () => ({ posts: [settled], after: null }),
+  });
+  const fresh = post("fresh");
+  const readPage = vi.fn(async () => ({
+    posts: [fresh, settled],
+    after: next(),
+  }));
+  const process = vi.fn(input.process);
+  const result = await runIncrementalRedditDiscovery({
+    ...input,
+    readPage,
+    process,
+  });
+  expect(result).toMatchObject({ stopReason: "exhausted", pages: 1 });
+  expect(readPage).toHaveBeenCalledTimes(1);
+  expect(process).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ since: previousSweep, posts: [fresh] }),
+  );
+});
+
+it("follows Next when a visibly unsorted page includes a row before the cutoff", async () => {
+  const input = fixture();
+  const first = post("first");
+  const second = post("second", now - 2 * 60_000);
+  const old = post("old", now - 16 * 60_000);
+  const readPage = vi.fn(async ({ after }: { after: string | null }) =>
+    after === null
+      ? { posts: [old, first], after: next() }
+      : { posts: [second], after: null },
+  );
+  const process = vi.fn(input.process);
+  const onCoverage = vi.fn<NonNullable<typeof input.onCoverage>>();
+  const result = await runIncrementalRedditDiscovery({
+    ...input,
+    readPage,
+    process,
+    onCoverage,
+  });
+  expect(result).toMatchObject({ stopReason: "exhausted", pages: 2 });
+  expect(process.mock.calls.map(([page]) => page.posts)).toEqual([
+    [first],
+    [second],
+  ]);
+  expect(onCoverage).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      found: 2,
+      skipped: 2,
+      pending: 0,
+      complete: true,
+    }),
+  );
+});
+
 async function overflowingPage() {
   return { posts: [post("one"), post("two"), post("three")], after: null };
 }

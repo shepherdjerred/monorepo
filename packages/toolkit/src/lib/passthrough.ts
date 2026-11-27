@@ -3,6 +3,7 @@ import os, { tmpdir } from "node:os";
 import path from "node:path";
 import { protectArgoTokenDefault } from "./argocd-options.ts";
 import { isArgoHelpCommand } from "./argocd-metadata.ts";
+import { hasNonAgentGcxOutput } from "./gcx-options.ts";
 import { isAgentEnvironment } from "./tracker/actor.ts";
 
 export const PASSTHROUGH_COMMANDS = [
@@ -35,6 +36,7 @@ type DefaultEnvironment = {
   readonly name: string;
   readonly value: string;
   readonly overrideFlags?: readonly string[] | undefined;
+  readonly whenArgs?: ((args: readonly string[]) => boolean) | undefined;
 };
 
 /** Expose a brokered credential to the vendor CLI under its own spelling. */
@@ -71,10 +73,12 @@ const HOMELAB_GCX_ENVIRONMENT: readonly DefaultEnvironment[] = [
     overrideFlags: ["--context"],
   },
   { name: "GRAFANA_ORG_ID", value: "1", overrideFlags: ["--context"] },
-];
-
-const HOMELAB_GCX_CREDENTIALS: readonly CredentialEnvironment[] = [
-  { name: "GRAFANA_TOKEN", from: "GRAFANA_API_KEY" },
+  {
+    name: "GCX_AGENT_MODE",
+    value: "false",
+    overrideFlags: ["--agent"],
+    whenArgs: hasNonAgentGcxOutput,
+  },
 ];
 
 function gcxSpec(prefixArgs?: readonly string[]): PassthroughSpec {
@@ -82,7 +86,7 @@ function gcxSpec(prefixArgs?: readonly string[]): PassthroughSpec {
     executable: "gcx",
     prefixArgs,
     defaultEnvironment: HOMELAB_GCX_ENVIRONMENT,
-    credentialEnvironment: HOMELAB_GCX_CREDENTIALS,
+    credentialEnvironment: [{ name: "GRAFANA_TOKEN", from: "GRAFANA_API_KEY" }],
   };
 }
 
@@ -337,6 +341,7 @@ function applySpecEnvironment(
     delete env["ARGOCD_AUTH_TOKEN"];
   }
   for (const entry of spec.defaultEnvironment ?? []) {
+    if (entry.whenArgs !== undefined && !entry.whenArgs(args)) continue;
     const overriddenByFlag =
       entry.overrideFlags !== undefined && hasFlag(args, entry.overrideFlags);
     if (!overriddenByFlag && !hasEnvironmentValue(env, entry.name)) {

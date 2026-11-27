@@ -20,8 +20,29 @@ import {
 } from "./forum-actions.ts";
 import type { ForumAction, ForumOptions } from "./forum-options.ts";
 
-function positiveRevision(value: string | undefined): number {
-  return z.number().int().positive().parse(integer(value));
+function requireExpectedRevision(
+  id: string,
+  action: "update" | "resolve" | "reopen",
+  raw: string | undefined,
+): number {
+  if (raw === undefined || raw.trim() === "") {
+    throw new Error(
+      `--expected-revision <N> is required for forum ${action} (inspect current revision with: toolkit forum view ${id} --json)`,
+    );
+  }
+  const trimmed = raw.trim();
+  if (!/^[1-9]\d*$/u.test(trimmed)) {
+    throw new Error(
+      `--expected-revision must be a positive integer for forum ${action} (received: ${raw})`,
+    );
+  }
+  const parsed = z.coerce.number().int().positive().safeParse(trimmed);
+  if (!parsed.success) {
+    throw new Error(
+      `--expected-revision must be a positive integer for forum ${action} (received: ${raw})`,
+    );
+  }
+  return parsed.data;
 }
 
 async function optionalViewerKey(
@@ -131,7 +152,11 @@ async function createOrUpdatePost(
     return client.create.mutate({ ...parsed, attachmentIds });
   }
   const id = required(args[0], "Post ID");
-  const expectedRevision = positiveRevision(options["expected-revision"]);
+  const expectedRevision = requireExpectedRevision(
+    id,
+    "update",
+    options["expected-revision"],
+  );
   const actor = await context.actor();
   const fields = await postFields(options, actor.key);
   const parsed = UpdateForumPostSchema.parse({
@@ -175,7 +200,11 @@ async function replyOrStateMutation(
     );
     return client.reply.mutate({ ...parsed, attachmentIds });
   }
-  const expectedRevision = positiveRevision(options["expected-revision"]);
+  const expectedRevision = requireExpectedRevision(
+    id,
+    action,
+    options["expected-revision"],
+  );
   if (action === "reopen") {
     return client.reopen.mutate(
       ReopenForumSchema.parse({

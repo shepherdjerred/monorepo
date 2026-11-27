@@ -35,7 +35,7 @@ It does not redact the separate repository-owned OpenTelemetry pipeline.
 
 Bugsink clients remain error-only. Bun services with their own tracing provider
 set `enableOpenTelemetrySetup: false` and keep SDK tracing disabled; their
-OpenTelemetry exporters own traces sent to Tempo and Phoenix.
+OpenTelemetry exporters own traces sent to Tempo and the SeaweedFS LLM archive.
 
 Applications pass the DSN, release, environment, and sample rates to
 `Sentry.init` explicitly from their own `BUGSINK_*` configuration. The SDK

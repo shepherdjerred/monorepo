@@ -222,6 +222,69 @@ describe("passthrough registry", () => {
   });
 });
 
+describe("gcx passthrough agent mode", () => {
+  test("suppresses gcx agent-mode stdout hints for explicit machine-readable output (AI-527)", () => {
+    for (const command of ["grafana", "prom", "loki", "tempo"] as const) {
+      for (const outputArgs of [
+        ["query", "up", "-o", "json"],
+        ["query", "up", "--output", "json"],
+        ["query", "up", "--output=json"],
+        ["query", "up", "-ojson"],
+        ["query", "up", "-o=json"],
+        ["query", "up", "-o", "yaml"],
+      ]) {
+        expect(
+          buildPassthroughInvocation(command, outputArgs, { CLAUDECODE: "1" })
+            ?.env["GCX_AGENT_MODE"],
+        ).toBe("false");
+      }
+
+      expect(
+        buildPassthroughInvocation(command, ["query", "up"], {
+          CLAUDECODE: "1",
+        })?.env["GCX_AGENT_MODE"],
+      ).toBeUndefined();
+      expect(
+        buildPassthroughInvocation(command, ["query", "up", "-o", "agents"], {
+          CLAUDECODE: "1",
+        })?.env["GCX_AGENT_MODE"],
+      ).toBeUndefined();
+      expect(
+        buildPassthroughInvocation(
+          command,
+          ["query", "up", "--output=agents"],
+          { CLAUDECODE: "1" },
+        )?.env["GCX_AGENT_MODE"],
+      ).toBeUndefined();
+      expect(
+        buildPassthroughInvocation(
+          command,
+          ["query", "up", "-o", "json", "--agent"],
+          { CLAUDECODE: "1" },
+        )?.env["GCX_AGENT_MODE"],
+      ).toBeUndefined();
+      expect(
+        buildPassthroughInvocation(command, ["query", "up", "-o", "json"], {
+          CLAUDECODE: "1",
+          GCX_AGENT_MODE: "true",
+        })?.env["GCX_AGENT_MODE"],
+      ).toBe("true");
+      expect(
+        buildPassthroughInvocation(
+          command,
+          ["query", "up", "--", "-o", "json"],
+          { CLAUDECODE: "1" },
+        )?.env["GCX_AGENT_MODE"],
+      ).toBeUndefined();
+      expect(
+        buildPassthroughInvocation(command, ["query", "up", "-o"], {
+          CLAUDECODE: "1",
+        })?.env["GCX_AGENT_MODE"],
+      ).toBeUndefined();
+    }
+  });
+});
+
 type ToolkitResult = {
   readonly code: number;
   readonly signalCode: NodeJS.Signals | number | null;
@@ -873,5 +936,35 @@ process.exit(0);
       { stdin: "ignore" },
     );
     expect(code).toBe(0);
+  });
+
+  test("forwards GCX_AGENT_MODE=false to gcx subprocess on -o json in agent environments (AI-527)", async () => {
+    const directory = await fakePath();
+    await writeExecutable(
+      directory,
+      "gcx",
+      `#!/bin/sh
+if [ "\${GCX_AGENT_MODE:-}" != "false" ] && [ -n "\${CLAUDECODE:-}" ]; then
+  printf '{"class":"hint","summary":"use --json list"}\\n'
+fi
+printf '{"status":"success","data":{"result":[]}}\\n'
+`,
+    );
+    const result = await runToolkit(
+      directory,
+      ["prom", "query", "up == 0", "-o", "json"],
+      "",
+      {
+        extraEnv: {
+          CLAUDECODE: "1",
+          GRAFANA_API_KEY: "synthetic-grafana-token",
+        },
+      },
+    );
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      status: "success",
+      data: { result: [] },
+    });
   });
 });

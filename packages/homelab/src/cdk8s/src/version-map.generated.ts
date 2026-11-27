@@ -98,7 +98,6 @@ export const VersionMapSchema = z
     "mccloud/bazarr-openai-whisperbridge": z.string(),
     "library/nginx": z.string(),
     "bugsink/bugsink": z.string(),
-    "arizephoenix/phoenix": z.string(),
     "temporalio/server": z.string(),
     "temporalio/ui": z.string(),
     "temporalio/admin-tools": z.string(),

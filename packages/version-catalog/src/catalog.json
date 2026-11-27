@@ -1210,22 +1210,6 @@
       "value": "2.6.3@sha256:d19378dc3ad8fac46b2d554019540e84d607c176b3e0774a10c55458f1288fa0"
     },
     {
-      "name": "arizephoenix/phoenix",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
-      },
-      "value": "version-22.0.0-nonroot@sha256:1cc6e3962b16d784055bcf71cea03ad50386564002ace1a11c1b409d34a08cf8",
-      "notes": [
-        "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
-        "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
-      ]
-    },
-    {
       "name": "temporalio/server",
       "category": "upstream",
       "artifactType": "image",

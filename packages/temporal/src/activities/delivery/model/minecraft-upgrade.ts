@@ -8,11 +8,69 @@ import { minecraftRuntimeImage } from "#lib/delivery/minecraft.ts";
 import { workerApplicationResources } from "#lib/delivery/workers/worker-hosts.ts";
 import { argoRequest } from "#activities/delivery/argocd.ts";
 import { verifyDeliveryPods } from "#activities/delivery/runtime.ts";
+import type { RenderedApplication } from "#lib/delivery/model/application.ts";
 import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts";
 import { recordStage, stageOf } from "./stages.ts";
 
 /** The TSMC Application the upgrade restarts; the reviewed target is fixed. */
 const SERVER = "minecraft-tsmc";
+const CHART_COMPONENT = "chart:minecraft";
+const CHARTS_REGISTRY = "https://charts.tailnet-1a49.ts.net";
+const UPSTREAM_CHART_REPOSITORY =
+  "https://itzg.github.io/minecraft-server-charts/";
+const HISTORICAL_CHARTMUSEUM_HOSTS = new Set([
+  "chartmuseum.sjer.red",
+  "chartmuseum.tailnet-1a49.ts.net",
+]);
+
+function isUpstreamMinecraftChart(artifact: ArtifactVersion | undefined) {
+  const origin = artifact?.origin;
+  return (
+    artifact?.kind === "chart" &&
+    artifact.serviceId === "minecraft" &&
+    artifact.component === CHART_COMPONENT &&
+    origin?.kind === "upstream" &&
+    origin.repository === UPSTREAM_CHART_REPOSITORY &&
+    origin.name === "minecraft"
+  );
+}
+
+/** Read a frozen upstream Minecraft chart at the mirror named by its current
+ * recipe. The immutable URI and the pinned digest remain the release identity.
+ */
+export function minecraftChartReadUri(
+  current: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+  rendered: RenderedApplication,
+): string {
+  const { uri, version } = rendered.sourceArtifact;
+  const host = URL.parse(uri)?.hostname;
+  if (
+    host === undefined ||
+    rendered.environmentId !== "minecraft/tsmc" ||
+    recipe.chartComponent !== CHART_COMPONENT ||
+    !HISTORICAL_CHARTMUSEUM_HOSTS.has(host)
+  )
+    return uri;
+
+  const artifact = current.versionSet.components[CHART_COMPONENT];
+  const path = `/charts/minecraft-${version}.tgz`;
+  if (
+    rendered.name !== SERVER ||
+    !("chart" in rendered.source) ||
+    rendered.source.chart !== "minecraft" ||
+    rendered.source.repoURL !== CHARTS_REGISTRY ||
+    rendered.source.targetRevision !== version ||
+    !isUpstreamMinecraftChart(artifact) ||
+    !/^[0-9A-Za-z.+-]+$/u.test(version) ||
+    uri !== `https://${host}${path}`
+  )
+    throw new Error(
+      "Historical ChartMuseum URI does not match the selected upstream Minecraft chart and its canonical Charts recipe",
+    );
+
+  return `${CHARTS_REGISTRY}${path}`;
+}
 
 /** Runtime readback of the retained volume, shared by the model step. */
 export type MinecraftUpgradeEffects = {

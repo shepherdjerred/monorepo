@@ -97,6 +97,7 @@ export async function collectAuxiliaryFacets(input: {
     collectMonorepoFacet({
       services,
       now,
+      ...(prom === undefined ? {} : { prometheus: prom }),
       github: sourceFacets.github,
       renovate: sourceFacets.renovate,
       bugsink: sourceFacets.bugsink,

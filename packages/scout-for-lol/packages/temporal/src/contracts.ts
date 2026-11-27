@@ -147,6 +147,42 @@ export type ScoutParticipantCrawlResult = z.infer<
   typeof ScoutParticipantCrawlResultSchema
 >;
 
+/**
+ * Delete batches one prune run issues at most. The Schedule runs every 15
+ * minutes, so a frontier further over its bounds than this finishes on the
+ * next run, and one run's history stays small.
+ */
+export const CRAWL_FRONTIER_PRUNE_MAX_BATCHES = 50;
+
+export const ScoutCrawlFrontierPruneInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  trigger: z.literal("schedule"),
+});
+export type ScoutCrawlFrontierPruneInput = z.infer<
+  typeof ScoutCrawlFrontierPruneInputSchema
+>;
+
+/** One bounded delete batch: rows dropped by each rule, and whether more may wait. */
+export const ScoutCrawlFrontierPruneBatchResultSchema = z.strictObject({
+  stale: z.number().int().nonnegative(),
+  overflow: z.number().int().nonnegative(),
+  more: z.boolean(),
+});
+export type ScoutCrawlFrontierPruneBatchResult = z.infer<
+  typeof ScoutCrawlFrontierPruneBatchResultSchema
+>;
+
+/** One Workflow run: its batches, the rows they dropped, and whether the frontier is within bounds. */
+export const ScoutCrawlFrontierPruneResultSchema = z.strictObject({
+  batches: z.number().int().positive(),
+  stale: z.number().int().nonnegative(),
+  overflow: z.number().int().nonnegative(),
+  drained: z.boolean(),
+});
+export type ScoutCrawlFrontierPruneResult = z.infer<
+  typeof ScoutCrawlFrontierPruneResultSchema
+>;
+
 /** Frozen capability inventory for unpatched retained queue-canary histories. */
 export const SCOUT_BACKGROUND_JOB_KINDS_V1 = [
   "competition-refresh",

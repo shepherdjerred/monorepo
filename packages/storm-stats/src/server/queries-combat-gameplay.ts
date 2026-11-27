@@ -49,7 +49,7 @@ export function queryPvpOverview(
     )
     .get();
 
-  const weaponRows = db
+  const pvpWeaponRows = db
     .query<{ weapon: string; kills: number }, []>(
       `SELECT weapon, COUNT(*) AS kills
        FROM combat_events
@@ -60,11 +60,25 @@ export function queryPvpOverview(
     )
     .all();
 
-  const totalPvpWeaponKills = weaponRows.reduce((acc, r) => acc + r.kills, 0);
+  const weaponRows =
+    pvpWeaponRows.length > 0
+      ? pvpWeaponRows
+      : db
+          .query<{ weapon: string; kills: number }, []>(
+            `SELECT weapon, COUNT(*) AS kills
+             FROM combat_events
+             WHERE combat_kind IN ('pvp', 'pve_kill')
+             GROUP BY weapon
+             ORDER BY kills DESC, weapon ASC
+             LIMIT 15`,
+          )
+          .all();
+
+  const totalWeaponKills = weaponRows.reduce((acc, r) => acc + r.kills, 0);
   const topWeapons: WeaponStat[] = weaponRows.map((r) => ({
     weapon: r.weapon,
     kills: r.kills,
-    sharePercent: safePercent(r.kills, totalPvpWeaponKills),
+    sharePercent: safePercent(r.kills, totalWeaponKills),
   }));
 
   const mobRows = db
@@ -108,9 +122,9 @@ export function queryPvpOverview(
     .query<{ killer_uuid: string; weapon: string; kills: number }, []>(
       `SELECT killer_uuid, weapon, COUNT(*) AS kills
        FROM combat_events
-       WHERE killer_uuid IS NOT NULL AND combat_kind = 'pvp'
-       GROUP BY killer_uuid, weapon
-       ORDER BY kills DESC, weapon ASC`,
+       WHERE killer_uuid IS NOT NULL AND combat_kind IN ('pvp', 'pve_kill')
+       GROUP BY killer_uuid, combat_kind, weapon
+       ORDER BY CASE WHEN combat_kind = 'pvp' THEN 0 ELSE 1 END ASC, kills DESC, weapon ASC`,
     )
     .all();
   const topWeaponByPlayer = new Map<string, string>();
@@ -188,7 +202,7 @@ export function queryGameplayOverview(
     .query<PlayerGameplayRow, []>("SELECT * FROM player_gameplay")
     .all();
 
-  const economyTop = [...gameplayRows]
+  const economyTop: GameplayOverviewResponse["economyTop"] = [...gameplayRows]
     .sort(
       (a, b) =>
         b.crystals - a.crystals || a.player_name.localeCompare(b.player_name),
@@ -199,6 +213,8 @@ export function queryGameplayOverview(
       name: r.player_name,
       crystals: r.crystals,
       townName: r.town_name,
+      townKind:
+        r.town_kind === "camp" || r.town_kind === "town" ? r.town_kind : null,
     }));
 
   let towns = [...snapshotTowns].sort(

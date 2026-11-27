@@ -145,29 +145,33 @@ export function pruneCaptures(
   });
 }
 
-/** Applies one segment unless it was already ingested; returns new captures. */
+/** Applies one segment unless it was already ingested; returns new captures and post-assembly redactions. */
 function applySegment(
   store: CaptureStore,
   name: string,
   records: readonly CaptureRecord[],
   now: Date,
-): number {
+): { captures: number; secrets: number } {
   return store.transaction(() => {
     if (
       store.get("SELECT name FROM spool_segments WHERE name = ?", name) != null
     ) {
-      return 0;
+      return { captures: 0, secrets: 0 };
     }
-    const created = records.filter((record) =>
-      applyRecord(store, record),
-    ).length;
+    let captures = 0;
+    let secrets = 0;
+    for (const record of records) {
+      const applied = applyRecord(store, record);
+      if (applied.created) captures += 1;
+      secrets += applied.secrets;
+    }
     store.run(
       "INSERT INTO spool_segments (name, ingested_at, records) VALUES (?, ?, ?)",
       name,
       now.toISOString(),
       records.length,
     );
-    return created;
+    return { captures, secrets };
   });
 }
 
@@ -187,10 +191,11 @@ export async function ingestCaptureSpool(options: {
   for (const name of names) {
     const segmentPath = path.join(options.spoolDir, name);
     const parsed = parseSegment(name, await Bun.file(segmentPath).bytes());
-    captures += applySegment(store, name, parsed.records, now);
+    const applied = applySegment(store, name, parsed.records, now);
+    captures += applied.captures;
     await rm(segmentPath);
     records += parsed.records.length;
-    redactedSecrets += parsed.secrets;
+    redactedSecrets += parsed.secrets + applied.secrets;
     if (parsed.torn) tornLines += 1;
   }
   const prunedCaptures = pruneCaptures(store, options.retentionDays, now);

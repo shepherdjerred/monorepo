@@ -87,6 +87,8 @@ export const SERIES_PRESET_IDS = [
   "kueue-cpu-quota",
   "turbo-hit-ratio",
   "turbo-network-bps",
+  "pr-code-review-assignments",
+  "pr-code-review-outcomes",
   "delivery-active",
   "delivery-outcomes",
   "argocd-sync-status",

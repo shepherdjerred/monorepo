@@ -1992,25 +1992,6 @@
       }
     },
     {
-      "id": "phoenix",
-      "title": "Phoenix",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "observability",
-      "components": [
-        {
-          "name": "chart:phoenix",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["phoenix"],
-        "argoApps": ["phoenix"]
-      }
-    },
-    {
       "id": "bugsink",
       "title": "Bugsink",
       "package": "homelab",
@@ -3204,7 +3185,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/2",
-      "configurationRevisionId": "argocd/prod/21"
+      "configurationRevisionId": "argocd/prod/22"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3420,7 +3401,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "alloy-gateway/prod/2",
-      "configurationRevisionId": "alloy-gateway/prod/3"
+      "configurationRevisionId": "alloy-gateway/prod/4"
     },
     {
       "id": "promtail/prod",
@@ -3429,14 +3410,6 @@
       "automatic": true,
       "recipeRevisionId": "promtail/prod/1",
       "configurationRevisionId": "promtail/prod/1"
-    },
-    {
-      "id": "phoenix/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "phoenix/prod/2",
-      "configurationRevisionId": "phoenix/prod/1"
     },
     {
       "id": "bugsink/prod",
@@ -4472,36 +4445,6 @@
     {
       "dependent": "outbound-mail/prod",
       "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "phoenix/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "phoenix/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "phoenix/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "phoenix/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "phoenix/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "phoenix/prod",
-      "prerequisite": "postgres-operator/prod",
       "rule": "any-accepted"
     },
     {

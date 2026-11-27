@@ -64,7 +64,6 @@ async function admitPlayers(
       puuid: player.puuid,
       platformRoute: player.platformRoute,
       depth: player.depth,
-      seedMatchId: player.seedMatchId,
       nextEligibleAt: now,
     })),
     skipDuplicates: true,
@@ -234,12 +233,13 @@ export function createPrismaCrawlStore(
           });
         }
         for (const visit of input.visits) {
-          await tx.crawlFrontier.update({
+          // `updateMany`: the pruner may have dropped the row while the tick
+          // ran, and a visit that finds no row simply leaves none behind.
+          await tx.crawlFrontier.updateMany({
             where: { puuid: visit.puuid },
             data: {
               lastVisitedAt: input.now,
               nextEligibleAt: crawlCooldownEnd(input.now),
-              visitCount: { increment: 1 },
               rankTier: visit.rank?.tier ?? null,
               rankDivision: visit.rank?.division ?? null,
               rankedAt: input.now,

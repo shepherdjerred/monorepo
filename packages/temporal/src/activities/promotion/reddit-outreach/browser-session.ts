@@ -106,6 +106,7 @@ export function createRedditOutreachBrowser(input: {
             subreddit,
             limit,
             account: REDDIT_OUTREACH_ACCOUNT,
+            after,
           });
           await input.dataset.listing(subreddit, page.posts);
           return page;

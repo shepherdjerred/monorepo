@@ -83,6 +83,20 @@ describe("physical catalog columns come from the lake schema", () => {
     }
   });
 
+  test("participant_kind and coverage are ordinary match columns", () => {
+    for (const id of ["match_participants", "competition_match_participants"]) {
+      const catalog = scoutQlSourceCatalog(id);
+      expect(catalog?.columns.get("participant_kind")?.type, id).toBe(
+        "varchar",
+      );
+      expect(catalog?.columns.get("coverage")?.type, id).toBe("varchar");
+    }
+    // Who a member is has no answer for a group row; coverage is per game.
+    const groups = scoutQlSourceCatalog("player_groups");
+    expect(groups?.columns.has("participant_kind")).toBe(false);
+    expect(groups?.columns.has("coverage")).toBe(true);
+  });
+
   test("loadout and champion ids carry their matching asset kinds", () => {
     const catalog = scoutQlSourceCatalog("match_participants");
     expect(catalog?.columns.get("champion_id")?.asset).toBe("champion");

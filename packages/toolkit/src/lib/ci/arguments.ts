@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 export function parseTimeout(value: string, option = "--timeout"): number {
   const match = /^(\d+(?:\.\d+)?)(ms|[smh])$/.exec(value);
   const unit = match?.[2];
@@ -15,10 +13,11 @@ export function parseTimeout(value: string, option = "--timeout"): number {
             : null;
   if (match === null || multiplier === null)
     throw new Error(`${option} requires a duration such as 30m or 2h`);
-  return z
-    .number()
-    .int()
-    .positive()
-    .max(2_147_483_647)
-    .parse(Number(match[1]) * multiplier);
+  const ms = Number(match[1]) * multiplier;
+  if (!Number.isInteger(ms) || ms <= 0 || ms > 2_147_483_647) {
+    throw new Error(
+      `${option} must be a positive duration between 1ms and 24d`,
+    );
+  }
+  return ms;
 }

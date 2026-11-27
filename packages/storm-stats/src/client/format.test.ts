@@ -19,6 +19,7 @@ import {
   formatPing,
   formatPlatform,
   formatRelativeTime,
+  formatTitleIdentifier,
   formatTrackLevel,
   formatWorldLabel,
 } from "./format.ts";
@@ -74,6 +75,21 @@ describe("duration and numeric formatters", () => {
 
     expect(formatArenaLabel("colosseum")).toBe("The Colosseum");
     expect(formatArenaLabel("custom_ring")).toBe("Custom Ring");
+  });
+
+  test("normalizes UPPER_SNAKE_CASE combat identifiers while preserving mixed-case Roman numerals", () => {
+    expect(formatTitleIdentifier("IRON_SWORD")).toBe("Iron Sword");
+    expect(formatTitleIdentifier("IRON_AXE")).toBe("Iron Axe");
+    expect(formatTitleIdentifier("ZOMBIE")).toBe("Zombie");
+    expect(formatTitleIdentifier("CREEPER")).toBe("Creeper");
+    expect(formatTitleIdentifier("WITHER_SKELETON")).toBe("Wither Skeleton");
+    expect(formatTitleIdentifier("ENDER_DRAGON")).toBe("Ender Dragon");
+    expect(formatTitleIdentifier("woodcutting")).toBe("Woodcutting");
+    expect(formatTitleIdentifier("custom_ring")).toBe("Custom Ring");
+    expect(formatTitleIdentifier("vip-plus")).toBe("Vip Plus");
+    expect(formatTitleIdentifier("Power V Bow")).toBe("Power V Bow");
+    expect(formatTitleIdentifier("Sharpness IV Axe")).toBe("Sharpness IV Axe");
+    expect(formatTitleIdentifier("")).toBe("");
   });
 
   test("formats timestamps in Pacific Time and relative elapsed labels", () => {

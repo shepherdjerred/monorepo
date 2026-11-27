@@ -32,6 +32,7 @@ import {
   catalogCost,
   optionalUsageNumber,
   requiredUsageNumber,
+  resolveKimiModelCandidates,
   usageEventEntry,
   type UsageCounts,
   type UsageFieldLocation,
@@ -85,9 +86,7 @@ type KimiWire = {
  * list-price estimate, like Claude Code's. The logged id is tried first.
  */
 export function kimiModelCandidates(model: string): readonly string[] {
-  const bare = model.replace(/^kimi-code\//u, "");
-  const api = bare.startsWith("kimi-") ? bare : `kimi-${bare}`;
-  return [...new Set([model, api])];
+  return resolveKimiModelCandidates(model);
 }
 
 /**
