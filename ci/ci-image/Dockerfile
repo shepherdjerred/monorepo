@@ -4,7 +4,7 @@
 # cache (near-free when unchanged); the toolchain layers invalidate on
 # .mise.toml changes.
 
-ARG SWIFTLINT_BUILDER_IMAGE=docker.io/library/swift:6.3.3-jammy@sha256:8346ae8fdc6f1dcd4c2b228b9eb7e55ef98743a4abead5765b806b0bcae74de5
+ARG SWIFTLINT_BUILDER_IMAGE=docker.io/library/swift:6.4.3-jammy@sha256:a76121ceda0315af40b7c15e71a8447248a318787b0d8b41b212a2812279542f
 
 # Build against Jammy's older libc. The upstream 0.65.1 Linux executable
 # requires GLIBC_2.38 and cannot execute on our Bookworm image (GLIBC_2.36).
@@ -28,7 +28,7 @@ RUN set -eu; \
     done < /swiftlint-input/runtime-libraries.txt
 RUN python3 /swiftlint-input/producer.py collect-licenses
 
-FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc AS swiftlint-runtime
+FROM debian:bookworm-slim@sha256:e67eeead736ff7bbe258ef088bff683635c561b1fcfefad0806c1df4ab49ce0e AS swiftlint-runtime
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates libcurl4 libxml2 libstdc++6 libgcc-s1 libatomic1 \
@@ -48,7 +48,7 @@ RUN python3 /swiftlint-input/producer.py export-runtime
 FROM scratch AS swiftlint-export
 COPY --from=swiftlint-runtime /runtime.tar.gz /runtime.tar.gz.sha256 /runtime.manifest.json /
 
-FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc AS base
+FROM debian:bookworm-slim@sha256:e67eeead736ff7bbe258ef088bff683635c561b1fcfefad0806c1df4ab49ce0e AS base
 
 # Fail-fast shell for every RUN: a failing producer in a pipeline (curl | sh,
 # printf | sha256sum) must fail the build, not be masked by the consumer.
@@ -76,7 +76,7 @@ RUN --mount=type=bind,source=ci/scripts/apt-https.sh,target=/tmp/apt-https.sh \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:29-cli@sha256:34507eb5069d8be82c95dd3b6987d4250fd5fee49b82e2509b7d7a7030740d6d /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker:29-cli@sha256:4e60c31615e83523afbb59773b25d055c0da9edcd5f80a4c6a6eebad49de1a25 /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker/buildx-bin:0.39.1@sha256:65035f720fc63f266620394a62edcde2318b3611ceb50b77af984578d011a0d6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # Full configured SwiftLint, without retaining the compiler toolchain.
@@ -87,7 +87,7 @@ RUN ln -s /opt/swiftlint/swiftlint /usr/local/bin/swiftlint
 # repo's .mise.toml. Verify the release's signed checksum manifest so Renovate
 # only needs to update the version and cannot leave architecture checksums stale.
 # renovate: datasource=github-releases depName=jdx/mise
-ARG MISE_VERSION=v2026.11.11
+ARG MISE_VERSION=v2026.11.14
 ARG MISE_MINISIGN_PUBLIC_KEY=RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ
 ARG TARGETARCH
 ENV MISE_DATA_DIR=/opt/mise \
@@ -132,7 +132,7 @@ RUN if [ "${TARGETARCH}" = amd64 ]; then bash ci/scripts/android-sdk.sh; \
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.13.9
+ARG UV_VERSION=0.13.10
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
 # The bun download cache is NOT baked into this image anymore. The old

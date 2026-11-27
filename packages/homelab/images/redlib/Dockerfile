@@ -22,7 +22,7 @@
 ########################
 # Matches upstream Dockerfile.ubuntu's RUST_BUILDER_VERSION=slim-bookworm.
 # renovate: datasource=docker depName=rust
-FROM rust:slim-bookworm@sha256:7c7d4eb4d05b7781187a327809466cfddf29753f6defdc3d19a0e291951b7a37 AS builder
+FROM rust:slim-bookworm@sha256:bb875b0f8ce726053e259034848c471840e96bfe591fd52556178ae9a05e6126 AS builder
 
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin

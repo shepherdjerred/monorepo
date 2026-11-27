@@ -42,9 +42,9 @@ FROM rust:1.99.1-bookworm@sha256:e6f2cff35d0f309acf8433b4f05878ed77092602c5065cc
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG TARGETARCH
 # renovate: datasource=github-releases depName=mozilla/sccache
-ARG SCCACHE_VERSION=0.19.0
-ARG SCCACHE_SHA256_AMD64=aa73c7270c997894038c0d8f0d297865f57569e1687883322bc431713d4bb9dd
-ARG SCCACHE_SHA256_ARM64=3e47fc4a71b1ddd1b4294a0de9d34498922fdf41e3cd0bda5df3954e3d6deb9d
+ARG SCCACHE_VERSION=0.20.1
+ARG SCCACHE_SHA256_AMD64=c9f6c5a3ae84d9da0956b28c357a365827bda33f3383647fc0b67484c74a5ea9
+ARG SCCACHE_SHA256_ARM64=505324daad5fcbb1a3cab5d57d26ef42baf4d10b236df7de93a008196f1f2230
 RUN set -eu; \
     arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
     case "$arch" in \
@@ -76,7 +76,7 @@ RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry,sharin
     cargo build --release --locked --bin ci-cache \
     && sccache --show-stats
 
-FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS runtime
+FROM debian:trixie-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0 AS runtime
 COPY --from=rust-build /src/target/release/ci-cache /usr/local/bin/ci-cache
 COPY --from=rust-build /etc/ssl/certs/ /etc/ssl/certs/
 COPY --from=client-build /app/packages/ci-cache/dist/client /usr/share/ci-cache/client
