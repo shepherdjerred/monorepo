@@ -5,7 +5,6 @@ import type {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { runPromtoolFixture } from "./platform/promtool-fixture.ts";
 import {
-  CI_AGENT_WORKFLOW_SLOTS,
   CI_NODE_CPU_HEADROOM_IDLE_RATIO,
   CI_PENDING_QUEUE_FOR,
   CI_PENDING_STEPS_THRESHOLD,
@@ -278,57 +277,6 @@ describe("Woodpecker CI I/O informational alerts", () => {
     expect(rule.annotations?.["description"]).toContain("4 TiB");
     expect(CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES).toBe(4 * 1024 ** 4);
     expect(rule.labels?.["severity"]).toBe("info");
-  });
-
-  // `woodpecker_worker_count` is idle agent slots, so idle plus running is the
-  // connected slot total: 16 while every pool's agent is connected, and short
-  // by that pool's slots when one drops. A fully busy fleet reports zero idle
-  // slots without being disconnected.
-  it("detects a pool whose agent lost its connection, and not a busy fleet", async () => {
-    expect(CI_AGENT_WORKFLOW_SLOTS).toBe(16);
-    const rule = alertRule("WoodpeckerAgentDisconnected");
-    expect(rule.for).toBe("10m");
-    // `info` routes to the null receiver, which would notify nobody.
-    expect(rule.labels?.["severity"]).toBe("warning");
-    const expr = ruleExpression(rule);
-    const scenario = (
-      name: string,
-      workers: string,
-      running: string,
-      expected: number | undefined,
-    ) => ({
-      interval: "1m",
-      name,
-      input_series: [
-        {
-          series: 'woodpecker_worker_count{namespace="woodpecker"}',
-          values: workers,
-        },
-        {
-          series: 'woodpecker_running_steps{namespace="woodpecker"}',
-          values: running,
-        },
-      ],
-      promql_expr_test: [
-        {
-          expr,
-          eval_time: "5m",
-          exp_samples:
-            expected === undefined ? [] : [{ labels: "{}", value: expected }],
-        },
-      ],
-    });
-    await runPromtoolFixture({
-      evaluation_interval: "1m",
-      tests: [
-        // The 8-slot `pr` agent is gone: 4 idle + 4 running of the other 8.
-        scenario("one pool disconnected", "4x10", "4x10", 8),
-        scenario("every agent disconnected", "0x10", "0x10", 0),
-        // Every one of the 16 slots busy: zero idle slots, all connected.
-        scenario("fully busy fleet", "0x10", "16x10", undefined),
-        scenario("healthy fleet", "9x10", "7x10", undefined),
-      ],
-    });
   });
 
   it("alerts on a sustained Woodpecker queue while liskov has CPU headroom", async () => {

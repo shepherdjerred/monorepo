@@ -26,6 +26,19 @@ export const CI_GATE_WORKFLOWS =
   CI_ADMISSION_BUDGET.pools.review.maxWorkflows +
   CI_ADMISSION_BUDGET.pools.completion.maxWorkflows;
 
+/**
+ * Label on every agent Deployment carrying its `WOODPECKER_MAX_WORKFLOWS`.
+ *
+ * kube-state-metrics exports it (`deployments=[...]` in its label allowlist,
+ * resources/argo-applications/observability/grafana-values.ts) as
+ * `kube_deployment_labels{label_ci_sjer_red_max_workflows}`, and the
+ * `WoodpeckerAgentDisconnected` alert sums it over the available agents. That
+ * makes the alert's expected capacity what the cluster runs, not what this
+ * source says: the two differ between a cap change merging and its agent
+ * rollout. The three places must agree; each names the others.
+ */
+export const CI_AGENT_MAX_WORKFLOWS_LABEL = "ci.sjer.red/max-workflows";
+
 /** Public origin GitHub reaches for webhooks and OAuth callbacks. */
 export const WOODPECKER_PUBLIC_HOST = "https://woodpecker.sjer.red";
 
