@@ -32,10 +32,20 @@ describe("relativeWhen", () => {
     expect(() => relativeWhenInline(-1, NOW)).toThrow("not a time");
   });
 
-  test("a game over a week old reads as its date, not a count", () => {
+  test("a date in another year says the year, so December does not read as last month", () => {
     // The design-audit seed pins its older games to 2025-12-31.
     const seeded = Date.UTC(2025, 11, 31, 16, 0, 0);
-    expect(relativeWhenInline(seeded, NOW)).toBe("Dec 31");
+    expect(relativeWhen(seeded, NOW)).toBe("Dec 31, 2025");
+    expect(relativeWhenInline(seeded, NOW)).toBe("Dec 31, 2025");
+  });
+
+  test("a date in the current year leaves the year out, and the year line is by UTC", () => {
+    expect(relativeWhen(Date.UTC(2026, 0, 2, 12), NOW)).toBe("Jan 2");
+    // Seven days before New Year's Day, read on New Year's Day: last year.
+    const newYear = Date.UTC(2027, 0, 1, 1, 0, 0);
+    expect(relativeWhen(Date.UTC(2026, 11, 20, 12), newYear)).toBe(
+      "Dec 20, 2026",
+    );
   });
 
   test("a time slightly in the future reads as now", () => {

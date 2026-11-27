@@ -8,6 +8,20 @@ const MONTH_DAY = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+const MONTH_DAY_YEAR = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** "Nov 17", or "Dec 31, 2025" when the year is not the current one. */
+function dateText(atMs: number, nowMs: number): string {
+  const sameYear =
+    new Date(atMs).getUTCFullYear() === new Date(nowMs).getUTCFullYear();
+  return (sameYear ? MONTH_DAY : MONTH_DAY_YEAR).format(atMs);
+}
+
 function plural(count: number, unit: string): string {
   return `${count.toString()} ${unit}${count === 1 ? "" : "s"}`;
 }
@@ -31,7 +45,7 @@ export function relativeWhen(atMs: number, nowMs: number): string {
   }
   const days = Math.floor(elapsed / DAY_MS);
   if (days === 1) return "Yesterday";
-  return days < 7 ? `${days.toString()} days ago` : MONTH_DAY.format(atMs);
+  return days < 7 ? `${days.toString()} days ago` : dateText(atMs, nowMs);
 }
 
 /** The lower-case form for the end of a sentence: "yesterday", "2 hours ago". */
