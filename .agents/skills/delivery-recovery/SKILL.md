@@ -50,7 +50,7 @@ toolkit deploy recovery --pending --json
 3. A refused apply-safety preflight can be reproduced read-only with the
    workstation ArgoCD token and
    `bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>`.
-
+   For "still co-owns", use the wiki's `how-to/clear-a-stale-field-manager.md`.
 4. A worker sync that failed with `exceeded its progress deadline` is usually
    capacity: look for a Pending `*-wf-retained-*` pod in the Application's
    namespace and `Insufficient cpu` on torvalds. The worker reader then
