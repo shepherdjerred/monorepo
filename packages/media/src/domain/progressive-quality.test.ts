@@ -278,6 +278,31 @@ describe("progressive quality", () => {
     ).toEqual(["fit", "close", "far"]);
   });
 
+  test("uses a legacy file's measured picture floor without inventing guide evidence", () => {
+    const candidate = release("fit", bluRay.id, 10_000_000_000);
+    const current = {
+      ...release("legacy", bluRay.id, 3_479_977_980),
+      resolvedEvidence: undefined,
+    };
+    const input = { candidate, current, profile, mediaIds: ["ultron"] };
+    expect(chooseUpgrade(input)).toMatchObject({
+      upgrade: true,
+      reason: "fallback_upgrade",
+    });
+    expect(
+      chooseUpgrade({
+        ...input,
+        current: { ...current, quality: "Remux-2160p" },
+      }),
+    ).toMatchObject({ upgrade: false, reason: "quality_downgrade" });
+    expect(
+      chooseUpgrade({
+        ...input,
+        current: { ...current, videoCompatibility: undefined },
+      }),
+    ).toMatchObject({ upgrade: false, reason: "current_evidence_unknown" });
+  });
+
   test("uses mapped coverage for a pack listing and the physical file ceiling at inspection", () => {
     const episodes = ["e1", "e2", "e3", "e4", "e5", "e6"];
     const pack = tvRelease("pack", tvWeb.id, 48_000_000_000, episodes);

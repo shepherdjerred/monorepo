@@ -13,6 +13,7 @@ import {
   progressiveSizeCeiling,
   progressivePictureRank,
   progressiveUpgrade,
+  compareLegacyMeasuredPredecessor,
 } from "./progressive-quality.ts";
 
 function evidenceFor(release: ReleaseAttributes, profile: QualityProfile) {
@@ -148,8 +149,20 @@ export function chooseResolvedPolicy(input: {
     input.current === null
       ? null
       : verifiedCurrent(input.current, input.profile);
-  if (current === null && input.current !== null)
-    return { upgrade: false, reason: "current_evidence_unknown", evaluation };
+  if (current === null && input.current !== null) {
+    const reason = compareLegacyMeasuredPredecessor({
+      profile: input.profile,
+      current: input.current,
+      next: candidate.release,
+      evaluation,
+      mediaIds: input.mediaIds,
+    });
+    return {
+      upgrade: reason === "quality_upgrade" || reason === "fallback_upgrade",
+      reason,
+      evaluation,
+    };
+  }
   if (current === null && evaluation.fallbackDistanceBytes !== undefined)
     return { upgrade: true, reason: "initial_fallback", evaluation };
   if (

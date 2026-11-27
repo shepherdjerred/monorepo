@@ -1770,7 +1770,8 @@ quality preference and is ranked by distance from the size target. The absolute
 limits are 100 GB per movie and 20 GB per episode. Title, edition, episode, audio,
 and safe playback are checked through measured verification. The title shows
 when its installed file is a fallback. Later checks can improve it while keeping
-a sharper playable copy available.
+a sharper playable copy available. Older Media files with measured picture
+quality can use those measurements when a new profile first checks for upgrades.
 
 The `media-quality-guide` Temporal schedule runs daily. Its Network activity
 fetches only the selected fixed source paths at one immutable TRaSH Git revision,

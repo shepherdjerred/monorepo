@@ -1,6 +1,6 @@
-import type { QualityProfile } from "#shared/contract.ts";
+import type { QualityProfile, ReleaseAttributes } from "#shared/contract.ts";
 import { QUALITY_GUIDE_VARIANTS } from "#shared/quality-guide/contract.ts";
-import type { ResolvedRelease } from "./resolved-contract.ts";
+import type { ResolvedRelease, SourceQuality } from "./resolved-contract.ts";
 import type { ReleaseEvaluation } from "./release-evaluation.ts";
 import { bytesPerMinute } from "./resolved-quality.ts";
 
@@ -38,11 +38,72 @@ export function progressivePictureRank(
   const quality = profile.resolved?.qualityDefinitions.find(
     (item) => item.quality.id === qualityId,
   )?.quality;
-  if (quality === undefined) return null;
+  return quality === undefined ? null : pictureRank(quality);
+}
+
+function pictureRank(quality: SourceQuality) {
   const remux = quality.modifier === "remux" || quality.source === "blurayRaw";
   return (
     quality.resolution * 10 + (remux ? 2 : quality.source === "bluray" ? 1 : 0)
   );
+}
+
+const LEGACY_MEASURED_SOURCES: Readonly<Record<string, string>> = {
+  bluray: "Bluray",
+  blurayRaw: "Remux",
+  tv: "HDTV",
+  television: "HDTV",
+  web: "WEB",
+  webdl: "WEB",
+  webRip: "WEBrip",
+  webrip: "WEBrip",
+};
+
+function legacyMeasuredLabel(quality: SourceQuality) {
+  if (quality.modifier === "remux")
+    return `Remux-${String(quality.resolution)}p`;
+  if (quality.modifier !== undefined && quality.modifier !== "none")
+    return null;
+  const source = LEGACY_MEASURED_SOURCES[quality.source];
+  return source === undefined
+    ? null
+    : `${source}-${String(quality.resolution)}p`;
+}
+
+/** Older native files may have verified probe attributes without guide evidence. */
+export function compareLegacyMeasuredPredecessor(input: {
+  profile: QualityProfile;
+  current: ReleaseAttributes;
+  next: ResolvedRelease;
+  evaluation: ReleaseEvaluation;
+  mediaIds: readonly string[];
+}) {
+  const { profile, current, next, evaluation, mediaIds } = input;
+  if (
+    current.resolvedEvidence !== undefined ||
+    current.videoCompatibility !== "compatible" ||
+    current.identityConfidence !== "exact" ||
+    mediaIds.some((id) => !current.mediaIds.includes(id)) ||
+    evaluation.fallbackDistanceBytes !== undefined ||
+    !isProgressiveQualityProfile(profile)
+  )
+    return "current_evidence_unknown";
+  const prior = profile.resolved?.qualityDefinitions.filter(
+    ({ quality }) => legacyMeasuredLabel(quality) === current.quality,
+  );
+  const [definition] = prior ?? [];
+  const rank = progressivePictureRank(profile, next.qualityId);
+  if (rank === null || definition === undefined || prior?.length !== 1)
+    return "current_evidence_unknown";
+  if (current.id === next.id) return "same_release";
+  const picture = rank - pictureRank(definition.quality);
+  if (picture < 0) return "quality_downgrade";
+  if (picture > 0) return "quality_upgrade";
+  const sizeFloor =
+    bytesPerMinute(definition.minSize ?? 0) * (next.runtimeMinutes ?? 0);
+  return current.sizeBytes > 0 && current.sizeBytes < sizeFloor
+    ? "fallback_upgrade"
+    : "no_fallback_improvement";
 }
 
 export function progressiveUpgrade(
