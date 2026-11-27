@@ -573,9 +573,9 @@ async function partialsFor(id: string, matchIds: string[]) {
 }
 
 describe("partials version", () => {
-  test("the partials definition is version 2 and its files say so", async () => {
-    expect(META_PARTIALS_VERSION).toBe(2);
-    const buildDir = await buildWithDay("v2", DAY, [
+  test("the partials definition is version 3 and its files say so", async () => {
+    expect(META_PARTIALS_VERSION).toBe(3);
+    const buildDir = await buildWithDay("v3", DAY, [
       await crawlSegment(DAY, TWO),
     ]);
     const names = [
@@ -584,7 +584,7 @@ describe("partials version", () => {
       ).scanSync({ cwd: buildDir }),
     ];
     expect(names).toHaveLength(1);
-    expect(path.basename(names[0] ?? "")).toMatch(/^partials-v2-/u);
+    expect(path.basename(names[0] ?? "")).toMatch(/^partials-v3-/u);
   });
 
   test("a retained day at version 1 counts as missing and the nightly step re-derives it", async () => {

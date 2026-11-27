@@ -1,5 +1,6 @@
 import {
   lookupChampion,
+  lookupChampionMatchups,
   lookupMatchup,
   lookupTiers,
   parseMetaSelection,
@@ -11,7 +12,8 @@ import type { MetaReader } from "#src/meta/meta-reader.ts";
 import { META_SERVING_VERSION } from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
- * The public champion meta API: `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`.
+ * The public champion meta API:
+ * `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:id,matchups/:a/:b}`.
  *
  * Unauthenticated and read-only. It serves the roll-up's JSON for the
  * published lake build and nothing else; it never queries the lake or the
@@ -207,12 +209,63 @@ const NOT_A_CHAMPION_ID: ErrorSpec = {
 };
 
 const CHAMPION_PATH = /^champions\/([^/]+)$/u;
+const CHAMPION_MATCHUPS_PATH = /^matchups\/([^/]+)$/u;
 const MATCHUP_PATH = /^matchups\/([^/]+)\/([^/]+)$/u;
 
 function championIdOf(text: string | undefined): number | undefined {
   return text !== undefined && /^\d{1,6}$/u.test(text)
     ? Number(text)
     : undefined;
+}
+
+/** The matchup routes: one champion's opponents, and one head-to-head pair. */
+async function handleMatchupRoutes(
+  route: string,
+  selection: ReturnType<typeof parseMetaSelection>,
+  request: Request,
+  deps: MetaRouteDeps,
+): Promise<Response | undefined> {
+  const championMatchups = CHAMPION_MATCHUPS_PATH.exec(route);
+  if (championMatchups !== null) {
+    const championId = championIdOf(championMatchups[1]);
+    if (championId === undefined) {
+      return errorResponse(deps, NOT_A_CHAMPION_ID);
+    }
+    return await respond(selection, request, deps, async (chosen) => {
+      const result = await lookupChampionMatchups(
+        deps.reader,
+        championId,
+        chosen,
+      );
+      return result.ok
+        ? {
+            ok: true,
+            buildId: result.value.buildId,
+            body: { schemaVersion: META_SERVING_VERSION, ...result.value },
+          }
+        : result;
+    });
+  }
+
+  const matchup = MATCHUP_PATH.exec(route);
+  if (matchup !== null) {
+    const first = championIdOf(matchup[1]);
+    const second = championIdOf(matchup[2]);
+    if (first === undefined || second === undefined) {
+      return errorResponse(deps, NOT_A_CHAMPION_ID);
+    }
+    return await respond(selection, request, deps, async (chosen) => {
+      const result = await lookupMatchup(deps.reader, first, second, chosen);
+      return result.ok
+        ? {
+            ok: true,
+            buildId: result.value.buildId,
+            body: { schemaVersion: META_SERVING_VERSION, ...result.value },
+          }
+        : result;
+    });
+  }
+  return undefined;
 }
 
 /** Null when the path is not a meta route. */
@@ -292,24 +345,8 @@ export async function handleMetaRoute(
     });
   }
 
-  const matchup = MATCHUP_PATH.exec(route);
-  if (matchup !== null) {
-    const first = championIdOf(matchup[1]);
-    const second = championIdOf(matchup[2]);
-    if (first === undefined || second === undefined) {
-      return errorResponse(deps, NOT_A_CHAMPION_ID);
-    }
-    return await respond(selection, request, deps, async (chosen) => {
-      const result = await lookupMatchup(deps.reader, first, second, chosen);
-      return result.ok
-        ? {
-            ok: true,
-            buildId: result.value.buildId,
-            body: { schemaVersion: META_SERVING_VERSION, ...result.value },
-          }
-        : result;
-    });
-  }
+  const matchups = await handleMatchupRoutes(route, selection, request, deps);
+  if (matchups !== undefined) return matchups;
 
   return errorResponse(deps, {
     status: 404,

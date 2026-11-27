@@ -23,6 +23,7 @@ import {
 } from "@scout-for-lol/data/meta/meta-serving.ts";
 import {
   entriesOf,
+  matchupLanesOf,
   matchupSpellsOf,
   type RollupRow,
   type SliceRows,
@@ -100,6 +101,38 @@ function addDetailRow(index: RowIndex, row: RollupRow): void {
   index.detail.set(key, rows);
 }
 
+function indexRow(index: RowIndex, row: RollupRow): void {
+  switch (row.kind) {
+    case "matches":
+      index.matches.set(stratumOf(row), row.games);
+      break;
+    case "ban":
+      index.bans.set(championOf(row), row.games);
+      break;
+    case "champion":
+      addChampionRow(index, row);
+      break;
+    case "item":
+    case "start_items":
+    case "build_path":
+    case "rune":
+    case "spells":
+    case "skill_order":
+    case "matchup":
+    case "trait_base":
+    case "item_trait":
+    case "duration":
+    case "boots":
+    case "keystone":
+    case "spell_single":
+    case "matchup_spell":
+    case "lane":
+    case "lane_matchup":
+      addDetailRow(index, row);
+      break;
+  }
+}
+
 function indexRows(rows: readonly RollupRow[]): RowIndex {
   const index: RowIndex = {
     matches: new Map(),
@@ -109,35 +142,7 @@ function indexRows(rows: readonly RollupRow[]): RowIndex {
     nameVotes: new Map(),
     detail: new Map(),
   };
-  for (const row of rows) {
-    switch (row.kind) {
-      case "matches":
-        index.matches.set(stratumOf(row), row.games);
-        break;
-      case "ban":
-        index.bans.set(championOf(row), row.games);
-        break;
-      case "champion":
-        addChampionRow(index, row);
-        break;
-      case "item":
-      case "start_items":
-      case "build_path":
-      case "rune":
-      case "spells":
-      case "skill_order":
-      case "matchup":
-      case "trait_base":
-      case "item_trait":
-      case "duration":
-      case "boots":
-      case "keystone":
-      case "spell_single":
-      case "matchup_spell":
-        addDetailRow(index, row);
-        break;
-    }
-  }
+  for (const row of rows) indexRow(index, row);
   return index;
 }
 
@@ -244,6 +249,7 @@ function assembleSlices(
       banRate: slice.banRate,
     });
     const spellsByOpponent = matchupSpellsOf(rows);
+    const lanesByOpponent = matchupLanesOf(rows);
     const opponents = (rows.get("matchup") ?? [])
       .map((entry) => ({
         championId: Number(entry.key1),
@@ -253,6 +259,10 @@ function assembleSlices(
         winRate: wilsonInterval(entry.wins, entry.games),
         spells: spellsByOpponent.get(entry.key1) ?? [],
       }))
+      .map((opponent) => {
+        const lane = lanesByOpponent.get(String(opponent.championId));
+        return lane === undefined ? opponent : { ...opponent, lane };
+      })
       .toSorted(
         (left, right) =>
           right.games - left.games || left.championId - right.championId,
@@ -300,10 +310,21 @@ function assembleTiers(
   return tiers;
 }
 
+/** The first and last ingest day with lane data, and how many there are. */
+function laneWindow(laneDays: readonly string[]): MetaManifest["lane"] {
+  const sorted = laneDays.toSorted();
+  const firstDay = sorted.at(0);
+  const lastDay = sorted.at(-1);
+  return firstDay === undefined || lastDay === undefined
+    ? null
+    : { firstDay, lastDay, days: sorted.length };
+}
+
 function assembleManifest(input: {
   tiers: ReadonlyMap<string, TierFile>;
   champions: ReadonlyMap<number, ChampionMetaFile>;
   days: readonly string[];
+  laneDays: readonly string[];
   buildId: string;
   now: Date;
   thresholds: MetaThresholds;
@@ -340,6 +361,7 @@ function assembleManifest(input: {
     generatedAt: input.now.toISOString(),
     source: { firstDay, lastDay, days: input.days.length },
     thresholds: input.thresholds,
+    lane: laneWindow(input.laneDays),
     defaults:
       defaultTier === undefined
         ? null
@@ -367,6 +389,8 @@ function assembleManifest(input: {
 export function assembleMetaServing(input: {
   rows: readonly RollupRow[];
   days: readonly string[];
+  /** The retained ingest days whose partials hold lane rows. */
+  laneDays: readonly string[];
   buildId: string;
   now: Date;
   thresholds: MetaThresholds;
@@ -411,6 +435,7 @@ export function assembleMetaServing(input: {
     tiers,
     champions,
     days: input.days,
+    laneDays: input.laneDays,
     buildId: input.buildId,
     now: input.now,
     thresholds: input.thresholds,
