@@ -128,6 +128,10 @@ export type ScoutPrematchStore = {
   childReads: NotificationIntentKey[];
   /** The stage of each maintenance pass a discovery ran, in order. */
   maintenanceStages: string[];
+  /** The games the live-roster recent-form step was asked about, in order. */
+  rosterReads: string[];
+  /** Fail the live-roster step, which must not fail the capture it follows. */
+  failRosterRead: boolean;
 };
 
 export function createScoutPrematchStore(
@@ -146,6 +150,8 @@ export function createScoutPrematchStore(
     delivered: [],
     childReads: [],
     maintenanceStages: [],
+    rosterReads: [],
+    failRosterRead: false,
     ...overrides,
   };
 }
@@ -163,6 +169,25 @@ export function captured(
       prematchIntentKeyOf(gameRef, channelId),
     ),
   });
+}
+
+/**
+ * The one prematch Activity that runs on the background queue: the strangers'
+ * recent-form read. It records the game it was asked about and nothing else.
+ */
+export function scoutPrematchBackgroundStubs(store: ScoutPrematchStore) {
+  return {
+    recordLiveRosterRecentForm: (input: ScoutGameRef) => {
+      store.rosterReads.push(prematchMatchIdOf(input.gameRef));
+      if (store.failRosterRead) {
+        throw ApplicationFailure.nonRetryable(
+          "injected live roster failure",
+          "InjectedCrash",
+        );
+      }
+      return { status: "completed", fetched: 9, unavailable: 0 };
+    },
+  };
 }
 
 /**

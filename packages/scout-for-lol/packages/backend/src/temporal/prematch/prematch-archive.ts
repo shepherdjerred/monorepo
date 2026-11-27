@@ -23,6 +23,7 @@ import { archivePrematchReceipted } from "#src/report-lake/receipted-archive.ts"
 import { stagePrematchReceipted } from "#src/report-lake/receipted-staging.ts";
 import { recordPrematchDeliveryIntents } from "#src/temporal/prematch/prematch-intents.ts";
 import { recordClashPrematchSightings } from "#src/league/clash/sighting.ts";
+import { recordLiveGameRosterOrReport } from "#src/live-roster/live-roster-record.ts";
 import {
   resolveScoutPrematchContext,
   type ScoutPrematchContext,
@@ -279,5 +280,7 @@ export async function archivePrematchSnapshot(
     ),
   );
   await recordPrematchDeliveryIntents(context, observedAt);
+  // After the intents, so the roster can never hold up the announcement.
+  await recordLiveGameRosterOrReport(context, observedAt);
   return { artifacts, riotMatchId };
 }

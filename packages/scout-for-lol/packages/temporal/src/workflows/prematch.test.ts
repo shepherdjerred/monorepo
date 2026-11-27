@@ -24,6 +24,7 @@ import {
   prematchIntentKeyOf,
   prematchMatchIdOf,
   scoutPrematchActivityStubs,
+  scoutPrematchBackgroundStubs,
   CHANNEL_IDS,
   GAME_REF,
   OTHER_GAME_REF,
@@ -48,6 +49,17 @@ const FIRST_CAPTURE_EFFECTS = [
   PREMATCH_RECEIPT_KINDS.staging,
   ...CHANNEL_IDS.map((channelId) => `intent:${channelId}`),
 ];
+
+/** The realtime stubs plus the background queue's live-roster step. */
+async function startPrematchWorkers(
+  store: ScoutPrematchStore,
+  games?: readonly ScoutPrematchGameRef[],
+): Promise<void> {
+  await harness.startWorkers(
+    scoutPrematchActivityStubs(store, games),
+    scoutPrematchBackgroundStubs(store),
+  );
+}
 
 async function captureGame(
   workflowId: string,
@@ -86,7 +98,7 @@ async function awaitGameChild(gameRef: ScoutPrematchGameRef): Promise<void> {
 describe("the V2 per-game prematch core", () => {
   test("captures the snapshot, then plans the fan-out off what it recorded", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     const result = await captureGame("prematch-game-happy");
 
@@ -109,9 +121,41 @@ describe("the V2 per-game prematch core", () => {
     );
   }, 60_000);
 
+  test("reads the lobby's recent form once, after the capture and the notification children", async () => {
+    const store = createScoutPrematchStore();
+    await startPrematchWorkers(store);
+
+    await captureGame("prematch-game-live-roster");
+
+    // On the background queue, off the capture's own Activity list.
+    expect(store.calls).toEqual(CAPTURE);
+    expect(store.rosterReads).toEqual([GAME_MATCH_ID]);
+  }, 60_000);
+
+  test("a failed recent-form read leaves the capture completed", async () => {
+    const store = createScoutPrematchStore({ failRosterRead: true });
+    await startPrematchWorkers(store);
+
+    const result = await captureGame("prematch-game-live-roster-fails");
+
+    expect(store.rosterReads).toEqual([GAME_MATCH_ID]);
+    expect(result).toMatchObject({
+      data: { status: "completed", childrenStarted: { notifications: 2 } },
+    });
+  }, 60_000);
+
+  test("does not read a lobby for a game that ended before the capture", async () => {
+    const store = createScoutPrematchStore({ live: false });
+    await startPrematchWorkers(store);
+
+    await captureGame("prematch-game-live-roster-ended");
+
+    expect(store.rosterReads).toEqual([]);
+  }, 60_000);
+
   test("re-runs over a capture that already stands without repeating it", async () => {
     const store = captured();
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     const result = await captureGame("prematch-game-resume");
 
@@ -135,7 +179,7 @@ describe("the V2 per-game prematch core", () => {
 
   test("reports a no-op for a game that ended before the capture ran", async () => {
     const store = createScoutPrematchStore({ live: false });
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     const result = await captureGame("prematch-game-ended");
 
@@ -154,7 +198,7 @@ describe("the V2 per-game prematch core", () => {
 
   test("refuses a fan-out plan that asks for a lake projection", async () => {
     const store = createScoutPrematchStore({ lakeProjection: true });
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     // The prematch result has no lake child to report, and the snapshot's lake
     // rows are staged by the capture itself. Dropping the request silently
@@ -194,7 +238,7 @@ describe("a V2 prematch capture killed mid-run", () => {
     async (scenario) => {
       const store = createScoutPrematchStore();
       scenario.crash(store);
-      await harness.startWorkers(scoutPrematchActivityStubs(store));
+      await startPrematchWorkers(store);
 
       await expect(captureGame("prematch-crash")).rejects.toThrow();
 
@@ -222,9 +266,7 @@ describe("a V2 prematch capture killed mid-run", () => {
 describe("V2 prematch discovery", () => {
   test("starts one child per distinct live game", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(
-      scoutPrematchActivityStubs(store, [GAME_REF, OTHER_GAME_REF]),
-    );
+    await startPrematchWorkers(store, [GAME_REF, OTHER_GAME_REF]);
 
     const result = await discover("prematch-discovery-two-games");
     await awaitGameChild(GAME_REF);
@@ -242,9 +284,7 @@ describe("V2 prematch discovery", () => {
 
   test("collapses one game surfaced through two tracked accounts", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(
-      scoutPrematchActivityStubs(store, [GAME_REF, SAME_GAME_OTHER_ACCOUNT]),
-    );
+    await startPrematchWorkers(store, [GAME_REF, SAME_GAME_OTHER_ACCOUNT]);
 
     const result = await discover("prematch-discovery-same-game");
     await awaitGameChild(GAME_REF);
@@ -264,9 +304,7 @@ describe("V2 prematch discovery", () => {
 
   test("keeps going past a game another execution already owns", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(
-      scoutPrematchActivityStubs(store, [GAME_REF, OTHER_GAME_REF]),
-    );
+    await startPrematchWorkers(store, [GAME_REF, OTHER_GAME_REF]);
     // A completed execution owns the first game's child ID.
     await captureGame(scoutPrematchGameWorkflowId(stage, GAME_REF));
 
@@ -288,9 +326,7 @@ describe("V2 prematch discovery", () => {
 describe("V2 prematch discovery maintenance", () => {
   test("runs the stage's maintenance once, after starting its children", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(
-      scoutPrematchActivityStubs(store, [GAME_REF, OTHER_GAME_REF]),
-    );
+    await startPrematchWorkers(store, [GAME_REF, OTHER_GAME_REF]);
 
     const handle = await harness
       .client()
@@ -324,7 +360,7 @@ describe("V2 prematch discovery maintenance", () => {
 
   test("runs the maintenance on a poll that found no live game", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(scoutPrematchActivityStubs(store, []));
+    await startPrematchWorkers(store, []);
 
     const result = await discover("prematch-discovery-maintenance-idle");
 
@@ -342,7 +378,7 @@ describe("V2 prematch discovery maintenance", () => {
     const store = createScoutPrematchStore({
       failAt: "runPrematchMaintenance",
     });
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     const settled = await settleWorkflow(
       discover("prematch-discovery-maintenance-fails"),
@@ -393,7 +429,7 @@ describe("V2 prematch delivery", () => {
 
   test("starts one notification child per minted intent without opening markets", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     const result = await captureGame("prematch-delivery-children");
 
@@ -416,7 +452,7 @@ describe("V2 prematch delivery", () => {
     const [v1Key, v2Key] = keys;
     if (v1Key === undefined || v2Key === undefined) throw new Error("keys");
     const store = createScoutPrematchStore({ delivered: [v1Key] });
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     const first = await captureGame("prematch-delivery-flip-1");
     await notificationChildOf(v2Key);
@@ -436,7 +472,7 @@ describe("V2 prematch delivery", () => {
 
   test("repeated captures never schedule the retired Activity", async () => {
     const store = createScoutPrematchStore();
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
     await captureGame("prematch-delivery-repeat-1");
     await captureGame("prematch-delivery-repeat-2");
     expect(store.calls).not.toContain("openPrematchMarkets");
@@ -444,7 +480,7 @@ describe("V2 prematch delivery", () => {
 
   test("opens no market for a game that ended before the capture ran", async () => {
     const store = createScoutPrematchStore({ live: false });
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
+    await startPrematchWorkers(store);
 
     await captureGame("prematch-delivery-ended");
 

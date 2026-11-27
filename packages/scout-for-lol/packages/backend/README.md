@@ -1716,7 +1716,7 @@ and a tick the server missed by more than a minute is not replayed. Each poll
 detects live games, starts one `scoutPrematchGameWorkflow` per game, and
 then runs `runPrematchMaintenance`
 (`src/temporal/prematch/prematch-maintenance.ts`): Dare accept-window expiry
-and callout refresh. Discovery records one
+and callout refresh, and live roster retention. Discovery records one
 `prematch_detections_total{status}` sample per probed account (`game`,
 `idle`, `unreadable`). The maintenance tail's retired
 `scout-v2-prematch-maintenance` gate is deprecated.
@@ -1729,6 +1729,39 @@ The consumer live view reads `listLivePrematchGames`
 younger than `LIVE_GAME_TTL_MS` (three hours,
 `src/temporal/prematch/prematch-intents.ts`), minus games the report lake
 already holds, with each roster read from the archived spectator snapshot.
+
+### The live roster
+
+`archivePrematchSnapshot` also writes one `LiveGameRoster` row per captured
+game (`src/live-roster/`), after the notification intents so a roster fault
+(reported to Bugsink, never thrown) cannot hold back the announcement. It holds
+the ten participants as the spectator payload named them: Riot ID, champion,
+summoner spells, keystone and trees, an inferred lane (null when the lobby is
+not unambiguous), the Solo/Duo rank Scout already held (never fetched at
+detection; null when none), and `isTracked`. First capture wins; a replay
+changes nothing. Arena lobbies are not recorded.
+
+The game Workflow then runs `recordLiveRosterRecentForm` on the `background`
+queue behind the `scout-v2-prematch-live-roster` patch. For each untracked
+participant with an identity it reads their last five ranked games and their
+Solo/Duo rank at `backfill` priority, through a client with no payload capture,
+and stores a summary on the row (games and wins, current streak, games on the
+champion they are playing, rank). Matches themselves are never stored. A 429,
+a refused ledger admission (the pass is bounded to four minutes) or an
+upstream outage fails the Activity retryably after the finished players are
+saved, and the retry does only the rest. A failure after the retries leaves the
+capture standing.
+
+`consumerLive.list` and `consumerLive.game` read the table and nothing else: no
+Riot call, no S3 object, no lake query. A roster is visible when a tracked
+account in one of the viewer's servers is in it, and strangers' PUUIDs are not
+returned.
+
+Retention: `expiresAt` is set at detection to the three-hour live window plus
+one hour, and is a hard cap. A game whose match the post-match core recorded
+is removed an hour after that record. `prematchMaintenanceSteps` runs
+`purgeExpiredLiveRosters` on every `prematch-poll`, so a roster outlives its
+window by at most one poll.
 
 ### Games against bots
 

@@ -162,6 +162,36 @@ model CurrentRankSnapshot {
   updatedAt    DateTime @updatedAt
 }
 
+/// The ten players of one live game, written when prematch detection archives
+/// its spectator snapshot and read by the consumer Live game page, which never
+/// calls Riot or S3. `participants` and `recentForm` are validated by
+/// `live-roster-schema.ts` on every read. `recentForm` holds the short
+/// ranked-form summary of each untracked participant (never their matches),
+/// keyed by PUUID, and is filled in by a follow-up Activity.
+///
+/// Rows are transient by design: `expiresAt` is the hard cap, and a game that
+/// ended is purged an hour after its match was recorded, whichever is first
+/// (`live-roster-retention.ts`).
+model LiveGameRoster {
+  riotMatchId           String    @id
+  platform              String
+  gameId                String
+  queueId               Int
+  gameMode              String
+  gameStartedAt         DateTime?
+  detectedAt            DateTime
+  expiresAt             DateTime
+  participants          Json
+  trackedPuuids         String[]
+  recentForm            Json      @default("{}")
+  recentFormCompletedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([detectedAt])
+  @@index([expiresAt])
+}
+
 // Clash-v1 current snapshot. Riot returns empty registrations when Clash is
 // inactive; rows are replaced on each poll rather than accumulated.
 model ClashTournament {
