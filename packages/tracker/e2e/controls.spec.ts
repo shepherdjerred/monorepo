@@ -216,7 +216,7 @@ test("opening an issue menu leaves its submenus closed until chosen", async ({
     if (mobile) await assignee.tap();
     else await assignee.hover();
     await expect(unassigned).toBeVisible();
-    await page.keyboard.press("Escape");
+    await unassigned.press("Escape");
     await expect(assignee).toHaveAttribute("aria-expanded", "false");
     await assignee.press("ArrowRight");
     await expect(unassigned).toBeVisible();
