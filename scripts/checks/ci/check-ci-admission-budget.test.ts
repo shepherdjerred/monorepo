@@ -243,8 +243,12 @@ describe("pooled CI admission budget", () => {
   });
 
   test("checks the overlap rather than only the new workflow cap", () => {
+    // 22 PR and main slots hold 55Gi of services beside a 4Gi step, inside
+    // the 62Gi compute quota; 12 more legacy slots overflow it.
     const largeServices = step({
-      services: [{ name: "db", resources: { ...SMALL, memoryRequest: "3Gi" } }],
+      services: [
+        { name: "db", resources: { ...SMALL, memoryRequest: "2560Mi" } },
+      ],
     });
     expect(
       pooledAdmissionBudgetViolations([largeServices], {
@@ -383,5 +387,112 @@ describe("pooled CI admission budget", () => {
         priorities: { main: 300, ready: 100, draft: 200 },
       }),
     ).toEqual([expect.stringContaining("priority")]);
+  });
+});
+
+/**
+ * The light reserve must hold every pr-light slot's largest pod at once, so
+ * Kueue never gates a light check and it waits only for one of its own
+ * slots. A slot's largest pod may be its checkout rather than its step.
+ */
+describe("light reserve", () => {
+  const budget = PooledBudgetSchema.parse(rawBudget);
+  const compute = step({
+    services: [
+      { name: "a", resources: SMALL },
+      { name: "b", resources: SMALL },
+    ],
+  });
+  const CHECKOUT = { ...SMALL, memoryRequest: "2Gi" };
+  const light = step({
+    key: "trivy",
+    agentLabels: { "ci-pool": "pr-light" },
+    resources: SMALL,
+    checkout: CHECKOUT,
+  });
+
+  test("holds every slot's checkout and step at once", () => {
+    expect(pooledAdmissionBudgetViolations([compute, light], budget)).toEqual(
+      [],
+    );
+    // Four 2Gi checkouts fill the 8Gi reserve exactly.
+    expect(budget.lightQuota.memory).toBe("8Gi");
+    expect(budget.pools["pr-light"].maxWorkflows).toBe(4);
+  });
+
+  test("rejects a slot whose checkout or step overflows the reserve", () => {
+    expect(
+      pooledAdmissionBudgetViolations(
+        [
+          compute,
+          { ...light, checkout: { ...CHECKOUT, memoryRequest: "3Gi" } },
+        ],
+        budget,
+      ),
+    ).toEqual([expect.stringContaining("memory: all 4 pr-light slots")]);
+    expect(
+      pooledAdmissionBudgetViolations(
+        [compute, { ...light, resources: { ...SMALL, cpuRequest: "1" } }],
+        budget,
+      ),
+    ).toEqual([expect.stringContaining("cpu: all 4 pr-light slots")]);
+  });
+
+  test("rejects more slots than the reserve holds", () => {
+    expect(
+      pooledAdmissionBudgetViolations([compute, light], {
+        ...budget,
+        maxWorkflows: budget.maxWorkflows + 1,
+        pools: {
+          ...budget.pools,
+          "pr-light": { ...budget.pools["pr-light"], maxWorkflows: 5 },
+        },
+      }),
+    ).toEqual([expect.stringContaining("memory: all 5 pr-light slots")]);
+  });
+
+  test("forbids services and the local backend", () => {
+    expect(
+      pooledAdmissionBudgetViolations(
+        [
+          compute,
+          { ...light, services: [{ name: "db", resources: SMALL }] },
+          { ...light, key: "mac", backend: "local" },
+        ],
+        budget,
+      ),
+    ).toEqual([
+      "trivy: the pr-light pool requires a Kubernetes workflow without services",
+      "mac: the pr-light pool requires a Kubernetes workflow without services",
+    ]);
+  });
+
+  test("is carved from the aggregate, not added to it", () => {
+    expect(
+      pooledAdmissionBudgetViolations([compute, light], {
+        ...budget,
+        lightQuota: { ...budget.lightQuota, cpu: "3" },
+      }),
+    ).toEqual([expect.stringContaining("cpu: compute, light and gate")]);
+  });
+
+  /** A main push runs the same workflows in the main pool, on compute. */
+  test("still counts light workflows against compute quota", () => {
+    expect(
+      pooledAdmissionBudgetViolations(
+        [
+          compute,
+          {
+            ...light,
+            resources: { ...SMALL, memoryRequest: "63Gi" },
+            checkout: undefined,
+          },
+        ],
+        { ...budget, lightQuota: { ...budget.lightQuota, memory: "8Gi" } },
+      ),
+    ).toEqual([
+      expect.stringContaining("memory: all 4 pr-light slots"),
+      expect.stringContaining("memory: 23 workflows'"),
+    ]);
   });
 });

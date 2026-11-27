@@ -6,6 +6,8 @@ import {
   CI_CLUSTER_QUEUE,
   CI_GATE_CLUSTER_QUEUE,
   CI_GATE_LOCAL_QUEUE,
+  CI_LIGHT_CLUSTER_QUEUE,
+  CI_LIGHT_LOCAL_QUEUE,
   CI_MAINTENANCE_CLUSTER_QUEUE,
   CI_MAINTENANCE_LOCAL_QUEUE,
   DELIVERY_CLUSTER_QUEUE,
@@ -17,6 +19,7 @@ import {
   CI_ADMISSION_BUDGET,
   CI_COMPUTE_WORKFLOWS,
   CI_GATE_WORKFLOWS,
+  CI_LIGHT_WORKFLOWS,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
@@ -66,6 +69,7 @@ const ClusterQueueSchema = z.object({
 
 const CLUSTER_QUEUES = [
   CI_CLUSTER_QUEUE,
+  CI_LIGHT_CLUSTER_QUEUE,
   CI_GATE_CLUSTER_QUEUE,
   CI_MAINTENANCE_CLUSTER_QUEUE,
   DELIVERY_CLUSTER_QUEUE,
@@ -178,9 +182,13 @@ describe("kueue-config", () => {
   });
 
   it("takes the CI budget from its language-neutral source", () => {
-    expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("23");
-    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("70Gi");
-    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("56Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("21");
+    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("62Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("48Gi");
+    // The light reserve came out of compute, so the aggregate is unchanged.
+    expect(quota(CI_LIGHT_CLUSTER_QUEUE, "cpu")).toBe("2");
+    expect(quota(CI_LIGHT_CLUSTER_QUEUE, "memory")).toBe("8Gi");
+    expect(quota(CI_LIGHT_CLUSTER_QUEUE, "ephemeral-storage")).toBe("8Gi");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "cpu")).toBe("1");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "memory")).toBe("2Gi");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "ephemeral-storage")).toBe("4Gi");
@@ -210,14 +218,31 @@ describe("kueue-config", () => {
     );
   });
 
+  it("keeps every queue's ephemeral storage within liskov's allocatable ephemeral storage", () => {
+    // Measured 2026-11-27: liskov reports 897,666,186,597 bytes (about 836
+    // GiB) of allocatable ephemeral storage.
+    const LISKOV_ALLOCATABLE_EPHEMERAL_GIB = 836;
+    const queuedGib = CLUSTER_QUEUES.map((name) => {
+      const storage = quota(name, "ephemeral-storage") ?? "";
+      if (!/^\d+Gi$/u.test(storage)) {
+        throw new Error(
+          `${name} ephemeral-storage quota is not whole Gi: ${storage}`,
+        );
+      }
+      return Number.parseInt(storage, 10);
+    }).reduce((total, gib) => total + gib, 0);
+    expect(queuedGib).toBeLessThanOrEqual(LISKOV_ALLOCATABLE_EPHEMERAL_GIB);
+  });
+
   it("keeps every queue's cpu (every queue) plus resident requests within liskov's allocatable cpu", () => {
     // Same reasoning as memory. Measured 2026-11-27: liskov reports 29 CPU
     // allocatable. The resident allowance covers non-Kueue requests: buildkitd
-    // 500m, the five Woodpecker agents 500m (100m each, maintenance included),
-    // kube-system 300m, prometheus 260m, promtail 100m, ci-cache 100m, openebs
-    // 100m, plus small extras.
+    // 500m, the six Woodpecker agents 600m (100m each, maintenance and
+    // pr-light included), kube-system 300m, prometheus 260m, promtail 100m,
+    // ci-cache 100m, openebs 100m, plus small extras. The light queue's CPU
+    // came out of the compute queue, so the queues' total is unchanged.
     const LISKOV_ALLOCATABLE_CPU = 29;
-    const RESIDENT_CPU_ALLOWANCE = 1.9;
+    const RESIDENT_CPU_ALLOWANCE = 2;
     const queuedCpu = CLUSTER_QUEUES.map((name) =>
       Number(quota(name, "cpu") ?? "NaN"),
     ).reduce((total, cpu) => total + cpu, 0);
@@ -239,14 +264,20 @@ describe("kueue-config", () => {
     expect(quota(CI_GATE_CLUSTER_QUEUE, "pods")).toBe(
       String(CI_GATE_WORKFLOWS),
     );
+    // A light workflow has no services and runs one pod at a time.
+    expect(quota(CI_LIGHT_CLUSTER_QUEUE, "pods")).toBe(
+      String(CI_LIGHT_WORKFLOWS),
+    );
     // PR 12, main 10 and maintenance 1.
     expect(CI_COMPUTE_WORKFLOWS).toBe(23);
+    expect(CI_LIGHT_WORKFLOWS).toBe(4);
     expect(CI_GATE_WORKFLOWS).toBe(4);
   });
 
   it("admits declared executor namespaces only on the compute queue, and never preempts", () => {
     for (const name of [
       CI_CLUSTER_QUEUE,
+      CI_LIGHT_CLUSTER_QUEUE,
       CI_GATE_CLUSTER_QUEUE,
       CI_MAINTENANCE_CLUSTER_QUEUE,
     ]) {
@@ -293,6 +324,7 @@ describe("kueue-config", () => {
       ]),
     ).toEqual([
       ["woodpecker-ci", "default", CI_CLUSTER_QUEUE],
+      ["woodpecker-ci", CI_LIGHT_LOCAL_QUEUE, CI_LIGHT_CLUSTER_QUEUE],
       ["woodpecker-ci", CI_GATE_LOCAL_QUEUE, CI_GATE_CLUSTER_QUEUE],
       [
         "woodpecker-ci",

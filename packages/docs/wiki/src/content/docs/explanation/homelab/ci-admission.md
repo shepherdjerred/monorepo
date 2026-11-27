@@ -5,31 +5,37 @@ sidebar:
   order: 5
 ---
 
-Kueue holds CI pods until their requests fit liskov's budget, with a separate
-reserve for review and completion gates. Delivery's executor Jobs have a
-reserve of their own beside that budget.
+Kueue holds CI pods until their requests fit liskov's budget, with separate
+reserves for short PR checks and for review and completion gates. Delivery's
+executor Jobs have a reserve of their own beside that budget.
 
 The [admission budget](https://raw.githubusercontent.com/shepherdjerred/monorepo/refs/heads/main/packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json)
-divides the existing capacity between computation and gates. Woodpecker's
-workflow caps limit concurrency within each pool.
+divides the existing capacity between computation, light checks, and gates.
+Woodpecker's workflow caps limit concurrency within each pool. The
+[pool and queue reference](/reference/ci-admission-queues/) lists every
+pool's slots and every queue's quota.
 
 ```mermaid
 flowchart TB
   accTitle: CI resource admission
-  accDescr: Woodpecker agents create pods in the woodpecker-ci namespace. Compute pods use the default queue, while review and completion pools use a separate gate reserve. Both queues admit pods onto liskov. The control plane lives in a namespace Kueue never touches.
+  accDescr: Woodpecker agents create pods in the woodpecker-ci namespace. Compute pods use the default queue, short service-free PR checks use a reserved light queue, and review and completion pools use a separate gate reserve. All three queues admit pods onto liskov. The control plane lives in a namespace Kueue never touches.
 
   subgraph CP[woodpecker namespace]
     WP[Woodpecker agent pools]
   end
   subgraph CI[woodpecker-ci namespace]
     POD[Compute pods]
+    LIGHT[Short PR check pods]
     GATE[Review and completion pods]
   end
   WP -->|creates| POD
+  WP -->|creates| LIGHT
   WP -->|creates| GATE
   POD -->|gated| CQ[ClusterQueue woodpecker]
+  LIGHT -->|gated| LQ[ClusterQueue woodpecker-light]
   GATE -->|gated| GQ[ClusterQueue woodpecker-gates]
   CQ -->|admitted| NODE[liskov]
+  LQ -->|admitted| NODE
   GQ -->|admitted| NODE
   CQ -.->|waits when full| POD
 ```
@@ -46,10 +52,10 @@ rather than a capacity problem.
 
 ## Admitting by resources instead
 
-Kueue meters CPU, memory, and ephemeral storage across two CI queues.
+Kueue meters CPU, memory, and ephemeral storage across three CI queues.
 Their combined budget stays below liskov's allocatable capacity.
 The [queue definitions](https://raw.githubusercontent.com/shepherdjerred/monorepo/refs/heads/main/packages/homelab/src/cdk8s/src/resources/kueue-config.ts)
-derive both reserves from the admission budget.
+derive every queue from the admission budget.
 
 A pod that does not fit is held behind a scheduling gate. It exists, but the
 scheduler and the kubelet ignore it. There is no churn, and nothing to evict.
@@ -62,9 +68,50 @@ constraint instead of an afterthought.
 Woodpecker's per-pool workflow caps sit above Kueue's admission on purpose.
 An agent holds a workflow's slot while Kueue gates its pod, so a cap tight
 enough to bind would put PR work back into the agent's first-in-first-out
-queue, where a lint pod waits behind a 30Gi verify that does not fit. The
-pull-request cap is sized so Kueue orders that wait instead: it admits the
-small pod past the blocked head, and ready PRs outrank drafts.
+queue. The pull-request cap is sized so Kueue usually orders that wait
+instead: it admits a small pod past a blocked head, and ready PRs outrank
+drafts. Under a burst of verify work, that was not enough. Short checks
+therefore have their own pool, below.
+
+## Why short checks have their own pool
+
+Kueue could order PR pods, but not the agent slots in front of them. Each
+verify reserves several CPUs. When verifies filled the compute queue, gated
+verify workflows still held most of the 12 `pr` slots. A one-minute scanner
+then waited for a slot behind them. Over the 72 hours to 2026-11-27,
+`trivy`, `semgrep`, `trmnl-validate` and the draft preflight ran for about a
+minute each. They waited a median of 20 minutes to over three hours to start.
+
+The [routing](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/routing.ts)
+now sends a PR workflow to the `pr-light` agent when it has no services and
+every container is in the light, scanner or contained tier. Those tiers are
+small and tightly limited. Verify, browser, Gradle, Cargo, medium builds, the
+dry-run rehearsal and anything with a service stay in `pr`. A main push keeps
+the same workflows in the main pool, since main already has its own slots.
+
+The light pool's pods join their own `woodpecker-light` queue, and that
+queue holds every slot at once. A workflow runs its clone pods and then its
+step one at a time. So a slot needs only its largest pod: 500m of CPU for a
+contained step, 2Gi of memory for the checkout, and 2Gi of ephemeral storage.
+Four slots need 2 CPU, 8Gi and 8Gi. The
+[admission proof](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/ci/check-ci-admission-budget.ts)
+checks exactly that against the generated pipeline, checkout included.
+Kueue therefore never gates a light pod. A light check waits only for one of
+four slots, each held for about a minute.
+
+Four is the smallest slot count that meets a one-minute start. Replaying the
+same 72 hours of light-check arrivals, three slots left the 90th percentile
+waiting 77 seconds, and four cut it to 19. The quota came out of the compute
+queue, so liskov's total budget is unchanged. Most of it is not new cost
+either: the light checks used compute quota before they had their own.
+
+### Why the light queue lends nothing
+
+Kueue lends idle quota only inside a cohort. With preemption off, a lender
+gets its quota back only when the borrower's pod finishes. A verify pod that
+borrowed the light reserve would hold it for a 5 to 30 minute run. The light
+checks would then be gated behind verify again, which is the wait this pool
+removes. The reserve is small, so keeping it idle between checks costs little.
 
 ## Why gates have reserved capacity
 
@@ -73,8 +120,8 @@ provider. A completion check can then queue behind work from newer PRs.
 The developer waits even after the expensive checks have finished.
 
 The [agent pools](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/agent.ts)
-give PR execution, main releases, maintenance, reviews, and completion separate
-workflow caps. Review and completion share a small resource reserve but have
+give PR execution, short PR checks, main releases, maintenance, reviews, and
+completion separate workflow caps. Review and completion share a small resource reserve but have
 separate agents. A backlog of review polls therefore cannot consume the
 completion slot.
 
@@ -183,7 +230,11 @@ A root check, `check-ci-admission-budget.ts`, rules that out. It proves that
 every in-flight workflow's services plus the largest step always fit the
 budget. Most services use the small `SERVICE_TIER`. Paper needs a larger
 reservation, so its workflow has a shared concurrency cap across agents and
-PRs. The proof accounts for that cap without reducing the smoke checks.
+PRs. The `docker-e2e` lane's Tempo and MinIO have a cap too. Without it, the
+proof had to assume every compute slot could hold them, and their ephemeral
+storage alone overflowed the compute quota once the light reserve left it.
+Each cap sits at or above the most that ran at once, so the proof accounts for
+it without reducing the checks.
 
 Kueue never preempts CI. It stops a plain pod by deleting it, and Woodpecker
 reports a pod that vanishes mid-step as a success.
@@ -208,10 +259,10 @@ checkout and reports remain on the workflow's persistent volume. Clone pods and
 service pods keep their existing storage.
 
 RAM storage competes with compilers and test processes for container memory.
-Each lane's profile adds its entire storage allowance to both the request and
-limit. Kueue therefore reserves that memory before execution starts. Two
-scratch verify pods and one scratch browser pod fill the compute memory quota,
-so other lanes wait instead of overcommitting the node.
+Each lane's profile adds its entire storage allowance to the limit, so a full
+scratch volume never squeezes the process. The request stays the lane's
+measured peak with its RAM storage included. Kueue therefore reserves what
+the lane really uses, and other lanes wait instead of overcommitting the node.
 The [scratch admission policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/ram-scratch-policy.ts)
 rejects a marked pod unless it is the single execution container of the lane
 its profile names.
@@ -302,4 +353,6 @@ kubelet eviction, whatever the queue says.
 
 ## Related
 
+- [CI agent pool and admission queue reference](/reference/ci-admission-queues/)
+  — every pool's slots and every queue's quota
 - [About the homelab](/explanation/homelab/overview/) — why liskov is CI-only

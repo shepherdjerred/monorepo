@@ -1,6 +1,6 @@
 {
-  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: CPU follows the same rule (every queue, 24 aggregate + 1 maintenance + 2 Delivery, plus about 1.8 of resident requests, <= 29), and every queue plus buildkitd's requests must fit the allocatable memory, so a pod Kueue admits can always schedule. Delivery's executor reserve (2 CPU, 8Gi) is a separate Kueue queue beside this budget, so computeQuota.memory gives up the same 8Gi. The quota is not where the overcommit lives: step requests are sized from measured usage (p90 memory, see the pipeline generator's tiers.ts), and limits stay the per-container backstop above them. The pool workflow caps are a backstop above Kueue's resource admission: an agent holds a workflow's slot while Kueue gates its pod, so the pr cap is sized so that Kueue, not the agent's first-in-first-out queue, orders waiting PR work. With right-sized requests, three verify pods plus a dozen small workflows fit at once, so the pr cap is 12; the main pool is 10 so 17-workflow main pipelines do not wait behind FIFO slots.",
-  "maxWorkflows": 27,
+  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: CPU follows the same rule (every queue, 24 aggregate + 1 maintenance + 2 Delivery, plus about 2.0 of resident requests, <= 29), and every queue plus buildkitd's requests must fit the allocatable memory, so a pod Kueue admits can always schedule. Delivery's executor reserve (2 CPU, 8Gi) is a separate Kueue queue beside this budget, so computeQuota.memory gives up the same 8Gi. The quota is not where the overcommit lives: step requests are sized from measured usage (p90 memory, see the pipeline generator's tiers.ts), and limits stay the per-container backstop above them. The pool workflow caps are a backstop above Kueue's resource admission: an agent holds a workflow's slot while Kueue gates its pod, so the pr cap is sized so that Kueue, not the agent's first-in-first-out queue, orders waiting PR work. The pr cap of 12 was sized when the light checks shared it; they now have their own pool, which only leaves more of its slots to heavier workflows that Kueue still orders by priority. The main pool is 10 so 17-workflow main pipelines do not wait behind FIFO slots. The aggregate splits into compute, light and gate quotas. Short service-free PR checks in the light, scanner or contained tier route to the pr-light pool, whose lightQuota is reserved (no cohort, so verify can never borrow it) and holds every pr-light slot's largest pod at once: 4 slots x (500m CPU, 2Gi checkout memory, 2Gi ephemeral) = 2 CPU, 8Gi, 8Gi, taken from computeQuota. A pr-light workflow therefore waits only for one of its own slots, never for Kueue.",
+  "maxWorkflows": 31,
   "legacyMaxWorkflows": 0,
   "maxServicesPerWorkflow": 2,
   "quota": {
@@ -9,9 +9,14 @@
     "ephemeral-storage": "60Gi"
   },
   "computeQuota": {
-    "cpu": "23",
-    "memory": "70Gi",
-    "ephemeral-storage": "56Gi"
+    "cpu": "21",
+    "memory": "62Gi",
+    "ephemeral-storage": "48Gi"
+  },
+  "lightQuota": {
+    "cpu": "2",
+    "memory": "8Gi",
+    "ephemeral-storage": "8Gi"
   },
   "gateQuota": {
     "cpu": "1",
@@ -22,6 +27,7 @@
     "pr": { "maxWorkflows": 12, "queue": "default" },
     "main": { "maxWorkflows": 10, "queue": "default" },
     "maintenance": { "maxWorkflows": 1, "queue": "default" },
+    "pr-light": { "maxWorkflows": 4, "queue": "ci-light" },
     "review": { "maxWorkflows": 3, "queue": "ci-gates" },
     "completion": { "maxWorkflows": 1, "queue": "ci-gates" }
   },

@@ -501,9 +501,11 @@ describe("signed workflow routing", () => {
         expect(config?.data).not.toContain("secrets:");
         expect(config?.data).not.toContain("volumes:");
       }
+      // A light-tier, service-free check: the light pool's reserved slots
+      // keep it from waiting behind verify for an agent.
       expect(parse(config?.data ?? "")).toMatchObject({
         labels: {
-          "ci-pool": "pr",
+          "ci-pool": "pr-light",
           "kueue.x-k8s.io/priority-class": "ci-draft",
         },
       });

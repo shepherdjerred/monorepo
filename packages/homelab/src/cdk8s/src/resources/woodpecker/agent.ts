@@ -113,8 +113,11 @@ export function createWoodpeckerAgent(chart: Chart) {
   // `maintenance` takes only the Temporal-dispatched maintenance workflows.
   // One slot of its own keeps the golden workspace refresh from waiting
   // behind the PR backlog in the `pr` agent's first-in-first-out queue.
+  // `pr-light` takes short, service-free PR checks for the same reason: in
+  // `pr` they waited behind every verify holding a slot while Kueue gated it.
   const pools: readonly CiAgentPool[] = [
     "pr",
+    "pr-light",
     "main",
     "maintenance",
     "review",

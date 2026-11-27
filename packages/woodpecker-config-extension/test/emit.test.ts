@@ -417,4 +417,24 @@ describe("service entrypoints", () => {
     ]);
     expect(tempo?.commands).toBeUndefined();
   });
+
+  /**
+   * Tempo and MinIO hold quota while their step waits, so a literal group caps
+   * them across every PR and main push; the admission proof counts only that
+   * cap, not one per compute slot.
+   */
+  test("caps docker-e2e's held services with a fixed repository-wide group", () => {
+    const step = testPipelineSteps().find(
+      (candidate) => candidate.key === "docker-e2e",
+    );
+    if (step === undefined) throw new Error("missing docker-e2e");
+    expect(
+      z
+        .object({
+          concurrency: z.object({ limit: z.number(), group: z.string() }),
+        })
+        .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))))
+        .concurrency,
+    ).toEqual({ limit: 3, group: "docker-e2e" });
+  });
 });

@@ -45,12 +45,12 @@ guarantee a dependency-closed set, which the emitter then relies on.
 When the typed `woodpecker-ram-scratch-enabled` flag is on, the ordinary
 `verify` and `playwright-e2e` execution pods carry their lane's profile from
 `src/pipeline/ram-scratch.ts`. Verify mounts an 8Gi tmpfs TMPDIR and a 4Gi
-private Gradle home; the browser lane mounts a 4Gi TMPDIR. Each profile
-reserves its whole tmpfs allowance above the lane's own tier: verify requests
-30Gi with a 36Gi limit, and browser requests 10Gi with a 16Gi limit.
-Kueue admits on those requests. The 70Gi compute quota therefore runs at most
-two scratch verify pods and one scratch browser pod at once, and the node
-cannot be oversubscribed. Homelab admission adds memory-backed volumes only to
+private Gradle home; the browser lane mounts a 4Gi TMPDIR. Each profile adds
+its whole tmpfs allowance to the lane's limit, while the request stays the
+lane's measured tier (tmpfs pages included): verify requests 20Gi with a 36Gi
+limit, and browser requests 4Gi with a 16Gi limit. Kueue admits on those
+requests, so the 62Gi compute quota runs at most three verify pods at once,
+and every queue stays within the node's allocatable memory. Homelab admission adds memory-backed volumes only to
 a profiled lane's single execution container, preserving clone, service,
 checkout, and report storage. The production inventory enables the flag, while
 the runtime fallback stays off. Owner manual benchmarks on `ci-canary/`
@@ -408,8 +408,8 @@ Deploy the ready-event compatibility path and server status-context template
 before enabling draft preflight. The server change requires a drained rollout;
 observe a real ready transition through full CI before changing draft coverage.
 
-`routing.ts` assigns Kubernetes workflows to PR, main, maintenance, or
-completion agents. A PR targeting the default branch still uses the PR pool;
+`routing.ts` assigns Kubernetes workflows to PR, PR-light, main, maintenance,
+or completion agents. A PR targeting the default branch still uses the PR pool;
 only a push or manual run on that branch uses main capacity. Benchmark and
 extended-tier runs on the default branch are background work in the PR pool
 at draft priority, below every ready PR, and leave main's reservation intact.
@@ -418,6 +418,21 @@ Temporal maintenance (`CI_MAINTENANCE_KIND`) uses its own one-slot
 at main's priority. It is rare, capped at one workflow, and Kueue never
 preempts, so it only passes waiting work. Native workflows keep their host
 labels.
+
+A PR workflow with no services whose every container is in the light, scanner
+or contained tier (`isPrLightWorkflow`) uses the `pr-light` agent instead of
+`pr`: today the scanners, `trmnl-validate` and the draft preflight. Its pods
+join the reserved `ci-light` queue, which the admission-budget check proves
+holds every `pr-light` slot's largest pod (the checkout or the step) at once,
+so a light check never waits behind verify for a slot or for quota. Verify,
+browser, medium, Gradle, Cargo, dry-run and service workflows stay in `pr`.
+Main pushes keep these workflows in the main pool, and background work stays
+in `pr`. `docker-e2e` shares the fixed `docker-e2e` concurrency group (limit 3) across every PR and main push, which bounds the Tempo and MinIO services it
+holds while its step waits for compute quota.
+
+The step dump (`dump-steps.ts`) records a `checkout` tier on every workflow
+that clones, so the admission check can size a reserve that holds a whole
+workflow, not only its step.
 
 The checkout-free `ci-complete` workflow uses its reserved `completion` pool
 with the trusted `CI_GATE_IMAGE` policy image and no checkout or services. It
