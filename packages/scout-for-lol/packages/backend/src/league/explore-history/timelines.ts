@@ -11,7 +11,7 @@ import { fetchMatchTimeline } from "#src/league/tasks/postmatch/match-data-fetch
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { bindParams } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   buildTimelineCoverageSource,

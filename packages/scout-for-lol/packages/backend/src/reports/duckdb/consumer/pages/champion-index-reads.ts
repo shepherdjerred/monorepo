@@ -4,7 +4,7 @@ import {
   type QueueType,
 } from "@scout-for-lol/data";
 import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { runSource } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   entryAccountPairs,
   entryGamesSource,

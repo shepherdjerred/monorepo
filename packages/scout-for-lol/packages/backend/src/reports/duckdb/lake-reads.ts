@@ -12,7 +12,7 @@ import {
   MATCH_UI_READ_COLUMNS,
   MatchLoadoutLakeRowSchema,
 } from "#src/report-lake/loadout.ts";
-import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   withLakePage,
   type LakePage,
@@ -35,41 +35,6 @@ const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
  * Same safety model as the report compiler:
  * fixed SQL shapes, closed column lists, every runtime value parameter-bound.
  */
-
-/**
- * Bind a lake query's parameters for one session.
- *
- * Exported for `reports/identity.ts`, which runs its own lookups. `execute.ts`
- * still carries a private copy; collapsing the two is a separate cleanup.
- */
-export function bindParams(
-  session: DuckDBSession,
-  params: BoundParam[],
-): (string | number | ReturnType<DuckDBSession["list"]>)[] {
-  return params.map((param) =>
-    param.kind === "list" ? session.list(param.values) : param.value,
-  );
-}
-
-/** Run `sql` over a built source and parse every row with `schema`. */
-async function runPageQuery<T>(
-  page: LakePage,
-  options: {
-    source: SqlFragment;
-    sql: string;
-    extraParams?: BoundParam[];
-    schema: z.ZodType<T>;
-  },
-): Promise<T[]> {
-  const rows = await page.session.run(
-    options.sql,
-    bindParams(page.session, [
-      ...options.source.params,
-      ...(options.extraParams ?? []),
-    ]),
-  );
-  return rows.map((row) => options.schema.parse(row));
-}
 
 /**
  * `puuid IN (…)` plus an optional queue filter — the predicate shared by every
@@ -207,7 +172,8 @@ export async function readPlayerMatchHistory(
     return [];
   }
   const limitSql = options.limit === undefined ? "" : "LIMIT ?";
-  return await runPageQuery(page, {
+  return await runSource({
+    session: page.session,
     source,
     sql:
       `SELECT match_id, puuid, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
@@ -218,7 +184,7 @@ export async function readPlayerMatchHistory(
       `${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
       `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
       `ORDER BY game_creation_ms DESC, match_id DESC ${limitSql}`,
-    extraParams:
+    trailingParams:
       options.limit === undefined
         ? []
         : [scalarParam(Math.floor(options.limit))],
@@ -285,7 +251,8 @@ export async function readPlayerChampionPool(
   }
   const limitSql =
     options.games === 20 || options.games === 50 ? "LIMIT ?" : "";
-  return await runPageQuery(page, {
+  return await runSource({
+    session: page.session,
     source,
     sql:
       `WITH player_matches AS (` +
@@ -302,7 +269,7 @@ export async function readPlayerChampionPool(
       `mode(CASE WHEN upper(trim(team_position)) IN ('', 'INVALID') THEN NULL ELSE team_position END) AS team_position ` +
       `FROM player_matches ` +
       `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
-    extraParams:
+    trailingParams:
       options.games === 20 || options.games === 50
         ? [scalarParam(options.games)]
         : [],
@@ -352,7 +319,8 @@ export async function readTeamTotalsForMatches(
   if (source === undefined) {
     return [];
   }
-  return await runPageQuery(page, {
+  return await runSource({
+    session: page.session,
     source,
     sql:
       `SELECT match_id, team_id, sum(kills)::BIGINT AS team_kills, ` +
@@ -414,7 +382,8 @@ export async function readChampionRecentForm(
   if (source === undefined) {
     return [];
   }
-  return await runPageQuery(page, {
+  return await runSource({
+    session: page.session,
     source,
     sql:
       `SELECT champion_id, champion_name, win FROM (` +
@@ -423,7 +392,7 @@ export async function readChampionRecentForm(
       `FROM (SELECT match_id, champion_id, champion_name, win, ${GAME_CREATED_MS_SQL} AS game_creation_ms ` +
       `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH})) ` +
       `WHERE recency <= ? ORDER BY champion_id, recency`,
-    extraParams: [scalarParam(options.perChampion)],
+    trailingParams: [scalarParam(options.perChampion)],
     schema: ChampionRecentFormRowSchema,
   });
 }

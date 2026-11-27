@@ -4,6 +4,7 @@ import {
 } from "#src/evidence/lake-eligibility.ts";
 import { duckDbEmptySelect } from "#src/report-lake/schema.ts";
 import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
+import { bindParams } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   buildMatchTeamBansSource,
@@ -37,12 +38,6 @@ import {
 } from "@scout-for-lol/data";
 
 const TARGET_KEY = /^T[1-5]$/u;
-
-function bindParams(session: DuckDBSession, params: BoundParam[]) {
-  return params.map((param) =>
-    param.kind === "list" ? session.list(param.values) : param.value,
-  );
-}
 
 async function materialize(
   session: DuckDBSession,
