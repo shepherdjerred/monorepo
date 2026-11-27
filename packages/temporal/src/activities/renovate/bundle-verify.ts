@@ -392,6 +392,8 @@ export async function readBundleDiff(
       "--no-ext-diff",
       "--no-textconv",
       "--no-color",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
       "--",
       ...files,
     ],
