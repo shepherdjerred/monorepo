@@ -28,7 +28,7 @@ import {
   scalarParam,
   GAME_CREATED_MS_SQL,
 } from "#src/reports/duckdb/lake.ts";
-import type { RoleMatchupRow } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import type { RoleMatchupRow } from "#src/reports/lanes/role-matchups.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 

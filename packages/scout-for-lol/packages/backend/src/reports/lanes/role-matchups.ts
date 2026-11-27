@@ -61,7 +61,7 @@ function requiredParticipantId(row: RoleMatchupRow): number {
 }
 
 function uniqueRoleParticipant(
-  rows: RoleMatchupRow[],
+  rows: readonly RoleMatchupRow[],
   teamId: number,
   role: Lane,
 ): RoleMatchupRow | null {
@@ -100,8 +100,8 @@ function checkpointState(
  * pairing a lane result.
  */
 export function buildRoleMatchups(options: {
-  rows: RoleMatchupRow[];
-  frames: LaneDeltaFrame[];
+  rows: readonly RoleMatchupRow[];
+  frames: readonly LaneDeltaFrame[];
 }): RoleMatchup[] | null {
   if (options.rows[0] === undefined || !isStandardRiftGame(options.rows[0])) {
     return null;

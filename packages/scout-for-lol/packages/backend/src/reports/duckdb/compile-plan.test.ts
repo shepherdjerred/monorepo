@@ -14,9 +14,9 @@ import {
   type PlanQueryInput,
 } from "#src/reports/duckdb/compile-plan.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
-import { NO_CRAWL_LAKE_FILES } from "#src/reports/duckdb/lake/crawl-files.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import {
+  EMPTY_TIMELINE_AND_LANE_FILES,
   TEST_GUILD_ID,
   TEST_LAKE_FILES,
   paramValues,
@@ -98,19 +98,7 @@ const EMPTY_LAKE: LakeFiles = {
   prematchParquet: [],
   prematchStaging: [],
   accountsParquet: undefined,
-  competitionRankHistoryParquet: [],
-  competitionRankHistoryStaging: [],
-  timelineEventsParquet: [],
-  timelineEventsStaging: [],
-  timelineEventParticipantsParquet: [],
-  timelineEventParticipantsStaging: [],
-  timelineParticipantFramesParquet: [],
-  timelineParticipantFramesStaging: [],
-  timelineCoverageParquet: [],
-  timelineCoverageStaging: [],
-  laneResults: { status: "unavailable" },
-  crawl: NO_CRAWL_LAKE_FILES,
-  crawlTombstones: [],
+  ...EMPTY_TIMELINE_AND_LANE_FILES,
 };
 
 describe("pushdown", () => {
