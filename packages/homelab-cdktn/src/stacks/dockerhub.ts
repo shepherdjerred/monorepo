@@ -4,7 +4,7 @@ import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { DockerProvider } from "#generated/providers/docker/provider/index.ts";
 import { HubRepository } from "#generated/providers/docker/hub-repository/index.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 import { importInstance, protect, retire } from "#src/state-migrations.ts";
 
 /**
@@ -16,7 +16,9 @@ export class DockerhubStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "dockerhub", {
       requiredVersion: ">= 1.11.0",
-      providerConstraints: { docker: "0.8.0" },
+      providerConstraints: {
+        docker: pinnedProviderVersion("registry.opentofu.org/docker/docker"),
+      },
     });
 
     encryptStateAndPlans(this, {

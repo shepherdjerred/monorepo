@@ -185,4 +185,22 @@ final class CaptureTextTests: XCTestCase {
         "text", "reasoning", "tool call Bash", "tool result", "tool exec", "tool Edit", "other",
       ])
   }
+
+  func testBlockBadgesAvoidContradictoryInheritedLabel() {
+    XCTAssertEqual(CaptureText.blockBadges(isNew: false, inherited: false), [])
+    XCTAssertEqual(
+      CaptureText.blockBadges(isNew: true, inherited: false),
+      [CaptureBlockBadge(text: "new", isAccent: true)])
+    XCTAssertEqual(
+      CaptureText.blockBadges(isNew: false, inherited: true),
+      [
+        CaptureBlockBadge(
+          text: "not sent",
+          isAccent: false,
+          help: "Not sent on the wire; carried server-side from the request this continues.")
+      ])
+    let both = CaptureText.blockBadges(isNew: true, inherited: true)
+    XCTAssertEqual(both.map(\.text), ["new", "not sent"])
+    XCTAssertEqual(both[1].help, CaptureText.notSentBadgeHelp)
+  }
 }
