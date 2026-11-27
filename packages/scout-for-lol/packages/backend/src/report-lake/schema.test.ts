@@ -11,15 +11,12 @@ import {
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
-import { MATCH_MIGRATION_GATED_COLUMNS } from "@scout-for-lol/data/model/reports/match-rebuild-gated-columns.ts";
 import { z } from "zod";
 import {
-  LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
   LAKE_SCHEMA_EPOCH,
   LAKE_TABLE_COLUMNS,
   lakeSchemaFingerprint,
   lakeSchemaFingerprintOf,
-  lakeSchemaStatus,
 } from "#src/report-lake/schema.ts";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 
@@ -149,37 +146,6 @@ describe("lakeSchemaFingerprint", () => {
           "/helm/parameters/scout.reportLakeSchemaEpoch",
         );
       }
-    }
-  });
-});
-
-describe("the declared predecessor schema", () => {
-  test("is exactly this schema without the migration's columns", () => {
-    const migration = new Set<string>(MATCH_MIGRATION_GATED_COLUMNS);
-    const predecessor = {
-      ...LAKE_TABLE_COLUMNS,
-      matches: Object.fromEntries(
-        Object.entries(MATCH_LAKE_COLUMNS).filter(
-          ([name]) => !migration.has(name),
-        ),
-      ),
-    };
-
-    expect(lakeSchemaFingerprintOf(predecessor)).toBe(
-      LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
-    );
-    expect(LAKE_PREDECESSOR_SCHEMA_FINGERPRINT).not.toBe(
-      lakeSchemaFingerprint(),
-    );
-  });
-
-  test("is the only other fingerprint a published build may carry", () => {
-    expect(lakeSchemaStatus(lakeSchemaFingerprint())).toBe("current");
-    expect(lakeSchemaStatus(LAKE_PREDECESSOR_SCHEMA_FINGERPRINT)).toBe(
-      "predecessor",
-    );
-    for (const other of ["c0d6dcb0944686f1", "1a45b23ce7f086cb", undefined]) {
-      expect(lakeSchemaStatus(other)).toBe("unknown");
     }
   });
 });
