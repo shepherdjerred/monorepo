@@ -36,8 +36,9 @@ export type TipTextProps = {
 };
 
 /**
- * One generated sentence with every referenced phrase as a rich-tooltip
- * trigger: "Charm" opens the ability, "stunned" opens the keyword. Must sit
+ * One generated sentence with each referenced entity's first mention as a
+ * rich-tooltip trigger: "Charm" opens the ability, "stunned" opens the
+ * keyword. Later mentions of the same entity in the text are plain text. Must sit
  * inside a `GameFactProvider`. A span that does not fit the text throws; see
  * `splitTipText`.
  */
@@ -46,7 +47,7 @@ export function TipText(props: TipTextProps) {
   return (
     <span className={cn("scout-tip-text", className)}>
       {splitTipText(text, refs).map((segment) =>
-        segment.type === "text" ? (
+        segment.type === "text" || segment.repeat ? (
           <Fragment key={segment.start}>{segment.text}</Fragment>
         ) : (
           <GameFactTooltip

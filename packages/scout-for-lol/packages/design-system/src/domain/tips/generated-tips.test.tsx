@@ -111,6 +111,30 @@ describe("TipText", () => {
     expect(markup).toContain("stops at the first enemy it hits");
   });
 
+  test("only the first mention of an entity in a tip is a trigger; later ones stay in the text", () => {
+    const tip = generatedFiles
+      .flatMap((file) => [...file.general, ...file.matchups])
+      .flatMap((set) => set.tips)
+      .find(
+        (candidate) =>
+          new Set(candidate.refs.map((ref) => `${ref.kind}/${ref.key}`)).size <
+          candidate.refs.length,
+      );
+    if (tip === undefined) {
+      throw new Error("No generated tip names an entity twice");
+    }
+    const entities = new Set(tip.refs.map((ref) => `${ref.kind}/${ref.key}`));
+    const markup = html(
+      createElement(TipText, { text: tip.text, refs: tip.refs }),
+    );
+    expect(markup.match(/scout-tip-text__ref/g)).toHaveLength(entities.size);
+    const plain = markup
+      .replaceAll(/<[^>]+>/g, "")
+      .replaceAll("&#x27;", "'")
+      .replaceAll("&quot;", '"');
+    expect(plain).toBe(tip.text);
+  });
+
   test("throws on a span that does not fit, in the page and not only in dev", () => {
     expect(() =>
       html(
