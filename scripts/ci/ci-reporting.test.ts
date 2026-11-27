@@ -645,19 +645,57 @@ describe("CI reporting manifest", () => {
   });
 
   test("test:ci preserves package-specific test hashing inputs", async () => {
-    for (const [turboPath, expectedTask] of [
-      [
-        "packages/birmel/turbo.json",
-        '"test:ci": {\n      "env": ["NODE_ENV"],\n      "inputs": ["$TURBO_EXTENDS$", ".env.test"]\n    }',
-      ],
-      [
-        "packages/scout-for-lol/packages/backend/turbo.json",
-        '"test:ci": {\n      "env": ["DATABASE_URL", "SCOUT_PG_PORT"],\n      "passThroughEnv": ["MISE_DATA_DIR"]\n    }',
-      ],
-    ] satisfies readonly (readonly [string, string])[]) {
-      const turbo = await Bun.file(path.join(repositoryRoot, turboPath)).text();
-      expect(turbo).toContain(expectedTask);
+    const birmel = await Bun.file(
+      path.join(repositoryRoot, "packages/birmel/turbo.json"),
+    ).text();
+    expect(birmel).toContain(
+      '"test:ci": {\n      "env": ["NODE_ENV"],\n      "inputs": ["$TURBO_EXTENDS$", ".env.test"]\n    }',
+    );
+  });
+});
+
+describe("scout backend CI test groups", () => {
+  test("scout backend test groups pass the PostgreSQL location through unhashed", async () => {
+    // DATABASE_URL and SCOUT_PG_PORT only locate the shared PostgreSQL server
+    // and label the unbound singleton stub; the suites clone their own
+    // databases, so no value changes a result and none may enter a hash.
+    const BackendTurboSchema = z.object({
+      tasks: z.record(
+        z.string(),
+        z
+          .object({
+            env: z.array(z.string()).optional(),
+            passThroughEnv: z.array(z.string()).optional(),
+          })
+          .loose(),
+      ),
+    });
+    const turbo = BackendTurboSchema.parse(
+      Bun.JSONC.parse(
+        await Bun.file(
+          path.join(
+            repositoryRoot,
+            "packages/scout-for-lol/packages/backend/turbo.json",
+          ),
+        ).text(),
+      ),
+    );
+    for (const task of [
+      "test:ci:free-1",
+      "test:ci:free-2",
+      "test:ci:db",
+      "test:extended:db",
+    ]) {
+      expect(turbo.tasks[task]?.env, task).toBeUndefined();
+      expect(turbo.tasks[task]?.passThroughEnv, task).toEqual(
+        expect.arrayContaining([
+          "MISE_DATA_DIR",
+          "DATABASE_URL",
+          "SCOUT_PG_PORT",
+        ]),
+      );
     }
+    expect(turbo.tasks["test:ci"]?.env).toBeUndefined();
   });
 });
 

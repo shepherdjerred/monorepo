@@ -2637,9 +2637,29 @@ process remain untouched. Choose an unused port while keeping that server:
 SCOUT_PG_PORT=5483 bun run test
 ```
 
-Turbo passes and hashes `SCOUT_PG_PORT` for both `test` and `test:ci`. Moving
-existing development data to a new major requires an explicit dump/restore;
-starting the harness does not migrate a previous cluster.
+Turbo passes and hashes `SCOUT_PG_PORT` for `test`. The CI-tier group tasks
+(`test:ci:db`, `test:ci:free-1`, `test:ci:free-2`) and `test:extended:db` pass
+`SCOUT_PG_PORT` and `DATABASE_URL` through without hashing them: they only say
+where the shared server listens and which URL the unbound singleton stub
+carries, and the suites clone their own databases. Moving existing development
+data to a new major requires an explicit dump/restore; starting the harness
+does not migrate a previous cluster.
+
+### CI test groups
+
+`ci-tests.json` splits the CI tier into three Turbo tasks that `test:ci` fans
+out to in parallel: `test:ci:db` runs the suites that reach the PostgreSQL
+harness (`src/testing/test-database.ts` and friends), and `test:ci:free-1` and
+`test:ci:free-2` are the two Vitest shards of every other suite. Each task's
+`inputs` drop the test files it never runs, so editing a PostgreSQL suite keeps
+both free shards cached and editing a free suite keeps `test:ci:db` cached.
+Source files are inputs of every group because the groups import the same
+modules. A new suite that starts PostgreSQL goes in the `db` list in
+`ci-tests.json` and in the free tasks' `inputs` in `turbo.json`;
+`scripts/ci-test-groups.test.ts` fails with the file to move when the lists and
+the import graph disagree. Vitest runs each suite in its own isolated module
+graph: `--no-isolate` fails 63 of the free suites because they share module
+singletons and `vi.mock` state, so it is not an option here.
 
 ## Riot request priorities
 
