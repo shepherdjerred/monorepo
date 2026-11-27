@@ -1,5 +1,11 @@
 import { useEffect } from "react";
 import { LiveMessageSchema } from "@shepherdjerred/artifacts/contract";
+import {
+  WAITER_QUERY_PREFIXES,
+  stalenessOf,
+  widen,
+  type Staleness,
+} from "#client/lib/live-scope.ts";
 import { queryClient } from "./api.ts";
 
 /** A tab hidden this long lets its stream go until it is shown again. */
@@ -19,7 +25,8 @@ const EVENT_NAMES = [
 /**
  * Keeps the open page current: one `EventSource` on `/api/events/stream`
  * (scoped to a board when there is one), invalidating every query when
- * something changed. The stream only wakes a client, so a message carries no
+ * something changed, or only the waiting header's when an agent connected or
+ * left. The stream only wakes a client, so a message carries no
  * data worth reading; the contract schema still rejects a broken frame.
  * Own changes are refetched too, which is harmless: they are idempotent reads.
  */
@@ -32,11 +39,18 @@ export function useLiveUpdates(board?: string): void {
     let source: EventSource | undefined;
     let pause: ReturnType<typeof setTimeout> | undefined;
     let flush: ReturnType<typeof setTimeout> | undefined;
+    let stale: Staleness | null = null;
 
-    function refetch(): void {
+    function refetch(staleness: Staleness = "all"): void {
+      stale = widen(stale, staleness);
       clearTimeout(flush);
       flush = setTimeout(() => {
-        void queryClient.invalidateQueries();
+        const scope = stale;
+        stale = null;
+        if (scope === "waiters")
+          for (const prefix of WAITER_QUERY_PREFIXES)
+            void queryClient.invalidateQueries({ queryKey: [prefix] });
+        else void queryClient.invalidateQueries();
       }, COALESCE_MS);
     }
 
@@ -54,7 +68,7 @@ export function useLiveUpdates(board?: string): void {
         return;
       }
       if (message.data.type === "ready") return;
-      refetch();
+      refetch(stalenessOf(message.data));
     }
 
     function open(): void {

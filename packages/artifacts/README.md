@@ -53,9 +53,15 @@ Content-Security-Policy.
 
 - **App** (`ARTIFACTS_APP_ORIGIN`): the UI, `/trpc`, `/api/uploads`,
   `/api/feedback/stream`, `/api/events/stream`, `/agent/*`. Login gate, CSRF
-  rules (`src/domain/csrf.ts`), no CORS, `frame-ancestors 'none'`. `/_t/*` and
-  `/_p/*` are 404, and it never reads object bytes: only
+  rules (`src/domain/csrf.ts`), no CORS. Every response carries the app
+  Content-Security-Policy (`appPolicy` in `src/domain/csp.ts`: `'self'` plus the
+  content origin for images, media, fetches and frames; `frame-ancestors 'none'`).
+  `/_t/*` and `/_p/*` are 404, and it never reads object bytes: only
   `src/server/content-host.ts` calls `ObjectStore.read`/`readRange`.
+- **Probes on both public hosts:** `GET|HEAD /healthz` and `/readyz` answer
+  before the login gate and CSRF checks (`src/server/health.ts`), with the
+  internal host's body and the host's own headers. `/readyz` runs `SELECT 1`.
+  Every other route stays gated.
 - **Content** (`ARTIFACTS_CONTENT_ORIGIN`): `GET|HEAD|OPTIONS` of
   `/_t/<token>/*`, `/_bridge/*`, `/_viewer/*`. Every response, whatever its
   status, carries the sandbox Content-Security-Policy with sources scoped to

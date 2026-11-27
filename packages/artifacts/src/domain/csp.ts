@@ -72,10 +72,34 @@ export function contentHeaders(
   };
 }
 
+/**
+ * The Content-Security-Policy of every app response. The UI itself is all
+ * `'self'`; only the content origin may supply images, media, fetches and
+ * frames (the artifacts it previews), and WebAssembly may compile (the
+ * terminal player) while script text may never be evaluated. The e2e serves
+ * this same policy, so the UI is proven to work under exactly what ships.
+ */
+export function appPolicy(contentOrigin: string): string {
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'wasm-unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: ${contentOrigin}`,
+    `media-src ${contentOrigin} blob:`,
+    `connect-src 'self' ${contentOrigin}`,
+    `frame-src ${contentOrigin}`,
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
 /** Headers of every app response: the UI is never framed and never shared. */
-export function appHeaders(): Record<string, string> {
+export function appHeaders(contentOrigin: string): Record<string, string> {
   return {
-    "Content-Security-Policy": "frame-ancestors 'none'",
+    "Content-Security-Policy": appPolicy(contentOrigin),
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Cross-Origin-Resource-Policy": "same-origin",

@@ -155,7 +155,7 @@ describe("content host: routes", () => {
       "/trpc/boards.list",
       "/api/uploads",
       "/api/feedback/stream",
-      "/healthz",
+      "/health",
       "/",
     ])
       expect(await statusOf(get(path))).toBe(404);
