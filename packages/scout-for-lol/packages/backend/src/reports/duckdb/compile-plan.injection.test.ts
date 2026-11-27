@@ -552,6 +552,8 @@ const CLOSED_STRING_LITERALS = new Set([
   "'Surrender'",
   "'Played out'",
   "'unknown'",
+  // participant_kind value that facts-cte.ts names to keep bots out of scope.
+  "'bot'",
   // Riot's empty position, folded into 'unknown'.
   "''",
   "'Not Arena'",

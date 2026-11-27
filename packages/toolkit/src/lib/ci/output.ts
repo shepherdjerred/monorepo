@@ -83,7 +83,10 @@ async function failureReviews(result: WaitResult, observer: CiObserver) {
 }
 
 export function diagnosticText(diagnostic: Diagnostic): string {
-  return `${diagnostic.workflow}${diagnostic.step === null ? "" : ` / ${diagnostic.step}`} exit=${String(diagnostic.exitCode)}\n${diagnostic.error ?? ""}\n${diagnostic.logs}${diagnostic.truncated ? "\n[excerpt truncated]" : ""}\n${diagnostic.url}`;
+  const stepPart = diagnostic.step === null ? "" : ` / ${diagnostic.step}`;
+  const exitPart =
+    diagnostic.exitCode === null ? "" : ` exit=${String(diagnostic.exitCode)}`;
+  return `${diagnostic.workflow}${stepPart}${exitPart}\n${diagnostic.error ?? ""}\n${diagnostic.logs}${diagnostic.truncated ? "\n[excerpt truncated]" : ""}\n${diagnostic.url}`;
 }
 
 function timingSummary(snapshot: WaitResult["snapshot"]) {

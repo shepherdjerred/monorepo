@@ -538,7 +538,9 @@ describe("history source usage and redaction", () => {
     const documents = results.flatMap((result) => result.documents);
     const grok = documents.find((document) => document.source === "grok");
     expect(grok?.toolOutputText).toContain("run shell command");
+    expect(grok?.toolOutputText).toContain("Read file");
     expect(grok?.toolOutputText).toContain("completed");
+    expect(grok?.toolOutputText).not.toContain("flaky.test.ts");
     expect(grok?.toolOutputText).not.toContain("grok-tool-command-marker");
     expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
     expect(grok?.toolOutputText).not.toContain(

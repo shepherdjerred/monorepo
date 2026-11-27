@@ -52,11 +52,10 @@ test("RAM scratch policies preserve namespace isolation and fail closed before w
       expect(mutation).toContain(volume.path);
       expect(validation).toContain(volume.name);
     }
+    // The limit carries the tmpfs allowance; the request is the lane's
+    // measured working set and only orders admission.
     expect(validation).toContain(
-      `compareTo(quantity('${profile.resources.memoryRequest}'))`,
-    );
-    expect(validation).toContain(
-      `compareTo(quantity('${profile.resources.memoryLimit}'))`,
+      `quantity(c.resources.limits['memory']).compareTo(quantity('${profile.resources.memoryLimit}')) >= 0`,
     );
   }
   const browser = mutators.find(
@@ -88,4 +87,5 @@ test("RAM scratch policies preserve namespace isolation and fail closed before w
   expect(validation).not.toContain("ci-canary/");
   expect(validation).not.toContain("ci.sjer.red/event");
   expect(validation).toContain("object.spec.containers.size() == 1");
+  expect(validation).not.toContain("c.resources.requests['memory']");
 });

@@ -287,7 +287,8 @@ export function activityGroupPillClass(group: ActivityGroup): string {
 }
 
 export function formatTitleIdentifier(raw: string): string {
-  return raw
+  const normalized = /^[A-Z0-9_-]+$/u.test(raw) ? raw.toLowerCase() : raw;
+  return normalized
     .replaceAll("_", " ")
     .replaceAll("-", " ")
     .replaceAll(/\b[a-z]/gu, (ch) => ch.toUpperCase());

@@ -55,6 +55,20 @@ export const AWS_CREDENTIAL_PROFILES: ReadonlyMap<
       secretAccessKey: "B2_SEAWEEDFS_BACKUPS_SECRET_ACCESS_KEY",
     },
   ],
+  [
+    "r2-archives",
+    {
+      accessKeyId: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+      secretAccessKey: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+    },
+  ],
+  [
+    "r2",
+    {
+      accessKeyId: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+      secretAccessKey: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+    },
+  ],
 ]);
 
 /** Matches the Keychain cache TTL so long-lived SDK clients refresh. */

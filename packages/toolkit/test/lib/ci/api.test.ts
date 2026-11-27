@@ -11,11 +11,14 @@ import { githubToken, tryGithubToken } from "#lib/ci/process.ts";
 import {
   getWoodpeckerPipelineForCommit,
   getPipeline,
+  nonWarningPipelineErrors,
   woodpeckerConfigFromEnv,
   loadWoodpeckerConfig,
   WoodpeckerPipelineSchema,
 } from "#lib/woodpecker/ci.ts";
 import { logExcerpt, pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
+import { diagnosticText } from "#lib/ci/output.ts";
+import { ciCommand } from "#commands/ci.ts";
 import { ciFixture, CI_HEAD } from "./fixtures.ts";
 
 const config = {
@@ -230,6 +233,134 @@ test("Woodpecker's null error list preserves failed workflow diagnostics", async
   expect(diagnostics[0]?.logs).toContain(
     "Missing required smoke bootstrap credential",
   );
+});
+
+test("pipeline-level non-warning Woodpecker errors produce diagnostics when workflows list is empty", async () => {
+  const pipeline = WoodpeckerPipelineSchema.parse({
+    number: 17_341,
+    commit: CI_HEAD,
+    status: "error",
+    workflows: [],
+    errors: [
+      {
+        type: "generic",
+        message: `could not load config from forge: token=${config.token}`,
+        is_warning: false,
+      },
+      {
+        type: "Warning",
+        message: "ignored warning",
+        is_warning: true,
+      },
+    ],
+  });
+  expect(nonWarningPipelineErrors(pipeline)).toEqual([
+    {
+      type: "generic",
+      message: `could not load config from forge: token=${config.token}`,
+    },
+  ]);
+  const diagnostics = await pipelineDiagnostics(pipeline, config);
+  expect(diagnostics).toHaveLength(1);
+  expect(diagnostics[0]).toMatchObject({
+    workflow: "pipeline",
+    step: null,
+    stepId: null,
+    exitCode: null,
+    logs: "",
+    command: "toolkit woodpecker pipeline show shepherdjerred/monorepo 17341",
+  });
+  const first = diagnostics[0];
+  expect(first).toBeDefined();
+  if (first === undefined) throw new Error("Expected diagnostic");
+  expect(first.error).toContain("could not load config from forge");
+  expect(first.error).not.toContain(config.token);
+  const rendered = diagnosticText(first);
+  expect(rendered).not.toContain("exit=null");
+  expect(rendered).toContain("could not load config from forge");
+});
+
+test("ciCommand explain omits self-referential toolkit ci explain command and surfaces pipeline errors", async () => {
+  vi.stubEnv("WOODPECKER_TOKEN", config.token);
+  vi.stubEnv("WOODPECKER_URL", config.baseUrl);
+  vi.stubEnv("WOODPECKER_REPO_ID", "1");
+  vi.stubEnv("GH_TOKEN", "gh-test-token");
+  vi.stubEnv("TRACKER_URL", "http://127.0.0.1:1");
+  const erroredPipeline = {
+    number: 17_341,
+    commit: CI_HEAD,
+    status: "error",
+    event: "pull_request",
+    ref: "refs/pull/99/head",
+    workflows: [],
+    errors: [
+      {
+        type: "generic",
+        message: "could not load config from forge: connection refused",
+        is_warning: false,
+      },
+    ],
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string | URL) => {
+      const url = new URL(input);
+      if (url.hostname === "127.0.0.1") {
+        throw new Error("tracker offline");
+      }
+      if (url.pathname.endsWith("/pulls/99")) {
+        return json(ciFixture().pr);
+      }
+      if (url.pathname.includes("/rules/branches/")) return json([]);
+      if (url.pathname.endsWith("/protection")) {
+        return new Response("", { status: 404 });
+      }
+      if (url.pathname.endsWith("/statuses")) return json([]);
+      if (url.pathname.endsWith("/check-runs")) {
+        return json({ check_runs: [] });
+      }
+      if (url.pathname.endsWith("/reviews")) return json([]);
+      if (url.pathname.endsWith("/graphql")) {
+        return json({
+          data: {
+            repository: {
+              pullRequest: {
+                headRefOid: CI_HEAD,
+                baseRefOid: "b".repeat(40),
+                reviewDecision: null,
+              },
+            },
+          },
+        });
+      }
+      if (url.pathname.endsWith("/branches/main")) {
+        return json({ commit: { sha: "b".repeat(40) } });
+      }
+      if (url.pathname.endsWith("/pipelines/17341")) {
+        return json(erroredPipeline);
+      }
+      return url.searchParams.get("event") === "pull_request"
+        ? json([erroredPipeline])
+        : json([]);
+    }),
+  );
+  const logs: string[] = [];
+  const logSpy = vi.spyOn(console, "log").mockImplementation((line: string) => {
+    logs.push(line);
+  });
+  try {
+    await ciCommand("explain", "99", {
+      json: true,
+      until: "first-failure",
+      main: false,
+    });
+  } finally {
+    logSpy.mockRestore();
+    process.exitCode = undefined;
+  }
+  const output = logs.join("\n");
+  expect(output).toContain("could not load config from forge");
+  expect(output).not.toContain("toolkit ci explain 99");
 });
 
 test("malformed and unauthenticated Woodpecker responses fail explicitly", async () => {

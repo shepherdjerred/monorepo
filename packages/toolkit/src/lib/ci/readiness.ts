@@ -5,8 +5,12 @@ import type {
   CiReview,
 } from "./github/schemas.ts";
 import { isHumanReview } from "./github.ts";
-import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
+import {
+  nonWarningPipelineErrors,
+  type WoodpeckerPipeline,
+} from "#lib/woodpecker/ci.ts";
 import type { MainStatus } from "./main.ts";
+import { sanitizeText } from "./redaction.ts";
 import { isFailure, workflowStatus } from "./status.ts";
 
 export type Outcome =
@@ -222,11 +226,19 @@ function failuresFor(
     .filter((check) => check.state === "fail")
     .map((check) => `${check.name} failed`);
   if (state === "fail" && snapshot.pipeline !== null) {
+    const workflowFailures = snapshot.pipeline.workflows
+      .filter((workflow) => isFailure(workflow.state))
+      .map((workflow) => `${workflow.name} failed`);
+    const pipelineErrors =
+      workflowFailures.length === 0
+        ? nonWarningPipelineErrors(snapshot.pipeline).map((entry) =>
+            sanitizeText(entry.message),
+          )
+        : [];
     failures.unshift(
-      ...snapshot.pipeline.workflows
-        .filter((workflow) => isFailure(workflow.state))
-        .map((workflow) => `${workflow.name} failed`),
+      ...workflowFailures,
       `Woodpecker pipeline #${String(snapshot.pipeline.number)} failed`,
+      ...pipelineErrors,
     );
   }
   return [...new Set(failures)];

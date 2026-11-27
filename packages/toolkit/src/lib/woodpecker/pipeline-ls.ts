@@ -5,6 +5,29 @@ import {
   type WoodpeckerConfig,
 } from "./ci.ts";
 
+function argsBeforeBoundary(args: readonly string[]): readonly string[] {
+  const boundary = args.indexOf("--");
+  return boundary === -1 ? args : args.slice(0, boundary);
+}
+
+function hasJsonOutputFlag(args: readonly string[]): boolean {
+  const candidates = argsBeforeBoundary(args);
+  return (
+    !candidates.includes("--help") &&
+    !candidates.includes("-h") &&
+    (candidates.includes("--json") ||
+      candidates.some(
+        (arg) =>
+          arg === "--output=json" || arg === "-o=json" || arg === "-ojson",
+      ) ||
+      candidates.some(
+        (arg, index) =>
+          (arg === "--output" || arg === "-o") &&
+          candidates[index + 1] === "json",
+      ))
+  );
+}
+
 export function isWoodpeckerPipelineLsJson(
   command: string,
   args: readonly string[],
@@ -13,13 +36,7 @@ export function isWoodpeckerPipelineLsJson(
     command === "woodpecker" &&
     args.includes("pipeline") &&
     args.includes("ls") &&
-    (args.includes("--json") ||
-      args.some(
-        (a) => a === "--output=json" || a.startsWith("--output=json"),
-      ) ||
-      args.some(
-        (a, i) => (a === "--output" || a === "-o") && args[i + 1] === "json",
-      ))
+    hasJsonOutputFlag(args)
   );
 }
 
@@ -146,4 +163,84 @@ export async function handleWoodpeckerPipelineLsJson(
   const data = await res.json();
   const sliced = Array.isArray(data) ? data.slice(0, options.limit) : data;
   console.log(JSON.stringify(sliced, null, 2));
+}
+
+function positionalArgs(args: readonly string[]): string[] {
+  const candidates = argsBeforeBoundary(args);
+  const positionals: string[] = [];
+  for (let i = 0; i < candidates.length; i++) {
+    const arg = candidates[i];
+    if (arg === undefined) continue;
+    if (arg.startsWith("-")) {
+      if (FLAGS_WITH_VALUE.has(arg)) i++;
+      continue;
+    }
+    positionals.push(arg);
+  }
+  return positionals;
+}
+
+export function isWoodpeckerPipelineShowJson(
+  command: string,
+  args: readonly string[],
+): boolean {
+  if (command !== "woodpecker" || !hasJsonOutputFlag(args)) {
+    return false;
+  }
+  const positionals = positionalArgs(args);
+  return positionals[0] === "pipeline" && positionals[1] === "show";
+}
+
+async function resolveWoodpeckerRepoId(
+  targetRepo: string,
+  config: WoodpeckerConfig,
+): Promise<string> {
+  if (/^\d+$/u.test(targetRepo)) {
+    return targetRepo;
+  }
+  const lookupRes = await woodpeckerRequest(
+    `/api/repos/lookup/${targetRepo}`,
+    config,
+  );
+  const lookup = RepoLookupSchema.parse(await lookupRes.json());
+  return String(lookup.id);
+}
+
+export async function handleWoodpeckerPipelineShowJson(
+  args: readonly string[],
+): Promise<void> {
+  const config = await loadWoodpeckerConfig();
+  const operands = positionalArgs(args).slice(2);
+  let targetRepo: string;
+  let rawPipeline: string;
+  if (
+    operands.length === 2 &&
+    operands[0] !== undefined &&
+    operands[1] !== undefined
+  ) {
+    targetRepo = operands[0];
+    rawPipeline = operands[1];
+  } else if (
+    operands.length === 1 &&
+    operands[0] !== undefined &&
+    /^\d+$/u.test(operands[0])
+  ) {
+    targetRepo = String(config.repoId);
+    rawPipeline = operands[0];
+  } else {
+    throw new Error(
+      "Usage: toolkit woodpecker pipeline show [repo-id|owner/repo] <pipeline-number> --output json",
+    );
+  }
+  if (!/^[1-9]\d*$/u.test(rawPipeline)) {
+    throw new Error(`Invalid Woodpecker pipeline number: ${rawPipeline}`);
+  }
+  const pipelineNumber = z.coerce.number().int().positive().parse(rawPipeline);
+  const repoId = await resolveWoodpeckerRepoId(targetRepo, config);
+  const res = await woodpeckerRequest(
+    `/api/repos/${repoId}/pipelines/${String(pipelineNumber)}`,
+    config,
+  );
+  const data: unknown = await res.json();
+  console.log(JSON.stringify(data, null, 2));
 }

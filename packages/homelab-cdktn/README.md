@@ -181,6 +181,10 @@ Never run `apply`, `import`, or any `state` subcommand as part of a port.
   replaces the HCL block, and a `<<-EOT` heredoc becomes its dedented lines,
   each ended by `\n`. A changed script plans as no change, so the stack's
   test pins every script in full (`src/seaweedfs.test.ts`).
+- **A provisioner runs only on create or replace.** A changed `input` is an
+  in-place update that never re-runs it, so a provisioner-bearing
+  `DataResource` also sets `triggersReplace` to every value its script reads
+  (the SeaweedFS stack's `rerunOnChange`). Its test rejects one without.
 - **Generated bindings are not typechecked.** `generate` prepends TypeScript's
   no-check pragma to each one because the generator omits `override`
   modifiers; their types still flow into the stacks that import them.

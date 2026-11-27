@@ -15,6 +15,13 @@ export const prCodeReviewAssignmentsTotal = new Counter({
   registers: [register],
 });
 
+export const prCodeReviewProviderOutcomesTotal = new Counter({
+  name: "pr_code_review_provider_outcomes_total",
+  help: "Per-provider PR code-review attempt outcomes reported to the coordinator, by provider and outcome (completed | skipped | usage-limited | timed-out)",
+  labelNames: ["provider", "outcome"] as const,
+  registers: [register],
+});
+
 export const prCodeReviewOutcomesTotal = new Counter({
   name: "pr_code_review_outcomes_total",
   help: "Terminal ci/code-review commit status outcomes, by result (success | failure) and bounded reason",

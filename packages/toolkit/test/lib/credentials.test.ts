@@ -421,6 +421,36 @@ describe("credential resolver failure reasons", () => {
       expect(message).not.toContain("ambient-sa-token");
     });
   });
+
+  test("an empty or silent op read failure with an enrolled service account names the unresolved field, not enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "ambient-sa-token";
+      const missing = `${await configPath(null)}.absent`;
+      const ref =
+        CREDENTIAL_REGISTRY["WOODPECKER_TOKEN"]?.source.kind === "op"
+          ? CREDENTIAL_REGISTRY["WOODPECKER_TOKEN"].source.ref
+          : "";
+      for (const reply of [
+        { exit: 0, stdout: "   \n", stderr: "" },
+        { exit: 1, stdout: "", stderr: "   \n" },
+      ]) {
+        const failure: unknown = await resolveCredentialValues(
+          ["WOODPECKER_TOKEN"],
+          { run: stubRun(() => reply, []), configPath: missing },
+        ).then(
+          () => null,
+          (error: unknown) => error,
+        );
+        const message = failure instanceof Error ? failure.message : "";
+        expect(message).toContain(
+          "toolkit: WOODPECKER_TOKEN (Woodpecker CI API token) could not be read from 1Password:",
+        );
+        expect(message).toContain(ref);
+        expect(message).toContain("workstation service account is enrolled");
+        expect(message).not.toMatch(/Enroll|enroll-service-account/);
+      }
+    });
+  });
 });
 
 describe("credential resolver keychain visibility", () => {

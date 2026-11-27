@@ -75,6 +75,8 @@ export type UsageEventEntry = {
   readonly reasoningTokens: number;
   readonly costUsd: number | null;
   readonly costComplete: boolean;
+  /** True when `costUsd` came from provider-reported billing (e.g. Grok `costUsdTicks`). */
+  readonly costReported?: boolean;
 };
 
 /** One tool invocation the agent made, named as the transcript names it. */
@@ -237,3 +239,36 @@ export type UsageReport = {
   readonly total: UsageTotals;
   readonly bySource: readonly UsageBySource[];
 };
+
+/** SQLite `usage_events` model, token, and cost columns shared across readers and repricing. */
+export const UsageStoredColumnsSchema = z.object({
+  model: z.string(),
+  input_tokens: z.number(),
+  output_tokens: z.number(),
+  cache_read_tokens: z.number(),
+  cache_creation_tokens: z.number(),
+  cached_input_tokens: z.number(),
+  reasoning_tokens: z.number(),
+  cost_usd: z.number().nullable(),
+  cost_complete: z.number(),
+});
+
+export type UsageStoredColumns = z.infer<typeof UsageStoredColumnsSchema>;
+
+export function usageTokenCountsFromRow(row: UsageStoredColumns): {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheCreationTokens: number;
+  readonly cachedInputTokens: number;
+  readonly reasoningTokens: number;
+} {
+  return {
+    inputTokens: row.input_tokens,
+    outputTokens: row.output_tokens,
+    cacheReadTokens: row.cache_read_tokens,
+    cacheCreationTokens: row.cache_creation_tokens,
+    cachedInputTokens: row.cached_input_tokens,
+    reasoningTokens: row.reasoning_tokens,
+  };
+}

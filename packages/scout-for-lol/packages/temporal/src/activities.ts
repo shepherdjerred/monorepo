@@ -12,6 +12,8 @@ import type {
   ScoutExploreTimelineInput,
   ScoutExploreTimelineResult,
   ScoutInteractiveRunInput,
+  ScoutCrawlFrontierPruneBatchResult,
+  ScoutCrawlFrontierPruneInput,
   ScoutParticipantCrawlInput,
   ScoutParticipantCrawlResult,
   ScoutPostMatchMaintenanceInput,
@@ -85,6 +87,9 @@ export type ScoutTemporalActivities = {
   runParticipantCrawl: (
     input: ScoutParticipantCrawlInput,
   ) => Promise<ScoutParticipantCrawlResult>;
+  pruneCrawlFrontier: (
+    input: ScoutCrawlFrontierPruneInput,
+  ) => Promise<ScoutCrawlFrontierPruneBatchResult>;
   fetchInitialHistoryPage: (
     input: ScoutInitialHistoryInput,
   ) => Promise<InitialHistoryPageResult>;

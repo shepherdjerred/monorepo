@@ -3,6 +3,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import type { ReviewThread } from "@shepherdjerred/code-review";
 import type { ReviewStateResult } from "@shepherdjerred/code-review/github";
 import { DEFAULT_CODE_REVIEW_SETTINGS } from "#shared/ci/code-review.ts";
+import { register } from "#observability/metrics.ts";
 import { createCodeReviewActivities } from "./code-review.ts";
 import type {
   CodeReviewActivityDeps,
@@ -452,6 +453,10 @@ describe("codeReviewActivities Temporal & commit-status effects", () => {
         workflowId: "code-review-coordinator",
         signal: "reportProviderOutcome",
       }),
+    );
+    const metricsText = await register.metrics();
+    expect(metricsText).toContain(
+      'pr_code_review_provider_outcomes_total{provider="coderabbit",outcome="usage-limited",component="temporal-worker"} 1',
     );
 
     await activities.postCodeReviewCommitStatus({

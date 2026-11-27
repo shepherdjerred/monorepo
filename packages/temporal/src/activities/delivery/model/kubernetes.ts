@@ -47,6 +47,7 @@ import {
   workerRolloutPreflight,
 } from "./worker-rollout.ts";
 import { forumBaselineFence } from "./forum-bundle.ts";
+import { minecraftChartReadUri } from "./minecraft-upgrade.ts";
 import {
   EVIDENCE_SUMMARY_LIMIT,
   restoreWrittenBody,
@@ -97,12 +98,14 @@ function reconciliationEvidence(
 /**
  * HTTPS chart bytes must match the artifact digest, and an OCI chart's tag
  * must still resolve to it; other stores serve the recorded version. The
- * digest binds the bytes, so the read follows a release host's redirect to
- * its download storage (GitHub release assets always redirect).
+ * digest binds the bytes, so ordinary reads follow a release host's redirect
+ * to its download storage. A historical ChartMuseum URI maps to a direct
+ * archive read from the exact Charts mirror the Minecraft recipe names.
  */
 async function verifySourceBytes(
   rendered: RenderedApplication,
   operationId: string,
+  readUri: string,
 ): Promise<EvidenceInput> {
   const artifact = rendered.sourceArtifact;
   if (artifact.uri.startsWith("oci://"))
@@ -113,9 +116,10 @@ async function verifySourceBytes(
       operationId,
       summary: `Source ${artifact.id} ${artifact.version} is bound by its recorded digest ${artifact.digest}; its store serves it by version`,
     };
-  const response = await fetch(artifact.uri, {
+  const mapped = readUri !== artifact.uri;
+  const response = await fetch(readUri, {
     signal: AbortSignal.any([effectSignal(), AbortSignal.timeout(30_000)]),
-    redirect: "follow",
+    redirect: mapped ? "error" : "follow",
   });
   if (!response.ok)
     throw new Error(
@@ -131,7 +135,7 @@ async function verifySourceBytes(
   return {
     kind: "preflight",
     operationId,
-    summary: `Source ${artifact.id} bytes match ${artifact.digest}`,
+    summary: `Source ${artifact.id} bytes match ${artifact.digest}${mapped ? ` at ${readUri}` : ""}`,
   };
 }
 
@@ -263,7 +267,11 @@ export async function applySafety(
 ) {
   const rendered = renderApplication(current, recipe);
   const operationId = deliveryOperationId(current.deployment.id);
-  const source = await verifySourceBytes(rendered, operationId);
+  const source = await verifySourceBytes(
+    rendered,
+    operationId,
+    minecraftChartReadUri(current, recipe, rendered),
+  );
   // A worker pool's images and routes are proved before its hosts change.
   await workerRolloutPreflight(current);
   // A forum's first upgrade re-observes its original baseline before the

@@ -39,7 +39,6 @@ const SERVICE_ALIASES: Readonly<Record<string, string>> = {
   loki: "observability",
   tempo: "observability",
   grafana: "observability",
-  phoenix: "observability",
   pyroscope: "observability",
   alloy: "observability",
   argocd: "gitops",
