@@ -118,6 +118,21 @@ test("splits ready-PR end to end into agent wait, gate and run; main pushes stay
   expect(card.main.endToEnd.p50Seconds).toBe(1200);
 });
 
+test("gives each pod of a restarted commit to the pipeline that created it", () => {
+  const commit = "c".repeat(40);
+  const first = readyPr(1, { commit, created: 1000, finished: 8000 });
+  const second = readyPr(2, { commit, created: 3000, finished: 9000 });
+  const pods = [
+    { pod: "wp-first", commit, createdAt: 1700, gateSeconds: 100 },
+    { pod: "wp-second", commit, createdAt: 3700, gateSeconds: 700 },
+  ];
+  const card = pipelineScorecard([first, second], pods, 0, 10_000);
+  // Each pipeline sees its own pod's gate, not the sum of both.
+  expect(card.readyPr.kueueGate.count).toBe(2);
+  expect(card.readyPr.kueueGate.p50Seconds).toBe(100);
+  expect(card.readyPr.kueueGate.p90Seconds).toBe(700);
+});
+
 test("assigns each pool claim to one writer", () => {
   expect(writerOf("woodpecker-ci", "ci-workspace")).toBe("workspaces");
   expect(writerOf("buildkitd", "zfs-ssd-lz4")).toBe("buildkit");

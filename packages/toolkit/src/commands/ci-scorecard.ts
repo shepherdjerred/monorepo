@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { parseTimeout } from "#lib/ci/arguments.ts";
+import { parseTimeout, printHelpIfRequested } from "#lib/ci/arguments.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import { ciScorecard, formatScorecard } from "#lib/ci/scorecard/scorecard.ts";
 import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
@@ -20,10 +20,7 @@ export async function ciScorecardCommand(
   args: string[],
   authenticate: () => Promise<void>,
 ): Promise<void> {
-  if (args.includes("--help") || args.includes("-h")) {
-    console.log(USAGE);
-    return;
-  }
+  if (printHelpIfRequested(args, USAGE)) return;
   const { values } = parseArgs({
     args,
     allowPositionals: false,

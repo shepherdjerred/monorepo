@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { printHelpIfRequested } from "#lib/ci/arguments.ts";
 import {
   CI_MAINTENANCE_KINDS,
   formatMaintenanceRetry,
@@ -17,10 +18,7 @@ prints why not. Dry run unless --apply, which sends and reads the memo back.
 `;
 
 export async function ciMaintenanceRetryCommand(args: string[]): Promise<void> {
-  if (args.includes("--help") || args.includes("-h")) {
-    console.log(USAGE);
-    return;
-  }
+  if (printHelpIfRequested(args, USAGE)) return;
   const { values, positionals } = parseArgs({
     args,
     allowPositionals: true,
@@ -31,7 +29,12 @@ export async function ciMaintenanceRetryCommand(args: string[]): Promise<void> {
   });
   if (positionals.length !== 1)
     throw new Error(`Expected one kind: ${CI_MAINTENANCE_KINDS.join(", ")}`);
-  const kind = z.enum(CI_MAINTENANCE_KINDS).parse(positionals[0]);
+  const parsedKind = z.enum(CI_MAINTENANCE_KINDS).safeParse(positionals[0]);
+  if (!parsedKind.success)
+    throw new Error(
+      `Unknown kind ${String(positionals[0])}; expected ${CI_MAINTENANCE_KINDS.join(", ")}`,
+    );
+  const kind = parsedKind.data;
   const report = await maintenanceRetry(
     kind,
     values.apply,

@@ -1,7 +1,7 @@
 import type { S3Client } from "@aws-sdk/client-s3";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { parseTimeout } from "#lib/ci/arguments.ts";
+import { parseTimeout, printHelpIfRequested } from "#lib/ci/arguments.ts";
 import { pipelineHistory } from "#lib/ci/history.ts";
 import { pipelineKind } from "#lib/ci/latency.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
@@ -270,10 +270,7 @@ export async function ciAnalyzeCommand(
   args: string[],
   authenticate: () => Promise<void>,
 ): Promise<void> {
-  if (args.includes("--help") || args.includes("-h")) {
-    console.log(USAGE);
-    return;
-  }
+  if (printHelpIfRequested(args, USAGE)) return;
   const { values } = parseArgs({
     args,
     allowPositionals: false,

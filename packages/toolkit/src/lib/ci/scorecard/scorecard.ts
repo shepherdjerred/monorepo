@@ -99,8 +99,14 @@ export type PipelineScorecard = {
   readonly main: { readonly finished: number; readonly endToEnd: Spread };
 };
 
+/**
+ * The verify pods that belong to one pipeline. A pod carries only its commit,
+ * so two pipelines on one commit (a restart) are told apart by creation time:
+ * a pod belongs to the latest same-commit pipeline created before it.
+ */
 function verifyPodsOf(
   pipeline: WoodpeckerPipeline,
+  siblings: readonly WoodpeckerPipeline[],
   pods: readonly VerifyPod[],
   now: number,
 ): VerifyPod[] {
@@ -113,7 +119,14 @@ function verifyPodsOf(
     (pod) =>
       pod.commit === pipeline.commit &&
       pod.createdAt >= from - 5 &&
-      pod.createdAt <= to,
+      pod.createdAt <= to &&
+      !siblings.some(
+        (other) =>
+          other.number !== pipeline.number &&
+          other.commit === pipeline.commit &&
+          (other.created ?? 0) > from &&
+          (other.created ?? 0) <= pod.createdAt + 5,
+      ),
   );
 }
 
@@ -140,7 +153,9 @@ export function pipelineScorecard(
       (workflow) => workflow.name === "verify",
     )?.startDelaySeconds;
     const matched =
-      pipeline === undefined ? [] : verifyPodsOf(pipeline, pods, until);
+      pipeline === undefined
+        ? []
+        : verifyPodsOf(pipeline, pipelines, pods, until);
     const agent = started ?? null;
     const gate =
       matched.length === 0
@@ -306,7 +321,8 @@ async function verifyPodSamples(
   until: number,
   signal?: AbortSignal,
 ): Promise<VerifyPod[]> {
-  const window = `[${windowMinutes(since, until)}:5m]`;
+  // One-minute steps so a short-lived pod is still sampled while it exists.
+  const window = `[${windowMinutes(since, until)}:1m]`;
   const [gates, created] = await Promise.all([
     metric(
       `max_over_time(((kube_pod_container_state_started{namespace="woodpecker-ci"} - on (namespace, pod) group_left () kube_pod_created{namespace="woodpecker-ci"}) * on (namespace, pod) group_left (label_ci_sjer_red_commit) ${VERIFY_PODS})${window})`,
