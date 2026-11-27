@@ -570,6 +570,12 @@ impl OverlayHost {
         let Some(process) = self.process.as_mut() else {
             return false;
         };
+        // An exited overlay cannot read, even if a concurrently forked child
+        // briefly holds the pipe's read end open between `fork` and `exec`.
+        if matches!(process.child.try_wait(), Ok(Some(_))) {
+            process.stdin = None;
+            return false;
+        }
         let Some(stdin) = process.stdin.as_mut() else {
             return false;
         };

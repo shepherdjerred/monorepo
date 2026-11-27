@@ -3,6 +3,7 @@ import { householdState } from "#client/discover/card.ts";
 import { CatalogDetailSchema, CatalogSearchSchema } from "#shared/api.ts";
 import { CatalogFeedSchema } from "#shared/catalog/contract.ts";
 import { ApiErrorSchema } from "#shared/contract.ts";
+import { AttachImportedRequestsSchema } from "#shared/personal-migration/contract.ts";
 import { UNAVAILABLE_FEED } from "./fixtures/catalog.ts";
 import { FEATURED } from "./fixtures/titles.ts";
 import { FixtureScenarioSchema, SCENARIO_COOKIE } from "./scenario.ts";
@@ -205,14 +206,29 @@ describe("fixture scenarios", () => {
       expectedCsrf,
     ]);
 
+    const csrfHeaders = {
+      "content-type": "application/json",
+      cookie: `${FIXTURE_CSRF_COOKIE}=${FIXTURE_CSRF_TOKEN}`,
+      "x-csrf-token": FIXTURE_CSRF_TOKEN,
+    };
+
+    const attach = api(
+      new Request("http://fixture.invalid/api/v1/requests/imported/attach", {
+        method: "POST",
+        headers: csrfHeaders,
+        body: JSON.stringify({}),
+      }),
+    );
+    expect(attach?.status).toBe(200);
+    expect(AttachImportedRequestsSchema.parse(await attach?.json())).toEqual({
+      attached: 0,
+    });
+    expect(logged).toEqual([]);
+
     const write = api(
       new Request("http://fixture.invalid/api/v1/requests/movies", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          cookie: `${FIXTURE_CSRF_COOKIE}=${FIXTURE_CSRF_TOKEN}`,
-          "x-csrf-token": FIXTURE_CSRF_TOKEN,
-        },
+        headers: csrfHeaders,
         body: JSON.stringify({ tmdbId: FEATURED.movie.tmdbId }),
       }),
     );

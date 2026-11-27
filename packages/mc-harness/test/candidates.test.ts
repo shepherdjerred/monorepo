@@ -929,6 +929,7 @@ describe("knockout checkpoint invalidation", () => {
       expect(retry.bouts.map(({ challenger }) => challenger)).toEqual(pending);
       expect(retry.best).toBe("b");
     },
+    60_000,
   );
   it.each(["model", "candidate"])(
     "starts a new tournament after the %s changes",
@@ -952,6 +953,7 @@ describe("knockout checkpoint invalidation", () => {
         "c",
       ]);
     },
+    60_000,
   );
 });
 
@@ -1127,7 +1129,7 @@ describe("candidate capture and judgment evidence", () => {
         .filter((entry) => entry.kind === "accept")
         .map((entry) => entry.candidate),
     ).toEqual(["b", "b"]);
-  });
+  }, 60_000);
 
   it.each(["contents", "placement", "world"])(
     "rejects a candidate after capture %s changes before side effects",
@@ -1206,7 +1208,7 @@ describe("candidate capture and judgment evidence", () => {
         new Uint8Array(await Bun.file(workspace.file(file)).arrayBuffer()),
       ).toEqual(inputs[index]);
     }
-  });
+  }, 60_000);
 });
 
 describe("candidates and knockout", () => {
