@@ -1,7 +1,8 @@
 import type { Task } from "@shepherdjerred/facet-protocol";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { changeQuery, readRoute } from "./routes.ts";
+import type { Destination } from "#workspace/workspace.ts";
+import { changeQuery, destinationPath, readRoute } from "./routes.ts";
 
 function openedFromList(value: unknown): boolean {
   return (
@@ -11,13 +12,22 @@ function openedFromList(value: unknown): boolean {
   );
 }
 
-function resolveTaskId(
-  requested: string | null,
+function resolveId(
+  requested: string,
   mapping: Readonly<Record<string, string>>,
-): string | null {
-  return requested === null || !Object.hasOwn(mapping, requested)
-    ? requested
-    : (mapping[requested] ?? requested);
+): string {
+  return Object.hasOwn(mapping, requested)
+    ? (mapping[requested] ?? requested)
+    : requested;
+}
+
+function resolveDestination(
+  requested: Destination,
+  mapping: Readonly<Record<string, string>>,
+): Destination {
+  if (requested.kind === "section") return requested;
+  const id = resolveId(requested.id, mapping);
+  return id === requested.id ? requested : { ...requested, id };
 }
 
 export function useWorkspaceLocation(
@@ -25,11 +35,18 @@ export function useWorkspaceLocation(
   dirty: boolean,
 ) {
   const location = useLocation();
-  const { pathname, search } = location;
+  const { pathname, search, hash } = location;
   const navigate = useNavigate();
-  const route = readRoute(pathname, search);
+  const requestedRoute = readRoute(pathname, search);
+  const destination = resolveDestination(requestedRoute.destination, mapping);
+  const canonicalPath =
+    destination === requestedRoute.destination
+      ? pathname
+      : destinationPath(destination);
+  const route = { ...requestedRoute, destination };
   const fromTaskList = openedFromList(location.state);
-  const taskId = resolveTaskId(route.taskId, mapping);
+  const taskId =
+    route.taskId === null ? null : resolveId(route.taskId, mapping);
 
   function go(path: string, replace = false): void {
     void navigate(path, { replace });
@@ -54,7 +71,7 @@ export function useWorkspaceLocation(
   }
 
   function taskHref(task: Task): string {
-    return changeQuery(pathname, search, { task: task.id });
+    return changeQuery(canonicalPath, search, { task: task.id });
   }
 
   function openTask(task: Task): void {
@@ -68,16 +85,31 @@ export function useWorkspaceLocation(
       void navigate(-1);
       return;
     }
-    go(changeQuery(pathname, search, { task: null }), true);
+    go(changeQuery(canonicalPath, search, { task: null }), true);
   }
 
   useEffect(() => {
-    if (dirty || route.taskId === null || taskId === route.taskId) return;
-    void navigate(changeQuery(pathname, search, { task: taskId }), {
+    if (dirty || (canonicalPath === pathname && taskId === route.taskId))
+      return;
+    const target =
+      taskId === route.taskId
+        ? `${canonicalPath}${search}`
+        : changeQuery(canonicalPath, search, { task: taskId });
+    void navigate(`${target}${hash}`, {
       state: { fromTaskList },
       replace: true,
     });
-  }, [dirty, fromTaskList, navigate, pathname, route.taskId, search, taskId]);
+  }, [
+    canonicalPath,
+    dirty,
+    fromTaskList,
+    hash,
+    navigate,
+    pathname,
+    route.taskId,
+    search,
+    taskId,
+  ]);
 
   return {
     route,

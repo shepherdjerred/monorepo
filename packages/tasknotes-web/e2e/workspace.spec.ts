@@ -48,6 +48,17 @@ async function addTask(page: Page, input: string): Promise<void> {
   await expect(capture).toBeHidden();
 }
 
+async function openNewProject(page: Page, name: string): Promise<void> {
+  await page.getByText("Manage workspace", { exact: true }).click();
+  await page.getByRole("button", { name: "New project" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(name);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Collections", exact: true })
+    .getByRole("link", { name, exact: true })
+    .click();
+}
+
 test("deep links survive sign-in, refresh, and history", async ({
   page,
   request,
@@ -163,6 +174,82 @@ test("offline relaunch and reconnect preserve one copy of a captured task", asyn
       return response.tasks.filter((task) => task.title === title).length;
     })
     .toBe(1);
+});
+
+test("sync replaces an open offline project URL without adding history", async ({
+  page,
+  context,
+}) => {
+  const name = `Offline project ${crypto.randomUUID().slice(0, 6)}`;
+  await signIn(page, "/browse");
+  await context.setOffline(true);
+  await openNewProject(page, name);
+  await expect(page).toHaveURL(/\/projects\/tmp-[\da-f-]+$/u);
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+
+  await context.setOffline(false);
+  await page.getByRole("button", { name: "Sync", exact: true }).click();
+  await expect(page).toHaveURL(/\/projects\/[\da-f-]+$/u);
+  await page.reload();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/browse$/u);
+});
+
+test("a dirty inspector keeps its project, draft, and history across sync", async ({
+  context,
+  page,
+  request,
+}) => {
+  const suffix = crypto.randomUUID().slice(0, 6);
+  const name = `Draft project ${suffix}`;
+  const original = `Pending task ${suffix}`;
+  const draft = `Pending edit ${suffix}`;
+  await signIn(page, "/browse");
+  await context.setOffline(true);
+  await openNewProject(page, name);
+  await addTask(page, original);
+  await page.getByRole("link", { name: original }).click();
+  const editor = page.getByRole("region", { name: "Task details" });
+  const taskName = editor.getByRole("textbox", { name: "Task name" });
+  await expect(taskName).toHaveValue(original);
+  await taskName.fill(draft);
+  const temporaryLocation = page.url();
+
+  await context.setOffline(false);
+  await page.evaluate(() => {
+    globalThis.dispatchEvent(new globalThis.Event("focus"));
+  });
+  let committedTaskId: string | undefined;
+  await expect
+    .poll(async () => {
+      const response = await syncResponseFor(request, []);
+      committedTaskId = response.tasks.find(
+        (task) => task.title === original,
+      )?.id;
+      return committedTaskId;
+    })
+    .toBeDefined();
+  if (committedTaskId === undefined) throw new Error("The task did not sync.");
+  await expect(
+    page.locator("a[data-task-link]").filter({ hasText: original }),
+  ).toHaveAttribute("data-task-link", committedTaskId);
+  await expect(page.locator(".list-heading h1")).toHaveText(name);
+  await expect(page).toHaveURL(temporaryLocation);
+  await expect(taskName).toHaveValue(draft);
+
+  await editor.getByRole("button", { name: "Save changes" }).click();
+  await expect(page).toHaveURL(/\/projects\/[\da-f-]+\?task=[\da-f-]+$/u);
+  const savedLocation = page.url();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/projects\/[\da-f-]+$/u);
+  await page.goForward();
+  await expect(page).toHaveURL(savedLocation);
+  await expect(taskName).toHaveValue(draft);
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page).toHaveURL(/\/projects\/[\da-f-]+$/u);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/browse$/u);
 });
 
 test.describe("sync transport", () => {
