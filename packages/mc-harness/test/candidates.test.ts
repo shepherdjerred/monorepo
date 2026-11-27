@@ -45,6 +45,7 @@ import { writeProgramFixture } from "./fixtures/program-evidence.ts";
 import { alignedRender, compiledGrid, cropToBox } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import { useCompactRenderTiles } from "./fixtures/compact-render-tiles.ts";
 import { BUILD_FILES, JudgeRecordSchema, type Op } from "#protocol/build.ts";
 
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
@@ -901,6 +902,7 @@ async function interruptedTournament(
 }
 
 describe("knockout checkpoint invalidation", () => {
+  useCompactRenderTiles();
   it.each([false, true])(
     "ignores unrelated saves with an outside incumbent of %s",
     async (outsideIncumbent) => {
