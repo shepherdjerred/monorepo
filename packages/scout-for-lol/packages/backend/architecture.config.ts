@@ -69,6 +69,7 @@ export const layers = [
   "http",
   "league",
   "lib",
+  "live-roster",
   "meta",
   "metrics",
   "mvp-votes",
