@@ -45,7 +45,7 @@ import {
 import {
   buildRoleMatchups,
   LANE_DELTA_CHECKPOINT_MS,
-} from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+} from "#src/reports/lanes/role-matchups.ts";
 import { dareSqlTimelineForMatch } from "#src/dares/sql/dare-sql-test-fixture.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 

@@ -37,7 +37,7 @@ import { teamObjectives } from "#src/trpc/router/consumer/match-team-objectives.
 import {
   buildRoleMatchups,
   LANE_DELTA_CHECKPOINT_MS,
-} from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+} from "#src/reports/lanes/role-matchups.ts";
 import {
   fetchMatchTimelineEvents,
   fetchMatchReviewTimeline,

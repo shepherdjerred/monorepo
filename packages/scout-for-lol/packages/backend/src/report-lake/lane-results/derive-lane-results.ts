@@ -35,7 +35,7 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
 import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { LANE_DELTA_CHECKPOINT_MS } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import { LANE_DELTA_CHECKPOINT_MS } from "#src/reports/lanes/role-matchups.ts";
 
 /** The lake files a lane-result derivation reads. */
 export type LaneResultInputs = Pick<

@@ -3,7 +3,7 @@ import type {
   LakeMatchParticipantRow,
   LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
-import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
+import { isStandardRiftGame } from "#src/reports/lanes/standard-rift.ts";
 
 /** The participant columns pairing roles reads. */
 export type RoleMatchupRow = Pick<

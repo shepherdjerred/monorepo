@@ -35,7 +35,7 @@ import {
 import {
   buildRoleMatchups,
   LANE_DELTA_CHECKPOINT_MS,
-} from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+} from "#src/reports/lanes/role-matchups.ts";
 
 const MatchInput = z.object({ matchId: RiotMatchIdSchema });
 const TimelinePageInput = MatchInput.extend({

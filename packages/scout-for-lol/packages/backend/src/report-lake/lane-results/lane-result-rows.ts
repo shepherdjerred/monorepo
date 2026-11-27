@@ -8,7 +8,7 @@ import {
   buildRoleMatchups,
   type RoleMatchup,
   type RoleMatchupParticipant,
-} from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+} from "#src/reports/lanes/role-matchups.ts";
 
 /** The participant columns a lane result reads, beyond the pairing's. */
 export type LaneParticipant = RoleMatchupParticipant &

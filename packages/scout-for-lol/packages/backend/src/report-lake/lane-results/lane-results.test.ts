@@ -30,7 +30,7 @@ import {
   buildRoleMatchups,
   LANE_DELTA_CHECKPOINT_MS,
   type RoleMatchup,
-} from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+} from "#src/reports/lanes/role-matchups.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 import { testFrameRow } from "#src/testing/report-lake/test-timeline-rows.ts";

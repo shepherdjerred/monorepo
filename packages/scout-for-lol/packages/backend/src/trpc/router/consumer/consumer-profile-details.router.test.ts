@@ -14,7 +14,7 @@ import type {
   LakeMatchParticipantRow,
   LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
-import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import { buildRoleMatchups } from "#src/reports/lanes/role-matchups.ts";
 import {
   configureConsumerProfileFeatureTest,
   registerConsumerProfileFeatureTestLifecycle,
