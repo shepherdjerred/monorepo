@@ -169,6 +169,9 @@ function reviewedSamplingWindows(
         ? [{ label: "Mountain terrain transition", timeSeconds: 881 }]
         : []),
       { label: "first turret loss", timeSeconds: 854 },
+      ...((fixture.directNeutralModels?.length ?? 0) > 0
+        ? [{ label: "Rift Herald movement", timeSeconds: 954.5 }]
+        : []),
       { label: "siege wave", timeSeconds: 1200 },
       ...(fixture.unitVisibility
         ? [

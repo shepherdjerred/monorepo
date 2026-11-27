@@ -1,5 +1,5 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
-import { replayPath } from "./recorded-replay-data.ts";
+import { replayPath, type readRecordedReplay } from "./recorded-replay-data.ts";
 import { seek } from "./recorded-replay-fixture.ts";
 import { centerMinimapOn, drawsNear } from "./recorded-world-assertions.ts";
 
@@ -23,13 +23,103 @@ async function captureObjective(
   await page.getByLabel("League of Legends replay scene").screenshot({ path });
 }
 
+async function verifyCurrentNeutralObjectives(
+  page: Page,
+  testInfo: TestInfo,
+  hasTeamVision: boolean,
+) {
+  const objectives = page.getByRole("combobox", { name: "Jump to event" });
+  for (const [clock, name] of [
+    ["7:04", "Chemtech Drake"],
+    ["14:34", "Cloud Drake"],
+    ["16:15", "Rift Herald"],
+    ["21:13", "Mountain Drake"],
+    ["22:37", "Baron Nashor"],
+    ["26:53", "Mountain Drake"],
+    ["29:57", "Baron Nashor"],
+    ["32:43", "Mountain Drake"],
+    ["38:24", "Mountain Drake"],
+  ] as const) {
+    await expect(
+      objectives.getByRole("option", {
+        name: new RegExp(`${clock} · .+ slays ${name}$`),
+      }),
+    ).toHaveCount(1);
+  }
+  const cloud = objectives.getByRole("option", {
+    name: /14:34 · .+ slays Cloud Drake$/,
+  });
+  const cloudValue = await cloud.getAttribute("value");
+  if (cloudValue === null) throw new Error("Missing Cloud Drake jump target.");
+  await objectives.selectOption(cloudValue);
+  await expect(
+    page.getByRole("slider", { name: "Replay time" }),
+  ).toHaveAttribute("aria-valuetext", "14:34");
+
+  const herald = [4927.243, 10_366.336] as const;
+  for (const [clock, visible] of [
+    [954.6, true],
+    [982, false],
+    [954.6, true],
+  ] as const) {
+    await seek(page, clock);
+    expect(await drawsNear(page, 43_119, herald)).toBe(visible);
+  }
+  await captureObjective(
+    page,
+    herald,
+    testInfo.outputPath("current-herald-rewound.png"),
+  );
+  await seek(page, 1246);
+  const mountain = [9842.164, 4400.52] as const;
+  expect(await drawsNear(page, 26_085, mountain)).toBe(true);
+
+  const play = page.getByRole("button", { name: "Play", exact: true });
+  const perspective = hasTeamVision ? "&perspective=red" : "";
+  await page.goto(`${replayPath}?t=389.72843701171877${perspective}`);
+  await expect(play).toBeVisible();
+  const chemtech = [9836, 4398] as const;
+  if (hasTeamVision) {
+    const vision = page.getByRole("combobox", { name: "Unit visibility" });
+    await expect(vision).toHaveValue("red");
+    expect(await drawsNear(page, 57_942, chemtech)).toBe(true);
+    await vision.selectOption("blue");
+    await expect.poll(() => drawsNear(page, 57_942, chemtech)).toBe(false);
+    await vision.selectOption("red");
+  }
+  await expect.poll(() => drawsNear(page, 57_942, chemtech)).toBe(true);
+  await captureObjective(
+    page,
+    chemtech,
+    testInfo.outputPath("current-chemtech-drake.png"),
+  );
+
+  await page.goto(`${replayPath}?t=2137.4022734375`);
+  await expect(play).toBeVisible();
+  const baron = [5008, 10_470] as const;
+  expect(await drawsNear(page, 65_598, baron)).toBe(true);
+  await captureObjective(
+    page,
+    baron,
+    testInfo.outputPath("current-surviving-baron.png"),
+  );
+}
+
 export async function verifyRecordedNeutralObjectives(
   page: Page,
-  paths: Iterable<string>,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   requested: Set<string>,
   testInfo: TestInfo,
 ) {
-  const assets = [...paths].filter((url) =>
+  if (fixture.directNeutralModels !== undefined) {
+    await verifyCurrentNeutralObjectives(
+      page,
+      testInfo,
+      fixture.unitVisibility,
+    );
+    return;
+  }
+  const assets = [...fixture.paths.keys()].filter((url) =>
     neutralModels.some((digest) =>
       url.endsWith(`/world-unit-models/${digest}.glb`),
     ),

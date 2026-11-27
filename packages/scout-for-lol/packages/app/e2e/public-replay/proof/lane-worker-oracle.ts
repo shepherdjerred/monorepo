@@ -1,14 +1,14 @@
 import { expect } from "@playwright/test";
 import path from "node:path";
 import { z } from "zod";
+import {
+  recordedWorldPaths,
+  verifyWorldUnitPaths,
+} from "./world-unit-path-oracle.ts";
 
 const oracleFile = "scout-8428-portable-lane-compiled.json";
 const oracleSha256 =
   "b47b5b6a61e60c5211e7f9f655264699db287a727704b4ae6f4f40e6b8b078e9";
-const lanePaths = z
-  .array(z.looseObject({ endTimeSeconds: z.number().positive() }))
-  .nonempty();
-const workerActors = z.array(z.looseObject({ paths: lanePaths }));
 const laneOracle = z.object({
   replaySha256: z.string(),
   instances: z.array(
@@ -18,7 +18,7 @@ const laneOracle = z.object({
       team: z.union([z.literal(100), z.literal(200)]),
       creationTimeSeconds: z.number().nonnegative(),
       killTimeSeconds: z.number().positive(),
-      paths: lanePaths,
+      paths: recordedWorldPaths,
     }),
   ),
   coverage: z.unknown(),
@@ -50,23 +50,6 @@ export async function verifyDirectLaneWorker(
       throw new Error(`Missing lane model for ${modelId}.`);
     return { ...instance, participantId, teamId: team };
   });
-  const comparable = workerActors
-    .parse(actual.laneMinionInstances)
-    .map(({ paths, ...instance }, actorIndex) => ({
-      ...instance,
-      paths: paths.map((point, pointIndex) => {
-        const end = instances[actorIndex]?.paths[pointIndex]?.endTimeSeconds;
-        // Browser and Bun Math.hypot can round the derived path end differently.
-        if (
-          end === undefined ||
-          Math.abs(point.endTimeSeconds - end) > 2 * Number.EPSILON * end
-        )
-          throw new Error(
-            `Decoded lane actor ${String(actorIndex)} has a different path end.`,
-          );
-        return { ...point, endTimeSeconds: end };
-      }),
-    }));
-  expect(comparable).toEqual(instances);
+  verifyWorldUnitPaths(actual.laneMinionInstances, instances);
   expect(actual.laneMinionCoverage).toEqual(expected.coverage);
 }

@@ -12,6 +12,7 @@ import {
 import { LocalScoutTerrainManifestSchema } from "../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
 import { ScoutTerrainAnnouncer } from "./scout-terrain-announcer.ts";
 import { loadRecordedInventory } from "./scout-terrain-inventory.ts";
+import { neutralObjectiveLabel } from "./scout-terrain-objectives.ts";
 import {
   loadRenderer,
   loadSceneMotion,
@@ -63,11 +64,9 @@ function recordedTimeline(
         throw new Error(
           "Neutral objective loss is outside the recorded match.",
         );
-      const objective =
-        modelId === "sru_baron" ? "Baron Nashor" : "Rift Herald";
       return {
         timeSeconds,
-        label: `${participant.championName} slays ${objective}`,
+        label: `${participant.championName} slays ${neutralObjectiveLabel(modelId)}`,
         ...(position === undefined
           ? {}
           : { mapPoint: data.mapPointAt(position) }),

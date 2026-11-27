@@ -11,7 +11,7 @@ export function sampleNativeTerrainWorldUnits(
   for (const unit of instances) {
     if (
       timeSeconds < unit.creationTimeSeconds ||
-      timeSeconds >= unit.killTimeSeconds
+      (unit.killTimeSeconds !== null && timeSeconds >= unit.killTimeSeconds)
     )
       continue;
     const path = latestAt(unit.paths, timeSeconds);

@@ -118,6 +118,9 @@ const SceneIdentitySchema = z.object({
           ),
         })
         .optional(),
+      neutralObjectiveModels: z
+        .array(z.tuple([z.string(), z.number().int().nonnegative()]))
+        .optional(),
       decodeTeamVision: z.literal(true).optional(),
       announcerEvents: z
         .array(
@@ -259,10 +262,12 @@ function workerCapabilities({
     directTeamVision,
     directTerrainVisibility,
     directLaneModels: workerMotion?.laneMinionCatalog?.models,
+    directNeutralModels: workerMotion?.neutralObjectiveModels,
     directWorldObservations:
       directTerrainVisibility ||
       directTeamVision ||
-      workerMotion?.laneMinionCatalog !== undefined,
+      workerMotion?.laneMinionCatalog !== undefined ||
+      workerMotion?.neutralObjectiveModels !== undefined,
   };
 }
 

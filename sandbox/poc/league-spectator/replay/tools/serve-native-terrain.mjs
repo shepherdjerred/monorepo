@@ -96,6 +96,8 @@ const { positionals, values } = parseArgs({
     "world-unit-models-sha256": { type: "string" },
     "neutral-unit-models": { type: "string" },
     "neutral-unit-models-sha256": { type: "string" },
+    "neutral-model-catalog": { type: "string" },
+    "neutral-model-catalog-sha256": { type: "string" },
     "lane-minion-models": { type: "string" },
     "lane-minion-models-sha256": { type: "string" },
     "lane-minion-model-catalog": { type: "string" },
@@ -402,6 +404,22 @@ for (const option of [
     `--${option} requires a Scout scene and its position decoder`,
   );
 }
+
+const neutralModelCatalogPath = values["neutral-model-catalog"];
+assert.equal(
+  neutralModelCatalogPath === undefined,
+  values["neutral-model-catalog-sha256"] === undefined,
+  "--neutral-model-catalog requires an explicit matching SHA-256 pin",
+);
+assert.ok(
+  neutralModelCatalogPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      values["position-decoder"] !== undefined &&
+      values["neutral-unit-models"] === undefined &&
+      values["world-unit-models"] === undefined &&
+      visionPath === undefined),
+  "Replay-derived neutral objectives require a private worker package without prepared neutral models or prepared team vision",
+);
 
 const laneMinionCatalogPath = values["lane-minion-model-catalog"];
 for (const option of [
@@ -1959,7 +1977,7 @@ if (decoderBytes !== undefined) {
   navgridBytes = heightBytes;
 }
 const worldUnitModelRoutes = new Map();
-let replayLaneMinionWorld;
+let replayWorldUnits;
 if (scoutScene) {
   let dragonKills;
   if (
@@ -2074,6 +2092,67 @@ if (scoutScene) {
       instances: [...existing.instances, ...units.instances],
     };
   }
+  if (neutralModelCatalogPath !== undefined) {
+    assert.ok(
+      currentBuild && scene.workerMotion && replayCodecs,
+      "Replay-derived neutral objectives require the exact current motion worker",
+    );
+    const { readCurrentNeutralModelCatalog } =
+      await import("./native-terrain-neutral-model-catalog.mjs");
+    const { createCurrentNeutralObjectiveCollector } =
+      await import("./research/recorded-current-neutral-objectives.mjs");
+    const { prepareCurrentNeutralObjectiveScene } =
+      await import("./research/recorded-current-neutral-objective-scene.mjs");
+    const { createWaypointReaderFromCodecs } =
+      await import("./research/native-terrain-waypoints-reader.mjs");
+    const collector = createCurrentNeutralObjectiveCollector({
+      replay,
+      binding: observations.binding,
+      codecs: replayCodecs,
+      readWaypoints: createWaypointReaderFromCodecs(replayCodecs),
+    });
+    for (const packet of replayTimedPacketEnvelopes(
+      replayPacketEnvelopes(replay, decompress),
+    ))
+      collector.observe(packet);
+    const evidence = collector.finish();
+    const { models } = await readCurrentNeutralModelCatalog(
+      neutralModelCatalogPath,
+      values["neutral-model-catalog-sha256"],
+      evidence.actors.map(({ modelId }) => modelId),
+    );
+    const existing = scene.worldUnitModels ?? { bindings: [], instances: [] };
+    const modelIds = new Map();
+    const bindings = [];
+    for (const [modelId, { model, skinScale, hiddenRanges, bytes }] of models) {
+      const participantId = 200 + existing.bindings.length + bindings.length;
+      const url = `/world-unit-models/${model.sha256}.glb`;
+      assert.ok(
+        !worldUnitModelRoutes.has(url),
+        "Duplicate neutral model route",
+      );
+      worldUnitModelRoutes.set(url, [bytes, "model/gltf-binary"]);
+      modelIds.set(modelId, participantId);
+      bindings.push({ participantId, skinScale, hiddenRanges, url });
+    }
+    const { neutralObjectiveInstances } = prepareCurrentNeutralObjectiveScene({
+      evidence,
+      modelIds,
+      waypointOrigin: proof.navgrid.movementOrigin,
+      durationSeconds: replay.duration,
+    });
+    const occupied = new Set(existing.instances.map(({ context }) => context));
+    assert.ok(
+      neutralObjectiveInstances.every(({ context }) => !occupied.has(context)),
+      "Neutral and other world units cannot share a context",
+    );
+    scene.neutralObjectiveModelBindings = bindings;
+    scene.workerMotion.neutralObjectiveModels = [...modelIds];
+    replayWorldUnits = {
+      bindings: [...existing.bindings, ...bindings],
+      instances: [...existing.instances, ...neutralObjectiveInstances],
+    };
+  }
   if (laneMinionCatalogPath !== undefined) {
     assert.ok(
       currentBuild && scene.workerMotion && replayCodecs,
@@ -2088,7 +2167,8 @@ if (scoutScene) {
         values["lane-minion-map-materials"],
         values["lane-minion-map-definitions"],
       );
-    const existing = scene.worldUnitModels ?? { bindings: [], instances: [] };
+    const existing = replayWorldUnits ??
+      scene.worldUnitModels ?? { bindings: [], instances: [] };
     const units = await loadWorldUnitAssets(
       laneMinionCatalogPath,
       assets,
@@ -2142,7 +2222,7 @@ if (scoutScene) {
       barracksPlacements,
       models: [...units.models],
     };
-    replayLaneMinionWorld = {
+    replayWorldUnits = {
       bindings: [...existing.bindings, ...units.bindings],
       instances: [...existing.instances, ...laneInstances],
     };
@@ -2398,9 +2478,9 @@ if (decodeTeamVision) {
     await import("./research/recorded-team-vision.mjs");
   readCurrentRecordedTeamVision(
     replay,
-    replayLaneMinionWorld === undefined
+    replayWorldUnits === undefined
       ? scene
-      : { ...scene, worldUnitModels: replayLaneMinionWorld },
+      : { ...scene, worldUnitModels: replayWorldUnits },
     replayTimedPacketEnvelopes(replayPacketEnvelopes(replay, decompress)),
     replayCodecs,
   );

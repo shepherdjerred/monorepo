@@ -21,6 +21,11 @@ import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-94
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
 import { verifyRecordedChampionExperienceFooter } from "./recorded-champion-experience-tracks.mjs";
 import { createRecordedInventoryCollector } from "./recorded-inventory-packets.mjs";
+import { createCurrentNeutralObjectiveCollector } from "./recorded-current-neutral-objectives.mjs";
+import {
+  prepareCurrentNeutralObjectiveScene,
+  readCurrentNeutralObjectiveModelIds,
+} from "./recorded-current-neutral-objective-scene.mjs";
 import { createCurrentLaneMinionCollector } from "./recorded-lane-minion-tracks.mjs";
 import { createCurrentRecordedTeamVisionCollector } from "./recorded-team-vision.mjs";
 
@@ -276,6 +281,7 @@ async function prepareMotion({
   decodeTeamVision,
   teamVisionWorldActors,
   laneMinionCatalog,
+  neutralObjectiveModels,
   terrainControllerGraph,
 }) {
   if (
@@ -295,6 +301,17 @@ async function prepareMotion({
   )
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
+  if (
+    neutralObjectiveModels !== undefined &&
+    (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
+  )
+    throw Error(
+      "Replay-derived neutral objectives require the reviewed current build.",
+    );
+  const neutralModelIds =
+    neutralObjectiveModels === undefined
+      ? undefined
+      : readCurrentNeutralObjectiveModelIds(neutralObjectiveModels);
   if (
     laneMinionCatalog !== undefined &&
     (laneMinionCatalog === null ||
@@ -422,6 +439,8 @@ async function prepareMotion({
           recoverTerrainByteSubstitution(codecs),
           announcerMapping,
         );
+  const dynamicActors =
+    laneMinionCatalog !== undefined || neutralModelIds !== undefined;
   const teamVision =
     decodeTeamVision === true
       ? createCurrentRecordedTeamVisionCollector(
@@ -432,14 +451,13 @@ async function prepareMotion({
           })),
           teamVisionWorldActors,
           codecs,
-          { dynamicActors: laneMinionCatalog !== undefined },
+          { dynamicActors },
         )
       : undefined;
   const rawWaypoints = createWaypointReaderFromCodecs(codecs);
-  const readWaypoints =
-    laneMinionCatalog === undefined
-      ? rawWaypoints
-      : cacheLastWaypoints(rawWaypoints);
+  const readWaypoints = dynamicActors
+    ? cacheLastWaypoints(rawWaypoints)
+    : rawWaypoints;
   const lane =
     laneMinionCatalog === undefined
       ? undefined
@@ -450,6 +468,16 @@ async function prepareMotion({
           barracksPlacements: laneMinionCatalog.barracksPlacements,
           onBirth: teamVision?.addCandidate,
           readWaypoints,
+        });
+  const neutral =
+    neutralModelIds === undefined
+      ? undefined
+      : createCurrentNeutralObjectiveCollector({
+          replay,
+          binding,
+          codecs,
+          readWaypoints,
+          onBirth: teamVision?.addCandidate,
         });
   const terrain =
     terrainControllerGraph === undefined
@@ -473,6 +501,7 @@ async function prepareMotion({
     teamVision,
     terrain,
     lane,
+    neutral,
   ].filter((collector) => collector !== undefined);
   const observe = (packet) => {
     for (const observer of observers) observer.observe(packet);
@@ -531,10 +560,25 @@ async function prepareMotion({
   }
   const laneResult =
     lane === undefined ? undefined : finishLaneMinions(lane, laneModelIds);
-  const visibleLaneContexts =
-    laneResult === undefined
+  const neutralResult =
+    neutral === undefined
       ? undefined
-      : new Set(laneResult.laneMinionInstances.map(({ context }) => context));
+      : prepareCurrentNeutralObjectiveScene({
+          evidence: neutral.finish(),
+          modelIds: neutralModelIds,
+          waypointOrigin,
+          durationSeconds: replay.duration,
+        });
+  const visibleDynamicContexts = dynamicActors
+    ? new Set([
+        ...(laneResult?.laneMinionInstances ?? []).map(
+          ({ context }) => context,
+        ),
+        ...(neutralResult?.neutralObjectiveInstances ?? []).map(
+          ({ context }) => context,
+        ),
+      ])
+    : undefined;
   return {
     type: "ready",
     frames: keyframes.frames,
@@ -551,9 +595,10 @@ async function prepareMotion({
       ? {}
       : { championAnimationCues: animation.finish() }),
     ...(laneResult ?? {}),
+    ...(neutralResult ?? {}),
     ...(teamVision === undefined
       ? {}
-      : { teamVision: teamVision.finish(visibleLaneContexts) }),
+      : { teamVision: teamVision.finish(visibleDynamicContexts) }),
     ...(terrainVisibility === undefined ? {} : { terrainVisibility }),
     ...(announcer === undefined
       ? {}

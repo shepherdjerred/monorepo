@@ -87,15 +87,15 @@ export async function verifyRecordedWorldActors(
   const zoomIn = page.getByRole("button", { name: "Zoom in" });
   const overview = page.getByRole("button", { name: "Map overview" });
   const worldAssets = [...fixture.paths.keys()];
-  const dragonAsset = worldAssets.find((url) =>
-    url.endsWith(
-      "/world-unit-models/bc30c9bfd1f8ea056feb5e70f0ef4787cc848ae4a737c236575064d41011eee0.glb",
-    ),
-  );
-  const earthAsset = worldAssets.find((url) =>
-    url.endsWith(
-      "/world-unit-models/cd9a2d4082bd804a88d09669d8bc86c826d7132e93a19f96fdd61d9121f2c65d.glb",
-    ),
+  const [dragonAsset, earthAsset] = [
+    "bc30c9bfd1f8ea056feb5e70f0ef4787cc848ae4a737c236575064d41011eee0",
+    "cd9a2d4082bd804a88d09669d8bc86c826d7132e93a19f96fdd61d9121f2c65d",
+  ].map((digest) =>
+    fixture.directNeutralModels === undefined
+      ? worldAssets.find((url) =>
+          url.endsWith(`/world-unit-models/${digest}.glb`),
+        )
+      : undefined,
   );
   const orderMinionAsset = worldAssets.find((url) =>
     url.endsWith(

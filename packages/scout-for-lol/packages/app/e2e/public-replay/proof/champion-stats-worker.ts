@@ -8,6 +8,7 @@ import {
 import { RecordedTerrainVisibilitySchema } from "./terrain-visibility-schema.ts";
 import { readDirectWorkerReply } from "./motion-worker-capture.ts";
 import { verifyDirectLaneWorker } from "./lane-worker-oracle.ts";
+import { verifyDirectNeutralWorker } from "./neutral-worker-oracle.ts";
 
 const schemaTrack = z.number().int().positive();
 const statPoint = z.tuple([z.number(), z.number(), z.number()]);
@@ -88,6 +89,9 @@ const reply = z.object({
   terrainVisibility: RecordedTerrainVisibilitySchema.optional(),
   laneMinionInstances: z.array(z.unknown()).optional(),
   laneMinionCoverage: z.unknown().optional(),
+  neutralObjectiveInstances: z.array(z.unknown()).optional(),
+  neutralObjectiveKills: z.array(z.unknown()).optional(),
+  neutralObjectiveOmissions: z.unknown().optional(),
   announcerCues: z
     .array(
       z
@@ -101,6 +105,8 @@ const reply = z.object({
 });
 
 const oracleFiles = {
+  "scout-8428-v30-neutral-visibility-native-tracks.json":
+    "bb002031183cb86b336b7b350d906c457eb7f328ea89271484737942eb54c04f",
   "exact-terrain-fog-agent/exact-8428-rift-terrain-windowed-receipt.json":
     "069130f305c46b9f626e8e4f70f9a9c3c20ce77892aac8e8444295aedc898f8d",
   "scout-8428-v21-team-vision-tracks.json":
@@ -167,6 +173,7 @@ export async function verifyDirectChampionStatsWorker(
     directTeamVision: boolean;
     directTerrainVisibility: boolean;
     directLaneModels: [string, number][] | undefined;
+    directNeutralModels: [string, number][] | undefined;
     terrainVisibility:
       z.infer<typeof RecordedTerrainVisibilitySchema> | undefined;
   },
@@ -203,6 +210,7 @@ export async function verifyDirectChampionStatsWorker(
     teamVisionWorldActors: fixture.directTeamVision,
     terrainControllerGraph: fixture.directTerrainVisibility,
     laneMinionCatalog: fixture.directLaneModels !== undefined,
+    neutralObjectiveModels: fixture.directNeutralModels !== undefined,
   })
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
@@ -216,16 +224,17 @@ export async function verifyDirectChampionStatsWorker(
       "waypointOrigin",
     ].sort(),
   );
-  await verifyDirectTeamVision(
-    fixture.directTeamVision,
-    actual.teamVision,
-    descriptor.sha256,
-    oracleRoot,
-  );
+  await verifyDirectTeamVision(fixture, actual.teamVision, oracleRoot);
   await verifyDirectLaneWorker(
     oracleRoot,
     descriptor.sha256,
     fixture.directLaneModels,
+    actual,
+  );
+  await verifyDirectNeutralWorker(
+    oracleRoot,
+    descriptor.sha256,
+    fixture.directNeutralModels,
     actual,
   );
   const terrainVisibility = await verifyDirectTerrainVisibility(
@@ -338,23 +347,28 @@ async function verifyDirectTerrainVisibility(
 }
 
 async function verifyDirectTeamVision(
-  enabled: boolean,
+  fixture: {
+    directTeamVision: boolean;
+    directNeutralModels: [string, number][] | undefined;
+    descriptor: { sha256: string };
+  },
   tracks: z.infer<typeof teamVision> | undefined,
-  replaySha256: string,
   oracleRoot: string,
 ) {
-  if (!enabled) {
+  if (!fixture.directTeamVision) {
     expect(tracks).toBeUndefined();
     return;
   }
   const bytes = await readOracle(
     oracleRoot,
-    "scout-8428-v21-team-vision-tracks.json",
+    fixture.directNeutralModels === undefined
+      ? "scout-8428-v21-team-vision-tracks.json"
+      : "scout-8428-v30-neutral-visibility-native-tracks.json",
   );
   const expected = z
     .object({ replaySha256: z.string(), tracks: teamVision })
     .parse(decode(bytes));
-  expect(expected.replaySha256).toBe(replaySha256);
+  expect(expected.replaySha256).toBe(fixture.descriptor.sha256);
   expect(tracks?.toSorted((a, b) => a.context - b.context)).toEqual(
     expected.tracks.toSorted((a, b) => a.context - b.context),
   );

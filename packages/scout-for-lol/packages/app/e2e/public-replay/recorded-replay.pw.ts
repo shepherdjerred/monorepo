@@ -464,18 +464,19 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
     await shared.getByLabel("League of Legends replay scene").screenshot({
       path: testInfo.outputPath("restored-share.png"),
     });
-    await verifyRecordedChemtechAnchor(
-      shared,
-      fixture.paths.keys(),
-      restored.requested,
-      testInfo,
-    );
+    if (fixture.directNeutralModels === undefined)
+      await verifyRecordedChemtechAnchor(
+        shared,
+        fixture.paths.keys(),
+        restored.requested,
+        testInfo,
+      );
   } finally {
     await viewer.close();
   }
   await verifyRecordedNeutralObjectives(
     page,
-    fixture.paths.keys(),
+    fixture,
     traffic.requested,
     testInfo,
   );

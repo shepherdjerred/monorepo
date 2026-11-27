@@ -35,6 +35,11 @@ import {
   type ReplayInventoryPoints,
 } from "./scout-terrain-inventory.ts";
 import {
+  NeutralObjectiveKillsSchema,
+  NeutralObjectiveModelIdSchema,
+  NeutralObjectiveWorkerKillsSchema,
+} from "./scout-terrain-objectives.ts";
+import {
   currentTerrainPositionBuild,
   terrainPositionBuild,
   terrainPositionProtocol,
@@ -122,7 +127,7 @@ const worldUnitInstance = z.object({
   participantId,
   teamId: teamId.optional(),
   creationTimeSeconds: z.number().nonnegative(),
-  killTimeSeconds: z.number().positive(),
+  killTimeSeconds: z.number().positive().nullable(),
   paths: z
     .array(
       z.object({
@@ -184,7 +189,35 @@ const LaneMinionCoverageSchema = z.strictObject({
   admittedByModel: z.record(laneMinionId, laneCount),
   omissions: z.record(z.string().regex(/^[a-zA-Z]+$/), laneCount),
 });
-const LaneMinionInstancesSchema = z.array(worldUnitInstance.extend({ teamId }));
+const LaneMinionInstancesSchema = z.array(
+  worldUnitInstance.extend({ teamId, killTimeSeconds: z.number().positive() }),
+);
+const NeutralObjectiveInstancesSchema = z.array(
+  worldUnitInstance.omit({ teamId: true }),
+);
+const NeutralObjectiveOmissionsSchema = z.record(
+  z.string().regex(/^[a-zA-Z]+$/),
+  laneCount,
+);
+
+function matchesWorldModelBindings(
+  models: [string, number][],
+  bindings: z.infer<typeof modelBinding>[],
+  occupiedBindings: z.infer<typeof modelBinding>[],
+) {
+  if (models.length !== bindings.length) return false;
+  const ids = new Set(
+    occupiedBindings.map(({ participantId }) => participantId),
+  );
+  const names = new Set<string>();
+  return models.every(([name, id], index) => {
+    if (ids.has(id) || names.has(name) || bindings[index].participantId !== id)
+      return false;
+    ids.add(id);
+    names.add(name);
+    return true;
+  });
+}
 const recordedStructureLoss = z.object({
   context: z.number().int().positive(),
   timeSeconds: z.number().positive(),
@@ -311,16 +344,7 @@ const TerrainSceneFields = z.object({
       }),
     )
     .optional(),
-  neutralObjectiveKills: z
-    .array(
-      z.object({
-        timeSeconds: z.number().positive(),
-        actorContext: z.number().int().positive(),
-        modelId: z.enum(["sru_baron", "sru_riftherald"]),
-        position: position.optional(),
-      }),
-    )
-    .optional(),
+  neutralObjectiveKills: NeutralObjectiveKillsSchema.optional(),
   inhibitorLosses: z
     .array(z.object({ timeSeconds: z.number().positive() }))
     .optional(),
@@ -447,6 +471,7 @@ const TerrainSceneFields = z.object({
     })
     .optional(),
   laneMinionModelBindings: z.array(modelBinding).length(8).optional(),
+  neutralObjectiveModelBindings: z.array(modelBinding).max(8).optional(),
   workerMotion: z
     .object({
       waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
@@ -458,6 +483,10 @@ const TerrainSceneFields = z.object({
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       laneMinionCatalog: LaneMinionCatalogSchema.optional(),
+      neutralObjectiveModels: z
+        .array(z.tuple([NeutralObjectiveModelIdSchema, participantId]))
+        .max(8)
+        .optional(),
       decodeTeamVision: z.literal(true).optional(),
     })
     .optional(),
@@ -619,28 +648,41 @@ export const SceneSchema = TerrainSceneFields.refine(
         scene.teamVision !== undefined
       )
         return false;
-      const known = new Set(
-        scene.worldUnitModels?.bindings.map(
-          ({ participantId }) => participantId,
-        ),
-      );
-      const names = new Set<string>();
-      return catalog.models.every(([name, id], index) => {
-        if (
-          known.has(id) ||
-          names.has(name) ||
-          bindings[index].participantId !== id
-        )
-          return false;
-        known.add(id);
-        names.add(name);
-        return true;
-      });
+      return matchesWorldModelBindings(catalog.models, bindings, [
+        ...(scene.worldUnitModels?.bindings ?? []),
+        ...(scene.neutralObjectiveModelBindings ?? []),
+      ]);
     },
     {
       path: ["workerMotion", "laneMinionCatalog"],
       message:
         "Replay-derived lanes require exact current model bindings and no baked vision.",
+    },
+  )
+  .refine(
+    (scene) => {
+      const models = scene.workerMotion?.neutralObjectiveModels;
+      const bindings = scene.neutralObjectiveModelBindings;
+      if (models === undefined) return bindings === undefined;
+      return (
+        bindings !== undefined &&
+        scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion?.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.teamVision === undefined &&
+        scene.neutralObjectiveKills === undefined &&
+        scene.dragonKills === undefined &&
+        matchesWorldModelBindings(
+          models,
+          bindings,
+          scene.worldUnitModels?.bindings ?? [],
+        )
+      );
+    },
+    {
+      path: ["workerMotion", "neutralObjectiveModels"],
+      message:
+        "Replay-derived objectives require exact current model bindings and no baked objectives or vision.",
     },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
@@ -786,6 +828,9 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     terrainVisibility: TerrainVisibilitySchema.optional(),
     laneMinionInstances: LaneMinionInstancesSchema.optional(),
     laneMinionCoverage: LaneMinionCoverageSchema.optional(),
+    neutralObjectiveInstances: NeutralObjectiveInstancesSchema.optional(),
+    neutralObjectiveKills: NeutralObjectiveWorkerKillsSchema.optional(),
+    neutralObjectiveOmissions: NeutralObjectiveOmissionsSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -912,6 +957,15 @@ async function loadWorkerMotion(
       (result.laneMinionCoverage !== undefined) !== decodeLanes
     )
       throw Error("Replay motion worker returned unexpected lane coverage.");
+    const decodeObjectives = workerMotion.neutralObjectiveModels !== undefined;
+    if (
+      (result.neutralObjectiveInstances !== undefined) !== decodeObjectives ||
+      (result.neutralObjectiveKills !== undefined) !== decodeObjectives ||
+      (result.neutralObjectiveOmissions !== undefined) !== decodeObjectives
+    )
+      throw Error(
+        "Replay motion worker returned unexpected objective coverage.",
+      );
     const terrainGraph = workerMotion.terrainControllerGraph;
     if (
       (result.terrainVisibility !== undefined) !==
@@ -931,13 +985,18 @@ async function loadWorkerMotion(
         "Replay motion worker returned unexpected team vision coverage.",
       );
     if (result.teamVision !== undefined && teamVisionActors !== undefined) {
-      const laneContexts =
-        result.laneMinionInstances?.map(({ context }) => context) ?? [];
-      const contexts = new Set([...teamVisionActors.contexts, ...laneContexts]);
+      const decodedContexts = [
+        ...(result.laneMinionInstances ?? []),
+        ...(result.neutralObjectiveInstances ?? []),
+      ].map(({ context }) => context);
+      const contexts = new Set([
+        ...teamVisionActors.contexts,
+        ...decodedContexts,
+      ]);
       const received = new Set(result.teamVision.map(({ context }) => context));
       if (
         contexts.size !==
-          teamVisionActors.contexts.size + laneContexts.length ||
+          teamVisionActors.contexts.size + decodedContexts.length ||
         received.size !== contexts.size ||
         result.teamVision.length !== contexts.size ||
         [...received].some((context) => !contexts.has(context))
@@ -1033,39 +1092,72 @@ function teamVisionActorBindings(scene: TerrainScene) {
   return { world, contexts };
 }
 
-function validateLanePaths(
-  actor: z.infer<typeof LaneMinionInstancesSchema>[number],
+function validateWorldUnitPaths(
+  actor: z.infer<typeof worldUnitInstance>,
   mapBounds: TerrainScene["mapBounds"],
+  activeEnd: number,
+  allowAnchors = false,
 ) {
   const { min, max } = mapBounds;
   let previousEnd = actor.creationTimeSeconds;
   for (const { timeSeconds, endTimeSeconds, points, speeds } of actor.paths) {
     const [knot] = speeds;
+    const anchor =
+      allowAnchors &&
+      points.length === 1 &&
+      endTimeSeconds === timeSeconds &&
+      knot.speed === 0;
     if (
       timeSeconds < previousEnd ||
-      endTimeSeconds <= timeSeconds ||
-      endTimeSeconds > actor.killTimeSeconds ||
-      points.length < 2 ||
+      endTimeSeconds > activeEnd ||
       knot.timeSeconds !== timeSeconds ||
-      knot.speed <= 0
+      (!anchor &&
+        (endTimeSeconds <= timeSeconds || points.length < 2 || knot.speed <= 0))
     )
-      throw Error("A decoded lane path falls outside its recorded life.");
+      throw Error("A decoded world unit path falls outside its recorded life.");
     previousEnd = endTimeSeconds;
     let distance = 0;
     for (const [index, [x, z]] of points.entries()) {
       if (x < min[0] || x > max[0] || z < min[2] || z > max[2])
-        throw Error("A decoded lane path falls outside Map11.");
+        throw Error("A decoded world unit path falls outside Map11.");
       if (index > 0) {
         const [priorX, priorZ] = points[index - 1];
         distance += Math.hypot(x - priorX, z - priorZ);
       }
     }
     if (
-      distance <= 0 ||
-      endTimeSeconds > timeSeconds + distance / knot.speed + 1e-9
+      !anchor &&
+      (distance <= 0 ||
+        endTimeSeconds > timeSeconds + distance / knot.speed + 1e-9)
     )
-      throw Error("A decoded lane path is longer than its recorded movement.");
+      throw Error(
+        "A decoded world unit path is longer than its recorded movement.",
+      );
   }
+}
+
+function occupiedWorldContexts(scene: TerrainScene) {
+  return new Set([
+    ...scene.participants.map(({ participantId }) => participantId),
+    ...[
+      scene.worldUnitModels,
+      scene.structureModels,
+      scene.inhibitorModels,
+      scene.nexusModels,
+    ].flatMap((group) => group?.instances.map(({ context }) => context) ?? []),
+  ]);
+}
+
+function mergeWorldModels(
+  previous: TerrainScene["worldUnitModels"],
+  bindings: z.infer<typeof modelBinding>[],
+  instances: z.infer<typeof worldUnitInstance>[],
+): TerrainScene["worldUnitModels"] {
+  if (instances.length === 0) return previous;
+  return {
+    bindings: [...(previous?.bindings ?? []), ...bindings],
+    instances: [...(previous?.instances ?? []), ...instances],
+  };
 }
 
 function loadWorldUnits(
@@ -1081,15 +1173,7 @@ function loadWorldUnits(
     throw Error("Decoded lanes are missing their authored catalog.");
 
   const models = new Map(catalog.models.map(([name, id]) => [id, name]));
-  const contexts = new Set([
-    ...scene.participants.map(({ participantId }) => participantId),
-    ...[
-      scene.worldUnitModels,
-      scene.structureModels,
-      scene.inhibitorModels,
-      scene.nexusModels,
-    ].flatMap((group) => group?.instances.map(({ context }) => context) ?? []),
-  ]);
+  const contexts = occupiedWorldContexts(scene);
   const counts = new Map<string, number>();
   const duration = scene.identity.durationMilliseconds / 1000;
   for (const actor of laneActors) {
@@ -1105,7 +1189,7 @@ function loadWorldUnits(
       throw Error("A decoded lane actor conflicts with the scene or catalog.");
     contexts.add(actor.context);
     counts.set(model, (counts.get(model) ?? 0) + 1);
-    validateLanePaths(actor, scene.mapBounds);
+    validateWorldUnitPaths(actor, scene.mapBounds, actor.killTimeSeconds);
   }
   const count = (rows: Record<string, number>) =>
     Object.values(rows).reduce((total, count) => total + count, 0);
@@ -1122,10 +1206,75 @@ function loadWorldUnits(
       "Decoded lane coverage does not account for the recorded births.",
     );
 
-  if (laneActors.length === 0) return scene.worldUnitModels;
+  return mergeWorldModels(scene.worldUnitModels, bindings, laneActors);
+}
+
+function loadNeutralObjectives(
+  scene: TerrainScene,
+  instances: z.infer<typeof NeutralObjectiveInstancesSchema>,
+  events: z.infer<typeof NeutralObjectiveWorkerKillsSchema>,
+  ground: (x: number, z: number) => number | null,
+) {
+  const bindings = scene.neutralObjectiveModelBindings;
+  const selectors = scene.workerMotion?.neutralObjectiveModels;
+  if (bindings === undefined || selectors === undefined)
+    throw Error("Decoded objectives are missing their authored bindings.");
+  const models = new Map(selectors.map(([name, id]) => [id, name]));
+  const champions = new Set(
+    scene.participants.map(({ participantId }) => participantId),
+  );
+  const occupied = occupiedWorldContexts(scene);
+  const duration = scene.identity.durationMilliseconds / 1000;
+  const bySubject = new Map(
+    events.map((event) => [event.subjectContext, event]),
+  );
+  if (bySubject.size !== events.length)
+    throw Error("Decoded objective defeats repeat an actor.");
+  const neutralObjectiveKills = events.map(
+    ({ subjectContext, actorContext, timeSeconds, modelId, position }) => {
+      if (
+        occupied.has(subjectContext) ||
+        !champions.has(actorContext) ||
+        timeSeconds > duration
+      )
+        throw Error(
+          "A decoded objective defeat conflicts with the replay roster or clock.",
+        );
+      const event = { actorContext, timeSeconds, modelId };
+      if (position === undefined) return event;
+      const [x, z] = position;
+      const y = ground(x, z);
+      if (y === null) throw Error("A decoded objective lies outside Map11.");
+      return { ...event, position: [x, y, z] as [number, number, number] };
+    },
+  );
+  for (const actor of instances) {
+    const model = models.get(actor.participantId);
+    const death = bySubject.get(actor.context);
+    const end = actor.killTimeSeconds ?? duration;
+    if (
+      model === undefined ||
+      occupied.has(actor.context) ||
+      actor.creationTimeSeconds >= end ||
+      end > duration ||
+      (death?.timeSeconds ?? null) !== actor.killTimeSeconds ||
+      (death !== undefined && death.modelId !== model)
+    )
+      throw Error(
+        "A decoded neutral actor conflicts with its catalog or recorded life.",
+      );
+    occupied.add(actor.context);
+    validateWorldUnitPaths(actor, scene.mapBounds, end, true);
+  }
   return {
-    bindings: [...(scene.worldUnitModels?.bindings ?? []), ...bindings],
-    instances: [...(scene.worldUnitModels?.instances ?? []), ...laneActors],
+    neutralObjectiveKills,
+    worldUnitModels: mergeWorldModels(
+      scene.worldUnitModels,
+      bindings,
+      instances,
+    ),
+    neutralObjectiveModelBindings: undefined,
+    workerMotion: undefined,
   };
 }
 
@@ -1168,6 +1317,20 @@ export async function loadSceneMotion(
   const experienceTracks = decoded.championExperienceTracks;
   const experienceThresholds = scene.championExperienceThresholds;
   const animationCues = decoded.championAnimationCues;
+  const neutrals =
+    decoded.neutralObjectiveInstances !== undefined &&
+    decoded.neutralObjectiveKills !== undefined
+      ? loadNeutralObjectives(
+          scene,
+          decoded.neutralObjectiveInstances,
+          decoded.neutralObjectiveKills,
+          ground,
+        )
+      : undefined;
+  const worldScene =
+    neutrals === undefined
+      ? scene
+      : { ...scene, worldUnitModels: neutrals.worldUnitModels };
   if (
     experienceTracks !== undefined &&
     (experienceThresholds === undefined ||
@@ -1217,11 +1380,12 @@ export async function loadSceneMotion(
       ...scene,
       motion: decoded.motion,
       decodedPositionFrames,
+      ...neutrals,
       ...(decoded.laneMinionInstances === undefined
         ? {}
         : {
             worldUnitModels: loadWorldUnits(
-              scene,
+              worldScene,
               decoded.laneMinionInstances,
               decoded.laneMinionCoverage,
             ),

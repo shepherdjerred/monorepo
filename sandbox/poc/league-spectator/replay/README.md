@@ -153,6 +153,24 @@ its lifetime. The scene omits actors in unobserved intervals. Herald's kill
 marker has no recorded position, and summoned Herald and death animations
 are outside this evidence.
 
+For a private `16.23.841.8428` package, prepare the neutral catalog from the
+exact installation and previously verified objective and dragon model
+manifests. The catalog tool checks the original resource digests against
+the current Map11 archive before copying the prepared GLBs.
+
+```powershell
+bun tools/native-terrain-neutral-model-catalog.mjs $installation $preparedObjectives $preparedDragons $newPrivateNeutralCatalog
+```
+
+Pass the new manifest with `--neutral-model-catalog` and its digest with
+`--neutral-model-catalog-sha256`. The motion worker derives the objective
+kills and bounded actor paths from the original replay. Kills can appear
+in the timeline when the catalog lacks a verified model. Use
+`--team-vision-from-replay` to derive masks for the actors that draw.
+Actors with isolated position observations draw only at those times.
+Animations, Void Grub lifecycles, and camp monsters remain unverified
+in this path.
+
 Prepare the first lane-minion wave in the reviewed long replay with the
 archived native packet reader and the original Map11 melee and ranged skins.
 
