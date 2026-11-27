@@ -8,6 +8,7 @@ import {
   corroborateChampionModelSelections,
   currentChampionBuild,
   loadChampionModelCatalog,
+  openChampionModelCatalog,
 } from "./native-terrain-champion-model-catalog.mjs";
 
 const identity = { build: "16.23.840.6595", protocol: "8bbfcd5af2bc92db" };
@@ -227,7 +228,30 @@ test("loads pinned build-authored GLBs for the decoded skin selectors", async ()
       ...archiveCatalog,
       nativeOpening: JSON.parse(corroborated).nativeOpening,
     });
+    const opened = await openChampionModelCatalog(
+      manifest,
+      archivePin,
+      otherMatch,
+      [],
+      {
+        maxManifestBytes: Buffer.byteLength(archive),
+        maxModelBytes: modelBytes.length,
+      },
+    );
+    const bounded = await openChampionModelCatalog(
+      manifest,
+      archivePin,
+      otherMatch,
+      [],
+      { maxModelBytes: modelBytes.length - 1 },
+    );
+    await expect(bounded.readModel(otherSelections[0])).rejects.toThrow(
+      "audit size bound",
+    );
     await writeFile(manifest, mixed);
+    expect((await opened.readModel(otherSelections[0])).bytes).toEqual(
+      modelBytes,
+    );
     await expect(
       loadChampionModelCatalog(
         manifest,

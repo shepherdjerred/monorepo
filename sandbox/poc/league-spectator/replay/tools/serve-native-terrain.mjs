@@ -99,6 +99,7 @@ const { positionals, values } = parseArgs({
     "lane-minion-models-sha256": { type: "string" },
     "team-vision": { type: "string" },
     "team-vision-sha256": { type: "string" },
+    "team-vision-from-replay": { type: "boolean" },
     "scout-css": { type: "string" },
     "turret-placements": { type: "string" },
   },
@@ -281,6 +282,7 @@ assert.ok(
 );
 const visionPath = values["team-vision"];
 const visionDigest = values["team-vision-sha256"];
+const decodeTeamVision = values["team-vision-from-replay"] === true;
 assert.equal(
   visionPath === undefined,
   visionDigest === undefined,
@@ -289,6 +291,11 @@ assert.equal(
 assert.ok(
   visionPath === undefined || privatePackageOutput !== undefined,
   "Recorded team vision requires a private package",
+);
+assert.ok(
+  !decodeTeamVision ||
+    (visionPath === undefined && privatePackageOutput !== undefined),
+  "Replay-derived team vision requires a private package without prepared vision tracks",
 );
 assert.ok(
   announcerDirectory === undefined || privatePackageOutput !== undefined,
@@ -2237,6 +2244,21 @@ if (
     if (decodeChampionInventory) scene.championInventoryItems = items;
     else scene.championInventory = { items, tracks };
   }
+}
+if (decodeTeamVision) {
+  assert.ok(
+    currentBuild && scene.workerMotion && replayCodecs,
+    "Replay-derived team vision requires the current motion worker",
+  );
+  const { readCurrentRecordedTeamVision } =
+    await import("./research/recorded-team-vision.mjs");
+  readCurrentRecordedTeamVision(
+    replay,
+    scene,
+    replayTimedPacketEnvelopes(replayPacketEnvelopes(replay, decompress)),
+    replayCodecs,
+  );
+  scene.workerMotion.decodeTeamVision = true;
 }
 let championAnimationRoutes;
 if (animationCatalogPath !== undefined) {

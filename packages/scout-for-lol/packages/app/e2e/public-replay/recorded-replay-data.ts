@@ -130,6 +130,7 @@ const SceneIdentitySchema = z.object({
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
+      decodeTeamVision: z.literal(true).optional(),
       announcerEvents: z
         .array(
           z.tuple([
@@ -287,6 +288,9 @@ export async function readRecordedReplay() {
     );
   }
   const capabilities = championCapabilities(scene);
+  const directTeamVision = scene.workerMotion?.decodeTeamVision === true;
+  if (directTeamVision && teamVision !== undefined)
+    throw new Error("Direct team vision requires a scene without baked masks.");
 
   const packageDigest = sha256(manifest);
   const packageRoot = `${packagePrefix}${packageDigest}`;
@@ -318,7 +322,10 @@ export async function readRecordedReplay() {
         .filter(({ sourceAlphaBlend }) => sourceAlphaBlend)
         .map(({ material }) => material.slice(material.lastIndexOf("/") + 1)) ??
       [],
-    unitVisibility: teamVision !== undefined,
+    unitVisibility: teamVision !== undefined || directTeamVision,
+    directTeamVision,
+    directReplayObservations:
+      directTeamVision || capabilities.directChampionObservations,
     announcerEvents: scene.workerMotion?.announcerEvents,
     announcerPreview: inventory.capabilities.announcerPreview,
     championAnimationCueCount: championAnimationCues?.length ?? 0,

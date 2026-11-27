@@ -53,6 +53,19 @@ const experience = z.array(
     ),
   }),
 );
+const teamVision = z.array(
+  z.strictObject({
+    context: schemaTrack,
+    changes: z
+      .array(
+        z.tuple([
+          z.number().nonnegative(),
+          z.union([z.literal(0), z.literal(2), z.literal(4), z.literal(6)]),
+        ]),
+      )
+      .nonempty(),
+  }),
+);
 const reply = z.object({
   requestKeys: z.array(z.string()),
   decodeChampionStats: z.boolean(),
@@ -68,6 +81,7 @@ const reply = z.object({
   inventoryTracks: inventory.optional(),
   experienceTracks: experience.optional(),
   animationCues: workerAnimationCues.optional(),
+  teamVision: teamVision.optional(),
   announcerCues: z
     .array(
       z
@@ -105,12 +119,14 @@ export async function observeDirectChampionStatsWorker(page: Page) {
             "championAnimationCatalog",
           );
           const hasAnnouncerEvents = Object.hasOwn(object, "announcerEvents");
+          const hasTeamVision = Object.hasOwn(object, "decodeTeamVision");
           if (
             decodeChampionStats ||
             decodeChampionInventory ||
             decodeChampionExperience ||
             hasChampionAnimationCatalog ||
-            hasAnnouncerEvents
+            hasAnnouncerEvents ||
+            hasTeamVision
           ) {
             const requestKeys = Object.keys(object).sort();
             const captureReady = ({ data }: MessageEvent<unknown>) => {
@@ -143,6 +159,11 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                   response,
                   "announcerCues",
                 )?.value;
+                const observedTeamVision: unknown =
+                  Object.getOwnPropertyDescriptor(
+                    response,
+                    "teamVision",
+                  )?.value;
                 Object.defineProperty(
                   globalThis,
                   "__scoutDirectChampionStatsProof",
@@ -159,6 +180,7 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                       experienceTracks,
                       animationCues,
                       announcerCues,
+                      teamVision: observedTeamVision,
                     },
                   },
                 );
@@ -175,6 +197,8 @@ export async function observeDirectChampionStatsWorker(page: Page) {
 }
 
 const oracleFiles = {
+  "scout-8428-v21-team-vision-tracks.json":
+    "c4a260a2e74c8d43275718126d47f013377c4df4b9e6f78cef2df0d4fe0b8979",
   "scout-8428-champion-health.json":
     "f2b0232bc86868479da10e6ed38bdb233867605ffe64c2116db078878ad651bd",
   "scout-8428-champion-resources.json":
@@ -231,12 +255,13 @@ export async function verifyDirectChampionStatsWorker(
     directChampionInventory: boolean;
     directChampionExperience: boolean;
     directChampionAnimation: boolean;
-    directChampionObservations: boolean;
+    directReplayObservations: boolean;
     championAnimationCueCount: number;
     announcerEvents?: unknown;
+    directTeamVision: boolean;
   },
 ) {
-  if (!fixture.directChampionObservations)
+  if (!fixture.directReplayObservations)
     return fixture.championAnimationCueCount;
   const {
     descriptor,
@@ -261,17 +286,27 @@ export async function verifyDirectChampionStatsWorker(
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
     decodeChampionStats: directChampionStats,
+    decodeTeamVision: fixture.directTeamVision,
+    teamVisionWorldActors: fixture.directTeamVision,
   })
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
-  expect(actual.requestKeys).toEqual([
-    "allowCurrentBuild",
-    ...optionalKeys,
-    "decoderBytes",
-    "identity",
-    "replayBytes",
-    "waypointOrigin",
-  ]);
+  expect(actual.requestKeys).toEqual(
+    [
+      "allowCurrentBuild",
+      ...optionalKeys,
+      "decoderBytes",
+      "identity",
+      "replayBytes",
+      "waypointOrigin",
+    ].sort(),
+  );
+  await verifyDirectTeamVision(
+    fixture.directTeamVision,
+    actual.teamVision,
+    descriptor.sha256,
+    oracleRoot,
+  );
   if (directChampionStats) {
     const [healthOracle, resourceOracle] = await Promise.all([
       readOracle(oracleRoot, "scout-8428-champion-health.json"),
@@ -343,6 +378,29 @@ export async function verifyDirectChampionStatsWorker(
   }
   expect(actual.animationCues).toBeUndefined();
   return fixture.championAnimationCueCount;
+}
+
+async function verifyDirectTeamVision(
+  enabled: boolean,
+  tracks: z.infer<typeof teamVision> | undefined,
+  replaySha256: string,
+  oracleRoot: string,
+) {
+  if (!enabled) {
+    expect(tracks).toBeUndefined();
+    return;
+  }
+  const bytes = await readOracle(
+    oracleRoot,
+    "scout-8428-v21-team-vision-tracks.json",
+  );
+  const expected = z
+    .object({ replaySha256: z.string(), tracks: teamVision })
+    .parse(decode(bytes));
+  expect(expected.replaySha256).toBe(replaySha256);
+  expect(tracks?.toSorted((a, b) => a.context - b.context)).toEqual(
+    expected.tracks.toSorted((a, b) => a.context - b.context),
+  );
 }
 
 async function readDirectWorkerReply(page: Page): Promise<unknown> {

@@ -114,24 +114,35 @@ export function corroborateChampionModelSelections(observations, creations) {
   });
 }
 
-async function readCatalogFile(root, file) {
+async function readCatalogFile(root, file, maxBytes) {
   const target = join(root, file);
+  const stat = await lstat(target);
   assert.ok(
-    (await lstat(target)).isFile() && (await realpath(target)) === target,
+    stat.isFile() && (await realpath(target)) === target,
     "Champion catalog requires exact regular files",
   );
+  if (maxBytes !== undefined)
+    assert.ok(
+      stat.size <= maxBytes,
+      "Champion catalog file exceeds its audit size bound",
+    );
   return await readFile(target);
 }
 
-export async function loadChampionModelCatalog(
+export async function openChampionModelCatalog(
   manifestPath,
   expectedSha256,
   identity,
   selections,
+  { maxManifestBytes, maxModelBytes } = {},
 ) {
   assert.match(expectedSha256, digestPattern);
   const root = await realpath(dirname(manifestPath));
-  const manifestBytes = await readCatalogFile(root, basename(manifestPath));
+  const manifestBytes = await readCatalogFile(
+    root,
+    basename(manifestPath),
+    maxManifestBytes,
+  );
   assert.equal(
     sha256(manifestBytes),
     expectedSha256,
@@ -181,9 +192,7 @@ export async function loadChampionModelCatalog(
       !Array.isArray(catalog.assets) &&
       typeof catalog.assets === "object",
   );
-  const routes = new Map();
-  const bindings = [];
-  for (const { context, champion, skinId } of selections) {
+  async function readModel({ context, champion, skinId }) {
     const key = `${champion.toLowerCase()}-${skinId}`;
     assert.ok(
       Object.hasOwn(catalog.assets, key),
@@ -205,21 +214,45 @@ export async function loadChampionModelCatalog(
     assert.equal(new Set(hiddenRanges).size, hiddenRanges.length);
     assert.equal(model.file, `${key}/model.glb`);
     assert.match(model.sha256, digestPattern);
-    const bytes = await readCatalogFile(root, model.file);
+    const bytes = await readCatalogFile(root, model.file, maxModelBytes);
     assert.equal(bytes.byteLength, model.bytes);
     assert.equal(sha256(bytes), model.sha256, "Champion model digest differs");
     assert.equal(bytes.subarray(0, 4).toString("ascii"), "glTF");
     assert.equal(bytes.readUInt32LE(4), 2);
     assert.equal(bytes.readUInt32LE(8), bytes.byteLength);
     const url = `/champion-models/${model.sha256}.glb`;
-    routes.set(url, [bytes, "model/gltf-binary"]);
-    bindings.push({
-      participantId: context,
-      skinId,
-      skinScale: skinScale ?? 1,
-      hiddenRanges,
-      url,
-    });
+    return {
+      bytes,
+      binding: {
+        participantId: context,
+        skinId,
+        skinScale: skinScale ?? 1,
+        hiddenRanges,
+        url,
+      },
+    };
+  }
+  return { catalog, readModel };
+}
+
+export async function loadChampionModelCatalog(
+  manifestPath,
+  expectedSha256,
+  identity,
+  selections,
+) {
+  const { readModel } = await openChampionModelCatalog(
+    manifestPath,
+    expectedSha256,
+    identity,
+    selections,
+  );
+  const routes = new Map();
+  const bindings = [];
+  for (const selection of selections) {
+    const { bytes, binding } = await readModel(selection);
+    routes.set(binding.url, [bytes, "model/gltf-binary"]);
+    bindings.push(binding);
   }
   return { bindings, routes };
 }

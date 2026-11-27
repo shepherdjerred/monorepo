@@ -327,7 +327,13 @@ draws at the recorded transition times and after rewinding.
 The private 16.23.841.8428 package requires a pinned catalog for the actual
 replay build. A catalog built from a pinned archive selection can serve replay
 openings with different actor IDs whenever it contains the exact selected
-skins. To prepare its champion position decoder from the
+skins. Use `tools/audit-native-terrain-skin-catalog.mjs` with the pinned
+archive census, selection, source input manifest, and model catalog to
+check each selected model through the runtime loader. The report lists
+uncovered archive keys. Match legality and native presentation require
+independent evidence.
+
+To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose
 controller state remains unresolved. When only a transition is unresolved,
@@ -458,11 +464,16 @@ the arrow keys. **Zoom in** and **Zoom out** work in free and follow views.
 Set `SCOUT_REPLAY_E2E_BUILD_NAME` to a distinct cache directory name before
 building and serving another preview alongside an existing one.
 
-For **Unit visibility**, generate the [exact team tracks](tools/research/README.md)
-from the same ROFL and pass `--team-vision` and `--team-vision-sha256` to the
-private package builder. The selected side filters the 3D actors and minimap
-markers with the same recorded masks. Terrain fog shading remains unverified.
-For the current-build preview, pass `--current` to the verifier with the
+For **Unit visibility** on 16.23.841.8428, pass `--team-vision-from-replay`
+to the private package builder. It checks that the original ROFL covers
+the actors bound to the scene. The package carries the decode option and
+the browser worker reads the initial and gameplay masks during its motion
+scan. The selected side filters the 3D actors and minimap markers with those
+masks. Terrain fog shading remains unverified.
+
+To use [prepared exact tracks](tools/research/README.md), pass their path and
+digest with `--team-vision` and `--team-vision-sha256`. For an independent
+current-build comparison, pass `--current` to the verifier with the
 matching macOS archive and the reviewed `scene.json` before team tracks are
 added. The verifier restricts the tracks to the actors that scene can draw.
 When the reviewed actor set changes, pass the new scene digest with
@@ -522,9 +533,12 @@ bun --no-install --bun playwright test --config e2e/public-replay/recorded-perfo
 
 The report records the actual drawing buffer and graphics backend, samples
 frame submissions during 1× and 4× playback, and lists decode worker lifetimes.
-The reviewed long recording samples the opening, first lane wave, first
-champion kill, Fire Dragon movement, late minions, and closing structures. A
-package with unit visibility also samples both team views.
+The reviewed 16.23.841.8428 Rift recording samples the opening, the first
+lane wave, the first champion elimination, the first turret loss, siege
+waves, and late super minions. It also samples both team views and windows
+that cross each recorded inhibitor return when the package supports those
+features. The reviewed 16.23.840.6595 recording retains its objective,
+animation, and camera samples.
 The rates describe headless rendering. Continuous worker simulation and
 display presentation need their own measurements.
 

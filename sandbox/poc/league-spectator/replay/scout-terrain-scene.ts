@@ -388,6 +388,7 @@ const TerrainSceneFields = z.object({
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
+      decodeTeamVision: z.literal(true).optional(),
     })
     .optional(),
   navgrid: z
@@ -506,6 +507,19 @@ export const SceneSchema = TerrainSceneFields.refine(
       path: ["workerMotion", "announcerEvents"],
       message:
         "Replay-derived announcements require exact current worker motion.",
+    },
+  )
+  .refine(
+    (scene) =>
+      scene.workerMotion?.decodeTeamVision !== true ||
+      (scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.teamVision === undefined),
+    {
+      path: ["workerMotion", "decodeTeamVision"],
+      message:
+        "Replay-derived team vision requires exact current worker motion without embedded masks.",
     },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
@@ -647,6 +661,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
       createChampionExperienceTracksSchema(z).optional(),
     championAnimationCues: ChampionAnimationWorkerCuesSchema.optional(),
     announcerCues: AnnouncerCuesSchema.optional(),
+    teamVision: TeamVisionSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -656,6 +671,7 @@ async function loadWorkerMotion(
   workerMotion: NonNullable<TerrainScene["workerMotion"]>,
   signal: AbortSignal,
   assets: TerrainMotionAssets,
+  teamVisionActors?: { world: [number, number][]; contexts: Set<number> },
 ) {
   const [replayBytes, decoderBytes] = await Promise.all([
     assets.replay(),
@@ -694,12 +710,36 @@ async function loadWorkerMotion(
           { once: true },
         );
         worker.postMessage(
-          { identity, ...workerMotion, replayBytes, decoderBytes },
+          {
+            identity,
+            ...workerMotion,
+            replayBytes,
+            decoderBytes,
+            ...(teamVisionActors === undefined
+              ? {}
+              : { teamVisionWorldActors: teamVisionActors.world }),
+          },
           [replayBytes, decoderBytes],
         );
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    if ((result.teamVision !== undefined) !== (teamVisionActors !== undefined))
+      throw Error(
+        "Replay motion worker returned unexpected team vision coverage.",
+      );
+    if (result.teamVision !== undefined && teamVisionActors !== undefined) {
+      const { contexts } = teamVisionActors;
+      const received = new Set(result.teamVision.map(({ context }) => context));
+      if (
+        received.size !== contexts.size ||
+        result.teamVision.length !== contexts.size ||
+        [...received].some((context) => !contexts.has(context))
+      )
+        throw Error(
+          "Replay motion worker returned incorrect team vision actors.",
+        );
+    }
     if (
       (result.championStats !== undefined) !==
       (workerMotion.decodeChampionStats === true)
@@ -764,6 +804,29 @@ type TerrainMotionAssets = {
   worker: () => Promise<Worker>;
 };
 
+function teamVisionActorBindings(scene: TerrainScene) {
+  if (scene.workerMotion?.decodeTeamVision !== true) return;
+  const world: [number, number][] = [
+    scene.worldUnitModels,
+    scene.structureModels,
+    scene.inhibitorModels,
+    scene.nexusModels,
+  ].flatMap(
+    (group) =>
+      group?.instances.map((actor): [number, number] => [
+        actor.context,
+        "creationTimeSeconds" in actor ? actor.creationTimeSeconds : 0,
+      ]) ?? [],
+  );
+  const contexts = new Set([
+    ...scene.participants.map(({ participantId }) => participantId),
+    ...world.map(([context]) => context),
+  ]);
+  if (contexts.size !== scene.participants.length + world.length)
+    throw Error("Duplicate actor binding in replay-derived team vision.");
+  return { world, contexts };
+}
+
 export async function loadSceneMotion(
   scene: TerrainScene,
   signal: AbortSignal,
@@ -777,7 +840,13 @@ export async function loadSceneMotion(
     assets.read("/heights.bin").then((buffer) => new Float32Array(buffer)),
     scene.workerMotion === undefined
       ? undefined
-      : loadWorkerMotion(scene.identity, scene.workerMotion, signal, assets),
+      : loadWorkerMotion(
+          scene.identity,
+          scene.workerMotion,
+          signal,
+          assets,
+          teamVisionActorBindings(scene),
+        ),
   ]);
   if (decoded === undefined) return { scene, heights };
   const ground = createNavgridGroundHeight(
@@ -846,6 +915,9 @@ export async function loadSceneMotion(
       ...scene,
       motion: decoded.motion,
       decodedPositionFrames,
+      ...(decoded.teamVision === undefined
+        ? {}
+        : { teamVision: decoded.teamVision, workerMotion: undefined }),
       ...(championStats === undefined
         ? {}
         : { ...championStats, workerMotion: undefined }),

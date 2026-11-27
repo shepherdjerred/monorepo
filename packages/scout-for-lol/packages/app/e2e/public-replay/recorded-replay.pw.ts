@@ -186,7 +186,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   await installRecordedDrawProbe(page);
   await observeRecordedItemBlobs(page);
-  if (fixture.directChampionObservations)
+  if (fixture.directReplayObservations)
     await observeDirectChampionStatsWorker(page);
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {

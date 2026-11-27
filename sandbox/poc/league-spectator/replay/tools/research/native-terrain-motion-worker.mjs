@@ -17,6 +17,7 @@ import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-94
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
 import { verifyRecordedChampionExperienceFooter } from "./recorded-champion-experience-tracks.mjs";
 import { createRecordedInventoryCollector } from "./recorded-inventory-packets.mjs";
+import { createCurrentRecordedTeamVisionCollector } from "./recorded-team-vision.mjs";
 
 function* observeMotionPackets(packets, observe) {
   // Motion may stop after the game clock. Keep ownership of the underlying
@@ -138,6 +139,8 @@ async function prepareMotion({
   decodeChampionExperience,
   championAnimationCatalog,
   announcerEvents,
+  decodeTeamVision,
+  teamVisionWorldActors,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -159,6 +162,16 @@ async function prepareMotion({
   )
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
+  if (
+    decodeTeamVision === true
+      ? !options.allowCurrentBuild ||
+        replay.build !== currentTerrainPositionBuild ||
+        !Array.isArray(teamVisionWorldActors)
+      : decodeTeamVision !== undefined || teamVisionWorldActors !== undefined
+  )
+    throw Error(
+      "Replay-derived team vision requires the reviewed current build and actor bindings.",
+    );
   if (
     decodeChampionStats !== undefined &&
     (decodeChampionStats !== true ||
@@ -249,7 +262,19 @@ async function prepareMotion({
           recoverTerrainByteSubstitution(codecs),
           announcerMapping,
         );
-  const observers = [inventory, animation, announcer].filter(
+  const teamVision =
+    decodeTeamVision === true
+      ? createCurrentRecordedTeamVisionCollector(
+          replay,
+          binding.verified.map(({ context, footerRow }) => ({
+            participantId: context,
+            teamId: prepared.observations.roster[footerRow - 1]?.team,
+          })),
+          teamVisionWorldActors,
+          codecs,
+        )
+      : undefined;
+  const observers = [inventory, animation, announcer, teamVision].filter(
     (collector) => collector !== undefined,
   );
   const observe = (packet) => {
@@ -302,6 +327,7 @@ async function prepareMotion({
     ...(animation === undefined
       ? {}
       : { championAnimationCues: animation.finish() }),
+    ...(teamVision === undefined ? {} : { teamVision: teamVision.finish() }),
     ...(announcer === undefined
       ? {}
       : {
