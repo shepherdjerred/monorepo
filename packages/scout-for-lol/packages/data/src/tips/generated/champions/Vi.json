@@ -1,0 +1,828 @@
+{
+  "schemaVersion": 1,
+  "champion": "Vi",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "f835e4220e8a18116c323c66fc80c3a1c399abbcf591033ee9cf5ab274293513",
+      "tips": [
+        {
+          "id": "jungle:Vi:general:0",
+          "text": "Hold Vault Breaker to charge it before you release; a longer charge hits harder and reaches farther, so it is best for catching someone running away.",
+          "refs": [{ "kind": "ability", "key": "Vi-Q", "start": 5, "end": 18 }],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Vi:general:1",
+          "text": "Charging Vault Breaker slows you a little, so charge it out of sight or behind a minion and release when the enemy is close.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Vi:general:2",
+          "text": "Use Relentless Force on a minion or monster in front of an enemy; the blast also hits the units behind your target.",
+          "refs": [{ "kind": "ability", "key": "Vi-E", "start": 4, "end": 20 }],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Vi:general:3",
+          "text": "Keep attacking the same target; every third hit with Denting Blows deals extra damage, cuts their Armor and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Vi:general:4",
+          "text": "Hit an enemy with an ability to activate Blast Shield; landing Denting Blows hits brings it back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-passive", "start": 41, "end": 53 },
+            { "kind": "ability", "key": "Vi-W", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Vi:general:5",
+          "text": "Use Cease and Desist on a target you can finish off. Nothing can push you off course while you dash, and the target is knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "knocked-up", "start": 119, "end": 129 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Vi:general:6",
+          "text": "Start a fight with Cease and Desist only when your team is close; diving alone ahead of them gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Vi:general:7",
+          "text": "Enemies you dash through with Cease and Desist are stunned, so aim it at the target so the dash passes through the rest of their team.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "9e243a1d4fdae8ece0e856009a095f47b5022e93282d6bff935ed1d83ac3418d",
+      "tips": [
+        {
+          "id": "jungle:Vi:Graves:0",
+          "text": "Charge Vault Breaker out of Graves' sight, inside his Smoke Screen or behind a wall, so he can't dodge it. Release it when he steps back.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Graves-W", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Vi:Graves:1",
+          "text": "Take fights up close; Graves is weakest when you are on top of him. Keep hitting him to trigger Denting Blows and cut his Armor.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Vi-W", "start": 96, "end": 109 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Vi:Graves:2",
+          "text": "Leave Smoke Screen's cloud right away; the slow ends as soon as you step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Vi:Graves:3",
+          "text": "Hold Cease and Desist until Graves has used Quickdraw. Then he has no quick dash to get away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Graves", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Graves-E", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3cd5874072d76d21a492f204e65d8aabe5445fdcbad5c4f67d2ba4b7f8c18983",
+      "tips": [
+        {
+          "id": "jungle:Vi:JarvanIV:0",
+          "text": "Do not walk into the line between Jarvan and his Demacian Standard, or Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 49, "end": 66 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Vi:JarvanIV:1",
+          "text": "Charge Vault Breaker fully to catch Jarvan when he runs. Charging slows you, so do it out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Vi:JarvanIV:2",
+          "text": "Keep Cease and Desist for when Jarvan commits to a fight. Vi cannot be stopped mid-dash, so use it to catch him.",
+          "refs": [{ "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 }],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Vi:JarvanIV:3",
+          "text": "Mix attacks with Vault Breaker to reach the third hit of Denting Blows fast. It cuts his Armor and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Vi-W", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9c4e1665843dcd0a6fc2103595f1a84ce440e9ae4e2ec5d533d63df13927f9ca",
+      "tips": [
+        {
+          "id": "jungle:Vi:Kayn:0",
+          "text": "Charge Vault Breaker from out of sight or behind minions. Kayn can slow you, so release it before he gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Kayn", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Vi:Kayn:1",
+          "text": "Land three hits to trigger Denting Blows on Kayn. It cuts his Armor and speeds up your attacks, so fight him in short, fast bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 27, "end": 40 },
+            { "kind": "champion", "key": "Kayn", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Vi:Kayn:2",
+          "text": "Hold Cease and Desist for when Kayn is outside terrain. It can't be stopped, and it works well to catch him after he uses Shadow Step.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Kayn-E", "start": 122, "end": 133 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Vi:Kayn:3",
+          "text": "Hit Kayn while he is inside terrain to cut Shadow Step short, or use a stun or knock up to end it at once.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kayn-E", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Vi:Kayn:4",
+          "text": "Watch for the warning on the terrain edge when Kayn is close. He is probably about to jump you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7a78f47614a551acc1a72e742d46b172e4144f1f4f22a6ff8bd0231caa31237",
+      "tips": [
+        {
+          "id": "jungle:Vi:Khazix:0",
+          "text": "Stay near allied minions or teammates so Kha'Zix can't get the big damage from Taste Their Fear on you.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 41, "end": 48 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 79, "end": 95 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Vi:Khazix:1",
+          "text": "Hold Cease and Desist for when Kha'Zix has used Leap. He is easy to catch when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Khazix", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Khazix-E", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Vi:Khazix:2",
+          "text": "Charge Vault Breaker toward where Kha'Zix will run; a full charge punishes him and knocks him back.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Khazix", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Vi:Khazix:3",
+          "text": "Land three hits with Denting Blows on Kha'Zix to cut his Armor and speed yourself up, then keep fighting him.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 21, "end": 34 },
+            { "kind": "champion", "key": "Khazix", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Vi:Khazix:4",
+          "text": "Watch for Kha'Zix coming out of brush or invisibility; his next hit slows you, so don't walk into a fight alone.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 10, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1c93861d3d28d5c20ece19520e7b25ac1a0c9bea34de5c011dbb0c6f9314fdae",
+      "tips": [
+        {
+          "id": "jungle:Vi:Kindred:0",
+          "text": "Charge Vault Breaker in bushes or behind minions, then release it when Kindred steps close. A full charge hits hardest.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Vi:Kindred:1",
+          "text": "Hit Kindred three times in a row to trigger Denting Blows. It cuts her Armor and speeds you up, so brawl her up close.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Vi-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Vi:Kindred:2",
+          "text": "Use Cease and Desist on Kindred when she is fragile and away from her team. It cannot be stopped once it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Vi:Kindred:3",
+          "text": "Don't dive into an active Lamb's Respite; nobody inside can die. Wait for it to end before you finish the kill.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Vi:Kindred:4",
+          "text": "Contest Kindred's Hunt camps in the jungle to slow her damage growth.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "da80eb92b67aaf4019fa512615065e70b2e209bd3d2c10906610e278142f1aa8",
+      "tips": [
+        {
+          "id": "jungle:Vi:LeeSin:0",
+          "text": "Charge Vault Breaker out of sight and release it to catch Lee Sin. A full charge hits much harder, so use it to finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "LeeSin", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Vi:LeeSin:1",
+          "text": "Hit Lee Sin three times to trigger Denting Blows. It deals bonus damage and cuts his Armor, which makes your next trade stronger.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Vi-W", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Vi:LeeSin:2",
+          "text": "Stay close to your team so Dragon's Rage cannot send you into a bad spot. Do not stand alone near Lee Sin.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "isolated", "start": 87, "end": 92 },
+            { "kind": "champion", "key": "LeeSin", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Vi:LeeSin:3",
+          "text": "Lee Sin is weak to magic damage. Use Relentless Force to hit him and anyone behind him.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Vi-E", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Vi:LeeSin:4",
+          "text": "Use Cease and Desist on Lee Sin when he has used Sonic Wave and cannot easily follow up. It starts a fight you control.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "LeeSin", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4516adbb422e92e229ad6b218895255cce9871372167f930cb7e0d0f1fb7d210",
+      "tips": [
+        {
+          "id": "jungle:Vi:MasterYi:0",
+          "text": "Charge Vault Breaker fully to catch Master Yi when he runs; it hits harder the longer you charge.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "MasterYi", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Vi:MasterYi:1",
+          "text": "Save Cease and Desist until Master Yi has used Alpha Strike; he can't be targeted while he jumps.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Vi:MasterYi:2",
+          "text": "Master Yi can't be slowed during Highlander, so rely on Cease and Desist's knock up to stop him instead.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Vi-R", "start": 56, "end": 72 },
+            { "kind": "keyword", "key": "knocked-up", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Vi:MasterYi:3",
+          "text": "Hit Master Yi with Relentless Force and Denting Blows early, before Meditate heals him back up.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Vi-E", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Vi-W", "start": 40, "end": 53 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a1900db12b1452e77f31068842236dc80a925e9ef7b93485e82cea00b467a9f2",
+      "tips": [
+        {
+          "id": "jungle:Vi:Naafiri:0",
+          "text": "Wait until Naafiri has used The Call of the Pack or Eviscerate, then go in with Cease and Desist; her Packmates and her escapes are gone.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 28, "end": 48 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 52, "end": 62 },
+            { "kind": "ability", "key": "Vi-R", "start": 80, "end": 96 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Vi:Naafiri:1",
+          "text": "Do not cast Cease and Desist at Naafiri while she is untargetable from The Call of the Pack. Wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 71, "end": 91 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Vi:Naafiri:2",
+          "text": "Charge Vault Breaker out of sight and release it as she walks in. A full charge hits hard and stops on her.",
+          "refs": [{ "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 }],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Vi:Naafiri:3",
+          "text": "Use Relentless Force on a Packmate or minion in front of her so the blast also hits Naafiri behind it.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Vi:Naafiri:4",
+          "text": "Keep hitting the same target to trigger Denting Blows. It cuts her Armor and speeds up your attacks for a drawn-out fight.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3d0c5cbdde49afc5a21fe2f529b561af9a3f7c22b2138940175a0b870caeb0c",
+      "tips": [
+        {
+          "id": "jungle:Vi:Nocturne:0",
+          "text": "Do not rely on Cease and Desist when Nocturne has Shroud of Darkness ready; it blocks the dash. Bait the shield first.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Nocturne", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 50, "end": 68 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Vi:Nocturne:1",
+          "text": "Hold Vault Breaker until Shroud of Darkness is used or on cooldown; a spell shield stops the punch.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 25, "end": 43 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Vi:Nocturne:2",
+          "text": "Stay away from Nocturne's Unspeakable Horror range, or move out of reach so the tether breaks before the fear.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 26, "end": 44 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Vi:Nocturne:3",
+          "text": "Stick with your team when Paranoia goes off; Nocturne is looking for a lone target.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 26, "end": 34 },
+            { "kind": "champion", "key": "Nocturne", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Vi:Nocturne:4",
+          "text": "Win fights by landing three hits for Denting Blows; Nocturne loses Armor and you hit faster.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 37, "end": 50 },
+            { "kind": "champion", "key": "Nocturne", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "abb0a9c7196935bc76ae362db481096c1fa39ed12602c954f14532880349fafd",
+      "tips": [
+        {
+          "id": "jungle:Vi:Shyvana:0",
+          "text": "Stop charging Vault Breaker when Shyvana is in range of Molten Burst; you are slowed and easy to hit. Charge out of her sight.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 14, "end": 27 },
+            { "kind": "champion", "key": "Shyvana", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 56, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Vi:Shyvana:1",
+          "text": "Fight Shyvana when her Dragon Fury is low; she can't turn into a dragon and her Emberstrike and abilities are weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Vi:Shyvana:2",
+          "text": "Use Cease and Desist to pick her out; Shyvana's Inferno Aegis shield is smaller when you are alone with her, so burst her down.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Vi:Shyvana:3",
+          "text": "Hit her three times with Denting Blows early in a fight to cut her Armor and gain Attack Speed before she transforms.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a6e62a59af02fbf07990573650b1b7bab153a567718475384e5c51e6fd1ff24",
+      "tips": [
+        {
+          "id": "jungle:Vi:Skarner:0",
+          "text": "Start a Vault Breaker charge from out of sight; Skarner's Ixtal's Impact is weaker if you see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 8, "end": 21 },
+            { "kind": "champion", "key": "Skarner", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Skarner-E", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Vi:Skarner:1",
+          "text": "Hit Skarner with Vault Breaker as he charges at you; it knocks him back and ends his charge.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Vi-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Vi:Skarner:2",
+          "text": "Stay away from walls when Skarner is near; if he grabs you, a wall means a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Vi:Skarner:3",
+          "text": "Use Cease and Desist for the fight; Skarner cannot stop it once it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4e2e35a85d04231be1e45e56d4f6ebb5073768610b7f729e86e0e0434620c097",
+      "tips": [
+        {
+          "id": "jungle:Vi:Sylas:0",
+          "text": "Charge Vault Breaker out of his sight and release it when he steps forward; a full charge hits hard and knocks him back.",
+          "refs": [{ "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 }],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Vi:Sylas:1",
+          "text": "Save Cease and Desist for when Sylas has used Abduct; Vi cannot be stopped during the dash, so he cannot escape it easily.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Vi:Sylas:2",
+          "text": "Don't brawl for long when Sylas has built up attack speed; trade in short bursts, then walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Vi:Sylas:3",
+          "text": "Hit him three times with Denting Blows to cut his Armor and speed up your attacks. Then finish the fight quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Vi:Sylas:4",
+          "text": "Be careful of low-health Sylas: Kingslayer heals him when it hits a champion, so burst him down before he can use it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Sylas-W", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49452428764ea587af865f802ff13c3bedea7fdc13b21b057d6247f5909963fd",
+      "tips": [
+        {
+          "id": "jungle:Vi:Talon:0",
+          "text": "Charge Vault Breaker out of sight and release it at Talon when he jumps in. A full charge hits hard and knocks him back.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Vi:Talon:1",
+          "text": "Talon is fragile. Keep Cease and Desist for him when he is exposed, since he cannot easily escape once you grab him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vi-R", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Vi:Talon:2",
+          "text": "Stay in a fight against Talon. Land three hits so Denting Blows shreds his Armor and speeds you up.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Vi-W", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Vi:Talon:3",
+          "text": "Watch for Talon going invisible with Shadow Assault. Once it is used he has no easy escape, so chase him when it's on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-R", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Vi:Talon:4",
+          "text": "Avoid being hit by Rake twice. The returning blades slow you, so step out of the cone before they return.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4da931ba6f132a71560471ab3ebd10cdcbfe562fd4372ac462c13ab837c11da0",
+      "tips": [
+        {
+          "id": "jungle:Vi:Viego:0",
+          "text": "When Viego starts charging Spectral Maw, step out of its line or back off; it stops at the first enemy it hits and stuns longer the longer it charges.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Viego-W", "start": 27, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 120 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Vi:Viego:1",
+          "text": "Charge Vault Breaker for a longer time to chase Viego down. It hits harder with a longer charge, and it slows you while you charge, so charge out of his sight.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Viego", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Vi:Viego:2",
+          "text": "Hit Viego three times in a row with attacks to trigger Denting Blows. It cuts his Armor and speeds up your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vi-W", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Vi:Viego:3",
+          "text": "If Viego vanishes into Harrowed Path mist, do not chase blindly. Watch the mist and fight him when he leaves it.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Viego-E", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Vi:Viego:4",
+          "text": "Do not die first in a fight. Viego turns a champion takedown into a wraith he can possess, so stay careful when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3b74c94e8ad9647898cff8bd6f373b1c49d2d33b1833582bc7aaa717407a3489",
+      "tips": [
+        {
+          "id": "jungle:Vi:XinZhao:0",
+          "text": "Charge Vault Breaker before Xin Zhao is close, then release it to stop him and knock him back. Do not walk into him mid-charge.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Vi:XinZhao:1",
+          "text": "Do not take a long fight with Xin Zhao; his Three Talon Strike combo knocks you up and cuts his other cooldowns. Disengage after his second hit.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Vi:XinZhao:2",
+          "text": "Keep Cease and Desist for when Xin Zhao has spent his Audacious Charge. Once you start dashing, he cannot stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Vi:XinZhao:3",
+          "text": "Respect Crescent Guard; if he sweeps you away, back off, since your allies cannot hit him during it.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 8, "end": 22 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

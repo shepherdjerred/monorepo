@@ -1,0 +1,4205 @@
+{
+  "schemaVersion": 1,
+  "champion": "Pantheon",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "3025c89d069d1d09cdd21d038d82e95ae5967d5793e83355cc1afb0613cba436",
+      "tips": [
+        {
+          "id": "top:Pantheon:general:0",
+          "text": "Tap Comet Spear to thrust at close range when you want to trade often; it gives back much of its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Pantheon:general:1",
+          "text": "Hold Comet Spear to throw it from farther away. It hits much harder against enemies who are low on health, so use it to finish a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Pantheon:general:2",
+          "text": "Open with Shield Vault to stun the enemy, then follow with your other spells and attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Pantheon:general:3",
+          "text": "Face the enemy when you cast Aegis Assault. You take no damage from enemies in front of you, except from towers, so use it to block a big hit.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Pantheon:general:4",
+          "text": "Recast Aegis Assault early if the enemy is about to leave range. The shield slam fires right away.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Pantheon:general:5",
+          "text": "Watch the Mortal Will counter and plan your spells and attacks so it fills before a fight. Your next spell is stronger once it is full.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 10,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Pantheon:general:6",
+          "text": "Use Shield Vault when Mortal Will is full. Your next attack then strikes three times.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 22,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Pantheon:general:7",
+          "text": "Use Grand Starfall at level 6 to join fights across the map or to finish a fleeing enemy. It slows enemies and fills Mortal Will when you land.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 117,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Pantheon:general:8",
+          "text": "Enemies see Grand Starfall coming and can walk out of it. Cast it where they are heading or at those who cannot move away.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Pantheon:combo:0",
+          "name": "Tap Q refund poke",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Pantheon-Q" }],
+          "when": "Poking in lane when you want to trade often without a long cooldown.",
+          "whenRefs": [],
+          "text": "Tap Q instead of holding it. The quick thrust refunds much of its cooldown, so you can poke again soon.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aa49a7a7379f456d5cb253b9e87ef7b454b09cf05c1b03ac85905a50dd30a613",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:general:0",
+          "text": "Hold Comet Spear to throw it from far away, and tap it for a quick thrust up close. The tap gives back most of the cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Pantheon:general:1",
+          "text": "Finish low health enemies with a thrown Comet Spear, since it hits much harder against them.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Pantheon:general:2",
+          "text": "Watch your Mortal Will counter. Plan your spells and attacks so the next fight starts with it ready.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 11,
+              "end": 22
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Pantheon:general:3",
+          "text": "Jump on a target with Shield Vault to stun them, then attack. With Mortal Will ready, your next attack hits three times.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 22, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 67,
+              "end": 78
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Pantheon:general:4",
+          "text": "Use Aegis Assault toward the enemy's damage to block it from the front. Recast it early to slam if they are about to leave range.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Pantheon:general:5",
+          "text": "Use Grand Starfall to join a fight far away. Enemies are slowed by the spear, and landing gives you Mortal Will ready.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 100,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Pantheon:combo:0",
+          "name": "Shield recast early slam",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Pantheon-E" },
+            { "kind": "ability", "key": "Pantheon-E" }
+          ],
+          "when": "When the enemy is about to leave your shield's range.",
+          "whenRefs": [],
+          "text": "Recast the shield to slam at once instead of waiting out the full channel. This lets you hit a fleeing target or set up the empowered slam for a chase.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Pantheon:combo:1",
+          "name": "Tap Q spear",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Pantheon-Q" }],
+          "when": "When you want a fast poke or a quicker cooldown on Comet Spear.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 51, "end": 62 }
+          ],
+          "text": "Tap the key to thrust the spear instead of holding it. The thrust refunds part of the cooldown, so you can use it again sooner, for example on camps.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "50cbe0b7031f164d933c9d72934205d716d80c3316d155c62c0f0a1a6c1295f9",
+      "tips": [
+        {
+          "id": "support:Pantheon:general:0",
+          "text": "Hold Comet Spear and throw it at low-health enemies; it hits much harder against them and can finish a fleeing carry.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Pantheon:general:1",
+          "text": "Tap Comet Spear for a quick poke. It gives back much of its cooldown, so you can use it again soon.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pantheon:general:2",
+          "text": "Jump on an enemy with Shield Vault to stun them, then have your partner follow up with their damage.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pantheon:general:3",
+          "text": "Watch the Mortal Will counter and save a spell for when it is full. The next spell then gets a bonus.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 10,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:general:4",
+          "text": "Face the enemy with Aegis Assault to take no damage from that direction. Enemies who get around you can still hurt you.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pantheon:general:5",
+          "text": "Recast Aegis Assault early to slam right away if the enemy is about to leave your range.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pantheon:general:6",
+          "text": "At level 6, use Grand Starfall to join a fight anywhere on the map. Its long warning means you should pick a spot enemies cannot easily leave.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Pantheon:general:7",
+          "text": "Grand Starfall leaves enemies slowed where the spear lands, so jump in and have your team chase them down.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Pantheon:combo:0",
+          "name": "Spear tap poke",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Pantheon-Q" }],
+          "when": "Poking in lane when you want Comet Spear back up quickly.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 29, "end": 40 }
+          ],
+          "text": "Tap Q instead of holding it. A quick thrust refunds much of the cooldown, so you can poke again sooner.",
+          "textRefs": []
+        },
+        {
+          "id": "support:Pantheon:combo:1",
+          "name": "Early shield slam recast",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Pantheon-E" }],
+          "when": "When an enemy is about to leave your Aegis Assault cone.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 37, "end": 50 }
+          ],
+          "text": "Recast E during the channel to slam right away. This lets you land the slam and any empowered defensive bonus without waiting.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "0a627d2872f0820693a8d98a4770f472a76ebcbf79fab9084f52561afb45e098",
+      "tips": [
+        {
+          "id": "top:Pantheon:Aatrox:0",
+          "text": "Jump on Aatrox with Shield Vault right after he commits The Darkin Blade; the stun stops him from following up.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 56, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "top:Pantheon:Aatrox:1",
+          "text": "Brace with Aegis Assault facing Aatrox when he swings or chains at you; you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Aatrox", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Pantheon:Aatrox:2",
+          "text": "Hold Comet Spear to poke from long range, and throw it to finish Aatrox when he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Aatrox", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Pantheon:Aatrox:3",
+          "text": "Walk out of Infernal Chains toward the sides or toward Aatrox so you are not pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Aatrox", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Pantheon:Aatrox:4",
+          "text": "Trade while Aatrox's Deathbringer Stance is down; its hit heals him, so avoid fighting right after he gets it back.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 12, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 21,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e36279cf983b48e6a83954ebc1b8d39acd2c719aabe8c0c35fc712ef22f81fca",
+      "tips": [
+        {
+          "id": "top:Pantheon:Briar:0",
+          "text": "Hold Aegis Assault facing Briar when she leaps in; you take no damage from her side while you brace, and you hit her as she attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Pantheon:Briar:1",
+          "text": "Stun Briar with Shield Vault when she starts to run at you in her frenzy, so you control the fight.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Pantheon:Briar:2",
+          "text": "Poke with Comet Spear from long range while she is on cooldown. Hold it to throw it further.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Pantheon:Briar:3",
+          "text": "Finish Briar with a thrown Comet Spear when she is low; it hits much harder on weak targets, even after she heals.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Pantheon:Briar:4",
+          "text": "Watch for her Certain Death at level 6. Grand Starfall makes you immune to crowd control while you fly, so you can use it to escape her.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-R", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bc51b043b68c4de9661e7ffc56efa62d7ad10989a469c85579d8bf7b60f44f31",
+      "tips": [
+        {
+          "id": "top:Pantheon:Darius:0",
+          "text": "Jump on Darius with Shield Vault to stun him, then step out of his reach. Don't stay in melee range, where his Hemorrhage stacks quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 111,
+              "end": 121
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Pantheon:Darius:1",
+          "text": "Poke Darius with Comet Spear while he walks up. Hold it for long range and thrust it when he is close.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Pantheon:Darius:2",
+          "text": "Face Darius with Aegis Assault when he commits. You take no damage from the front, so his Decimate and attacks from that side do nothing.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Darius-Q", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Pantheon:Darius:3",
+          "text": "Stay out of the cone when Darius uses Apprehend. It pulls you in and leaves you slowed, so keep Aegis Assault ready as your answer.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Darius-E", "start": 38, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 96, "end": 109 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Pantheon:Darius:4",
+          "text": "Keep your health up. Noxian Guillotine deals more damage the more Hemorrhage stacks you carry, so don't trade for long.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 21, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 66,
+              "end": 76
+            }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "73b6147a1a7ded6d1014c28ae7fec24581eeb540d02dd4c4ce01d0be28c6b41d",
+      "tips": [
+        {
+          "id": "top:Pantheon:Fiora:0",
+          "text": "Wait for Fiora to use Riposte, then stun her with Shield Vault; it is a long wait for her to have it again.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Fiora-W", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Pantheon:Fiora:1",
+          "text": "Do not jump on Fiora with Shield Vault while Riposte is ready; she can parry it and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Fiora-W", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Pantheon:Fiora:2",
+          "text": "Poke with Comet Spear from long range while she walks up; hold it to throw it farther.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Pantheon:Fiora:3",
+          "text": "Face Fiora with Aegis Assault when she lunges in; her attacks from the front cannot hurt you while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Pantheon:Fiora:4",
+          "text": "Finish Fiora with a thrown Comet Spear once she is low on health; it hits much harder then.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6fb85e70fc8080e1f3b1d83a9215957f29b4c6e0d35384b3612c9d7b7fc22698",
+      "tips": [
+        {
+          "id": "top:Pantheon:Gangplank:0",
+          "text": "Jump on Gangplank with Shield Vault when he has used Remove Scurvy; otherwise he can clear your stun.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 23, "end": 35 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 53, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Pantheon:Gangplank:1",
+          "text": "Stay out of range of Gangplank's kegs; Parrrley can set them off and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 21, "end": 30 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Pantheon:Gangplank:2",
+          "text": "Use Aegis Assault facing Gangplank when he shoots a keg; you take no damage from that side.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Pantheon:Gangplank:3",
+          "text": "Finish Gangplank with a held Comet Spear when he is low on health; it deals much more damage then.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 7, "end": 16 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Pantheon:Gangplank:4",
+          "text": "Watch low-health Gangplank when you reach level 6; Grand Starfall can reach him from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Pantheon:Gangplank:5",
+          "text": "Leave Cannon Barrage's area at once; it slows you and hits many times.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c3d24e781d01490fc19d8c2d428821441c35ee284d0d3cd752234f2bb022127e",
+      "tips": [
+        {
+          "id": "top:Pantheon:Garen:0",
+          "text": "Use Shield Vault to stun Garen when he steps up to last-hit, then trade with your Comet Spear while he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Garen", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 82, "end": 93 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Pantheon:Garen:1",
+          "text": "Hold Comet Spear to throw it from long range and poke Garen. Tap it up close for a quick trade with a short cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Garen", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Pantheon:Garen:2",
+          "text": "Do not stand in Judgment for long. Hit him and step out, or use Aegis Assault to block his front while you hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Pantheon:Garen:3",
+          "text": "Garen's Decisive Strike silences you on his next attack. Keep your distance when it is ready, so you can still cast your spells.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Pantheon:Garen:4",
+          "text": "Keep hitting Garen so Perseverance cannot heal him. Spear pokes and trades keep him from regenerating.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 22,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Pantheon:Garen:5",
+          "text": "Throw Comet Spear to finish Garen when he is low. Stay away from him when you are low, since Demacian Justice finishes you.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Garen", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Garen-R", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "13a4bdb471231afd920bb6db18af8f74c61bc91e72c46040b91eabf738e34fb9",
+      "tips": [
+        {
+          "id": "top:Pantheon:Jayce:0",
+          "text": "Use Aegis Assault facing Jayce when he commits with Thundering Blow or Shock Blast; you take no damage from that direction while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Pantheon:Jayce:1",
+          "text": "Jump on Jayce with Shield Vault to stun him, then follow with your empowered triple hit once Mortal Will is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 93,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Pantheon:Jayce:2",
+          "text": "Hold Comet Spear to throw it from long range at Jayce when he is low; it hits much harder on weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Pantheon:Jayce:3",
+          "text": "Jayce is strong early at range, so tap Comet Spear to trade up close and get the cooldown back quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Pantheon:Jayce:4",
+          "text": "Use Grand Starfall to finish a hurt Jayce or to join a fight; it slows him and hits hard in a line.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "341de06f4d6a37180b75116dbfbc401d81f34f168bc7b6d516ff241e91d00039",
+      "tips": [
+        {
+          "id": "top:Pantheon:KSante:0",
+          "text": "Walk up with a short Comet Spear tap to poke him, since a tap costs little and brings the cooldown back quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 21, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Pantheon:KSante:1",
+          "text": "Jump on him with Shield Vault when his Ntofo Strikes is on cooldown, so you can stun him without being pulled in.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "KSante-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Pantheon:KSante:2",
+          "text": "Use Aegis Assault facing him when he dashes in with Path Maker or Ntofo Strikes, since you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "KSante-W", "start": 52, "end": 62 },
+            { "kind": "ability", "key": "KSante-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Pantheon:KSante:3",
+          "text": "When he goes All Out he is much squishier, so fight him then and finish him with Comet Spear.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20ee89a8fd0c10679587d56acc7841d94e45cdf33d801d2e46556c359978d2ec",
+      "tips": [
+        {
+          "id": "top:Pantheon:Malphite:0",
+          "text": "Stay out of Malphite's range when Ground Slam is ready; it cuts your Attack Speed and hurts your trades.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malphite-E", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Pantheon:Malphite:1",
+          "text": "Poke him with Comet Spear while he walks up to last-hit; tapping it refunds much of its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Pantheon:Malphite:2",
+          "text": "Jump on Malphite with Shield Vault only when his Granite Shield is already broken; the stun then gives you a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 22, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 49,
+              "end": 63
+            },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Pantheon:Malphite:3",
+          "text": "Stay spread out from your team and watch for Unstoppable Force at level 6; it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 45, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Pantheon:Malphite:4",
+          "text": "Brace with Aegis Assault when Malphite dives in; he cannot hurt you from the front while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Malphite", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "29ecbcc79215158fbb930c0653b35a3c071fa308869a88ae7f398ffae6cbc62b",
+      "tips": [
+        {
+          "id": "top:Pantheon:Mordekaiser:0",
+          "text": "Hold Aegis Assault facing him when he casts Obliterate or Death's Grasp; you take nothing from the front and hit him while he swings.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 44,
+              "end": 54
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 58,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Pantheon:Mordekaiser:1",
+          "text": "Stun him with Shield Vault when he walks up to trade, then follow with your Mortal Will empowered attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 14, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 76,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Pantheon:Mordekaiser:2",
+          "text": "Poke with Comet Spear from long range early, before Mordekaiser has built up a big Indestructible shield.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 10, "end": 21 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 52,
+              "end": 63
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 83,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Pantheon:Mordekaiser:3",
+          "text": "Don't stay next to him once his aura is on. Darkness Rise hurts a lot over time, so trade and step away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 44,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Pantheon:Mordekaiser:4",
+          "text": "Finish him with a thrown Comet Spear when he is low; it hits much harder on weak enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f2dd8da6e66e0cdf8965337270f5c70d452962250ee3dd076bbcbc726738385e",
+      "tips": [
+        {
+          "id": "top:Pantheon:Rumble:0",
+          "text": "Jump on Rumble with Shield Vault when he has overheated; he can't cast spells then.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Pantheon:Rumble:1",
+          "text": "Use Aegis Assault facing Rumble when he fires Flamespitter; the front blocks his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Pantheon:Rumble:2",
+          "text": "Don't stay in the fire of The Equalizer. Move out of it, since it burns and slows.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 26, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Pantheon:Rumble:3",
+          "text": "Rumble deals magic damage, so Aegis Assault's bonus Magic Resist from Mortal Will helps in a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 30, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 70,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Pantheon:Rumble:4",
+          "text": "Poke Rumble with Comet Spear and finish him with the hurled spear once he is low.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "23f3c12bb0498dea5aa6657cac23a7ca47914fa3b82487a7851760cff0c9328a",
+      "tips": [
+        {
+          "id": "top:Pantheon:Sion:0",
+          "text": "Stay out of Sion's charge line when he starts Decimating Smash; sidestep it, since a full charge stuns you for a long time.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 46, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Pantheon:Sion:1",
+          "text": "Jump on Sion with Shield Vault to stun him as he starts charging Decimating Smash; this interrupts the big hit.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Sion-Q", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Pantheon:Sion:2",
+          "text": "Poke Sion with Comet Spear while he is far away; hold it for range, and tap it up close for a quick cooldown refund.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Pantheon:Sion:3",
+          "text": "Back off when Sion's Soul Furnace shield is up; hitting it wastes your trade, and he can blast you when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Sion-W", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Pantheon:Sion:4",
+          "text": "Do not leave Sion nearly dead; Glory in Death brings him back with fast, healing attacks. Back away and wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fdf578cd348c624fb98889a0f28ab154ff69332a1a11d66811f3b8f6a802bd79",
+      "tips": [
+        {
+          "id": "top:Pantheon:Teemo:0",
+          "text": "Don't walk up to Teemo carelessly; Blinding Dart will make your attacks miss. Wait for it to go on cooldown before trading.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Pantheon:Teemo:1",
+          "text": "Use Shield Vault to reach Teemo and stun him, then finish the trade fast before his poison builds up.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Pantheon:Teemo:2",
+          "text": "Watch the bushes: Teemo can be invisible there. Don't step onto unseen ground where his Noxious Trap may be waiting.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Teemo-R", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Pantheon:Teemo:3",
+          "text": "Hold Comet Spear to throw it from long range, and use it when Teemo is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Teemo", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Pantheon:Teemo:4",
+          "text": "Avoid retreating after you get hit. Toxic Shot punishes backing out, so commit to the fight or stay out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "65ea62a2261774a569cfe2a67f5ebd1ef1babd7c8f90f11f3ba005399e86fdf6",
+      "tips": [
+        {
+          "id": "top:Pantheon:Vayne:0",
+          "text": "Avoid fighting with a wall behind you. Condemn knocks you into it for a stun and heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Pantheon:Vayne:1",
+          "text": "Jump on Vayne with Shield Vault to stun her and shut down her Tumble. She is fragile, so keep the pressure on.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 62, "end": 68 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Pantheon:Vayne:2",
+          "text": "Use Comet Spear to poke Vayne when she walks up to last-hit. Hold it for a longer throw.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Pantheon:Vayne:3",
+          "text": "Do not trade with Vayne for long stretches. Her third hit or ability on you deals extra true damage with Silver Bolts, so hit and step back.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Vayne-W", "start": 105, "end": 117 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Pantheon:Vayne:4",
+          "text": "Use Aegis Assault facing Vayne to block her attacks while you walk up to her.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Pantheon:Vayne:5",
+          "text": "Use Grand Starfall to finish off a Vayne who has gone low or fled the lane. Her Final Hour makes her harder to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Vayne-R", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9f4814aca43895ec457fdcf6195cb0ccb8540faf04124cc9bee38a93a0bd1ba3",
+      "tips": [
+        {
+          "id": "top:Pantheon:Yone:0",
+          "text": "Stun Yone with Shield Vault when he steps up to trade, then follow with your Mortal Will empowered attack.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 15, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 77,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Pantheon:Yone:1",
+          "text": "Use Aegis Assault when Yone commits, and face him. You take no damage from his non-tower hits coming from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Pantheon:Yone:2",
+          "text": "Hold Comet Spear for a longer throw to poke Yone from a distance. Hit him first, and finish him when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Yone", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Pantheon:Yone:3",
+          "text": "Yone's Soul Unbound sends him back to his body after he trades, so fight him when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Pantheon:Yone:4",
+          "text": "Look for kills with Grand Starfall. It slows enemies on landing, so use it on a Yone who is already low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 20, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Yone", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b7d11c78d164ba19cb14279083973cd033054e34c65c16d0c05ded7930d5c325",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Graves:0",
+          "text": "Jump on Graves with Shield Vault when he has spent his shells; he has to reload and can't fight back well, so the stun gets you a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Pantheon:Graves:1",
+          "text": "Hold Comet Spear and throw it when Graves is low on health; it hits much harder against weakened enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Graves", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Pantheon:Graves:2",
+          "text": "Use Aegis Assault facing Graves when he shoots; you take no damage from his front, so his shotgun pellets can't hurt you.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Pantheon:Graves:3",
+          "text": "Land Shield Vault first when you want to fight; Graves is stunned and can't use Quickdraw to dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 },
+            { "kind": "ability", "key": "Graves-E", "start": 80, "end": 89 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Pantheon:Graves:4",
+          "text": "Use Grand Starfall to join a fight or chase Graves from far away; the spear slows him when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1cb94beb5b29b501fca7e005872be3c6bf73dc18ed2f5a3b831dfdbac98d87f2",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his flag to avoid being knocked up.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Pantheon:JarvanIV:1",
+          "text": "Brace with Aegis Assault facing Jarvan when he dives, because it blocks damage from the front.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Pantheon:JarvanIV:2",
+          "text": "Stun Jarvan with Shield Vault right after he spends Dragon Strike, when he has little to escape with.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Pantheon:JarvanIV:3",
+          "text": "Finish a low-health Jarvan with a held Comet Spear; it hits much harder on weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Pantheon:JarvanIV:4",
+          "text": "Do not trade inside a Cataclysm arena. Fight outside it or wait for the walls to drop.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1f9fe227e4a11d2491c7e3c399f495fd4f6434a542a3dc22f0d37dbee308162b",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Kayn:0",
+          "text": "Hold Comet Spear and hurl it at Kayn when he is low on health; it hits much harder against weakened enemies and can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kayn", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Pantheon:Kayn:1",
+          "text": "Stun Kayn with Shield Vault when he commits, then follow up with your empowered attack.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Pantheon:Kayn:2",
+          "text": "Face Kayn with Aegis Assault when he dives in; you take no damage from the front while it channels, so turn it toward him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Pantheon:Kayn:3",
+          "text": "Use Grand Starfall to reach a fight or an escaping Kayn across the map; the spear slows enemies where it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a02a475be90c7d7ae91d448f5a59d0ccb3d02e63d4ecfd11da02a704aaddb129",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Khazix:0",
+          "text": "Stay near allied minions or champions when Kha'Zix is around; his Taste Their Fear hits far harder on an enemy who is isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 66, "end": 82 },
+            { "kind": "keyword", "key": "isolated", "start": 118, "end": 126 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Pantheon:Khazix:1",
+          "text": "Use Shield Vault on Kha'Zix when he jumps in; he is stunned and cannot answer right away.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Pantheon:Khazix:2",
+          "text": "Face Kha'Zix with Aegis Assault when he dives. Damage from the front is blocked, so he wastes his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Pantheon:Khazix:3",
+          "text": "Hold Comet Spear to throw it when Kha'Zix is low on health; it hits much harder on weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Pantheon:Khazix:4",
+          "text": "Look for a fight when Kha'Zix has used Leap and Void Assault; he has little way to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Khazix-E", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Khazix-R", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "db4241a55bd810677a3a62142f19ccb3429a41c2ae4773df873da15d6c0d2973",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Kindred:0",
+          "text": "Hunt Kindred early with Shield Vault; she is fragile, and the stun keeps her from kiting away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 24, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Pantheon:Kindred:1",
+          "text": "Hold Aegis Assault facing Kindred when she is about to hit you; you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kindred", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Pantheon:Kindred:2",
+          "text": "Hurl Comet Spear when Kindred is low on health; it deals much more damage to weakened enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kindred", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Pantheon:Kindred:3",
+          "text": "Do not dive into Lamb's Respite expecting a kill; no one inside can die. Back off and return once it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Pantheon:Kindred:4",
+          "text": "Use Grand Starfall to catch Kindred in a fight or chase; it slows those it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kindred", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "13ae77b646bda60a973d3b54ec1b0b637c20ce0a4043acfb52ea1881ae275ec2",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:LeeSin:0",
+          "text": "Stay out of Lee Sin's Sonic Wave line and keep your distance. If it lands, he can dash onto you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Pantheon:LeeSin:1",
+          "text": "Use Shield Vault on Lee Sin when he dashes in, to stun him and stop his chain.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Pantheon:LeeSin:2",
+          "text": "Hold Aegis Assault toward Lee Sin when he commits. Facing him blocks his damage from the front.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Pantheon:LeeSin:3",
+          "text": "Stay spread out from your team, so Dragon's Rage can't knock Lee Sin's target into others.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 35, "end": 48 },
+            { "kind": "champion", "key": "LeeSin", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Pantheon:LeeSin:4",
+          "text": "Hit Lee Sin with magic damage like Grand Starfall. He has tools against physical damage.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6b4154244096438cd727b57ade47a1db6b2bec349d2bb0dd999839c2ca3c2a94",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:MasterYi:0",
+          "text": "Stun Master Yi with Shield Vault when he commits, then fight him while he is held.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Pantheon:MasterYi:1",
+          "text": "Hold Aegis Assault facing Master Yi so his basic attacks from the front do nothing to you. Face him as he runs in.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Pantheon:MasterYi:2",
+          "text": "Don't rely on Grand Starfall's slow when Master Yi has Highlander active; he ignores slows then. Use Shield Vault to stop him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "MasterYi", "start": 41, "end": 50 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 55, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Pantheon:MasterYi:3",
+          "text": "Hurl Comet Spear at Master Yi when he is low on health, such as after Meditate fails to heal enough, to finish him off.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "MasterYi", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ed51b07b7a6daea4d9b367bacbbd122ce0bf463a3cc13fb8c7f8bdd84ab82baf",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Naafiri:0",
+          "text": "Use Aegis Assault to face Naafiri when she dives in; her hits from the front do nothing while you brace, so turn it toward her and wait.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Pantheon:Naafiri:1",
+          "text": "Jump on Naafiri with Shield Vault when she commits, so she is stunned and cannot chain her spells.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Pantheon:Naafiri:2",
+          "text": "Finish her with a held Comet Spear once she is low on health; it hits much harder then.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Pantheon:Naafiri:3",
+          "text": "Do not use Shield Vault while she is untargetable from The Call of the Pack; wait until she is visible again.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 55, "end": 75 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5e85adf08c5f3a52b429256941c216504393c233a749d03df58b9bc5523264f1",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Nocturne:0",
+          "text": "Hold Shield Vault until Nocturne has used Shroud of Darkness, or the stun is blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nocturne", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Pantheon:Nocturne:1",
+          "text": "Face Nocturne with Aegis Assault when he dashes in with Paranoia; you take no damage from that direction while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Pantheon:Nocturne:2",
+          "text": "Walk out of range when Nocturne casts Unspeakable Horror so the tether breaks and you are not feared.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Pantheon:Nocturne:3",
+          "text": "Poke with Comet Spear from range; it can finish Nocturne when he is low.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Nocturne", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Pantheon:Nocturne:4",
+          "text": "Avoid fighting on his Duskbringer trail; he moves faster and hits harder there.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac2eb869f0b48b8d873ecce718d3889a52dbbc0efd57fc0f1aa1bd7ff20b8a0c",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Shyvana:0",
+          "text": "Hold Comet Spear and hurl it when Shyvana is low on health; it hits much harder against weakened enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Pantheon:Shyvana:1",
+          "text": "Jump on Shyvana with Shield Vault to stun her before she can start attacking, then keep hitting her.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Pantheon:Shyvana:2",
+          "text": "Face Shyvana and use Aegis Assault when she attacks; you take no damage from the front while it channels.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Pantheon:Shyvana:3",
+          "text": "Keep your distance and poke with Comet Spear while her Dragon Fury is low; she is weak when she cannot hit you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Pantheon:Shyvana:4",
+          "text": "Use Grand Starfall to catch her off guard from far away; it slows her and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3033e6789e3dc86bd90ca419c4035a50661894274988b72fe5d3bee6db1a8573",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Skarner:0",
+          "text": "Stun Skarner with Shield Vault when he charges in with Ixtal's Impact; a stun stops the charge.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Skarner-E", "start": 55, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Pantheon:Skarner:1",
+          "text": "Stay away from walls when Skarner grabs you; hitting one stuns you and deals damage.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Pantheon:Skarner:2",
+          "text": "Do not fight him for long; his attacks stack Quaking and the damage adds up.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Pantheon:Skarner:3",
+          "text": "Dodge Impale sideways or with Flash; it hits only a line in front of him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 6, "end": 12 },
+            { "kind": "summoner-spell", "key": "4", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Pantheon:Skarner:4",
+          "text": "Throw Comet Spear at Skarner once he is low on health, as it hits harder on weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Skarner", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "89178d1fcaaacdb95c87278a21640009499e7ce0f62528e76f7aef608d36514b",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Sylas:0",
+          "text": "Hold Comet Spear and hurl it when Sylas is low; it hits much harder on weak targets and finishes him from range.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Pantheon:Sylas:1",
+          "text": "Jump on Sylas with Shield Vault to stun him before he can chain you, then follow up with your empowered triple strike.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Pantheon:Sylas:2",
+          "text": "Face Sylas when you use Aegis Assault; you take no damage from that direction, so his chains and bursts from the front can't hurt you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Pantheon:Sylas:3",
+          "text": "Sylas can copy Grand Starfall, so use it only when it wins a fight, and don't throw it at him when he can steal it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7b4b33ceb73c82d0e54c6f63d2c2ba50dc5ed40e28179e7481b3aa9377bc370c",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Talon:0",
+          "text": "Stay alert when Talon vanishes with Shadow Assault; he can reappear on you. Stand near allies and keep Shield Vault ready to stun him when he shows up.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Talon-R", "start": 36, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-W",
+              "start": 103,
+              "end": 115
+            },
+            { "kind": "keyword", "key": "stunned", "start": 125, "end": 129 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Pantheon:Talon:1",
+          "text": "Face Talon and use Aegis Assault when he dives in. You take no damage from the front, so his burst lands on the shield.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Pantheon:Talon:2",
+          "text": "Do not hold Aegis Assault against Talon's Noxian Diplomacy from behind. Talon can leap over terrain and strike from a side you are not facing.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Talon", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Talon-Q", "start": 42, "end": 58 },
+            { "kind": "champion", "key": "Talon", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Pantheon:Talon:3",
+          "text": "Pick off a weakened Talon with a held Comet Spear; it hits much harder against low-health enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Pantheon:Talon:4",
+          "text": "Use Grand Starfall to chase Talon down once his escape is spent; the spear slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4b4cced1973b3132e174b720cbb2f79e4f172df435a67dc0a3115bd715833d81",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:Viego:0",
+          "text": "Hold Comet Spear to hurl it when Viego is low on Health; it hits much harder against weak enemies and can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Pantheon:Viego:1",
+          "text": "Stun Viego with Shield Vault before he can start a fight on his terms, then follow up with your empowered attack.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Pantheon:Viego:2",
+          "text": "Face Viego when you use Aegis Assault; you take no damage from his side while you brace, so wait out his burst behind it.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Pantheon:Viego:3",
+          "text": "Use Grand Starfall to reach a fight across the map, and land the spear to slow Viego so he cannot run.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 },
+            { "kind": "champion", "key": "Viego", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Pantheon:Viego:4",
+          "text": "Kill Viego cleanly; a dead enemy near him can become a wraith he uses to heal and take their powers, so don't leave a fallen ally exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f0e90da6837bc732ca65735880a11c1c35501ac5441a7f3a7e773647132b3176",
+      "tips": [
+        {
+          "id": "jungle:Pantheon:XinZhao:0",
+          "text": "Stay away from Xin Zhao's third Three Talon Strike, which knocks you up. Back off or stun him first with Shield Vault.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 32, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 105, "end": 117 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Pantheon:XinZhao:1",
+          "text": "Face Xin Zhao with Aegis Assault when he dives in. You take no damage from the front while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Pantheon:XinZhao:2",
+          "text": "Hold Comet Spear and finish Xin Zhao with the throw once he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Pantheon:XinZhao:3",
+          "text": "Step out of the area when you see Grand Starfall coming; the warning gives you time. Avoid clumping up with allies until Xin Zhao has used Crescent Guard.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 34, "end": 48 },
+            { "kind": "champion", "key": "XinZhao", "start": 121, "end": 129 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 139, "end": 153 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Pantheon:XinZhao:4",
+          "text": "Move away from Wind Becomes Lightning's long thrust; it slows you and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 15, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0aa14bcf83031bc6f5375877fb04bd106f68571329ba20f86329eb46ca9456f6",
+      "tips": [
+        {
+          "id": "support:Pantheon:Alistar:0",
+          "text": "Keep your distance from Alistar when Pulverize and Headbutt are both ready; the combo can lock you down, especially near turrets.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "Alistar-W", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Alistar:1",
+          "text": "Throw Comet Spear from long range to wear Alistar down before you jump in. He is tough, so aim for his carry instead.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Alistar", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Pantheon:Alistar:2",
+          "text": "Face Alistar with Aegis Assault when he commits his combo; it blocks his damage from the front.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Pantheon:Alistar:3",
+          "text": "Do not hit Alistar while Unbreakable Will is active. Back off and wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Alistar-R", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Pantheon:Alistar:4",
+          "text": "Use Shield Vault on the enemy carry instead of Alistar. Alistar is too tough to kill, and the stun leaves their carry open.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Alistar", "start": 47, "end": 54 },
+            { "kind": "champion", "key": "Alistar", "start": 56, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d11ba636c0faf088cc1e1220fd18376e783431a0a6c0f2f97861c4d2ba356e86",
+      "tips": [
+        {
+          "id": "support:Pantheon:Anivia:0",
+          "text": "Dodge Flash Frost by staying out of its line, and never stand at the end of its range, where it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Pantheon:Anivia:1",
+          "text": "Jump in with Shield Vault when Flash Frost is on cooldown; Anivia has little to stop you then.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 31, "end": 42 },
+            { "kind": "champion", "key": "Anivia", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Pantheon:Anivia:2",
+          "text": "Check where Crystallize stands before you leap; the wall blocks your way and can push you aside.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pantheon:Anivia:3",
+          "text": "Stand in Aegis Assault facing Anivia to ignore her spells coming from that side, then slam her.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Anivia", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Pantheon:Anivia:4",
+          "text": "Hold Comet Spear to finish Anivia once she is low on health; she is weak in the early game.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Pantheon:Anivia:5",
+          "text": "Anivia returns as an egg when she dies, so kill the egg too; gank with a teammate to make sure of it.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5ff5139b6952c17affab8566774615d239a92b46e28f55b27a06f41115765bd5",
+      "tips": [
+        {
+          "id": "support:Pantheon:Bard:0",
+          "text": "Hold Comet Spear and release it at a long range to poke Bard when he walks up for chimes. Tap it up close for a quick thrust with a short cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 51, "end": 55 },
+            { "kind": "champion", "key": "Bard", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Pantheon:Bard:1",
+          "text": "Jump on Bard with Shield Vault right after he misses Cosmic Binding. He can't easily fight back while you have him stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Bard-Q", "start": 53, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Pantheon:Bard:2",
+          "text": "Face Bard and use Aegis Assault when Cosmic Binding is coming at you. You take no damage from that direction while you channel.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Bard-Q", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pantheon:Bard:3",
+          "text": "Walk over Bard's Caretaker's Shrines to destroy them. His team then loses the healing and the speed boost.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pantheon:Bard:4",
+          "text": "Don't stand beside a wall when Bard has Cosmic Binding ready. Hitting terrain stuns you, so stay away from walls.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Bard-Q", "start": 40, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Pantheon:Bard:5",
+          "text": "Look for the stasis circle from Tempered Fate and don't jump into it. Use Grand Starfall after it ends, when the enemy has lost their escape.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "45dc725a11c01e4bb2fd0b882db6fcbb785c8ea71d8c752c8e5c9719c457249a",
+      "tips": [
+        {
+          "id": "support:Pantheon:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits one of them first and not you.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pantheon:Blitzcrank:1",
+          "text": "Hold Comet Spear to hit Blitzcrank from long range when he is low on health; it hurts much more against low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Pantheon:Blitzcrank:2",
+          "text": "Use Shield Vault to stun Blitzcrank when he is out of position, then follow up with your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pantheon:Blitzcrank:3",
+          "text": "Face Blitzcrank with Aegis Assault when he throws a grab; the shield blocks damage from that direction.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Pantheon:Blitzcrank:4",
+          "text": "Do not fight Blitzcrank at level 6 if his Static Field is ready; it silences you for a moment and breaks your shield.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 13, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 42,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c3aae649b9c71438803018bdbcbfc4b618557b4f42af7ebcf99bb6e452d788f5",
+      "tips": [
+        {
+          "id": "support:Pantheon:Brand:0",
+          "text": "Dodge Brand's first Sear or Pillar of Flame. He needs one spell to land before his combo can start.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Brand-W", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Pantheon:Brand:1",
+          "text": "Brace Aegis Assault toward Brand when he casts Sear, since you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Brand-Q", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Pantheon:Brand:2",
+          "text": "Jump on Brand with Shield Vault to stun him, then hit him hard. He is fragile and has no escape of his own.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Pantheon:Brand:3",
+          "text": "Hold Comet Spear and throw it from range at Brand. It hits harder against low-health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Brand", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pantheon:Brand:4",
+          "text": "Stay away from your ally when Brand casts Pyroclasm, so it bounces to fewer targets.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Brand-R", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4a81732769f594cbb4d863d0f24c4779b2d89d3a5ae20f37e37217eba84a5e8a",
+      "tips": [
+        {
+          "id": "support:Pantheon:Braum:0",
+          "text": "Walk around Braum's Unbreakable instead of attacking into it; hits from the front do almost nothing while it is up. Wait for it to end or hit him from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Braum-E", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:Braum:1",
+          "text": "Use Aegis Assault to block the front when you walk into his Winter's Bite range; it protects you from enemies in that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Braum-Q", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Pantheon:Braum:2",
+          "text": "Do not let Braum and his ally stack Concussive Blows on you; leave before the fourth hit lands and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 36,
+              "end": 52
+            },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Pantheon:Braum:3",
+          "text": "Jump on the enemy carry with Shield Vault, not on Braum. The stun lets your lane partner follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 29, "end": 41 },
+            { "kind": "champion", "key": "Braum", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Pantheon:Braum:4",
+          "text": "Hold Comet Spear to hurl it at long range and finish low health enemies. Braum's Winter's Bite can stop your approach, so stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Braum", "start": 73, "end": 78 },
+            { "kind": "ability", "key": "Braum-Q", "start": 81, "end": 94 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Pantheon:Braum:5",
+          "text": "Dodge Glacial Fissure during its long cast and avoid walking on the ice, which slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7ce13a1d88393c04163af2464efecb2e0589cf419b879d1007c5915f16d9da61",
+      "tips": [
+        {
+          "id": "support:Pantheon:Camille:0",
+          "text": "Hold Comet Spear to throw it from long range, and use it to finish Camille when she is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Camille", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Pantheon:Camille:1",
+          "text": "Stand in front of Camille and hold Aegis Assault when she dives in with Hookshot. She cannot hurt you from the front, and you hit her while you wait.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Camille-E", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pantheon:Camille:2",
+          "text": "Jump on Camille with Shield Vault to stun her, then follow with your empowered attack for a strong trade.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pantheon:Camille:3",
+          "text": "Camille's Tactical Sweep slows and heals her only on the outer half of the cone. Stay out of its edge, or step in close so you avoid the slow.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-W", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 137, "end": 141 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Pantheon:Camille:4",
+          "text": "Watch for Camille's Hextech Ultimatum on your partner. Once it lands, stay out of the zone unless you can win the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 10, "end": 17 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f678cb8bc3a3c894df55c6984654286e43842720ab1277683f0a8a9c94da8b3c",
+      "tips": [
+        {
+          "id": "support:Pantheon:Janna:0",
+          "text": "Save Shield Vault for when Janna uses her shield or has no Howling Gale ready; she is easy to stun and burst.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Janna", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Janna-Q", "start": 59, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Pantheon:Janna:1",
+          "text": "Janna's Monsoon knocks you back and shuts down a dive. Hold your jump until it is used.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Janna-R", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Janna:2",
+          "text": "Listen for Howling Gale charging from brush or off screen; step aside so it cannot knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Pantheon:Janna:3",
+          "text": "Poke Janna's partner with Comet Spear; she is weakest when she cannot buff them.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Janna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7c5bee71521b6962d65656ea73a34fb54226a21b2b018a3c5971ee02b96b1e8",
+      "tips": [
+        {
+          "id": "support:Pantheon:Karma:0",
+          "text": "Stay out of Karma's Inner Flame line; minions in front of you will stop it. Every hit she lands makes Mantra come back sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Karma-Q", "start": 20, "end": 31 },
+            { "kind": "ability", "key": "Karma-R", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Pantheon:Karma:1",
+          "text": "Jump in with Shield Vault to stun her when her Focused Resolve is on cooldown. She has little else to stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Karma-W", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Pantheon:Karma:2",
+          "text": "Break Focused Resolve by moving out of its reach, or use Aegis Assault to push on. Otherwise you get rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 57, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Pantheon:Karma:3",
+          "text": "Hold Comet Spear and throw it at a low-health Karma; it hits much harder against weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Karma", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c9f79883c7a35ce06a4c3a82a6b2f4342e2cd182e1ecd0cefb5382d9e9c14b71",
+      "tips": [
+        {
+          "id": "support:Pantheon:Leona:0",
+          "text": "Brace Aegis Assault toward Leona when she runs in; you ignore her damage from that direction while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Leona", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Pantheon:Leona:1",
+          "text": "Hold Comet Spear back and throw it from long range at Leona when she walks up; it keeps going through a minion line to hit others too.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Pantheon:Leona:2",
+          "text": "Stay out of Zenith Blade range, because it roots you and pulls Leona in for her stun. Step out of its line when you see her start the cast.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 48 },
+            { "kind": "champion", "key": "Leona", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Pantheon:Leona:3",
+          "text": "When Leona raises Eclipse, back off instead of trading; she takes less damage and keeps the bonus longer if her shield hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Pantheon:Leona:4",
+          "text": "Move out of the center of Solar Flare; only the middle stuns you, and the edge only slows.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pantheon:Leona:5",
+          "text": "Jump on the enemy carry with Shield Vault when Leona has used her stun; the stun lets you follow up with Comet Spear.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 29, "end": 41 },
+            { "kind": "champion", "key": "Leona", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "38d6b41b3810c730bea3212e2077c53f471ee9903a7d1477e041ade05179d9df",
+      "tips": [
+        {
+          "id": "support:Pantheon:Lulu:0",
+          "text": "Jump on Lulu with Shield Vault when she is out of position; the stun gives you a second to burst her down.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Pantheon:Lulu:1",
+          "text": "Stay out of her line of fire; Glitterlance leaves you slowed, so dodge it before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:Lulu:2",
+          "text": "Poke with Comet Spear and hold it for longer range. Lulu has low health early, so the damage adds up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Lulu", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Pantheon:Lulu:3",
+          "text": "Face Lulu with Aegis Assault when she tries to trade. You take no damage from the front while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pantheon:Lulu:4",
+          "text": "Keep Shield Vault ready for a dive. Lulu's Whimsy can turn you into a critter, so jump when she has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Lulu-W", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b862a53c4ceb3f6c34392c37da5a645e9dfaad5421543f84211474bd3c8d3eb5",
+      "tips": [
+        {
+          "id": "support:Pantheon:Lux:0",
+          "text": "Stay out of Light Binding's line, ideally behind a minion, because it roots only the first two enemies it hits and it is slow to fly.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Pantheon:Lux:1",
+          "text": "Jump on Lux with Shield Vault when her Light Binding is on cooldown. The stun keeps her from fighting back and she has few ways out.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 8, "end": 11 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Lux-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Pantheon:Lux:2",
+          "text": "Hold Comet Spear for long-range poke, and release it quickly for a short thrust that gives back much of its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Pantheon:Lux:3",
+          "text": "Use Aegis Assault to block her Final Spark when it comes from the front, then face her so the beam hits your shield.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Lux-R", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Pantheon:Lux:4",
+          "text": "Finish a weakened Lux with a hurled Comet Spear, because it hits much harder against low health.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Pantheon:Lux:5",
+          "text": "Step out of Lucent Singularity's zone instead of staying in it, since it slows you and then bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cac791fccf331b8ed79054a233f4cce5ecc73290157f3530882198eb8665510a",
+      "tips": [
+        {
+          "id": "support:Pantheon:Maokai:0",
+          "text": "Jump on Maokai with Shield Vault only when you are ready to fight. His Twisted Advance can root you when you are out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Maokai-W", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Pantheon:Maokai:1",
+          "text": "Hit Maokai with few spells. Each one you land or he casts shortens the cooldown on his Sap Magic heal.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 87,
+              "end": 96
+            }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Pantheon:Maokai:2",
+          "text": "Stay out of brush where Maokai may have left a Sapling Toss. Brush saplings hit harder and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Maokai-E", "start": 47, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Pantheon:Maokai:3",
+          "text": "Look for a Comet Spear finish when Maokai is low on health. Hold the charge to throw it from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Maokai", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Pantheon:Maokai:4",
+          "text": "Aim Grand Starfall away from Nature's Grasp. Plan your landing so it cannot catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Maokai-R", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9814234005998e70a9c52d6383a7f064feea4b2d33077d31417bf85193177378",
+      "tips": [
+        {
+          "id": "support:Pantheon:Mel:0",
+          "text": "Use Aegis Assault when Mel's Solar Snare or Radiant Barrage is coming from the front; it blocks damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Mel", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Mel-E", "start": 29, "end": 40 },
+            { "kind": "ability", "key": "Mel-Q", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Pantheon:Mel:1",
+          "text": "Wait for Mel to spend Rebuttal before you throw Comet Spear. Her nova destroys projectiles that hit it.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Pantheon:Mel:2",
+          "text": "Jump on Mel with Shield Vault right after she uses Solar Snare. She is then easy to stun and burst.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 8, "end": 11 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Mel-E", "start": 51, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Pantheon:Mel:3",
+          "text": "Back off when you are low. Mel's Overwhelm stacks will kill you with her next hit or Golden Eclipse.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Mel-R", "start": 85, "end": 99 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Pantheon:Mel:4",
+          "text": "Finish Mel with a thrown Comet Spear once she is low; it hits much harder on weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pantheon:Mel:5",
+          "text": "Look for roams with Grand Starfall once Mel has used her spells; the warning gives her time, so aim where she must stand.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 20, "end": 34 },
+            { "kind": "champion", "key": "Mel", "start": 40, "end": 43 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d757fd46d812e3fd92345defcb660b338c285cbf1e21596e14dbb160485c8c1f",
+      "tips": [
+        {
+          "id": "support:Pantheon:Milio:0",
+          "text": "Jump on Milio with Shield Vault when his Ultra Mega Fire Kick is on cooldown; the stun gives you a free few seconds on him.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Milio-Q", "start": 41, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Pantheon:Milio:1",
+          "text": "Catch Milio when he is away from his allies, since he moves worse alone. Go in when his partner is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "isolated", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Pantheon:Milio:2",
+          "text": "Sidestep the fireball from Ultra Mega Fire Kick; it hits the first enemy in its path, so keep a minion from blocking it only if you want to be shielded.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 27, "end": 47 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Pantheon:Milio:3",
+          "text": "Hold Aegis Assault facing Milio's fireball or his partner's attacks; you take no damage from the front while it channels.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Pantheon:Milio:4",
+          "text": "Hold Comet Spear to throw it from long range and poke Milio, especially once he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Milio", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ec19d0997491136b39cefeb781da6232876e05767b8d521fc5d5ffd84cdad3e6",
+      "tips": [
+        {
+          "id": "support:Pantheon:Morgana:0",
+          "text": "Stay behind minions so Morgana's Dark Binding hits them instead of you; it stops at the first enemy.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pantheon:Morgana:1",
+          "text": "Wait for Morgana to use Dark Binding before you leap in with Shield Vault.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pantheon:Morgana:2",
+          "text": "If Morgana puts Black Shield on herself or her partner, your Shield Vault stun will not work until the shield breaks.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 3, "end": 10 },
+            { "kind": "ability", "key": "Morgana-E", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Pantheon:Morgana:3",
+          "text": "Use Aegis Assault facing Morgana to walk through her damage, but leave the area when Tormented Shadow lands, because it does not care about your shield.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Morgana", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Morgana-W", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Pantheon:Morgana:4",
+          "text": "Look for Comet Spear on Morgana when she is low; it deals much more damage to low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Morgana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pantheon:Morgana:5",
+          "text": "Stay out of Soul Shackles range at level 6, or break away from her before the chains pull tight, so you avoid the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9532088758ea2ab8cdb57c5f579b813284390748ed2b8ca63276560739df0df7",
+      "tips": [
+        {
+          "id": "support:Pantheon:Nami:0",
+          "text": "Jump on Nami with Shield Vault when Aqua Prison is on cooldown; the stun keeps her from answering, and she cannot easily escape.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Nami-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Pantheon:Nami:1",
+          "text": "Hold Comet Spear to throw it from far away, and finish Nami with it once she is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Pantheon:Nami:2",
+          "text": "Use Aegis Assault facing Nami's bubble or her allies' attacks; you take no damage from that direction while it channels.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Nami", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Pantheon:Nami:3",
+          "text": "Do not fight an enemy who has Tidecaller's Blessing active; wait a few seconds for it to run out.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 30, "end": 51 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Pantheon:Nami:4",
+          "text": "Watch Tidal Wave; it is slow, so step out of its path sideways instead of walking away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7af3d2e5103a1c473f8b236c896752c68cda3c50cd5b0924255c825dc4872eea",
+      "tips": [
+        {
+          "id": "support:Pantheon:Nautilus:0",
+          "text": "Hold Aegis Assault in front of you when Nautilus aims Dredge Line at you; you are immune to damage from that direction, so he cannot hurt you head-on.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Pantheon:Nautilus:1",
+          "text": "Stay out of a straight line with Nautilus and keep minions or walls between you; Dredge Line stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Pantheon:Nautilus:2",
+          "text": "Wait out Riptide's waves before you run; leaving early walks you into the later explosions and you get slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 9, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pantheon:Nautilus:3",
+          "text": "Jump on Nautilus with Shield Vault when his Dredge Line is on cooldown. The stun lets you land your follow-up hits safely.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 44, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Pantheon:Nautilus:4",
+          "text": "Poke with a tapped Comet Spear from range. It comes back fast, so you can keep pressure on Nautilus.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 19, "end": 30 },
+            { "kind": "champion", "key": "Nautilus", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:Nautilus:5",
+          "text": "Break his Titan's Wrath shield before you stay in a long fight; while it holds, his attacks hurt everyone around the target.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-W", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Nautilus:6",
+          "text": "Use Grand Starfall at level 6 to finish a hurt Nautilus or to join a fight elsewhere. His spells cannot reach you while you are in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6551e7679b38de02623221dbe91871ca9748f8c66f6bef982e47d13593bc7943",
+      "tips": [
+        {
+          "id": "support:Pantheon:Neeko:0",
+          "text": "Jump on Neeko with Shield Vault when she has no Tangle-Barbs ready; the stun keeps her from fighting back.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Neeko-E", "start": 48, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Pantheon:Neeko:1",
+          "text": "Hold Aegis Assault facing Neeko when she throws Tangle-Barbs or Blooming Burst; you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Neeko", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Neeko-E", "start": 48, "end": 60 },
+            { "kind": "ability", "key": "Neeko-Q", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Pantheon:Neeko:2",
+          "text": "Hit Neeko with Comet Spear when she is low on health; it deals much more damage to weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pantheon:Neeko:3",
+          "text": "Be wary of a disguised Neeko; if an ally looks odd, back off, because Pop Blossom can come from nowhere.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Neeko-R", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:Neeko:4",
+          "text": "Stay out of a line with minions in front of you; Tangle-Barbs gets stronger after it hits one enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6c057324006f57af9c05e0589cac0448bd79d7a3dada665b03d4f25ccb5d9e5a",
+      "tips": [
+        {
+          "id": "support:Pantheon:Poppy:0",
+          "text": "Cast Shield Vault from outside Steadfast Presence, or wait until the field ends. Poppy can stop your dash.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Poppy-W", "start": 31, "end": 49 },
+            { "kind": "champion", "key": "Poppy", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Pantheon:Poppy:1",
+          "text": "Stay away from walls when Poppy is close. Heroic Charge stuns you if it slams you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-E", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pantheon:Poppy:2",
+          "text": "Hold Comet Spear to throw it from range. Use it to poke Poppy before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 51, "end": 55 },
+            { "kind": "champion", "key": "Poppy", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Pantheon:Poppy:3",
+          "text": "Step on Poppy's dropped buckler to destroy it and deny her the shield from Iron Ambassador.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 75,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pantheon:Poppy:4",
+          "text": "Do not stand in Poppy's line when she charges Keeper's Verdict. It can send you back toward your base.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Poppy-R", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8746959fcdedae445c47adfbdc171f0c359f581a3c2518d65db4b098952eecde",
+      "tips": [
+        {
+          "id": "support:Pantheon:Pyke:0",
+          "text": "Hit Pyke with Shield Vault when he commits; the stun gives you time to hit him with your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pantheon:Pyke:1",
+          "text": "Hold Comet Spear to throw it from far away and wear Pyke down. It hits harder against low health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Pyke:2",
+          "text": "Face Pyke with Aegis Assault when Bone Skewer or Phantom Undertow is coming. You take no damage from the front while it channels.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 34, "end": 45 },
+            { "kind": "ability", "key": "Pyke-E", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Pantheon:Pyke:3",
+          "text": "Do not chase Pyke after he vanishes. Ghostwater Dive hides him and he heals back damage you dealt.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Pyke-W", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1bb9d38193e0a775bb018e4838d5a29f55b49181ecd6be685a9b7a6c4817bca6",
+      "tips": [
+        {
+          "id": "support:Pantheon:Rakan:0",
+          "text": "Jump on Rakan with Shield Vault when he is away from his partner; it stuns him, and he is easy to catch alone.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Pantheon:Rakan:1",
+          "text": "Poke Rakan with Comet Spear before you engage; hold it for the long throw, or tap it for a quick thrust at close range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rakan", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Pantheon:Rakan:2",
+          "text": "Use Aegis Assault when Rakan's allies dive at you; you take no damage from the direction you face, so face them.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rakan", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Pantheon:Rakan:3",
+          "text": "Stay out of Grand Entrance's landing spot. Its dash shows where it is going, and it knocks you up after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "571e2b37062cc0e151b878ee45785ff6656211482e4bec2a2a4cb20a8b8f1bc7",
+      "tips": [
+        {
+          "id": "support:Pantheon:Rell:0",
+          "text": "Walk behind Rell or wait out Aegis Assault when she braces; you take no damage from the front while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Pantheon:Rell:1",
+          "text": "Stay out of Rell's Shattering Strike line. It stuns, and it also destroys your shields.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Rell-Q", "start": 19, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Pantheon:Rell:2",
+          "text": "Jump in with Shield Vault when Rell has used her stun and Ferromancy: Crash Down; the enemy is then easy to catch and stun.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Rell", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Rell-W", "start": 58, "end": 80 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Pantheon:Rell:3",
+          "text": "Hold Comet Spear to throw it from long range at low health enemies. It hits harder against them.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Pantheon:Rell:4",
+          "text": "Fight Rell in short trades. Each hit she lands makes her tougher, so don't stand in a long brawl.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Pantheon:Rell:5",
+          "text": "Move away when Rell starts Magnet Storm, or use Aegis Assault to hold position. It pulls you in and hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Rell-R", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5e7f874db647c8b0450d120a61f15491e0dd6326a977b5c65b4599896b23bbca",
+      "tips": [
+        {
+          "id": "support:Pantheon:Senna:0",
+          "text": "Jump on Senna with Shield Vault when she steps up for a Mist Wraith or a last hit; the stun lets you hit her without answer.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Pantheon:Senna:1",
+          "text": "Hold Comet Spear to throw it from long range when Senna is low on health; it hits much harder on weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Pantheon:Senna:2",
+          "text": "Stay out of Last Embrace's line; if you are rooted, Senna and her partner get free hits. Walk sideways or behind minions to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 50 },
+            { "kind": "champion", "key": "Senna", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Pantheon:Senna:3",
+          "text": "Brace with Aegis Assault facing Senna when she fires at you; it blocks damage from the front, but not from the sides or behind.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Senna", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pantheon:Senna:4",
+          "text": "Senna outranges you more as she collects Mist, so close the gap with Shield Vault early instead of trading at range.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pantheon:Senna:5",
+          "text": "Use Grand Starfall to finish a hurt Senna or to roam; it slows enemies and the landing gives your next spell a bonus.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f0225068f176ef16f912a2155915b74b0be6333ad76ecc1e8a67aa5ec8c1aa38",
+      "tips": [
+        {
+          "id": "support:Pantheon:Seraphine:0",
+          "text": "Save Shield Vault for when Seraphine has used Beat Drop; she is easiest to stun and trade with while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 27, "end": 36 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Pantheon:Seraphine:1",
+          "text": "Use Aegis Assault facing Seraphine when she throws spells at you; you take no damage from that direction except from towers.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Pantheon:Seraphine:2",
+          "text": "Hold Comet Spear to throw it from far away. It hits harder against a low-health Seraphine.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Seraphine", "start": 80, "end": 89 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pantheon:Seraphine:3",
+          "text": "Tap Comet Spear for a quick thrust when she is close; it gives back much of its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pantheon:Seraphine:4",
+          "text": "Seraphine's Encore charms from far away, so stay out of line with her or fight near cover once you reach level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "968d48d570ededce1cb48c1042075adcf83d84f9477823e9dffa98c823907050",
+      "tips": [
+        {
+          "id": "support:Pantheon:Shen:0",
+          "text": "Jump on Shen with Shield Vault when he steps up to the wave, so he is stunned before he can use Shadow Dash.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 },
+            { "kind": "ability", "key": "Shen-E", "start": 96, "end": 107 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Pantheon:Shen:1",
+          "text": "Do not stand in front of Shen's Shadow Dash path. Step out of its line so you are not taunted into his team.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Shen-E", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Pantheon:Shen:2",
+          "text": "Hold Comet Spear and throw it from long range to poke Shen. It does extra damage once he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Shen", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Shen:3",
+          "text": "Use Aegis Assault when Shen's allies rush you, but face them. It blocks damage only from the front.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shen", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pantheon:Shen:4",
+          "text": "Watch for Shen's Stand United after level 6. If he vanishes from lane, expect him to arrive beside an ally you are fighting.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-R", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "061753263e3adf3a4e5737b5c2a1d75d435e04a355ef4a34fed699e6e860fdb9",
+      "tips": [
+        {
+          "id": "support:Pantheon:Sona:0",
+          "text": "Jump on Sona with Shield Vault when she steps forward to poke. The stun stops her from casting and she is easy to burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "support:Pantheon:Sona:1",
+          "text": "Walk into her poke with Aegis Assault facing her. You take no damage from that direction while the shield is up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Pantheon:Sona:2",
+          "text": "Stay out of Crescendo range when you can. Being stunned in front of her team usually gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pantheon:Sona:3",
+          "text": "Throw Comet Spear at Sona when she is low. It deals far more damage to low-health enemies, and she has few ways to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Sona", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Pantheon:Sona:4",
+          "text": "Hold your jump until she has used Song of Celerity or Aria of Perseverance. Her heal and shield make an early trade much weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "Sona-W", "start": 54, "end": 74 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "baa7c92f45c5b2486f1701b731e355db38c18e8af2db865be85b12f654d1c6a8",
+      "tips": [
+        {
+          "id": "support:Pantheon:Soraka:0",
+          "text": "Look for Shield Vault on Soraka when she is out of position; she is fragile and the stun lets you kill her.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Soraka", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Pantheon:Soraka:1",
+          "text": "Hold Comet Spear to throw it from far away, and use it to finish Soraka when she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Soraka", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Pantheon:Soraka:2",
+          "text": "Dodge Equinox; stay out of the field so you are not silenced and rooted. Go in after it has been used.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "silenced", "start": 52, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Pantheon:Soraka:3",
+          "text": "Sidestep Starcall; when it hits, it slows you and heals her, so it wins her trades.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 9, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Pantheon:Soraka:4",
+          "text": "Brace with Aegis Assault facing Soraka's allies to take their damage, then slam. Her heals are weak against burst.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Soraka", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "78acbb95acc190b443b49138452db7acde73becabcaf91ec63fb5fd9af9e660d",
+      "tips": [
+        {
+          "id": "support:Pantheon:Swain:0",
+          "text": "Don't stand at the edge of Swain's range. Stay out of his Death's Hand range or close the gap quickly, since the bolts hurt most up close.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Swain-Q", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Pantheon:Swain:1",
+          "text": "Hold Shield Vault until Nevermove is used, because a rooted Pantheon is easy to pull and punish.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Swain-E", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 },
+            { "kind": "champion", "key": "Pantheon", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Pantheon:Swain:2",
+          "text": "Face Swain with Aegis Assault when he casts Nevermove or Death's Hand, then slam to close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Swain-E", "start": 44, "end": 53 },
+            { "kind": "ability", "key": "Swain-Q", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Pantheon:Swain:3",
+          "text": "Keep moving when Vision of Empire appears; it takes a while to explode, so step out of it to avoid the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Pantheon:Swain:4",
+          "text": "Throw Comet Spear when Swain is low on health, because it hits much harder against low-health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Swain", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a0d54674c691ec9a8784b4f615ff2eec50dfd41622f0e40fc1de8e3080169520",
+      "tips": [
+        {
+          "id": "support:Pantheon:TahmKench:0",
+          "text": "Stay out of Tongue Lash range; it slows you, and with three stacks of An Acquired Taste it stuns you too.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 70,
+              "end": 87
+            },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Pantheon:TahmKench:1",
+          "text": "Do not let Tahm Kench poke you into three stacks, because then he can Devour you.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 11, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:TahmKench:2",
+          "text": "Hold Comet Spear to throw it from long range, and finish enemies who are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Pantheon:TahmKench:3",
+          "text": "Brace with Aegis Assault facing Tahm Kench when he lashes at you; you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "TahmKench", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Pantheon:TahmKench:4",
+          "text": "When you see the landing marker for Abyssal Dive, step out of it. You can stun him with Shield Vault while he channels.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 36, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cbea1c9940b467ab3bbfd97a60ec8b0f6c15bbe170c7d9d7f7aabd31a0f712d9",
+      "tips": [
+        {
+          "id": "support:Pantheon:Taric:0",
+          "text": "Hold Comet Spear to throw it from far away. It hits harder on low-health enemies, so use it to finish Taric or his carry.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Taric", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pantheon:Taric:1",
+          "text": "Jump with Shield Vault on a target Taric hasn't shielded. It stuns them, but Dazzle can punish you right afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Taric", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Taric-E", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Pantheon:Taric:2",
+          "text": "Taric's Dazzle takes a moment to burst, so keep moving after he casts it and step out of the beam.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Taric-E", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Pantheon:Taric:3",
+          "text": "Taric reduces his cooldowns by attacking with Bravado. Punish him when he walks up to the minions.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 46,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Taric:4",
+          "text": "Use Grand Starfall to hit enemies away from Taric. Hit before Cosmic Radiance arrives, because it makes them invulnerable.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Taric", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Taric-R", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "06036f1e0145ee4d124d9b2837fd50806c17a14f2bb60f588f466501fcc9c6a0",
+      "tips": [
+        {
+          "id": "support:Pantheon:Thresh:0",
+          "text": "Hold Aegis Assault facing Thresh when his Death Sentence or Flay is coming; you take no damage from that direction while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Thresh", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 42, "end": 56 },
+            { "kind": "ability", "key": "Thresh-E", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pantheon:Thresh:1",
+          "text": "Watch Thresh's cast start for Death Sentence; it has a long cast time, so sidestep it. The scythe stops at the first enemy it hits, so stay behind your minions.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pantheon:Thresh:2",
+          "text": "Jump in with Shield Vault to stun Thresh once his Death Sentence is on cooldown, then follow up with Comet Spear.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 50, "end": 64 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pantheon:Thresh:3",
+          "text": "Hold Comet Spear and throw it at Thresh when he is low on health; it hits much harder against weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Pantheon:Thresh:4",
+          "text": "Use Grand Starfall to finish a fleeing target or join a fight elsewhere. Thresh's The Box can still slow you once you land, so land at the edge of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Thresh", "start": 73, "end": 79 },
+            { "kind": "ability", "key": "Thresh-R", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a1cd81bc85fd2b4f644b1c78979690c45de59d155cdeb17eb4eb2d61cd38d69d",
+      "tips": [
+        {
+          "id": "support:Pantheon:Velkoz:0",
+          "text": "Jump on Vel'Koz with Shield Vault as soon as he spends Tectonic Disruption or Void Rift; he has little way to get away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 55, "end": 74 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 78, "end": 87 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Pantheon:Velkoz:1",
+          "text": "Hold Aegis Assault toward Vel'Koz when he casts at you; you take no damage from the front while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Velkoz", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Pantheon:Velkoz:2",
+          "text": "Shield Vault stuns, so use it to interrupt Life Form Disintegration Ray before it deals much damage.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 0, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 43, "end": 71 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pantheon:Velkoz:3",
+          "text": "Finish a low-health Vel'Koz with a hurled Comet Spear; it hits much harder against low-health enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pantheon:Velkoz:4",
+          "text": "Stay out of Plasma Fission's line, since it slows you and splits to catch you at range.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0621e66789ab224a7b2dedbefc2e0f349437ef38cec8f9f0c3095caf0588cd5e",
+      "tips": [
+        {
+          "id": "support:Pantheon:Xerath:0",
+          "text": "Jump on Xerath with Shield Vault as soon as he starts charging Arcanopulse or lands a Shocking Orb; he cannot stop you, and you stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 63, "end": 74 },
+            { "kind": "ability", "key": "Xerath-E", "start": 86, "end": 98 },
+            { "kind": "keyword", "key": "stunned", "start": 128, "end": 132 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:Pantheon:Xerath:1",
+          "text": "Stay out of a straight line with Xerath when Shocking Orb is ready; it stuns the first enemy it hits, so walk at an angle or keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Pantheon:Xerath:2",
+          "text": "Hold Aegis Assault toward Xerath when his spells come at you; you take no damage from that direction while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Xerath", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Pantheon:Xerath:3",
+          "text": "Walk at Xerath instead of away from him; closing the distance is how you beat his range.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pantheon:Xerath:4",
+          "text": "Hold Comet Spear to hurl it from long range once he is low on health; it hits much harder then.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Pantheon:Xerath:5",
+          "text": "When Xerath channels Rite of the Arcane, dive in with Shield Vault; he is stuck in place and you stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 21, "end": 39 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 54, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ee43cda542c7056320bda591fa9a48b692ccb1fe1a148e22a4371c41d2be5a18",
+      "tips": [
+        {
+          "id": "support:Pantheon:Yuumi:0",
+          "text": "Jump on the enemy carry with Shield Vault when Yuumi is attached; she can't be targeted while attached, so the stun lands on her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 29, "end": 41 },
+            { "kind": "champion", "key": "Yuumi", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Pantheon:Yuumi:1",
+          "text": "Hit Yuumi with Comet Spear when she is detached; she can only be hit while she is off her partner.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Pantheon:Yuumi:2",
+          "text": "Use Aegis Assault to walk through her Prowling Projectile when it comes from the front; you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 38, "end": 57 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Pantheon:Yuumi:3",
+          "text": "Finish low-health enemies with a hurled Comet Spear; it hits much harder on them.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pantheon:Yuumi:4",
+          "text": "Save Grand Starfall for when the enemy pair is hurt, then fight them while they are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "fbb4b75b8b9f415302e2c38fc57750d8e26f3eae5461fef0819ac35896263270",
+      "tips": [
+        {
+          "id": "support:Pantheon:Zilean:0",
+          "text": "Move out of the way of Time Bomb right after it lands; if two bombs hit you, you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Pantheon:Zilean:1",
+          "text": "Jump on Zilean with Shield Vault when his Time Bomb and Rewind are on cooldown; he is fragile and hard to escape once stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 42, "end": 51 },
+            { "kind": "ability", "key": "Zilean-W", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Pantheon:Zilean:2",
+          "text": "Hold Comet Spear to finish Zilean or his partner when low on health; it hurts more against weakened enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zilean", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pantheon:Zilean:3",
+          "text": "If Zilean puts Chronoshift on his carry, wait for it to end before you strike the killing blow.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Zilean-R", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pantheon:Zilean:4",
+          "text": "Brace with Aegis Assault facing Zilean when he is about to bomb you; you take no damage from that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Zilean", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "40dc1410ee2ab5168270bf15fd174ea434d54e31b6356f386de283e17b8c39d1",
+      "tips": [
+        {
+          "id": "support:Pantheon:Zyra:0",
+          "text": "Step on Zyra's seeds before she can grow them, or stay out of the area around them. Walking over a seed destroys it.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pantheon:Zyra:1",
+          "text": "Jump on Zyra with Shield Vault as soon as she uses Grasping Roots or Deadly Spines. The stun makes it hard for her to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Zyra-E", "start": 51, "end": 65 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 69, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Pantheon:Zyra:2",
+          "text": "Face Zyra with Aegis Assault when her Grasping Roots or plants are about to hit you. You take no damage from the front, only from the sides and behind.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Zyra-E", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Pantheon:Zyra:3",
+          "text": "Hold Comet Spear to throw it from range at Zyra when she is low on health. It hits much harder against low-health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zyra", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Pantheon:Zyra:4",
+          "text": "Get away from the area when Stranglethorns lands. It knocks you up after a short delay, so leave before the vines snap up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pantheon:Zyra:5",
+          "text": "Use Grand Starfall to reach Zyra when she is out of position. She can't easily escape it.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zyra", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

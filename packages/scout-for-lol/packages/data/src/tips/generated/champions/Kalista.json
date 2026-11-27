@@ -1,0 +1,734 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kalista",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "ef3c26260b33ee02915c47e7289cfc0e70e5fdee0cae0e0bbe96e6e398ef1661",
+      "tips": [
+        {
+          "id": "adc:Kalista:general:0",
+          "text": "Press a move command right as each basic attack winds up to lunge with Martial Poise. Attack, hop back, repeat to stay out of reach.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 71,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Kalista:general:1",
+          "text": "Use Rend to finish low-health minions. Their death resets its cooldown, so you can last-hit with it again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Kalista:general:2",
+          "text": "Put spears on the enemy with attacks and Pierce first, then use Rend. It only works on enemies with spears in them, and more spears mean more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Kalista-E", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kalista:general:3",
+          "text": "Aim Pierce down the lane through a minion wave. It stops at the first target, but if it kills a minion it keeps flying and carries the spears to the next enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Kalista:general:4",
+          "text": "Rend leaves enemies slowed. Use it to stop a fleeing enemy or to cut off their approach.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Kalista:general:5",
+          "text": "Send Sentinel into the brush or toward the objectives to see danger coming. Hold a charge for when you need it.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Kalista:general:6",
+          "text": "Use Fate's Call when your support is in range. They fly to the enemy and knock them up, which sets up a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:Kalista:general:7",
+          "text": "Stay close to your support. Sentinel and Fate's Call both rely on them being nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-W", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Kalista-R", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Kalista:general:8",
+          "text": "You can't cancel an attack once it starts. Don't begin one when an enemy skillshot is about to hit you.",
+          "refs": [],
+          "pWrong": 0.7
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Kalista:combo:0",
+          "name": "Hop kiting",
+          "category": "trick",
+          "sequence": ["attack", "attack"],
+          "when": "Any time you fight or chase, and when you kite away from enemies in lane.",
+          "whenRefs": [],
+          "text": "Enter a move command while your attack winds up to hop on each hit. Clicking the ground repeatedly keeps your target, so you can hop again and again.",
+          "textRefs": []
+        },
+        {
+          "id": "adc:Kalista:combo:1",
+          "name": "Pierce hop",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Kalista-Q" }],
+          "when": "When you want to poke with Pierce and stay out of enemy range.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 27, "end": 33 }
+          ],
+          "text": "Move away right after casting Pierce to hop backward as it launches. You poke from range and step out of the return fire.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 30, "end": 36 }
+          ]
+        },
+        {
+          "id": "adc:Kalista:combo:2",
+          "name": "Rend during a hop",
+          "category": "trick",
+          "sequence": ["attack", { "kind": "ability", "key": "Kalista-E" }],
+          "when": "When you are about to last hit a minion or finish a champion while dashing.",
+          "whenRefs": [],
+          "text": "Rend can be cast during a hop or an attack windup. Use it to cancel the windup, and the empowered attack applies Rend on landing.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kalista-E", "start": 113, "end": 117 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "7547088fdb8e2d729d1afed67e16702f251af5f14fc46b2b5077100c0e233bf3",
+      "tips": [
+        {
+          "id": "adc:Kalista:Ashe:0",
+          "text": "Dodge sideways when Ashe fires Volley, and keep minions out of the line so Pierce stays clean.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ashe-W", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Kalista:Ashe:1",
+          "text": "Be careful when Ashe's Enchanted Crystal Arrow is ready, and do not walk alone in the lane or the jungle.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ashe-R", "start": 23, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kalista:Ashe:2",
+          "text": "Ashe has few escapes, so Rend her after stacking spears when your team ganks.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kalista-E", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Kalista:Ashe:3",
+          "text": "Stay out of Ashe's range and use Martial Poise to hop in only to attack; Frost Shot slows you if she hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 33,
+              "end": 46
+            },
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 73,
+              "end": 83
+            },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0ec1d5e468e54ce62f143980a9390e049acd91be515be61fcbb6a6cfdd1aadf7",
+      "tips": [
+        {
+          "id": "adc:Kalista:Caitlyn:0",
+          "text": "Don't stand still in Caitlyn's range. Her Piltover Peacemaker hits from far away, so keep minions between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 42, "end": 61 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Kalista:Caitlyn:1",
+          "text": "Watch for Yordle Snap Trap on the ground and don't dash onto spots where she could have placed one. Being rooted in her range hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Kalista:Caitlyn:2",
+          "text": "Use Pierce on Caitlyn, then dash with Martial Poise to dodge her return shot. Add Rend once spears are on her.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Caitlyn", "start": 14, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 38,
+              "end": 51
+            },
+            { "kind": "ability", "key": "Kalista-E", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Kalista:Caitlyn:3",
+          "text": "Her net slows you for a short time, so avoid trading in a straight line from her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "caf3b81fb550b854e22c430b6d39b13d66c5c83cc5322715bca110bcee4a6321",
+      "tips": [
+        {
+          "id": "adc:Kalista:Ezreal:0",
+          "text": "Ezreal is fragile, so take the fight to him. Dash in with your attacks and punish him after he misses Mystic Shot.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 102, "end": 113 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Kalista:Ezreal:1",
+          "text": "Keep minions between you and Ezreal; his Mystic Shot hits only the first enemy, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kalista:Ezreal:2",
+          "text": "Stack spears on Ezreal with attacks and Pierce, then use Rend to slow him and stop him from kiting.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Kalista-E", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kalista:Ezreal:3",
+          "text": "Watch where Ezreal's Arcane Shift cooldown is; when it is down, he cannot easily escape your dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Kalista:Ezreal:4",
+          "text": "Use Sentinel on the brush or lane edge to spot Ezreal before you step forward, so you avoid his skillshots.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "86d00f1450b14a3611623e8c4a57ce0e302a51f999471cdd7b5ba708d1bca4d1",
+      "tips": [
+        {
+          "id": "adc:Kalista:Jhin:0",
+          "text": "Watch for Jhin's invisible traps from Captive Audience before dashing; stepping on one slows you and sets you up for his shots.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Jhin-E", "start": 38, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Kalista:Jhin:1",
+          "text": "Stay out of Jhin's line when you or your support just took a hit; Deadly Flourish roots you and has very long range.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 66, "end": 81 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kalista:Jhin:2",
+          "text": "Trade after Jhin fires his fourth shot; he must reload and can't attack for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kalista:Jhin:3",
+          "text": "Use Rend to finish low minions or Jhin; a kill resets it, so you can chain it.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Jhin", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Kalista:Jhin:4",
+          "text": "Hide in brush or behind minions so Jhin's basic attacks and Dancing Grenade have less to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c9db37eb0c7bbeba718f86a5d5b951ed7ee773f4e89c810934530ad6ca794f62",
+      "tips": [
+        {
+          "id": "adc:Kalista:Jinx:0",
+          "text": "Stay out of Jinx's Zap! line, because getting slowed makes Pierce and your lunges worse.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jinx-W", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Kalista:Jinx:1",
+          "text": "Don't walk over Flame Chompers! when you lunge in; wait for them to expire or bait them out first.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kalista:Jinx:2",
+          "text": "Look for the all-in once Jinx has used Flame Chompers!, since it is her main way to protect herself.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Jinx-E", "start": 39, "end": 54 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kalista:Jinx:3",
+          "text": "Build up spears with attacks, then use Rend to finish Jinx or slow her when she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Jinx", "start": 54, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kalista:Jinx:4",
+          "text": "Hit Jinx while she is using the rocket launcher, before her minigun speeds up.",
+          "refs": [{ "kind": "champion", "key": "Jinx", "start": 4, "end": 8 }],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e684e14b5913a9b56a584ee1a436ff26d1f8d7bf0f48785afd8908d3fca4b380",
+      "tips": [
+        {
+          "id": "adc:Kalista:Kaisa:0",
+          "text": "Stay out of Kai'Sa's range and use Pierce from far away, since her Void Seeker has long range too.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Kalista:Kaisa:1",
+          "text": "Use Rend on a minion you can kill so it resets, then slow Kai'Sa with it when she is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 },
+            { "kind": "champion", "key": "Kaisa", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Kalista:Kaisa:2",
+          "text": "Look for the moment Kai'Sa is alone and out of position; she is strong at killing isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "isolated", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "isolated", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Kalista:Kaisa:3",
+          "text": "Use Fate's Call to knock Kai'Sa up when she steps in with Killer Instinct, so your allies can get her.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "feefb341ce7150e86cfbc2497119cb1832c8514b3e80d244c03a97d27bdb15bd",
+      "tips": [
+        {
+          "id": "adc:Kalista:MissFortune:0",
+          "text": "Walk toward Miss Fortune with Martial Poise dashes between attacks, and stay out of her Make It Rain, which slows you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 12,
+              "end": 24
+            },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 30,
+              "end": 43
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 88,
+              "end": 100
+            },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Kalista:MissFortune:1",
+          "text": "Hit Miss Fortune with Pierce to break her speed bonus from Strut. She is easy to kill once you reach her.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 59,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:Kalista:MissFortune:2",
+          "text": "Stack spears on Miss Fortune with attacks and Pierce, then use Rend to finish her. A kill resets the cooldown.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Kalista-Q", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Kalista-E", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kalista:MissFortune:3",
+          "text": "Do not stand in a straight line behind a minion when Miss Fortune has Double Up ready. The shot bounces through the minion onto you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 53,
+              "end": 65
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 70,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Kalista:MissFortune:4",
+          "text": "Walk out of the cone when Miss Fortune starts Bullet Time at level 6. Fate's Call can save an ally caught in it.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 26,
+              "end": 38
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 46,
+              "end": 57
+            },
+            { "kind": "ability", "key": "Kalista-R", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bc61e86b8ed67ac81887f429491276249df221b423aad2135654c7d33966b52a",
+      "tips": [
+        {
+          "id": "adc:Kalista:Sivir:0",
+          "text": "Spear Sivir with Pierce when her Spell Shield is down. Wait for her to use it first on something cheaper.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Sivir-E", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Kalista:Sivir:1",
+          "text": "Dodge Boomerang Blade; it costs a lot of mana. If it hits you going out, stay out of its path on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kalista:Sivir:2",
+          "text": "Don't let Sivir push the wave freely with Ricochet. Use Rend on minions to kill them and reset its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Sivir-W", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Kalista-E", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Kalista:Sivir:3",
+          "text": "Use Martial Poise to dash sideways out of Boomerang Blade's line while you keep attacking.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "ability", "key": "Sivir-Q", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "654987b2dd968ae3e8a90a417971df4b697a82e922562315a175b68b6f1ed5c0",
+      "tips": [
+        {
+          "id": "adc:Kalista:Smolder:0",
+          "text": "Play aggressive early; Smolder is weak before he stacks Dragon Practice, so trade with Pierce and basic attacks while he is still weak.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 56,
+              "end": 71
+            },
+            { "kind": "ability", "key": "Kalista-Q", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Kalista:Smolder:1",
+          "text": "Stay out of a straight line from Smolder's Achooo!; use Martial Poise dashes sideways to dodge it while you attack.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-W", "start": 43, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 56,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Kalista:Smolder:2",
+          "text": "Stack spears on Smolder with attacks and Pierce, then use Rend to finish him or to slow him and chase.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Kalista-E", "start": 58, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Kalista:Smolder:3",
+          "text": "Smolder's Flap, Flap, Flap ends if he is stunned or rooted. Once he takes off to escape, slow him with Rend and keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-E", "start": 10, "end": 26 },
+            { "kind": "ability", "key": "Kalista-E", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Kalista:Smolder:4",
+          "text": "Smolder's MMOOOMMMM! can hit you from far away, so keep moving with Martial Poise when he is at level 6 and has it up.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-R", "start": 10, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 68,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1e1e76bd873bea584ab4b5a32e78f69cf9db9ad7227e477e01291c1046ec3af1",
+      "tips": [
+        {
+          "id": "adc:Kalista:Yunara:0",
+          "text": "Poke Yunara with Pierce when she steps up to last-hit, then use Martial Poise to dash out of her return trade.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 17, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 64,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Kalista:Yunara:1",
+          "text": "Build up spears on Yunara with attacks, then use Rend to hit hard and leave her slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Kalista-E", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Kalista:Yunara:2",
+          "text": "Stay out of the line of her prayer bead; it leaves you heavily slowed and easy to trade with.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Kalista:Yunara:3",
+          "text": "Respect her level 6 power: she gets a dash and a long beam, so keep your distance.",
+          "refs": [],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Kalista:Yunara:4",
+          "text": "Use Rend on low-health minions to reset it and keep the lane clean while you keep spears on Yunara.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Yunara", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

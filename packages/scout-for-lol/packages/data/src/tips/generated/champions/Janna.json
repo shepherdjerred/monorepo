@@ -1,0 +1,945 @@
+{
+  "schemaVersion": 1,
+  "champion": "Janna",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "78446af39e966610245f57a4e31540da0a0211f29745a9a6b3e5fb7cfbbf8234",
+      "tips": [
+        {
+          "id": "support:Janna:general:0",
+          "text": "Put Eye of the Storm on your carry before a trade; the shield also adds Attack Damage, so they hit harder while it holds.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Janna:general:1",
+          "text": "Shield an allied turret with Eye of the Storm when it is under attack or about to kill an enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 29, "end": 45 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Janna:general:2",
+          "text": "Hit an enemy with Zephyr to leave them slowed, which also shortens the wait for your next Eye of the Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Janna-E", "start": 90, "end": 106 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Janna:general:3",
+          "text": "Hold Howling Gale to charge it before you throw it when you can. A longer charge goes farther and knocks enemies up for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Janna:general:4",
+          "text": "Recast Howling Gale right away to knock an enemy up fast when they dive your carry or you need a quick stop.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Janna:general:5",
+          "text": "Cast Monsoon when enemies dive onto a wounded ally. It knocks them back and then heals your team.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Janna:general:6",
+          "text": "Stand still while Monsoon heals. Moving or using an ability ends it early.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Janna:general:7",
+          "text": "Walk near Janna's allies as they move toward her. Tailwind gives them extra Move Speed, so use it to chase or run away together.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 10, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Janna-passive",
+              "start": 50,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Janna:combo:0",
+          "name": "Instant Howling Gale",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Janna-Q" },
+            { "kind": "ability", "key": "Janna-Q" }
+          ],
+          "when": "When you need a fast knock up to stop a dive or interrupt a dash, and an uncharged tornado is enough.",
+          "whenRefs": [],
+          "text": "Cast the tornado and recast it at once to send it uncharged. It is quick and hard to dodge, but short in range and knock up time.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "960752b40be6531ce26467a44433d5f036bac831b9a6644a109b53d38a299729",
+      "tips": [
+        {
+          "id": "support:Janna:Bard:0",
+          "text": "Use Monsoon to knock back Bard and his ally when they dive in, then stay still so the healing keeps going.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Bard", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Janna:Bard:1",
+          "text": "Hit Bard with Zephyr when he walks up to collect a chime or place a shrine. He is slowed and it costs him mana for little gain.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Janna-W", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Janna:Bard:2",
+          "text": "Stand away from your ADC in a line with Bard's Cosmic Binding. A second target or a wall makes it stun, so keep out of line with each other.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Bard-Q", "start": 47, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Janna:Bard:3",
+          "text": "Keep Eye Of The Storm ready for your ADC when Bard gets close. Casting Howling Gale or Zephyr on him cuts its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Bard", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Janna-Q", "start": 71, "end": 83 },
+            { "kind": "ability", "key": "Janna-W", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Janna:Bard:4",
+          "text": "Hit Bard's ally with Howling Gale when he uses Magical Journey to come in. The tornado knocks them up while they are exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Janna-Q", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Bard-E", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d0c1f3b6ca86fa3eab19e613087dbe7924087b73478a736a874961845537b5f6",
+      "tips": [
+        {
+          "id": "support:Janna:Braum:0",
+          "text": "Hold Howling Gale until Braum is out of position; his Unbreakable shield can absorb it if he faces you with it raised.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Braum", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Braum-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Janna:Braum:1",
+          "text": "Zephyr is your safe poke on Braum; use it when his Winter's Bite is on cooldown so you can trade without being slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "poke", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Braum", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Braum-Q", "start": 51, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Janna:Braum:2",
+          "text": "Stay out of Winter's Bite's line behind your minions; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Janna:Braum:3",
+          "text": "Don't let Braum's team mark you and then hit you, because Concussive Blows stuns on the fourth stack. Step away after the first mark.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 10, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 58,
+              "end": 74
+            },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Janna:Braum:4",
+          "text": "Use Monsoon to knock Braum and his allies back when they dive on you or your carry. Do it before the fight collapses.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Braum", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d2c8baecbb49ab98223cc90da6218992ba6ea3d014beb6e86c2581bdbe894b6a",
+      "tips": [
+        {
+          "id": "support:Janna:Karma:0",
+          "text": "Save Monsoon for when Karma or her partner dives on you or an ally; it knocks them back and heals your team, but moving or casting ends it early.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Karma", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Janna:Karma:1",
+          "text": "Hold Eye of the Storm for Focused Resolve or Inner Flame aimed at your carry; the shield soaks the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Karma-W", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Karma-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Janna:Karma:2",
+          "text": "Use Zephyr on Karma when she steps up to poke; it has long range and leaves her slowed, so she is easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Karma", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Janna:Karma:3",
+          "text": "Hit Karma with Howling Gale when she is rooted or slowed in place, because she cannot dodge the slow tornado easily.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Janna-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a4078559b69ee80885057fb6ff76fe798f9efff15190dac267b806234681792c",
+      "tips": [
+        {
+          "id": "support:Janna:Leona:0",
+          "text": "Hit Leona with Zephyr as she walks up, so she is slowed and has a harder time reaching you or your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Janna-W", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Janna:Leona:1",
+          "text": "Keep Howling Gale ready for when Leona dashes in; its knock up interrupts her.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "knocked-up", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Janna:Leona:2",
+          "text": "Save Monsoon to push Leona off your carry once she lands on them. It does not push enemies through terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Leona", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Janna:Leona:3",
+          "text": "Shield your carry with Eye Of The Storm just before Leona reaches them, so her burst and stun hit a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Leona", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Janna:Leona:4",
+          "text": "Stay behind your minions and your carry. Zenith Blade is a projectile, so it needs a clear line to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3aabbaeacbcffdfd3b95102decc261f632d2bb4806b42733b8f7fbefe861647a",
+      "tips": [
+        {
+          "id": "support:Janna:Lulu:0",
+          "text": "Poke Lulu with Zephyr when she steps up to help her ally; it also slows her, so she cannot easily follow up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lulu", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Janna-W", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Janna:Lulu:1",
+          "text": "Keep minions between you and Lulu's Pix, because his bolts can be intercepted by other units.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Janna:Lulu:2",
+          "text": "Stay out of Glitterlance range when you can; the slow is heavy and lets her team close on you.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Janna:Lulu:3",
+          "text": "Hold Eye Of The Storm for when Lulu's Whimsy or Glitterlance is coming at your carry, then shield them.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Lulu", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Lulu-W", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Janna:Lulu:4",
+          "text": "Use Monsoon to knock back enemies who dive in after Wild Growth, but do not move or cast, or it ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lulu-R", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "60c66fbce878bfcb5eff787ed50c01b1bec4a9908f6844569d5c81dabc051f23",
+      "tips": [
+        {
+          "id": "support:Janna:Lux:0",
+          "text": "Stay out of Lux's line and spread away from your ADC so one Light Binding cannot root both of you.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Lux-Q", "start": 60, "end": 73 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Janna:Lux:1",
+          "text": "Use Zephyr on Lux when she steps up to poke, then trade back while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Lux", "start": 14, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Janna:Lux:2",
+          "text": "Shield your ADC with Eye of the Storm just before Lux's spells land, since it absorbs the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 21, "end": 37 },
+            { "kind": "champion", "key": "Lux", "start": 50, "end": 53 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Janna:Lux:3",
+          "text": "Use Howling Gale when Lux is rooting or slowing an ally of yours, or when she walks into your range. A quick release is hard for her to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Janna:Lux:4",
+          "text": "Use Monsoon to push enemies off a wounded ally when Lux tries to finish with Final Spark. Stay still while it heals.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 52, "end": 55 },
+            { "kind": "ability", "key": "Lux-R", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "747154ded71d95b370d9d82ba354b44ca0a680ada27ba8a8beceadfcf5821784",
+      "tips": [
+        {
+          "id": "support:Janna:Milio:0",
+          "text": "Hold Howling Gale until Milio is lined up on you or his ally, then release it to knock him up. A fully charged one lasts longer but is easy to see coming.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Janna:Milio:1",
+          "text": "Use Zephyr on Milio when he walks up to poke; it slows him and the damage grows with your bonus Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Milio", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Janna:Milio:2",
+          "text": "Use Monsoon to push Milio and his carry apart when they commit, or to heal your side in a fight. Moving or casting ends the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Milio", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Janna:Milio:3",
+          "text": "Landing Zephyr or Howling Gale on an enemy champion refunds part of Eye Of The Storm's cooldown, so open trades with them and shield your carry right after.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Janna-Q", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Janna-E", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Janna:Milio:4",
+          "text": "Zephyr and Howling Gale are both blocked by projectiles, so Milio's Ultra Mega Fire Kick fireball can get in the way. Fire from a different angle.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Janna-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Milio", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Milio-Q", "start": 68, "end": 88 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "99eb9f52e078f7ce2f7e4a07e51738e942bf73e8426ba3e2732ba575ccc2b04b",
+      "tips": [
+        {
+          "id": "support:Janna:Nami:0",
+          "text": "Hit Nami with Zephyr when she walks up to poke or cast. It slows her and she cannot easily dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Janna-W", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Janna:Nami:1",
+          "text": "Keep Eye of the Storm ready for your carry when Nami throws Aqua Prison or Tidecaller's Blessing trades start. The shield soaks the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Nami", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Nami-Q", "start": 60, "end": 71 },
+            { "kind": "ability", "key": "Nami-E", "start": 75, "end": 96 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Janna:Nami:2",
+          "text": "Punish a missed Aqua Prison by going in with Howling Gale and Zephyr, since Nami's best tool is on a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Janna-Q", "start": 45, "end": 57 },
+            { "kind": "ability", "key": "Janna-W", "start": 62, "end": 68 },
+            { "kind": "champion", "key": "Nami", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Janna:Nami:3",
+          "text": "Use Monsoon to knock back an enemy diving onto your carry. Do not move, or it ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Janna:Nami:4",
+          "text": "Watch for Nami's Tidal Wave coming from far away. It travels slowly, so step out of its path.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Nami-R", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2642b55fa626d8f871da1738d521e4226dc560dee54bd007d23ee21b03337d33",
+      "tips": [
+        {
+          "id": "support:Janna:Nautilus:0",
+          "text": "Hit Nautilus with Zephyr when he walks up, so he is slowed and loses ground. Pair it with poke to keep him away from your lane.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Janna-W", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Janna:Nautilus:1",
+          "text": "Save Monsoon for when Nautilus dives you or your carry; it knocks him back and heals your team.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Nautilus", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Janna:Nautilus:2",
+          "text": "Put Eye of the Storm on your carry before Nautilus can hit Dredge Line; the shield absorbs the damage from the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Nautilus", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Janna:Nautilus:3",
+          "text": "Stay behind your minions so Dredge Line has no clear path to you. Its anchor stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Janna:Nautilus:4",
+          "text": "Use Howling Gale quickly, without charging it, to knock Nautilus up when he closes in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nautilus", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f678cb8bc3a3c894df55c6984654286e43842720ab1277683f0a8a9c94da8b3c",
+      "tips": [
+        {
+          "id": "support:Janna:Pantheon:0",
+          "text": "Use Monsoon when Pantheon jumps on you or your carry; it knocks him back and heals your allies, but moving or casting ends it early.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Pantheon", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Janna:Pantheon:1",
+          "text": "Put Eye Of The Storm on your carry before Pantheon can stun them with Shield Vault; the shield absorbs his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Pantheon", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Janna:Pantheon:2",
+          "text": "Hit Pantheon with Zephyr when he walks up, so he is slowed and cannot easily close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Janna-W", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Janna:Pantheon:3",
+          "text": "Aim Howling Gale at Pantheon as he leaps in; a quick tap knocks him up and stops his dive.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "support:Janna:Pantheon:4",
+          "text": "Do not waste abilities on Pantheon while he braces with Aegis Assault; wait until it ends, then act.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "59ceb446ecf86f265ef9f904fff3138456f3fe0a2b2b540e28d1e27fdbb30d12",
+      "tips": [
+        {
+          "id": "support:Janna:Pyke:0",
+          "text": "Hit Pyke with Zephyr when he walks up to hook; being slowed makes him easier to escape and gives your team time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Janna-W", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Janna:Pyke:1",
+          "text": "Use Monsoon to knock Pyke back when he dives on your carry. It also heals your allies, but moving or casting ends it early.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Pyke", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Janna:Pyke:2",
+          "text": "Put Eye of the Storm on your carry before Pyke can hook them; the shield soaks the damage from his Bone Skewer.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Pyke", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 99, "end": 110 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Janna:Pyke:3",
+          "text": "Fire Howling Gale quickly at Pyke when he closes in; it knocks him up and cancels his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Janna:Pyke:4",
+          "text": "Stay behind your minions and keep your distance from Pyke so his hook has less chance to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f9b5100b75d9cdc3107bda396cdc9f9b3a2c7495a23af3545fb18361a123c5f7",
+      "tips": [
+        {
+          "id": "support:Janna:Senna:0",
+          "text": "Hold Eye of the Storm for when Senna's Last Embrace is about to root your carry; the shield absorbs the damage and she loses her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Senna", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Senna-W", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Janna:Senna:1",
+          "text": "Use Zephyr to slow Senna when she steps up to hit minions, then follow with Howling Gale.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Janna-Q", "start": 76, "end": 88 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Janna:Senna:2",
+          "text": "Senna has long range, so stay out of her reach. Poke her with Zephyr, which always finds its target.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Janna-W", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Janna:Senna:3",
+          "text": "Level 6 Monsoon pushes Senna and her partner away when they dive you, and it heals your team. Stand still while it channels.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 8, "end": 15 },
+            { "kind": "champion", "key": "Senna", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Janna:Senna:4",
+          "text": "Zephyr and Howling Gale both cut Eye of the Storm's cooldown when they hit an enemy champion, so land them often to shield more.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Janna-Q", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Janna-E", "start": 33, "end": 49 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1bbe4f60d8f9796b1e4c1516257cad30511c4c1a6102cd2c66f1c24c0715abed",
+      "tips": [
+        {
+          "id": "support:Janna:Seraphine:0",
+          "text": "Use Zephyr on Seraphine when she steps up to poke, then trade back while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Seraphine", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Janna:Seraphine:1",
+          "text": "Hold Monsoon for when Seraphine's Encore charm lands, so you knock back enemies and heal your team at once.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Seraphine", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Janna:Seraphine:2",
+          "text": "Put Eye Of The Storm on your carry before Seraphine's Beat Drop or High Note lands, since the shield soaks the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Seraphine", "start": 42, "end": 51 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 54, "end": 63 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Janna:Seraphine:3",
+          "text": "Stay out of a straight line with Seraphine. Beat Drop slows, and it roots you if you are already slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 44, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Janna:Seraphine:4",
+          "text": "Hit Seraphine with a quick Howling Gale to knock her up when she walks forward to use her spells.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Janna-Q", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d919cdc10ede023be65fd662b6b736855bf77059bb2a8f213b7efb97aa6498ef",
+      "tips": [
+        {
+          "id": "support:Janna:Sona:0",
+          "text": "Poke Sona with Zephyr while she walks up to cast. Her short range makes her hurt when she stays close.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sona", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Janna-W", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Janna:Sona:1",
+          "text": "Save Monsoon to knock back Sona and the enemy carry when she lines up Crescendo.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sona", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sona-R", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Janna:Sona:2",
+          "text": "Charge Howling Gale from a bush so Sona does not see it, then release it when she walks into it.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Sona", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Janna:Sona:3",
+          "text": "Shield your carry with Eye of the Storm before Sona's Hymn of Valor lands, so her poke does less.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Sona", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Sona-Q", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "poke", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "54600772e4538dc1fb90270c4fcacd968ec319e31a9751dc3353f9e88bf38919",
+      "tips": [
+        {
+          "id": "support:Janna:Thresh:0",
+          "text": "Keep Zephyr ready for when Thresh walks up; the slow makes his hook harder to line up and gives you room to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Thresh", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Janna:Thresh:1",
+          "text": "Watch Thresh's cast start on Death Sentence and step sideways; it takes a moment to throw.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Janna:Thresh:2",
+          "text": "Shield your ally with Eye Of The Storm just before Thresh's hook lands. The shield absorbs the damage from Death Sentence, though not the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-E", "start": 22, "end": 38 },
+            { "kind": "champion", "key": "Thresh", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 107, "end": 121 },
+            { "kind": "keyword", "key": "stunned", "start": 138, "end": 142 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Janna:Thresh:3",
+          "text": "Use Monsoon to knock Thresh away when he dives in or boxes your team with The Box, and save it for the moment he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Thresh", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Thresh-R", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Janna:Thresh:4",
+          "text": "Aim Howling Gale at Thresh when he walks in for a Flay; the knock up gives you time to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Thresh-E", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

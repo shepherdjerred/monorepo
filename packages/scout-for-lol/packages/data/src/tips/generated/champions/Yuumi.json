@@ -1,0 +1,858 @@
+{
+  "schemaVersion": 1,
+  "champion": "Yuumi",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "757b69c4f3752fbe9761f724ef9983c03449ec651648215778e0e37e3e24b3a1",
+      "tips": [
+        {
+          "id": "support:Yuumi:general:0",
+          "text": "Attach to your lane partner with You and Me! when enemies threaten you; while attached you can't be targeted except by towers.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Yuumi:general:1",
+          "text": "Cast Prowling Projectile while attached and steer it around with your mouse. It speeds up after a moment and slows the enemy more.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 5, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Yuumi:general:2",
+          "text": "Stay attached to the ally who kills the most. Kills and minions build your bond, and your Best Friend makes your abilities stronger.",
+          "refs": [],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Yuumi:general:3",
+          "text": "Use Zoomies while attached to shield your partner and give them Move Speed and Attack Speed. It also refills their mana.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Yuumi:general:4",
+          "text": "Start Final Chapter while attached so you can steer the waves. Aim them at enemies and across your allies to heal them.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-R", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Yuumi:general:5",
+          "text": "Watch for stuns and knock-ups when you dash with You and Me!. Being stopped mid-dash puts it on a long cooldown and leaves you exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Yuumi:general:6",
+          "text": "Hit an enemy champion with Prowling Projectile when you are hurt. Feline Friendship heals you and the ally you are attached to.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 27, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "Yuumi-passive",
+              "start": 66,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Yuumi:combo:0",
+          "name": "Steered Q",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Yuumi-Q" }],
+          "when": "When enemies stand behind minions or are dodging in lane while you are attached.",
+          "whenRefs": [],
+          "text": "Cast the missile while attached and guide it with your mouse around minions and toward the enemy champion. It then accelerates for the stronger slow and damage.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "581b1855ae0f2f88373c8bc0851d92f80840aa8da0a9c0338885905964e43a69",
+      "tips": [
+        {
+          "id": "support:Yuumi:Bard:0",
+          "text": "Stay attached to your carry when Bard aims Cosmic Binding; you can't be targeted while attached, so only your partner needs to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Bard-Q", "start": 43, "end": 57 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Yuumi:Bard:1",
+          "text": "Zoomies on your partner shields them when Bard's Meeps and Cosmic Binding start trading, and they also get Move Speed to step out.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Bard", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Bard-Q", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Yuumi:Bard:2",
+          "text": "Steer Prowling Projectile around Bard's minions to reach him. It slows him and lets your team follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Yuumi:Bard:3",
+          "text": "Walk your carry over Bard's shrines to destroy them. Don't let his partner take the heal for free.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Yuumi:Bard:4",
+          "text": "Final Chapter hits Bard's team too, but Bard's Tempered Fate freezes everyone in its area, so wait for it to end before channeling into it.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Bard", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Bard-R", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ea090329d8aaecfb74df70df70531cf86ca71cf371345bc0dda795beea854cf4",
+      "tips": [
+        {
+          "id": "support:Yuumi:Braum:0",
+          "text": "Stay attached to your partner when Braum is nearby. You can't be targeted, so Winter's Bite can't hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Braum-Q", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Yuumi:Braum:1",
+          "text": "Be careful when you dash with You and Me!. Being stunned or rooted while dashing knocks you down.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 30, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 56 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Yuumi:Braum:2",
+          "text": "Don't fire Prowling Projectile into Braum while his Unbreakable is raised. It gets blocked and destroyed.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 11, "end": 30 },
+            { "kind": "champion", "key": "Braum", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Braum-E", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Yuumi:Braum:3",
+          "text": "Move away from the Glacial Fissure frozen ground. It slows you and your partner.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1c6d6af5466b0c9204990c4a7d8f6f7e325857dbe4ecbd1b501f15a178f0ab7f",
+      "tips": [
+        {
+          "id": "support:Yuumi:Karma:0",
+          "text": "Stay attached to your partner in lane; you can't be targeted that way, so Karma's Inner Flame has to aim at your partner.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 74, "end": 79 },
+            { "kind": "ability", "key": "Karma-Q", "start": 82, "end": 93 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Yuumi:Karma:1",
+          "text": "Don't hop off when Focused Resolve is ready to be cast. Karma can tether and root you when you are caught alone.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 19, "end": 34 },
+            { "kind": "champion", "key": "Karma", "start": 56, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Yuumi:Karma:2",
+          "text": "Prowling Projectile is a good answer to Karma poking you. Fire it when she steps up to land Inner Flame, and she will be slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 0, "end": 19 },
+            { "kind": "champion", "key": "Karma", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Karma-Q", "start": 92, "end": 103 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 127 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Yuumi:Karma:3",
+          "text": "Use Zoomies on your partner when Karma's Mantra is up, so the shield soaks the big Inner Flame burst.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Karma", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Karma-R", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Karma-Q", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "560169290c18f3a03441c0fcf163d9bb7bcbc46f0eb99ad8c71079fe89fd49ac",
+      "tips": [
+        {
+          "id": "support:Yuumi:Leona:0",
+          "text": "Stay attached to your partner when Leona is near. You can't be targeted, so her Zenith Blade can't pick you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Leona-E", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Yuumi:Leona:1",
+          "text": "Use Zoomies on your partner as Leona dashes in. The shield soaks the first hit and the speed helps them get away.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Leona", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Yuumi:Leona:2",
+          "text": "Don't detach near Leona. Being caught alone means she can use Zenith Blade to root you and then stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Leona-E", "start": 62, "end": 74 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Yuumi:Leona:3",
+          "text": "Fire Prowling Projectile at Leona as she walks up. It slows her, which makes her approach harder.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Yuumi:Leona:4",
+          "text": "Keep your partner out of the middle of Solar Flare. Only the center stuns, so they should move out of it fast.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1e1a2c2313922aa6fe608f6cea8c34edd895354bdba364d1fe75de229abd3ce1",
+      "tips": [
+        {
+          "id": "support:Yuumi:Lulu:0",
+          "text": "Stay attached to your carry in lane. Lulu can't hit you with Glitterlance or Whimsy then, so she must go after your partner.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 61, "end": 73 },
+            { "kind": "ability", "key": "Lulu-W", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Yuumi:Lulu:1",
+          "text": "Don't dash to an ally when Lulu's Whimsy is ready. If you are polymorphed mid-dash, you get knocked down and your attach goes on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Lulu-W", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Yuumi:Lulu:2",
+          "text": "Steer Prowling Projectile around minions to hit Lulu. Poke her down so she can't engage freely.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Lulu", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Yuumi:Lulu:3",
+          "text": "Put Zoomies on your carry when Lulu goes for them. The shield and speed can ruin her trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lulu", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2119224c821b26e8a660faeda618e7c9db887c739423ba9804fd54653b8e4364",
+      "tips": [
+        {
+          "id": "support:Yuumi:Lux:0",
+          "text": "Stay attached to your ally when Lux is nearby, because you cannot be targeted by her skillshots.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 32, "end": 35 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Yuumi:Lux:1",
+          "text": "Do not detach into range of Light Binding; being rooted keeps you stuck and stops you from re-attaching.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 28, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Yuumi:Lux:2",
+          "text": "Use Zoomies while attached to shield your ally against Lux's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 55, "end": 58 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Yuumi:Lux:3",
+          "text": "Steer Prowling Projectile around to poke Lux; it slows her and she has no easy way to dodge it from afar.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Lux", "start": 41, "end": 44 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Yuumi:Lux:4",
+          "text": "Move out of the red line before Final Spark fires; your ally takes it even while you are attached.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9201e9a79070ecd67ba5e0efb234c66e9f15088990ee6ec380b9353a1f41869e",
+      "tips": [
+        {
+          "id": "support:Yuumi:Milio:0",
+          "text": "Attach with You and Me! to your carry before Ultra Mega Fire Kick lands; you can't be targeted while attached, so the kick must hit your partner.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Milio-Q", "start": 45, "end": 65 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Yuumi:Milio:1",
+          "text": "Don't dash with You and Me! while Milio's kick is ready; getting stunned mid-dash knocks you down and puts it on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Milio", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Yuumi:Milio:2",
+          "text": "Steer Prowling Projectile around his minions and hit Milio. It slows him and is hard for him to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Milio", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Yuumi:Milio:3",
+          "text": "Use Final Chapter when Milio and his partner are bunched up. It slows them and damages them, and it heals your own team.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7fdfcd3addfd6f2acb3d0d510014e27cf511c729922f21d0f2c86e991cee4594",
+      "tips": [
+        {
+          "id": "support:Yuumi:Nami:0",
+          "text": "Stay attached to your ally in fights. Nami's Aqua Prison cannot target you then, so she has to aim at your partner.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Nami-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Yuumi:Nami:1",
+          "text": "Do not dash with You and Me! while Aqua Prison is ready, because a stun mid-dash knocks you down and puts it on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Nami-Q", "start": 35, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Yuumi:Nami:2",
+          "text": "Use Prowling Projectile to slow Nami and her carry when they step forward. It stops at the first enemy it hits, so line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 },
+            { "kind": "champion", "key": "Nami", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Yuumi:Nami:3",
+          "text": "Back off when Nami's ally is empowered by Tidecaller's Blessing. It runs out quickly, so wait it out before trading.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Nami-E", "start": 42, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Yuumi:Nami:4",
+          "text": "Watch for Tidal Wave coming from far away and step out of its path. It travels slowly, so you can usually dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 10, "end": 20 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "005339e732448019cfc4b2799982941c0864b6c20d1321d07397b2a3f1bcc57c",
+      "tips": [
+        {
+          "id": "support:Yuumi:Nautilus:0",
+          "text": "Stay attached to your ally so Nautilus can't target you, and stand ready to dodge Dredge Line on your lane partner.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 82, "end": 93 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Yuumi:Nautilus:1",
+          "text": "Don't detach in front of Nautilus. Alone, you are easy to hook and stun.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Yuumi:Nautilus:2",
+          "text": "Use Zoomies on your ally when Nautilus is about to engage; the shield and speed help them avoid the hook.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Yuumi:Nautilus:3",
+          "text": "Prowling Projectile at Nautilus when he walks up; the slow makes his approach harder.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 0, "end": 19 },
+            { "kind": "champion", "key": "Nautilus", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ee43cda542c7056320bda591fa9a48b692ccb1fe1a148e22a4371c41d2be5a18",
+      "tips": [
+        {
+          "id": "support:Yuumi:Pantheon:0",
+          "text": "Stay attached to your partner when Pantheon is near; you can't be targeted, so he must go after your partner.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Yuumi:Pantheon:1",
+          "text": "When Pantheon jumps in with Shield Vault, cast Zoomies on your partner so the shield soaks his hit.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 28, "end": 40 },
+            { "kind": "ability", "key": "Yuumi-E", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Yuumi:Pantheon:2",
+          "text": "Don't aim Prowling Projectile at Pantheon while he braces with Aegis Assault; he takes no damage from the front.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 10, "end": 29 },
+            { "kind": "champion", "key": "Pantheon", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Yuumi:Pantheon:3",
+          "text": "Watch for the warning of Grand Starfall and move your partner out of the area; Final Chapter can slow him if he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 25, "end": 39 },
+            { "kind": "ability", "key": "Yuumi-R", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cd255a503daaa9ac69099491050d3c37a77db02413a8653196f0413ac9409baa",
+      "tips": [
+        {
+          "id": "support:Yuumi:Pyke:0",
+          "text": "Stay attached to your ally when Pyke is near; you can't be targeted except by towers, so his Bone Skewer and Phantom Undertow can't hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 93, "end": 104 },
+            { "kind": "ability", "key": "Pyke-E", "start": 109, "end": 125 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Yuumi:Pyke:1",
+          "text": "Don't detach or dash out when Pyke is close. If he stuns you mid-dash, you fall and can't attach again for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Yuumi:Pyke:2",
+          "text": "Hit Pyke with Prowling Projectile to slow him and reveal him. It keeps him from slipping away to heal.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 14, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Yuumi:Pyke:3",
+          "text": "Keep poking Pyke from range while he is visible. He heals back damage only when enemies can't see him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Pyke", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Yuumi:Pyke:4",
+          "text": "Use Zoomies on your ally when Pyke dashes in; the shield soaks some of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Pyke", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Yuumi:Pyke:5",
+          "text": "Use Final Chapter to heal your team after a fight with Pyke, and to slow him so he can't escape.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2385ce08eaf2a27a01e228e52375c20339eda2a42d71e8d594ded4ff59179794",
+      "tips": [
+        {
+          "id": "support:Yuumi:Senna:0",
+          "text": "Stay attached to your carry and out of Senna's reach; you are untargetable except by towers while attached.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Yuumi:Senna:1",
+          "text": "Dodge Last Embrace; it is a slow shot you can sidestep, and the root comes after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Yuumi:Senna:2",
+          "text": "Steer Prowling Projectile around minions to hit Senna, because the missile stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Senna", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Yuumi:Senna:3",
+          "text": "Cast Zoomies on your carry when Senna is about to trade; the shield and speed help you win the exchange.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Senna", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Yuumi:Senna:4",
+          "text": "Do not leave your partner while Senna can reach you; being rooted or slowed while detached makes you easy to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5493004261c2e037dcbc43c18095553c03a80b45441aced967e599d57e6c3d62",
+      "tips": [
+        {
+          "id": "support:Yuumi:Seraphine:0",
+          "text": "Stay attached to your carry in lane. Seraphine can't target you, so her damage must go through your ally.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Yuumi:Seraphine:1",
+          "text": "Dodge Beat Drop. Getting slowed by your own Prowling Projectile or an ally's effect would let Seraphine root her targets, so stay out of her line.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 44, "end": 63 },
+            { "kind": "champion", "key": "Seraphine", "start": 94, "end": 103 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Yuumi:Seraphine:2",
+          "text": "Use Zoomies on your carry when Seraphine threatens a trade. The shield soaks her High Note.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Seraphine", "start": 31, "end": 40 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Yuumi:Seraphine:3",
+          "text": "Stay attached when Seraphine charms with Encore. You are untargetable, but your carry still gets stunned, so keep healing them.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 104 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Yuumi:Seraphine:4",
+          "text": "Steer Prowling Projectile around the lane to slow Seraphine when you attack, then let your carry follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Seraphine", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6bf531271b3fbb3a220c64797dbb67608165dda184a62e6ab631f782988e5a0f",
+      "tips": [
+        {
+          "id": "support:Yuumi:Sona:0",
+          "text": "Stay attached to your carry in lane. While attached you cannot be targeted except by towers, so Hymn of Valor only gets your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 96, "end": 109 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Yuumi:Sona:1",
+          "text": "Steer Prowling Projectile around the first enemy in the way, and aim it at Sona. She has no escape, and the slow lets your carry follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Sona", "start": 75, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Yuumi:Sona:2",
+          "text": "Stay alert to Crescendo. Dodge it when you can, since it stuns whatever it hits, and detaching early leaves you exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Yuumi:Sona:3",
+          "text": "Use Zoomies on your carry just before a trade; the shield absorbs Sona's poke and gives them speed.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Sona", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "poke", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3befdf5f0df64e6fdcf89223c72fe2df873aac8329d5fbff691cc12c83c0da96",
+      "tips": [
+        {
+          "id": "support:Yuumi:Thresh:0",
+          "text": "Stay attached to your ally when Thresh is near; you can't be targeted, so Death Sentence can only hook your partner.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Yuumi:Thresh:1",
+          "text": "When you are not attached, stay behind minions so Death Sentence can't reach you. A hook on you means you are stunned and pulled in.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 50, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Yuumi:Thresh:2",
+          "text": "Hold You and Me! so you can reattach to an ally once Thresh uses his hook, since being stunned while not attached is dangerous.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Yuumi:Thresh:3",
+          "text": "Steer Prowling Projectile around the minions to hit Thresh. It slows him, so he can't easily close in on you or your partner.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Thresh", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Yuumi:Thresh:4",
+          "text": "Use Zoomies on your partner when Thresh winds up a hook; the shield and Move Speed help them escape a pull or Flay.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Thresh", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Thresh-E", "start": 110, "end": 114 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

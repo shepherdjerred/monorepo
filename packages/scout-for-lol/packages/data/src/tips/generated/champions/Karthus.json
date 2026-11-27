@@ -1,0 +1,1682 @@
+{
+  "schemaVersion": 1,
+  "champion": "Karthus",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "1ed15cc5da4140498e1a48de1e558c7cf4b09e22b088b2d6cd0e687c2182e94c",
+      "tips": [
+        {
+          "id": "jungle:Karthus:general:0",
+          "text": "Aim Lay Waste at a single target when you can; it hits much harder on one enemy than on a group. Use it on lone camps and lone champions.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Karthus:general:1",
+          "text": "Toggle Defile on when you are standing in a camp or next to an enemy, and switch it off when nothing is near. It drains your mana quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Karthus:general:2",
+          "text": "Put Wall of Pain in a chasing enemy's path so they are slowed and take more magic damage. It also works to stop an escape.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Karthus:general:3",
+          "text": "Use Requiem from level 6 to finish low-health enemies anywhere on the map. Check the map for kills in other lanes before you start the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Karthus:general:4",
+          "text": "Enemies see Requiem coming and can stop it. Flash or a kill on you interrupts the channel, so start it when you are safe.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 12, "end": 19 },
+            { "kind": "summoner-spell", "key": "4", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Karthus:general:5",
+          "text": "When you die, keep casting with Death Defied. Stand where enemies must pass and use Lay Waste and Defile; Requiem stops working partway through.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 32,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Karthus-Q", "start": 84, "end": 93 },
+            { "kind": "ability", "key": "Karthus-E", "start": 98, "end": 104 },
+            { "kind": "ability", "key": "Karthus-R", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Karthus:general:6",
+          "text": "Kill camps and units with Defile on to get mana back. Destroying a structure with it also restores mana.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9bc28fc9853b2143c07d6a5e1ce365472256d370b56cefe5d7e13c7b3df95448",
+      "tips": [
+        {
+          "id": "adc:Karthus:general:0",
+          "text": "Aim Lay Waste at a single enemy when you can; it hits much harder when it catches only one target, so use it on the enemy, not on a group of minions.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Karthus:general:1",
+          "text": "Lay Waste has a short delay before it lands, so aim where the enemy is walking, not where they stand.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 0, "end": 9 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Karthus:general:2",
+          "text": "Place Wall of Pain in the path of an enemy who is running at you or fleeing; they are slowed and lose Magic Resist after touching it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Karthus:general:3",
+          "text": "Turn on Defile only when enemies are close enough to hit, and turn it off when they leave, because it drains your mana quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Karthus:general:4",
+          "text": "Killing minions or structures with Defile gives mana back, which helps you keep your spells going.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Karthus:general:5",
+          "text": "If you die, keep casting with Death Defied while you can; your spells cost nothing, but you can't move. Hit anything that walks near your body.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 30,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Karthus:general:6",
+          "text": "Use Requiem from level 6 to finish enemies hurt anywhere on the map; the damage reaches them at any distance. Ask allies to call out low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Karthus:general:7",
+          "text": "Start Requiem only when you are safe, because enemies see a beam of light and Flash or death interrupts it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 6, "end": 13 },
+            { "kind": "summoner-spell", "key": "4", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "809f4191de5bec97a112ad816f363bc0c2e92d4f5d35ff1f801bf2690d7d6770",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Graves:0",
+          "text": "Cast Requiem when Graves is low after a jungle fight or a gank; he cannot easily dodge it from across the map.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Graves", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Karthus:Graves:1",
+          "text": "Put Wall of Pain in the narrow path Graves needs to chase you through. It slows him and lowers his Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Graves", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Karthus:Graves:2",
+          "text": "Graves dashes with Quickdraw to close in, so don't stand still with Defile on. Slow him first, then keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Graves-E", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Karthus-E", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Karthus:Graves:3",
+          "text": "If Graves kills you, keep casting with Death Defied. Lay Waste and Wall of Pain can still punish him if he stays near your body.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 3, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 39,
+              "end": 51
+            },
+            { "kind": "ability", "key": "Karthus-Q", "start": 53, "end": 62 },
+            { "kind": "ability", "key": "Karthus-W", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Karthus:Graves:4",
+          "text": "Aim Lay Waste so it hits Graves alone. A lone target takes much more damage than a group.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Graves", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fac2613ea51ca4bd5be8b4ef7bb44f1faff9d3d27a33bb5ea413f88fd6c844b5",
+      "tips": [
+        {
+          "id": "jungle:Karthus:JarvanIV:0",
+          "text": "Keep Wall of Pain ready for when Jarvan IV dives in; it slows him and cuts his Magic Resist, so Lay Waste and Defile hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "JarvanIV", "start": 33, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 96, "end": 105 },
+            { "kind": "ability", "key": "Karthus-E", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Karthus:JarvanIV:1",
+          "text": "Stay away from the line between Jarvan IV and his Demacian Standard. If he pulls himself along it, you get knocked up and can't escape.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 50, "end": 67 },
+            { "kind": "keyword", "key": "knocked-up", "start": 107, "end": 117 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Karthus:JarvanIV:2",
+          "text": "Hit Jarvan IV with Lay Waste when he is alone. A single target takes much more damage from it.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Karthus:JarvanIV:3",
+          "text": "If Jarvan IV kills you, keep casting Lay Waste and Defile from your spirit form. He can't hit you there, so use it to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 3, "end": 12 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "Karthus-E", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Karthus:JarvanIV:4",
+          "text": "Don't toggle Defile on while Jarvan IV is hunting you. It drains your mana fast, and you need that mana for Lay Waste and Wall of Pain.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 13, "end": 19 },
+            { "kind": "champion", "key": "JarvanIV", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 108, "end": 117 },
+            { "kind": "ability", "key": "Karthus-W", "start": 122, "end": 134 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "69262f6e8e5c9e91b6e896123b11e17bfa41bffbc2f4f68a98a473ee913397b7",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Kayn:0",
+          "text": "Hit Kayn with Wall of Pain when he runs at you; it slows him and lowers his Magic Resist, so Lay Waste and Defile hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Karthus-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 93, "end": 102 },
+            { "kind": "ability", "key": "Karthus-E", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Karthus:Kayn:1",
+          "text": "Aim Lay Waste so it hits Kayn alone; a single target takes much more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Karthus:Kayn:2",
+          "text": "Do not stand still once Kayn has damaged you. Umbral Trespass can reach a marked target, so keep your health up.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Kayn-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Karthus:Kayn:3",
+          "text": "Kayn can slip through walls with Shadow Step. Watch the edge of nearby terrain for his warning and don't sit with your back to a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-E", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Karthus:Kayn:4",
+          "text": "Keep casting after you die. Death Defied lets you keep using Lay Waste and Defile, so keep Kayn inside the area.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 28,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Karthus-Q", "start": 61, "end": 70 },
+            { "kind": "ability", "key": "Karthus-E", "start": 75, "end": 81 },
+            { "kind": "champion", "key": "Kayn", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a73de3879dadb978bcd9935bf02b74cd0c794d28d29a7b63a83e8d7630d649a5",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Khazix:0",
+          "text": "Stay near your minions, turret or allies. Kha'Zix hits much harder with Taste Their Fear when you are isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 72, "end": 88 },
+            { "kind": "keyword", "key": "isolated", "start": 102, "end": 110 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Karthus:Khazix:1",
+          "text": "Put Wall of Pain where Kha'Zix will jump in or run out. He is slowed and loses Magic Resist, so your damage hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Karthus:Khazix:2",
+          "text": "Keep Defile on when Kha'Zix lands on you. It deals steady damage to him and he can't easily avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Khazix", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Karthus:Khazix:3",
+          "text": "Use Requiem to finish him when he is low. It hits from any distance, even after he escapes.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Karthus:Khazix:4",
+          "text": "Hit him with Lay Waste when he is alone, since it deals extra damage when it hits only one enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 13, "end": 22 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Karthus:Khazix:5",
+          "text": "If you die, keep casting Lay Waste and Defile from Death Defied. Kha'Zix may stay close to finish the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 51,
+              "end": 63
+            },
+            { "kind": "champion", "key": "Khazix", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5596296e0351ad365e9e2a0c3ffff3c1cd5f29f3dc323d0fe99b3173c36fe0e3",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Kindred:0",
+          "text": "Hit Kindred with Lay Waste alone when you can; a lone target takes double damage, so avoid hitting her next to minions or monsters.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Karthus:Kindred:1",
+          "text": "Put Wall of Pain in her path when she dashes or chases; she is slowed and loses Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Karthus:Kindred:2",
+          "text": "Kindred is fragile, so pressure her with Lay Waste from range and force her to play cautiously.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Karthus:Kindred:3",
+          "text": "Do not count on Requiem to finish her if she has Lamb's Respite up; it stops units from dying inside the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Kindred-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Karthus:Kindred:4",
+          "text": "If you die near her, keep casting during Death Defied, but stay out of her reach; Defile still hurts anyone who stays close.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 41,
+              "end": 53
+            },
+            { "kind": "ability", "key": "Karthus-E", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "af5624ef0003a04acdfea998caea96c4a80e1546f15be7f88eacd4c8d3b97429",
+      "tips": [
+        {
+          "id": "jungle:Karthus:LeeSin:0",
+          "text": "Put Wall of Pain in front of Lee Sin when he closes in; the slow and the lost Magic Resist make him easy to hit with Lay Waste.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 117, "end": 126 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Karthus:LeeSin:1",
+          "text": "Stay away from his allies and the walls around you; Dragon's Rage can kick him into you, so keep your team spread out.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Karthus:LeeSin:2",
+          "text": "Lee Sin takes magic damage badly, so Lay Waste hits him hard when it lands on him alone.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Karthus:LeeSin:3",
+          "text": "Keep Defile off until he is close, then turn it on; it hurts him while he chases you and drains your mana fast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Karthus:LeeSin:4",
+          "text": "If Lee Sin kills you, keep casting Lay Waste and Defile from your spirit form; he can't touch you while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 3, "end": 10 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 35, "end": 44 },
+            { "kind": "ability", "key": "Karthus-E", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "097a74780fb011abf0e3c3892526d84794d35430da88765bc133657a74b1b3d8",
+      "tips": [
+        {
+          "id": "jungle:Karthus:MasterYi:0",
+          "text": "Lay Waste does double damage on a lone target, so aim it at Master Yi when he is alone, such as when he is farming camps.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "MasterYi", "start": 60, "end": 69 },
+            { "kind": "keyword", "key": "isolated", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Karthus:MasterYi:1",
+          "text": "Master Yi can't be slowed once Highlander is active, so save Wall of Pain for before he turns it on.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 31, "end": 41 },
+            { "kind": "ability", "key": "Karthus-W", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Karthus:MasterYi:2",
+          "text": "Stay near minions or allies so Alpha Strike has other targets, and keep Defile running when he jumps on you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Karthus-E", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Karthus:MasterYi:3",
+          "text": "Use Requiem when Master Yi is low after a fight. Meditate heals him, so finish him before he channels it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "MasterYi", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8ce6cf9db1600b70bbb42bd981f6f1341dc76b6b15b8fc466af05d914c26a0a5",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Naafiri:0",
+          "text": "Use Wall of Pain on the path Naafiri dashes through; she ends up slowed and takes more magic damage from you.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Karthus:Naafiri:1",
+          "text": "Aim Lay Waste at Naafiri herself, not her packmates. It hits much harder when it catches only one enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Karthus:Naafiri:2",
+          "text": "Keep your health high when Naafiri is around. Requiem does not stop her from diving, so do not count on it to save you.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Karthus-R", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Karthus:Naafiri:3",
+          "text": "If you die near her, keep casting from your spirit form. Lay Waste and Defile still hit her if she stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 57, "end": 66 },
+            { "kind": "ability", "key": "Karthus-E", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "652fb7898b78f9732bd4261831b4ffcf18ae7730afe72c3fd27fa01987544b54",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Nocturne:0",
+          "text": "Hold your Wall of Pain for when Nocturne dives in; it slows him and cuts his Magic Resist, so your damage hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Nocturne", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Karthus:Nocturne:1",
+          "text": "Stay away from Nocturne when Unspeakable Horror is ready; if the tether holds, he fears you and you cannot fight back well.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Karthus:Nocturne:2",
+          "text": "Keep moving away when Nocturne's Shroud of Darkness is up, since it blocks your next ability. Bait it with a cheap Lay Waste first.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 33, "end": 51 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 115, "end": 124 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Karthus:Nocturne:3",
+          "text": "Nocturne can dash to you from across the map with Paranoia. Stay near allies and keep your Wall of Pain ready when the map goes dark.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 50, "end": 58 },
+            { "kind": "ability", "key": "Karthus-W", "start": 91, "end": 103 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Karthus:Nocturne:4",
+          "text": "Even if you die to Nocturne, keep casting Lay Waste and Defile from your spirit form, and stay out of the fight if you can't hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 42, "end": 51 },
+            { "kind": "ability", "key": "Karthus-E", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "963e97c0fe1c305444914f78fc0793c5f98fa6cfe81f1f4f97159e60e8e5c03a",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Shyvana:0",
+          "text": "Keep your distance from Shyvana and poke with Lay Waste; she is weak when she cannot hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Karthus:Shyvana:1",
+          "text": "Put Wall of Pain in her path when she runs at you; she is slowed and loses Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Karthus:Shyvana:2",
+          "text": "Aim Lay Waste at her alone so it hits for double damage, and keep her away from her minions.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Karthus:Shyvana:3",
+          "text": "Do not stand on her dragon form flight path; Dragon's Descent makes you flee and she then closes the gap. Walk away from her landing spot.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Karthus:Shyvana:4",
+          "text": "Keep Defile off when she is far away; it costs a lot of mana and only hurts enemies close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Karthus:Shyvana:5",
+          "text": "Use Requiem to finish her if she is low after a fight; it hits from any distance.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b1257c8c3ba719fe77170459ffb2a3cb3e7c9b8f1bb491f40e8e49357118317",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Skarner:0",
+          "text": "Put Wall of Pain down on the path Skarner charges along; he is immune to slows during Ixtal's Impact, but the wall still cuts his Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Skarner-E", "start": 86, "end": 100 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Karthus:Skarner:1",
+          "text": "Stay far from Skarner and poke with Lay Waste; he has to get close to do his damage.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 14, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Karthus:Skarner:2",
+          "text": "Keep your distance from walls when Skarner charges; if he drags you into one, you are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Karthus:Skarner:3",
+          "text": "If you die, keep casting Lay Waste and Defile from your spirit form on enemies who stay close to your corpse.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Karthus:Skarner:4",
+          "text": "Use Requiem to finish Skarner once he is hurt from a fight, because he cannot dodge it or run out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Skarner", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4c1718a990f800a5915850d1dd9cd14317354e4ad28f15db9b431984b868ba83",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Sylas:0",
+          "text": "Cast Requiem when Sylas is low on health. He can heal with Kingslayer, so finish him before he gets the chance.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Karthus:Sylas:1",
+          "text": "Keep Wall of Pain in front of you when Sylas closes in. He ends up slowed and takes more magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Karthus:Sylas:2",
+          "text": "Aim Lay Waste at Sylas when he is alone. A blast that hits only one enemy deals double damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "isolated", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Karthus:Sylas:3",
+          "text": "Stay away from where Sylas can dash in. Abduct stuns and knocks you up, and he reaches you fast.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Karthus:Sylas:4",
+          "text": "If you die, keep casting Lay Waste and Defile with Death Defied. Sylas will often walk in to finish you.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 51,
+              "end": 63
+            },
+            { "kind": "champion", "key": "Sylas", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5389f54d59d9420ebdcf9d9344c5d60762e6ed059b4a80fd7f9d37ac71d260db",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Talon:0",
+          "text": "Keep Wall of Pain ready for when Talon jumps in; it slows him and makes your follow-up damage hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Karthus:Talon:1",
+          "text": "Stay away from walls Talon can vault over and watch for his Shadow Assault, since he can appear next to you quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Talon-R", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Karthus:Talon:2",
+          "text": "Keep Defile on when Talon dives you; it hits him every second while he is next to you, and you cannot be pushed around.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Karthus:Talon:3",
+          "text": "If Talon kills you, keep casting Lay Waste and Defile from your spirit form, and use Requiem early enough to finish before it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "Karthus-E", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Karthus-R", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Karthus:Talon:4",
+          "text": "Use Requiem when Talon is low after a fight; it hits from any distance, and he cannot hide from it by vaulting walls.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1817348eaf006ca91334a186dc2379801a8b108a011e42407b1141959c15307e",
+      "tips": [
+        {
+          "id": "jungle:Karthus:Viego:0",
+          "text": "Keep Lay Waste on Viego when he is alone; it hits much harder against a single target. Use it to poke him when he's isolated.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Viego", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "isolated", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "isolated", "start": 116, "end": 124 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Karthus:Viego:1",
+          "text": "Put Wall of Pain where Viego must run through it; he is slowed and loses Magic Resist, so he can't easily close in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Karthus:Viego:2",
+          "text": "Use Requiem from far away when Viego is low after a fight; it hits him wherever he is.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Viego", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Karthus:Viego:3",
+          "text": "If Viego kills you, keep casting while you are in spirit form. He can't hit you, so Defile and Lay Waste still punish him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Karthus-E", "start": 84, "end": 90 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 95, "end": 104 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Karthus:Viego:4",
+          "text": "Don't let Viego reach you in a fight when you can't move. Spectral Maw stuns the first enemy it hits, so stay out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Viego-W", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b4608bb8bac25031d3e9adb918a5d3d0c77b163ae641a1ba7ca4b16cd44df2ac",
+      "tips": [
+        {
+          "id": "jungle:Karthus:XinZhao:0",
+          "text": "Place Wall of Pain in front of Xin Zhao when he charges. It slows him and cuts his Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Karthus:XinZhao:1",
+          "text": "Keep Lay Waste on Xin Zhao as he approaches, but stay away from him. Audacious Charge closes the gap fast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 69, "end": 85 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Karthus:XinZhao:2",
+          "text": "Do not stand where Xin Zhao can finish his third Three Talon Strike attack. The knock up sets up his whole combo.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 49, "end": 67 },
+            { "kind": "keyword", "key": "knocked-up", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Karthus:XinZhao:3",
+          "text": "If you die, keep casting Lay Waste and Defile from your spirit form on whoever stands near you.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Karthus:XinZhao:4",
+          "text": "Use Requiem when Xin Zhao is low after a fight or camp. Damage that hits from far away is hard for him to avoid.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "XinZhao", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1ca6f0192f3c853d83b52b04e296a96a9073be904b063fbe5670ac1b35eac0fb",
+      "tips": [
+        {
+          "id": "adc:Karthus:Ashe:0",
+          "text": "Use Lay Waste on Ashe whenever she is alone in the blast; the damage is much higher.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ashe", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Karthus:Ashe:1",
+          "text": "Put Wall of Pain behind Ashe when you trade; she will be slowed and take more magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Karthus:Ashe:2",
+          "text": "Stay out of a straight line with Ashe so Enchanted Crystal Arrow is hard to land on you. A stun from far away means death.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Ashe-R", "start": 41, "end": 64 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Karthus:Ashe:3",
+          "text": "Stay behind your minions so Volley arrows are absorbed before they reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "adc:Karthus:Ashe:4",
+          "text": "Ashe has few ways to escape, so Requiem can finish her when she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karthus-R", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5cb46ea8662b19a967bb72ce3e49c4bbaa28d0fee4c28281cfb773afb0df0e6f",
+      "tips": [
+        {
+          "id": "adc:Karthus:Caitlyn:0",
+          "text": "Poke with Lay Waste on Caitlyn when she is alone in the lane; it hits much harder when it catches only one enemy.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Caitlyn", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Karthus:Caitlyn:1",
+          "text": "Keep out of Piltover Peacemaker's long range, because it hits from far away and Karthus has little to dodge it with.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 12, "end": 31 },
+            { "kind": "champion", "key": "Karthus", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Karthus:Caitlyn:2",
+          "text": "Put Wall of Pain on the lane when you want to fight; enemies who cross it are slowed and lose Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Karthus:Caitlyn:3",
+          "text": "Watch for Yordle Snap Trap before you step forward with Defile; being rooted next to her is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 10, "end": 26 },
+            { "kind": "ability", "key": "Karthus-E", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Karthus:Caitlyn:4",
+          "text": "If you die, keep casting Lay Waste and Defile from Death Defied at anyone who walks over your body.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 51,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Karthus:Caitlyn:5",
+          "text": "Use Requiem at level 6 when Caitlyn is hurt from lane; it hits her from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Caitlyn", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "759dc3f93a2bbfd06f6b5dc9532a2568a8cf3c59e4a3884d6d61d41a2ffea038",
+      "tips": [
+        {
+          "id": "adc:Karthus:Ezreal:0",
+          "text": "Use Lay Waste on Ezreal when he is alone in range, because it hits much harder against one target. Aim it where he walks to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ezreal", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "isolated", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Karthus:Ezreal:1",
+          "text": "Put Wall of Pain across the path Ezreal needs to take to get at you. He is slowed and loses Magic Resist, so your next spells hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Karthus:Ezreal:2",
+          "text": "Ezreal can dodge Lay Waste, so aim it where he is walking. It lands after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Karthus:Ezreal:3",
+          "text": "Ezreal can blink away with Arcane Shift, so don't expect to finish him just by stepping on him with Defile. Turn Defile on only when he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Karthus-E", "start": 100, "end": 106 },
+            { "kind": "ability", "key": "Karthus-E", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Karthus:Ezreal:4",
+          "text": "If you die, keep casting with Death Defied while Ezreal is near your corpse. Lay Waste still goes off, so use it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 30,
+              "end": 42
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Karthus:Ezreal:5",
+          "text": "Use Requiem when Ezreal is low from a trade or has gone to base. Telegraphed beams warn him, so he may flee.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8ae8c3b7ec1c564733044af8e8ff2b574cc75d3377b7aee50a7fc5d5335888c7",
+      "tips": [
+        {
+          "id": "adc:Karthus:Jhin:0",
+          "text": "Aim Lay Waste at Jhin when he is alone in the area; a blast that hits only one enemy hurts far more.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Jhin", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Karthus:Jhin:1",
+          "text": "Place Wall of Pain where Jhin must walk to reach you or his minions; he is slowed and takes extra magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Jhin", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Karthus:Jhin:2",
+          "text": "Step out of line when Jhin aims Deadly Flourish, especially right after you were hit by his ally, because it roots.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Jhin-W", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Karthus:Jhin:3",
+          "text": "Watch the ground for Jhin's hidden traps before walking forward to harass him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Karthus:Jhin:4",
+          "text": "Keep your health high once you reach level 6, since Requiem hits Jhin from anywhere and finishes him when he is weak.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 52, "end": 59 },
+            { "kind": "champion", "key": "Jhin", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Karthus:Jhin:5",
+          "text": "If you die in lane, keep casting with Death Defied and keep Defile on if enemies stand near your corpse.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 38,
+              "end": 50
+            },
+            { "kind": "ability", "key": "Karthus-E", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "350fef35426e5f10126c799be2aa97e166d75e6e9f2f23677e5daef6eba3aa85",
+      "tips": [
+        {
+          "id": "adc:Karthus:Jinx:0",
+          "text": "Poke Jinx with Lay Waste when she is alone in the blast; it hits much harder on a single target than on a crowd.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Karthus:Jinx:1",
+          "text": "Place Wall of Pain where Jinx will walk or flee; she is slowed and loses Magic Resist, so follow up with Lay Waste.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 105, "end": 114 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Karthus:Jinx:2",
+          "text": "Turn on Defile only when Jinx or her support is close enough to be hit; it drains your mana fast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 8, "end": 14 },
+            { "kind": "champion", "key": "Jinx", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Karthus:Jinx:3",
+          "text": "Jinx is easy to finish with Requiem after a trade, because it hits her from any distance. Her low health makes her a good target.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karthus-R", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Karthus:Jinx:4",
+          "text": "If you die, keep casting Lay Waste and Defile in your Death Defied form; you can't move, so aim at where enemies are standing.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 54,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "01aa5a86742286c9cb4b42fb7e53c49a2b6856b4a777fd01924bdd0121c7ea03",
+      "tips": [
+        {
+          "id": "adc:Karthus:Kaisa:0",
+          "text": "Poke with Lay Waste on a lone target; it hits much harder when it catches only one enemy, so aim at Kai'Sa when her support stands apart.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Kaisa", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Karthus:Kaisa:1",
+          "text": "Lay Waste outranges Kai'Sa's basic attacks. Poke her when she walks up to last-hit minions.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Kaisa", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Karthus:Kaisa:2",
+          "text": "Put Wall of Pain across her path when she tries to close in; she is slowed and takes more magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Karthus:Kaisa:3",
+          "text": "Turn on Defile when she is close and stuck in a fight. Turn it off when she leaves, because it drains your mana fast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Karthus:Kaisa:4",
+          "text": "Keep casting after you die. Death Defied lets you land Lay Waste and Defile while the enemy is chasing you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 28,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Karthus-Q", "start": 55, "end": 64 },
+            { "kind": "ability", "key": "Karthus-E", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Karthus:Kaisa:5",
+          "text": "Use Requiem to finish Kai'Sa when she is low. She can't escape it by running, but she can interrupt it with a Flash.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kaisa", "start": 22, "end": 28 },
+            { "kind": "summoner-spell", "key": "4", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0d5439a714956a6a80ed85f3e274e956b5495b9fb85e7b8dcd7ff06356d7edc4",
+      "tips": [
+        {
+          "id": "adc:Karthus:MissFortune:0",
+          "text": "Poke Miss Fortune with Lay Waste when she steps up to last-hit; it deals double damage when it hits only her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MissFortune", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Karthus:MissFortune:1",
+          "text": "Put Wall of Pain across her path when she dashes in or retreats; she is slowed and her Strut speed will not save her.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 87,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "adc:Karthus:MissFortune:2",
+          "text": "Hitting her breaks Strut's speed bonus, so land a Lay Waste before she can close in or run away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 19,
+              "end": 24
+            },
+            { "kind": "ability", "key": "Karthus-Q", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Karthus:MissFortune:3",
+          "text": "Respect Double Up through minions; stand away from the minion in front of you so the shot cannot bounce to you.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 8, "end": 17 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Karthus:MissFortune:4",
+          "text": "Do not stand still in Make It Rain or in front of Bullet Time; both hurt a lot if you stay in them. Move sideways out of them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 22,
+              "end": 34
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 50,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:Karthus:MissFortune:5",
+          "text": "Use Requiem when she is low after a fight; it hits her from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2357a81bd5d556cc1b45f06db3dde362bfc3ce66fbfbc5db236e7dee27b4690f",
+      "tips": [
+        {
+          "id": "adc:Karthus:Sivir:0",
+          "text": "Use Lay Waste on Sivir when she is alone, so it hits for much more. Cast it where she will walk, since it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sivir", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "isolated", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Karthus:Sivir:1",
+          "text": "Bait Spell Shield with a weak Lay Waste before you cast Wall of Pain or Requiem. She can only block one ability.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Karthus-W", "start": 56, "end": 68 },
+            { "kind": "ability", "key": "Karthus-R", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Karthus:Sivir:2",
+          "text": "Dodge Boomerang Blade. If it hits you on the way out, stay out of its path on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Karthus:Sivir:3",
+          "text": "Keep farming with Lay Waste and stay out of Sivir's reach. She pushes fast, so do not let the wave crash into your tower.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 18, "end": 27 },
+            { "kind": "champion", "key": "Sivir", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Karthus:Sivir:4",
+          "text": "If you die, keep casting Lay Waste and Defile from your spirit form on anyone close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Karthus-E", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "24df625e2ee3d7f852d38cebe01fe15ba903b86c9bb602b6e11ae6ae2eb9f903",
+      "tips": [
+        {
+          "id": "adc:Karthus:Smolder:0",
+          "text": "Poke with Lay Waste on Smolder whenever he walks up to last-hit; it hits much harder when he is the only enemy it touches.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Karthus:Smolder:1",
+          "text": "Fight Smolder early, before his Dragon Practice stacks have made his abilities hit hard.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 32,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Karthus:Smolder:2",
+          "text": "Place Wall of Pain where Smolder must cross to reach you, so he is slowed and takes more magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Karthus:Smolder:3",
+          "text": "Turn on Defile when Smolder flies in with Flap, Flap, Flap, but stay out of his Achooo! line.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 8, "end": 14 },
+            { "kind": "champion", "key": "Smolder", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Smolder-E", "start": 42, "end": 58 },
+            { "kind": "ability", "key": "Smolder-W", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Karthus:Smolder:4",
+          "text": "Use Requiem to finish Smolder when he retreats low on health; it reaches him from any distance.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1a0cefd30eedcedb20b90812d7172c13155d975a6730d9ee9c489a179e707d03",
+      "tips": [
+        {
+          "id": "adc:Karthus:Yunara:0",
+          "text": "Poke Yunara with Lay Waste when she is alone in the blast; a lone target takes much more damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Karthus:Yunara:1",
+          "text": "Place Wall of Pain where Yunara must walk to reach you or her minions; she is slowed and takes more magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Yunara", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Karthus:Yunara:2",
+          "text": "Turn on Defile when Yunara walks up to trade; it hurts everyone close to you, but it drains your mana fast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 8, "end": 14 },
+            { "kind": "champion", "key": "Yunara", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Karthus:Yunara:3",
+          "text": "Keep casting after you die. Death Defied lets you drop a last Lay Waste or Defile on anyone who chases your corpse.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 28,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Karthus-Q", "start": 62, "end": 71 },
+            { "kind": "ability", "key": "Karthus-E", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Karthus:Yunara:4",
+          "text": "Use Requiem to finish Yunara when she is hurt after a trade, since it hits wherever she is.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Yunara", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

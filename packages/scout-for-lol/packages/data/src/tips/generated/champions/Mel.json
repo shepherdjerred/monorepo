@@ -1,0 +1,1877 @@
+{
+  "schemaVersion": 1,
+  "champion": "Mel",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "77f214f4312b9866a955c7e84f14b259fe4d65bfb277cafbe969d0e14c9fe14f",
+      "tips": [
+        {
+          "id": "middle:Mel:general:0",
+          "text": "Cast Rebuttal when enemy spells or projectiles are about to land on you. It destroys them, and the shield and speed boost are a bonus.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Mel:general:1",
+          "text": "Open with Solar Snare at long range. The root lasts longer the farther the orb travels, so a far hit sets up your whole combo.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 10, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Mel:general:2",
+          "text": "Aim Radiant Barrage at where the enemy will be, such as after they are rooted or while they walk up to farm. Hitting a champion shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Mel:general:3",
+          "text": "Cast an ability just before an auto attack. Searing Brilliance then fires extra bolts with that attack.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-passive", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Mel:general:4",
+          "text": "Keep hitting the same enemy to build up Overwhelm. When they are low, it executes them, so keep poking a weakened enemy.",
+          "refs": [],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Mel:general:5",
+          "text": "Cast Golden Eclipse to finish an enemy carrying many Overwhelm stacks. It needs an enemy champion with Overwhelm on them and hits every affected enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Mel:general:6",
+          "text": "Use Rebuttal on your allies' side in a fight. The shield and speed boost reach allies the nova touches.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "dd85fe590900b4564796770d3fdb14bb90229ed01d22c69816be7b31db936084",
+      "tips": [
+        {
+          "id": "support:Mel:general:0",
+          "text": "Throw Solar Snare from long range when you can; the root lasts longer the farther the orb travels. Close-range casts only root briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "rooted", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Mel:general:1",
+          "text": "Cast Rebuttal when enemy projectiles are about to land on you or an ally. It destroys them, shields your team and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Mel:general:2",
+          "text": "Save Rebuttal for the enemy's most dangerous projectile instead of using it on cooldown. Wait until they have thrown it.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Mel:general:3",
+          "text": "Aim Radiant Barrage at where an enemy will stand, such as when they are rooted or last-hitting. Hitting a champion shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Mel:general:4",
+          "text": "Use an ability before you auto-attack. Searing Brilliance then adds extra bolts to that attack, so cast first and hit right after.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-passive", "start": 39, "end": 57 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Mel:general:5",
+          "text": "Keep poking the same enemy so Overwhelm builds up. Once they are low, Golden Eclipse can finish them, and Overwhelm can execute them on its own.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-R", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Mel:general:6",
+          "text": "Follow a Solar Snare with Radiant Barrage on the rooted enemy. They can't step out of it, and your allies can join in.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Mel-Q", "start": 26, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "35b0a49efebc03fc65fdb442833f2a25b008d02d0beaa40879abf4637093d793",
+      "tips": [
+        {
+          "id": "middle:Mel:Ahri:0",
+          "text": "Use Rebuttal as Ahri throws Charm. It destroys the kiss and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ahri", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ahri-E", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Mel:Ahri:1",
+          "text": "Fire Solar Snare from long range to keep Ahri off you. A longer shot roots her for longer, which gives you time to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ahri", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Mel:Ahri:2",
+          "text": "Keep poking with Radiant Barrage while Ahri's Orb of Deception is on cooldown. Hitting a champion shortens its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Mel-Q", "start": 17, "end": 32 },
+            { "kind": "champion", "key": "Ahri", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Mel:Ahri:3",
+          "text": "Hit Ahri with several abilities and attacks to build Overwhelm stacks. When her health is low, those stacks can execute her.",
+          "refs": [{ "kind": "champion", "key": "Ahri", "start": 4, "end": 8 }],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "898fdba67be5c6f1af2b581a162fb6dab632074b60a4f8c4eb2a360c967d0095",
+      "tips": [
+        {
+          "id": "middle:Mel:Akali:0",
+          "text": "Cast Rebuttal as Akali throws Shuriken Flip; it destroys the shuriken and stops her dash from being recast.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Akali-E", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "middle:Mel:Akali:1",
+          "text": "Aim Solar Snare at Akali as she dashes in; the root holds her still while your damage lands. Longer range gives a longer root.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Akali", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Mel:Akali:2",
+          "text": "Hit Akali with Radiant Barrage when she walks up to the wave; it is a good way to poke her down.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Mel-Q", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Mel:Akali:3",
+          "text": "Aim Radiant Barrage at the smoke from Twilight Shroud; area damage still hits her inside and reveals her.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Akali-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "middle:Mel:Akali:4",
+          "text": "Keep Rebuttal ready when Akali is at level 6; her Perfect Execution is hard to avoid otherwise and you are easy to kill when low.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Akali-R", "start": 50, "end": 67 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c44f208b006933baf303b0c76d9c1731b71c20751311e6149d9e1cd1421fb4ba",
+      "tips": [
+        {
+          "id": "middle:Mel:Anivia:0",
+          "text": "Use Rebuttal when Anivia casts Flash Frost at you; it destroys the ice and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Anivia", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Mel:Anivia:1",
+          "text": "Hit Anivia with Solar Snare from long range; the farther the orb travels, the longer she is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Mel-E", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Mel:Anivia:2",
+          "text": "Dodge Flash Frost by sidestepping. Stay out of range of the stun at the end of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Mel:Anivia:3",
+          "text": "Fight in lane and not near walls. Anivia's egg is hard to kill early, so kill her only when it is safe to do so.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Mel:Anivia:4",
+          "text": "Use Radiant Barrage on Anivia when she stands still channeling Glacial Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Anivia-R", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9d9179c1f1d2159126d73da32630e8af846318fb000d5b7a0f746286c68ea70a",
+      "tips": [
+        {
+          "id": "middle:Mel:Aurora:0",
+          "text": "Cast Rebuttal when Aurora's Twofold Hex or The Weirding is about to land; it destroys the projectile and shocks her back.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Aurora", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Aurora-E", "start": 43, "end": 55 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Mel:Aurora:1",
+          "text": "Aim Solar Snare at long range when Aurora walks up; the root lasts longer the farther the orb flies, so you can punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Mel:Aurora:2",
+          "text": "Hit Aurora with Radiant Barrage from far away while she is busy with minions; the cooldown shortens when it hits her.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Mel-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Mel:Aurora:3",
+          "text": "When Aurora vanishes with Across the Veil, do not chase blindly. Wait for her to reappear before spending Solar Snare.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Mel-E", "start": 106, "end": 117 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Mel:Aurora:4",
+          "text": "Once Aurora is low, use Golden Eclipse to finish her; Overwhelm stacks make the blast hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Mel-R", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fcfad1633d5009f46d9ba543ff4106ab17975024e0f552cbe5e30e9bd1776e39",
+      "tips": [
+        {
+          "id": "middle:Mel:Cassiopeia:0",
+          "text": "Use Rebuttal when Cassiopeia fires Noxious Blast or Twin Fang at you. It destroys the projectile and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 18, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 35,
+              "end": 48
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 52, "end": 61 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Mel:Cassiopeia:1",
+          "text": "Turn away from Cassiopeia as Petrifying Gaze goes off, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Mel:Cassiopeia:2",
+          "text": "Fire Solar Snare from long range so the root lasts longer. Cassiopeia is easy to hit while she walks around in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Mel:Cassiopeia:3",
+          "text": "Stay out of Miasma. It grounds you and slows you, and it stops your movement abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 12,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Mel:Cassiopeia:4",
+          "text": "Cast an ability, then attack. Searing Brilliance fires extra bolts on your next attack and adds Overwhelm stacks toward an execute.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-passive", "start": 30, "end": 48 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Mel:Cassiopeia:5",
+          "text": "Hit Cassiopeia with Radiant Barrage whenever she stands still to farm. Hitting a champion shortens its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Mel-Q", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "befa5f9e515ef93d48ff4d3e1ab1c7eec1f5e2f260b54699be96a3206194e7e0",
+      "tips": [
+        {
+          "id": "middle:Mel:Fizz:0",
+          "text": "Cast Rebuttal when Fizz throws the lure from Chum the Waters. It destroys the lure and stops his ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Fizz", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Fizz-R", "start": 45, "end": 60 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Mel:Fizz:1",
+          "text": "Aim Solar Snare at Fizz when his Playful is on cooldown. While he is balanced on his trident he can't be targeted.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Mel:Fizz:2",
+          "text": "Stack Overwhelm with Radiant Barrage and your attacks. Once Fizz is low, Golden Eclipse can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Fizz", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Mel-R", "start": 73, "end": 87 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Mel:Fizz:3",
+          "text": "Keep Fizz away while his Seastone Trident glows, because his attacks hit harder for a few seconds. Use Rebuttal for a shield when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Fizz-W", "start": 25, "end": 41 },
+            { "kind": "ability", "key": "Mel-W", "start": 103, "end": 111 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5238f1719f4cb5a2a50852d5b2454788e8e89e3564f224b5e79b25fdcf33f33e",
+      "tips": [
+        {
+          "id": "middle:Mel:Malzahar:0",
+          "text": "Cast Rebuttal as Malzahar throws Call of the Void or Nether Grasp; it destroys projectiles and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Malzahar", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 33, "end": 49 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Mel:Malzahar:1",
+          "text": "Don't waste Solar Snare while Void Shift is up; Malzahar ignores crowd control then. Hit him once he has taken damage.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 30,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Mel:Malzahar:2",
+          "text": "Stay away from minions marked by Malefic Visions; when they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Mel:Malzahar:3",
+          "text": "Stand out of Call of the Void's two portals; being silenced stops your Rebuttal and Solar Snare.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Mel-W", "start": 71, "end": 79 },
+            { "kind": "ability", "key": "Mel-E", "start": 84, "end": 95 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "middle:Mel:Malzahar:4",
+          "text": "Cast Radiant Barrage from long range and weave attacks in; each ability gives bonus bolts on your next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Mel:Malzahar:5",
+          "text": "Voidlings hit hard when Malzahar has built stacks of Void Swarm. Back off from them or clear them with your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malzahar-W", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "286737ecc0559e9bf4516d7bafa5afb019aa519b5735a0539a0cebe1712c1689",
+      "tips": [
+        {
+          "id": "middle:Mel:Orianna:0",
+          "text": "Cast Rebuttal when Orianna sends the Ball at you with Command: Attack; it destroys the projectile and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Orianna", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Mel:Orianna:1",
+          "text": "Aim Solar Snare at Orianna's Ball when she walks up to trade; being rooted keeps her from escaping your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Mel:Orianna:2",
+          "text": "Stay away from the Ball when Orianna has Command: Shockwave; anyone near it gets pulled in and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Orianna-R", "start": 41, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Mel:Orianna:3",
+          "text": "Cast an ability before you auto-attack; Searing Brilliance adds extra bolts to the attack, and Overwhelm stacks build toward an execute.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-passive", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f9cf948b8dc99e0a4ba2b7a50a07e039657e4635390dc897d6b6effd180007ed",
+      "tips": [
+        {
+          "id": "middle:Mel:Ryze:0",
+          "text": "Cast Rebuttal when Ryze throws Overload at you; it destroys the projectile and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Ryze", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Mel:Ryze:1",
+          "text": "Fire Solar Snare from long range; the farther the orb travels, the longer Ryze is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 74, "end": 78 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Mel:Ryze:2",
+          "text": "Stay out of Rune Prison range, as it is a targeted spell and roots you if you carry Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Mel:Ryze:3",
+          "text": "Land Radiant Barrage on Ryze while he is rooted or slowed, so most bolts connect.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ryze", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Mel:Ryze:4",
+          "text": "Keep hitting Ryze with spells and attacks to build Overwhelm, then cast Golden Eclipse to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Mel-R", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "aa450c0a31df9a064ee7d1ae5c35602e923b51d5e0525fcade0808c2c5e98e51",
+      "tips": [
+        {
+          "id": "middle:Mel:Sylas:0",
+          "text": "Hold Rebuttal for Sylas's Abduct or Chain Lash; it destroys the projectile and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Mel:Sylas:1",
+          "text": "Rebuttal cannot stop Kingslayer, because it is a targeted dash. Hit him with Radiant Barrage as he comes in.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Sylas-W", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Mel-Q", "start": 77, "end": 92 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Mel:Sylas:2",
+          "text": "Land Solar Snare from long range for a longer root. Then follow with Radiant Barrage while he cannot move.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Mel-Q", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Mel:Sylas:3",
+          "text": "Keep hitting Sylas to build Overwhelm. When he is low, Golden Eclipse or one attack can execute him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Mel-R", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Mel:Sylas:4",
+          "text": "Fight him when Hijack is on cooldown. Once he has hit you with Hijack, he cannot take Golden Eclipse again for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-R", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Sylas-R", "start": 63, "end": 69 },
+            { "kind": "ability", "key": "Mel-R", "start": 86, "end": 100 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Mel:Sylas:5",
+          "text": "Do not trust his health bar. Kingslayer heals him a lot when he is low, so finish him fast.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "99fedf5f661bf9b00e5015030455aaea47f2628825ae8541c59be5cc89e60687",
+      "tips": [
+        {
+          "id": "middle:Mel:TwistedFate:0",
+          "text": "Hold Rebuttal for Twisted Fate's Wild Cards. It destroys the cards, shields you and hits him back.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 18,
+              "end": 30
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 33,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Mel:TwistedFate:1",
+          "text": "Hit Twisted Fate with Solar Snare when he picks the Gold Card or comes to last-hit. A long throw roots him longer.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Mel-E", "start": 22, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Mel:TwistedFate:2",
+          "text": "Poke him with Radiant Barrage whenever it's ready. Hitting a champion shortens its cooldown, so you can fire it again sooner.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Mel-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Mel:TwistedFate:3",
+          "text": "Watch for Destiny. When he reveals the map, play safe, because he can gate in to ambush you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Mel:TwistedFate:4",
+          "text": "Land several hits on him to build Overwhelm, then use Golden Eclipse once his health is low.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-R", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0ab24ab47034ef18b7c63d65fce8a302c059d08b251c949430f02a37175352fb",
+      "tips": [
+        {
+          "id": "middle:Mel:Viktor:0",
+          "text": "Use Rebuttal when Viktor fires Hextech Ray or Siphon Power at you; it destroys the projectile and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Viktor", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Viktor-E", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Mel:Viktor:1",
+          "text": "Fire Solar Snare from long range so the root lasts longest, then follow up while Viktor can't move.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "Viktor", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Mel:Viktor:2",
+          "text": "Don't stand inside Gravity Field; leave it before it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Mel:Viktor:3",
+          "text": "Cast an ability before your next attack, so Searing Brilliance adds extra bolts to it.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-passive", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Mel:Viktor:4",
+          "text": "Move out of Arcane Storm early, since it follows whoever it damaged. Don't stay near it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "76bcbc6d7007a8bac3ed1d54a141d40959134f1857d90a927f0bd71d3e01ce3a",
+      "tips": [
+        {
+          "id": "middle:Mel:Yasuo:0",
+          "text": "Cast Rebuttal when Yasuo's whirlwind from Steel Tempest comes at you; it destroys the projectile and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Mel:Yasuo:1",
+          "text": "Aim Solar Snare from long range; it roots for longer the farther it travels, giving you time to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "rooted", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Mel:Yasuo:2",
+          "text": "Expect Yasuo to put Wind Wall in front of your Radiant Barrage and Solar Snare; wait for it to fall before you throw them.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "Mel-Q", "start": 47, "end": 62 },
+            { "kind": "ability", "key": "Mel-E", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Mel:Yasuo:3",
+          "text": "Keep hitting Yasuo with abilities and attacks to build Overwhelm, then finish him with Golden Eclipse.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Mel-R", "start": 87, "end": 101 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Mel:Yasuo:4",
+          "text": "Hold Rebuttal for when Yasuo dashes in with Sweeping Blade; the shield and speed help you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Mel:Yasuo:5",
+          "text": "Avoid getting knocked up by Yasuo's whirlwind, because that lets him use Last Breath on you.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "66e459f7d19d838b84f98c23c4eb0c290a6295990b95967da75a3c26cf8eba4f",
+      "tips": [
+        {
+          "id": "middle:Mel:Yone:0",
+          "text": "Fire Solar Snare from long range at Yone. The root lasts longer the farther the orb travels, so he cannot easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 36, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Mel:Yone:1",
+          "text": "Cast Rebuttal when Yone's Mortal Steel knock-up or Fate Sealed comes at you. It destroys the projectile and shields you and your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Yone-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Yone-R", "start": 51, "end": 62 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Mel:Yone:2",
+          "text": "Poke Yone with Radiant Barrage from long range. Hitting a champion shortens its cooldown, so you can keep firing it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Mel-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Mel:Yone:3",
+          "text": "Keep hitting Yone to build Overwhelm stacks, then use Golden Eclipse once his health is low enough for the stacks to kill him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Mel-R", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Mel:Yone:4",
+          "text": "Do not chase Yone while he is in spirit form. When it ends he snaps back to his body and repeats damage on you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "807f73d7b4b13b5e04af10c3f8eb8a08ab0d3d013870d02b94a1c95ba9b7e7a8",
+      "tips": [
+        {
+          "id": "middle:Mel:Zed:0",
+          "text": "Hold Rebuttal for Zed's Razor Shuriken or Living Shadow; it destroys them and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Zed", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Zed-Q", "start": 24, "end": 38 },
+            { "kind": "ability", "key": "Zed-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Mel:Zed:1",
+          "text": "Zed's Death Mark dash can't be destroyed by Rebuttal, so don't count on the nova to stop his ultimate.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Mel-W", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Mel:Zed:2",
+          "text": "Hit Zed with Solar Snare when he lands from a Living Shadow dash; a rooted Zed can't swap back to safety.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Mel-E", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Zed-W", "start": 46, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 },
+            { "kind": "champion", "key": "Zed", "start": 75, "end": 78 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Mel:Zed:3",
+          "text": "Use Radiant Barrage to poke Zed when he has no shadow out; his damage and mobility depend on it.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Zed", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Mel:Zed:4",
+          "text": "Zed's Contempt for the Weak hurts more when you are low, so keep your health up and trade carefully.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-passive", "start": 6, "end": 27 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "359fe790931893e362e9b9e81a6ca7d896ff65f37a2a5dd910324bd1e72e68a8",
+      "tips": [
+        {
+          "id": "support:Mel:Bard:0",
+          "text": "Cast Rebuttal when Cosmic Binding is coming at you; it destroys the bolt and shields you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Bard-Q", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Mel:Bard:1",
+          "text": "Stand away from walls and from other units lined up behind you, so Cosmic Binding cannot stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 67, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Mel:Bard:2",
+          "text": "Use Solar Snare from long range on Bard; the farther the orb flies, the longer the root lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Bard", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Mel:Bard:3",
+          "text": "Walk over Bard's shrines to destroy them, so his ally cannot take the healing.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Mel:Bard:4",
+          "text": "Follow Bard through his Magical Journey portal only when you are sure it is safe; enemies can use it too.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Bard-E", "start": 24, "end": 39 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Mel:Bard:5",
+          "text": "Use Radiant Barrage on Bard whenever he walks up for chimes or last-hits; casting it also powers up your next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Bard", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Mel:Bard:6",
+          "text": "Do not fight into Tempered Fate unless you want to be frozen in place with your enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "48477f64d01637d31e133778f6d91886e0524abd5d1ce1ec576a40071cf7b1c9",
+      "tips": [
+        {
+          "id": "support:Mel:Braum:0",
+          "text": "Cast Rebuttal when Braum fires Winter's Bite or Glacial Fissure at you or your carry. It destroys the projectile and shields your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Braum", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Braum-Q", "start": 31, "end": 44 },
+            { "kind": "ability", "key": "Braum-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Mel:Braum:1",
+          "text": "Don't fire Radiant Barrage or Solar Snare into a raised Unbreakable. Wait until his shield is down or aim from another side.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 11, "end": 26 },
+            { "kind": "ability", "key": "Mel-E", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Braum-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Mel:Braum:2",
+          "text": "Leave combat before Braum and his ally land more hits on you. A fourth stack of Concussive Blows stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 20, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 80,
+              "end": 96
+            },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Mel:Braum:3",
+          "text": "Stay out of the frozen ground left by Glacial Fissure, and use its long cast time to step aside.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Mel:Braum:4",
+          "text": "Fire Solar Snare from long range so the root lasts longer, then follow up while Braum is stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "Braum", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c92fa7b645dc9c9fe1d82f38998eb623b6126e2c48a363230244bbbabfe41c9b",
+      "tips": [
+        {
+          "id": "support:Mel:Karma:0",
+          "text": "Time Rebuttal to eat Karma's Inner Flame; it destroys the projectile and shields you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Karma", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Karma-Q", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Mel:Karma:1",
+          "text": "Stay out of range of Focused Resolve, or walk away so the tether breaks before it roots you. Karma uses it to disengage too.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 },
+            { "kind": "champion", "key": "Karma", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Mel:Karma:2",
+          "text": "Fire Solar Snare at long range for a longer root. Follow with Radiant Barrage while Karma can't move.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Mel-Q", "start": 62, "end": 77 },
+            { "kind": "champion", "key": "Karma", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Mel:Karma:3",
+          "text": "Leave the Mantra circle fast. Inner Flame with Mantra explodes there for big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Karma-Q", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Karma-R", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Mel:Karma:4",
+          "text": "Keep hitting Karma so Overwhelm stacks build. Once she is low, Golden Eclipse can finish her.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Mel-R", "start": 63, "end": 77 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "251a8d69662a68ab024f90fafe619668ea47923431323b01b8f2682a01e0c572",
+      "tips": [
+        {
+          "id": "support:Mel:Leona:0",
+          "text": "Wait until Leona commits Zenith Blade, then answer with Rebuttal. It destroys the sword, so she cannot dash to you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Leona-E", "start": 25, "end": 37 },
+            { "kind": "ability", "key": "Mel-W", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Mel:Leona:1",
+          "text": "Fire Solar Snare from long range when you can. It roots Leona for longer, which stops her from closing in.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 55 },
+            { "kind": "champion", "key": "Leona", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Mel:Leona:2",
+          "text": "Back off when Leona raises Eclipse. Her armor and magic resist are high for a few seconds, then she deals damage nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Leona-W", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Mel:Leona:3",
+          "text": "Stay out of Leona's reach and use Radiant Barrage from long range. Her empowered attack from Shield of Daybreak stuns you if she gets close.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Mel-Q", "start": 34, "end": 49 },
+            { "kind": "ability", "key": "Leona-Q", "start": 93, "end": 111 },
+            { "kind": "keyword", "key": "stunned", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "27d4070c628853188bc597152310bd5581d3bfc4c0c647d10514dbc7c8cb681b",
+      "tips": [
+        {
+          "id": "support:Mel:Lulu:0",
+          "text": "Wait for Lulu to use Whimsy before you go in. Without it she has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Lulu-W", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Mel:Lulu:1",
+          "text": "Use Rebuttal when Glitterlance is coming. It destroys the bolts and shields you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Mel:Lulu:2",
+          "text": "Stay behind your minions when Lulu attacks, because they can intercept Pix's bolts.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Mel:Lulu:3",
+          "text": "Land Solar Snare from long range. The root lasts longer the further the orb travels.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Mel:Lulu:4",
+          "text": "Do not clump up with your ally when Wild Growth is ready. It knocks up and slows everyone around the target.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 36, "end": 47 },
+            { "kind": "keyword", "key": "knocked-up", "start": 61, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "69e7b91f8909384c25e4d1c0fb7f02f7bb4a3096c01793de02bf6009feb0afd7",
+      "tips": [
+        {
+          "id": "support:Mel:Lux:0",
+          "text": "Use Rebuttal when Lux throws Light Binding or Lucent Singularity at you; it destroys both and hits her back.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Lux", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Lux-Q", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Lux-E", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Mel:Lux:1",
+          "text": "Rebuttal cannot stop Final Spark. When you see its red line, step to the side.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Lux-R", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Mel:Lux:2",
+          "text": "Fire Solar Snare from long range at Lux so the root lasts longer, then follow up with Radiant Barrage.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Mel-Q", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Mel:Lux:3",
+          "text": "Cast an ability before you auto-attack Lux; Searing Brilliance then adds extra bolts to that attack.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 39, "end": 42 },
+            { "kind": "ability", "key": "Mel-passive", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Mel:Lux:4",
+          "text": "Stay spread out from your partner so Lux cannot hit you both with one Light Binding.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 37, "end": 40 },
+            { "kind": "ability", "key": "Lux-Q", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f62f797aa3494be11711c356a39bd8ea5f260ff1be5449ef9b5b0ce19614a1d6",
+      "tips": [
+        {
+          "id": "support:Mel:Milio:0",
+          "text": "Aim Solar Snare at Milio from long range when he steps up to kick or poke. The longer the orb travels, the longer he stays rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Milio", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 123, "end": 129 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Mel:Milio:1",
+          "text": "Cast Rebuttal when Milio kicks Ultra Mega Fire Kick at you. It destroys the fireball and shields you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Milio", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Milio-Q", "start": 31, "end": 51 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Mel:Milio:2",
+          "text": "Milio is fragile when he is alone. Look for him when his allies are away, then land Solar Snare and follow up with Radiant Barrage.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "isolated", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Mel-E", "start": 84, "end": 95 },
+            { "kind": "ability", "key": "Mel-Q", "start": 115, "end": 130 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Mel:Milio:3",
+          "text": "Watch for his Breath of Life before you commit your root. It cleanses crowd control from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c865dfe9300128725bb272be9a0235f5d7cacf8a1639b14d85ea8c5b8c46499b",
+      "tips": [
+        {
+          "id": "support:Mel:Nami:0",
+          "text": "Use Rebuttal when Nami's Aqua Prison or Tidal Wave is flying at you; it destroys the projectile and shields you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nami", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Nami-Q", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Nami-R", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Mel:Nami:1",
+          "text": "Fire Solar Snare from far away so the root lasts longer. Nami has little to stop you if she is rooted, so follow up with Radiant Barrage.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "Nami", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 101 },
+            { "kind": "ability", "key": "Mel-Q", "start": 121, "end": 136 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Mel:Nami:2",
+          "text": "Stay out of Nami's Aqua Prison range, and move sideways when she casts it. If she misses, her long cooldown gives you a window to attack.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Nami-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Mel:Nami:3",
+          "text": "Skip fights against a champion with Tidecaller's Blessing active; it fades quickly, so wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 36, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Mel:Nami:4",
+          "text": "Keep hitting Nami and her partner with abilities and attacks to build Overwhelm. Then use Golden Eclipse to finish a low-health enemy.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Mel-R", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Mel:Nami:5",
+          "text": "Step out of the path of Tidal Wave; it travels slowly and you can see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c35d4820b4df3212c9dd246bec9ac4d8d37d60a5fd78dcef1b70a7170f78f44e",
+      "tips": [
+        {
+          "id": "support:Mel:Nautilus:0",
+          "text": "Keep Rebuttal ready for Dredge Line. It destroys the anchor, so Nautilus cannot pull you in.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Nautilus", "start": 64, "end": 72 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Mel:Nautilus:1",
+          "text": "Stay far from Nautilus and poke with Radiant Barrage. His hook has long range, so also stay behind your minions.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Mel-Q", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Mel:Nautilus:2",
+          "text": "Fire Solar Snare at him when he engages. It roots him, and the field around it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Mel:Nautilus:3",
+          "text": "Hold still when Riptide goes off next to you until its waves end. Running early takes you into the later waves.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Mel:Nautilus:4",
+          "text": "Hit his shield with Radiant Barrage when he turns on Titan's Wrath. Its area damage from attacks is big.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Mel:Nautilus:5",
+          "text": "Hold Rebuttal when Nautilus goes for the hook. Depth Charge is a projectile too, so it is useful against his ultimate chase.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Nautilus", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Nautilus-R", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9814234005998e70a9c52d6383a7f064feea4b2d33077d31417bf85193177378",
+      "tips": [
+        {
+          "id": "support:Mel:Pantheon:0",
+          "text": "Hold Solar Snare for when Pantheon jumps in; a rooted Pantheon is easy to kill. Shoot from far away to root him longer.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 47, "end": 53 },
+            { "kind": "champion", "key": "Pantheon", "start": 54, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Mel:Pantheon:1",
+          "text": "Cast Rebuttal when Pantheon throws Comet Spear; it destroys the spear and shields you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Mel:Pantheon:2",
+          "text": "Don't fire into Aegis Assault from the front; he takes no damage from that side. Wait it out or hit him from behind.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Mel:Pantheon:3",
+          "text": "Stay near your ally when Pantheon is up; Shield Vault stuns, so keep Rebuttal ready to cover them.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 41, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Mel-W", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Mel:Pantheon:4",
+          "text": "Keep your health up. A thrown Comet Spear hits hard on low targets, so step back when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Mel:Pantheon:5",
+          "text": "Move away when you see Grand Starfall; it gives a warning before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2dae2fd8084976ced859b21e4598f295129f192efbfb08bd2bb3d31e357059ec",
+      "tips": [
+        {
+          "id": "support:Mel:Pyke:0",
+          "text": "Save Rebuttal for Pyke's Bone Skewer or Phantom Undertow; it destroys the projectile and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Pyke", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Pyke-E", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Mel:Pyke:1",
+          "text": "Hit Pyke with Solar Snare when he comes for a pull. Rooted, he can't dash in, and the field leaves him slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Mel-E", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Mel:Pyke:2",
+          "text": "Keep Radiant Barrage on Pyke to chip him down. He can only heal that damage back once he is out of your sight.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Pyke", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Mel:Pyke:3",
+          "text": "Stay away from low-health allies; Pyke can execute them with Death From Below, and you could be next.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Pyke-R", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Mel:Pyke:4",
+          "text": "When sharks circle under your feet, Pyke is hiding nearby. Step back from your allies and be ready to answer his dash.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f8b69eec89089c7d452bf3f8d6777a2e5e2873c67cf5e65dc01150efae4763c5",
+      "tips": [
+        {
+          "id": "support:Mel:Senna:0",
+          "text": "Cast Rebuttal when Last Embrace is flying at you. It destroys the projectile, so you dodge the root and hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Senna-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Mel:Senna:1",
+          "text": "Hit Senna with Solar Snare from long range for a longer root, then follow with Radiant Barrage while she is stuck.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Mel-E", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Mel-Q", "start": 79, "end": 94 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Mel:Senna:2",
+          "text": "Senna out-ranges you as she collects Mist. Trade on your own terms, and do not stand still where Piercing Darkness can slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-Q", "start": 97, "end": 114 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 123 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Mel:Senna:3",
+          "text": "Chain abilities into a basic attack so Searing Brilliance fires extra bolts. Build Overwhelm stacks on Senna so Golden Eclipse can finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-passive", "start": 39, "end": 57 },
+            { "kind": "champion", "key": "Senna", "start": 103, "end": 108 },
+            { "kind": "ability", "key": "Mel-R", "start": 112, "end": 126 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e1d197e69efb8e2e6678c27d9a3145840754100500db53800d3e39dbc1bbd63d",
+      "tips": [
+        {
+          "id": "support:Mel:Seraphine:0",
+          "text": "Use Rebuttal when Seraphine fires Beat Drop or High Note; it destroys the projectile and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Seraphine", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 34, "end": 43 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Mel:Seraphine:1",
+          "text": "Don't get slowed before Beat Drop lands. Slowed targets get rooted, and rooted ones get stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Mel:Seraphine:2",
+          "text": "Stay out of Encore's long reach; if it hits you, you are charmed and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Mel:Seraphine:3",
+          "text": "Land Solar Snare from far away for a longer root, then follow with Radiant Barrage.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Mel-Q", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "30c26c26c50767ac999c7fdd6b95d5e5a6a9fa309464384471d2440e7ba8c9cc",
+      "tips": [
+        {
+          "id": "support:Mel:Sona:0",
+          "text": "Wait for Sona to commit Crescendo, then answer with Rebuttal to destroy it before it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Sona-R", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Mel-W", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Mel:Sona:1",
+          "text": "Fire Solar Snare from far away to root Sona for longer; she is fragile and cannot escape easily.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Sona", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Mel:Sona:2",
+          "text": "Use Radiant Barrage on Sona when she stands still; hitting a champion shortens its wait.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sona", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Mel:Sona:3",
+          "text": "Kill Sona first in fights; she heals and shields her team with Aria of Perseverance.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sona-W", "start": 63, "end": 83 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "40660b2c2b41a2ef1de2f77b8818152b46cf586bce2bdc52ae69df3a541a4f4e",
+      "tips": [
+        {
+          "id": "support:Mel:Thresh:0",
+          "text": "Hold Rebuttal until Thresh starts casting Death Sentence. It destroys his scythe and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Thresh", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Mel:Thresh:1",
+          "text": "Hit Thresh with Solar Snare when he walks up for a hook. It roots him and the field slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Mel-E", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Mel:Thresh:2",
+          "text": "Stay behind minions so Death Sentence stops on them. It hits the first unit in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "support:Mel:Thresh:3",
+          "text": "Use Radiant Barrage to poke Thresh when he steps forward. Its cooldown drops when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Thresh", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Mel:Thresh:4",
+          "text": "If you get caught by Flay or The Box, use Rebuttal to take a shield and speed up your escape.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Thresh-R", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Mel-W", "start": 42, "end": 50 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

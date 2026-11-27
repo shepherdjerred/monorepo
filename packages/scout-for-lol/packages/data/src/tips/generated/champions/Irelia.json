@@ -1,0 +1,2098 @@
+{
+  "schemaVersion": 1,
+  "champion": "Irelia",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "64dd9a9611ce661ae835b837b9e9d58b2b01f5f9dc4a36d9acd7d1bb9df8311a",
+      "tips": [
+        {
+          "id": "top:Irelia:general:0",
+          "text": "Use Bladesurge on low-health minions to reach the enemy, and cast it on a champion marked Unsteady to get it back almost at once.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Irelia:general:1",
+          "text": "Land Flawless Duet or Vanguard's Edge first to mark the enemy Unsteady, then chain Bladesurge on them.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Irelia-R", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 83, "end": 93 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Irelia:general:2",
+          "text": "Place the first blade of Flawless Duet past the enemy, then recast so they are caught between the blades and stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Irelia:general:3",
+          "text": "Hit minions and champions with your spells to build Ionian Fervor before you trade. Full stacks add bonus damage to your attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 52,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Irelia:general:4",
+          "text": "Hold Defiant Dance a moment before releasing it for more damage. Time it for incoming crowd control, because it is not interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Irelia:general:5",
+          "text": "Use Vanguard's Edge to trap a champion in its cage; they are slowed when they cross the edge. Fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Irelia:general:6",
+          "text": "Bladesurge refunds its cooldown if it kills the target. Finish low-health minions or champions to keep dashing.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Irelia:combo:0",
+          "name": "Dash-cast Flawless Duet",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Irelia-Q" },
+            { "kind": "ability", "key": "Irelia-E" }
+          ],
+          "when": "When you dash onto an enemy and want to stun them as you arrive.",
+          "whenRefs": [],
+          "text": "Flawless Duet can be cast during the Bladesurge dash. Throw the first blade, dash in, then recast so the stun lands as you arrive.",
+          "textRefs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 37, "end": 47 }
+          ]
+        },
+        {
+          "id": "top:Irelia:combo:1",
+          "name": "Unsteady Bladesurge reset",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Irelia-E" },
+            { "kind": "ability", "key": "Irelia-Q" },
+            { "kind": "ability", "key": "Irelia-Q" }
+          ],
+          "when": "When chasing a champion with minions or other targets nearby.",
+          "whenRefs": [],
+          "text": "Flawless Duet marks the enemy as Unsteady. Bladesurge on the marked enemy nearly resets its cooldown, so you can dash again right away.",
+          "textRefs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 43, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4a0157cef65c2658b442c22061c71a0a95319cf9f18d0d80725125b4db1ba28d",
+      "tips": [
+        {
+          "id": "middle:Irelia:general:0",
+          "text": "Hit minions with Bladesurge to dash toward the enemy. Low-health minions are best, because a kill refreshes the cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Irelia:general:1",
+          "text": "Land Flawless Duet or Vanguard's Edge first. Then Bladesurge the unsteady enemy to refresh its cooldown and chain your dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Irelia-R", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Irelia:general:2",
+          "text": "Throw the first blade of Flawless Duet past the enemy, then recast so the blades cross over them. Anyone caught between is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Irelia:general:3",
+          "text": "Start Defiant Dance when you expect damage or a disable. Crowd control can't interrupt it, and holding the charge makes the hit stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Irelia:general:4",
+          "text": "Keep Ionian Fervor stacked by hitting champions with your abilities. At full stacks your attacks deal extra magic damage, so trade then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 5,
+              "end": 18
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Irelia:general:5",
+          "text": "Aim Vanguard's Edge at a champion. Its blades form a cage that slows anyone who walks through it, so use it to stop an escape or trap a target.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Irelia:general:6",
+          "text": "Bladesurge works best when a minion wave is near, because you need targets to dash to. Be careful about diving when the lane is empty.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Irelia:combo:0",
+          "name": "Dash-cast Flawless Duet",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Irelia-Q" },
+            { "kind": "ability", "key": "Irelia-E" }
+          ],
+          "when": "When you dash onto a target and want a stun without a gap between casts.",
+          "whenRefs": [],
+          "text": "Flawless Duet can be cast in the middle of the Bladesurge dash. Use it to place the blade or recast it without losing time.",
+          "textRefs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 47, "end": 57 }
+          ]
+        },
+        {
+          "id": "middle:Irelia:combo:1",
+          "name": "Unsteady Bladesurge reset",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Irelia-E" },
+            { "kind": "ability", "key": "Irelia-Q" },
+            { "kind": "ability", "key": "Irelia-Q" }
+          ],
+          "when": "When you want to chain dashes through minions to stay on a champion.",
+          "whenRefs": [],
+          "text": "The stun marks the champion Unsteady. Bladesurge then almost resets its cooldown on that champion, so you can dash again right away.",
+          "textRefs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 38, "end": 48 }
+          ]
+        },
+        {
+          "id": "middle:Irelia:combo:2",
+          "name": "Ultimate mark Bladesurge",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Irelia-R" },
+            { "kind": "ability", "key": "Irelia-Q" }
+          ],
+          "when": "When you want to engage a champion and keep Bladesurge available.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 44, "end": 54 }
+          ],
+          "text": "The Vanguard's Edge barrage marks the champion Unsteady. Bladesurge then hits the mark and comes back almost at once.",
+          "textRefs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 57, "end": 67 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "520ec566a1bf35d70b29e9996672b4664400ce7b10781a508e767d23a606b73c",
+      "tips": [
+        {
+          "id": "top:Irelia:Aatrox:0",
+          "text": "Use Bladesurge on minions to close the gap, then dash onto Aatrox. Keep a low-health minion nearby so you can leave if you need to.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Aatrox", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Irelia:Aatrox:1",
+          "text": "Hit Aatrox with Flawless Duet first. It leaves him Unsteady, so Bladesurge comes back almost at once and you can chain dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Irelia:Aatrox:2",
+          "text": "Start Defiant Dance as Aatrox begins a swing. It cuts the damage you take and crowd control can't interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Irelia:Aatrox:3",
+          "text": "Dodge the edge of The Darkin Blade. Standing in the middle of the swing means you aren't knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "knocked-up", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Irelia:Aatrox:4",
+          "text": "Use Bladesurge to leave when Infernal Chains lands on you, since Infernal Chains pulls you back only if you stay in its area. Dash out of it before the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Irelia:Aatrox:5",
+          "text": "Use Vanguard's Edge at level 6 to trap Aatrox in the cage when he tries to run, then finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5b2e7442ec492ac396fdf97e5f4ba157d751f938493a52d4a18a24faad87a64e",
+      "tips": [
+        {
+          "id": "top:Irelia:Briar:0",
+          "text": "Use Defiant Dance when Briar leaps in with Head Rush or Blood Frenzy; the stun can't interrupt your charge, and you take much less physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Briar-Q", "start": 43, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Irelia:Briar:1",
+          "text": "Hit Briar with Flawless Duet to stun her, then Bladesurge onto her to refresh your dash and keep fighting.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Irelia-E", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Irelia:Briar:2",
+          "text": "Step back while Briar charges Chilling Scream; if it's fully charged and shoves you into a wall, you take heavy damage and get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Briar-E", "start": 30, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 127, "end": 134 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Irelia:Briar:3",
+          "text": "Keep minions between you and Briar so Bladesurge always has a target to dash to, and use it to escape her chase.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Irelia:Briar:4",
+          "text": "Briar is forced to attack the nearest enemy during Blood Frenzy; kite away with Bladesurge on minions so she wastes her fast attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "aaa6a9fb5a80372b3286a36a47f2d4cac88d3c46a100b4ddfd24bdca6de3ee55",
+      "tips": [
+        {
+          "id": "top:Irelia:Darius:0",
+          "text": "Use Bladesurge on minions to close the gap, but stay out of Darius's Apprehend range until you are ready to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Darius", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Darius-E", "start": 69, "end": 78 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Irelia:Darius:1",
+          "text": "Trade in short bursts and step away. Darius gets much stronger when he stacks Hemorrhage on you, so don't stand and trade with him.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 78,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Irelia:Darius:2",
+          "text": "Use Flawless Duet on Darius, then Bladesurge him. The mark it leaves lets Bladesurge come back almost at once.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 34, "end": 44 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Irelia:Darius:3",
+          "text": "Stun Darius with Flawless Duet when he winds up Decimate. He can walk during it but cannot cast Apprehend, so stay out of the axe's edge and hit him.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Irelia-E", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Darius-Q", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Darius-E", "start": 96, "end": 105 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Irelia:Darius:4",
+          "text": "Charge Defiant Dance when you expect Darius to engage. Crowd control does not interrupt it, and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Irelia:Darius:5",
+          "text": "Save Vanguard's Edge to trap Darius when he is low. It slows him, so he cannot easily walk out.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a1b99d6450f40843c2751b5c016890b9d3bc61ad4b644d85771d828e25ef7cf",
+      "tips": [
+        {
+          "id": "top:Irelia:Fiora:0",
+          "text": "Don't stun Fiora with Flawless Duet while Riposte is ready; she can turn it into a stun on you. Wait until she has used it, then commit.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Fiora", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Irelia-E", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Fiora-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Irelia:Fiora:1",
+          "text": "Bait Riposte with a cheap Bladesurge on a minion or a poke, then go in once she has spent it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 26, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Irelia:Fiora:2",
+          "text": "Mark Fiora with Flawless Duet, then Bladesurge her to refresh the cooldown and chain your dashes.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Irelia:Fiora:3",
+          "text": "Keep minions near you before you trade. Bladesurge needs them to close the gap and to escape her Lunge.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 40, "end": 50 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Irelia:Fiora:4",
+          "text": "Use Defiant Dance when she is about to strike you; it can't be interrupted and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a6f3fb9fd2c18cc171155eae5f39490b30892bd13db33a47467baa6be9545e0c",
+      "tips": [
+        {
+          "id": "top:Irelia:Gangplank:0",
+          "text": "Hit Gangplank with Flawless Duet or Vanguard's Edge first; that marks him Unsteady, so Bladesurge hits and comes back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Irelia-E", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Irelia-R", "start": 36, "end": 51 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Irelia:Gangplank:1",
+          "text": "Hold Defiant Dance until he tries to trade or detonate a keg; the charge cannot be interrupted and cuts physical damage taken.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Irelia:Gangplank:2",
+          "text": "Use Bladesurge on minions to close the gap, but avoid dashing into a cluster of his kegs; the explosion slows you and hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Irelia:Gangplank:3",
+          "text": "Stun him with Flawless Duet when he places kegs, so he cannot pop them while you are on him.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Irelia-E", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Irelia:Gangplank:4",
+          "text": "Save your stun for after he uses Remove Scurvy; it cleanses disables, so a stun used before it is wasted.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 33, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Irelia:Gangplank:5",
+          "text": "Aim Vanguard's Edge at him when he is low; the cage traps him and slows him heavily.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "362b3239bd0266a6ad91d6ce586c5f0de388276238490ed4d94dcb611dd69d59",
+      "tips": [
+        {
+          "id": "top:Irelia:Garen:0",
+          "text": "Use Bladesurge on minions to close the gap, but save it to dash onto Garen. Hit him first with Flawless Duet and Bladesurge comes back fast.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Garen", "start": 69, "end": 74 },
+            { "kind": "ability", "key": "Irelia-E", "start": 95, "end": 108 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 113, "end": 123 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Irelia:Garen:1",
+          "text": "Stun Garen with Flawless Duet when he walks up to fight. Then dash in with Bladesurge and trade while he can't move.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Irelia:Garen:2",
+          "text": "Start Defiant Dance just before Garen's Decisive Strike or Judgment lands. Crowd control can't interrupt it, and it cuts the physical damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Garen", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Garen-Q", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Garen-E", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Irelia:Garen:3",
+          "text": "Don't dash onto Garen right after he uses Decisive Strike. He gets a burst of Move Speed, and the Silence stops you casting abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Garen-Q", "start": 42, "end": 57 },
+            { "kind": "keyword", "key": "silenced", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Irelia:Garen:4",
+          "text": "Stay out of range while Garen spins with Judgment, since it hurts whoever is closest. Poke him between spins.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Garen-E", "start": 41, "end": 49 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Irelia:Garen:5",
+          "text": "Keep Garen from regenerating by chipping him whenever he tries to recover. Perseverance stops working for a while after he takes damage from you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 75,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Irelia:Garen:6",
+          "text": "Stay healthy once you reach level 6 and Garen is hurt, because Demacian Justice deals more damage the lower you are. Retreat before he gets to you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Garen-R", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "361e51e8bb5d1d3dda7f58e0c1721992faeedb6a0fd8d975c9ef8dec2faf5e51",
+      "tips": [
+        {
+          "id": "top:Irelia:Jayce:0",
+          "text": "Hold Defiant Dance for when Jayce commits Thundering Blow or To the Skies!; crowd control cannot interrupt the charge and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Irelia:Jayce:1",
+          "text": "Hit Jayce with Flawless Duet first, then use Bladesurge on him; it refreshes its cooldown so you can chase.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Irelia-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Irelia:Jayce:2",
+          "text": "Close in while Jayce is in cannon form and fight him up close, where his long-range poke matters less.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Irelia:Jayce:3",
+          "text": "Aim Flawless Duet so the line crosses Jayce; stunning him stops him from escaping with his hammer leap.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Irelia:Jayce:4",
+          "text": "Keep minions near you so Bladesurge can reach Jayce, and use it on low-health minions to close distance or dodge his shots.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 25, "end": 35 },
+            { "kind": "champion", "key": "Jayce", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b695974efaf2953110e717f48d0f46cdf85bf6ca8b39ac80c964240dee2b207",
+      "tips": [
+        {
+          "id": "top:Irelia:KSante:0",
+          "text": "Don't use Bladesurge on K'Sante minions or into his Ntofo Strikes range carelessly; a pulled and stunned Irelia gets hit hard.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 104 },
+            { "kind": "champion", "key": "Irelia", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Irelia:KSante:1",
+          "text": "Charge Defiant Dance when you expect Path Maker; crowd control can't interrupt it, and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "KSante-W", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Irelia:KSante:2",
+          "text": "Land Flawless Duet on him so he is Unsteady, then Bladesurge to him for a fast cooldown and a quick second dash.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Irelia:KSante:3",
+          "text": "Hit him with abilities to stack Ionian Fervor, then trade while it's full; his Ntofo Strikes slows are weaker when you can dash away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 32,
+              "end": 45
+            },
+            { "kind": "ability", "key": "KSante-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Irelia:KSante:4",
+          "text": "When he goes All Out, he loses health and resistances; use Vanguard's Edge to trap him and burst him down.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Irelia-R", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dd70bb204109d4de3375e534ad6c275176025e7bd60713db79004e20025815e2",
+      "tips": [
+        {
+          "id": "top:Irelia:Malphite:0",
+          "text": "Build Ionian Fervor stacks on minions before you go in; with full stacks your hits deal extra magic damage and you win the trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 6,
+              "end": 19
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Irelia:Malphite:1",
+          "text": "Charge Defiant Dance when Malphite uses Unstoppable Force or Ground Slam; crowd control does not interrupt it and it cuts physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Malphite-R", "start": 40, "end": 57 },
+            { "kind": "ability", "key": "Malphite-E", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Irelia:Malphite:2",
+          "text": "Hit Malphite with Flawless Duet first, then use Bladesurge on him; it hits the Unsteady mark and comes back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Irelia-E", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Irelia:Malphite:3",
+          "text": "Stay spread from Malphite's minions' range when you can; Seismic Shard slows you, so keep a minion or low-health target ready for Bladesurge to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 57, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 130, "end": 140 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Irelia:Malphite:4",
+          "text": "Do not stand in a clump at the end of his Unstoppable Force dash; use Bladesurge to leave when he commits to it.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 42, "end": 59 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0f54dad273e75861a0568460efffdf049e1edb2b804a7bc5b3e1c97068591237",
+      "tips": [
+        {
+          "id": "top:Irelia:Mordekaiser:0",
+          "text": "Use Bladesurge on minions to close the gap, then hit Mordekaiser. Don't dash in without a minion or a mark to bring the cooldown back.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Irelia:Mordekaiser:1",
+          "text": "Stay out of his Death's Grasp line when you can. Dash sideways with Bladesurge on a minion instead of walking straight at him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Irelia-Q", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Irelia:Mordekaiser:2",
+          "text": "Trade in short bursts and back off once he has hit you three times. After that Darkness Rise makes staying close to him costly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 79,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Irelia:Mordekaiser:3",
+          "text": "Hit him with Flawless Duet to stun him and mark him Unsteady. Then Bladesurge onto him and the cooldown comes back for another dash.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 13, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 67, "end": 77 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Irelia:Mordekaiser:4",
+          "text": "When his Indestructible shield is up, hold your damage and wait for it to fade. Hitting into it only wastes your trade.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Irelia:Mordekaiser:5",
+          "text": "Use Defiant Dance when you see Death's Grasp or Obliterate coming. It can't be interrupted, and you take less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 31,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 48,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Irelia:Mordekaiser:6",
+          "text": "After Realm of Death takes you into his realm, you are cut off from your team. Plan to fight him with your own tools, not rely on help.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-R", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d4e7f4c97ede71e69650d25711303af466d60092e3f5ce831fa617f31fb64a35",
+      "tips": [
+        {
+          "id": "top:Irelia:Rumble:0",
+          "text": "Dash onto Rumble with Bladesurge after he overheats; he cannot cast spells or shield himself, so trade hard then.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Irelia:Rumble:1",
+          "text": "Hit Rumble with Flawless Duet first, then Bladesurge to him; the mark it leaves makes Bladesurge ready again fast.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 42, "end": 52 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 86, "end": 96 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Irelia:Rumble:2",
+          "text": "Use Defiant Dance when Rumble's Electro Harpoon or Flamespitter is coming; it cuts magic damage and cannot be interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Rumble-E", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Irelia:Rumble:3",
+          "text": "Do not stand in the burning trail of The Equalizer; use Bladesurge on a minion or Rumble to leave it quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 56, "end": 66 },
+            { "kind": "champion", "key": "Rumble", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5062ea067b6805e01ac7c462625c9148fd5ee2a8d88b1d8d8ac46607a19e0e86",
+      "tips": [
+        {
+          "id": "top:Irelia:Sion:0",
+          "text": "Stay out of Sion's charging line. A full Decimating Smash stuns for a long time, so dodge it or dash out with Bladesurge.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 41, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 110, "end": 120 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Irelia:Sion:1",
+          "text": "Use Defiant Dance when Sion starts charging Decimating Smash. Crowd control can't interrupt it and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Sion-Q", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Irelia:Sion:2",
+          "text": "Hit Sion with Flawless Duet first. It stuns and makes him Unsteady, so Bladesurge comes back quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Irelia-E", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Irelia:Sion:3",
+          "text": "Keep minions nearby so Bladesurge always has a target. Stay close to the wave and out of Sion's Roar of the Slayer.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Sion", "start": 89, "end": 93 },
+            { "kind": "ability", "key": "Sion-E", "start": 96, "end": 114 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Irelia:Sion:4",
+          "text": "Don't kill Sion carelessly when he is low. Glory in Death brings him back at full health and he hits very fast.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Sion-passive", "start": 43, "end": 57 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "402efe30510cfbdf18704ae7cab09493c6549054c9a7b66637d54e2640c1c720",
+      "tips": [
+        {
+          "id": "top:Irelia:Teemo:0",
+          "text": "Dash onto minions with Bladesurge to close the gap on Teemo; his Blinding Dart will not make it miss.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Teemo", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 65, "end": 78 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Irelia:Teemo:1",
+          "text": "Mark Teemo with Flawless Duet, then Bladesurge to him; Bladesurge's cooldown is nearly reset on a marked target.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Teemo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Irelia:Teemo:2",
+          "text": "Look for mushrooms before you walk into brush or a wave; Noxious Trap slows and reveals you. Shoot them with basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Irelia:Teemo:3",
+          "text": "Use Defiant Dance to soak Teemo's poke while you charge, then release it when he is close. It also reduces magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Irelia:Teemo:4",
+          "text": "Check brush before you push up; an invisible Teemo gets bonus Attack Speed when he breaks stealth.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9e81d680a42a043819c4fd147b0582cd6ef00df58aeabd3719c9b82e42489fd1",
+      "tips": [
+        {
+          "id": "top:Irelia:Vayne:0",
+          "text": "Dash in with Bladesurge on a minion next to Vayne, then hit her. She is fragile, so short, sharp trades work well.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 13, "end": 23 },
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Irelia:Vayne:1",
+          "text": "Hit Vayne with Flawless Duet first to mark her, so Bladesurge comes back almost at once and you can dash again.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Irelia-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Irelia:Vayne:2",
+          "text": "Stand away from walls when you fight Vayne, because Condemn pins you for a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Vayne-E", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Irelia:Vayne:3",
+          "text": "Use Defiant Dance when Condemn is about to land. Crowd control does not interrupt the charge, and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Vayne-E", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Irelia:Vayne:4",
+          "text": "Vanguard's Edge cages Vayne so she cannot Tumble away. Use it at level 6 to finish her off.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Vayne", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 42, "end": 48 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e3aa58aac6ed53bf68b225204f97f1c6d7b1c823b74626dc632156fe09ba04b8",
+      "tips": [
+        {
+          "id": "top:Irelia:Yone:0",
+          "text": "Hit Yone with Flawless Duet first, then use Bladesurge on him; the Unsteady mark cuts Bladesurge's cooldown so you can keep chasing.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Irelia-E", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 44, "end": 54 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 86, "end": 96 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Irelia:Yone:1",
+          "text": "Use Bladesurge on minions to close the gap, then trade with Yone while your Ionian Fervor stacks are full.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 60, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 76,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Irelia:Yone:2",
+          "text": "Start Defiant Dance just before Yone's knock up or Fate Sealed lands; it can't be interrupted and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "knocked-up", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Yone-R", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Irelia:Yone:3",
+          "text": "Aim Vanguard's Edge at Yone when you want to trap him; the cage slows him if he walks through it.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d72ff06da9dfdeca8dc5912879742747b2bf5099abe05ef14b241da953d7d9f3",
+      "tips": [
+        {
+          "id": "middle:Irelia:Ahri:0",
+          "text": "Hold Defiant Dance for when Ahri throws Charm. It can't be interrupted by crowd control, and the damage reduction softens her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ahri", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Ahri-E", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Irelia:Ahri:1",
+          "text": "Stay behind minions when Ahri has Charm ready. It stops at the first enemy it hits, so a minion in front of you takes it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Irelia:Ahri:2",
+          "text": "Go in with Bladesurge on a minion to close the gap, then hit Ahri. Kills and Unsteady targets refresh the cooldown, so you can chain dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Ahri", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Irelia:Ahri:3",
+          "text": "Stun Ahri with Flawless Duet to mark her Unsteady, then Bladesurge onto her for a cheap cooldown refresh.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Irelia-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 56, "end": 66 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Irelia:Ahri:4",
+          "text": "Throw the first blade of Flawless Duet past Ahri, so her escape path is covered when the blades meet. She is stunned if she is between them.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Ahri", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Irelia:Ahri:5",
+          "text": "Look for the all-in once Ahri has used Spirit Rush. She is much easier to catch and kill without it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-R", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b679d00493aaf69d704d5562d16f4416db3213ef60c04a51e8ffe570831383d2",
+      "tips": [
+        {
+          "id": "middle:Irelia:Akali:0",
+          "text": "Use Flawless Duet to stun Akali when she jumps in, then follow with Bladesurge. Both can hit her, so a stun and a dash make a strong trade.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 68, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Irelia:Akali:1",
+          "text": "Hit Akali with Flawless Duet first, then dash with Bladesurge. It marks her Unsteady, which makes Bladesurge come back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Irelia-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 51, "end": 61 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 98, "end": 108 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Irelia:Akali:2",
+          "text": "Hold Defiant Dance for when Akali commits her burst. Crowd control can't interrupt the charge, and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Irelia:Akali:3",
+          "text": "Keep minions around you so Bladesurge can chase Akali when she vanishes in smoke, and so you can dash away after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 27, "end": 37 },
+            { "kind": "champion", "key": "Akali", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Irelia:Akali:4",
+          "text": "Use Vanguard's Edge at level 6 to trap Akali when she is low. The cage slows her and stops her from running.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1d4debfc867898bc9fb1170a2370d44aff9709ab243fdba898deed59f5a0c4c9",
+      "tips": [
+        {
+          "id": "middle:Irelia:Anivia:0",
+          "text": "Don't run into Anivia's Crystallize wall. Wait for it to melt, or go around it.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Anivia-W", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Irelia:Anivia:1",
+          "text": "Sidestep Flash Frost. The stun only comes when the ice reaches the end of its range or Anivia detonates it early.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Anivia", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Irelia:Anivia:2",
+          "text": "Use Defiant Dance when Anivia casts Frostbite or Flash Frost at you. Stay out of range or you take the full hit.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Anivia-E", "start": 36, "end": 45 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Irelia:Anivia:3",
+          "text": "Hit her with Flawless Duet, then dive in with Bladesurge. The Unsteady mark refreshes Bladesurge so you can chain onto her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 86, "end": 96 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Irelia:Anivia:4",
+          "text": "Take a fight at low health with Bladesurge on minions first. Her egg lets her come back, so finish her and hit the egg.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Irelia:Anivia:5",
+          "text": "Hit her with Vanguard's Edge to trap her. It slows her inside the cage and stops her from kiting away.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 13, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2816bfb6ab21ba8d679ba2e02a331f64c6f1a26e37e8be80d90ceb12c09c5b1d",
+      "tips": [
+        {
+          "id": "middle:Irelia:Aurora:0",
+          "text": "Hit Aurora with Flawless Duet first; it marks her Unsteady, so Bladesurge then comes back almost at once and you can keep chasing.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Irelia:Aurora:1",
+          "text": "Throw the first blade of Flawless Duet past Aurora, then recast so the stun catches her as she backs away.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Aurora", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Irelia:Aurora:2",
+          "text": "Start Defiant Dance before Aurora's The Weirding or Twofold Hex lands; it cuts the magic damage and crowd control cannot interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Aurora-E", "start": 36, "end": 48 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Irelia:Aurora:3",
+          "text": "Don't dash onto Aurora with Bladesurge when she is about to vanish with Across the Veil. Keep it for a minion so you can still reach her afterwards.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Aurora-W", "start": 72, "end": 87 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Irelia:Aurora:4",
+          "text": "If Aurora lands Between Worlds on you, don't walk into its edge; the enemy inside can jump across it and you get slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Irelia:Aurora:5",
+          "text": "Use Vanguard's Edge to cage Aurora when she is low; the cage slows her badly and keeps her from hopping away.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3f1d0a709ecb947e98129d88d2e226f6f3ec7f52dd3c4b8f07be6ba1c3bcd9b2",
+      "tips": [
+        {
+          "id": "middle:Irelia:Cassiopeia:0",
+          "text": "Use Bladesurge on minions to close the gap, then dash onto Cassiopeia. Keep a low-health minion nearby so you always have a dash target.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Irelia:Cassiopeia:1",
+          "text": "Hit Cassiopeia with Flawless Duet and she becomes Unsteady, so Bladesurge on her comes back almost at once. Chain them to stay on her.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Irelia-E", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Irelia:Cassiopeia:2",
+          "text": "Cassiopeia's Miasma grounds you, so you can't dash with Bladesurge while you stand in it. Wait for the clouds to fade, or dash before they land.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 0, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 13,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Irelia-Q", "start": 56, "end": 66 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Irelia:Cassiopeia:3",
+          "text": "Start Defiant Dance just before Petrifying Gaze lands. It can't be interrupted by crowd control and it cuts her magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Irelia:Cassiopeia:4",
+          "text": "Approach Cassiopeia from the side or from behind. Petrifying Gaze only stuns you if you are facing her.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 9, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 50,
+              "end": 65
+            },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Irelia:Cassiopeia:5",
+          "text": "Stand out of the way of the Noxious Blast she aims at you. Dashing through the minion wave makes it hard for her to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a3b7ae7d3e3f3b028a89f0a9efd32b0b7eacc3708d8c1a06e88867b134d0752",
+      "tips": [
+        {
+          "id": "middle:Irelia:Fizz:0",
+          "text": "Don't dash onto Fizz with Bladesurge when his Playful is ready; he becomes untargetable and your engage is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 26, "end": 36 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Irelia:Fizz:1",
+          "text": "Hit Fizz with Flawless Duet to stun him, then use Bladesurge on the Unsteady mark to dash again at once.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Irelia-E", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Irelia:Fizz:2",
+          "text": "Use Defiant Dance when Fizz commits Urchin Strike or his empowered attack; it can't be interrupted and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Irelia:Fizz:3",
+          "text": "Keep minions around so Bladesurge can chase Fizz, but kill low minions first so you can dash away from his Chum the Waters.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Fizz", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Fizz-R", "start": 107, "end": 122 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Irelia:Fizz:4",
+          "text": "Vanguard's Edge cages Fizz and slows him, so he can't easily escape with Playful. Cast it when he is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d98b78fd684c9262953b17d7d890cfeb79d88b55ec37861cb64c914af25bd89b",
+      "tips": [
+        {
+          "id": "middle:Irelia:Malzahar:0",
+          "text": "Dash onto Malzahar with Bladesurge only when his Void Shift is down; it blocks most of your damage and stuns while it is up.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 49,
+              "end": 59
+            },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 108 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Irelia:Malzahar:1",
+          "text": "Hit Malzahar with Flawless Duet first, then use Bladesurge on him; the mark makes Bladesurge come back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Irelia-E", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 48, "end": 58 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 82, "end": 92 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Irelia:Malzahar:2",
+          "text": "Stay close to minions so you can chain Bladesurge through them, and avoid waves marked by Malefic Visions that could spread it onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 39, "end": 49 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 90, "end": 105 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Irelia:Malzahar:3",
+          "text": "Use Defiant Dance when Call of the Void is about to land; it still charges while you are silenced and cuts damage.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Irelia:Malzahar:4",
+          "text": "Once you are on Malzahar, push him hard. Vanguard's Edge cages him in, so he cannot walk away from your fight.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Irelia-R", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ef307b8601747c384f3a30fec8b22b385886d4073e7d1b433c54212ac117896f",
+      "tips": [
+        {
+          "id": "middle:Irelia:Orianna:0",
+          "text": "Dash onto a minion with Bladesurge, then onto Orianna. Minions give you the reach to close the gap on her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 24, "end": 34 },
+            { "kind": "champion", "key": "Orianna", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Irelia:Orianna:1",
+          "text": "Hit Orianna with Flawless Duet first. It stuns her and marks her Unsteady, so Bladesurge comes back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Irelia-E", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Irelia:Orianna:2",
+          "text": "Use Defiant Dance when you expect her Command: Shockwave. Crowd control can't interrupt the charge, and you take less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Orianna-R", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Irelia:Orianna:3",
+          "text": "Look for her Ball when you dash in. She can only hit what is near it, so stay out of the Ball's area.",
+          "refs": [],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Irelia:Orianna:4",
+          "text": "Land Vanguard's Edge at level 6 to trap her inside the cage. She takes a lot of damage and is slowed if she tries to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "081f582ec933e5ef5e6b7f66c38c8de196c1a7536cb85ec266e9a2fc4bd5ff05",
+      "tips": [
+        {
+          "id": "middle:Irelia:Ryze:0",
+          "text": "Stay off Ryze's Spell Flux marks when you can. Overload and Rune Prison hit much harder and root you when you are marked.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Ryze-E", "start": 16, "end": 26 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 47, "end": 55 },
+            { "kind": "ability", "key": "Ryze-W", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Irelia:Ryze:1",
+          "text": "Use Bladesurge on minions to close the gap, then hit Ryze. Marking him with Flawless Duet lets Bladesurge reset.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ryze", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Irelia-E", "start": 76, "end": 89 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Irelia:Ryze:2",
+          "text": "Hold Defiant Dance until Ryze is about to cast Rune Prison. The charge cannot be interrupted, so the root will not stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ryze", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ryze-W", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Irelia:Ryze:3",
+          "text": "Aim Flawless Duet so Ryze is between the two blades. The stun gives you time to reach him and kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Irelia:Ryze:4",
+          "text": "Use Vanguard's Edge to trap Ryze when he is hurt. The cage slows him, so he cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bc62c8dbf8eb7a0d034862e137f317bc455da51216526a9ee6a1ed77cfad7c50",
+      "tips": [
+        {
+          "id": "middle:Irelia:Sylas:0",
+          "text": "Dash onto minions with Bladesurge to close the gap, then hit Sylas. Keep the dash ready for when he steps up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Sylas", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Irelia:Sylas:1",
+          "text": "Use Defiant Dance when you see Sylas about to cast Abduct. It can't be interrupted, and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Irelia:Sylas:2",
+          "text": "Stay out of a straight line with Sylas. Abduct is blocked by the first enemy it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "middle:Irelia:Sylas:3",
+          "text": "Stun Sylas with Flawless Duet, then dash in with Bladesurge. The stun leaves him Unsteady, so the dash comes back quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Irelia:Sylas:4",
+          "text": "Don't go all in when Sylas is low on health. Kingslayer heals him and can turn the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Sylas-W", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "18b8f8d750405ede0df5689f584bd12b9ac31c985c8a71654380b2d8895139df",
+      "tips": [
+        {
+          "id": "middle:Irelia:TwistedFate:0",
+          "text": "Don't dash onto Twisted Fate with Bladesurge when his Pick a Card is ready. The Gold Card will stun you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Irelia-Q", "start": 34, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 54,
+              "end": 65
+            },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Irelia:TwistedFate:1",
+          "text": "Use Defiant Dance to take his Gold Card stun or Wild Cards; the charge can't be interrupted by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 48,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Irelia:TwistedFate:2",
+          "text": "Hit him with Flawless Duet to stun him and mark him as Unsteady. Then use Bladesurge on him to reset it and go for the kill.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 13, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Irelia:TwistedFate:3",
+          "text": "Watch for Destiny. It reveals you on the map, so he can teleport on you with it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "286f873e990e13200565e32117e637f8f5a6304cee02b1f0252f0b0cc791abdc",
+      "tips": [
+        {
+          "id": "middle:Irelia:Viktor:0",
+          "text": "Hit Viktor with Flawless Duet first, then dash in with Bladesurge. It marks him Unsteady, so Bladesurge comes back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Irelia-E", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 55, "end": 65 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Irelia:Viktor:1",
+          "text": "Walk up with Defiant Dance charging when you expect his Gravity Field or Hextech Ray. Crowd control can't interrupt it and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Viktor-W", "start": 56, "end": 69 },
+            { "kind": "ability", "key": "Viktor-E", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Irelia:Viktor:2",
+          "text": "Use Bladesurge on minions to close the gap, and don't stand still in his Gravity Field. Staying inside it gets you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Viktor-W", "start": 73, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Irelia:Viktor:3",
+          "text": "Land the Vanguard's Edge cage on Viktor at level 6. It slows him and stops him from kiting you.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Viktor", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Irelia:Viktor:4",
+          "text": "Trade once his Siphon Power is on cooldown. Its shield is what makes your all-in weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3604c48a4f05d4ed72c81382c61dcc9d6dfcf3c153616ca406d8f2d0f435f50a",
+      "tips": [
+        {
+          "id": "middle:Irelia:Yasuo:0",
+          "text": "Don't throw Flawless Duet or Vanguard's Edge into Wind Wall; the blades are destroyed and nothing lands. Wait for the wall to fade.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Irelia-R", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Irelia:Yasuo:1",
+          "text": "Hit Yasuo with Flawless Duet first, then use Bladesurge on him. It refreshes quickly and lets you keep chaining dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Irelia-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Irelia:Yasuo:2",
+          "text": "Don't use Flawless Duet into his Steel Tempest knock up; save the stun for when he dashes at you, since the stun leaves him stunned and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 10, "end": 23 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 33, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 112 },
+            { "kind": "keyword", "key": "stunned", "start": 124, "end": 131 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Irelia:Yasuo:3",
+          "text": "Stay out of the way of the whirlwind from Steel Tempest. Being knocked up lets him follow with Last Breath, so sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 63, "end": 73 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Irelia:Yasuo:4",
+          "text": "Use Defiant Dance when you expect his burst; crowd control can't interrupt it and it cuts damage taken.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bc17b5aee7b3ac41af88a27b98fbc29cb3d379c78d13528cd2d58b588ee4bb13",
+      "tips": [
+        {
+          "id": "middle:Irelia:Yone:0",
+          "text": "Use Bladesurge on minions to close the gap, then dash onto Yone once he commits his Mortal Steel.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Yone-Q", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Irelia:Yone:1",
+          "text": "Land Flawless Duet first, then Bladesurge onto Yone; the mark makes Bladesurge come back almost at once.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 31, "end": 41 },
+            { "kind": "champion", "key": "Yone", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Irelia:Yone:2",
+          "text": "Start Defiant Dance when Yone's knock up is about to land; crowd control cannot interrupt it and it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Irelia:Yone:3",
+          "text": "Aim Flawless Duet so Yone is between the blades, even if he is in spirit form; it stuns him for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Irelia:Yone:4",
+          "text": "Trade hard when Yone's Soul Unbound is on cooldown, since he cannot escape or return his damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Yone-E", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Irelia:Yone:5",
+          "text": "At level 6, Vanguard's Edge traps Yone in a cage, slowing him if he tries to leave. Follow with Bladesurge.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Yone", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 96, "end": 106 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f841f4d7989ac190375bcd51f5d69ff794aa21ccc47c8fc229681f3c89abd110",
+      "tips": [
+        {
+          "id": "middle:Irelia:Zed:0",
+          "text": "Use Defiant Dance when Zed commits Death Mark on you; crowd control cannot interrupt it, and it cuts the damage you take while he stores his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Irelia:Zed:1",
+          "text": "Hit Zed with Flawless Duet to stun him, then use Bladesurge on him. He is Unsteady, so Bladesurge comes back almost at once.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Irelia-E", "start": 13, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Irelia:Zed:2",
+          "text": "Use Bladesurge on minions to close in on Zed or to chase him after he swaps away with Living Shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Zed", "start": 41, "end": 44 },
+            { "kind": "ability", "key": "Zed-W", "start": 86, "end": 99 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Irelia:Zed:3",
+          "text": "Stay out of his Razor Shuriken lines and trade when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,899 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ivern",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "1791b2c01dc88f3524ee72d999aaaaccbf44af263120017bc746ad608f91e75b",
+      "tips": [
+        {
+          "id": "jungle:Ivern:general:0",
+          "text": "Plant a grove on each camp with Friend of the Forest, then come back to free it once it has fully grown. Smite frees it at once.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ivern-passive",
+              "start": 32,
+              "end": 52
+            },
+            { "kind": "summoner-spell", "key": "11", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Ivern:general:1",
+          "text": "Aim Rootcaller carefully; it stops at the first enemy it hits. A hit leaves the target rooted, so your team can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Ivern:general:2",
+          "text": "Tell your allies to attack the rooted enemy. Rootcaller makes them dash into attack range, which helps melee allies most.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ivern:general:3",
+          "text": "Put Triggerseed on an ally just before a fight. It shields them, then bursts and slows enemies standing near them.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ivern:general:4",
+          "text": "Grow Brushmaker patches at ambush spots and objectives before a fight. They reveal the area, and attacks from brush hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Ivern:general:5",
+          "text": "Use Brushmaker to cover your escape when chased, or to hide an ally's engage from the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Ivern:general:6",
+          "text": "Send Daisy! in at the start of a fight and have her hit the same enemy until her third attack knocks enemies up.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-R", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Ivern:general:7",
+          "text": "Recast Daisy! to pull her back to protect a teammate, since she can block skillshots and slow chasers.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-R", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Ivern:combo:0",
+          "name": "Root then recast dash",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Ivern-Q" },
+            { "kind": "ability", "key": "Ivern-Q" }
+          ],
+          "when": "When you want to close in on a rooted enemy to peel for or engage with an ally.",
+          "whenRefs": [],
+          "text": "After the vine roots a target, recast to dash onto them. Your allies can also attack the rooted target to dash in.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "9b58f69654fbe6d9487b61280277036380b35d31b43c0bb03edb5b5b169d47a8",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Graves:0",
+          "text": "Plant groves while Graves is away from your camps. Free them with Friend of the Forest only when it is safe.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 19, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Ivern-passive",
+              "start": 66,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ivern:Graves:1",
+          "text": "Aim Rootcaller at Graves when he dashes in; once he is rooted, your team can hit him easily.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Graves", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Ivern:Graves:2",
+          "text": "Smoke Screen can't hurt you if you leave the cloud, so step out of it quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Ivern:Graves:3",
+          "text": "Place Brushmaker brush to ambush Graves, but watch for his End of the Line detonating along its path.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Graves", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Graves-Q", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Ivern:Graves:4",
+          "text": "Send Daisy at Graves in a fight; she can block his shots and her third hit knocks him up.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0f796d11c50b7b43329400b40da97da6db81b70ebd0a5864475c36f777df38be",
+      "tips": [
+        {
+          "id": "jungle:Ivern:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike along it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Ivern:JarvanIV:1",
+          "text": "Hit Jarvan with Rootcaller when he leaps in or lines up a combo. Rooted, he cannot reposition, and your allies can dash onto him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Ivern:JarvanIV:2",
+          "text": "Put Triggerseed on yourself or an ally before Jarvan jumps in. The shield absorbs the burst, and the blast slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Ivern:JarvanIV:3",
+          "text": "Plant brush with Brushmaker around your camps and fights. It hides your position and powers up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "06193d202abe017c91212e894f5c795ee93ff73877176aa25f5e0e1cf6a1984c",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Kayn:0",
+          "text": "Root Kayn with Rootcaller when he comes out of a wall; he can't escape while rooted and your team can dash onto him.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 15, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Ivern:Kayn:1",
+          "text": "Stay with your team; Kayn punishes a lone Ivern with Umbral Trespass.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Ivern", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Kayn-R", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Ivern:Kayn:2",
+          "text": "Put Triggerseed on yourself or an ally when Kayn jumps in; the shield soaks damage and the burst slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kayn", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ivern:Kayn:3",
+          "text": "Keep Daisy near you when Kayn is around; she can block his skillshots and slow him down.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Ivern:Kayn:4",
+          "text": "Grow Brushmaker in front of you to hide when Kayn dives, and check his wall warnings.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Kayn", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75c6bfc1c6831a4a721b56659304bc52bbe5a98c1e58a90ef4516159405a91cd",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Khazix:0",
+          "text": "Stay close to Daisy, minions or allies. Kha'Zix does far less damage with Taste Their Fear if you are not isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 74, "end": 90 },
+            { "kind": "keyword", "key": "isolated", "start": 106, "end": 114 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Ivern:Khazix:1",
+          "text": "Hit Kha'Zix with Rootcaller as he leaps in. A rooted Kha'Zix can't run, and your team can dash to him.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 52 },
+            { "kind": "champion", "key": "Khazix", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Ivern:Khazix:2",
+          "text": "Put Triggerseed on yourself when Kha'Zix is near. The shield absorbs his burst, and the burst slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Khazix", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Ivern:Khazix:3",
+          "text": "Fight Kha'Zix when Leap and Void Assault are on cooldown. He has little escape then.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Khazix-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d7cd35e50f08de77f6fd713d58ac1e744cbdb159a81cc3ce1b67e0ec17909ec7",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Kindred:0",
+          "text": "Aim Rootcaller at Kindred when she dashes in. If it hits, she is rooted and your allies can dash onto her.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Kindred", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Ivern:Kindred:1",
+          "text": "Kindred is fragile, so put Daisy! on her to knock her up and chase her off.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Ivern-R", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Ivern:Kindred:2",
+          "text": "Shield an ally with Triggerseed before a fight with Kindred. When it bursts, enemies near them are slowed, so Kindred can't chase easily.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 20, "end": 31 },
+            { "kind": "champion", "key": "Kindred", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 },
+            { "kind": "champion", "key": "Kindred", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ivern:Kindred:3",
+          "text": "Don't try to kill anyone standing in her Lamb's Respite zone; nobody inside dies while it lasts. Wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Ivern:Kindred:4",
+          "text": "Grow brush with Brushmaker near objectives to set up an ambush. Kindred's Wolf's Frenzy can reveal it, so don't rely on it alone.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 16, "end": 26 },
+            { "kind": "champion", "key": "Kindred", "start": 64, "end": 71 },
+            { "kind": "ability", "key": "Kindred-W", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "13f61da5337f3407042e072d01e9636283a6804b8c40200bda3972b70c1fc397",
+      "tips": [
+        {
+          "id": "jungle:Ivern:LeeSin:0",
+          "text": "Aim Rootcaller at Lee Sin when he dashes in. Rooting him stops his chase and lets your team hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Ivern:LeeSin:1",
+          "text": "Put Triggerseed on yourself or an ally before Lee Sin jumps in. The shield absorbs damage, and the burst slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "LeeSin", "start": 46, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Ivern:LeeSin:2",
+          "text": "Lee Sin's Tempest reveals you in brush, so don't count on hiding there when he is close.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Ivern:LeeSin:3",
+          "text": "Send Daisy at Lee Sin when you fight. Her third hit on him knocks him up, and she can soak up some of his attention.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Ivern:LeeSin:4",
+          "text": "Stay near your team. Lee Sin can find you alone with Sonic Wave and kick you away with Dragon's Rage.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 87, "end": 100 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3370b4f658133594a9a8f40332da120c399944dcb89e08f4774b904f1ae15b9a",
+      "tips": [
+        {
+          "id": "jungle:Ivern:MasterYi:0",
+          "text": "Land Rootcaller on Master Yi when he commits, then hit him while he is rooted. Rooted targets can't dash away with Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "MasterYi", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 85 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 115, "end": 127 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Ivern:MasterYi:1",
+          "text": "Don't rely on Triggerseed's slow once Master Yi has Highlander on; he ignores slows. Use Rootcaller and Daisy's knock up instead.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "MasterYi", "start": 38, "end": 47 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 52, "end": 62 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ivern:MasterYi:2",
+          "text": "Put Triggerseed on the ally Master Yi is hitting. The shield absorbs damage and the burst slows him if Highlander is down.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 103, "end": 113 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Ivern:MasterYi:3",
+          "text": "Keep Daisy next to the target Master Yi wants. Her knock up stops his chase when she hits three times in a row.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "knocked-up", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Ivern:MasterYi:4",
+          "text": "Place brush near your fights before Master Yi arrives; allies inside it deal extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5fa04a895a27b7b18e8af1483aaad09f66583d9605a239c3e65d13a75f4adc0e",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Naafiri:0",
+          "text": "Aim Rootcaller at Naafiri when she commits; she is rooted and you can follow up with Triggerseed on an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Ivern-E", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Ivern:Naafiri:1",
+          "text": "Put Triggerseed on the ally she dives; the shield absorbs her burst and the blast slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Ivern:Naafiri:2",
+          "text": "Keep Daisy! ready for when Naafiri jumps in; her third hit on one champion knocks enemies up.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Naafiri", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Ivern:Naafiri:3",
+          "text": "Grow Brushmaker brush near your lanes to hide your ambush and spot her approach.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "535885c2af0efdaff8cc7bd6e1fe74e16d5616cca9f7953e7f31fcfb98c57242",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Nocturne:0",
+          "text": "Aim Rootcaller at Nocturne when he dashes in. Shroud of Darkness can block it, so throw it when he has used his shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Nocturne", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Ivern:Nocturne:1",
+          "text": "When Nocturne casts Paranoia, stay close to your team. His dash hits whoever is alone.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "isolated", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Ivern:Nocturne:2",
+          "text": "Put Triggerseed on yourself or an ally when Nocturne dives. The shield absorbs damage and the burst slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nocturne", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ivern:Nocturne:3",
+          "text": "Keep Daisy next to you in a fight with Nocturne. Her hits knock him up, which breaks his Unspeakable Horror tether.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 89, "end": 107 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac79caf2ce64a8465f29698f16a6f4d51b022ef538acc2f33005dfc2f1dcb47b",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Shyvana:0",
+          "text": "Hit Shyvana with Rootcaller as she runs in, then stay back. She does best when she can attack you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Ivern:Shyvana:1",
+          "text": "Put Triggerseed on yourself or an ally just before she engages; it shields them and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Ivern:Shyvana:2",
+          "text": "Keep your allies spread out when Shyvana is in dragon form; her abilities hit more enemies then.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ivern:Shyvana:3",
+          "text": "Poke Shyvana while her Dragon Fury is low; she has no dragon form until it fills.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Ivern:Shyvana:4",
+          "text": "Place Brushmaker where you can ambush Shyvana; the brush lets you hide from her and gives your attacks extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Ivern:Shyvana:5",
+          "text": "Send Daisy at Shyvana in a fight, so her third hit on the same target knocks them up.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8977c5ebd6b49203f1f402bad29c0cff8885af07910f3c47164f87e0a0288015",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Skarner:0",
+          "text": "Aim Rootcaller at Skarner as he charges; a root stops Ixtal's Impact.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Skarner", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Skarner-E", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Ivern:Skarner:1",
+          "text": "Stay away from walls when Skarner is near; Ixtal's Impact into a wall stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Skarner-E", "start": 43, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ivern:Skarner:2",
+          "text": "Skarner's Impale can be dodged. Keep an escape ready when he is at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-R", "start": 10, "end": 16 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Ivern:Skarner:3",
+          "text": "Put Triggerseed on yourself or an ally as the fight starts; the shield absorbs damage and the burst slows Skarner.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 },
+            { "kind": "champion", "key": "Skarner", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Ivern:Skarner:4",
+          "text": "Fight Skarner near Daisy so her third hit on him knocks him up.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ab61bfe0abc62349fd2a83869130fe14b534bc1cf64f07fba551b7f7270d4c2d",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Sylas:0",
+          "text": "Plant a grove on a camp and come back to free it once it has grown; Ivern cannot attack jungle monsters, so plan your route around that.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ivern:Sylas:1",
+          "text": "Aim Rootcaller at Sylas when he dashes in; a rooted Sylas is easy for your team to chase down.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 45, "end": 51 },
+            { "kind": "champion", "key": "Sylas", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Ivern:Sylas:2",
+          "text": "Put Triggerseed on yourself or an ally when Sylas jumps in; the shield absorbs his burst and the blast slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Ivern:Sylas:3",
+          "text": "Do not fight Sylas alone in a long brawl; Kingslayer heals him as he drops lower, so burst him with your team instead.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Ivern:Sylas:4",
+          "text": "Use Daisy! to guard a teammate Sylas is chasing, and fight near her; Daisy knocks up an enemy she hits three times in a row.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "knocked-up", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Ivern:Sylas:5",
+          "text": "Stay out of Sylas's ultimate reach and think before casting Daisy! near him; Hijack lets him copy it when he can.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Ivern-R", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Sylas-R", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "146fe3d93a771cc80657f0ed8d27481f49fbd42138f1fbc2a2b3d6f35505c064",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Talon:0",
+          "text": "Root Talon with Rootcaller when he jumps in, then have allies attack him to dash in and punish.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Ivern:Talon:1",
+          "text": "Put Triggerseed on yourself when Talon dives; the shield absorbs burst and the blast leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Ivern:Talon:2",
+          "text": "Summon Daisy next to you when Talon is nearby; she blocks skillshots and can knock him up after three hits.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Ivern:Talon:3",
+          "text": "Plant brush with Brushmaker around your camps and objectives so Talon cannot roam or ambush unseen.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-W", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Ivern:Talon:4",
+          "text": "Once Talon has used Shadow Assault, he has no easy escape, so engage then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "014abf964c6339ebf723a51fce807a67ad90d14ed11712132e07c4edc85480a0",
+      "tips": [
+        {
+          "id": "jungle:Ivern:Viego:0",
+          "text": "Land Rootcaller on Viego when he dives in; he is rooted and your team can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Ivern:Viego:1",
+          "text": "Put Triggerseed on yourself or an ally before Viego jumps in; the shield absorbs his burst and the blast slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Ivern:Viego:2",
+          "text": "Don't fight Viego alone near his Mist; he can vanish from view. Grow Brushmaker patches to see the area.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Ivern-W", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Ivern:Viego:3",
+          "text": "Keep Daisy close to you when Viego looks for a kill; once he scores one, he can take over the dead enemy.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c5dd61b5575756a563d35a06622878d9ed4188f164f252c1c4907556319f9c4b",
+      "tips": [
+        {
+          "id": "jungle:Ivern:XinZhao:0",
+          "text": "Hit Xin Zhao with Rootcaller as he charges in. A rooted Xin Zhao cannot easily finish his combo, and your allies can dash to him.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 18, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 55 },
+            { "kind": "champion", "key": "XinZhao", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Ivern:XinZhao:1",
+          "text": "Put Triggerseed on yourself or your ally before a fight. The shield absorbs his burst, and the blast slows him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Ivern:XinZhao:2",
+          "text": "Keep your team spread out until Xin Zhao uses Crescent Guard. Then re-engage while he waits on the long cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Ivern:XinZhao:3",
+          "text": "Send Daisy at Xin Zhao to slow his chase. She can block his Wind Becomes Lightning, and a third hit on him knocks him up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 60, "end": 82 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

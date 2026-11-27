@@ -1,0 +1,2602 @@
+{
+  "schemaVersion": 1,
+  "champion": "Orianna",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "c52b84983d4eeab682e4a9fb6bebef50ca028658312fd3deeae87412f9c032c2",
+      "tips": [
+        {
+          "id": "middle:Orianna:general:0",
+          "text": "Send Command: Attack through the enemy and its minions to poke. It hits again where the Ball lands, so aim so the Ball ends up on the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Orianna:general:1",
+          "text": "Use Command: Protect on yourself to pull the Ball back, then throw Command: Attack again for quick poke.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 67, "end": 82 },
+            { "kind": "keyword", "key": "poke", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Orianna:general:2",
+          "text": "Keep track of where the Ball is. Your abilities only affect the area around it, and it snaps back to you if you walk too far away.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Orianna:general:3",
+          "text": "Escape with Command: Dissonance while the Ball is on you. The speed boost for you and the slow on enemies chasing you make it a strong getaway.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 12, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Orianna:general:4",
+          "text": "Attach the Ball to a tanky ally with Command: Protect. It gives them extra Armor and Magic Resist, and a shield when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Orianna:general:5",
+          "text": "Put the Ball in the middle of the enemy team before you cast Command: Shockwave at level 6. It pulls them toward the Ball and knocks them up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 61, "end": 79 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Orianna:general:6",
+          "text": "Attack the same enemy several times in a row. Your passive gets stronger with each hit, but switching targets resets it.",
+          "refs": [],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Orianna:combo:0",
+          "name": "Buffered Shockwave",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Orianna-Q" },
+            { "kind": "ability", "key": "Orianna-R" }
+          ],
+          "when": "You want to pull enemies toward a spot you can't reach yet.",
+          "whenRefs": [],
+          "text": "Throw the ball with Command: Attack and queue Shockwave while it is flying. It fires as soon as the ball lands, so the timing is tight.",
+          "textRefs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 20, "end": 35 }
+          ]
+        },
+        {
+          "id": "middle:Orianna:combo:1",
+          "name": "Self-Protect poke",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Orianna-E" },
+            { "kind": "ability", "key": "Orianna-Q" }
+          ],
+          "when": "The ball is left behind in lane and you want to poke again right away.",
+          "whenRefs": [],
+          "text": "Use Protect on yourself to pull the ball back, then throw it out again with Command: Attack. This is Riot's own harass tip.",
+          "textRefs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 76, "end": 91 }
+          ]
+        },
+        {
+          "id": "middle:Orianna:combo:2",
+          "name": "Dissonance escape",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Orianna-W" }],
+          "when": "You are being chased and the ball is attached to you.",
+          "whenRefs": [],
+          "text": "Cast Dissonance with the ball on you for a burst of speed. The field it leaves behind slows the chasers.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "d1fdf5293252c0f89618955b4bcd66bfdf41cc8292b1980bb9d71d307d205f07",
+      "tips": [
+        {
+          "id": "middle:Orianna:Ahri:0",
+          "text": "Stay behind your minions so Charm hits them first; Ahri's kiss ends at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 28, "end": 33 },
+            { "kind": "champion", "key": "Ahri", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Orianna:Ahri:1",
+          "text": "Poke with Command: Attack when Ahri walks up to last-hit. It keeps going after a hit, so it can catch her and the minions in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Ahri", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Ahri:2",
+          "text": "Once Ahri has spent Spirit Rush, trade and push harder; she has a hard time getting away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-R", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Orianna:Ahri:3",
+          "text": "If Ahri dashes in on you, answer with Command: Dissonance; it damages her and leaves her slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Orianna-W", "start": 38, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Orianna:Ahri:4",
+          "text": "At level 6, put the Ball on Ahri and cast Command: Shockwave when she's close. It can ruin her all-in or start yours.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Orianna-R", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f0118c9ca30228e7a628bdf42b6f8d6068f1c92244020ed77097dc0e28ee697f",
+      "tips": [
+        {
+          "id": "middle:Orianna:Akali:0",
+          "text": "Keep Command: Dissonance ready for when Akali dives in; the pulse hurts her and the field leaves her slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Akali", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Akali:1",
+          "text": "Hold Command: Shockwave for when Akali commits. Make sure the Ball is on you or close by so the whole burst lands on her.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Akali", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Orianna:Akali:2",
+          "text": "Poke with Command: Attack while Akali has little energy, then pull the Ball back with Command: Protect on yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Akali", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Orianna-E", "start": 86, "end": 102 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Orianna:Akali:3",
+          "text": "Aim Command: Dissonance at the smoke when Akali hides in Twilight Shroud; area damage still hits her and shows where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Akali", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Akali-W", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "52897f1e99759c53c9c9a0ba42c7a7180b24e410620d84e5017e700af1746458",
+      "tips": [
+        {
+          "id": "middle:Orianna:Akshan:0",
+          "text": "Poke with Command: Attack when Akshan walks up to last-hit; it passes through everything in its path and hits him on arrival.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Akshan", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Orianna:Akshan:1",
+          "text": "Use Command: Shockwave when Akshan is close to you and you have the Ball on you or near him. It stuns him and pulls him in.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Akshan", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Orianna:Akshan:2",
+          "text": "Put Command: Dissonance down when Akshan dashes in or tries to run away. Its field slows him while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Akshan", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Orianna:Akshan:3",
+          "text": "Akshan can vanish with Going Rogue near walls and brush. Stay back from them and keep the Ball out so you are not caught off guard.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Akshan-W", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f062b639fc765459228df9811495f9dd1705972306c0719f0da52d7d786227f0",
+      "tips": [
+        {
+          "id": "middle:Orianna:Anivia:0",
+          "text": "Stay out of Anivia's Flash Frost line; if you get hit, she follows up with Frostbite for big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 21, "end": 32 },
+            { "kind": "ability", "key": "Anivia-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Orianna:Anivia:1",
+          "text": "Poke her with Command: Attack from a distance, then pull the Ball back with Command: Protect on yourself to poke again.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Orianna-E", "start": 76, "end": 92 },
+            { "kind": "keyword", "key": "poke", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Anivia:2",
+          "text": "Use Command: Dissonance with the Ball on you when you need to escape; it speeds you up and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Anivia:3",
+          "text": "Do not walk into Glacial Storm; it slows you and hurts more the longer it grows. Fight it from the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Orianna:Anivia:4",
+          "text": "Hit her egg after Rebirth if you can; with the Ball and Command: Shockwave you can often finish it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 18,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Orianna-R", "start": 56, "end": 74 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "24dff0a75231ac61b6c0729544f42561ffe8982e9db05240916e95181ac3ab28",
+      "tips": [
+        {
+          "id": "middle:Orianna:Annie:0",
+          "text": "Poke Annie with Command: Attack when she walks up to last-hit; she has to come in range of the Ball.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Annie", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Orianna:Annie:1",
+          "text": "Watch the counter under Annie's health bar; when it lights up, stay out of her range, because her next spell stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 114 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Orianna:Annie:2",
+          "text": "If Annie dashes in to fight, drop Command: Dissonance to slow her and speed yourself away.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Orianna-W", "start": 34, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Annie:3",
+          "text": "Use Command: Protect on yourself to pull the Ball back and shield yourself against Annie's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Annie", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Orianna:Annie:4",
+          "text": "Stay spread from your allies when Tibbers is out; he burns everyone nearby, so fight away from him.",
+          "refs": [],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "54ee8f37eb1fb8e8c4650ebdb6a44d6436d3291be29b731004d97fb1d1ee054a",
+      "tips": [
+        {
+          "id": "middle:Orianna:AurelionSol:0",
+          "text": "Poke with Command: Attack from long range while Aurelion Sol is busy with minions, then pull the Ball back with Command: Protect on yourself to reuse it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 48,
+              "end": 60
+            },
+            { "kind": "ability", "key": "Orianna-E", "start": 112, "end": 128 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Orianna:AurelionSol:1",
+          "text": "Watch for Falling Star landing on you. It lands after a delay, so step out of the area before it hits and you avoid being stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 129 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Orianna:AurelionSol:2",
+          "text": "Step out of the black hole from Singularity early. It drags you toward the middle, and low-health targets there die instantly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 32,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Orianna:AurelionSol:3",
+          "text": "Use Command: Dissonance to leave a slowing field behind you when you retreat from his dash, so he can't catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Orianna:AurelionSol:4",
+          "text": "Put the Ball on him before level 6 with Command: Attack, then use Command: Shockwave to pull him into your team's damage when he steps in close.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Orianna-R", "start": 66, "end": 84 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Orianna:AurelionSol:5",
+          "text": "Hold the Ball on yourself for armor and magic resist when he is about to burst you with Breath of Light.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 88,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ec1105c5dc0310f852c68810cc62fcf05c35816c3ff192476b2b992e25297ffe",
+      "tips": [
+        {
+          "id": "middle:Orianna:Aurora:0",
+          "text": "Hold Command: Shockwave until Aurora jumps in or lands near the Ball; the stun and pull can set up a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Aurora", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Orianna:Aurora:1",
+          "text": "Use Command: Attack to poke Aurora when she steps up to last-hit. It hits everything along its path.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Aurora", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Orianna:Aurora:2",
+          "text": "Keep Command: Protect ready for when Aurora dives. Put the shield on yourself to take the Ball back fast and make her trade worse.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Aurora", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Orianna:Aurora:3",
+          "text": "Use Command: Dissonance to slow Aurora when she runs at you or tries to get away. Place the Ball first so the pulse lands on her.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 },
+            { "kind": "champion", "key": "Aurora", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Orianna:Aurora:4",
+          "text": "When Aurora turns invisible with Across the Veil, don't waste spells on where she was. Stay back and wait for her to show up.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0b47ef7fa892a0efb616bdf8da3cbcb7f07841867cfd9a5f8c4d562f9107536",
+      "tips": [
+        {
+          "id": "middle:Orianna:Azir:0",
+          "text": "Poke Azir with Command: Attack from long range when his Sand Soldiers are gone or far from you. He has to stand close to his soldiers to hit back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Azir", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Orianna:Azir:1",
+          "text": "Step out of his Sand Soldiers' reach, because they are what deal his damage. Trade when they have expired or been sent elsewhere.",
+          "refs": [],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Orianna:Azir:2",
+          "text": "Hold Command: Shockwave for when Azir dashes in with Shifting Sands or steps close to the Ball. It knocks him toward the Ball and stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Azir", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Azir-E", "start": 53, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 130, "end": 135 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Orianna:Azir:3",
+          "text": "Put Command: Dissonance on the ground when Azir walks toward you. The field slows him, and you can use it to fight or to walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Azir", "start": 43, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Orianna:Azir:4",
+          "text": "Do not stand in Emperor's Divide's path when you cannot afford to be knocked back. Its wall also blocks you for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cf7c6fbd2fad0e685a8302823e1400a1b5d1166b54627c9576848cea1720a10e",
+      "tips": [
+        {
+          "id": "middle:Orianna:Brand:0",
+          "text": "Sidestep Sear and Pillar of Flame; Brand needs one ability to land before his stun combo starts. Pillar of Flame has a delay, so keep moving.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Brand-W", "start": 18, "end": 33 },
+            { "kind": "champion", "key": "Brand", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Brand-W", "start": 97, "end": 112 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Orianna:Brand:1",
+          "text": "Trade with Command: Attack, then pull the Ball back with Command: Protect on yourself for another hit. Brand's range makes long trades risky.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 11, "end": 26 },
+            { "kind": "ability", "key": "Orianna-E", "start": 57, "end": 73 },
+            { "kind": "champion", "key": "Brand", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Orianna:Brand:2",
+          "text": "Use Command: Dissonance to escape when Brand is on you; it slows him and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Brand", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Orianna:Brand:3",
+          "text": "Keep your Ball on you or an ally when Brand is near. Command: Protect gives a shield that softens his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Orianna-E", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Orianna:Brand:4",
+          "text": "Stay away from your minions when Brand is near; his Conflagration spreads fire to everything close to the target.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Orianna:Brand:5",
+          "text": "At level 6, put the Ball on Brand and use Command: Shockwave when he steps in range; he is stunned and pulled to you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Orianna-R", "start": 42, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "99ae368f99b65cc1b07d5273d440aadd4bbece8a642ff23e4d94b7f383dca5f1",
+      "tips": [
+        {
+          "id": "middle:Orianna:Briar:0",
+          "text": "Keep the Ball between you and Briar and poke with Command: Attack while she walks up; she has no ranged way to reach you except Head Rush.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 50, "end": 65 },
+            { "kind": "ability", "key": "Briar-Q", "start": 128, "end": 137 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Orianna:Briar:1",
+          "text": "When Briar leaps in, use Command: Dissonance on yourself to slow her and run toward your team.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-W", "start": 25, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Orianna:Briar:2",
+          "text": "Put the Ball on yourself with Command: Protect before she reaches you; the shield and extra resistances blunt her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Orianna:Briar:3",
+          "text": "Save Command: Shockwave for when Briar is on top of you in a fight; it stuns her and pulls her toward the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Briar", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Orianna:Briar:4",
+          "text": "When Briar is forced onto a target during Blood Frenzy, she can't steer. Kite back with the slow field and hit her with Command: Attack as she chases.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 120, "end": 135 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9ffb41153c4937c4b08ffa36fc87df038daf6d78f0a1d100f5b2447703cc6c17",
+      "tips": [
+        {
+          "id": "middle:Orianna:Cassiopeia:0",
+          "text": "Poke with Command: Attack from long range; the Ball stays behind where it landed, so aim it at Cassiopeia whenever she steps up to last-hit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Orianna:Cassiopeia:1",
+          "text": "Cassiopeia is slowed in your Command: Dissonance field. Use it to cut her chase, or to run away when she steps forward.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Orianna-W", "start": 29, "end": 48 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Orianna:Cassiopeia:2",
+          "text": "Hold Command: Shockwave for when Cassiopeia commits. Put the Ball on her, and she is pulled in and stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Orianna:Cassiopeia:3",
+          "text": "When Cassiopeia is close to ending a fight, put Command: Protect on yourself. It shields you and brings the Ball back.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Orianna-E", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7b042c5b8fe34622b45802ca3a31027eef27ee079fd6442d2d28faa0d2990299",
+      "tips": [
+        {
+          "id": "middle:Orianna:Diana:0",
+          "text": "Poke Diana with Command: Attack from long range while she walks up. Each hit also gives her less reason to stay in lane.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Orianna:Diana:1",
+          "text": "Dodge Crescent Strike by stepping out of its curved path. If it hits, expect Diana to dash onto you with Lunar Rush right away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 77, "end": 82 },
+            { "kind": "ability", "key": "Diana-E", "start": 105, "end": 115 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Orianna:Diana:2",
+          "text": "When Diana dashes in, fire Command: Dissonance to hit her and leave her slowed. It also speeds you up while you move away.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-W", "start": 27, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Orianna:Diana:3",
+          "text": "Put the Ball on yourself before Diana arrives, so Command: Protect's shield is up and Command: Dissonance can fire right away.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Orianna-E", "start": 50, "end": 66 },
+            { "kind": "ability", "key": "Orianna-W", "start": 86, "end": 105 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Orianna:Diana:4",
+          "text": "Keep the Ball near you when Diana can dive. Command: Shockwave pulls her in and stuns her, and only works around the Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Orianna-R", "start": 44, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Orianna:Diana:5",
+          "text": "Do not rely on Command: Shockwave alone to stop Diana. Her Pale Cascade shield soaks some damage when she comes in.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 15, "end": 33 },
+            { "kind": "champion", "key": "Diana", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Diana-W", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a8844e8d639d747aecfc4f958b5c1df44ba4b7e2982a44f301786700dcdc0acf",
+      "tips": [
+        {
+          "id": "middle:Orianna:Ekko:0",
+          "text": "Poke Ekko with Command: Attack from long range while he walks up to last-hit; the Ball keeps travelling and hits everyone in its path.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ekko", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Orianna:Ekko:1",
+          "text": "Save Command: Shockwave for when Ekko dives in. It stuns him and pulls him toward the Ball, so put the Ball where you want him.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Ekko", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Orianna:Ekko:2",
+          "text": "Use Command: Dissonance when Ekko jumps on you. It damages him and slows him, which makes it harder for him to chase or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Ekko", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Ekko:3",
+          "text": "Watch for Parallel Convergence to appear on the ground and step out of the area before it goes off. Ekko only stuns you if he walks into it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 10, "end": 30 },
+            { "kind": "champion", "key": "Ekko", "start": 100, "end": 104 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Orianna:Ekko:4",
+          "text": "Put Command: Protect on yourself when Ekko jumps on you. The shield absorbs some of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Ekko", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Orianna:Ekko:5",
+          "text": "Do not chase Ekko after he uses Chronobreak, since he returns to where he was, heals and damages you. Wait until it is on cooldown before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Ekko-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5b77e861a518387ae90adb8a16981dff6173e2515e6570a362c83c64000d1d23",
+      "tips": [
+        {
+          "id": "middle:Orianna:Ezreal:0",
+          "text": "Aim Command: Attack through minions to hit Ezreal. It passes through enemies and keeps going, so minions don't block it.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Orianna:Ezreal:1",
+          "text": "Ezreal's Mystic Shot is a straight line that minions block. Stand so a minion is between you and him, and he will struggle to poke you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 126, "end": 130 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Orianna:Ezreal:2",
+          "text": "Ezreal is fragile, so lean on him. Command: Shockwave pulls him toward the Ball and stuns him, so put the Ball on him and fire it at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Orianna-R", "start": 35, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Orianna:Ezreal:3",
+          "text": "Use Command: Dissonance when Ezreal blinks in close. The field slows him as he tries to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "58778ef1d3a0e4fb5c9aefa4293dc4f31e9d063ca93b0aa8fa94fdea793d8b75",
+      "tips": [
+        {
+          "id": "middle:Orianna:Fizz:0",
+          "text": "Save Command: Shockwave for when Fizz lands from Playful; it pulls him in and stuns him, so he cannot dodge again.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Orianna:Fizz:1",
+          "text": "Do not waste spells while Fizz is untargetable on his trident. Wait until he lands, then answer with Command: Dissonance.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Orianna-W", "start": 101, "end": 120 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Orianna:Fizz:2",
+          "text": "Poke him with Command: Attack while he walks up to last-hit. Keep the Ball behind you so Fizz has a harder time reaching you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Fizz", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Orianna:Fizz:3",
+          "text": "Put Command: Protect on yourself when Fizz dives in. The shield and extra resistances blunt his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Fizz", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Fizz:4",
+          "text": "Fizz's Chum the Waters is a long-range shark that hits harder the farther it flies. Stay away from other enemies near you so it has no easy targets.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Fizz-R", "start": 7, "end": 22 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Orianna:Fizz:5",
+          "text": "Use Command: Dissonance to escape when he gets on you. The field slows him and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "899ebb3069aadca52fe1c8544d39377059ac41c68fcb586bb7d8befc395998bf",
+      "tips": [
+        {
+          "id": "middle:Orianna:Galio:0",
+          "text": "Keep Command: Attack on cooldown to poke Galio. His Winds of War is slow to arrive, so trade right after he uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Galio", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Galio-Q", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Orianna:Galio:1",
+          "text": "Stay away from Galio's Justice Punch range. Keep the Ball behind you so Command: Dissonance can slow him if he lunges at you.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Galio-E", "start": 23, "end": 36 },
+            { "kind": "ability", "key": "Orianna-W", "start": 72, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Orianna:Galio:2",
+          "text": "Don't spend Command: Shockwave on a Galio charging Shield of Durand; he takes less magic damage and can taunt you right back.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 12, "end": 30 },
+            { "kind": "champion", "key": "Galio", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Galio-W", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Orianna:Galio:3",
+          "text": "Galio is slower while charging Shield of Durand, so poke him with Command: Attack then.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-W", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0c0b331def85813070aeb7546f3b433b6b021065d6abc5cdcc2bf5ab1c647623",
+      "tips": [
+        {
+          "id": "middle:Orianna:Hwei:0",
+          "text": "Stay out of the way of Hwei's slow lightning and fireball by moving sideways. Both need him to aim, so walk unpredictably when he's casting.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Orianna:Hwei:1",
+          "text": "Rush Hwei right after he paints a Torment spell. Use Command: Attack, then Command: Dissonance when he is close, and trade while the spell is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 53, "end": 68 },
+            { "kind": "ability", "key": "Orianna-W", "start": 75, "end": 94 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Orianna:Hwei:2",
+          "text": "Hold Command: Shockwave for when Hwei is stunned-range close. It pulls him toward the Ball, so place the Ball where your team can reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Hwei", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Orianna:Hwei:3",
+          "text": "Use Command: Protect on yourself to bring the Ball back fast, then follow with Command: Attack to poke Hwei.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 79, "end": 94 },
+            { "kind": "keyword", "key": "poke", "start": 98, "end": 102 },
+            { "kind": "champion", "key": "Hwei", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Hwei:4",
+          "text": "Use Command: Dissonance to escape when Hwei roots or drags you. The speed boost and slowing field help you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Hwei", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ef307b8601747c384f3a30fec8b22b385886d4073e7d1b433c54212ac117896f",
+      "tips": [
+        {
+          "id": "middle:Orianna:Irelia:0",
+          "text": "Keep the Ball near where Irelia will dash in. Command: Dissonance slows her and leaves a field that hurts her approach.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Orianna-W", "start": 46, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Orianna:Irelia:1",
+          "text": "Stay away from minion waves she can dash through. Without minions near you, Irelia's Bladesurge has nothing to land on.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 76, "end": 82 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 85, "end": 95 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Orianna:Irelia:2",
+          "text": "Hold Command: Shockwave until Irelia has dashed in. Don't waste it while she charges Defiant Dance, because she takes much less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Irelia", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Irelia-W", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Orianna:Irelia:3",
+          "text": "Use Command: Attack to poke her when her Ionian Fervor stacks are down.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 41,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Orianna:Irelia:4",
+          "text": "Keep Command: Protect ready to shield yourself when she dashes in. It also brings the Ball back to you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1c4452266512f884546eda7f4e9108bc625d81bc157428ca65ab9f37bc18d6b",
+      "tips": [
+        {
+          "id": "middle:Orianna:Kassadin:0",
+          "text": "Poke Kassadin with Command: Attack while he is low level. He has no easy way to reach you early.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kassadin", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Orianna:Kassadin:1",
+          "text": "Keep Command: Dissonance ready for when Kassadin blinks in. Its slowing field helps you walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Kassadin", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Orianna:Kassadin:2",
+          "text": "Use Command: Protect on yourself for a shield when Kassadin's Force Pulse is about to land.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kassadin", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Orianna:Kassadin:3",
+          "text": "Once Kassadin reaches level 6, keep the Ball near you so Command: Shockwave can stun him when he blinks in.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Orianna-R", "start": 57, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2dd8f1a399ef9b2865785aa4450d3bb01b2b22cad8ebe4af34787c9c6e3013fd",
+      "tips": [
+        {
+          "id": "middle:Orianna:Katarina:0",
+          "text": "Hold Command: Shockwave for when Katarina starts Death Lotus. It stuns her and breaks the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Katarina", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Katarina-R", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Orianna:Katarina:1",
+          "text": "Keep the Ball on you when Katarina is close. Command: Dissonance then hits her and slows her as she dives in.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Orianna-W", "start": 45, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Orianna:Katarina:2",
+          "text": "Use Command: Protect on yourself for a shield when Katarina jumps on you. It also brings the Ball back to you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Katarina", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Katarina:3",
+          "text": "Walk away from Daggers on the ground. When she picks one up with Shunpo it lowers her cooldown, so she can attack again soon.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Orianna:Katarina:4",
+          "text": "Poke her with Command: Attack while she waits for her cooldowns. Stay at long range so Shunpo cannot reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Katarina-E", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dcd4cfa135ae1647a8864c2cefc17afd2a9c9130d9580bb308cc2c233f583bd7",
+      "tips": [
+        {
+          "id": "middle:Orianna:Leblanc:0",
+          "text": "Stay out of Ethereal Chains' line and keep minions between you and LeBlanc. Walk away from the tether before it breaks the root on you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Leblanc", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Orianna:Leblanc:1",
+          "text": "When LeBlanc dashes in with Distortion, hit her with Command: Dissonance to slow her and punish her return.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Orianna-W", "start": 53, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Orianna:Leblanc:2",
+          "text": "Use Command: Attack to poke LeBlanc from long range while she has to wait on her cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Leblanc", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Orianna:Leblanc:3",
+          "text": "Save Command: Shockwave for when LeBlanc commits. It stuns her, so she cannot recast Distortion to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Leblanc", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 85, "end": 95 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Orianna:Leblanc:4",
+          "text": "Use Command: Protect on yourself to gain a shield when you expect LeBlanc's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Leblanc", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7d77fc62424baafc05386d3cc46fb9d522e47f756ec992c4b3c2f1de809b5a20",
+      "tips": [
+        {
+          "id": "middle:Orianna:Lissandra:0",
+          "text": "Poke with Command: Attack when Lissandra steps up to last-hit; it passes through minions and hits her and anything behind her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Lissandra", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Orianna:Lissandra:1",
+          "text": "Stay out of Ice Shard range. Standing behind your minions means the first one hit takes the slow instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Orianna:Lissandra:2",
+          "text": "Step out of the way of Glacial Path. Lissandra often recasts it to jump onto you, so keep your distance and keep Command: Dissonance ready.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-E", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "Lissandra", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "Orianna-W", "start": 113, "end": 132 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Orianna:Lissandra:3",
+          "text": "Trade while Ring of Frost is on cooldown. Her root is her best answer to you walking close.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Orianna:Lissandra:4",
+          "text": "Use Command: Dissonance to run when she dives; the field slows her and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Orianna:Lissandra:5",
+          "text": "Stay away from her Frozen Tomb at level 6. If she targets you, you are stunned, so keep your distance and ready your Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-R", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Orianna:Lissandra:6",
+          "text": "Hit Command: Shockwave when she jumps in with Glacial Path to stun her and pull her toward the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 4, "end": 22 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 46, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9d51e9d9ea03635191a1c3f85cb861adf856ba3c91db413daf61f7ce6bb962e5",
+      "tips": [
+        {
+          "id": "middle:Orianna:Lux:0",
+          "text": "Stay out of Light Binding's line and keep minions out of its path, because it roots the first two enemies it hits. Walk to the side to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Orianna:Lux:1",
+          "text": "Poke Lux with Command: Attack while she walks up to last-hit. It passes through enemies and hits again at the end.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Orianna:Lux:2",
+          "text": "Use Command: Protect on yourself to pull the Ball back, then fire Command: Attack again for repeated poke.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 66, "end": 81 },
+            { "kind": "keyword", "key": "poke", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Orianna:Lux:3",
+          "text": "Lux is fragile, so put the Ball on her and cast Command: Shockwave to pull her in. Do it when your team can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Orianna-R", "start": 48, "end": 66 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Orianna:Lux:4",
+          "text": "Leave the Ball outside Lucent Singularity's area and don't walk into it, since it slows you. Walk around it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 23, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Orianna:Lux:5",
+          "text": "When Lux casts Final Spark, a warning line appears first. Step out sideways, and don't stay in a long line with your team.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-R", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Orianna:Lux:6",
+          "text": "If Lux has used Light Binding, trade with Command: Dissonance and Command: Attack, because her next one is on a long cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 3, "end": 6 },
+            { "kind": "ability", "key": "Lux-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Orianna-W", "start": 42, "end": 61 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c20d5846206d3449a7bb6f2a4c73a068ce16c45b682d7d50568d37f7e0912191",
+      "tips": [
+        {
+          "id": "middle:Orianna:Malzahar:0",
+          "text": "Poke with Command: Attack from long range while Malzahar farms; the Ball keeps going after it hits, so line up the minions and him together.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Malzahar", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Orianna:Malzahar:1",
+          "text": "Hit Malzahar with auto attacks and abilities when his Void Shift is down. It cuts his damage taken a lot until he takes a hit.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 54,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Orianna:Malzahar:2",
+          "text": "Step out of Call of the Void when the portals appear; it silences you and stops you from casting.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Orianna:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions. When they die, it jumps to the nearest enemy, which can be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Orianna:Malzahar:4",
+          "text": "Look for Command: Shockwave at level 6 once Malzahar has spent his spells. Pull him in and kill him before Void Shift returns.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 9, "end": 27 },
+            { "kind": "champion", "key": "Malzahar", "start": 44, "end": 52 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 107,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Orianna:Malzahar:5",
+          "text": "Use Command: Dissonance to escape when Malzahar closes in. The field leaves him slowed and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Malzahar", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "286737ecc0559e9bf4516d7bafa5afb019aa519b5735a0539a0cebe1712c1689",
+      "tips": [
+        {
+          "id": "middle:Orianna:Mel:0",
+          "text": "Hold Command: Dissonance until Mel's Rebuttal is spent, or at least don't count on her missiles landing while it is up; Rebuttal destroys enemy projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Mel", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Mel-W", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Mel-W", "start": 120, "end": 128 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Orianna:Mel:1",
+          "text": "Throw Command: Attack when Mel's Rebuttal is on cooldown, because Rebuttal destroys projectiles such as the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Mel", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Mel-W", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Mel-W", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Orianna:Mel:2",
+          "text": "Stay out of a straight line with Mel; if Solar Snare hits you, you are rooted and her barrage follows.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Mel-E", "start": 41, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Orianna:Mel:3",
+          "text": "Back off when you are low on health after trading; Mel's Overwhelm stacks can execute you with her next hit.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 51, "end": 54 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Orianna:Mel:4",
+          "text": "Use Command: Shockwave at level 6 when Mel is close to the Ball; it pulls her in and stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Mel", "start": 39, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c90c4759aec1ab894059c951006f67c7429e39b7cec85dcc0ae83988b64585b9",
+      "tips": [
+        {
+          "id": "middle:Orianna:Naafiri:0",
+          "text": "Save Command: Shockwave for when Naafiri dives at you; it stuns her and pulls her and her packmates in, so you can follow up with your other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Naafiri", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Orianna:Naafiri:1",
+          "text": "Poke her with Command: Attack from long range while she is cautious, and pull the Ball back with Command: Protect on yourself.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Orianna-E", "start": 97, "end": 113 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Orianna:Naafiri:2",
+          "text": "When Naafiri closes in, drop Command: Dissonance on yourself; it damages her and leaves a field that slows her while you run.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Orianna-W", "start": 29, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Orianna:Naafiri:3",
+          "text": "Keep the Ball on yourself and hold Command: Protect for when she starts her dash, so the shield and bonus resistances soften the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3b7a3b954bd4f0c8addc9568e6a41a2afd76f9be33d88c742bacca3735dde3af",
+      "tips": [
+        {
+          "id": "middle:Orianna:Qiyana:0",
+          "text": "Keep the Ball on yourself or close by when Qiyana threatens to dash in; Command: Dissonance then slows her as she arrives.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Orianna-W", "start": 72, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Orianna:Qiyana:1",
+          "text": "Save Command: Shockwave for when Qiyana dashes onto you with Audacity; it stuns her and pulls her into the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Qiyana", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 61, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Orianna:Qiyana:2",
+          "text": "Poke with Command: Attack when she steps up to gather an element, then pull the Ball back with Command: Protect on yourself.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Orianna-E", "start": 95, "end": 111 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Orianna:Qiyana:3",
+          "text": "Qiyana turns invisible in brush with the grass element. Stay back from brush, and do not walk in blind.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Orianna:Qiyana:4",
+          "text": "Keep Command: Protect ready as a shield for when she dashes in. It also damages her if the Ball passes through her.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc567b6c767e70262a470ab3e7987c3b536a1ffae8d66a1e90d98c7383405b1a",
+      "tips": [
+        {
+          "id": "middle:Orianna:Ryze:0",
+          "text": "Keep the Ball near the lane so Command: Dissonance and Command: Attack hit Ryze when he walks up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 31, "end": 50 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 55, "end": 70 },
+            { "kind": "champion", "key": "Ryze", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Orianna:Ryze:1",
+          "text": "Do not let Ryze put Spell Flux on you before Rune Prison. Once he has, he can root you and hit hard.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Ryze-E", "start": 20, "end": 30 },
+            { "kind": "ability", "key": "Ryze-W", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Orianna:Ryze:2",
+          "text": "If Ryze gets close, put the Ball on you and use Command: Shockwave to stun him and pull him in.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Orianna-R", "start": 48, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Orianna:Ryze:3",
+          "text": "Use Command: Dissonance to slow Ryze when you need to leave. Its field also speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 },
+            { "kind": "champion", "key": "Ryze", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0e74b31250bdd0951993af1a4991d269410b4b93565d73ff74b46b0422800a5a",
+      "tips": [
+        {
+          "id": "middle:Orianna:Sylas:0",
+          "text": "Stay out of Abscond range and watch for the dash; Sylas follows with Abduct, which stuns and knocks you up. Keep your distance when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Orianna:Sylas:1",
+          "text": "Poke Sylas with Command: Attack from long range when he steps up to the wave. He has to commit to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Orianna:Sylas:2",
+          "text": "Use Command: Protect on yourself to pull the Ball back and shield you when Sylas dives in, then fire Command: Attack as he closes.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 75, "end": 80 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 101, "end": 116 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Orianna:Sylas:3",
+          "text": "Put the Ball near you before Sylas arrives, so Command: Dissonance can hit him and slow him as he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Orianna-W", "start": 47, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Orianna:Sylas:4",
+          "text": "Sylas can steal Command: Shockwave with Hijack at level 6. Position the Ball carefully before you fight, and watch what he does with it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Orianna-R", "start": 16, "end": 34 },
+            { "kind": "ability", "key": "Sylas-R", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Orianna:Sylas:5",
+          "text": "Sylas heals with Kingslayer when he is low, so do not chase a hurt Sylas. Burst him down fully or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "48d90b53e2cc470b2ff06a38c3f3eb8ef4bb02785031316c5cc959ba3d072371",
+      "tips": [
+        {
+          "id": "middle:Orianna:Syndra:0",
+          "text": "Stay out of Scatter the Weak's line when Syndra has a Dark Sphere out; a pushed Dark Sphere stuns you, so step sideways.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Syndra", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 54, "end": 65 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 80, "end": 91 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Orianna:Syndra:1",
+          "text": "Trade with Command: Attack when Syndra's Dark Sphere is on cooldown, then pull the Ball back with Command: Protect on yourself to poke again.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Syndra", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 41, "end": 52 },
+            { "kind": "ability", "key": "Orianna-E", "start": 98, "end": 114 },
+            { "kind": "keyword", "key": "poke", "start": 130, "end": 134 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Orianna:Syndra:2",
+          "text": "Push at Syndra after she uses Scatter the Weak, since its cooldown is long and she has no way to knock you off.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Syndra-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Orianna:Syndra:3",
+          "text": "If Syndra gets close, use Command: Dissonance to slow her and speed yourself away.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Orianna-W", "start": 26, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Orianna:Syndra:4",
+          "text": "Use Command: Shockwave in a fight to pull Syndra in and stun her; it is a strong answer when she steps close.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Syndra", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d626648c92989cdb1793531763caf1ece799caf2a473b741fe902ea1d0f170a3",
+      "tips": [
+        {
+          "id": "middle:Orianna:Taliyah:0",
+          "text": "Stay out of Taliyah's Seismic Shove and Unraveled Earth combo; if you get knocked into the stones, you take damage and get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 130 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Orianna:Taliyah:1",
+          "text": "Walk to the side when Taliyah throws Threaded Volley; the rocks fly in a fixed direction.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Orianna:Taliyah:2",
+          "text": "Poke Taliyah with Command: Attack, then pull the Ball back with Command: Protect on yourself to poke again.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Taliyah", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Orianna-E", "start": 64, "end": 80 },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Orianna:Taliyah:3",
+          "text": "Use Command: Dissonance to leave when Taliyah closes in; the field slows her and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Taliyah", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Taliyah:4",
+          "text": "Taliyah's Weaver's Wall can't be cast right after she takes damage from you, so keep her hurt to stop her escaping or roaming.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Taliyah-R", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Orianna:Taliyah:5",
+          "text": "At level 6, put the Ball on yourself or near Taliyah, then use Command: Shockwave when she steps in; she is stunned and pulled to the Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 45, "end": 52 },
+            { "kind": "ability", "key": "Orianna-R", "start": 63, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 115 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "718398e7b0f5cc76225b39f938af822bf979d90068a841ccd9b017ebfb56ff62",
+      "tips": [
+        {
+          "id": "middle:Orianna:Talon:0",
+          "text": "Keep Command: Dissonance ready for when Talon leaps in; the field slows him, and you move faster inside it to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Orianna:Talon:1",
+          "text": "Use Command: Protect on yourself when Talon dives. The shield and the extra resistances from the Ball help you survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Orianna:Talon:2",
+          "text": "Poke Talon with Command: Attack while he last-hits. Pull the Ball back to you with Command: Protect to repeat it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 16, "end": 31 },
+            { "kind": "ability", "key": "Orianna-E", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Orianna:Talon:3",
+          "text": "Hold Command: Shockwave until Talon commits to you. It stuns him and pulls him toward the Ball, so keep the Ball on you when he jumps in.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1da0f12f849a25a9646fc629881bf901d6ffb6e039bc257f9f4c0c8ca685cba",
+      "tips": [
+        {
+          "id": "middle:Orianna:TwistedFate:0",
+          "text": "Dodge Wild Cards early, since you can't afford many hits. Step out of the fan's cone sideways.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Orianna:TwistedFate:1",
+          "text": "When Twisted Fate starts shuffling Pick a Card, back off. His Gold Card stuns you and sets up a follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 35,
+              "end": 46
+            },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Orianna:TwistedFate:2",
+          "text": "Poke him with Command: Attack and pull the Ball back with Command: Protect on yourself to poke again quickly.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Orianna-E", "start": 58, "end": 74 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Orianna:TwistedFate:3",
+          "text": "When Destiny goes off, leave the lane if you are low, since he may be teleporting to you.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Orianna:TwistedFate:4",
+          "text": "Use Command: Dissonance with the Ball on you to escape a gank. The slowing field helps.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ba80a77b38d442aeab0433ce0f30716044668cdf07521bca0f58bb82c3c5c17e",
+      "tips": [
+        {
+          "id": "middle:Orianna:Veigar:0",
+          "text": "Keep your distance from Veigar when you are low on health, since Primordial Burst hurts more the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Veigar-R", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Orianna:Veigar:1",
+          "text": "Watch for the Dark Matter warning and keep moving. It lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Orianna:Veigar:2",
+          "text": "Do not run into the edge of Event Horizon. If you stay inside the cage you can still move and attack.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Orianna:Veigar:3",
+          "text": "Poke Veigar with Command: Attack when he steps up to last-hit. Hit him with the Ball on the way out and back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Veigar", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Orianna:Veigar:4",
+          "text": "If Veigar jumps on you, use Command: Dissonance to slow him and run away.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Orianna-W", "start": 28, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Orianna:Veigar:5",
+          "text": "Use Command: Shockwave to pull Veigar into your team when he is stuck near your Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Veigar", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "231cee2f9a3bd5aae02f29f58901602df3fc2ecc2185d0ebf20a3074d44a56f4",
+      "tips": [
+        {
+          "id": "middle:Orianna:Vex:0",
+          "text": "Keep the Ball on a spot where Vex must walk when she goes for a last-hit, then hit it with Command: Attack for poke.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 91, "end": 106 },
+            { "kind": "keyword", "key": "poke", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Orianna:Vex:1",
+          "text": "Hold Command: Shockwave until Vex steps in close. It stuns her and pulls her toward the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Vex", "start": 30, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Orianna:Vex:2",
+          "text": "Step out of Vex's Looming Darkness and keep your distance. Her Mistral Bolt is easy to sidestep when you watch her cast.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Vex-E", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Vex-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Orianna:Vex:3",
+          "text": "Put Command: Dissonance down as you retreat when Vex jumps in. The field slows her and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Vex", "start": 49, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Orianna:Vex:4",
+          "text": "Use Command: Protect on yourself to pull the Ball back for a shield when Vex's Personal Space shout is about to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vex", "start": 73, "end": 76 },
+            { "kind": "ability", "key": "Vex-W", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "00dd2f5704ee9873121ee07b2af68f26de76d9f64c83752a37f1ab048a37581d",
+      "tips": [
+        {
+          "id": "middle:Orianna:Viktor:0",
+          "text": "Stay out of Viktor's Siphon Power range and poke him with Command: Attack from far away. His shield makes trading up close worse for you.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Orianna:Viktor:1",
+          "text": "Step out of Gravity Field quickly. Staying inside gets you slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Viktor:2",
+          "text": "If Viktor is stuck in a Gravity Field or an Arcane Storm, use Command: Dissonance to run away. It speeds you up and slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Viktor-W", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Viktor-R", "start": 44, "end": 56 },
+            { "kind": "ability", "key": "Orianna-W", "start": 62, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Orianna:Viktor:3",
+          "text": "Leave the Ball where it will catch Viktor, then use Command: Shockwave when he walks into it. Do this when he is trying to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Orianna-R", "start": 52, "end": 70 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Orianna:Viktor:4",
+          "text": "Sidestep Hextech Ray, since it travels in a straight line. Be careful with the delayed blast it leaves behind once he has upgraded it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "54f42416acdcc1c55581f9cb35f1b333f1257021570150c6eefc2c6f3819fa99",
+      "tips": [
+        {
+          "id": "middle:Orianna:Vladimir:0",
+          "text": "Poke Vladimir with Command: Attack as he walks up to farm; it hits everything along its path.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Orianna:Vladimir:1",
+          "text": "Hold Command: Shockwave until Vladimir uses Sanguine Pool, since he can't be hit while pooled.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Vladimir", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Orianna:Vladimir:2",
+          "text": "Use Command: Dissonance to escape if he gets on top of you; the field slows him and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Orianna:Vladimir:3",
+          "text": "Kill or escape Vladimir before Hemoplague finishes, since it heals him for each champion it hit.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "33911181c040f22dbcbf6f4c1e5a7f7dfb432447225c338ac90261bed09cf7b6",
+      "tips": [
+        {
+          "id": "middle:Orianna:Xerath:0",
+          "text": "Step up and trade when Xerath has just used Shocking Orb or Arcanopulse; Orianna wins close fights better than long-range ones.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Xerath-E", "start": 44, "end": 56 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 60, "end": 71 },
+            { "kind": "champion", "key": "Orianna", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Orianna:Xerath:1",
+          "text": "Sidestep Shocking Orb by moving out of its line, and stay near minions that could block it. It stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "middle:Orianna:Xerath:2",
+          "text": "Walk side to side when you see Xerath charging Arcanopulse; the beam is hardest to land on someone moving sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Orianna:Xerath:3",
+          "text": "Poke with Command: Attack, then pull the Ball back with Command: Protect on yourself to repeat it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Orianna-E", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Orianna:Xerath:4",
+          "text": "Use Command: Dissonance when Xerath is slowing you with Eye of Destruction; the field speeds you up and slows him if he steps in.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Xerath", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Xerath-W", "start": 56, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Orianna:Xerath:5",
+          "text": "At level 6, put the Ball on Xerath and use Command: Shockwave when he is in reach; it stuns him and drags him toward the Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Orianna-R", "start": 43, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Orianna:Xerath:6",
+          "text": "Move away or toward his Rite of the Arcane circles as the shots land; the shots land after a delay, so walk out of the marked spot.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 24, "end": 42 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "50fcf024087163e0424d855c163c9da3f9a8b1581a636ddc7aa109b67ec2325e",
+      "tips": [
+        {
+          "id": "middle:Orianna:XinZhao:0",
+          "text": "Keep the Ball between you and Xin Zhao and slow him with Command: Dissonance when he charges in.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Orianna-W", "start": 57, "end": 76 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Orianna:XinZhao:1",
+          "text": "Poke with Command: Attack from long range. Xin Zhao has to use Audacious Charge to reach you, so be ready to answer it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "XinZhao", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Orianna:XinZhao:2",
+          "text": "Use Command: Protect on yourself for a shield when Xin Zhao lunges at you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Orianna:XinZhao:3",
+          "text": "Save Command: Shockwave for when Xin Zhao is on top of you. It stuns him and pulls him in, which breaks his Three Talon Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 108, "end": 126 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f327cf0a5509063c1a212426a449146ed7fb413be39825cecd4193c5decb3034",
+      "tips": [
+        {
+          "id": "middle:Orianna:Yasuo:0",
+          "text": "Keep Command: Shockwave for when Yasuo dashes in or lands a knock up; it pulls him in and stuns him so your team can kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Yasuo", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Orianna:Yasuo:1",
+          "text": "Do not rely on Command: Attack into his Wind Wall; the wiki says the Ball may drop when it hits the wall, so wait for the wall to fade.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Orianna:Yasuo:2",
+          "text": "Poke him with Command: Attack while he last-hits; it keeps going through minions to hit him, and the first hit does the most damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Orianna:Yasuo:3",
+          "text": "Use Command: Dissonance when he dashes at you; the field slows him and speeds you up as you back away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Orianna:Yasuo:4",
+          "text": "Put the Ball on yourself with Command: Protect when he dives; the shield helps you survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cf7dcad847269ced46b18f1abdba2e7dc41eea1a582532734baa68bfec603986",
+      "tips": [
+        {
+          "id": "middle:Orianna:Yone:0",
+          "text": "Poke him with Command: Attack from long range while he walks up to last-hit; the Ball keeps flying after it hits.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Orianna:Yone:1",
+          "text": "Save Command: Shockwave for when Yone dashes in with Fate Sealed or Mortal Steel; it stuns him and pulls him to the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Yone", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Yone-R", "start": 53, "end": 64 },
+            { "kind": "ability", "key": "Yone-Q", "start": 68, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Orianna:Yone:2",
+          "text": "When Yone gets close, use Command: Dissonance to slow him and speed yourself up so you can walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Orianna-W", "start": 26, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Yone:3",
+          "text": "Use Command: Protect on yourself to pull the Ball back for armor and magic resist and a shield when he threatens to dive on you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Orianna:Yone:4",
+          "text": "Do not fight him in his Soul Unbound; his damage is repeated when it ends, so back off until his body returns.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-E", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "39926042b0ad973998eb1c3813ed58ae233cbb808799d8e2c44bfcdd8c449bfc",
+      "tips": [
+        {
+          "id": "middle:Orianna:Zed:0",
+          "text": "Poke Zed with Command: Attack when he walks up to last-hit; the ball hits everything along its path and where it lands.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Orianna:Zed:1",
+          "text": "Hold Command: Shockwave until Zed jumps in with Death Mark. It pulls him in and stuns him, which makes his mark harder to use.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Zed-R", "start": 48, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Orianna:Zed:2",
+          "text": "Use Command: Dissonance when Zed closes in. It deals damage, leaves a field that slows him, and speeds you up to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Zed:3",
+          "text": "Keep the ball on you or on a nearby ally. Command: Protect gives you a shield and some defenses to survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Orianna:Zed:4",
+          "text": "Zed is weakest right after he uses Living Shadow, so punish him with Command: Attack then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "634169036b6cee049c579a1e3f9e2450520067a49a6c622e6ed78e6d1efd2e63",
+      "tips": [
+        {
+          "id": "middle:Orianna:Zoe:0",
+          "text": "Stay out of Zoe's long Paddle Star range when you can; the star hits harder the further it flies, so close fights cost you less.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 12, "end": 15 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Orianna:Zoe:1",
+          "text": "Keep moving and watch for Sleepy Trouble Bubble. If you are stunned or asleep, Zoe's follow-up damage is far larger.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 26, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 },
+            { "kind": "champion", "key": "Zoe", "start": 79, "end": 82 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Orianna:Zoe:2",
+          "text": "Hit Zoe with Command: Attack while she stands still after Portal Jump; she cannot move then and must return to her start spot.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Zoe-R", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Orianna:Zoe:3",
+          "text": "Use Command: Shockwave on Zoe once she has used her bubble or Portal Jump. She has little way to get out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Zoe", "start": 26, "end": 29 },
+            { "kind": "ability", "key": "Zoe-R", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Orianna:Zoe:4",
+          "text": "Put Command: Protect on an ally or yourself to get the Ball back fast and poke again with Command: Attack.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 78 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 90, "end": 105 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

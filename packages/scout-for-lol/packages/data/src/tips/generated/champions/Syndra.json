@@ -1,0 +1,1002 @@
+{
+  "schemaVersion": 1,
+  "champion": "Syndra",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "98b97887f06112784bb492bcdd674498591a92142120061e7ef0097eb55a872c",
+      "tips": [
+        {
+          "id": "middle:Syndra:general:0",
+          "text": "Use Dark Sphere on enemies who stand still to last-hit, and keep the spheres on the ground. Your other abilities need them.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Syndra:general:1",
+          "text": "Hit an enemy with Force of Will, then follow with Dark Sphere. They are slowed and have a hard time dodging it.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-W", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 50, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Syndra:general:2",
+          "text": "Place a Dark Sphere near the enemy, then push it into them with Scatter the Weak. A sphere that hits them stuns them.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Syndra-E", "start": 64, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Syndra:general:3",
+          "text": "Grab an enemy minion with Force of Will when no sphere is around. You can then throw it as a slowing hit on the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-W", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Syndra:general:4",
+          "text": "Scatter the Weak has a long cooldown, so don't waste it. Use it to stun with a sphere or to push away someone diving you.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 0, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Syndra:general:5",
+          "text": "Aim Scatter the Weak away from walls and terrain. Enemies are not knocked back through terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Syndra:general:6",
+          "text": "Before you cast Unleashed Power, lay down several Dark Spheres. More spheres on the ground means more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Syndra:general:7",
+          "text": "Put your points into one ability until it reaches max rank. At max rank it gains a strong bonus.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Syndra:general:8",
+          "text": "Use Unleashed Power on a low-health enemy once you have lots of Splinters of Wrath. It can then finish them off.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Syndra:combo:0",
+          "name": "Instant sphere stun (QE buffer)",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Syndra-Q" },
+            { "kind": "ability", "key": "Syndra-E" }
+          ],
+          "when": "When you want to stun an enemy standing at close or medium range.",
+          "whenRefs": [],
+          "text": "Cast Q and then E at once, as the sphere is still appearing. The sphere is knocked back as soon as it lands, so the enemy has little time to react.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "5152167179d31f23bce985383c828a13899a74b0a634cc511cb32c890cbab504",
+      "tips": [
+        {
+          "id": "middle:Syndra:Ahri:0",
+          "text": "Stay behind minions when Ahri is nearby. Charm stops at the first enemy it hits, so minions in the way protect you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Syndra:Ahri:1",
+          "text": "Knock Dark Spheres into Ahri with Scatter the Weak so she is stunned. Do it when she steps forward to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Syndra-E", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Syndra:Ahri:2",
+          "text": "Once Ahri's Spirit Rush is down, play aggressively. She has far less ability to escape or dive you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-R", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Syndra:Ahri:3",
+          "text": "After Force of Will hits Ahri, follow with Dark Sphere. She is slowed and has a hard time dodging it.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Syndra:Ahri:4",
+          "text": "Keep your distance from Ahri's Orb of Deception. It hits you on the way out and on the way back.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "52c03ef2d6971d3f160b8a3e03881a4d913587e57d4369fedaf997ee9a4daed1",
+      "tips": [
+        {
+          "id": "middle:Syndra:Akali:0",
+          "text": "Keep Scatter the Weak ready for when Akali jumps on you; it knocks her back and can stop her kill.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Syndra:Akali:1",
+          "text": "Put a Dark Sphere down before Akali arrives, then push it with Scatter the Weak to stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Syndra-E", "start": 63, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Syndra:Akali:2",
+          "text": "Throw Dark Sphere or Force of Will into Twilight Shroud smoke; area damage still hits her and briefly shows her.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Syndra-W", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "Akali-W", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Syndra:Akali:3",
+          "text": "Hit Akali with Force of Will and follow with Dark Sphere; she is slowed and has trouble dodging.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Syndra-W", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Syndra:Akali:4",
+          "text": "Trade when Akali is low on energy; Five Point Strike is weak then and she has trouble answering you.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Akali-Q", "start": 35, "end": 52 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3af2fa95a1526f4c290c99bf9893f3f62a0503d5c77baa089e5a02447cd62695",
+      "tips": [
+        {
+          "id": "middle:Syndra:Anivia:0",
+          "text": "Dodge Flash Frost by stepping sideways. Its stun only comes when it bursts, so don't stand still at the end of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Syndra:Anivia:1",
+          "text": "Use Scatter the Weak to push Anivia back when she walks up, ideally through a Dark Sphere so she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 78, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Syndra:Anivia:2",
+          "text": "Hit Anivia with Force of Will, then follow with Dark Sphere. She will be slowed and have a hard time dodging it.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Syndra-W", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 48, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Syndra:Anivia:3",
+          "text": "Don't stand in Glacial Storm. It slows you and hurts more once it has fully formed.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Syndra:Anivia:4",
+          "text": "Kill Anivia fully, then remember her egg. Hit it while she is vulnerable, since she can return with full health.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a34e1eadce1357fbfee31d0e6ae3fee2bf891af1deb693f6b2070f10302adbed",
+      "tips": [
+        {
+          "id": "middle:Syndra:Aurora:0",
+          "text": "Throw Force of Will at Aurora, then follow with Dark Sphere while she is slowed and cannot dodge it easily.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 48, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Syndra:Aurora:1",
+          "text": "Push a Dark Sphere into Aurora with Scatter the Weak to stun her, then follow up with your other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Syndra-E", "start": 36, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Syndra:Aurora:2",
+          "text": "Hold Unleashed Power until several spheres are out. At level 6 it can finish Aurora once she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Aurora", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Syndra:Aurora:3",
+          "text": "Once Aurora uses Across the Veil to turn invisible, do not chase. Wait for her to reappear and be ready to hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Syndra:Aurora:4",
+          "text": "Stay out of her Twofold Hex line. Bait it out, then trade while it recharges.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Syndra:Aurora:5",
+          "text": "Do not fight inside the circle from Between Worlds. Enemies who cross its edge are slowed, and Aurora can hop across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 36, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 },
+            { "kind": "champion", "key": "Aurora", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5f8f4627402b2fd31dc49efb7b16f341e9f9852630f665292b4190454ed85294",
+      "tips": [
+        {
+          "id": "middle:Syndra:Cassiopeia:0",
+          "text": "Use Scatter the Weak right after Cassiopeia closes in; a pushed Dark Sphere stuns her and sets up your burst.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 64, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Syndra:Cassiopeia:1",
+          "text": "Turn away as Cassiopeia casts Petrifying Gaze so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 13, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 30,
+              "end": 45
+            },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Syndra:Cassiopeia:2",
+          "text": "Do not stand in Miasma; you cannot use movement abilities there and you are slowed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 16,
+              "end": 22
+            },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Syndra:Cassiopeia:3",
+          "text": "Trade with Dark Sphere while Cassiopeia's Twin Fang is hard to use; she hits hardest on poisoned targets, so keep away from Noxious Blast.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 29, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 42,
+              "end": 51
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 124,
+              "end": 137
+            }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bd664c4f557047fdc5fc78545d7438ebe386720365cd0f2aa13db0a0a5053435",
+      "tips": [
+        {
+          "id": "middle:Syndra:Fizz:0",
+          "text": "Hit Fizz with Force of Will, then follow with Dark Sphere; he is slowed and finds it hard to avoid.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Syndra-W", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 46, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Syndra:Fizz:1",
+          "text": "Do not cast Scatter the Weak at Fizz while he balances on his trident; Playful makes him untargetable and you will waste it.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Fizz", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Syndra:Fizz:2",
+          "text": "Keep Scatter the Weak ready for when Fizz dives in; it knocks him back and a pushed Dark Sphere stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 84, "end": 95 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Syndra:Fizz:3",
+          "text": "Do not let Fizz walk up and use Seastone Trident on you; poke him back when he approaches and keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Fizz-W", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Syndra:Fizz:4",
+          "text": "Watch Fizz at level 6; if you do not have Scatter the Weak available when Chum the Waters comes, you can be caught.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Syndra-E", "start": 42, "end": 58 },
+            { "kind": "ability", "key": "Fizz-R", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "22c387a43d2df8ff9425829c153cfc722b88e28abffd0db82b5fcd7fd17e29df",
+      "tips": [
+        {
+          "id": "middle:Syndra:Malzahar:0",
+          "text": "Put Dark Sphere down away from Malzahar and poke him when he walks up to farm; he loses Void Shift once hit.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malzahar", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 88,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Syndra:Malzahar:1",
+          "text": "Stay out of Call of the Void's line; being silenced stops your spheres and Scatter the Weak.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Syndra-E", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "middle:Syndra:Malzahar:2",
+          "text": "Do not stand near minions marked by Malefic Visions; when they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Syndra:Malzahar:3",
+          "text": "Keep your distance at level 6; Nether Grasp is hard to escape once it lands. Use Scatter the Weak to push him back before that.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Syndra-E", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "48d90b53e2cc470b2ff06a38c3f3eb8ef4bb02785031316c5cc959ba3d072371",
+      "tips": [
+        {
+          "id": "middle:Syndra:Orianna:0",
+          "text": "Hit Orianna with Force of Will, then follow with Dark Sphere while she is slowed and cannot dodge.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Syndra-W", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Syndra:Orianna:1",
+          "text": "Place a Dark Sphere near Orianna, then use Scatter the Weak to push it into her for a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Orianna", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Syndra-E", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Syndra:Orianna:2",
+          "text": "Watch where the Ball sits; Orianna's abilities only work around it. Stay out of range of it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Syndra:Orianna:3",
+          "text": "Before Orianna reaches level 6, respect Command: Shockwave when you stand close to her Ball, because it pulls you in.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Orianna-R", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "de2ef4e373662c2972acbb87f007b34de6a552a0cb052821c1ab8e2c9791eec2",
+      "tips": [
+        {
+          "id": "middle:Syndra:Ryze:0",
+          "text": "Place Dark Sphere, then push it with Scatter the Weak when Ryze steps up. The stun gives you a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Syndra-E", "start": 37, "end": 53 },
+            { "kind": "champion", "key": "Ryze", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Syndra:Ryze:1",
+          "text": "Stay away from Ryze once Spell Flux has landed on you. Rune Prison then roots you and Overload hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ryze-E", "start": 25, "end": 35 },
+            { "kind": "ability", "key": "Ryze-W", "start": 55, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 77 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Syndra:Ryze:2",
+          "text": "Hit Ryze with Force of Will, then follow with Dark Sphere. He is slowed and has a hard time dodging it.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Syndra-W", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 46, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Syndra:Ryze:3",
+          "text": "Hold Unleashed Power until several spheres are out. It does more damage then, and it can finish a Ryze who is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ryze", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc8ffac90b41eef9f5f21a4740f70f44d7074f8c5d5e3847767edb442bd2d7fd",
+      "tips": [
+        {
+          "id": "middle:Syndra:Sylas:0",
+          "text": "Use Scatter the Weak on Sylas when he dashes in; it knocks him back and breaks his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Syndra:Sylas:1",
+          "text": "Keep Dark Sphere out before he engages, so Scatter the Weak can push it into him and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Syndra-E", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Syndra:Sylas:2",
+          "text": "Poke him with Dark Sphere from long range while he waits on cooldowns; his Chain Lash and Abduct have to come close.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Syndra:Sylas:3",
+          "text": "Hold back after Scatter the Weak is used; her long cooldown leaves you open to his Abduct. Stay away from him then.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Syndra:Sylas:4",
+          "text": "Do not fight him when he is low on health; Kingslayer heals him more the lower he is.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Syndra:Sylas:5",
+          "text": "Save Unleashed Power for when he is hurt or you want to kill him, since it can be stolen if he hits it; use it with many spheres out.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6e676bf69d47862d7e98505a9fbb62c294c228ad2ade877c02f6c416d1bbceec",
+      "tips": [
+        {
+          "id": "middle:Syndra:TwistedFate:0",
+          "text": "Follow Force of Will with Dark Sphere; the slowed Twisted Fate has a hard time dodging it.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-W", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "champion", "key": "TwistedFate", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Syndra:TwistedFate:1",
+          "text": "Keep a Dark Sphere down, then use Scatter the Weak when Twisted Fate walks close to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 7, "end": 18 },
+            { "kind": "ability", "key": "Syndra-E", "start": 34, "end": 50 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 56,
+              "end": 68
+            },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Syndra:TwistedFate:2",
+          "text": "Stay out of his reach when the Gold Card is ready; if he hits you, you are stunned and can't escape his follow-up.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Syndra:TwistedFate:3",
+          "text": "Hold Scatter the Weak for when he commits; he can't be pushed back otherwise, and his Wild Cards hit wide.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 5, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 86,
+              "end": 96
+            }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Syndra:TwistedFate:4",
+          "text": "When Destiny goes off, back off to safety; he may teleport in with allies.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Syndra:TwistedFate:5",
+          "text": "Gather plenty of spheres before using Unleashed Power to kill him; it deals the most damage that way.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "13c20605bdf3524b3d041cc41cc353a644412e07bb211bd8625554f6acb0a184",
+      "tips": [
+        {
+          "id": "middle:Syndra:Viktor:0",
+          "text": "Hit Viktor with Scatter the Weak onto a Dark Sphere so he is stunned, then follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Syndra-E", "start": 16, "end": 32 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 40, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Syndra:Viktor:1",
+          "text": "Keep Viktor away; he is stronger close up. Poke him with Dark Sphere from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Syndra:Viktor:2",
+          "text": "Hit Viktor with Force of Will, then follow with Dark Sphere while he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Syndra-W", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 48, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Syndra:Viktor:3",
+          "text": "Don't stand inside Gravity Field; step out before it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Syndra:Viktor:4",
+          "text": "Walk out of Arcane Storm early; it follows you and keeps hurting.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9f981ed2f5c22a7ea02af3f1851b3e0edd800c70d77d674b2c8a1a21c452ee80",
+      "tips": [
+        {
+          "id": "middle:Syndra:Yasuo:0",
+          "text": "Keep Scatter the Weak ready for when Yasuo dashes at you; it knocks him back, and a pushed Dark Sphere stuns him if it connects.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 91, "end": 102 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Syndra:Yasuo:1",
+          "text": "Yasuo's Wind Wall blocks your Scatter the Weak and stops pushed spheres. Wait for the wall to drop before you commit it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Syndra-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Syndra:Yasuo:2",
+          "text": "Force of Will throws a Dark Sphere or minion and slows. Throw one onto Yasuo, then follow with Dark Sphere while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-W", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 23, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 },
+            { "kind": "champion", "key": "Yasuo", "start": 71, "end": 76 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 95, "end": 106 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 125 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Syndra:Yasuo:3",
+          "text": "Stay out of range of Yasuo's tornado from Steel Tempest. Once he has hit two in a row, back away or sidestep, because the knock up sets up his ultimate.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 122, "end": 130 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Syndra:Yasuo:4",
+          "text": "Hold Scatter the Weak when you can. If he is knocked up by an ally, his Last Breath can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Syndra:Yasuo:5",
+          "text": "Poke him with Dark Sphere from long range while he has no minions to dash through.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ede300a22175fdb7fc7f914671abc5e6bd52698144a6c9d212d4fe1a457e0ae5",
+      "tips": [
+        {
+          "id": "middle:Syndra:Yone:0",
+          "text": "Throw Dark Sphere, then push it with Scatter the Weak to stun Yone when he walks up. Do it as he commits to a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Syndra-E", "start": 37, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "champion", "key": "Yone", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Syndra:Yone:1",
+          "text": "Use Scatter the Weak to knock Yone back when he dashes in with Mortal Steel. Then hit him while he is out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Yone-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Syndra:Yone:2",
+          "text": "Poke him with Dark Sphere from long range. Yone has no ranged attack, so he has to give up lane or trade into you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Syndra:Yone:3",
+          "text": "Hold Scatter the Weak for when Yone comes at you. Its cooldown is long, and without it you are easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Syndra:Yone:4",
+          "text": "Be careful at level 6. Fate Sealed can reach you from far away and stuns you, so keep Scatter the Weak ready.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-R", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Syndra-E", "start": 86, "end": 102 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a68a9ddb9ab585804f08ad5be900e5e4bd22c4a2b958f5e0fe412810c35f9a3d",
+      "tips": [
+        {
+          "id": "middle:Syndra:Zed:0",
+          "text": "Use Scatter the Weak on Zed when he dashes in with Death Mark or Living Shadow; it knocks him back and breaks his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Zed-R", "start": 51, "end": 61 },
+            { "kind": "ability", "key": "Zed-W", "start": 65, "end": 78 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Syndra:Zed:1",
+          "text": "Keep a Dark Sphere ready before Zed reaches you, so Scatter the Weak can stun him if he steps close.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 32, "end": 35 },
+            { "kind": "ability", "key": "Syndra-E", "start": 52, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Syndra:Zed:2",
+          "text": "Poke Zed with Dark Sphere from long range and make him walk into it. Punish him when his Living Shadow is on cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Zed-W", "start": 89, "end": 102 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Syndra:Zed:3",
+          "text": "Hit Zed with Force of Will, then follow with Dark Sphere. He will be slowed and have trouble dodging it.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Syndra-W", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Syndra:Zed:4",
+          "text": "Scatter the Weak has a long cooldown, so don't waste it on a Zed who isn't coming at you. Hold it for his Death Mark.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 61, "end": 64 },
+            { "kind": "ability", "key": "Zed-R", "start": 106, "end": 116 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

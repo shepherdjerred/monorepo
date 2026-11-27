@@ -1,0 +1,3236 @@
+{
+  "schemaVersion": 1,
+  "champion": "Rumble",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "531c8a93b0117207860e0dcba346e38d5271069f47a422cfc0249dd56c942f3a",
+      "tips": [
+        {
+          "id": "top:Rumble:general:0",
+          "text": "Pace your spells to stay in the Danger Zone, where your basic abilities get stronger. Spamming everything makes you Overheat and unable to cast.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Rumble:general:1",
+          "text": "Use Flamespitter on the enemy while they stand in front of you. It deals extra damage based on their max Health, so it hurts tanks most.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:general:2",
+          "text": "Hit the enemy with Electro Harpoon twice. The second hit makes the slow stronger and cuts more Magic Resist, so follow up with Flamespitter.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 127, "end": 139 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Rumble:general:3",
+          "text": "Cast Scrap Shield when the enemy is about to trade with you. It also gives a burst of Move Speed to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:general:4",
+          "text": "Aim Electro Harpoon carefully. It stops at the first enemy it hits, so a minion in the way can block it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "top:Rumble:general:5",
+          "text": "Drag The Equalizer across the path the enemy will flee down, or across your team's fight. It slows everyone standing in the fire.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Rumble:general:6",
+          "text": "When you Overheat in a trade, finish with basic attacks. They hit harder and faster, but you can't cast spells for a few seconds.",
+          "refs": [],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Rumble:combo:0",
+          "name": "Dragged Equalizer wall",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Rumble-R" }],
+          "when": "When enemies are fleeing, or you want to split a team fight or block a choke point.",
+          "whenRefs": [],
+          "text": "Click and drag while casting to set the direction of the fire trail. Aim it across their escape path, or across a choke point, instead of straight at them.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "b9df3faf40ade45c1ecaf43c753615eb81bd5c5a9c875ca9f0ebf8d9b291eca4",
+      "tips": [
+        {
+          "id": "top:Rumble:Aatrox:0",
+          "text": "Keep Flamespitter on Aatrox while he walks up; it burns a share of his max Health, so it hurts him more the longer he stays in the cone.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Rumble:Aatrox:1",
+          "text": "Land Electro Harpoon twice to leave Aatrox slowed. It makes The Darkin Blade easier to dodge and lets you walk away from Infernal Chains.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 60, "end": 76 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 121, "end": 136 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Rumble:Aatrox:2",
+          "text": "Cast Scrap Shield just before Infernal Chains pulls you back or The Darkin Blade lands. Its speed boost also helps you step out of the hit zones.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 30, "end": 45 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Rumble:Aatrox:3",
+          "text": "Watch your Heat bar. If you Overheat you can't cast, and Aatrox will walk up and trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Rumble:Aatrox:4",
+          "text": "Use The Equalizer to cut off Aatrox when he dashes in or tries to flee. Its burning trail slows him and he has to leave it to avoid the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d8a56f7ef49fbeecc1ed577c47d19055b2248ad4ae7e60bbf1d4c50ceccb24bf",
+      "tips": [
+        {
+          "id": "top:Rumble:Akali:0",
+          "text": "Fire Electro Harpoon when Akali steps in to trade; it slows her and lowers her Magic Resist, so your follow-up hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Rumble:Akali:1",
+          "text": "Keep Flamespitter on her when she is close. It deals damage over time, and she loses much of it if she dashes out.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Akali:2",
+          "text": "Use Scrap Shield as Akali commits to a trade. It absorbs part of her burst and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Akali:3",
+          "text": "Do not spam abilities when Akali is near. Overheating stops you casting, and she can punish that.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Akali:4",
+          "text": "Drop The Equalizer on the path she will dash through, or on her escape route after she is hurt. It slows her and burns.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f12171b8ab76a172f0105312e2273e56734700388e48911e118ffad77ed0d74a",
+      "tips": [
+        {
+          "id": "top:Rumble:Ambessa:0",
+          "text": "Hit Ambessa with Electro Harpoon as she walks up; it slows her and cuts her Magic Resist, so your follow-up hurts more.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Rumble-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Ambessa:1",
+          "text": "Open Scrap Shield just as she commits to a trade; it absorbs her burst and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:Ambessa:2",
+          "text": "Hold Flamespitter until she is close and keep her in the cone; it hurts more the more health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Rumble:Ambessa:3",
+          "text": "Space your spells so you stay in the Danger Zone and avoid Overheating, which leaves you unable to cast while she closes in.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Ambessa:4",
+          "text": "After Public Execution picks up an ally, drop The Equalizer on the spot; it slows everyone caught in the fire.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 6, "end": 22 },
+            { "kind": "ability", "key": "Rumble-R", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "396f522b17b860f60c18b8f2a9059489d9b03647cc777aca31a93fbcd2b1caeb",
+      "tips": [
+        {
+          "id": "top:Rumble:Anivia:0",
+          "text": "Keep Anivia in your Flamespitter cone; the burn is heavy against her health, so step in when her abilities are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Rumble:Anivia:1",
+          "text": "Sidestep Flash Frost; it slows you, and Frostbite then hits much harder. Never stand still in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Anivia-E", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Rumble:Anivia:2",
+          "text": "Use Scrap Shield before a fight, since it blunts her poke and speeds you up. Pay attention to your Heat so you do not overheat mid-trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Anivia:3",
+          "text": "Do not walk through Crystallize. Wait for it to melt, or go around it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Anivia:4",
+          "text": "Use The Equalizer to cover her escape path. Her Glacial Storm is hard to stay in near it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Anivia-R", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Rumble:Anivia:5",
+          "text": "Anivia revives with full health from her egg. Finish the egg quickly, or you lose the kill.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07ee271d67c8f3ecff1c70778263974c5436e4f2ccf22ea1bcadc08d4ed6dece",
+      "tips": [
+        {
+          "id": "top:Rumble:Aurora:0",
+          "text": "Keep your Heat in the Danger Zone before you trade; Electro Harpoon and Flamespitter both hit much harder there.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 52, "end": 67 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Rumble:Aurora:1",
+          "text": "Use Electro Harpoon on Aurora as she walks up; the slowed target is easier to keep inside Flamespitter.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 90, "end": 102 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Rumble:Aurora:2",
+          "text": "Do not cast everything at once. Overheating leaves you unable to cast, and Aurora can punish you during that window.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Aurora:3",
+          "text": "Aim Electro Harpoon where Aurora will land after Across the Veil, since she is invisible but can still be hit there.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Aurora-W", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Rumble:Aurora:4",
+          "text": "Use Scrap Shield when Twofold Hex comes at you or when you need to run; it also gives you extra Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Aurora:5",
+          "text": "Hold The Equalizer to cover her escape. Her Between Worlds ring is a trap you can drop fire into, and she cannot leave it easily.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Aurora-R", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "253996a9a4e11ab67b4dabfae96d70f7205efe3a1063e3d7c94f59e3d70112fc",
+      "tips": [
+        {
+          "id": "top:Rumble:Briar:0",
+          "text": "Hold Scrap Shield for when Briar leaps in with Head Rush or Blood Frenzy; the shield and speed boost soften her first burst.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Briar-Q", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Rumble:Briar:1",
+          "text": "Keep Flamespitter on Briar when she closes in. It deals damage based on her max Health, so it hurts more the sturdier she gets.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Briar:2",
+          "text": "Hit Briar with Electro Harpoon as she approaches. It slows her and cuts her Magic Resist, so your other spells hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Rumble:Briar:3",
+          "text": "Watch your Heat. If you Overheat while Briar is on you, you can't cast spells and she can freely trade.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Rumble:Briar:4",
+          "text": "Use The Equalizer on Briar once she is locked onto someone. The burning trail slows her, so she has a hard time getting out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "21e9fc77510b3161c65cdf206e1421262ad4c609284784ac1135078c7d6a324a",
+      "tips": [
+        {
+          "id": "top:Rumble:Camille:0",
+          "text": "Hit Camille with Electro Harpoon when she walks up to trade; it slows her and cuts her Magic Resist, so your next spells hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Rumble-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Rumble:Camille:1",
+          "text": "Hold Flamespitter on her at close range while she is in your cone; it hurts more against high health, which suits a tanky Camille.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Camille", "start": 122, "end": 129 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Rumble:Camille:2",
+          "text": "Pop Scrap Shield as Camille dashes in with Hookshot, so her stun and burst land on a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Camille", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Camille-E", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Rumble:Camille:3",
+          "text": "Watch your Heat in a trade. If you Overheat you cannot cast, and Camille can hit you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Camille:4",
+          "text": "Once Camille is locked in by The Hextech Ultimatum, drop The Equalizer on the zone; she and you are both stuck there, so use it when you can win the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Camille-R", "start": 29, "end": 50 },
+            { "kind": "ability", "key": "Rumble-R", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Rumble:Camille:5",
+          "text": "Use The Equalizer on the path she needs to escape or chase along; it slows her while she stands in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "542c8328ec2bc2960b81ff74a677d63db592356014e76245e1dc3e37f584ac45",
+      "tips": [
+        {
+          "id": "top:Rumble:Chogath:0",
+          "text": "Keep Flamespitter on Cho'Gath when he walks up to a minion wave. He is large and takes extra damage from it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Chogath", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Rumble:Chogath:1",
+          "text": "Step sideways out of the Rupture smoke cloud. Scrap Shield gives you speed to get out in time.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Rumble-W", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Rumble:Chogath:2",
+          "text": "Hit Cho'Gath with Electro Harpoon from long range as he walks up. A slowed Cho'Gath has a hard time reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Rumble-E", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            { "kind": "champion", "key": "Chogath", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:Chogath:3",
+          "text": "Stay out of Feral Scream range. Being silenced mid-rotation leaves you without spells.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "silenced", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Rumble:Chogath:4",
+          "text": "Drop The Equalizer across his escape path so Cho'Gath stays slowed while you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Chogath", "start": 45, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5c981ffa8d30bb6743ea9bc7dedcfc993b4a74b7efac6ad95a07f4bdfa989c39",
+      "tips": [
+        {
+          "id": "top:Rumble:Darius:0",
+          "text": "Poke Darius with Electro Harpoon from long range; it slows him and the harpoon flies on past the first target.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-E", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Darius:1",
+          "text": "Fire Electro Harpoon again while Darius is slowed. A second hit makes the slow stronger and cuts his Magic Resist more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:Darius:2",
+          "text": "Use Scrap Shield when Darius pulls you in with Apprehend, or just before he gets close. It also gives you a burst of speed to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Darius-E", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Darius:3",
+          "text": "Keep Darius at the edge of Flamespitter range and burn him as he walks in. It deals extra damage to high-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Rumble:Darius:4",
+          "text": "Watch your Heat. If you overheat in front of Darius, you can't cast anything and he can walk onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Darius:5",
+          "text": "Drop The Equalizer behind Darius when he's chasing, or across his path to a fight. Its trail slows him and keeps hurting him while he stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4de31cb5cfbd721652497ae368da0d75d9b7d3e5d34e67d87f926a3f87b83067",
+      "tips": [
+        {
+          "id": "top:Rumble:DrMundo:0",
+          "text": "Keep Mundo in Flamespitter range; it burns a share of his max Health, so it hurts a big-Health target.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:DrMundo:1",
+          "text": "Dodge Infected Bonesaw by stepping out of its thin line; Electro Harpoon can't be used to block it, so stay off the line of minions.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "ability", "key": "Rumble-E", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Rumble:DrMundo:2",
+          "text": "Use Scrap Shield as Mundo throws his bonesaw or trades, to soak the hit and speed away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:DrMundo:3",
+          "text": "Don't spam spells to overheat; you can't cast while Mundo walks up and swings, so keep your Heat in Danger Zone.",
+          "refs": [],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Rumble:DrMundo:4",
+          "text": "Use Electro Harpoon from long range to keep Mundo slowed and away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Rumble:DrMundo:5",
+          "text": "Hold The Equalizer to block his path when you are ahead; he heals, so pair it with other damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d968e9a9f5c5b3428301029ccd5dc83ba7b8675a1af62048e1ce6b6e0ea3e688",
+      "tips": [
+        {
+          "id": "top:Rumble:Fiora:0",
+          "text": "Hold Electro Harpoon until Fiora is about to Lunge or Riposte. Riposte blocks it, and a slowed Fiora has a harder time reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Fiora", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Fiora-W", "start": 54, "end": 61 },
+            { "kind": "ability", "key": "Fiora-W", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 },
+            { "kind": "champion", "key": "Fiora", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "top:Rumble:Fiora:1",
+          "text": "Do not start Flamespitter while Fiora's Riposte is ready. She blocks it and stabs back at you, and you waste Heat.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Fiora", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Fiora-W", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "top:Rumble:Fiora:2",
+          "text": "Once Fiora has used Riposte, Flamespitter her hard. Stay in the Danger Zone so it hurts more.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Fiora-W", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Rumble:Fiora:3",
+          "text": "Use Scrap Shield when Fiora dives in with Lunge. The shield and Move Speed let you absorb her burst and step away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Rumble:Fiora:4",
+          "text": "Do not overheat while Fiora is close. You cannot cast anything for a few seconds, and she can pounce on you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Fiora:5",
+          "text": "Drop The Equalizer on the path Fiora must walk to reach you, or across her escape route. The burning trail slows her and she cannot fight freely in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bdf378c7115b7e87722d66ca1825f4dca3e80e5d5eab437bbe5b7804d949402a",
+      "tips": [
+        {
+          "id": "top:Rumble:Gangplank:0",
+          "text": "Keep Scrap Shield for when Gangplank blows a keg or hits you with Parrrley. It soaks the burst and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 27, "end": 36 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Rumble:Gangplank:1",
+          "text": "Hit Gangplank with Electro Harpoon from long range. He can't easily reach you while slowed, and you can follow up with Flamespitter.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Rumble-E", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 119, "end": 131 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:Gangplank:2",
+          "text": "Don't spend your slows and damage all at once when Remove Scurvy is ready. Bait it out first, then commit.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:Gangplank:3",
+          "text": "Don't Overheat while Gangplank is near. You can't cast spells, and he can punish you with Parrrley and Powder Keg.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 21, "end": 30 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 90, "end": 98 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-E",
+              "start": 103,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f257e60d4056e94a21cda17c48f378a9db28782ec25eaebea958089299ecc14a",
+      "tips": [
+        {
+          "id": "top:Rumble:Garen:0",
+          "text": "Poke Garen with Electro Harpoon from long range. He has no ranged attack and has to walk up to you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Rumble-E", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Rumble:Garen:1",
+          "text": "Hit Garen with two Electro Harpoons in a row. The stacked slow makes it hard for him to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Rumble:Garen:2",
+          "text": "Garen's Decisive Strike removes slows and speeds him up, so don't count on slowing him once he uses it. Back away from the silence.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 123, "end": 130 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Garen:3",
+          "text": "Use Scrap Shield as Garen runs in. The shield and extra speed blunt his trade and help you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Garen", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Rumble:Garen:4",
+          "text": "Fight him with Flamespitter in the Danger Zone. It burns a share of his max Health, which suits a tanky Garen.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "Garen", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Rumble:Garen:5",
+          "text": "Don't Overheat while Garen is close. You can't cast spells, and he can hit you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Garen:6",
+          "text": "Stay healthy against Garen once you reach level 6. Demacian Justice hurts you more the lower your Health is.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Garen-R", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Garen:7",
+          "text": "Drop The Equalizer on the path Garen would take to escape. The slowing fire stops him from running away or reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "37f80d548d628cf0426785c6dfc9c1da21822a02283288151016e0ae538a572d",
+      "tips": [
+        {
+          "id": "top:Rumble:Gnar:0",
+          "text": "Use Electro Harpoon to slow Gnar when he closes in; hit him twice and the slow and Magic Resist cut get stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Rumble:Gnar:1",
+          "text": "Keep Gnar inside Flamespitter in the Danger Zone; it burns a share of his max Health, which hurts a tanky Mega Gnar.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Gnar", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Rumble:Gnar:2",
+          "text": "Cast Scrap Shield just before Gnar's stun or throw lands, or to run away after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Gnar", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Gnar:3",
+          "text": "When Gnar turns Mega, stay away from walls behind you; his big throw stuns if it slams you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Gnar:4",
+          "text": "Spread your spells so you don't Overheat; being silenced next to Mega Gnar gets you killed.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 48, "end": 56 },
+            { "kind": "champion", "key": "Gnar", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Rumble:Gnar:5",
+          "text": "Use The Equalizer to block Gnar's path when he is hurt, or to punish him for standing in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gnar", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2cae19030fa72b82c9660145ba0c67e8c52a4db815e9e391d8852e2153eec1a1",
+      "tips": [
+        {
+          "id": "top:Rumble:Gragas:0",
+          "text": "Aim Electro Harpoon at Gragas as he walks up to trade; it slows him, and a second hit slows him more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gragas", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:Gragas:1",
+          "text": "Hold Flamespitter on Gragas when he is stuck in close range; it deals more damage the more health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Gragas", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:Gragas:2",
+          "text": "Do not spam every ability at once; Overheating blocks your spells, and Gragas can walk in with Body Slam.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Gragas-E", "start": 95, "end": 104 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Rumble:Gragas:3",
+          "text": "Use Scrap Shield right before Gragas lands Body Slam or Barrel Roll; it absorbs part of the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gragas", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Gragas-E", "start": 43, "end": 52 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Rumble:Gragas:4",
+          "text": "Step away from a Barrel Roll cask before it blows up, since it hits harder the longer it sits.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Rumble:Gragas:5",
+          "text": "Drop The Equalizer on the path Gragas retreats along, or onto him when he is slowed and cannot leave the fire.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Gragas", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "76258dcf4e0394c1b725b98e4401d3b5b118bbfa6d768c7a41e909d3f418a860",
+      "tips": [
+        {
+          "id": "top:Rumble:Gwen:0",
+          "text": "Poke Gwen with Electro Harpoon from long range; she has to walk into your range to trade, and the harpoon slows her and cuts her Magic Resist.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gwen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Rumble:Gwen:1",
+          "text": "Fire a second Electro Harpoon at Gwen while she is still slowed; the slow and Magic Resist cut both get stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Gwen", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Rumble:Gwen:2",
+          "text": "Start Flamespitter when Gwen steps in to fight. It hurts more the higher her max Health, and Gwen has to stay close to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Gwen", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Gwen", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Rumble:Gwen:3",
+          "text": "Use Scrap Shield as Gwen starts her trade. It blunts her burst and gives you speed to step out.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gwen", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Rumble:Gwen:4",
+          "text": "Don't stay in Hallowed Mist; she can't be targeted from outside it. Aim your Flamespitter and Electro Harpoon at her once she leaves it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 77, "end": 89 },
+            { "kind": "ability", "key": "Rumble-E", "start": 94, "end": 109 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Rumble:Gwen:5",
+          "text": "Watch your Heat. If you Overheat you can't cast, and Gwen can walk onto you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Gwen:6",
+          "text": "Use The Equalizer to cut off Gwen's escape or to catch her in a fight. Its burning trail slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gwen", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a0abc7e38a496956216421e02987a1c67cd7a9374687f3155445d63aec38a16",
+      "tips": [
+        {
+          "id": "top:Rumble:Heimerdinger:0",
+          "text": "Walk up and burn Heimerdinger with Flamespitter when his turrets are down or far away; it deals extra damage to his health bar, and he is squishy.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 17,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Rumble-Q", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Rumble:Heimerdinger:1",
+          "text": "Hit him with Electro Harpoon twice in a row; the second hit stacks the slow and strips more Magic Resist, which makes the follow-up hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 13, "end": 28 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Rumble:Heimerdinger:2",
+          "text": "Keep Heat in the Danger Zone but stop before you Overheat. A silenced Rumble next to turrets and a stun is easy to kill.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 69 },
+            { "kind": "champion", "key": "Rumble", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:Heimerdinger:3",
+          "text": "Drop The Equalizer across the path he needs to retreat along, or onto his turrets and him together, so he stays slowed in the fire.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Heimerdinger:4",
+          "text": "Use Scrap Shield as you walk into his grenade or rocket range; the shield and speed boost soak some of his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bda4aee1adf3c0db5b601f108696c6a7a368e09dc9ddb6aff8483669e47a3d42",
+      "tips": [
+        {
+          "id": "top:Rumble:Illaoi:0",
+          "text": "Poke with Electro Harpoon from long range and keep Illaoi away from your lane's terrain; she needs Tentacles to fight well.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rumble-E", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Illaoi", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Rumble:Illaoi:1",
+          "text": "Fire Electro Harpoon twice on Illaoi to slow her more; it is hard for her to reach you while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Illaoi", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Rumble:Illaoi:2",
+          "text": "Use Flamespitter when she walks up to you. It hurts more the more health she has, so it works well against her large health pool.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Rumble:Illaoi:3",
+          "text": "Pace your Heat so you are not Overheated when Illaoi dives in. You cannot cast spells then.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Illaoi:4",
+          "text": "Cast Scrap Shield as Illaoi's leap lands. It gives a shield and speed to get away from her.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Illaoi", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Illaoi:5",
+          "text": "Drop The Equalizer on her escape path or on her Tentacles' area once you win a fight. It slows her and deals damage over time.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d4e7f4c97ede71e69650d25711303af466d60092e3f5ce831fa617f31fb64a35",
+      "tips": [
+        {
+          "id": "top:Rumble:Irelia:0",
+          "text": "Keep Flamespitter pointed at Irelia when she dashes in; it keeps burning her while she trades.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Irelia", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Rumble:Irelia:1",
+          "text": "Hit Irelia with Electro Harpoon as she approaches; it slows her and lowers her Magic Resist, so follow with more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rumble-E", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Rumble:Irelia:2",
+          "text": "Do not spend your big spells on Defiant Dance; wait until she finishes it, then hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:Irelia:3",
+          "text": "Stay out of the minion wave when you fight; Irelia uses minions to dash with Bladesurge and reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 77, "end": 87 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Irelia:4",
+          "text": "Pace your spells to stay below overheating; if Irelia is near when you overheat, she can attack you with no answer.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Irelia:5",
+          "text": "Use Scrap Shield when Irelia dashes in; the shield absorbs her hit and the speed lets you walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Irelia", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8246029d37a0de8c3848f5e86d2a4dfd387405fe19501f729cec0f66276b2f0d",
+      "tips": [
+        {
+          "id": "top:Rumble:Jax:0",
+          "text": "Poke Jax with Electro Harpoon as he walks up; hitting twice slows him much more.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Rumble:Jax:1",
+          "text": "Do not start Flamespitter right as Jax is in Counter Strike; he dodges your attacks and then stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Jax", "start": 35, "end": 38 },
+            { "kind": "ability", "key": "Jax-E", "start": 45, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Rumble:Jax:2",
+          "text": "Do not trade toe-to-toe with Jax. Poke him, and use Scrap Shield when he leaps on you.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Rumble-W", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Jax:3",
+          "text": "Watch your Heat bar. Overheating next to Jax leaves you unable to cast, so keep your spells paced.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 41, "end": 44 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Jax:4",
+          "text": "Drop The Equalizer on the path Jax must walk to reach you, or where he stands in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jax", "start": 31, "end": 34 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "31c88bc9b77f56685a82fa9fcb26d101e8f58ae45bbc942fbb688d3cae1b4470",
+      "tips": [
+        {
+          "id": "top:Rumble:Jayce:0",
+          "text": "Hold Electro Harpoon until Jayce steps up to hit a minion. He is slowed and his Magic Resist drops, so Flamespitter hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 103, "end": 115 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Rumble:Jayce:1",
+          "text": "Keep Jayce inside Flamespitter's cone. Its damage grows with his max Health, and he often hovers close to poke you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Rumble:Jayce:2",
+          "text": "Cast Scrap Shield when Jayce's Shock Blast or hammer leap comes at you. It blocks part of his burst and gives you speed.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Rumble:Jayce:3",
+          "text": "Electro Harpoon hits only the first enemy, so a minion in the way soaks it. Throw it when Jayce has a clear line.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Rumble:Jayce:4",
+          "text": "Jayce is strong early. Don't trade casually; pace your Heat so you are not overheating when he jumps on you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Rumble:Jayce:5",
+          "text": "When Jayce uses The Equalizer's trail zone, cut off his retreat. He is slowed while he stands in the fire.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "88c12f9667131ebe805a43ee4d38410f7a1e034d0c8c44674c04f47e0a643acc",
+      "tips": [
+        {
+          "id": "top:Rumble:KSante:0",
+          "text": "Use Flamespitter when K'Sante walks up to trade; it hurts more the more max Health he has, and he is a big target.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "KSante", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Rumble:KSante:1",
+          "text": "Hit K'Sante with Electro Harpoon twice in a row; the stacked slow helps you keep away from his dashes and the lowered Magic Resist makes your damage count.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Rumble-E", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Rumble:KSante:2",
+          "text": "Use Scrap Shield as K'Sante finishes charging Path Maker; the shield and speed help you absorb the hit and get away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "KSante", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "KSante-W", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Rumble:KSante:3",
+          "text": "Stay out of Overheating while K'Sante is close. You cannot cast spells then, and he can stun you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:KSante:4",
+          "text": "Drop The Equalizer across the path K'Sante must take to escape or reach you; it slows him while he stands in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0c6ab33909e490e9da85326665768659dd09f2e052c02361be47cb3c37c44caa",
+      "tips": [
+        {
+          "id": "top:Rumble:Kayle:0",
+          "text": "Hit Kayle with Flamespitter while she is still in melee range. She starts weak and can't easily get away from the cone.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Rumble:Kayle:1",
+          "text": "Put Kayle behind before level 6, then she gets range. Use Electro Harpoon to poke and slow her.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 58, "end": 73 },
+            { "kind": "keyword", "key": "poke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Kayle:2",
+          "text": "Kayle is fragile. Make her use Divine Judgment on herself, then wait it out, since it can't stop you slowing her.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kayle-R", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:Kayle:3",
+          "text": "Use Scrap Shield to absorb Kayle's Radiant Blast and her attacks when you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kayle", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Rumble:Kayle:4",
+          "text": "Use The Equalizer to block her path when she tries to run, or to keep her from reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d91c743317691c74a1ed80698f73ee8a2e23d51100ec80202041ff7b9b60ac41",
+      "tips": [
+        {
+          "id": "top:Rumble:Kennen:0",
+          "text": "Poke Kennen with Electro Harpoon from long range; two hits in a row slow him more and cut his Magic Resist.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kennen", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Kennen:1",
+          "text": "Step into Kennen's face with Flamespitter when he walks up to trade. It keeps burning him, and he is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Rumble:Kennen:2",
+          "text": "Cast Scrap Shield as Kennen's Thundering Shuriken comes at you. It blunts his trade and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Kennen", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 30, "end": 49 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Kennen:3",
+          "text": "Watch your Heat. If you overheat, you cannot cast, and Kennen can walk in and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Rumble:Kennen:4",
+          "text": "Hit Kennen with The Equalizer when he rushes in with Lightning Rush. The burning trail slows him and punishes his escape path.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Kennen-E", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0b181b4f9271e41a0038061615ff4a83d342640b13a4b1b186983e21f461ffcb",
+      "tips": [
+        {
+          "id": "top:Rumble:Kled:0",
+          "text": "Use Flamespitter when Kled walks up to trade; it hits hard on his large health. Keep him inside the cone for the full burn.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kled", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Rumble:Kled:1",
+          "text": "Hit Kled with Electro Harpoon early to slow him, so he has a harder time closing in or running off.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Rumble:Kled:2",
+          "text": "Use Scrap Shield as Kled dashes or swings in; the shield and speed boost soften his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kled", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Rumble:Kled:3",
+          "text": "Once Kled falls off his mount, Skaarl is gone. Press the attack, because he is easier to kill while dismounted.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 },
+            { "kind": "rune", "key": "8005", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:Kled:4",
+          "text": "Spend your spells carefully so you don't overheat in front of Kled. Overheating leaves you unable to cast, so he gets a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Rumble:Kled:5",
+          "text": "Drop The Equalizer on the path Kled would take after he is slowed; the burning trail slows him and deals steady damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kled", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b5c4ee41e30da5928766b40bb43e2c1e2abe6f1518de29827385e63c4414b006",
+      "tips": [
+        {
+          "id": "top:Rumble:Malphite:0",
+          "text": "Keep Rumble's Flamespitter pointed at Malphite while you stay in the Danger Zone. It deals extra damage based on his health.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 14, "end": 26 },
+            { "kind": "champion", "key": "Malphite", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Rumble:Malphite:1",
+          "text": "Land Electro Harpoon on Malphite before he reaches you. It slows him and, on a second hit, slows him more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:Malphite:2",
+          "text": "Don't overheat near Malphite. He can run at you while you cannot cast.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Malphite:3",
+          "text": "Use Scrap Shield when Malphite is about to land Unstoppable Force. It absorbs some of the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Malphite-R", "start": 48, "end": 65 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Rumble:Malphite:4",
+          "text": "Place The Equalizer behind Malphite when he retreats or when you fight near him. Its burning trail slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Malphite", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "025767a919dcdc38f50c566f044603981761f9fc94954e8b6f4a8e2fdc869a68",
+      "tips": [
+        {
+          "id": "top:Rumble:Mordekaiser:0",
+          "text": "Hit Mordekaiser with Electro Harpoon twice in a row; the second hit deepens the slow and cuts more Magic Resist, so he can't close on you easily.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Rumble-E", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Mordekaiser:1",
+          "text": "Keep Mordekaiser in the cone of Flamespitter; it burns a share of his max Health, so it hurts a tanky Mordekaiser.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 32, "end": 44 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 102,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Mordekaiser:2",
+          "text": "Stay out of his range when he reaches Darkness Rise, since its aura hurts anyone standing next to him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 38,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:Mordekaiser:3",
+          "text": "Step away from Death's Grasp by moving sideways. If you get pulled in, use Scrap Shield right away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 15,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Rumble-W", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Rumble:Mordekaiser:4",
+          "text": "Don't overheat next to Mordekaiser. You can't cast spells while Overheating, so he gets a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "57a644ad1df8ce5d94322ffdf58e3c68e706ac0ade9114df2169bb3f6493e11b",
+      "tips": [
+        {
+          "id": "top:Rumble:Naafiri:0",
+          "text": "Keep Flamespitter pointed at Naafiri and her packmates when they run in; the cone burns all of them at once.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Rumble:Naafiri:1",
+          "text": "Land Electro Harpoon on Naafiri as she approaches; the slow makes it harder for her to reach you and fight on her terms.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:Naafiri:2",
+          "text": "Pop Scrap Shield just as she dives in with Eviscerate or Hounds' Pursuit; it soaks her burst and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 43, "end": 53 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Rumble:Naafiri:3",
+          "text": "Count your Heat before trading. If you Overheat while she is close, you cannot cast anything and she can hit you freely.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Naafiri:4",
+          "text": "Drop The Equalizer on the path she must take to escape or to chase you; she gets slowed and burned while she stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72dbf583e46c7a9e75342a8c0730cda23e7118b96173a63cacdcd9d0479d753f",
+      "tips": [
+        {
+          "id": "top:Rumble:Nasus:0",
+          "text": "Poke Nasus with Electro Harpoon from long range whenever he walks up to last-hit; he has no ranged way to answer it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nasus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Rumble-E", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Rumble:Nasus:1",
+          "text": "Hit Nasus with two Electro Harpoons in a row; the second makes the slow stronger, so he cannot easily reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Rumble:Nasus:2",
+          "text": "Use Flamespitter when Nasus steps in to hit you; it deals extra damage based on his max Health, which suits a tanky target.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nasus", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Nasus:3",
+          "text": "Use Scrap Shield as Nasus comes in with Siphoning Strike; the shield and speed help you take his hit and walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nasus", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Rumble:Nasus:4",
+          "text": "Keep your Heat in the Danger Zone but never at full, or you cannot cast while Nasus walks onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Nasus:5",
+          "text": "When Nasus uses Fury of the Sands, drop The Equalizer on his escape path and back away; do not fight him up close.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Nasus-R", "start": 16, "end": 33 },
+            { "kind": "ability", "key": "Rumble-R", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c0eed3ac02dcb4dd5237af25855323f4d6ceeab6a38102318b30bcba74331aa2",
+      "tips": [
+        {
+          "id": "top:Rumble:Olaf:0",
+          "text": "Pace your spells to stay in the Danger Zone. Overheating next to Olaf leaves you unable to cast while he runs you down.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Rumble:Olaf:1",
+          "text": "Hit Olaf with Electro Harpoon from long range to slow him and stop him closing the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Rumble:Olaf:2",
+          "text": "Stay out of the axe's path and keep away from where it lands; denying Olaf the axe cuts his harassment.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Rumble:Olaf:3",
+          "text": "Cast Scrap Shield when Olaf commits to a trade, and use Flamespitter at close range as he walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Olaf", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Rumble:Olaf:4",
+          "text": "Do not rely on slows or stuns once Olaf starts Ragnarok; he is immune. Fight him before then, or back off.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 29 },
+            { "kind": "champion", "key": "Olaf", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Olaf-R", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Rumble:Olaf:5",
+          "text": "Olaf grows more dangerous at low health, so keep poking him instead of trying to finish him in a short all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9bcf32249d73d2237a55f0be097c3b0d613777173b31a05843e02b2fd66fe819",
+      "tips": [
+        {
+          "id": "top:Rumble:Ornn:0",
+          "text": "Keep Electro Harpoon ready as Ornn walks up; it slows him and shreds his Magic Resist, which helps you kite away from his charge.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ornn", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Rumble:Ornn:1",
+          "text": "Stand away from walls when Ornn is near. If Searing Charge hits terrain beside you, you get knocked up and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Ornn-E", "start": 44, "end": 58 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 102 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Rumble:Ornn:2",
+          "text": "Hold Scrap Shield for when Ornn commits with Bellows Breath. It gives a shield and a burst of speed to step out of the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ornn", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Ornn-W", "start": 45, "end": 59 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Ornn:3",
+          "text": "Watch your Heat. If you overheat, you cannot cast, and Ornn can walk up and hit you with no answer.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Ornn:4",
+          "text": "Flamespitter hurts a tanky Ornn because it deals damage based on his max Health. Keep him in the cone while you back away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ornn", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Rumble:Ornn:5",
+          "text": "Use The Equalizer to cut off Ornn's path when he is stuck on you. Its burning trail slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ornn", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f2dd8da6e66e0cdf8965337270f5c70d452962250ee3dd076bbcbc726738385e",
+      "tips": [
+        {
+          "id": "top:Rumble:Pantheon:0",
+          "text": "Keep Electro Harpoon ready for when Pantheon jumps at you; it slows him and lowers his Magic Resist so your follow-up hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Pantheon", "start": 36, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Rumble:Pantheon:1",
+          "text": "Cast Scrap Shield as Pantheon's Shield Vault lands, so the shield soaks the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Rumble:Pantheon:2",
+          "text": "Don't use Flamespitter into Pantheon while he braces with Aegis Assault from the front. Wait it out or step around to his side.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Rumble:Pantheon:3",
+          "text": "Watch your Heat. If you overheat when Pantheon is near, you can't cast and he can jump on you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Pantheon:4",
+          "text": "Keep your health up. Pantheon's thrown Comet Spear hits much harder on low health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Rumble:Pantheon:5",
+          "text": "When Pantheon lands from Grand Starfall, drop The Equalizer on him to cut off his escape.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 25, "end": 39 },
+            { "kind": "ability", "key": "Rumble-R", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "795ddd94888674af34a00515762b7a88b6590355e0225be90ad25aa733ea764c",
+      "tips": [
+        {
+          "id": "top:Rumble:Quinn:0",
+          "text": "Keep Flamespitter on Quinn when she dives in; it hurts more the more health she has, so it works well against her.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Quinn", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Rumble:Quinn:1",
+          "text": "Fire Electro Harpoon at Quinn when she is far away. It slows her, so she has a harder time closing in with her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Quinn", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Rumble:Quinn:2",
+          "text": "Use Scrap Shield as Quinn jumps in or throws her eagle, to soak up her burst and walk away faster.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Quinn", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Rumble:Quinn:3",
+          "text": "Do not spam spells to Overheat while Quinn is near; you can't cast, and she can trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Rumble:Quinn:4",
+          "text": "Lay The Equalizer across the path Quinn runs along when she leaves or chases. She is slowed and burned inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Quinn", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a1a2af05f04d3acb4628b8ef9fac6a94874b2fd95bb6d109a5c7888f84fce9c0",
+      "tips": [
+        {
+          "id": "top:Rumble:Renekton:0",
+          "text": "Hit Renekton with Electro Harpoon as he closes in; the slow gives you time to back away.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Rumble-E", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Renekton:1",
+          "text": "Watch his Fury. When it is high his next Ruthless Predator stuns longer, so stay out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Rumble:Renekton:2",
+          "text": "Hold Scrap Shield for when Renekton dashes in. It absorbs his burst and gives you speed to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Renekton", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Rumble:Renekton:3",
+          "text": "Use Flamespitter on Renekton when he is stuck in the wave. It hurts more against high max health.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Renekton", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Rumble:Renekton:4",
+          "text": "Do not rush your spells. Overheating leaves you unable to cast while Renekton walks up on you.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "78cd7ec45fc47d10ec4fbcaf2c419877079686c8d976a41d393fde6e1dabbedf",
+      "tips": [
+        {
+          "id": "top:Rumble:Riven:0",
+          "text": "Aim Electro Harpoon at Riven as she dashes in; it slows her and cuts her Magic Resist, which makes it easier to follow up with Flamespitter.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Riven", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 127, "end": 139 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Rumble:Riven:1",
+          "text": "Cast Scrap Shield just before Riven's Ki Burst or Broken Wings lands; the shield soaks her burst and you get a speed boost to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Riven", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Riven-W", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Riven-Q", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Rumble:Riven:2",
+          "text": "Stay at long range and use Electro Harpoon to poke her. Riven has to cross the gap with short dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 27, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 },
+            { "kind": "champion", "key": "Riven", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:Riven:3",
+          "text": "Do not spend every spell at once. Overheating leaves you unable to cast, and Riven will jump on you while you are silenced.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 77, "end": 82 },
+            { "kind": "keyword", "key": "silenced", "start": 114, "end": 122 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Rumble:Riven:4",
+          "text": "Keep Flamespitter pointed at her while she is in your face; it deals damage based on her max Health, so it hurts a tanky Riven too.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Riven", "start": 121, "end": 126 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Rumble:Riven:5",
+          "text": "Use The Equalizer on the path she runs along to escape or chase; it slows her and burns her while she stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "11deab9675a16b5ec0ec64cb17fa7a031bf8d43c5a63a0c1e89c5013fcd9930a",
+      "tips": [
+        {
+          "id": "top:Rumble:Sett:0",
+          "text": "Poke Sett with Electro Harpoon as he walks up; a second hit makes the slow and Magic Resist loss much stronger.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sett", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Rumble:Sett:1",
+          "text": "Keep Flamespitter on Sett when he closes in; it does extra damage to high-health targets, and Sett has plenty.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Sett", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Rumble:Sett:2",
+          "text": "Hold Scrap Shield for when Sett's Haymaker is coming or he starts a trade; the shield and speed help you walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sett-W", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Rumble:Sett:3",
+          "text": "Don't stand between Sett and a minion: Facebreaker pulls from both sides and stuns only if enemies are on each side.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Sett-E", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Rumble:Sett:4",
+          "text": "Watch your Heat. If you overheat you can't cast, and Sett can walk up and punish you.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Sett:5",
+          "text": "Use The Equalizer on the path Sett must take to reach you or retreat; the burning trail slows him and keeps hurting him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7f899b499ba9d33269a27efca314e4b02e6e1c9916de85119224341f162d1d67",
+      "tips": [
+        {
+          "id": "top:Rumble:Shen:0",
+          "text": "Poke with Electro Harpoon from long range; Shen has no ranged attack to answer it. Hit twice to slow him more and cut his Magic Resist.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rumble-E", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Shen", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Rumble:Shen:1",
+          "text": "Keep Electro Harpoon aimed at Shen when he is about to dash. A slowed Shen is easier to dodge and to burn down.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Shen", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            { "kind": "champion", "key": "Shen", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Rumble:Shen:2",
+          "text": "Step out of the way of Shadow Dash. If you are taunted, you can't walk away, so keep your distance and make him miss.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Rumble:Shen:3",
+          "text": "Hold Flamespitter until you can use it in Danger Zone. It burns more of Shen's max Health, which suits a tank.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Shen", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Rumble:Shen:4",
+          "text": "Don't spam abilities or you will overheat and be silenced. Shen can walk up and punish you while you can't cast.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 49, "end": 57 },
+            { "kind": "champion", "key": "Shen", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Rumble:Shen:5",
+          "text": "Use Scrap Shield when Shen's empowered attacks come in or when you need to run away.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Rumble:Shen:6",
+          "text": "Watch for Shen's ultimate at level 6. If a fight is going your way, use The Equalizer on the spot where he will arrive.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Rumble-R", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cfbfcb6fcc9d552ddd18d04f3f6f3a970bb744297b32d09c6bdfef3feb3844d2",
+      "tips": [
+        {
+          "id": "top:Rumble:Singed:0",
+          "text": "Stay out of Singed's Poison Trail. Hit him from range with Electro Harpoon so he cannot reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Singed-Q", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Rumble-E", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Rumble:Singed:1",
+          "text": "Do not stand where Mega Adhesive lands. If Singed Flings you into it, you are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 19, "end": 32 },
+            { "kind": "champion", "key": "Singed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Rumble:Singed:2",
+          "text": "Do not Overheat near Singed. You cannot cast, and he can walk up and Fling you.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Singed-E", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Rumble:Singed:3",
+          "text": "Use Flamespitter when Singed chases you; it hits a wide cone and does extra damage to his large health pool.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Singed", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Rumble:Singed:4",
+          "text": "Cast The Equalizer over Singed's escape path when he commits to a fight; it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Singed", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "88bf73a7eb2d049e239e50d9499c0f4bb18fd50083b3084848811b95224f414d",
+      "tips": [
+        {
+          "id": "top:Rumble:Sion:0",
+          "text": "Poke Sion with Electro Harpoon as he walks up. Two hits slow him more and cut his Magic Resist.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Rumble:Sion:1",
+          "text": "Stay out of the line when Sion charges Decimating Smash. Walk sideways before he releases it so it misses.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Sion-Q", "start": 39, "end": 55 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Rumble:Sion:2",
+          "text": "Keep Scrap Shield ready for when Sion engages. The shield and speed boost help you get away from the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Rumble:Sion:3",
+          "text": "Don't spam spells and Overheat while Sion is near. He can run in while you can't cast.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Rumble:Sion:4",
+          "text": "Put The Equalizer on the path he'll use to reach you. It slows him and punishes him for chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a5bb278a0d3b74a24bad521cfe7a546870772706619dd1815c1adf46c8733ef9",
+      "tips": [
+        {
+          "id": "top:Rumble:TahmKench:0",
+          "text": "Keep Electro Harpoon hitting Tahm Kench to slow him and cut his Magic Resist; he struggles to close the gap while slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "TahmKench", "start": 29, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Rumble:TahmKench:1",
+          "text": "Stay out of Tongue Lash range when he has stacks. A fully stacked hit stuns you and lets him swallow you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:TahmKench:2",
+          "text": "Use Flamespitter when he steps up to trade; it also burns based on his max Health, so his big health pool works against him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Rumble:TahmKench:3",
+          "text": "Pop Scrap Shield as Tongue Lash comes in, or to run away after a trade. It also gives you a burst of Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:TahmKench:4",
+          "text": "Drop The Equalizer across his path when he uses Abyssal Dive to escape or engage; the trail slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Rumble:TahmKench:5",
+          "text": "Burst him quickly. Thick Skin turns damage into grey health he heals back if you give him a few seconds without damage.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "aac5c3ff288812f7ea5d44162dbc8091344baf1ffaf81415ced527cae3c4382c",
+      "tips": [
+        {
+          "id": "top:Rumble:Teemo:0",
+          "text": "Walk up and use Flamespitter on Teemo once his Blinding Dart is on cooldown. Staying in range lets it deal damage over time.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Rumble:Teemo:1",
+          "text": "Use Electro Harpoon on Teemo to slow him so you can catch him. Twice in a row slows him even more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Rumble:Teemo:2",
+          "text": "Watch for bushes where Teemo may hide, and don't walk into unseen ground. Noxious Trap is invisible until stepped on, and you can break it by attacking it.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Teemo-R", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Rumble:Teemo:3",
+          "text": "Use Scrap Shield before you trade to soak his poison and Blinding Dart damage. Stay in the Danger Zone for a stronger shield.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Rumble:Teemo:4",
+          "text": "Use The Equalizer on the path Teemo runs along to escape. It slows him and does damage while he stands in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d04f10ae41d9f36683b600b332fd40d184f185cf3b5584a4adb0e332555fab5a",
+      "tips": [
+        {
+          "id": "top:Rumble:Tryndamere:0",
+          "text": "Keep Tryndamere away with Electro Harpoon; hit him twice to slow him a lot and cut his Magic Resist.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Rumble-E", "start": 26, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Rumble:Tryndamere:1",
+          "text": "Do not overheat when he is close. You cannot cast while overheated, and he can dash onto you with Spinning Slash.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 98,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Rumble:Tryndamere:2",
+          "text": "Use Flamespitter when he walks in to trade; it hurts more the more health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Rumble:Tryndamere:3",
+          "text": "Put The Equalizer across his path when he runs at you or tries to leave; it slows him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Tryndamere:4",
+          "text": "Do not burst him down once his Undying Rage is up; wait for it to end before you spend your abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Rumble:Tryndamere:5",
+          "text": "Poke him early so he cannot easily last-hit minions to build Fury for Bloodlust.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4ea62d5ce11f5bf91ad49f656c512f9295c2996343518b5e18b5eaefa290ddba",
+      "tips": [
+        {
+          "id": "top:Rumble:Urgot:0",
+          "text": "Keep Flamespitter on Urgot as he walks in; it hits hard on a big-health target. Do not stand in melee range for long.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Urgot", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Rumble:Urgot:1",
+          "text": "Hit Urgot with two Electro Harpoons to slow him hard, so his legs and Purge have trouble keeping up.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Urgot-W", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Rumble:Urgot:2",
+          "text": "Stay out of Disdain's line, because it stuns you and throws you back. Use Scrap Shield for its speed when he starts to dash.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Rumble-W", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Rumble:Urgot:3",
+          "text": "Do not fall low once Fear Beyond Death hits you, because Urgot can then execute you. Back away and keep your health up.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-R", "start": 21, "end": 38 },
+            { "kind": "champion", "key": "Urgot", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Urgot:4",
+          "text": "Do not overheat near Urgot. You cannot cast spells then, and he can walk onto you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7c363a9a73448e9abcf51199700753f47bd7c82e565a6cd28e29fe6b28d63ce5",
+      "tips": [
+        {
+          "id": "top:Rumble:Varus:0",
+          "text": "Hit Varus with Electro Harpoon when he starts charging Piercing Arrow; he is slowed and easy to hit. Follow with Flamespitter if he stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Varus-Q", "start": 55, "end": 69 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 113, "end": 125 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Rumble:Varus:1",
+          "text": "Stay close to Varus. Flamespitter deals more the more health he has, and he has to charge Piercing Arrow to reach you from range.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Varus-Q", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Rumble:Varus:2",
+          "text": "Cast Scrap Shield as you walk into his range to soak his poke and speed up your approach.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Rumble:Varus:3",
+          "text": "Keep your Heat near Danger Zone but do not Overheat while he is near. You cannot cast spells then, and he can hit you freely.",
+          "refs": [],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Rumble:Varus:4",
+          "text": "Chain of Corruption roots you, so stay out of its long range when you can. Use Scrap Shield for its speed when you see him aim.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 0, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Rumble-W", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Rumble:Varus:5",
+          "text": "Use The Equalizer to block his path when he tries to run or when he is rooted by nothing but your fight. It slows him and burns him while he stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "62f3f89df46c9da9d066b9f9cfa453cc12eaa26d98c6b0d9bfe8d06dffe06d27",
+      "tips": [
+        {
+          "id": "top:Rumble:Vayne:0",
+          "text": "Pace your spells to stay in the Danger Zone without overheating. Vayne will jump on you if you go silent.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Rumble:Vayne:1",
+          "text": "Keep Vayne away from walls behind you. Condemn into terrain stuns you and does heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Vayne-E", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Rumble:Vayne:2",
+          "text": "Hit Vayne with Electro Harpoon so she cannot kite or Tumble away easily. Two hits slow her more.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Rumble:Vayne:3",
+          "text": "Hold Flamespitter on Vayne while she is in front of you. She is fragile and the health damage adds up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Rumble:Vayne:4",
+          "text": "Use Scrap Shield before she trades or when she tries to Condemn you. It softens the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Vayne-E", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Rumble:Vayne:5",
+          "text": "Drop The Equalizer across the path Vayne would flee or Tumble through when you are winning.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "341da114be357316171f01f2e48783ef10f76b3b95ddc9a22ea48f29a0fee686",
+      "tips": [
+        {
+          "id": "top:Rumble:Vladimir:0",
+          "text": "Keep Rumble in the Danger Zone and hold Flamespitter on Vladimir for the extra damage. It scales with his health, which he builds up.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 40, "end": 52 },
+            { "kind": "champion", "key": "Vladimir", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Rumble:Vladimir:1",
+          "text": "Hit Vladimir with Electro Harpoon twice. He is slowed more and takes more damage, which makes it hard for him to reach you with Transfusion.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Rumble-E", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 128, "end": 139 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Rumble:Vladimir:2",
+          "text": "Don't use Flamespitter or The Equalizer on Vladimir while he is in Sanguine Pool. He can't be targeted, and he hurts you and slows you while you are inside.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 10, "end": 22 },
+            { "kind": "ability", "key": "Rumble-R", "start": 26, "end": 39 },
+            { "kind": "champion", "key": "Vladimir", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 67, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 125, "end": 130 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Rumble:Vladimir:3",
+          "text": "Walk out of Hemoplague's area quickly, and don't use Scrap Shield as your only answer to it. Staying in it makes you take more damage, then the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Rumble-W", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bdaf90f905d4cc8a541079e54b5b915d6a9d30d38794f249eb99b35adc1a1fd1",
+      "tips": [
+        {
+          "id": "top:Rumble:Volibear:0",
+          "text": "Keep Volibear at the edge of your Electro Harpoon range. Two hits in a row slow him more and cut his Magic Resist, so he struggles to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Rumble-E", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Rumble:Volibear:1",
+          "text": "Slow him with Electro Harpoon when Volibear charges in, then burn him with Flamespitter while he chases you. Back up as you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Volibear", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Rumble:Volibear:2",
+          "text": "Use Scrap Shield when Volibear's Thundering Smash is up and he runs at you. The shield and extra speed make his stun and first hit weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 33, "end": 49 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Rumble:Volibear:3",
+          "text": "Flamespitter hurts more against high-health targets, so use it whenever Volibear builds health. Fight in Danger Zone for the biggest damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Volibear", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Rumble:Volibear:4",
+          "text": "Don't Overheat when Volibear is close, because you can't cast spells and he will trade freely. Pace your spells.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Volibear:5",
+          "text": "Drop The Equalizer on the path Volibear takes after leaping in with Stormbringer. The slowed trail makes it hard for him to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Volibear", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Volibear-R", "start": 68, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d1f77c8d6f7ae7132665a573fee1575dc34269259b4a665a28abaf15dcaf2c3a",
+      "tips": [
+        {
+          "id": "top:Rumble:XinZhao:0",
+          "text": "Keep Electro Harpoon aimed at Xin Zhao as he approaches; it slows him, and a second hit slows him more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Rumble:XinZhao:1",
+          "text": "Use Scrap Shield just before Xin Zhao's Three Talon Strike lands its third hit, to soak the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Rumble:XinZhao:2",
+          "text": "Do not rush your spells into overheating when Xin Zhao is near; you will be unable to cast while he charges in.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:XinZhao:3",
+          "text": "Hold Flamespitter until Xin Zhao is in the cone, and he will take damage while he stays close. Stay in the Danger Zone for the stronger version.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Rumble:XinZhao:4",
+          "text": "Place The Equalizer behind Xin Zhao after a fight starts to block his retreat; the trail slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbb35deb731b114100f684e7ffff75ac253d7cea40062d5178ebeb41d2274c76",
+      "tips": [
+        {
+          "id": "top:Rumble:Yasuo:0",
+          "text": "Hit Yasuo with Electro Harpoon as he closes in; it slows him and cuts his Magic Resist, so your next spells hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Rumble:Yasuo:1",
+          "text": "Keep Yasuo inside Flamespitter's cone; it hits him for extra damage based on his max Health over time, so it works well when he stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Rumble:Yasuo:2",
+          "text": "Do not rely on Electro Harpoon when Wind Wall is up; it blocks the harpoon. Wait for the wall to fade, or use Flamespitter up close.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 36, "end": 45 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 110, "end": 122 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Rumble:Yasuo:3",
+          "text": "Use Scrap Shield when Yasuo wants to trade or dash in; it softens his hit and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Rumble:Yasuo:4",
+          "text": "Spread your spells out so you do not Overheat in the middle of a trade, because you cannot cast while Overheated and Yasuo can hit you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 117, "end": 122 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Rumble:Yasuo:5",
+          "text": "Use The Equalizer to cut off Yasuo's escape or to punish him when he is stuck fighting. He is slowed and takes damage while inside the fire.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "99b634716f05cbf498ce267347f7f9a63dec5041918e76bc1731ab92f36c96b7",
+      "tips": [
+        {
+          "id": "top:Rumble:Yone:0",
+          "text": "Hold Electro Harpoon until Yone walks up to trade. Hit him twice to slow him a lot and cut his Magic Resist, then burn him with Flamespitter.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 128, "end": 140 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Rumble:Yone:1",
+          "text": "Aim Flamespitter at Yone when he steps in to hit you. The cone is wide and it deals extra damage based on his max Health, so it hurts a sturdy Yone.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 143, "end": 147 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Rumble:Yone:2",
+          "text": "Use Scrap Shield just before Yone's Mortal Steel or Spirit Cleave lands. The extra Move Speed also helps you step out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Yone-Q", "start": 36, "end": 48 },
+            { "kind": "ability", "key": "Yone-W", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Rumble:Yone:3",
+          "text": "Watch your Heat while trading. If you overheat, you can't cast spells and Yone can walk onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Rumble:Yone:4",
+          "text": "After Yone dashes in with his third Mortal Steel, he is knocking you up and committed. Punish him with Electro Harpoon and Flamespitter as he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Yone-Q", "start": 36, "end": 48 },
+            { "kind": "ability", "key": "Rumble-E", "start": 103, "end": 118 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 123, "end": 135 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Rumble:Yone:5",
+          "text": "Drop The Equalizer on the path Yone takes back after Soul Unbound. His spirit form ends by snapping back to his body, so he is easy to trap there.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Yone-E", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1aa5664d992bc61e9ab1d183fe1408c3d13e21792d7e3127488890fb6b864868",
+      "tips": [
+        {
+          "id": "top:Rumble:Yorick:0",
+          "text": "Keep Flamespitter on Yorick while he walks up; it does extra damage based on his max Health, which suits a tanky fighter.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yorick", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Rumble:Yorick:1",
+          "text": "Hit Yorick with Electro Harpoon twice to slow him hard and cut his Magic Resist, so he can't close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rumble-E", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Rumble:Yorick:2",
+          "text": "Use Flamespitter on Mist Walkers when they gather; they are weak and die quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Rumble:Yorick:3",
+          "text": "Don't spend all your Heat before a trade; Overheating leaves you unable to cast, and Yorick can walk up and punish you.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Rumble:Yorick:4",
+          "text": "Drop The Equalizer behind Yorick or across his escape path; it slows everyone inside.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yorick", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "60ad3bc5236b7ef7dcc5a7e0ebf9266db2a8718b246f7ffa3de5cb4bcfbb4b87",
+      "tips": [
+        {
+          "id": "top:Rumble:Zaahen:0",
+          "text": "Hit Zaahen with Electro Harpoon as he closes in; it slows him and cuts his Magic Resist, so your next spells hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rumble-E", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Rumble:Zaahen:1",
+          "text": "Keep Zaahen in Flamespitter's cone; it hurts more against his big health pool, and Danger Zone makes it hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Rumble:Zaahen:2",
+          "text": "Use Scrap Shield just before Zaahen dashes or pulls you in, so his first hit lands on the shield.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zaahen", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Rumble:Zaahen:3",
+          "text": "Space your spells so you stay in Danger Zone without overheating; if you overheat in front of Zaahen, you cannot cast and he will punish you.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Rumble:Zaahen:4",
+          "text": "Drop The Equalizer on the path Zaahen must take to reach you, or on him after a fight; the burning trail slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zaahen", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

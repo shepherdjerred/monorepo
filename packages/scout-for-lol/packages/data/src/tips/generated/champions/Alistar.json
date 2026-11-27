@@ -1,0 +1,1014 @@
+{
+  "schemaVersion": 1,
+  "champion": "Alistar",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "58d0637ab739cd926198104cf25ab9c9d1387407855b0ef7db3836fac8884689",
+      "tips": [
+        {
+          "id": "support:Alistar:general:0",
+          "text": "Start your engage with Headbutt on a fragile enemy, then use Pulverize as you land to knock up everyone around them.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 61, "end": 70 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Alistar:general:1",
+          "text": "Aim Headbutt so the enemy is knocked back toward your allies and their damage.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Alistar:general:2",
+          "text": "Use Pulverize when enemies walk up to your lane partner or the minions. It hits all around you, so you don't need to aim it.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Alistar:general:3",
+          "text": "Turn on Trample when you trade, and keep hitting champions with it. Once it is fully stacked, your next attack on a champion stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Alistar:general:4",
+          "text": "Stun or displace enemy champions and stand near dying minions to charge Triumphant Roar. It heals you and your nearby allies.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Alistar-passive",
+              "start": 72,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Alistar:general:5",
+          "text": "Press Unbreakable Will when you are caught by crowd control or focused. It cleanses you and cuts the damage you take, so you can keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Alistar:general:6",
+          "text": "Don't waste Headbutt and Pulverize when you can't follow up. Your lane partner needs to be close to punish the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Alistar:combo:0",
+          "name": "Headbutt-Pulverize combo",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Alistar-W" },
+            { "kind": "ability", "key": "Alistar-Q" }
+          ],
+          "when": "When you want to engage and lock down an enemy near your allies or under your turret.",
+          "whenRefs": [],
+          "text": "Headbutt into the target and cast Pulverize right as you land. Pulverize knocks them up and overrides the knockback, so they stay beside you and your team.",
+          "textRefs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 34, "end": 43 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 63, "end": 72 }
+          ]
+        },
+        {
+          "id": "support:Alistar:combo:1",
+          "name": "Buffered Pulverize",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Alistar-W" },
+            { "kind": "ability", "key": "Alistar-Q" }
+          ],
+          "when": "When you want the Pulverize to come out immediately after the Headbutt dash ends.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Alistar-W", "start": 62, "end": 70 }
+          ],
+          "text": "Press Pulverize while Headbutt is still dashing. It casts with a shorter cast time when the dash ends, and it shortens the knockback so the target stays close.",
+          "textRefs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Alistar-W", "start": 22, "end": 30 }
+          ]
+        },
+        {
+          "id": "support:Alistar:combo:2",
+          "name": "Flash Headbutt-Pulverize",
+          "category": "trick",
+          "sequence": [
+            { "kind": "summoner-spell", "key": "2202" },
+            { "kind": "ability", "key": "Alistar-W" },
+            { "kind": "ability", "key": "Alistar-Q" }
+          ],
+          "when": "When you want to catch an enemy off guard and push them into your allies.",
+          "whenRefs": [],
+          "text": "Flash to change your angle, then Headbutt and Pulverize. The surprise gap close and the new angle knock the target back into your team.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Alistar-W", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 46, "end": 55 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "514fcffcc23846148075b82f8448b941d877724210940238e771b7140484f2e2",
+      "tips": [
+        {
+          "id": "support:Alistar:Bard:0",
+          "text": "Use Headbutt on Bard when he steps up to place a shrine or fire a bolt, then follow with Pulverize to keep him knocked up and stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Bard", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 89, "end": 98 },
+            {
+              "kind": "keyword",
+              "key": "knocked-up",
+              "start": 111,
+              "end": 121
+            },
+            { "kind": "keyword", "key": "stunned", "start": 126, "end": 133 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Alistar:Bard:1",
+          "text": "Walk over Bard's shrines to destroy them, or Trample over them, so his team cannot take the healing.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Alistar-E", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Alistar:Bard:2",
+          "text": "Stay out of a straight line with your own carry and other enemies when Cosmic Binding is coming, because hitting a second target or a wall stuns both.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 71, "end": 85 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Alistar:Bard:3",
+          "text": "Save Unbreakable Will for when Cosmic Binding or Tempered Fate stuns you in a fight; it cleanses the stun. Do not use it while you are in stasis.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Bard-Q", "start": 31, "end": 45 },
+            { "kind": "ability", "key": "Bard-R", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Alistar:Bard:4",
+          "text": "Watch for Bard going through a Magical Journey portal. Be ready to Headbutt him when he comes out the other side.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-E", "start": 31, "end": 46 },
+            { "kind": "ability", "key": "Alistar-W", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b4eeb4e8162dd84af342372c9f7ec10e0b53d37866c33643cdd3a0202bd80cbc",
+      "tips": [
+        {
+          "id": "support:Alistar:Braum:0",
+          "text": "Walk up and Headbutt Braum when his Unbreakable is down or facing the wrong way; it is a targeted dash, so his shield cannot block it.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 12, "end": 20 },
+            { "kind": "champion", "key": "Braum", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Braum-E", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Alistar:Braum:1",
+          "text": "Follow Headbutt with Pulverize right away so Braum is knocked up and stunned before he can react.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 21, "end": 30 },
+            { "kind": "champion", "key": "Braum", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Alistar:Braum:2",
+          "text": "Pulverize hits all around you, so use it when Braum stands next to his carry and catch both.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Braum", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Alistar:Braum:3",
+          "text": "Use Unbreakable Will when you are stunned or slowed by Braum's combo; it clears the effect and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "champion", "key": "Braum", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Alistar:Braum:4",
+          "text": "Trample up Braum's team in a brawl: five stacks make your next attack stun, and it works well against his Concussive Blows.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Braum", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 106,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Alistar:Braum:5",
+          "text": "Stay out of a straight line with Braum when his Winter's Bite is ready; it stops at the first enemy it hits and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Braum-Q", "start": 48, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ce26af3262233b6acc518fef1c4ad198e6e376fa1f831dd0e8c2c44ba13b5d96",
+      "tips": [
+        {
+          "id": "support:Alistar:Karma:0",
+          "text": "Use Headbutt to jump on Karma, then follow with Pulverize while she is stunned. She has no dash to escape, so commit once you are on her.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Karma", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 48, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Alistar:Karma:1",
+          "text": "Karma is fragile, so make her your target instead of the tougher players in the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Alistar:Karma:2",
+          "text": "Walk out of the path of Inner Flame; it stops at the first enemy it hits, so stand behind a minion when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Alistar:Karma:3",
+          "text": "Step out of the tether of Focused Resolve before it ends, or you will be rooted and hit again.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 26, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Alistar:Karma:4",
+          "text": "Use Unbreakable Will when Karma's root lands on you; it removes the root and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Karma", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Alistar:Karma:5",
+          "text": "Start Trample when you walk up to trade; her poke hits you less than the stacks you gain on her.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7f2f0a6f8f0445c202189479f2ca2d62ec57f2525b0bd1bbba483e65455a19e",
+      "tips": [
+        {
+          "id": "support:Alistar:Leona:0",
+          "text": "Use Unbreakable Will when Leona lands her stun; it cleanses the stun and cuts the damage her team deals while you are locked down.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Leona", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Alistar:Leona:1",
+          "text": "Headbutt Leona as she charges in to knock her back. Following with Pulverize keeps her away from your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Leona", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Alistar:Leona:2",
+          "text": "Stay out of her Zenith Blade line. Keep minions between you or step sideways, because it is a straight thrust.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Alistar:Leona:3",
+          "text": "When Leona raises Eclipse, back away from her. Fight her once her bonus defenses have worn off.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Alistar:Leona:4",
+          "text": "Hit Leona first with Headbutt. Her Shield of Daybreak needs her to reach you, so knocking her away wastes it.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Alistar-W", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Leona-Q", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "36545c7597799b2c668369449b0ba986d502a472fce3286f579e614e566a8670",
+      "tips": [
+        {
+          "id": "support:Alistar:Lulu:0",
+          "text": "Save Headbutt for when Lulu steps up to cast; the knockback and stun leave her open for your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Lulu", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Alistar:Lulu:1",
+          "text": "Follow Headbutt with Pulverize so the enemy is knocked up and cannot walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "knocked-up", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Alistar:Lulu:2",
+          "text": "Lulu can polymorph you with Whimsy, so use Unbreakable Will to cleanse it if you are caught in a deadly fight.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-W", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Alistar-R", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Alistar:Lulu:3",
+          "text": "Stay out of Glitterlance range when you walk up; being slowed makes it hard to reach Lulu with Headbutt.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "champion", "key": "Lulu", "start": 85, "end": 89 },
+            { "kind": "ability", "key": "Alistar-W", "start": 95, "end": 103 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Alistar:Lulu:4",
+          "text": "Use Trample when you are close to the enemy to build stacks; your next attack then stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "abe698a749dce2e4fd320c902d0c0e99369769a453b85b0a9a1a133c97d278b1",
+      "tips": [
+        {
+          "id": "support:Alistar:Lux:0",
+          "text": "Walk up with Headbutt to knock Lux back, then follow with Pulverize while she is stunned. Save Headbutt for when she is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 58, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 },
+            { "kind": "ability", "key": "Alistar-W", "start": 95, "end": 103 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Alistar:Lux:1",
+          "text": "Lux is fragile and her Light Binding is her main way to stop you. Stay behind minions so it hits them first.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-Q", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Alistar:Lux:2",
+          "text": "Once you are rooted by Light Binding, use Unbreakable Will to cleanse it and keep fighting. Do not waste it on a slow.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Lux-Q", "start": 23, "end": 36 },
+            { "kind": "ability", "key": "Alistar-R", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Alistar:Lux:3",
+          "text": "Use Trample when you are close to Lux. It lets you walk through terrain and, after its stacks build up, your next attack stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 34, "end": 37 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Alistar:Lux:4",
+          "text": "Step out of Lucent Singularity before it detonates, because it slows you and makes you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9f6cd73c3d1e2335d306318df0b148471090acee90c75975917541f62b751d24",
+      "tips": [
+        {
+          "id": "support:Alistar:Milio:0",
+          "text": "Use Headbutt on Milio when he steps up to poke or leaves his ally. He is fragile, and the knockback and stun give you a chance to follow with Pulverize.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Milio", "start": 16, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 142, "end": 151 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Alistar:Milio:1",
+          "text": "Buffer Pulverize during Headbutt so the knock up lands right as you arrive, before Milio can react.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 7, "end": 16 },
+            { "kind": "ability", "key": "Alistar-W", "start": 24, "end": 32 },
+            { "kind": "champion", "key": "Milio", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Alistar:Milio:2",
+          "text": "Milio's Ultra Mega Fire Kick is a thin line that stops on the first enemy it hits. Stay behind a minion or your ally so it hits them first.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Milio-Q", "start": 8, "end": 28 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "support:Alistar:Milio:3",
+          "text": "Walk up with Trample once he has used his abilities. Hitting him five times lets your next attack stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Alistar:Milio:4",
+          "text": "Save Unbreakable Will for when you are caught in a stun, so you can cleanse it and keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9a7b599b276e13bf6f727475db5c3182302a4c23b68c20409696dd5c8fa13428",
+      "tips": [
+        {
+          "id": "support:Alistar:Nami:0",
+          "text": "Dodge Aqua Prison, then go in with Headbutt. Nami has a long cooldown to wait out after a miss, so that is your window.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Alistar-W", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Nami", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Alistar:Nami:1",
+          "text": "Use Headbutt on Nami, then Pulverize right after. She is fragile and has no dash to escape the combo.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nami", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Alistar:Nami:2",
+          "text": "Headbutt can knock Nami back toward your carry. Aim the knockback so it pushes her into your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Nami", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Alistar:Nami:3",
+          "text": "Stay out of the path of Tidal Wave; it moves slowly. Sidestep it instead of wasting Unbreakable Will on it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "Alistar-R", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Alistar:Nami:4",
+          "text": "Back off from an enemy carrying Tidecaller's Blessing and wait for it to run out. It lasts only a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 32, "end": 53 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Alistar:Nami:5",
+          "text": "Stun enemies with Trample and your attack to charge Triumphant Roar. The heal helps you win trades.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 18, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Alistar-passive",
+              "start": 52,
+              "end": 67
+            }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c850469c64b230754a14b1e96dd7f2c436de6c4d8f0f3479cd38e6a17ef2fd5c",
+      "tips": [
+        {
+          "id": "support:Alistar:Nautilus:0",
+          "text": "Stay out of Dredge Line range unless you can answer it; once Nautilus hooks you, use Unbreakable Will to cleanse the stun before his team follows up.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "Alistar-R", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "support:Alistar:Nautilus:1",
+          "text": "Use Headbutt to knock Nautilus toward your own team, then follow with Pulverize to keep him locked down.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nautilus", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Alistar:Nautilus:2",
+          "text": "Hold your Headbutt for when Nautilus walks up to fight. Spending it early leaves you with no engage.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Alistar:Nautilus:3",
+          "text": "Stand still for a moment when Nautilus uses Riptide next to you. The later waves hit anyone who runs early.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Alistar:Nautilus:4",
+          "text": "Let Trample build its stacks on Nautilus, then hit him with an attack to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Nautilus", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0aa14bcf83031bc6f5375877fb04bd106f68571329ba20f86329eb46ca9456f6",
+      "tips": [
+        {
+          "id": "support:Alistar:Pantheon:0",
+          "text": "Use Pulverize on Pantheon when he leaps in with Shield Vault; it stops him from following up and lets you hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Pantheon", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Alistar:Pantheon:1",
+          "text": "Do not walk into Pantheon while Aegis Assault is facing you; he takes no damage from that side. Wait it out or step around to his back.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Alistar:Pantheon:2",
+          "text": "Headbutt Pantheon toward your carry when he overextends, then follow with Pulverize so he stays stunned and knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Pantheon", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 74, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 103 },
+            { "kind": "keyword", "key": "knocked-up", "start": 108, "end": 118 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Alistar:Pantheon:3",
+          "text": "Save Unbreakable Will for when Pantheon stuns you or your carry; it clears the stun and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Pantheon", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Alistar:Pantheon:4",
+          "text": "When Pantheon starts Grand Starfall, use the warning time to move away from the target area or set up a Headbutt for when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "Alistar-W", "start": 104, "end": 112 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "46b64dd668ead08c4f172ea7b5aa85ecae43c3ccdc6328c4a71b77f729b70bae",
+      "tips": [
+        {
+          "id": "support:Alistar:Pyke:0",
+          "text": "Use Headbutt on Pyke when he steps up with his hook; it knocks him back and leaves him stunned for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Pyke", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Alistar:Pyke:1",
+          "text": "Cast Pulverize when Pyke is next to you; it knocks him up and cancels his plans for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Alistar:Pyke:2",
+          "text": "Pyke is fragile, so start the trade with Headbutt and follow with Pulverize, and your team can burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Alistar-W", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Alistar:Pyke:3",
+          "text": "Use Unbreakable Will when Pyke lands his stun; it clears the stun and cuts the damage you take while you fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Pyke", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Alistar:Pyke:4",
+          "text": "Stay close to your carry and watch for Pyke disappearing; he heals when hidden, so do not chase him far.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f6dcc084a1b441c65da6307f93dcb33db2cffafa16200524a0756c9c80f913ab",
+      "tips": [
+        {
+          "id": "support:Alistar:Senna:0",
+          "text": "Use Headbutt to dash onto Senna, then Pulverize at once; she is fragile and cannot trade with you once you are on top of her.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Senna", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Alistar:Senna:1",
+          "text": "Stay out of Senna's long attack range and wait for her to step forward to hit minions, then engage.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Alistar:Senna:2",
+          "text": "Use Unbreakable Will when Senna's Last Embrace is about to root you; it clears the root and cuts damage while you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Senna", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Senna-W", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Alistar:Senna:3",
+          "text": "Take hits with Trample running and walk up to Senna; at full stacks your next attack on her stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 15, "end": 22 },
+            { "kind": "champion", "key": "Senna", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "941b3e4bc69822510975499849fc08a189125bb9f68648315ef4e4a31b34d0e1",
+      "tips": [
+        {
+          "id": "support:Alistar:Seraphine:0",
+          "text": "Walk up and use Pulverize to knock her up when she steps forward to poke. Then follow with Headbutt while she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Alistar-W", "start": 91, "end": 99 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 120 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Alistar:Seraphine:1",
+          "text": "Use Headbutt to close the gap on her. Seraphine is fragile, so reach her before she can retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Seraphine", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Alistar:Seraphine:2",
+          "text": "Use Unbreakable Will when her Encore charm is about to hit you. It cleanses the charm.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Alistar:Seraphine:3",
+          "text": "Stay out of a straight line with her. Beat Drop slows you, and if you are already slowed it roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 38, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Alistar:Seraphine:4",
+          "text": "Trample gives you a ghosted run at her. Stay on her to build stacks, then hit her with an attack to stun.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "28e3314b7c3c8b29463ce002c5511ec438b5e9cd9b16ea22ee5b51039241c960",
+      "tips": [
+        {
+          "id": "support:Alistar:Sona:0",
+          "text": "Close the gap with Headbutt on Sona, then follow with Pulverize so she is stunned and can't poke or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Sona", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 54, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 },
+            { "kind": "keyword", "key": "poke", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Alistar:Sona:1",
+          "text": "Sona is fragile, so make her the target of your engage. Reach her before her team can punish you.",
+          "refs": [{ "kind": "champion", "key": "Sona", "start": 0, "end": 4 }],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Alistar:Sona:2",
+          "text": "Use Trample when you walk up to her. Landing the stacks lets your next attack stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-E", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Alistar:Sona:3",
+          "text": "Hold Unbreakable Will for when Crescendo is coming, since it cleanses the stun. Don't waste it early.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Sona-R", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Alistar:Sona:4",
+          "text": "Her Hymn of Valor hits the nearest enemies, so expect poke while you wait. Stay out of its range until you can engage.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3e6dedd6ba959f008b80934b59369e03e1589ea040a9614e8dd0400d1a3cf7e1",
+      "tips": [
+        {
+          "id": "support:Alistar:Thresh:0",
+          "text": "Watch for Thresh starting Death Sentence; his cast is slow, so step sideways or behind a minion before the scythe flies.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Alistar:Thresh:1",
+          "text": "Use Unbreakable Will when Thresh hooks you and your team is ready to follow up. It cleanses the disable and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Thresh", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Alistar:Thresh:2",
+          "text": "Use Pulverize when Thresh is close to you. Then Headbutt him back toward your team, because he is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Thresh", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Alistar-W", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Alistar:Thresh:3",
+          "text": "Stay out of The Box when your team is not ready to fight. Take the walls down on purpose to protect an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Alistar:Thresh:4",
+          "text": "When Thresh walks up to take souls, Headbutt him and follow with Pulverize while he is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Alistar-W", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 65, "end": 74 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,4290 @@
+{
+  "schemaVersion": 1,
+  "champion": "Naafiri",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "eb755f26ade50d4bd052d6a1e99c1e7f53d1aab38023283e413256524be7ddde",
+      "tips": [
+        {
+          "id": "top:Naafiri:general:0",
+          "text": "Throw Darkin Daggers at the enemy champion, then recast it once they are bleeding. The recast hurts more the lower their health is, and it heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Naafiri:general:1",
+          "text": "Use Darkin Daggers on the wave too. Its bleed finishes off low-health minions, which helps you last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Naafiri:general:2",
+          "text": "Hit champions with your abilities as often as you can. Each hit shortens the wait for the next Packmate in We Are More.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Naafiri-passive",
+              "start": 107,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Naafiri:general:3",
+          "text": "Use Eviscerate to dash in, hit with both parts, and dash out. It also heals your Packmates to full.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Naafiri:general:4",
+          "text": "Press The Call of the Pack to dodge an incoming spell, since you can't be targeted at the start. Then fight while you have extra damage and speed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 6, "end": 26 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Naafiri:general:5",
+          "text": "At level 6, use Hounds' Pursuit to jump onto a champion who is low on health. If you get the takedown, recast it for a shield and a second target.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Naafiri:general:6",
+          "text": "Hounds' Pursuit has a short wind-up before the dash. Stuns and knockups can interrupt it, so don't start it when the enemy can interrupt you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e8d61d521cfa7809bc0aece097464bf4d2b4a8ce3623e8ce24d5af7c086af1a5",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:general:0",
+          "text": "Hit a champion with Darkin Daggers, then recast it while they are still bleeding. The recast deals more damage the lower their health is, and it heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Naafiri:general:1",
+          "text": "Use Darkin Daggers to finish off camp monsters. The bleed finishes small monsters that are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Naafiri:general:2",
+          "text": "Land your abilities on champions or large monsters often. Each hit brings your next Packmate back sooner.",
+          "refs": [],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Naafiri:general:3",
+          "text": "Use Eviscerate when your Packmates are hurt. It heals them to full, and both of its hits shorten the Packmate cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Naafiri:general:4",
+          "text": "Press The Call of the Pack just before a fight. You can't be targeted for a moment, and you gain damage, speed and extra Packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 6, "end": 26 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Naafiri:general:5",
+          "text": "Use Hounds' Pursuit on a champion who is running away. If you get the kill, recast it right away for a shield and a second dash.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Naafiri:general:6",
+          "text": "Don't dash with Hounds' Pursuit when you are likely to be stunned during its short windup. Being interrupted cancels it.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "36393d1fa071f1e9179e08d349cbd89f6bbfb5eae68541405dc6aa418e90f9c8",
+      "tips": [
+        {
+          "id": "middle:Naafiri:general:0",
+          "text": "Throw Darkin Daggers at the enemy champion, then recast once they bleed for extra damage and a heal. The lower their health, the harder it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Naafiri:general:1",
+          "text": "Use Darkin Daggers on low-health minions. The bleed finishes them off, which helps you last-hit and push the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Naafiri:general:2",
+          "text": "Hit champions with your abilities as often as you can. Each hit brings your next Packmate back sooner.",
+          "refs": [],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Naafiri:general:3",
+          "text": "Use Eviscerate to dash onto the enemy and then back out. It hits twice, and the second hit is a burst around you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Naafiri:general:4",
+          "text": "Press The Call of the Pack to dodge a spell aimed at you, since you can't be targeted for a moment. It also adds Packmates, damage and speed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 6, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Naafiri:general:5",
+          "text": "At level 6, use Hounds' Pursuit to jump onto a squishy enemy champion. If you kill them, recast it for a shield and a second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Naafiri:general:6",
+          "text": "Hounds' Pursuit takes a moment to wind up, and stuns or knock-ups during it cancel it. Cast it when the enemy has no control spell ready.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "e9172904e2070f2218b25ce73f0dcf23d369100e0edbdf3609dc7e8466825b53",
+      "tips": [
+        {
+          "id": "top:Naafiri:Aatrox:0",
+          "text": "Dodge the Aatrox swings by walking out of the telegraphed area. Use Eviscerate to dash clear, or The Call of the Pack to become untargetable.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 68, "end": 78 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 97, "end": 117 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Naafiri:Aatrox:1",
+          "text": "When Aatrox's Infernal Chains hit you, move to the side or toward him to leave the circle. Standing still gets you pulled back and hit again.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Naafiri:Aatrox:2",
+          "text": "Throw Darkin Daggers from long range to poke Aatrox. Recast it when he is low to deal extra damage and heal yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "Aatrox", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Naafiri:Aatrox:3",
+          "text": "Stay away from Aatrox while World Ender is active, since he heals more and a kill extends it. Hounds' Pursuit can finish a weakened Aatrox.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 94, "end": 109 },
+            { "kind": "champion", "key": "Aatrox", "start": 132, "end": 138 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bd722944457d4c947143bcd70c2ba64e7a70e62563bcb4bf16135bb31140191a",
+      "tips": [
+        {
+          "id": "top:Naafiri:Briar:0",
+          "text": "Keep Darkin Daggers on Briar from long range. Recast it once she is bleeding for extra damage and a heal.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Naafiri:Briar:1",
+          "text": "Use The Call of the Pack to become untargetable just as Head Rush or Chilling Scream would land on you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Briar-Q", "start": 56, "end": 65 },
+            { "kind": "ability", "key": "Briar-E", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Naafiri:Briar:2",
+          "text": "Stay away from walls when Briar charges Chilling Scream, or the knockback will stun you and hurt a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Naafiri:Briar:3",
+          "text": "Hit her with Eviscerate, then use Hounds' Pursuit to finish her when she is low. A kill lets you recast it.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0dc5795397e2dca9cf1465a7b187250975df3cfb71be3d8fdea4a7d3f460e324",
+      "tips": [
+        {
+          "id": "top:Naafiri:Darius:0",
+          "text": "Stay out of Darius' Apprehend range. If it hits, you are pulled in and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Naafiri:Darius:1",
+          "text": "Trade with Darkin Daggers from long range, and recast it for the heal when the bleed is on him. Do not walk into his axe.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 11, "end": 25 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Naafiri:Darius:2",
+          "text": "Use Eviscerate to get away after a trade, or to hit him and leave before he can use Decimate.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Darius-Q", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Naafiri:Darius:3",
+          "text": "Do not stay in a long fight with Darius. His Hemorrhage stacks build up, and at full stacks he hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 45,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Naafiri:Darius:4",
+          "text": "Keep your health up at level 6, because Noxian Guillotine deals true damage that grows with Hemorrhage stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 40, "end": 57 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 92,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "30b3eaf4e0267b8463bca916e931e3fe3d65204487b45e4bee4aa93eedb9fd9c",
+      "tips": [
+        {
+          "id": "top:Naafiri:Fiora:0",
+          "text": "Do not throw Darkin Daggers or Eviscerate into a ready Fiora; Riposte blocks it and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 31, "end": 41 },
+            { "kind": "champion", "key": "Fiora", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Fiora-W", "start": 62, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Naafiri:Fiora:1",
+          "text": "Bait Riposte first, then dash in with Hounds' Pursuit once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Naafiri:Fiora:2",
+          "text": "Recast Darkin Daggers on Fiora once she is hurt; it heals you and hits harder the lower she is.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Fiora", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Naafiri:Fiora:3",
+          "text": "Watch the Vital on you and move so Fiora's Lunge has to dash into awkward spots.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bed7df525c37f93daab5daca719bb3f6ad3e2f5175808107c8508b628b73a06d",
+      "tips": [
+        {
+          "id": "top:Naafiri:Gangplank:0",
+          "text": "Stay out of keg blast zones. Pop them yourself only if you can safely walk up; enemy attacks on a keg only defuse it.",
+          "refs": [],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Naafiri:Gangplank:1",
+          "text": "Dodge the slow of Powder Keg; a slowed Naafiri is easy for Gangplank to hit with Parrrley.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 18, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 },
+            { "kind": "champion", "key": "Naafiri", "start": 39, "end": 46 },
+            { "kind": "champion", "key": "Gangplank", "start": 59, "end": 68 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Naafiri:Gangplank:2",
+          "text": "Hit Gangplank with Darkin Daggers, then recast it when he is bleeding to deal more damage and heal.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Naafiri:Gangplank:3",
+          "text": "Hounds' Pursuit won't stick if he cleanses with Remove Scurvy. Wait until it is on cooldown before diving him.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Naafiri:Gangplank:4",
+          "text": "Use The Call of the Pack to become untargetable and dodge a Parrrley or keg explosion aimed at you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "de52fca67cf051aba35498ed289d32e5548db56daedcbd005ca0c20831c67f67",
+      "tips": [
+        {
+          "id": "top:Naafiri:Garen:0",
+          "text": "Hit Garen with Darkin Daggers from long range, then back off. He has no way to close the gap except Decisive Strike's speed boost.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Garen-Q", "start": 100, "end": 115 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Naafiri:Garen:1",
+          "text": "Use The Call of the Pack to avoid Demacian Justice or his burst when you are low, since it makes you untargetable briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Garen-R", "start": 34, "end": 50 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Naafiri:Garen:2",
+          "text": "Do not stand in Judgment with your packmates. Fight from the edge of its range and leave once it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 16, "end": 24 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Naafiri:Garen:3",
+          "text": "Hit him often to keep his Perseverance from healing him. Poke him with Darkin Daggers so he cannot regenerate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 26,
+              "end": 38
+            },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 71, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Naafiri:Garen:4",
+          "text": "Leave with Eviscerate after trading, before Garen's silence and spin catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Garen", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f3a148bab0144c490df67b51a67b59911129b31479ae77d5432d7635ce286183",
+      "tips": [
+        {
+          "id": "top:Naafiri:Jayce:0",
+          "text": "Close the gap with Eviscerate when Jayce is in Cannon form; he is weaker up close.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 19, "end": 29 },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Naafiri:Jayce:1",
+          "text": "Dodge Jayce's Shock Blast; it stops at the first enemy it hits, so Packmates in front can soak it.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Naafiri:Jayce:2",
+          "text": "Land Darkin Daggers and recast it once he is hurt; the heal helps you win a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Naafiri:Jayce:3",
+          "text": "Watch for Jayce dropping an Acceleration Gate; a stronger Shock Blast is coming.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Naafiri:Jayce:4",
+          "text": "Use The Call of the Pack to avoid his burst when he leaps in with To the Skies!.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ac7061993223832f26a1611f5c5d48fb988847af56d91401a5c89f2d53b85a5",
+      "tips": [
+        {
+          "id": "top:Naafiri:KSante:0",
+          "text": "Hit Darkin Daggers on K'Sante, then recast it once he is low to finish the bleed and heal yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Naafiri:KSante:1",
+          "text": "Stay out of Ntofo Strikes range when he has two stacks. The next cast stuns and pulls you in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Naafiri:KSante:2",
+          "text": "Wait for K'Sante to go All Out before you commit with Hounds' Pursuit. He loses health and resistances then.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "KSante-R", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Naafiri:KSante:3",
+          "text": "Use The Call of the Pack to become untargetable when Path Maker is about to land. It also gives you extra Packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "KSante-W", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f3eb6dadf30dd03d086ac0ee9a3c540188ced0a47fada97808c856916dc7ab3f",
+      "tips": [
+        {
+          "id": "top:Naafiri:Malphite:0",
+          "text": "Throw Darkin Daggers at Malphite, then recast it once the bleed is on him to deal extra damage and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Naafiri:Malphite:1",
+          "text": "Stay back from Ground Slam; it cuts your attack speed and your Packmates' too, so trade right after he uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Naafiri:Malphite:2",
+          "text": "Use The Call of the Pack to dodge Malphite's Unstoppable Force when he dashes at you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Malphite", "start": 34, "end": 42 },
+            { "kind": "ability", "key": "Malphite-R", "start": 45, "end": 62 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Naafiri:Malphite:3",
+          "text": "Do not trade into his shield; poke him down while Granite Shield is gone, since it refills when he is not hit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 30, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 50,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a43a2cdb10b175bec374d6a0fa06a88906da1e1e1b055d16b6066de743a33002",
+      "tips": [
+        {
+          "id": "top:Naafiri:Mordekaiser:0",
+          "text": "Dodge Death's Grasp by sidestepping, or by going untargetable with The Call of the Pack; a pulled Naafiri takes heavy damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 6,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Naafiri-W", "start": 67, "end": 87 },
+            { "kind": "champion", "key": "Naafiri", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Naafiri:Mordekaiser:1",
+          "text": "Do not stand in Mordekaiser's aura after he lands three hits; poke with Darkin Daggers from range instead.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 16,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Naafiri:Mordekaiser:2",
+          "text": "Hit Mordekaiser with Eviscerate and Darkin Daggers together; that shreds his Indestructible shield before he can heal from it.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 36, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 77,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Naafiri:Mordekaiser:3",
+          "text": "Realm of Death leaves you alone with him, so avoid being caught at level 6 and keep Hounds' Pursuit up to escape or fight back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 0,
+              "end": 14
+            },
+            { "kind": "ability", "key": "Naafiri-R", "start": 84, "end": 99 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "57a644ad1df8ce5d94322ffdf58e3c68e706ac0ade9114df2169bb3f6493e11b",
+      "tips": [
+        {
+          "id": "top:Naafiri:Rumble:0",
+          "text": "Stay out of Rumble's Flamespitter cone. Its damage grows with your max Health, so don't stand in it for long.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Naafiri:Rumble:1",
+          "text": "Dodge Electro Harpoon when you can; it is a straight shot that slows you and lowers your Magic Resist for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Naafiri:Rumble:2",
+          "text": "Go in with Hounds' Pursuit when Rumble Overheats; he cannot cast spells or shield himself then.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Rumble", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Naafiri:Rumble:3",
+          "text": "Use The Call of the Pack to become untargetable and dodge his harpoon or The Equalizer when he commits them.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Rumble-R", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Naafiri:Rumble:4",
+          "text": "Use Eviscerate to jump out of The Equalizer's burning trail rather than walking through it.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Rumble-R", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d8dc0a28e00323e42ea923044e9fab18f4070315dd17e1ca48cd5216dd2076c9",
+      "tips": [
+        {
+          "id": "top:Naafiri:Sion:0",
+          "text": "Stay out of a long Decimating Smash charge. Sidestep it, or dash away with Eviscerate when the charge glows.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Naafiri:Sion:1",
+          "text": "Use The Call of the Pack to become untargetable when Sion commits a big spell, then hit back while he is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Sion", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Naafiri:Sion:2",
+          "text": "Poke with Darkin Daggers and recast it when he is bleeding to heal back damage. Do not stand in his Roar of the Slayer.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 10, "end": 24 },
+            { "kind": "ability", "key": "Sion-E", "start": 100, "end": 118 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Naafiri:Sion:3",
+          "text": "Do not trade into his Soul Furnace shield. Wait for it to break or fade, then go in.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Naafiri:Sion:4",
+          "text": "When Sion dies, back away from the zombie form instead of chasing. Use that time to reset.",
+          "refs": [{ "kind": "champion", "key": "Sion", "start": 5, "end": 9 }],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ebc5235743d9fefb8d1f7958cf69a8e5facef5febebd8ff745e18e982ac0bab3",
+      "tips": [
+        {
+          "id": "top:Naafiri:Teemo:0",
+          "text": "Dodge Blinding Dart if you can; being blinded ruins your attacks, so don't walk into a trade while you're hit by it.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Naafiri:Teemo:1",
+          "text": "Don't run through brush or unseen ground without caution; Noxious Trap mushrooms are hidden and slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Naafiri:Teemo:2",
+          "text": "Hit Teemo with Darkin Daggers from range, then recast it when the bleed is on him to heal and deal more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Naafiri:Teemo:3",
+          "text": "Use Eviscerate to dash in and out; it also heals your Packmates fully.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Naafiri:Teemo:4",
+          "text": "Save Hounds' Pursuit for level 6 to catch Teemo; it also lets you recast it if you score a takedown.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Teemo", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1a2af827800dd1d0f8f075faa3b6deb06598ee01d8fcce1da6cf0668ce7296d8",
+      "tips": [
+        {
+          "id": "top:Naafiri:Vayne:0",
+          "text": "Stay away from walls near Vayne. Condemn into terrain stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Naafiri:Vayne:1",
+          "text": "Wait until Vayne has used Condemn, then go in with Eviscerate or Hounds' Pursuit. She is fragile with it on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Vayne-E", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 51, "end": 61 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Naafiri:Vayne:2",
+          "text": "Hit Vayne with Darkin Daggers, then recast for extra damage and healing while she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Naafiri:Vayne:3",
+          "text": "Don't trade with Vayne for long. Silver Bolts hits hard on the third attack, so break off before then.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Vayne-W", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Naafiri:Vayne:4",
+          "text": "Use The Call of the Pack to dodge Condemn; you can't be targeted for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Vayne-E", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6bd38b0c99562d7f527da027164b268cbb4facb3d06665945b2327085b03a2c0",
+      "tips": [
+        {
+          "id": "top:Naafiri:Yone:0",
+          "text": "Hit Yone with Darkin Daggers, then recast it once he is bleeding. It deals big damage when he is low and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Naafiri:Yone:1",
+          "text": "Use The Call of the Pack to dodge Yone's knock up and big trades. You are untargetable briefly and your pack grows.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "knocked-up", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Naafiri:Yone:2",
+          "text": "Use Eviscerate to dash through Yone and burst him. It also heals your packmates back up after a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Naafiri:Yone:3",
+          "text": "Wait until Yone is low or his shield is gone, then finish him with Hounds' Pursuit. Recast it if you score a takedown.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c9954e243dbe3c02139f27c7fac58ddc482266e5da7a433350a96d5a5f40dcf5",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Aatrox:0",
+          "text": "Aatrox's swings are telegraphed. Step out of the Darkin Blade's area, and move to the side to escape Infernal Chains.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 45, "end": 61 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 101, "end": 116 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Naafiri:Aatrox:1",
+          "text": "Use The Call of the Pack to dodge Aatrox's big ability, since you cannot be targeted at the start.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Aatrox", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Naafiri:Aatrox:2",
+          "text": "Use Darkin Daggers when he is low, then recast it to hit hard and heal. It works best on a bleeding target.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Naafiri:Aatrox:3",
+          "text": "Use Hounds' Pursuit to dive Aatrox after his abilities are spent. He cannot escape easily because the dash slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Naafiri:Aatrox:4",
+          "text": "Stay away from Aatrox when he uses World Ender, so he cannot snowball from a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f26d84b89990fa251d9ce98f6510ef5b62d84fc35019ac5caac88dfaacf564e",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Ambessa:0",
+          "text": "Hit Ambessa with Darkin Daggers, then recast it when she is low to finish her and heal.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Naafiri:Ambessa:1",
+          "text": "Wait for Ambessa to waste Repudiation before you dive in; it shields her and hits harder if you hit her during the brace.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Naafiri:Ambessa:2",
+          "text": "Use Eviscerate to get out of range when Ambessa's Lacerate slows you, and to reset your packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ambessa", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 50, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Naafiri:Ambessa:3",
+          "text": "Stay away from Ambessa after level 6; Public Execution can reach you from long range and pins you down.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "afefbbeaf0af8c09ea0e167a030cd615e54d1f1baf175d5f2df8fc82e64cee44",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Amumu:0",
+          "text": "Stay out of Amumu's line and range for Bandage Toss; once you are stunned, his ultimate usually follows.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 39, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Naafiri:Amumu:1",
+          "text": "Use The Call of the Pack to become untargetable when Amumu throws Bandage Toss at you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Amumu", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Naafiri:Amumu:2",
+          "text": "Do not stand in Despair's range for long; it hurts more against high-Health targets, and your packmates take it too.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Naafiri:Amumu:3",
+          "text": "Stay spread out from your team near Amumu when his ultimate is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Naafiri:Amumu:4",
+          "text": "Do not rely on physical damage alone against Amumu; Tantrum reduces it, so pick fights when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Amumu-E", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "efcc3acb80077913633d83ed760df3237615fcadcae0418404ab47839d4b6504",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Belveth:0",
+          "text": "Hold Hounds' Pursuit for when Bel'Veth is low or has used her dashes; she is hard to catch while Void Surge is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Belveth", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 97, "end": 107 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Naafiri:Belveth:1",
+          "text": "Dodge Above and Below, as it knocks you up and slows you. Wait for her to cast it before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Naafiri:Belveth:2",
+          "text": "Use The Call of the Pack to become untargetable as Bel'Veth's big spells land, then hit back with extra packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Belveth", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Naafiri:Belveth:3",
+          "text": "Back away from Royal Maelstrom; she takes less damage and heals while it spins. Fight her after it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "430bc8624f25e28430c2063907834c77bfc1110fa31fbc811dc7dfacfa581485",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Brand:0",
+          "text": "Dodge Sear, because it stuns you only if you are already ablaze. Without it his combo does not get going.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "ablaze", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Naafiri:Brand:1",
+          "text": "Use The Call of the Pack to become untargetable when Brand's Pyroclasm is coming at you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Brand", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Brand-R", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Naafiri:Brand:2",
+          "text": "Step out of Pillar of Flame's circle after he casts it. It lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Naafiri:Brand:3",
+          "text": "Stay away from your packmates when Brand fights; his Conflagration spreads through them to you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Brand-E", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Naafiri:Brand:4",
+          "text": "Jump on Brand with Hounds' Pursuit once his Sear is on cooldown. He is fragile and you can kill him.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Brand-Q", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c85f0006850898756bd4dde0f8c53fb35007df3c669a9ff82141b541dccc2e34",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Briar:0",
+          "text": "Dodge Briar's Head Rush by keeping minions or distance between you; if it lands you are stunned and your resistances drop.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Briar-Q", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Naafiri:Briar:1",
+          "text": "Stay away from walls when Briar charges Chilling Scream; a full charge knocks you into them for heavy damage and a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Naafiri:Briar:2",
+          "text": "Use The Call of the Pack to dodge Briar's burst; you are untargetable for a moment, so her leap and attacks miss.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Briar", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Naafiri:Briar:3",
+          "text": "Hit Briar with Darkin Daggers from range when she has no Blood Frenzy running, then recast for the bigger hit and a heal.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "98265b1857aa93948d75f0d2978af790bf3992d1788ab217c6ac76bd96708049",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Darius:0",
+          "text": "Stay out of Apprehend's cone. If it hits, Darius pulls you in and slows you, and you cannot dash away while you are knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "knocked-up", "start": 116, "end": 126 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Naafiri:Darius:1",
+          "text": "Use The Call of the Pack to dodge Darius's big hit. You cannot be targeted for a moment, and the extra Packmates and speed help you leave or fight.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Darius", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Naafiri:Darius:2",
+          "text": "Throw Darkin Daggers from long range and recast it to heal. Darius has to walk into your range to answer.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Naafiri:Darius:3",
+          "text": "Do not stay in melee range for a long fight. Hit him, then leave with Eviscerate before his Hemorrhage stacks build up.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 70, "end": 80 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 92,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Naafiri:Darius:4",
+          "text": "Once Darius is low, finish him with Hounds' Pursuit. His escape tools are limited, so press your lead.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b146b9b736cd4d42ab3c4d094b28de77c556398c7600589b7af12d94894b898e",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Diana:0",
+          "text": "Hit Diana with Darkin Daggers, then recast it when she is low to deal extra damage and heal yourself.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Naafiri:Diana:1",
+          "text": "Step out of Crescent Strike; if you are marked with Moonlight, Diana can dash onto you again quickly with Lunar Rush.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Diana", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Diana-E", "start": 106, "end": 116 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Naafiri:Diana:2",
+          "text": "Use The Call of the Pack to dodge Moonfall's damage; you are untargetable while you prepare to hunt.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Diana-R", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Naafiri:Diana:3",
+          "text": "Fight Diana after her Pale Cascade shield and orbs run out; she is much easier to burst then.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Diana-W", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "14952189d066558ebba35108334a4d0baf0da59930d555d551fb8b3fd47ba793",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:DrMundo:0",
+          "text": "Don't expect to stun or root Dr. Mundo; Goes Where He Pleases resists the first one, so make him spend it first.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "DrMundo", "start": 29, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 40,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Naafiri:DrMundo:1",
+          "text": "Step out of the line of Infected Bonesaw; it slows you and heals him when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Naafiri:DrMundo:2",
+          "text": "Hit Dr. Mundo with Darkin Daggers, then recast it for the finishing hit and your own healing.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Naafiri:DrMundo:3",
+          "text": "Don't stay close while Heart Zapper charges. Leave or burst him before the recast, or he heals the damage back.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Naafiri:DrMundo:4",
+          "text": "Hit him hard right after Maximum Dosage starts, or walk away. He heals through slow damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Naafiri:DrMundo:5",
+          "text": "Use The Call of the Pack to dodge his Blunt Force Trauma swing, since you can't be targeted at first.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "45a710710dbf0cab63ae9c260960274af02ce6550145422d614a4012e1c0a9d1",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Ekko:0",
+          "text": "Walk out of the Parallel Convergence zone once you see its marker. Staying inside gets you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Naafiri:Ekko:1",
+          "text": "Chronobreak makes Ekko hard to kill. Wait for it to be on cooldown, or trail him, before you dive in.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ekko", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Naafiri:Ekko:2",
+          "text": "Use The Call of the Pack to dodge Ekko's burst. You are untargetable at the start, so time it as his abilities land.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Ekko", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Naafiri:Ekko:3",
+          "text": "Dodge the first Timewinder throw sideways. The return hit hurts more, so leave its field quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b592a137fb08913156afa9cae1d173aa0b798e48ebe241b813b860aa1a51879",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Evelynn:0",
+          "text": "Stay away from Evelynn when an Allure arrow points at you. Walk toward your packmates and keep your distance until the charm is gone.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Naafiri:Evelynn:1",
+          "text": "Use The Call of the Pack to become untargetable when Evelynn dives in. It also gives you extra damage and speed to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Evelynn", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Naafiri:Evelynn:2",
+          "text": "Ward your jungle entrances, because Evelynn can hide until she is close. Evelynn's Last Caress also hurts a lot when your health is low, so stay healthy.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 36, "end": 43 },
+            { "kind": "champion", "key": "Evelynn", "start": 73, "end": 80 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Naafiri:Evelynn:3",
+          "text": "Recast Darkin Daggers on Evelynn when she is bleeding to heal yourself in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Evelynn", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c8347f6e1fae3c7e05a8240c841fea2f7fc22c656742c39247a259086436fd4f",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Fiddlesticks:0",
+          "text": "Hunt Fiddlesticks with Hounds' Pursuit once he is caught out; it hits him fast and slows him briefly.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 5,
+              "end": 17
+            },
+            { "kind": "ability", "key": "Naafiri-R", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Naafiri:Fiddlesticks:1",
+          "text": "Watch for a lone scarecrow or still brush; Fiddlesticks may be waiting there, so ward before walking in.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 43,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Naafiri:Fiddlesticks:2",
+          "text": "Stay out of Reap's slow and silence; do not step into its center, or you cannot use your dash.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 12,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "silenced", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Naafiri:Fiddlesticks:3",
+          "text": "Use The Call of the Pack to dodge Crowstorm or Terrify at the last moment while untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 34,
+              "end": 43
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 47,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ec2ca0c338d45b4a4d4da76b2dd281f5ca79b687748fcbec2b6630a70107a390",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Graves:0",
+          "text": "Jump in with Eviscerate only when Graves has Quickdraw on cooldown; otherwise he becomes sturdy and dashes away.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 13, "end": 23 },
+            { "kind": "champion", "key": "Graves", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Graves-E", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Naafiri:Graves:1",
+          "text": "Walk around the edge of Graves' End of the Line path, since it detonates again along the trail after a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Naafiri:Graves:2",
+          "text": "Leave Smoke Screen's cloud right away; the slow ends the moment you step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Naafiri:Graves:3",
+          "text": "Use The Call of the Pack to become untargetable and dodge Graves' burst, then go in with extra speed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Naafiri:Graves:4",
+          "text": "Commit with Hounds' Pursuit once Collateral Damage is on cooldown. Graves is easy to catch with no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Graves-R", "start": 33, "end": 50 },
+            { "kind": "champion", "key": "Graves", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Naafiri:Graves:5",
+          "text": "Hit Graves with Darkin Daggers and recast it once he is low; it heals you when it hits a champion.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "859b17089c1b4279e5d13dc07113dd5808d9e3f6efe683ec9d9a3393b10aa24e",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Gwen:0",
+          "text": "Hit Gwen with Darkin Daggers, then recast it once she is low to heal and finish her.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Naafiri:Gwen:1",
+          "text": "Wait for Gwen to use Hallowed Mist before you commit Hounds' Pursuit. Her mist makes her untargetable to you while you are outside it.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Gwen-W", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Naafiri:Gwen:2",
+          "text": "Fight Gwen before she has attacked a few times; she needs hits to power up her damage. Jump her early.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Naafiri:Gwen:3",
+          "text": "Use The Call of the Pack to dodge Needlework and add packmates before a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Gwen-R", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a829bb3d7d1a01c78cb7053b4c88c7e9667789c79a7c3d96851073f3c2c6dd5",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Hecarim:0",
+          "text": "Wait for Hecarim to spend Devastating Charge, then fight him. Without it he has little to reach you with.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 26, "end": 44 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Naafiri:Hecarim:1",
+          "text": "Do not stand next to his allies when you jump in with Hounds' Pursuit. Onslaught of Shadows can fear you right after.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 54, "end": 69 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 71, "end": 91 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Naafiri:Hecarim:2",
+          "text": "Hit him with Darkin Daggers, then recast it when he is low. He heals from Spirit of Dread, so burst him fast.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Naafiri:Hecarim:3",
+          "text": "Use Eviscerate to burst him when he has no Spirit of Dread; he lacks durability.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5fa04a895a27b7b18e8af1483aaad09f66583d9605a239c3e65d13a75f4adc0e",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Ivern:0",
+          "text": "Stay clear of Rootcaller; a rooted Naafiri is an easy target for Ivern's team to jump on.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 14, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 28, "end": 34 },
+            { "kind": "champion", "key": "Naafiri", "start": 35, "end": 42 },
+            { "kind": "champion", "key": "Ivern", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Naafiri:Ivern:1",
+          "text": "Use The Call of the Pack to become untargetable and dodge Rootcaller as the vine arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Naafiri:Ivern:2",
+          "text": "Hit Ivern with Hounds' Pursuit when he is alone; he is squishy, but check for Daisy! first.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Ivern-R", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Naafiri:Ivern:3",
+          "text": "Check brush before walking in; Ivern's Brushmaker can hide an ambush.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Ivern-W", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3e3dcfd5e12fa0d6fc83ab710f9b70de06152c9e69f5095d69edf25968f6f1c",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you will be knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Naafiri:JarvanIV:1",
+          "text": "Use The Call of the Pack to dodge his Cataclysm or Dragon Strike when you see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 38, "end": 47 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Naafiri:JarvanIV:2",
+          "text": "If you are trapped by Cataclysm, escape with Eviscerate; the dash can go through the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Naafiri:JarvanIV:3",
+          "text": "Hit him with Darkin Daggers, then recast it once he is hurt to heal and finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d47bbf8d8a8933c9b6ef913632080729fced906dcfa252807002f1b8bbdb4031",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Jax:0",
+          "text": "Wait out Counter Strike before you attack Jax; your attacks get dodged and the stun follows.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Jax", "start": 42, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Naafiri:Jax:1",
+          "text": "Trade in short bursts with Darkin Daggers and Eviscerate, then back off. Long fights let Jax's Attack Speed climb.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 27, "end": 41 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 46, "end": 56 },
+            { "kind": "champion", "key": "Jax", "start": 89, "end": 92 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Naafiri:Jax:2",
+          "text": "Recast Darkin Daggers on a hurt Jax to heal and finish the bleed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Jax", "start": 32, "end": 35 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Naafiri:Jax:3",
+          "text": "Use The Call of the Pack to dodge Jax's Leap Strike or burst, since you cannot be targeted for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Jax", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Jax-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "87e46c0077153948542ea77bfa6d1c0ab8d96482d2bfccf20f8d1f206b4121de",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Jayce:0",
+          "text": "Save Eviscerate to get out of Jayce's reach or to finish a trade; the dash and blades both hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Naafiri:Jayce:1",
+          "text": "Hit Jayce with Darkin Daggers from range, then recast it when he is hurt to heal and deal more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Naafiri:Jayce:2",
+          "text": "Do not dive in when Thundering Blow is ready; it roots you and knocks you back. Wait until he has used it.",
+          "refs": [],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Naafiri:Jayce:3",
+          "text": "Use Hounds' Pursuit at level 6 to catch Jayce when he is low; a kill lets you recast it.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8ce6cf9db1600b70bbb42bd981f6f1341dc76b6b15b8fc466af05d914c26a0a5",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Karthus:0",
+          "text": "Walk out of Wall of Pain rather than through it. Crossing it slows you and lowers your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Naafiri:Karthus:1",
+          "text": "Use The Call of the Pack to dodge Lay Waste as it lands. You cannot be targeted for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Naafiri:Karthus:2",
+          "text": "Dive Karthus with Hounds' Pursuit, since he has no dash to escape. Kill him fast, because he can keep casting after he dies.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Naafiri:Karthus:3",
+          "text": "After a kill, step away from his corpse. His spirit form can still hit you with Defile.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2842656f4e606c8d08f2f727f7e15332776d20d9f6709f7dfe205c666e2a76f6",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Kayn:0",
+          "text": "Dodge Blade's Reach when Kayn swings it; if it misses, he cannot dive you from long range with Umbral Trespass.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Kayn-R", "start": 95, "end": 110 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Naafiri:Kayn:1",
+          "text": "Watch for the warning at the edge of a wall; Kayn is in Shadow Step there and may be coming for you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Kayn-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Naafiri:Kayn:2",
+          "text": "Hit Kayn during Shadow Step with Darkin Daggers to cut its duration short and leave him out in the open.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kayn-E", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Naafiri:Kayn:3",
+          "text": "Use The Call of the Pack to become untargetable when Kayn commits to a dive, then fight back with your extra Packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Kayn", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7102397abad06120d2a5d65dc8505f5af59757f45804058cc6929faeef8586a0",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Khazix:0",
+          "text": "Stay near allied minions or teammates so Kha'Zix cannot treat you as isolated and hit you with a huge Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "isolated", "start": 69, "end": 77 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 102, "end": 118 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Naafiri:Khazix:1",
+          "text": "Use The Call of the Pack to dodge Kha'Zix's burst, since you cannot be targeted when it begins.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Khazix", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Naafiri:Khazix:2",
+          "text": "Punish Kha'Zix when Leap is on cooldown; he has little escape then. Chase with Hounds' Pursuit.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Khazix-E", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 79, "end": 94 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Naafiri:Khazix:3",
+          "text": "Watch for the brush and Void Assault; his next hit slows you, so stay near your Packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 24, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "69517e73a78efaa2915bb38d5b45aefdfaa1514e005c6e9aa814198dd1a79899",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Kindred:0",
+          "text": "Wait for Kindred to use Dance of Arrows, then dive in with Hounds' Pursuit; she has less escape for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 24, "end": 39 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Naafiri:Kindred:1",
+          "text": "Do not chase Kindred into Wolf's Frenzy; Wolf bites you while she stays inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Kindred-W", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Naafiri:Kindred:2",
+          "text": "Watch for Lamb's Respite; kill nobody inside it, and save your burst until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Naafiri:Kindred:3",
+          "text": "Hit Kindred with Darkin Daggers and recast it for the heal; it also keeps you sturdy against her poke.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c2c7ffdcb5497bc7d9cef9b1659dbea2c27c5285c1455c5f3a883d0b4b7ca5e5",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:LeeSin:0",
+          "text": "Hit Lee Sin with Darkin Daggers, then recast it for extra damage and healing.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Naafiri:LeeSin:1",
+          "text": "Press The Call of the Pack when Lee Sin is about to kick or strike you; you cannot be targeted for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "LeeSin", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Naafiri:LeeSin:2",
+          "text": "Use Eviscerate to get out of Lee Sin's reach or to hit him with a burst of blades.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Naafiri:LeeSin:3",
+          "text": "Fight Lee Sin when he is low on Energy; his ability chain falls apart after a few casts.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a493633a8ce8f78b2be1ee5c5509d2910f6f89b70c721ca1fa5f29eb6213d0be",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Lillia:0",
+          "text": "Dodge Swirlseed, which rolls on until it hits you or a wall. If you get slowed, hold off on diving in.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 6, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Naafiri:Lillia:1",
+          "text": "Use The Call of the Pack to become untargetable just as the strike of Lillia's Watch Out! Eep!",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Lillia", "start": 70, "end": 76 },
+            { "kind": "ability", "key": "Lillia-W", "start": 79, "end": 94 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Naafiri:Lillia:2",
+          "text": "Step out of the center of Lillia's Watch Out! Eep!",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Lillia-W", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Naafiri:Lillia:3",
+          "text": "Chase Lillia with Hounds' Pursuit once she is hurt. Her Move Speed gets strong when she lands abilities, so catch her early.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a324396bf53bb938049578811ce2497dd0e2e43a1a5d3f56bd3897cac82579a8",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:MasterYi:0",
+          "text": "Do not rely on Hounds' Pursuit to stop Master Yi once Highlander is on; he ignores the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "MasterYi", "start": 39, "end": 48 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Naafiri:MasterYi:1",
+          "text": "Hit Master Yi with Darkin Daggers and recast it when he is low; it deals extra damage and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Naafiri:MasterYi:2",
+          "text": "Hit him a few times so he must spend mana on Meditate to heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Naafiri:MasterYi:3",
+          "text": "Save Eviscerate to get away from Master Yi, or to hit him when he lands from Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "MasterYi", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ceae9e21ced7e83386d8283c2bbf0a1d8bffcfb3e3482d405b81f5864ca7bbdc",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:MonkeyKing:0",
+          "text": "Wukong can leave a clone and vanish. Hit the real one with Darkin Daggers, and recast it when his Health is low to heal and finish him.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Naafiri:MonkeyKing:1",
+          "text": "Don't dive in on top of Wukong when Cyclone is ready; it knocks you up. Wait for him to spend it first.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Naafiri:MonkeyKing:2",
+          "text": "Short fights favor you. Use Eviscerate to strike and reset, since it heals your packmates to full, then back out before his Stone Skin stacks up.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 28, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 124,
+              "end": 134
+            }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Naafiri:MonkeyKing:3",
+          "text": "Use The Call of the Pack to avoid his Nimbus Strike or burst, then fight back with your extra packmates and bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b7ebfafb4a4842414c00c681d7ee762517ba0eb735598e3f8b0411f197c6d346",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Nidalee:0",
+          "text": "Dodge Javelin Toss when Nidalee is far away; it hurts most from long range and marks you as Hunted.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Naafiri:Nidalee:1",
+          "text": "Use Eviscerate to dash out of Nidalee's Pounce follow-up, since she must get close to use Takedown.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Nidalee", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Naafiri:Nidalee:2",
+          "text": "Use The Call of the Pack when Nidalee jumps at you; you are untargetable for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Nidalee", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Naafiri:Nidalee:3",
+          "text": "Hit Nidalee with Darkin Daggers and recast it when she is low; the extra damage grows as her health drops and you heal.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Naafiri:Nidalee:4",
+          "text": "Use Hounds' Pursuit to reach Nidalee when she is hurt, since she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nidalee", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7f5c90cb0b5a4a7715bc4da53952c5e5deb48ca63c239ebcec8f4c9420d58c9e",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Nocturne:0",
+          "text": "Wait out Nocturne's Shroud of Darkness before you use Hounds' Pursuit or Darkin Daggers; it blocks them. Bait it first with a cheap ability.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 20, "end": 38 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 54, "end": 69 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 73, "end": 87 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Naafiri:Nocturne:1",
+          "text": "Dodge Duskbringer by stepping aside; it is a narrow line.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Naafiri:Nocturne:2",
+          "text": "Keep your Eviscerate for when Nocturne casts Unspeakable Horror; dash away to break the tether before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Nocturne", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 45, "end": 63 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Naafiri:Nocturne:3",
+          "text": "Don't fight Nocturne's Umbra Blades when it's ready; it heals him off you and your packmates.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 12, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Nocturne-passive",
+              "start": 23,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Naafiri:Nocturne:4",
+          "text": "Stay near allies when Nocturne casts Paranoia; his dash can land on you with no warning.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "814be62a6a895e5bb18e0daa3175dbc133f22d01c5b0bade167db509fe4fc806",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Nunu:0",
+          "text": "Poke Nunu with Darkin Daggers, then recast for the heal when he is already bleeding.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Naafiri:Nunu:1",
+          "text": "Sidestep Biggest Snowball Ever! with a sharp turn or Eviscerate; it turns slowly, and getting hit by a big one means a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 9, "end": 31 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 53, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 123 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Naafiri:Nunu:2",
+          "text": "Use The Call of the Pack to become untargetable when Nunu's snowball or barrage is about to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Naafiri:Nunu:3",
+          "text": "Don't stand in Absolute Zero for long; leave the blizzard early or dash out with Eviscerate before the slow grows.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 81, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ed51b07b7a6daea4d9b367bacbbd122ce0bf463a3cc13fb8c7f8bdd84ab82baf",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Pantheon:0",
+          "text": "Do not fight Pantheon head-on when he braces Aegis Assault; wait it out or hit him from another side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Naafiri:Pantheon:1",
+          "text": "Keep your health up around Pantheon; a thrown Comet Spear hits much harder on low health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Naafiri:Pantheon:2",
+          "text": "Use The Call of the Pack to dodge Shield Vault; being untargetable makes his jump miss you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Naafiri:Pantheon:3",
+          "text": "When Pantheon starts Grand Starfall, move away from the marked area; the warning lasts several seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5d574e201d3bd9e62d78f20da734cb5811f38fa8b892c84dd8ed85afe3745de9",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Qiyana:0",
+          "text": "Use The Call of the Pack when Qiyana dashes in with Audacity. Her damage lands on nothing, and you come out with extra packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Qiyana", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Naafiri:Qiyana:1",
+          "text": "Stay away from walls and brush when Qiyana's Supreme Display of Talent is ready. It stuns along terrain edges.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 45, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Naafiri:Qiyana:2",
+          "text": "Hit Qiyana with Darkin Daggers, then recast when she is low. The bleed and the heal win you a short trade.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Naafiri:Qiyana:3",
+          "text": "Use Hounds' Pursuit on Qiyana once she has spent Audacity. Without that dash she struggles to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Qiyana", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac08e7718a9963c504d12d1f4e306bec0c15f57f98ae8212a5b3c5f1a0441db2",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Rammus:0",
+          "text": "Don't dive Rammus while Defensive Ball Curl is up; your physical damage does little and hitting him hurts you. Wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Rammus-W", "start": 24, "end": 43 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Naafiri:Rammus:1",
+          "text": "Stay out of Frenzying Taunt range, or hold The Call of the Pack to become untargetable as he casts it.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 43, "end": 63 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Naafiri:Rammus:2",
+          "text": "Hit him with Darkin Daggers from range and recast it to heal, but watch for his Powerball roll closing in.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 80, "end": 89 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Naafiri:Rammus:3",
+          "text": "Use Eviscerate to dash away when Powerball is coming at you; it is faster than walking.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7386e017abc8fbd2e74df371ba596f9ece3d1635a4a314dabe40049841fc40c7",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:RekSai:0",
+          "text": "Use Hounds' Pursuit to dive Rek'Sai when she is away from her tunnels; her packmates dash alongside you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "RekSai", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Naafiri:RekSai:1",
+          "text": "Watch for Void Rush after you have hurt Rek'Sai's target: she vanishes briefly, then lands on you. Use The Call of the Pack as it lands to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "RekSai", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 103, "end": 123 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Naafiri:RekSai:2",
+          "text": "Stay unmoving in the brush when Rek'Sai is near; she can only see you while you are moving.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Naafiri:RekSai:3",
+          "text": "Use Darkin Daggers on Rek'Sai, then recast it once she is hurt to heal and deal more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "RekSai", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Naafiri:RekSai:4",
+          "text": "Stay out of Furious Bite range when her Fury is full, as it then hits hard.",
+          "refs": [],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fde86456d4a321c8286211b8dc411b0a130694d728723762f4d13dad176140c4",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Rengar:0",
+          "text": "Stay out of brush when Rengar is near. His Unseen Predator makes him leap onto you from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 43,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Naafiri:Rengar:1",
+          "text": "Use The Call of the Pack to become untargetable when Rengar leaps at you, so his burst hits nothing.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Rengar", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Naafiri:Rengar:2",
+          "text": "Fight Rengar while his Ferocity is low. At full Ferocity his Bola Strike roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Rengar-E", "start": 61, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Naafiri:Rengar:3",
+          "text": "Hit him with Darkin Daggers from range, then recast it when he is low to deal damage and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "61b9b4ff97701173bdd185c937ad9ead8f1f581310ae631cc0226573e3b59f7c",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Sejuani:0",
+          "text": "Use The Call of the Pack to become untargetable right as Sejuani throws Glacial Prison or Arctic Assault at you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Sejuani", "start": 57, "end": 64 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 72, "end": 86 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Naafiri:Sejuani:1",
+          "text": "Sejuani stops being slowed once she has Frost Armor, so do not rely on Hounds' Pursuit to hold her in place.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Naafiri:Sejuani:2",
+          "text": "Sejuani is tanky, so aim Hounds' Pursuit at her squishy teammates instead, and stay clear of the stun that Permafrost can give her.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 25, "end": 40 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 107, "end": 117 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Naafiri:Sejuani:3",
+          "text": "Use Eviscerate to dash away after Sejuani's second swing of Winter's Wrath starts; that swing carries most of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sejuani", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9f4fe0e5619ead7dad83e14b605e58bee1d818a2ec29e9eb5d50ad2d51b14d40",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Shaco:0",
+          "text": "Don't chase Shaco into brush or unwarded paths; Jack In The Box can fear and root you there.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Shaco-W", "start": 48, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Naafiri:Shaco:1",
+          "text": "Use The Call of the Pack to become untargetable when Shaco jumps in, and Eviscerate to get away after Deceive.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Shaco", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 73, "end": 83 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Naafiri:Shaco:2",
+          "text": "Hit Shaco with Darkin Daggers and recast it when he is low; it deals more damage and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Naafiri:Shaco:3",
+          "text": "Don't chase the Hallucinate clone; when it dies it explodes and spawns boxes. Hit the real Shaco instead.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Shaco", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "07b9489fb1024f8bdb146ff121402320b99169344af2158b9b8fbdac8d387687",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Shyvana:0",
+          "text": "Stay out of long fights with Shyvana. Hit her with Darkin Daggers, then Recast it to finish the bleed and heal yourself.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Naafiri:Shyvana:1",
+          "text": "Use The Call of the Pack to dodge Shyvana's burst; you become untargetable for a moment and gain speed to chase or run.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Shyvana", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Naafiri:Shyvana:2",
+          "text": "Eviscerate away from Shyvana once she has used Molten Burst, and avoid clustering your packmates in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Shyvana", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Naafiri:Shyvana:3",
+          "text": "Use Hounds' Pursuit to pick off Shyvana when she is low on Dragon Fury, before she can transform.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "024a86feb7259a2bf208fdf1cfb8f5fa0462bcc39c4cf98d033cbf1a5e80d59b",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Skarner:0",
+          "text": "Do not fight Skarner near walls; if Ixtal's Impact grabs you, hitting terrain stuns you. Keep Eviscerate ready to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Skarner-E", "start": 36, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 94, "end": 104 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Naafiri:Skarner:1",
+          "text": "Use The Call of the Pack to become untargetable when Skarner commits Impale or his charge.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Skarner", "start": 53, "end": 60 },
+            { "kind": "ability", "key": "Skarner-R", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Naafiri:Skarner:2",
+          "text": "Skarner's Quaking builds with attacks, so poke him and back out rather than trading toe to toe.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Naafiri:Skarner:3",
+          "text": "Recast Darkin Daggers on Skarner to heal and hit him harder when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Skarner", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b3fe62b5321f40e760dcb802b8a7cfb06635c61406f4651069b6316799a34094",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Sylas:0",
+          "text": "Wait for Sylas to spend Abscond / Abduct before you commit; without it he has a hard time catching you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Sylas-E", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Naafiri:Sylas:1",
+          "text": "Stay out of Sylas's reach when he is hurt and avoid long fights; Kingslayer heals him when he hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Sylas-W", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Naafiri:Sylas:2",
+          "text": "Use The Call of the Pack to dodge his key spells; it makes you untargetable at the start, and Kingslayer can't hit you then.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Sylas-W", "start": 94, "end": 104 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Naafiri:Sylas:3",
+          "text": "Fight Sylas when he has no ultimate to steal; Hounds' Pursuit is a strong one for him to take, so use it when he can't hijack it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Naafiri:Sylas:4",
+          "text": "Recast Darkin Daggers once he is bleeding to deal big damage and heal back what Chain Lash took.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b8e1e2e9f2e255e209ff0285bc2b8d86acf3f6a15c4bf21806fae7594acdd76d",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Talon:0",
+          "text": "Do not trade when Talon has Shadow Assault ready; he can vanish and turn the fight. Bait it out first.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Talon-R", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Naafiri:Talon:1",
+          "text": "Use The Call of the Pack when Talon jumps on you. It makes you untargetable for a moment and wastes his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Naafiri:Talon:2",
+          "text": "Recast Darkin Daggers on a bleeding Talon when he is low. It deals big damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Talon", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Naafiri:Talon:3",
+          "text": "Step out of Rake's path; its blades come back and leave you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Naafiri:Talon:4",
+          "text": "Hounds' Pursuit chases Talon down after he uses Shadow Assault or after a fight, so use it once his escape is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Talon-R", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9b76e8666a166281175f6b09a7a0fca05799829d0248d66978cc30073eff77e4",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Trundle:0",
+          "text": "Avoid fighting Trundle on his Frozen Domain; he is much faster and hits harder there. Pull the fight away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Trundle-W", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Naafiri:Trundle:1",
+          "text": "Leave Pillar of Ice quickly if he casts it on you; it slows you and walls your dash path.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Naafiri:Trundle:2",
+          "text": "Use The Call of the Pack to dodge his Subjugate or Chomp; you are untargetable for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Trundle-R", "start": 38, "end": 47 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Naafiri:Trundle:3",
+          "text": "Hit him with Darkin Daggers and recast when he is low; you heal and deal extra damage to a hurt target.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Naafiri:Trundle:4",
+          "text": "Don't feed kills near him; his King's Tribute heals him when enemies die close by.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Trundle-passive",
+              "start": 31,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "18a692d961089ff5d0865c47884b9dda46fe6b70c61ce798f6dba194cb54b550",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Udyr:0",
+          "text": "Hit Udyr with Darkin Daggers from range and recast it when he is bleeding for extra damage and healing. He has few ranged tools.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Naafiri:Udyr:1",
+          "text": "Do not let Udyr reach you with a Blazing Stampede attack; he stuns you. Keep your distance, and use Eviscerate to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Udyr-E", "start": 33, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 100, "end": 110 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Naafiri:Udyr:2",
+          "text": "Wait until Udyr has spent his Iron Mantle shield before you commit with Hounds' Pursuit.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Udyr-W", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 72, "end": 87 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Naafiri:Udyr:3",
+          "text": "Use The Call of the Pack to dodge his burst; you are briefly untargetable and gain extra packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Naafiri:Udyr:4",
+          "text": "Do not stay inside Wingborne Storm; it slows you and hurts your packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a1900db12b1452e77f31068842236dc80a925e9ef7b93485e82cea00b467a9f2",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Vi:0",
+          "text": "Dodge a charging Vault Breaker by stepping aside or using Eviscerate. A full charge hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Naafiri:Vi:1",
+          "text": "Use The Call of the Pack just before Vi's Cease and Desist lands. Being untargetable can make her ult fail.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Vi", "start": 37, "end": 39 },
+            { "kind": "ability", "key": "Vi-R", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Naafiri:Vi:2",
+          "text": "Do not trade for long with Vi. Three hits in a row cut your Armor and speed up her attacks.",
+          "refs": [],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Naafiri:Vi:3",
+          "text": "Hit Vi with Darkin Daggers, then recast it once she is low. It deals more damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Naafiri:Vi:4",
+          "text": "Stay away from Vi once she is level 6. If she dashes at you with Cease and Desist, you cannot escape it with Eviscerate.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 65, "end": 81 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 109, "end": 119 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a15df01a28c91df82bee5126fc1922fd51ed38311fac632deb2da25034924890",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Viego:0",
+          "text": "Dodge Spectral Maw's blast; it hits only the first enemy, so keep a packmate or minion between you and Viego to absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Naafiri:Viego:1",
+          "text": "Recast Darkin Daggers on a bleeding Viego for extra damage and a heal; use it when he is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Viego", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Naafiri:Viego:2",
+          "text": "Use The Call of the Pack to become untargetable and dodge his stun or Heartbreaker, then hit him with extra packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Viego-R", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Naafiri:Viego:3",
+          "text": "Do not die near Viego with a wraith; he can possess you and use your abilities against you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Naafiri:Viego:4",
+          "text": "Watch for mist walls from Harrowed Path; Viego may be hiding inside, so don't walk in blind.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 26, "end": 39 },
+            { "kind": "champion", "key": "Viego", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a6c93acb081452222f043b07c5ebb54037627d92c594e7ff148465baf7332bf2",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Volibear:0",
+          "text": "Hit Volibear with Darkin Daggers, then recast it once he is hurt. It deals more damage to low Health targets and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Naafiri:Volibear:1",
+          "text": "Do not fight Volibear head-on when he has Thundering Smash ready. If he reaches you, the stun lets him win the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 42, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Naafiri:Volibear:2",
+          "text": "Use The Call of the Pack to dodge his Thundering Smash or Sky Splitter. You cannot be targeted for a short time, and you then hit harder and run faster.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 38, "end": 54 },
+            { "kind": "ability", "key": "Volibear-E", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Naafiri:Volibear:3",
+          "text": "Dash away with Eviscerate when Volibear lands Stormbringer. He is tankier and slows nearby enemies, so do not stay close.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "Volibear", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Volibear-R", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ca80538db2312c2505c5cad07ad45a912f0e617da424bbefc8f9a3d75f156347",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Warwick:0",
+          "text": "Do not trust Warwick to stay hurt and flee; he senses weak champions and chases them down with Blood Hunt.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Warwick-W", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Naafiri:Warwick:1",
+          "text": "Use The Call of the Pack to become untargetable when Warwick commits with Infinite Duress or Jaws of the Beast.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Warwick", "start": 53, "end": 60 },
+            { "kind": "ability", "key": "Warwick-R", "start": 74, "end": 89 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 93, "end": 110 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Naafiri:Warwick:2",
+          "text": "Land Darkin Daggers early and recast it when Warwick is low; it heals you and the bleed wears him down.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Warwick", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Naafiri:Warwick:3",
+          "text": "Do not fight him when he is low on health; Eternal Hunger heals him a lot. Burst him down quickly, or back off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 43,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Naafiri:Warwick:4",
+          "text": "Use Eviscerate to get out of range once Warwick Fears you after Primal Howl.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Warwick", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Warwick-E", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "542455ee7c82f372c95dc76e4e865a3fb26e0b1d80977d00f0ecff8f27c2ac27",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:XinZhao:0",
+          "text": "Hit Xin Zhao with Darkin Daggers early and recast it once he is bleeding; you heal and deal more damage the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Naafiri:XinZhao:1",
+          "text": "Stay away from Xin Zhao when his Three Talon Strike is ready; the third hit knocks you up and he follows up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 33, "end": 51 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Naafiri:XinZhao:2",
+          "text": "Use Eviscerate to dash away once Xin Zhao's Audacious Charge is used, since he has no other gap closer.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Naafiri:XinZhao:3",
+          "text": "Do not stand clumped with your allies in a fight; Crescent Guard knocks back everyone it hits.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2479869ac188f10199d0f27686badc3da3b22f48ca2d17e4d3d46c6d2b85dd1d",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Zac:0",
+          "text": "Stay out of Zac's reach when he starts charging Elastic Slingshot. If it lands, you are knocked up and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Zac-E", "start": 48, "end": 65 },
+            { "kind": "keyword", "key": "knocked-up", "start": 88, "end": 98 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Naafiri:Zac:1",
+          "text": "Use Eviscerate to dash away when you are knocked up. It will not help while you are still in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Naafiri:Zac:2",
+          "text": "Step on Zac's goo chunks in a fight; it destroys them and denies his healing.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 8, "end": 11 }],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Naafiri:Zac:3",
+          "text": "Kill his bloblets when he splits apart, or he comes back. Your packmates and Darkin Daggers can help finish them.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 77, "end": 91 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Naafiri:Zac:4",
+          "text": "Use The Call of the Pack to become untargetable when Zac's Stretching Strikes or Elastic Slingshot is about to land.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Zac", "start": 53, "end": 56 },
+            { "kind": "ability", "key": "Zac-Q", "start": 59, "end": 77 },
+            { "kind": "ability", "key": "Zac-E", "start": 81, "end": 98 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e673cf94d0615953b671b05381f27bd73d3b9810f667a0266570b3a4b5d59a4b",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Zed:0",
+          "text": "Hold Eviscerate to escape or to finish Zed after he spends his Living Shadow; it is a quick dash that also deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 39, "end": 42 },
+            { "kind": "ability", "key": "Zed-W", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Naafiri:Zed:1",
+          "text": "Use The Call of the Pack when Zed casts Death Mark on you or dives in; you are untargetable for a short time at the start.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Zed-R", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Naafiri:Zed:2",
+          "text": "Keep Darkin Daggers for when Zed is low, and recast it to finish him and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Naafiri:Zed:3",
+          "text": "Stay away from Zed's shadow when he uses Shadow Slash; the shadow's slash is what slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 15, "end": 18 },
+            { "kind": "ability", "key": "Zed-E", "start": 41, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0195731210b1206ee9667e72e27e442b7ce322733388e8136ad7458d023978c2",
+      "tips": [
+        {
+          "id": "jungle:Naafiri:Zyra:0",
+          "text": "Don't run in a straight line toward Zyra. Grasping Roots will root you, so wait for it to be used before you dive.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Zyra-E", "start": 42, "end": 56 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Naafiri:Zyra:1",
+          "text": "Step on her seeds before she can grow them. Be ready to dodge back when she tries to grow one as you step on it.",
+          "refs": [],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Naafiri:Zyra:2",
+          "text": "Use The Call of the Pack to become untargetable when Zyra casts Grasping Roots. You dodge the root and gain speed to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Zyra", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Zyra-E", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Naafiri:Zyra:3",
+          "text": "Dive Zyra with Hounds' Pursuit when she has used her roots. She is fragile, and a takedown lets you recast it.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Naafiri:Zyra:4",
+          "text": "Fight away from her plants. They are short-lived, so Eviscerate out when she grows a group of them.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8be9269bee5722f01166d67f04a7c72967e2ed69e7224608b89033d2dd5c4118",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Ahri:0",
+          "text": "Stay out of Charm's line behind minions, and sidestep it; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Naafiri:Ahri:1",
+          "text": "Use The Call of the Pack to become untargetable and dodge Charm when you see Ahri cast it.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Ahri-E", "start": 58, "end": 63 },
+            { "kind": "champion", "key": "Ahri", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Naafiri:Ahri:2",
+          "text": "Go in with Hounds' Pursuit when Spirit Rush is on cooldown; Ahri has much less escape then.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 11, "end": 26 },
+            { "kind": "ability", "key": "Ahri-R", "start": 32, "end": 43 },
+            { "kind": "champion", "key": "Ahri", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Naafiri:Ahri:3",
+          "text": "Hit Ahri with Darkin Daggers, then recast for extra damage and healing when she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Naafiri:Ahri:4",
+          "text": "Use Eviscerate to close in and burst Ahri once her Charm is used.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ahri", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Ahri-E", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "655f3587b9310c8b6273614f447e2b1c4d555fb377376b4fa94e4384666a48e6",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Akali:0",
+          "text": "Hit Akali with Darkin Daggers, then recast it when she is hurt. The recast heals you if it hits a champion.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Naafiri:Akali:1",
+          "text": "Use The Call of the Pack to dodge Akali's burst; you can't be targeted for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Akali", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Naafiri:Akali:2",
+          "text": "Engage Akali when her Energy is low; her Five Point Strike is weak then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Akali-Q", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Naafiri:Akali:3",
+          "text": "Chase Akali down with Hounds' Pursuit when she is low on Health. A kill lets you recast it.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Naafiri:Akali:4",
+          "text": "Throw area attacks like Eviscerate into Akali's smoke; they still hit her and briefly show where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 24, "end": 34 },
+            { "kind": "champion", "key": "Akali", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f592b36af70f0483c5c999663d40d6ed1ce3ed9407d853c830ef09e2bd246d5b",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Anivia:0",
+          "text": "Sidestep Flash Frost; it is wide and slow-moving, and the stun comes when it ends or is recast. Stay out of its path as it travels.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Naafiri:Anivia:1",
+          "text": "Wait for Anivia to use Flash Frost, then go in with Hounds' Pursuit or Eviscerate while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 52, "end": 67 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Naafiri:Anivia:2",
+          "text": "Use The Call of the Pack to become untargetable and dodge Frostbite or Flash Frost, then close in with the extra speed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Anivia-E", "start": 58, "end": 67 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Naafiri:Anivia:3",
+          "text": "Do not fight inside Glacial Storm; it slows you and hurts more once fully formed. Go around it or hit Anivia from outside.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 20, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 },
+            { "kind": "champion", "key": "Anivia", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Naafiri:Anivia:4",
+          "text": "When Anivia becomes an egg, back off or finish it quickly. Your Packmates and Darkin Daggers help.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 78, "end": 92 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7659bb5a43873800d7f0a4c8b8656c2e40133f582840361a33464753e499c17b",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Aurora:0",
+          "text": "Hit Aurora with Darkin Daggers, then recast it for extra damage and a heal. Her low health makes the recast hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Naafiri:Aurora:1",
+          "text": "Wait until Aurora has used Across the Veil before you commit to a dive. Without it, she has fewer ways to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Aurora-W", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Naafiri:Aurora:2",
+          "text": "Do not dash in straight lines into The Weirding; the slow lets her kite you away.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 35, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Naafiri:Aurora:3",
+          "text": "Use The Call of the Pack to dodge her spell and gain extra packmates before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Naafiri:Aurora:4",
+          "text": "Hounds' Pursuit reveals Aurora and reaches her even after she vanishes, so use it to finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d0d94192c14351293ea0e8171e2e5d409b6ae01e3ad8111d702596bab537cc9c",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Cassiopeia:0",
+          "text": "Bait out Miasma before you commit with Eviscerate. Being grounded stops your dash.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Naafiri:Cassiopeia:1",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze. You get slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Naafiri:Cassiopeia:2",
+          "text": "Use The Call of the Pack to dodge Cassiopeia's key spell. You can't be targeted for a moment, and the extra Move Speed helps you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Naafiri:Cassiopeia:3",
+          "text": "Sidestep Noxious Blast, because it lands after a short delay. Then close the gap while Cassiopeia's Move Speed bonus has run out.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Naafiri:Cassiopeia:4",
+          "text": "Throw Darkin Daggers at her. Recast when she is low, as it deals more damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "eeced0c82a596a6805406d0d362e773c72cf84585f389a44df5398af6c56bd5a",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Fizz:0",
+          "text": "Hold Hounds' Pursuit until Fizz has used Playful; if he still has it, he can dodge your dash.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Naafiri:Fizz:1",
+          "text": "Hit Fizz with Darkin Daggers and recast it once he is hurt; it heals you when it hits a champion.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Naafiri:Fizz:2",
+          "text": "Stay out of his reach when Urchin Strike is ready; he can dash onto you and burst you.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Naafiri:Fizz:3",
+          "text": "Sidestep Chum the Waters when you see the fish thrown; a hit slows you and the shark then knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 9, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "58a4f8eb3710d1f46511b21414f5e648aaa16170030cf7ea7a58be736eb4b28a",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Malzahar:0",
+          "text": "Jump on Malzahar with Hounds' Pursuit when his Void Shift is down. It's your best way to burst him, so hit him once he has been damaged.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 22, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Naafiri:Malzahar:1",
+          "text": "Stay out of Call of the Void's area. Being silenced leaves you unable to use Eviscerate or Darkin Daggers to get away or to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 77, "end": 87 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Naafiri:Malzahar:2",
+          "text": "Save The Call of the Pack for when Malzahar uses his silence. Being untargetable also helps you avoid Nether Grasp.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Malzahar", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Naafiri:Malzahar:3",
+          "text": "Don't stand in Malefic Visions' spread range. Avoid minion waves it has marked, since the visions jump to you when they die.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c90c4759aec1ab894059c951006f67c7429e39b7cec85dcc0ae83988b64585b9",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Orianna:0",
+          "text": "Stay out of Orianna's Ball range and hit her with Darkin Daggers; a bleeding target takes more damage if you recast it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Naafiri:Orianna:1",
+          "text": "Use The Call of the Pack to become untargetable and dodge Orianna's burst, then fight with bonus damage and speed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Orianna", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Naafiri:Orianna:2",
+          "text": "Wait until Orianna has spent Command: Shockwave before diving; it stuns and pulls you toward the Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Orianna-R", "start": 29, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Naafiri:Orianna:3",
+          "text": "Use Eviscerate to dash out of Orianna's Ball range or to dodge Command: Attack, which has a delay.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Orianna", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b7b1b44b7da708bbe76ff4fc338df51ed1a9831945c9fae06913eb674b16f81a",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Ryze:0",
+          "text": "Stay out of Ryze's Flux. Once he has marked you, Rune Prison roots you and Overload hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ryze-W", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Naafiri:Ryze:1",
+          "text": "Use The Call of the Pack to dodge his burst. You are untargetable for the first moment, so his targeted spells cannot hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Naafiri:Ryze:2",
+          "text": "Look for Hounds' Pursuit once he has spent Rune Prison. Without it he has little to stop you, and a kill lets you recast.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 9, "end": 24 },
+            { "kind": "ability", "key": "Ryze-W", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Naafiri:Ryze:3",
+          "text": "Aim Darkin Daggers at Ryze, then recast to heal and deal more damage. Land it when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fe4049946c8ae3dbc80a8d5d0999f61a6f941b8e314843d2ddf6cc94456d641c",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Sylas:0",
+          "text": "Throw Darkin Daggers at Sylas, then recast it when the bleed is on him; it hurts more the lower his health is and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Naafiri:Sylas:1",
+          "text": "Stay out of Chain Lash range and sidestep it; being slowed lets Sylas catch you with the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 },
+            { "kind": "champion", "key": "Sylas", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Naafiri:Sylas:2",
+          "text": "Keep your distance from Abduct; its chains stop at the first enemy hit, so your packmates can block it.",
+          "refs": [],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Naafiri:Sylas:3",
+          "text": "Use The Call of the Pack to become untargetable when Sylas goes for Kingslayer; it cannot hit you then.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Sylas", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Sylas-W", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Naafiri:Sylas:4",
+          "text": "Fight Sylas when his Hijack is on cooldown for you; if he steals Hounds' Pursuit he can't do it again for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-R", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2aeb8522ec700a9addc0e48c5f03094c82a5a2b7fb48a5e43b65dfacd2739527",
+      "tips": [
+        {
+          "id": "middle:Naafiri:TwistedFate:0",
+          "text": "Watch for Twisted Fate shuffling his deck above his head; a Gold Card stun is coming, so stay out of his attack range or wait it out.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 10,
+              "end": 22
+            },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Naafiri:TwistedFate:1",
+          "text": "Sidestep Wild Cards before you dash in; the cone is wide, so move out of the angle rather than straight back.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Naafiri:TwistedFate:2",
+          "text": "Use The Call of the Pack to become untargetable when Twisted Fate is about to land a card, then close in with extra speed.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "TwistedFate", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Naafiri:TwistedFate:3",
+          "text": "When Twisted Fate uses Destiny to teleport, expect him to appear near you; he is squishy, so punish him with Hounds' Pursuit.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Naafiri-R", "start": 109, "end": 124 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Naafiri:TwistedFate:4",
+          "text": "Hit him with Darkin Daggers, then recast for the bigger hit once he is lower on health; it also heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a423af91be08cae5180b12bdcc50a92ff9f0b694235f60c495d215838f4da53e",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Viktor:0",
+          "text": "Do not stand in Gravity Field. Step out before it finishes charging, or you will be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Naafiri:Viktor:1",
+          "text": "Save Eviscerate to dodge a Hextech Ray or leave a field, and use it to jump in when his abilities are down.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Viktor-E", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Naafiri:Viktor:2",
+          "text": "Use The Call of the Pack to become untargetable and avoid his Siphon Power or Gravity Field while you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 62, "end": 74 },
+            { "kind": "ability", "key": "Viktor-W", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Naafiri:Viktor:3",
+          "text": "Hit him with Darkin Daggers, then recast it to finish the bleed and heal when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Naafiri:Viktor:4",
+          "text": "Go for Hounds' Pursuit once his shield and Gravity Field are spent. Viktor is fragile and cannot easily escape you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 7, "end": 22 },
+            { "kind": "ability", "key": "Viktor-W", "start": 43, "end": 56 },
+            { "kind": "champion", "key": "Viktor", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a7c1f3054f528ea024ae88ca636e8a3f822c3b95f713f4f0c611972d0122f68b",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Yasuo:0",
+          "text": "Hit Yasuo with Darkin Daggers when he has no minion in front. Recast it once he is bleeding to hit hard and heal.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Naafiri:Yasuo:1",
+          "text": "Don't throw Darkin Daggers into Wind Wall; wait for it to fade, because it blocks projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 12, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Naafiri:Yasuo:2",
+          "text": "Stay away from Yasuo once he has two Steel Tempest stacks; his whirlwind knocks you up and sets up Last Breath.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 99, "end": 110 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Naafiri:Yasuo:3",
+          "text": "Use Eviscerate to jump in right after Yasuo has fired his whirlwind, when he is weakest.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yasuo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Naafiri:Yasuo:4",
+          "text": "Use The Call of the Pack to dodge his whirlwind, since you are untargetable for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fdc2fff2723a8c22b518a3da470dd94f430bb25ab70a51bc3055ed9b92df6c03",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Yone:0",
+          "text": "Land Darkin Daggers on Yone, then recast it once he is hurt; it deals more damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Naafiri:Yone:1",
+          "text": "Stay out of Mortal Steel range when he has two stacks; the third cast dashes in and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Naafiri:Yone:2",
+          "text": "Use The Call of the Pack to dodge his big combo; you are untargetable at the start, and it gives you extra packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Naafiri:Yone:3",
+          "text": "Don't chase him in spirit form with Soul Unbound; he snaps back to his body and takes the trade with him.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-E", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Naafiri:Yone:4",
+          "text": "Save Hounds' Pursuit to finish him after he spends his abilities, and recast it if you get the kill.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9cd1c5695df1fbf50bcd6c0b0714a929f8bc79ebaba5d40eb6a25068098a0e9b",
+      "tips": [
+        {
+          "id": "middle:Naafiri:Zed:0",
+          "text": "Dodge Razor Shuriken by stepping sideways. Zed's Shadow throws a second one from another angle, so watch for both.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 43, "end": 46 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Naafiri:Zed:1",
+          "text": "Zed is weakest right after he casts Living Shadow, because his slow and extra damage depend on it. Jump on him then with Eviscerate.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 36, "end": 49 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 121, "end": 131 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Naafiri:Zed:2",
+          "text": "Use The Call of the Pack when Zed casts Death Mark on you; it makes you untargetable and speeds you up. Fight back with your Packmates around you.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Zed-R", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Naafiri:Zed:3",
+          "text": "Use Darkin Daggers on Zed when he is low, then recast it to finish him and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 22, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Naafiri:Zed:4",
+          "text": "Zed gets slowed only by his Shadow's slash, so stay out of the Shadow's range of you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 15 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

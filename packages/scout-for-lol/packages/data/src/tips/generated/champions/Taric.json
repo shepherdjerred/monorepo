@@ -1,0 +1,988 @@
+{
+  "schemaVersion": 1,
+  "champion": "Taric",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "ecd98699abdd91e236d5de7d8b01185753115affb9ccdd35711b62302ba4a6ee",
+      "tips": [
+        {
+          "id": "support:Taric:general:0",
+          "text": "Cast an ability, then attack twice. Bravado makes those hits quick, adds magic damage and shortens your ability cooldowns.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 36,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Taric:general:1",
+          "text": "Bind your carry with Bastion and stay close. While you are linked, your abilities also come from them, so Dazzle can hit from both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Taric-E", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Taric:general:2",
+          "text": "Aim Dazzle so the enemy is still in the beam when it bursts. The wind-up is slow, but you can keep walking while it charges.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Taric:general:3",
+          "text": "Use Starlight's Touch before a fight when it is full, or at low stacks to trigger Bravado more often. Hitting with Bravado attacks adds stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-Q", "start": 4, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 82,
+              "end": 89
+            },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 115,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Taric:general:4",
+          "text": "Cast Cosmic Radiance as soon as you know a fight is starting. It has a delay, so waiting until someone is about to die is too late.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Taric:general:5",
+          "text": "Step in with Bastion for the shield when the enemy is about to poke. It shields you and your ally and costs little to keep up.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 13, "end": 20 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Taric:combo:0",
+          "name": "Split Dazzle",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Taric-W" },
+            { "kind": "ability", "key": "Taric-E" }
+          ],
+          "when": "When you have a tethered ally standing apart from you and want to catch an enemy who is dodging.",
+          "whenRefs": [],
+          "text": "Bastion makes your ally cast Dazzle too, from their own position. Keep them spread so the two beams cover different angles and are hard to sidestep.",
+          "textRefs": [
+            { "kind": "ability", "key": "Taric-W", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Taric-E", "start": 29, "end": 35 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "14491714577524640b60e37095a3cd5107c2587b9bf128d74dc6adb3813c03b8",
+      "tips": [
+        {
+          "id": "support:Taric:Bard:0",
+          "text": "Stay out of a straight line with Bard. Cosmic Binding stuns if it hits a second enemy or a wall, so keep your ADC from standing right behind you.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Bard-Q", "start": 39, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Taric:Bard:1",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can use it.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Taric:Bard:2",
+          "text": "Use Dazzle when Bard walks up to attack with his meeps. It takes a moment to go off, so aim where he will be standing.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Bard", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Taric:Bard:3",
+          "text": "Take Bastion on your ADC before Bard's engage so the shield is ready. Your abilities then come from both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Bard", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Taric:Bard:4",
+          "text": "If Bard casts Tempered Fate, hold your damage until it ends. His ultimate also freezes his own allies.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Bard-R", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Taric:Bard:5",
+          "text": "You can follow Bard through Magical Journey when it is safe. Do not follow him blindly into his team.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Bard-E", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7a42545da4c2dcce90809604975722101460c5ebb71c47cb6070e45c22354432",
+      "tips": [
+        {
+          "id": "support:Taric:Braum:0",
+          "text": "Aim Dazzle at Braum when he walks up to hit you or your carry; the beam takes a moment, so cast it where he is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Braum", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Taric:Braum:1",
+          "text": "Stay out of Winter's Bite lines, or keep a minion in front of you, because it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Taric:Braum:2",
+          "text": "Once Braum has marked you, step out of the fight before you take more hits, or the Concussive Blows stun lands.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 83,
+              "end": 99
+            },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Taric:Braum:3",
+          "text": "Use Bravado after each spell to attack Braum. The fast empowered hits shorten your cooldowns, so Dazzle comes back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Braum", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Taric-E", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Taric:Braum:4",
+          "text": "When you see Glacial Fissure start, walk out of its line. Then avoid the frozen ground it leaves, which leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 13, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Taric:Braum:5",
+          "text": "Cast Cosmic Radiance early once a fight is certain, because it takes a while to take effect.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8e2e5d8c5d1f3d9eac22c440734767f0d9797171d9a2ad3c037a0553ee3ebac9",
+      "tips": [
+        {
+          "id": "support:Taric:Karma:0",
+          "text": "Avoid walking up to the minions while Karma has Inner Flame ready. A hit slows you and lowers her Mantra cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Karma-Q", "start": 48, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 },
+            { "kind": "ability", "key": "Karma-R", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Taric:Karma:1",
+          "text": "Step out of range when Karma tethers you with Focused Resolve. Breaking the tether means you are never rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Karma-W", "start": 46, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Taric:Karma:2",
+          "text": "Land Dazzle on Karma when she commits to a cast; the stun gives you a free trade. Aim it ahead of where she is walking.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Karma", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Taric:Karma:3",
+          "text": "Cast a spell before you attack so Bravado gives you quick, stronger hits. This wins short trades against Karma.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 34,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Karma", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "73d387a08d33f9c4faae83b9ae06c5ac3feb088936aa91ad0b136425eca74772",
+      "tips": [
+        {
+          "id": "support:Taric:Leona:0",
+          "text": "Aim Dazzle at Leona when she steps up to engage; it takes a moment to burst, so cast it where she is walking, not where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Leona", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Taric:Leona:1",
+          "text": "Bind your carry with Bastion before Leona engages, so the shield is already up when she dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 21, "end": 28 },
+            { "kind": "champion", "key": "Leona", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Taric:Leona:2",
+          "text": "Save Cosmic Radiance for when Leona lands her stun on your team. The delay is long, so cast it early in the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Leona", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Taric:Leona:3",
+          "text": "Use Starlight's Touch to heal back the damage after Leona trades with you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Leona", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Taric:Leona:4",
+          "text": "Step out of the center of Solar Flare so you are only slowed, not stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f15fe7cf1a2793423865ec93081933c6f1d7a2678d88f111e715649d2b4fefa4",
+      "tips": [
+        {
+          "id": "support:Taric:Lulu:0",
+          "text": "Aim Dazzle at Lulu where she will stand, not where she is now; it bursts after a delay and she can step out of the beam.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Lulu", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Taric:Lulu:1",
+          "text": "Lulu's Whimsy turns you into a critter, so stay out of her range when you are about to engage.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-W", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Taric:Lulu:2",
+          "text": "Hit Lulu with a Bravado attack after casting a spell; it shortens your cooldowns and fills Starlight's Touch.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 16,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Taric-Q", "start": 91, "end": 108 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Taric:Lulu:3",
+          "text": "Stand behind minions to block the Pix bolts and Glitterlance, which stop at the first unit they hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:Taric:Lulu:4",
+          "text": "Save Starlight's Touch until you have stacks and your partner is hurt after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-Q", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3567fc0cf6eaed477782b9e10fb2b5b58aba5b37c1616aeca6ec6ce64c3517c6",
+      "tips": [
+        {
+          "id": "support:Taric:Lux:0",
+          "text": "Aim Dazzle at Lux when she stops to cast; it takes a moment to burst, so walk toward her and it stuns her where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Lux", "start": 14, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "support:Taric:Lux:1",
+          "text": "Walk and attack her right after a spell. Bravado makes your next attacks hit fast and shortens your cooldowns.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 41,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Taric:Lux:2",
+          "text": "Stay out of a straight line with your carry when Lux is in range. Light Binding roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 49, "end": 52 },
+            { "kind": "ability", "key": "Lux-Q", "start": 66, "end": 79 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Taric:Lux:3",
+          "text": "Use Bastion on your carry early in a trade. The shield soaks Lux's poke and the tether lets your Dazzle fire from both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 61, "end": 64 },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 },
+            { "kind": "ability", "key": "Taric-E", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Taric:Lux:4",
+          "text": "Save Cosmic Radiance for when Final Spark is coming or a fight is certain. It has a delay, so cast it early.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Lux-R", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "62f2701f5c84913bd20368fecfca057a1dec5d495087489ccd0133efd150383b",
+      "tips": [
+        {
+          "id": "support:Taric:Milio:0",
+          "text": "Aim Dazzle at Milio when he is stuck near his ally; it takes a moment to burst, so cast it where he will stand. Walk while it winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Milio", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Taric:Milio:1",
+          "text": "Stay out of a straight line from Milio. Ultra Mega Fire Kick stops at the first enemy it hits, so keep a minion in front of you.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 40, "end": 60 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Taric:Milio:2",
+          "text": "Cast an ability, then hit Milio or a minion with the empowered attacks from Bravado. They cut your cooldowns and fuel Starlight's Touch.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 26, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 76,
+              "end": 83
+            },
+            { "kind": "ability", "key": "Taric-Q", "start": 118, "end": 135 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Taric:Milio:3",
+          "text": "Punish Milio when he is alone and his allies are far away. Catching him by himself is the best way to start a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 7, "end": 12 },
+            { "kind": "keyword", "key": "isolated", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2716ab131ffd914c544218680e3e42d4ecefc64aa78d17c3023b2972a4ccff44",
+      "tips": [
+        {
+          "id": "support:Taric:Nami:0",
+          "text": "Walk out of Aqua Prison's landing spot; the bubble takes a moment to land, so keep moving when Nami aims it at you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Taric:Nami:1",
+          "text": "Once Nami misses Aqua Prison, step up and hit her with Dazzle while it is on its long cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Nami-Q", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Taric-E", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Taric:Nami:2",
+          "text": "Dazzle bursts after a short delay, so aim where Nami will be. You can keep walking while it winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Nami", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Taric:Nami:3",
+          "text": "Cast Bastion on your carry early; it shields you both and your Dazzle then also fires from them.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Taric-E", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Taric:Nami:4",
+          "text": "Walk away from a wave of Tidal Wave when you see it coming; it travels slowly, so you can leave its path.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Taric:Nami:5",
+          "text": "Back off from an enemy carrying Tidecaller's Blessing; it fades quickly, and then you can trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 32, "end": 53 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9a768dbe564fd7cfdaf1b4f56ba09b53366be9ab8591508ae0bb3076564aa03a",
+      "tips": [
+        {
+          "id": "support:Taric:Nautilus:0",
+          "text": "Stay out of Dredge Line's long range when you can. Once Nautilus is close, Dazzle is your answer, so don't waste it early.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 56, "end": 64 },
+            { "kind": "ability", "key": "Taric-E", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Taric:Nautilus:1",
+          "text": "Aim Dazzle at where Nautilus will be, not where he stands. It bursts after a delay, so he can walk out of it unless he is closing in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Nautilus", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Taric:Nautilus:2",
+          "text": "Do not run the instant Riptide goes off next to you. Wait for the waves to finish, or you run into the later ones and take more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Taric:Nautilus:3",
+          "text": "Cast Cosmic Radiance as soon as a fight is certain. Its delay is long, and Nautilus can lock down one of you in that time.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nautilus", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Taric:Nautilus:4",
+          "text": "Put Bastion on your carry before Nautilus engages. It shields them and your tether lets your abilities hit from both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Nautilus", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Taric:Nautilus:5",
+          "text": "Trade with a spell, then hit him with the two Bravado attacks. This shortens your cooldowns and gives you charges for Starlight's Touch to heal with.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 46,
+              "end": 53
+            },
+            { "kind": "ability", "key": "Taric-Q", "start": 118, "end": 135 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cbea1c9940b467ab3bbfd97a60ec8b0f6c15bbe170c7d9d7f7aabd31a0f712d9",
+      "tips": [
+        {
+          "id": "support:Taric:Pantheon:0",
+          "text": "Aim Dazzle at where Pantheon will be, not where he is; it bursts after a delay and he can walk out of it. Cast it when he commits to a jump or a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Taric:Pantheon:1",
+          "text": "Pantheon can't be hurt from the front while he braces with Aegis Assault. Wait it out or hit him from behind, and don't waste Dazzle on the shield.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 59, "end": 72 },
+            { "kind": "ability", "key": "Taric-E", "start": 126, "end": 132 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Taric:Pantheon:2",
+          "text": "Bind your carry with Bastion before Pantheon jumps in; the shield blunts his burst, and your abilities then come from both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 21, "end": 28 },
+            { "kind": "champion", "key": "Pantheon", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Taric:Pantheon:3",
+          "text": "Use Cosmic Radiance as soon as Pantheon commits to a fight. Its delay is long, so it must start before your ally is in danger.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Taric:Pantheon:4",
+          "text": "Heal with Starlight's Touch after your empowered attacks have built charges. Weak allies hit by Pantheon's poke need the heal.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "7", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Taric-Q", "start": 10, "end": 27 },
+            { "kind": "champion", "key": "Pantheon", "start": 96, "end": 104 },
+            { "kind": "keyword", "key": "poke", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a49e5f73be265a005382812aa6faf5379966133325abfbd162da1c8d165d082b",
+      "tips": [
+        {
+          "id": "support:Taric:Pyke:0",
+          "text": "Aim Dazzle at where Pyke will be, since it bursts after a delay. He can walk out of it, so cast it when he commits to a dash or a hook.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Taric:Pyke:1",
+          "text": "Stay away from low-health allies when Pyke is around. Death From Below can execute them, and you may be next.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Taric:Pyke:2",
+          "text": "Use Cosmic Radiance early when Pyke is about to jump on a fight. Its delay is long, so cast it before your carry is in danger.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Taric:Pyke:3",
+          "text": "Heal back damage from his trades with Starlight's Touch, and hit him with empowered attacks so your cooldowns come back faster.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "7", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Taric-Q", "start": 38, "end": 55 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Taric:Pyke:4",
+          "text": "Hit Pyke with your empowered attacks when he walks up to trade. Step back after, since he can pull you with Bone Skewer.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 108, "end": 119 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "06141dc8c1d7507c9cd158e5e8a6d554c6acce64f869adc83c09867fd0886b0a",
+      "tips": [
+        {
+          "id": "support:Taric:Senna:0",
+          "text": "Walk up and use Dazzle when Senna steps forward to attack; the beam takes a moment to burst, so aim where she will be standing.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 16, "end": 22 },
+            { "kind": "champion", "key": "Senna", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Taric:Senna:1",
+          "text": "Senna outranges you, so get close with a Bravado attack. Cast an ability first so your next attacks hit fast and cut your cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 41,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Taric:Senna:2",
+          "text": "Put Bastion on your carry before Senna's Last Embrace lands. The shield absorbs some of her damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Senna", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Senna-W", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Taric:Senna:3",
+          "text": "Use Starlight's Touch after trades to heal you and your ally from Senna's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Senna", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Taric:Senna:4",
+          "text": "Cast Cosmic Radiance early when a fight is certain. Senna's Dawning Shadow can hit from anywhere on the map, and the delay is long.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Senna", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Senna-R", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b1140fe8e58a7a8cbaf0860292116ad0618342e7f2b87e3b92daa3a4094eaf93",
+      "tips": [
+        {
+          "id": "support:Taric:Seraphine:0",
+          "text": "Walk up and trade with Dazzle when Seraphine stands near her minions or ally; the stun gives you a free Bravado hit.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Seraphine", "start": 35, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 104,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Taric:Seraphine:1",
+          "text": "Cast Dazzle early. It takes a moment to go off, but you can keep moving while it winds up, so walk toward Seraphine as you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Seraphine", "start": 106, "end": 115 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Taric:Seraphine:2",
+          "text": "Seraphine's Beat Drop and High Note are long-range poke. Heal it back with Starlight's Touch once you have stocked charges.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 26, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 51, "end": 55 },
+            { "kind": "summoner-spell", "key": "7", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Taric-Q", "start": 75, "end": 92 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Taric:Seraphine:3",
+          "text": "Use Cosmic Radiance as soon as an all-in is certain. Her Encore charm can start a fight, and the ultimate has a delay before it protects you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Taric:Seraphine:4",
+          "text": "Bind your carry with Bastion before she pokes. Their shield and your armor cut the damage they take from her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8aa71f70e0c48c44cfa89ee155c523c5a217133872bed23195c45412b4ef0257",
+      "tips": [
+        {
+          "id": "support:Taric:Sona:0",
+          "text": "Cast Dazzle on Sona when she walks up to cast Hymn of Valor; she is fragile and the stun lets you and your carry kill her.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Sona", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Sona-Q", "start": 46, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Taric:Sona:1",
+          "text": "Cast an ability, then hit Sona with your two empowered Bravado attacks; they trim your cooldowns and hit fast.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 26, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 55,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Taric:Sona:2",
+          "text": "Use Starlight's Touch to heal back the poke from Sona between waves.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Sona", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Taric:Sona:3",
+          "text": "Stay out of the way of Crescendo in fights; if your team is about to be stunned, cast Cosmic Radiance early because it has a delay.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 79 },
+            { "kind": "ability", "key": "Taric-R", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5b971080020101c2a75ceacd3de3b703e8ae84747b1b558f12d34665a5d4b9e9",
+      "tips": [
+        {
+          "id": "support:Taric:Thresh:0",
+          "text": "Walk out of line when Thresh begins Death Sentence; the cast is slow and the scythe stops at the first unit it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Taric:Thresh:1",
+          "text": "Use Dazzle on Thresh when he leaps in or stands close; it stuns him, and you can move while it winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Thresh", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Taric:Thresh:2",
+          "text": "Attack with Bravado after each spell to shorten your cooldowns, but only step up to Thresh when his Death Sentence is on cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 12,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Thresh", "start": 84, "end": 90 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 100, "end": 114 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Taric:Thresh:3",
+          "text": "Cast Bastion on your carry before Thresh hooks; the shield goes up at once and your tether lets Dazzle fire from both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Taric-E", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Taric:Thresh:4",
+          "text": "Start Cosmic Radiance as soon as a fight is certain; it has a delay, so cast it before Thresh's Box and hook land.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Thresh", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,892 @@
+{
+  "schemaVersion": 1,
+  "champion": "Soraka",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "403ba37ef21a9aa2f758d7ed45528e253bbda28579d7fab678061b5ddeedd8b2",
+      "tips": [
+        {
+          "id": "support:Soraka:general:0",
+          "text": "Hit an enemy with Starcall first, then cast Astral Infusion. Soraka gets Rejuvenation, so the heal costs her almost no health and also heals over time.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Soraka-W", "start": 44, "end": 59 },
+            { "kind": "champion", "key": "Soraka", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Soraka:general:1",
+          "text": "Don't spam Astral Infusion without Rejuvenation. It costs a chunk of your own health, and you can't cast it when you are very low.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 11, "end": 26 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Soraka:general:2",
+          "text": "Poke with Starcall whenever enemies stand in range. It slows them, and a hit on a champion heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 10, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Soraka:general:3",
+          "text": "Use Equinox to keep enemies off your carry. It silences them while it lingers, then roots them when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "silenced", "start": 47, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Soraka:general:4",
+          "text": "Aim Equinox where the enemy will stand when it ends. The root only catches whoever is still inside, so it works best as a setup for your team's follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Soraka:general:5",
+          "text": "Use Wish from anywhere on the map to save an ally who is about to die. It heals more on low health allies.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-R", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Soraka:general:6",
+          "text": "Face a low health ally and Salvation makes you run much faster toward them. Use it to reach and save a friend.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Soraka-passive",
+              "start": 27,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Soraka:general:7",
+          "text": "Stay behind your frontline in fights. Enemies are told to focus you when you step forward to heal.",
+          "refs": [],
+          "pWrong": 0.1
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "f1a94f45c6027846b657b280e29150bdbf03e14a4fe0a031ce23c35250cd4641",
+      "tips": [
+        {
+          "id": "support:Soraka:Bard:0",
+          "text": "Keep Equinox for when Bard walks up to trade or to take a shrine; he is silenced, then rooted, and can't dodge or run away.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Bard", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "silenced", "start": 72, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Soraka:Bard:1",
+          "text": "Hit Bard with Starcall to get Rejuvenation, then use Astral Infusion on your partner for almost no health cost.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Soraka-W", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Soraka:Bard:2",
+          "text": "Stay out of a straight line with your partner, because Cosmic Binding stuns when it hits two enemies or a wall. Stand away from walls too.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 55, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Soraka:Bard:3",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Soraka:Bard:4",
+          "text": "Do not rely on Astral Infusion when low on health, since it costs your own health. Get Rejuvenation first when Bard is near.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Bard", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4f62392851081ad1090c7741356fdf659392a1b6a912597826f19f766f4afabb",
+      "tips": [
+        {
+          "id": "support:Soraka:Karma:0",
+          "text": "Land Starcall on Karma when she walks up to poke; the heal it gives you lets you trade back with Astral Infusion for almost no health.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Karma", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Soraka-W", "start": 97, "end": 112 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Soraka:Karma:1",
+          "text": "Aim Equinox where Karma will stand to cast. She is silenced and cannot use Mantra or her abilities, then rooted when the field ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Karma", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Karma-R", "start": 75, "end": 81 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Soraka:Karma:2",
+          "text": "Step away from Focused Resolve to break the tether before it ends. If it holds, you are rooted and take the damage twice.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Soraka:Karma:3",
+          "text": "Sidestep Inner Flame, as it stops on the first unit it hits. Stay behind minions so it explodes on them first.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Soraka:Karma:4",
+          "text": "Leave the circle that an empowered Inner Flame creates quickly, because it slows you and bursts for heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 35, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ff4b8985463e71b95f17445440575ec7fbfe646f74a7c076b2fd786fd633ee9b",
+      "tips": [
+        {
+          "id": "support:Soraka:Leona:0",
+          "text": "Keep Equinox ready for when Leona walks up; it silences her, so she can't use Zenith Blade or Eclipse, then roots her when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Leona", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 47, "end": 55 },
+            { "kind": "ability", "key": "Leona-E", "start": 78, "end": 90 },
+            { "kind": "ability", "key": "Leona-W", "start": 94, "end": 101 },
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Soraka:Leona:1",
+          "text": "Stay behind your minions and your carry. Zenith Blade is a projectile, so minions in its path get hit first.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Soraka:Leona:2",
+          "text": "Hit Leona with Starcall when she steps forward. The slow makes it harder for her to reach you, and you get healing.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Soraka:Leona:3",
+          "text": "Step away from the center of Solar Flare to avoid the stun. Use Wish to save an ally who is caught.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Soraka-R", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Soraka:Leona:4",
+          "text": "Keep Astral Infusion for after the fight starts, and use it while you have Rejuvenation from Starcall so it costs you little health.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 93, "end": 101 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "504b6e6531bae9f40e8b6f19b809777934afd81fe1a1faf6148a86d7c4050fa4",
+      "tips": [
+        {
+          "id": "support:Soraka:Lulu:0",
+          "text": "Poke with Starcall whenever Lulu steps up to help her partner; a hit also heals you and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Soraka:Lulu:1",
+          "text": "Aim Equinox where Lulu will stand to trade. She is silenced in the field and rooted when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lulu", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Soraka:Lulu:2",
+          "text": "Stay out of Glitterlance range, or step aside, because it slows heavily and hits twice.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Soraka:Lulu:3",
+          "text": "Keep your health up before trading, since Astral Infusion costs you health. Start it from a Starcall hit so the cost nearly vanishes.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 42, "end": 57 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Soraka:Lulu:4",
+          "text": "Wish is your save when Wild Growth lands on your carry. Heal everyone from afar once they drop low.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-R", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-R", "start": 23, "end": 34 },
+            { "kind": "summoner-spell", "key": "7", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "061b48a5f04208c703931135b29448d184a7c1ba5cad3a9858f283793e4ce394",
+      "tips": [
+        {
+          "id": "support:Soraka:Lux:0",
+          "text": "Use Equinox on Lux when she steps up to poke; she is silenced and cannot cast while inside, then rooted when the field ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 15, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "silenced", "start": 53, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Soraka:Lux:1",
+          "text": "Hit Lux with Starcall to heal yourself and slow her. Then Astral Infusion your partner for almost no health cost.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 13, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Soraka-W", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Soraka:Lux:2",
+          "text": "Stay out of a straight line with your partner and the minions, so Light Binding cannot root two of you at once.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 66, "end": 79 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Soraka:Lux:3",
+          "text": "Watch for Lux's Lucent Singularity and walk out of it; the slow is bad when you are fighting for position.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 10, "end": 13 },
+            { "kind": "ability", "key": "Lux-E", "start": 16, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Soraka:Lux:4",
+          "text": "Stay healthy: Astral Infusion costs your own health, and Lux's burst can finish you if you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Lux", "start": 57, "end": 60 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e630610d0ca309cef30c8a7fc46ec115b867afcba79dbd3aefc79f9b056b46b0",
+      "tips": [
+        {
+          "id": "support:Soraka:Milio:0",
+          "text": "Hit Milio with Starcall to slow him and start Rejuvenation, then use Astral Infusion on your carry for almost no health cost.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Soraka-W", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Soraka:Milio:1",
+          "text": "Aim Equinox at the spot Milio or his carry is standing in; the silence stops spells and the root holds them in place.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Milio", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Soraka:Milio:2",
+          "text": "Stay out of Milio's Ultra Mega Fire Kick line, because it stuns you and knocks you back. Stand behind a minion when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Milio-Q", "start": 20, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Soraka:Milio:3",
+          "text": "Starcall outranges most of what Milio has, so poke him from a distance while he has to walk up to land Ultra Mega Fire Kick.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Milio", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Milio-Q", "start": 103, "end": 123 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "31a6dc71e286926e57b87d698263add81172dc1b78e52400a240d8bdabca8ef0",
+      "tips": [
+        {
+          "id": "support:Soraka:Nami:0",
+          "text": "Land Starcall on Nami or her partner first; the hit gives you Rejuvenation, which heals and speeds you up, and makes Astral Infusion nearly free.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Nami", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Soraka-W", "start": 117, "end": 132 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Soraka:Nami:1",
+          "text": "Cast Equinox on Nami when she steps up to throw a bubble; she is silenced and cannot cast, then rooted when the field ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Nami", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 65, "end": 73 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Soraka:Nami:2",
+          "text": "Sidestep Aqua Prison; it lands after a short delay, so move once you see it thrown. Use Starcall on her while her bubble is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 88, "end": 96 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Soraka:Nami:3",
+          "text": "Step out of the way of Tidal Wave; it travels slowly. Do not heal with Wish before it hits, since a slowed, knocked up target is easy to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Soraka-R", "start": 71, "end": 75 },
+            { "kind": "keyword", "key": "knocked-up", "start": 108, "end": 118 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Soraka:Nami:4",
+          "text": "Back off from an enemy carrying Tidecaller's Blessing; its boost is brief, and you avoid the slow by waiting it out.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 32, "end": 53 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0e93a141836b261ed0aec6c26a6edee6aeeac5a588d81a50e5818b1cb47c2533",
+      "tips": [
+        {
+          "id": "support:Soraka:Nautilus:0",
+          "text": "Stay out of Dredge Line range and keep minions between you and Nautilus; the anchor stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Soraka:Nautilus:1",
+          "text": "Hit Nautilus with Starcall from long range; it slows him and heals you, so you can poke without stepping forward.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 18, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "poke", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Soraka:Nautilus:2",
+          "text": "Save Equinox for when Nautilus walks up. He is silenced, then rooted when the field ends, so he cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Nautilus", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 47, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Soraka:Nautilus:3",
+          "text": "Use Starcall first, then Astral Infusion. Your ally gets Rejuvenation too and you pay almost no health.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Soraka-W", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Soraka:Nautilus:4",
+          "text": "Do not stand next to your ally in a bush or fog; if Dredge Line hits you, you are stunned and dragged into the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 52, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "baa7c92f45c5b2486f1701b731e355db38c18e8af2db865be85b12f654d1c6a8",
+      "tips": [
+        {
+          "id": "support:Soraka:Pantheon:0",
+          "text": "Keep Equinox for when Pantheon jumps in or stands still; its silence stops his abilities, and he is rooted when the field ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Soraka:Pantheon:1",
+          "text": "Poke Pantheon with Starcall from long range; it slows him and heals you when it hits.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Soraka:Pantheon:2",
+          "text": "Stay away from low health around Pantheon; a thrown Comet Spear hits much harder on weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Soraka:Pantheon:3",
+          "text": "When Pantheon vaults onto your carry and stuns them, heal them with Astral Infusion right away.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Soraka-W", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Soraka:Pantheon:4",
+          "text": "Do not waste damage on Pantheon while Aegis Assault is facing you; he ignores hits from the front. Wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Soraka:Pantheon:5",
+          "text": "Use Wish when Grand Starfall lands on your team; it heals everyone from any distance.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-R", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6d05d24418c0f04e35546c03c7ccbf53bdfc5375314c4282f205288bb812980e",
+      "tips": [
+        {
+          "id": "support:Soraka:Pyke:0",
+          "text": "Hit Pyke with Starcall when he walks up to the minions; it slows him and heals you, so you can trade back safely.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Soraka:Pyke:1",
+          "text": "Hold Equinox for when Pyke comes in on you; it silences him so he can't cast his abilities, then roots him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Pyke", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "silenced", "start": 47, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Soraka:Pyke:2",
+          "text": "Stay behind your minions and away from Pyke's range. Bone Skewer pulls the first enemy it hits, and a pulled Soraka is easy to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 53, "end": 64 },
+            { "kind": "champion", "key": "Soraka", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Soraka:Pyke:3",
+          "text": "Keep your health up with Astral Infusion and Wish. Pyke can execute low-health champions with Death From Below, and he can do it to your lane partner too.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 25, "end": 40 },
+            { "kind": "ability", "key": "Soraka-R", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Pyke", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Pyke-R", "start": 94, "end": 110 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Soraka:Pyke:4",
+          "text": "Pyke heals back damage when you can't see him, so don't chase him into the fog. Take your trade and stay near your ally.",
+          "refs": [{ "kind": "champion", "key": "Pyke", "start": 0, "end": 4 }],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "653bcc16f0fbaa9260345d228a44d366880900124d1c85fa2da37cd484b432f5",
+      "tips": [
+        {
+          "id": "support:Soraka:Senna:0",
+          "text": "Land Starcall on Senna when she walks up to attack; it slows her and heals you, so you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Soraka:Senna:1",
+          "text": "Senna has long range, so stay out of her reach. Use Starcall to poke her from a distance instead of walking into her shots.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 52, "end": 60 },
+            { "kind": "keyword", "key": "poke", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Soraka:Senna:2",
+          "text": "Cast Equinox where Senna is standing when she uses Last Embrace or Piercing Darkness; she is silenced and cannot cast more.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Senna", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Senna-W", "start": 51, "end": 63 },
+            { "kind": "ability", "key": "Senna-Q", "start": 67, "end": 84 },
+            { "kind": "keyword", "key": "silenced", "start": 93, "end": 101 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Soraka:Senna:3",
+          "text": "Equinox roots when it ends, so cast it on Senna when your allies are ready to follow up. Aim it where she is likely to stay.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "rooted", "start": 8, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Soraka:Senna:4",
+          "text": "Last Embrace roots after a short delay, so move out of its area quickly after it hits you. Walk sideways to dodge it, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "534157008a4482cb987d2b573081f196d00f01fff81c0cb039dd079bae1bcec1",
+      "tips": [
+        {
+          "id": "support:Soraka:Seraphine:0",
+          "text": "Poke with Starcall when Seraphine walks up to last-hit; hitting her also gives you Rejuvenation, which heals you and makes Astral Infusion cheap.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Seraphine", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Soraka-W", "start": 123, "end": 138 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Soraka:Seraphine:1",
+          "text": "Stay out of line with Beat Drop. After Starcall slows you, it roots you instead, so avoid using Starcall near her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 96, "end": 104 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Soraka:Seraphine:2",
+          "text": "Use Equinox on Seraphine when she commits to a fight. The silence stops her spells, and the root that follows keeps her in place.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Seraphine", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "silenced", "start": 58, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Soraka:Seraphine:3",
+          "text": "Seraphine's Encore charm can reach far through champions. Stay away from the line of enemies and allies, and save Equinox to punish her cast.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Soraka-E", "start": 114, "end": 121 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Soraka:Seraphine:4",
+          "text": "After a fight, use Wish when your allies are low. It heals more on low-health allies, wherever they are.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-R", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a40d7fa7c9c234ba84e35e34710dfd0ddc8522318170cb386e58ccd434b0586a",
+      "tips": [
+        {
+          "id": "support:Soraka:Sona:0",
+          "text": "Use Starcall on Sona when she walks up to poke; it slows her and heals you through Rejuvenation.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Sona", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Soraka:Sona:1",
+          "text": "Aim Equinox where Sona will stand to trade. It silences her, so she can't cast, then roots her when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Sona", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "silenced", "start": 47, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Soraka:Sona:2",
+          "text": "After Starcall hits, cast Astral Infusion on your carry. It costs you almost no health and gives them Rejuvenation too.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Soraka-W", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Soraka:Sona:3",
+          "text": "Stay out of Crescendo's line when Sona reaches level 6. It stuns everything in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Sona", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Soraka:Sona:4",
+          "text": "Don't spam Astral Infusion without Rejuvenation. It costs you a lot of health, and Sona's Hymn of Valor pokes you.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-W", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Sona", "start": 83, "end": 87 },
+            { "kind": "ability", "key": "Sona-Q", "start": 90, "end": 103 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0c374b6fb070f77ae9f2c55069b40bcc70de398dc0416fa7d6bfc6cfca7fce3e",
+      "tips": [
+        {
+          "id": "support:Soraka:Thresh:0",
+          "text": "Stay out of Death Sentence range and watch for his cast to begin; if you get hooked, you are stunned and pulled in.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Soraka:Thresh:1",
+          "text": "Aim Equinox at Thresh when he walks up to hook or collect souls; the silence stops his spells and the root holds him in place.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Thresh", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "silenced", "start": 69, "end": 76 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Soraka:Thresh:2",
+          "text": "Poke him with Starcall when he steps forward; hitting a champion also heals you and speeds you up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Soraka:Thresh:3",
+          "text": "Hold Equinox for when he commits to an engage; it has a long cooldown, so do not spend it just to harass.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Soraka:Thresh:4",
+          "text": "Use Wish when your partner is caught by The Box or a hook; it heals them from any distance, and more if they are low.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-R", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Thresh-R", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

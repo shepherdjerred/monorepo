@@ -1,0 +1,2062 @@
+{
+  "schemaVersion": 1,
+  "champion": "DrMundo",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "00dd3831a8b3d4e9ce0382ccd94611db302c79810ff3b6349b02086e8cf8e035",
+      "tips": [
+        {
+          "id": "top:DrMundo:general:0",
+          "text": "Throw Infected Bonesaw at enemy champions, not just minions; hitting a champion gives back all the Health it cost, and it slows them.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 122, "end": 127 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:DrMundo:general:1",
+          "text": "Aim Infected Bonesaw down the lane carefully. It stops at the first enemy it hits, so a minion in the way takes it instead of the enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:DrMundo:general:2",
+          "text": "Turn on Heart Zapper when you expect to take damage, then recast it while an enemy champion is close to heal the most.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 8, "end": 20 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:DrMundo:general:3",
+          "text": "Use Blunt Force Trauma on your next attack to hit harder, especially when you are low on Health. It also clears a wave faster, since it hits minions harder.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:DrMundo:general:4",
+          "text": "If Blunt Force Trauma kills a target, the body flies off and hurts enemies it passes through. Aim kills toward other enemies.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 3, "end": 21 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:DrMundo:general:5",
+          "text": "Walk over the canister that Goes Where He Pleases drops to heal and bring the passive back sooner. Grab it before an enemy champion destroys it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 28,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:DrMundo:general:6",
+          "text": "Walk into stuns and roots when the passive is ready; Mundo resists the first one. Wait for it to return before diving into crowd control.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:DrMundo:general:7",
+          "text": "Save Maximum Dosage for a fight with several enemies nearby, once you are hurt. It gives more Health the lower you are and the more enemies are close.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:DrMundo:general:8",
+          "text": "Use the Move Speed from Maximum Dosage to chase down enemies or to escape once you have healed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0714702dcf51ad050ca79c333a0cb713691e21d9cd106d9093ab863b9f7b11a6",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:general:0",
+          "text": "Throw Infected Bonesaw at monsters and enemy champions; hitting either gives back all of its Health cost. Hitting anything else only gives back half.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:DrMundo:general:1",
+          "text": "Use Infected Bonesaw on a chasing enemy. It hits the first enemy in its path and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:DrMundo:general:2",
+          "text": "Turn on Heart Zapper before you take damage, then recast it to heal what you stored. The heal is bigger if you hit an enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 8, "end": 20 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:DrMundo:general:3",
+          "text": "Walk over the canister that Goes Where He Pleases drops to heal and bring the ability back sooner. Enemy champions can destroy it first, so grab it fast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 28,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:DrMundo:general:4",
+          "text": "Let enemies waste stuns and roots on you. Goes Where He Pleases blocks the first one, so walk in first when you start a fight.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 28, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 42,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:DrMundo:general:5",
+          "text": "Use Blunt Force Trauma on camps for extra damage. It hits harder the lower your Health is, so use it when you are hurt.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:DrMundo:general:6",
+          "text": "Save Maximum Dosage for a fight where several enemies are close. It heals more with each nearby enemy champion once it is max rank.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:DrMundo:general:7",
+          "text": "Use Maximum Dosage when you are low but still alive. It gives you more max Health based on what you are missing, plus Move Speed to chase or escape.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "2e2e7dc87dbdcf055b9154dcb53b7924aa3c0f40bb2f221a46089f1b855522bd",
+      "tips": [
+        {
+          "id": "top:DrMundo:Aatrox:0",
+          "text": "Hit Aatrox with Infected Bonesaw whenever he walks up to last-hit; it hurts more the healthier he is and leaves him slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:DrMundo:Aatrox:1",
+          "text": "Aim Infected Bonesaw at Aatrox, not minions. Hitting a champion gives back all of its health cost.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:DrMundo:Aatrox:2",
+          "text": "Do not fear Infernal Chains. Goes Where He Pleases ignores the first immobilizing effect, though it costs some health and drops a canister to walk over.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 12, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 29,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:DrMundo:Aatrox:3",
+          "text": "Start Heart Zapper when Aatrox commits to a trade, then recast it while he is still next to you to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:DrMundo:Aatrox:4",
+          "text": "Trade once Blunt Force Trauma is ready. It hits harder the lower your health gets, so you can fight back even when hurt.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 11, "end": 29 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:DrMundo:Aatrox:5",
+          "text": "Save Maximum Dosage for when Aatrox and his allies are all close, since more nearby enemies means more healing.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0076766e64306c8d6e60a00a37059545530f86f2fa33c7f8efc35c63b72a2e27",
+      "tips": [
+        {
+          "id": "top:DrMundo:Briar:0",
+          "text": "Throw Infected Bonesaw at Briar when she leaps in or walks up; it slows her and you heal back the health it costs when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:DrMundo:Briar:1",
+          "text": "Her Head Rush stun is blocked by Goes Where He Pleases, so you can wait for it and then trade back. Walk over the canister to heal and bring the passive back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 14, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 33,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:DrMundo:Briar:2",
+          "text": "Cast Heart Zapper when Briar jumps on you, then recast it on her to heal back the damage you took.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:DrMundo:Briar:3",
+          "text": "Hit Briar with Blunt Force Trauma once you are lower on health, because it hits harder the more health you are missing.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 15, "end": 33 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:DrMundo:Briar:4",
+          "text": "Save Maximum Dosage for when Briar locks onto you with Certain Death; it heals more with enemies close by, so fight her in it.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-R", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bb51850d9e8afe0f02111e7312b2162605263f7eded8bd150e17dd9547bbfa28",
+      "tips": [
+        {
+          "id": "top:DrMundo:Darius:0",
+          "text": "Walk over the canister Goes Where He Pleases drops after Darius pulls you; it heals you and brings the passive back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 23,
+              "end": 44
+            },
+            { "kind": "champion", "key": "Darius", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:DrMundo:Darius:1",
+          "text": "Darius's Apprehend pull is blocked by your passive, so make him spend it, then trade while the passive is down only if you are healthy.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Darius-E", "start": 9, "end": 18 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:DrMundo:Darius:2",
+          "text": "Throw Infected Bonesaw at Darius whenever he walks up; it slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:DrMundo:Darius:3",
+          "text": "Start Heart Zapper just before Darius hits you, then recast it on him to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:DrMundo:Darius:4",
+          "text": "Avoid long fights with five Hemorrhage stacks on you; Darius gains big damage, so back off and let the bleed fade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 28,
+              "end": 38
+            },
+            { "kind": "champion", "key": "Darius", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:DrMundo:Darius:5",
+          "text": "Use Maximum Dosage before Noxian Guillotine lands to survive his burst. Fight him when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Darius-R", "start": 26, "end": 43 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2a72b94357da808d0cb89f0bffaf28833a7dd8d01a9f6645e16891b847148d98",
+      "tips": [
+        {
+          "id": "top:DrMundo:Fiora:0",
+          "text": "Throw Infected Bonesaw when Fiora walks up to the minions; it slows her and hits harder the more health she has.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Fiora", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:DrMundo:Fiora:1",
+          "text": "Fiora's Riposte blocks everything for a moment, so wait it out before you commit your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "top:DrMundo:Fiora:2",
+          "text": "Don't rely on stunning or rooting her. Riposte can turn that against you, so keep your Goes Where He Pleases ready for the fight instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 39, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 87,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:DrMundo:Fiora:3",
+          "text": "Start a trade with Heart Zapper when she lunges in. You store the damage she deals, then recast it on her to heal.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:DrMundo:Fiora:4",
+          "text": "Use Maximum Dosage when she uses Grand Challenge on you, to heal through the Vitals and keep up with her speed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Fiora-R", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "08dc115d767417a6660a76e656ab896b85f64de79ab9207e086c1fb51430ad47",
+      "tips": [
+        {
+          "id": "top:DrMundo:Gangplank:0",
+          "text": "Land Infected Bonesaw on Gangplank early; it deals damage based on his current health, slows him, and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:DrMundo:Gangplank:1",
+          "text": "Gangplank's Powder Keg slows you, but enemies can't stop you resisting it. Walk through the blast and keep trading while you are slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 129, "end": 135 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:DrMundo:Gangplank:2",
+          "text": "Use Heart Zapper when Gangplank pokes you or trades with you; it stores damage, then Recast heals you if it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gangplank", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:DrMundo:Gangplank:3",
+          "text": "Gangplank cleanses with Remove Scurvy, so slows and stuns from your side are not guaranteed. Don't count on pinning him down with them.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:DrMundo:Gangplank:4",
+          "text": "Take fights once Maximum Dosage is ready; Gangplank's burst has trouble finishing you while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "Gangplank", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72f6a164362d4dc0aaf9b582130611e9d0e8e94852cbecb0c63c3d7e5b4aca1b",
+      "tips": [
+        {
+          "id": "top:DrMundo:Garen:0",
+          "text": "Land Infected Bonesaw on Garen from long range; it hurts more the healthier he is and slows him, so he can't catch you easily.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Garen", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:DrMundo:Garen:1",
+          "text": "Garen's Decisive Strike will silence you, so don't count on Heart Zapper right after he lands it. Cast Heart Zapper before he gets close.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 60, "end": 72 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 103, "end": 115 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:DrMundo:Garen:2",
+          "text": "Use Heart Zapper when Garen walks in to trade, then recast it to heal back what you stored. The heal is bigger if it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:DrMundo:Garen:3",
+          "text": "Keep hitting Garen with Infected Bonesaw and Blunt Force Trauma while he is hurt, so Perseverance can't start his fast regeneration.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 24, "end": 40 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 45, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 85,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:DrMundo:Garen:4",
+          "text": "Garen's Demacian Justice hurts more the lower you are. Use Maximum Dosage to get your health back up before he gets to level 6 range.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-R", "start": 8, "end": 24 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:DrMundo:Garen:5",
+          "text": "Garen's Judgment hits the nearest enemy harder, so fight near minions or your own damage will be spread out.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-E", "start": 8, "end": 16 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a75e8995a4c59886b0532edf0658d9602af0fb397827e9b950550d60e853a87",
+      "tips": [
+        {
+          "id": "top:DrMundo:Jayce:0",
+          "text": "Walk over the canister that drops when Goes Where He Pleases blocks Jayce's Thundering Blow. It heals you and shortens the passive's cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 39,
+              "end": 60
+            },
+            { "kind": "champion", "key": "Jayce", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:DrMundo:Jayce:1",
+          "text": "Land Infected Bonesaw on Jayce while he is in cannon form and poking you. It hurts, slows him and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:DrMundo:Jayce:2",
+          "text": "Start Heart Zapper before Jayce's burst lands. Recast it while he is next to you and you heal the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:DrMundo:Jayce:3",
+          "text": "Trade when Jayce is in hammer form and close. Blunt Force Trauma hits harder the lower your health is.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:DrMundo:Jayce:4",
+          "text": "Save Maximum Dosage for when Jayce commits his burst. It heals more the more enemies are near you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "16cf35027b6b37895edbb52c94b62fa1379d0dd91ba9c6c1a42ddb4dde6602cf",
+      "tips": [
+        {
+          "id": "top:DrMundo:KSante:0",
+          "text": "Throw Infected Bonesaw at K'Sante whenever he walks up to trade; it slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "KSante", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:DrMundo:KSante:1",
+          "text": "Goes Where He Pleases resists the first stun from K'Sante. Walk over the canister to heal and bring the passive back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 0,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "KSante", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:DrMundo:KSante:2",
+          "text": "Use Heart Zapper when K'Sante fights you up close, then recast it to heal back the damage you took. It heals more if it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "KSante", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:DrMundo:KSante:3",
+          "text": "Save Maximum Dosage for after K'Sante goes All Out. He loses a lot of health and defense then, so you can fight him at his weakest.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "KSante-R", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:DrMundo:KSante:4",
+          "text": "Hit K'Sante with Blunt Force Trauma once you are low on health. It hits harder the less health you have.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4f841b58fc371affcf8c1557aa6c1c619fc096b785b4bfc6ec3653eb0f148a84",
+      "tips": [
+        {
+          "id": "top:DrMundo:Malphite:0",
+          "text": "Land Infected Bonesaw on Malphite whenever he walks up to trade; it slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Malphite", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:DrMundo:Malphite:1",
+          "text": "Malphite's Unstoppable Force knocks you up, but Goes Where He Pleases can resist it. Walk over the canister afterward to heal and shorten its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 48,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:DrMundo:Malphite:2",
+          "text": "Press Heart Zapper before Malphite trades with you, then recast it on him. You heal back the damage you took, and all of it if you hit a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Malphite", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:DrMundo:Malphite:3",
+          "text": "Hit Malphite with Blunt Force Trauma when you are lower on health, because it hits harder the more health you are missing.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:DrMundo:Malphite:4",
+          "text": "Malphite's Ground Slam cuts your Attack Speed. Do not walk into his range with Blunt Force Trauma ready, or your attacks will come out slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-E", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 79, "end": 97 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f29ac966430e01a797ed17f6e785204a89999679cc6ec83cd6a6641cfc411df2",
+      "tips": [
+        {
+          "id": "top:DrMundo:Mordekaiser:0",
+          "text": "Save Heart Zapper for when Mordekaiser commits to a trade; stand next to him, then recast it to turn the damage you took into health.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:DrMundo:Mordekaiser:1",
+          "text": "Land Infected Bonesaw on Mordekaiser rather than on minions; it slows him and gives you back the Health it cost.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 25,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:DrMundo:Mordekaiser:2",
+          "text": "Death's Grasp will pull you in, so aim to sidestep it. Keep the pull from landing, since it also feeds his Darkness Rise.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 0,
+              "end": 13
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 107,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:DrMundo:Mordekaiser:3",
+          "text": "Goes Where He Pleases blocks the first stun or root on you. Pick up the canister afterwards to heal and bring the passive back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 0,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "stunned", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:DrMundo:Mordekaiser:4",
+          "text": "Don't stay in a long fight once Darkness Rise is active; back off and come in again when it fades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 32,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:DrMundo:Mordekaiser:5",
+          "text": "Use Maximum Dosage when Mordekaiser is next to you and you are hurt. It heals you more with enemies close by, so fight through his damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4de31cb5cfbd721652497ae368da0d75d9b7d3e5d34e67d87f926a3f87b83067",
+      "tips": [
+        {
+          "id": "top:DrMundo:Rumble:0",
+          "text": "Throw Infected Bonesaw at Rumble when he walks up to trade; it hurts more the healthier he is and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Rumble", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:DrMundo:Rumble:1",
+          "text": "Aim Infected Bonesaw at Rumble, not minions, when you can; hitting a champion gives back all the Health it cost.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Rumble", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:DrMundo:Rumble:2",
+          "text": "Start Heart Zapper when Rumble's harpoons or flames are about to land, then detonate it on him to heal back what you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Rumble", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:DrMundo:Rumble:3",
+          "text": "Rumble deals mostly magic damage, so fight him when you can heal through his trades and walk away with more Health than you started.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:DrMundo:Rumble:4",
+          "text": "Rumble can't cast spells while he overheats, so step in and hit him with Blunt Force Trauma then.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:DrMundo:Rumble:5",
+          "text": "Slowing effects won't hold you well; Goes Where He Pleases blocks the first one that would stop your movement, so close in on him freely.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 37,
+              "end": 58
+            }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9d45dcc1b3c03d8fb503f60811b35ec0ffdfbb4962aafeae82b8482416e4e8d1",
+      "tips": [
+        {
+          "id": "top:DrMundo:Sion:0",
+          "text": "Stay out of a long Decimating Smash. If Sion holds the charge, step out of the area rather than walking into the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Sion", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:DrMundo:Sion:1",
+          "text": "Bait Sion into using an early stun on Goes Where He Pleases. It resists the first immobilizing effect, so his big hit gets wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 38,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:DrMundo:Sion:2",
+          "text": "Throw Infected Bonesaw at Sion whenever he is in range. It hits harder against high current Health, slows him, and heals you when it lands on a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Sion", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:DrMundo:Sion:3",
+          "text": "Do not fight Sion once he dies. Glory in Death makes him hit very fast for a short time, so walk away until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:DrMundo:Sion:4",
+          "text": "Use Heart Zapper when you expect to take damage from Sion, then recast it next to him to heal back the stored damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sion", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "90e42e5b9714e948a2f77ffc251e905a181f5f7844d7a2373a5ae0d7c6acf80a",
+      "tips": [
+        {
+          "id": "top:DrMundo:Teemo:0",
+          "text": "Hit Teemo with Infected Bonesaw when he steps up to poke or farm. It slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:DrMundo:Teemo:1",
+          "text": "Walk over the canister from Goes Where He Pleases. It heals you and shortens the cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 28,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:DrMundo:Teemo:2",
+          "text": "Watch for Teemo's mushrooms in bushes and on your path. Walking into one slows you and reveals you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 10, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:DrMundo:Teemo:3",
+          "text": "Once you reach Teemo, use Heart Zapper while he hits you, then recast it to heal back the stored damage.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:DrMundo:Teemo:4",
+          "text": "Use Blunt Force Trauma on Teemo when you are close. It hits harder as your Health drops.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:DrMundo:Teemo:5",
+          "text": "Wait to use Maximum Dosage until Teemo's poison is on you and you are committed to the fight.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Teemo", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4e85a85585208a0c47586ec51ab2b57ddd2028df4c44df4d2a2e2185060c0d61",
+      "tips": [
+        {
+          "id": "top:DrMundo:Vayne:0",
+          "text": "Throw Infected Bonesaw at Vayne whenever she walks up to farm; it slows her and heals you back. Her tumbling away won't dodge a bonesaw already thrown.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:DrMundo:Vayne:1",
+          "text": "Stay away from walls when Vayne has Condemn ready. Goes Where He Pleases blocks the stun only while it is available, so check that it is up.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 51,
+              "end": 72
+            },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:DrMundo:Vayne:2",
+          "text": "Press Heart Zapper when Vayne trades with you, then recast it once she is in range. You get back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:DrMundo:Vayne:3",
+          "text": "Walk over the canister that Goes Where He Pleases drops, but only when Vayne is not hitting you. It heals you and shortens the cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 28,
+              "end": 49
+            },
+            { "kind": "champion", "key": "Vayne", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:DrMundo:Vayne:4",
+          "text": "Use Blunt Force Trauma once Vayne is low on health. It hits harder the lower your own health is.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9c4c1b9d2ee623b50cbd7f33dc04e278cc20b6c44fcc7a7e4faeacea04c71706",
+      "tips": [
+        {
+          "id": "top:DrMundo:Yone:0",
+          "text": "Land Infected Bonesaw on Yone whenever you can; it slows him and heals you back. Use it on him instead of minions when you can.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:DrMundo:Yone:1",
+          "text": "Yone's Fate Sealed stun and knock up will not work on you the first time, thanks to Goes Where He Pleases. Pick up the canister afterward to heal.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-R", "start": 7, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 28, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 84,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:DrMundo:Yone:2",
+          "text": "Start Heart Zapper before Yone trades with you, then recast it on him to turn the damage you took into healing.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:DrMundo:Yone:3",
+          "text": "Use Maximum Dosage when Yone dives you at level 6. It heals more with him close by, so fight him while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:DrMundo:Yone:4",
+          "text": "Hit Yone with Blunt Force Trauma once you are hurt. It deals more damage the lower your health is.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 14, "end": 32 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "77f0872ef5def5ce9500ea1d9a8be4b10782a7ef0c89f3b3fca9abb3065ba24f",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Graves:0",
+          "text": "Land Infected Bonesaw on Graves whenever you can; it slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Graves", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:DrMundo:Graves:1",
+          "text": "Graves has no stun or root to waste on you, so your Goes Where He Pleases rarely matters in this fight. Walk up and fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "stunned", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 22, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 52,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:DrMundo:Graves:2",
+          "text": "Start Heart Zapper when you go in on Graves. Recast it while he is still in range to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:DrMundo:Graves:3",
+          "text": "Chase him down when Graves has fired both shells and is reloading. He cannot attack during that time.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:DrMundo:Graves:4",
+          "text": "Use Maximum Dosage once Graves has spent his big abilities. The heal and Move Speed let you run him down.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7bfe44941b75cb9163333b9b8e0a64d2d27a17b3533d5eb2618d9c16be1baeb",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:JarvanIV:0",
+          "text": "Hit Jarvan with Infected Bonesaw to slow him and heal back its cost. Aim it down the line he must walk to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:DrMundo:JarvanIV:1",
+          "text": "Jarvan's Dragon Strike and Cataclysm can stop you in place. Goes Where He Pleases blocks the first one, so fight when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 27, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 60,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:DrMundo:JarvanIV:2",
+          "text": "Start Heart Zapper before Jarvan lands his burst. You store the damage he deals and heal it back when you recast on him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:DrMundo:JarvanIV:3",
+          "text": "Save Maximum Dosage for when Jarvan commits with Cataclysm. His terrain keeps you both inside, so heal through the fight.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:DrMundo:JarvanIV:4",
+          "text": "Pick up the canister Goes Where He Pleases drops before Jarvan can destroy it. It heals you and brings the passive back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 21,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e6deaad26e9a86778eae0e06be004c0c6430a205571f038b9f3b0f5d4d30fa07",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Kayn:0",
+          "text": "Walk over the canister Goes Where He Pleases drops when Kayn stuns or roots you; it heals you and shortens the passive's cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 23,
+              "end": 44
+            },
+            { "kind": "champion", "key": "Kayn", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:DrMundo:Kayn:1",
+          "text": "Land Infected Bonesaw on Kayn before he commits; it slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:DrMundo:Kayn:2",
+          "text": "Start Heart Zapper when Kayn dives onto you, then recast it to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:DrMundo:Kayn:3",
+          "text": "Save Maximum Dosage for when Kayn is on you or his team is chasing; it heals more with more enemies nearby.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:DrMundo:Kayn:4",
+          "text": "Fight Kayn when your health is low enough to boost Blunt Force Trauma; the bonus damage grows as you lose health.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 51, "end": 69 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2870014cbd1261650ca9a60c9664042b39a97182710ca1937814c3f8acfacec6",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Khazix:0",
+          "text": "Stay near your allies, minions or a turret when Kha'Zix is around; Taste Their Fear hits far harder on a target who is isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 67, "end": 83 },
+            { "kind": "keyword", "key": "isolated", "start": 119, "end": 127 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:DrMundo:Khazix:1",
+          "text": "Land Infected Bonesaw on Kha'Zix when he jumps in; it slows him and heals you back.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Khazix", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:DrMundo:Khazix:2",
+          "text": "Press Heart Zapper as soon as Kha'Zix dives you, then recast it to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:DrMundo:Khazix:3",
+          "text": "Kha'Zix cannot easily stun you, so walk into him; Goes Where He Pleases blocks the first immobilizing effect.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 50,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:DrMundo:Khazix:4",
+          "text": "Fight when Leap and Void Assault are on cooldown; Kha'Zix has no easy escape and you out-sustain him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Khazix-R", "start": 20, "end": 32 },
+            { "kind": "champion", "key": "Khazix", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:DrMundo:Khazix:5",
+          "text": "Save Maximum Dosage for when Kha'Zix commits; it heals you more with enemies close.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1f2577c5875d31963bb95c8eaee998d13b03a58bd24537838195f6e9b2a7e336",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Kindred:0",
+          "text": "Hit Kindred with Infected Bonesaw when she dashes in or tries to run; it slows her and hurts more the healthier she is.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:DrMundo:Kindred:1",
+          "text": "Kindred is fragile, so keep pressure on her and force her to play safe instead of invading or chasing Hunts.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:DrMundo:Kindred:2",
+          "text": "Her Lamb's Respite stops anyone dying in the zone, so don't spend your burst on a target inside it. Wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:DrMundo:Kindred:3",
+          "text": "Walk onto your canister after Goes Where He Pleases blocks her Mounting Dread slow, so you heal and get the passive back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 30,
+              "end": 51
+            },
+            { "kind": "ability", "key": "Kindred-E", "start": 63, "end": 77 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "jungle:DrMundo:Kindred:4",
+          "text": "Use Heart Zapper when you are about to take her damage, then recast it on her to heal back the stored health.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "40547a5ab68862d6e43d36f288bf1c7b4c8bb1a8a8cf0c2b2fdff06d5172eac2",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:LeeSin:0",
+          "text": "Keep Infected Bonesaw for when Lee Sin walks into range; it hurts more the healthier he is and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "LeeSin", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:DrMundo:LeeSin:1",
+          "text": "Lee Sin's Dragon's Rage roots you in place, so Goes Where He Pleases can resist it; walk over the canister afterward to heal.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 24, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 47,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:DrMundo:LeeSin:2",
+          "text": "Use Heart Zapper when Lee Sin jumps on you, then recast it on him to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:DrMundo:LeeSin:3",
+          "text": "Take fights when you are low on Health; Blunt Force Trauma hits harder then. Save Maximum Dosage for when Lee Sin commits.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 40, "end": 58 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 82, "end": 96 },
+            { "kind": "champion", "key": "LeeSin", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a6b4b827154acea514a71090080ff93139b3ba387a737f066564c39e879f11a",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:MasterYi:0",
+          "text": "Hit Master Yi with Infected Bonesaw when he jumps in. It slows him unless Highlander is active, and it heals you when it hits a champion.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:DrMundo:MasterYi:1",
+          "text": "Wait for Highlander to end before you try to slow him. While it lasts, a slow won't hold him, so save Infected Bonesaw for other uses.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 9, "end": 19 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 102, "end": 118 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:DrMundo:MasterYi:2",
+          "text": "Use Heart Zapper when he is on top of you. It damages him and stores damage you take, then heals you when you recast it.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:DrMundo:MasterYi:3",
+          "text": "Use Maximum Dosage when Master Yi commits. It gives you extra health and healing, which helps you outlast his damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:DrMundo:MasterYi:4",
+          "text": "Walk over the canister from Goes Where He Pleases to heal and shorten its cooldown. Pick it up before an enemy can destroy it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 28,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "14952189d066558ebba35108334a4d0baf0da59930d555d551fb8b3fd47ba793",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Naafiri:0",
+          "text": "Throw Infected Bonesaw at Naafiri whenever you can; it slows her and heals you back when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Naafiri", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:DrMundo:Naafiri:1",
+          "text": "Naafiri has no stun or root, so Goes Where He Pleases is rarely spent on her. Walk over the canister to get it back sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "stunned", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 32,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:DrMundo:Naafiri:2",
+          "text": "Start Heart Zapper when she dives in; it hurts her and her Packmates, and you recast it to heal back what you took.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:DrMundo:Naafiri:3",
+          "text": "Save Maximum Dosage for after Hounds' Pursuit lands, then fight back. Her burst is short, and you heal through it.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:DrMundo:Naafiri:4",
+          "text": "Fight her near your own jungle camps with Blunt Force Trauma ready; the hit is stronger the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4d58112b39d7d225ca33bbfbee57cb5402445bb46146e747e10d8bef61a13da7",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Nocturne:0",
+          "text": "Nocturne's Unspeakable Horror fear can't hold you: Goes Where He Pleases resists the first one, so walk through his tether without panic.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 11, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 51,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:DrMundo:Nocturne:1",
+          "text": "Aim Infected Bonesaw at Nocturne when he dashes in; it hits for a share of his current health and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Nocturne", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:DrMundo:Nocturne:2",
+          "text": "Nocturne's Shroud of Darkness blocks one ability, so bait it with a weak Infected Bonesaw before you commit your bigger spells.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 11, "end": 29 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 73, "end": 89 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:DrMundo:Nocturne:3",
+          "text": "When Nocturne jumps on you with Paranoia, use Heart Zapper right away; it stores the damage he deals, and you heal it back if you hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:DrMundo:Nocturne:4",
+          "text": "Fight him once Maximum Dosage is ready; the extra health and healing outlast his burst.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c10b8374567df233a1059ed446cc85e30a671651c03d5547931fc940a993e0cf",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Shyvana:0",
+          "text": "Land Infected Bonesaw on Shyvana before she transforms; it hurts more the healthier she is and leaves her slowed so you can close in.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Shyvana", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:DrMundo:Shyvana:1",
+          "text": "Do not count on Goes Where He Pleases against the slow from Molten Burst; a slow does not stop you from moving, so it is not blocked.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 16,
+              "end": 37
+            },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 60, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:DrMundo:Shyvana:2",
+          "text": "Press Heart Zapper when she commits to a fight, then recast it on her to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:DrMundo:Shyvana:3",
+          "text": "Save Maximum Dosage for when Shyvana is in Dragon Form and you are low; it heals more with enemies near you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:DrMundo:Shyvana:4",
+          "text": "Walk over the canister from Goes Where He Pleases to heal, but grab it before Shyvana can destroy it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 28,
+              "end": 49
+            },
+            { "kind": "champion", "key": "Shyvana", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "343fbe8ace4250d86f1f12ca0afd91b2244d7fd99ff128a6e64ba93d03ce726e",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Skarner:0",
+          "text": "Walk over the canister Goes Where He Pleases drops after Skarner's Ixtal's Impact is resisted; it heals you and shortens the cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 23,
+              "end": 44
+            },
+            { "kind": "champion", "key": "Skarner", "start": 57, "end": 64 },
+            { "kind": "ability", "key": "Skarner-E", "start": 67, "end": 81 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:DrMundo:Skarner:1",
+          "text": "Land Infected Bonesaw on Skarner whenever you can; it hurts more the healthier he is and slows him, and hitting a champion gives you the health back.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Skarner", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:DrMundo:Skarner:2",
+          "text": "Start Heart Zapper when Skarner commits to a fight, then recast it while he is in range to heal back the damage you took.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:DrMundo:Skarner:3",
+          "text": "Keep your distance from Skarner's Impale; being suppressed by it leaves you unable to act. Save Maximum Dosage for after you are out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Skarner-R", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 96, "end": 110 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:DrMundo:Skarner:4",
+          "text": "Trade with Blunt Force Trauma once you are low on health; it hits harder the less health you have.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-E", "start": 11, "end": 29 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8a6115dc9219158df1ef443eaba4a0647f78d0b4b83f4123fe36490e540e9e38",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Sylas:0",
+          "text": "Aim Infected Bonesaw at Sylas when he is healthy; it hurts more the more health he has, and it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:DrMundo:Sylas:1",
+          "text": "Sylas's Abduct stun is resisted by Goes Where He Pleases, so you can stand and fight when he pulls in on you the first time.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 35,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:DrMundo:Sylas:2",
+          "text": "Walk over the canister after resisting a stun, so you heal and get your passive back sooner. Sylas can destroy it if he reaches it first.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:DrMundo:Sylas:3",
+          "text": "Start Heart Zapper before Sylas hits you, then detonate on him to heal back the damage you stored.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:DrMundo:Sylas:4",
+          "text": "Do not stay low near Sylas; Kingslayer heals him and hits hard. Use Maximum Dosage when you commit to a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Sylas-W", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "cf16c1d17ea5abe5364597e729858169c3b02fb0f2be2786f00f45707e7ea1d6",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Talon:0",
+          "text": "Throw Infected Bonesaw at Talon whenever he is in line; it slows him and the health you pay back is returned in full on a champion hit.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:DrMundo:Talon:1",
+          "text": "Start Heart Zapper as Talon jumps on you, then recast it while he is close. You heal back the damage he dealt.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:DrMundo:Talon:2",
+          "text": "Talon does not rely on stuns or roots, so Goes Where He Pleases rarely triggers. Do not count on it to save you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 42,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:DrMundo:Talon:3",
+          "text": "Use Maximum Dosage when Talon commits with his burst. You get much sturdier and faster, so he cannot finish you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:DrMundo:Talon:4",
+          "text": "Hit Talon with a Blunt Force Trauma attack once you are hurt; it hits harder the lower your health is.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "05f108893c2abcd69a6a1fe4c70ae6795d6e42d0a0ac2942e3fbedf974aec3ae",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:Viego:0",
+          "text": "Throw Infected Bonesaw at Viego when he charges in; he is slowed, and you heal back the Health it cost you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:DrMundo:Viego:1",
+          "text": "Viego's Spectral Maw stun is resisted by Goes Where He Pleases, so walk into his fights and make him waste it.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Viego-W", "start": 8, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 41,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:DrMundo:Viego:2",
+          "text": "Pick up the canister your passive drops after resisting a stun; it heals you and brings the passive back sooner.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:DrMundo:Viego:3",
+          "text": "Start Heart Zapper when Viego commits to a trade, then recast it so the stored damage heals you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:DrMundo:Viego:4",
+          "text": "Do not let Viego finish a kill near you. Killing a champion lets him possess the body, so back off when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 11, "end": 16 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:DrMundo:Viego:5",
+          "text": "Save Maximum Dosage for when Viego jumps on you with Heartbreaker; it adds Health and speed to outlast him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Viego-R", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "571285d7299d86a4cb912dc6f4aec856495f4c477d69290a5930ca06c699d747",
+      "tips": [
+        {
+          "id": "jungle:DrMundo:XinZhao:0",
+          "text": "Throw Infected Bonesaw at Xin Zhao as he closes in; it slows him and heals you when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:DrMundo:XinZhao:1",
+          "text": "Your passive resists the first knock up or stun, so walk into Xin Zhao's combo while it is ready, then pick up the canister.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 62, "end": 70 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:DrMundo:XinZhao:2",
+          "text": "Cast Heart Zapper when Xin Zhao jumps on you so it stores the damage you take, then recast to heal it back.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:DrMundo:XinZhao:3",
+          "text": "Hold Maximum Dosage until Xin Zhao has committed Audacious Charge and Crescent Guard; he can't burst through the healing.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 49, "end": 65 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:DrMundo:XinZhao:4",
+          "text": "Don't linger when Xin Zhao's Three Talon Strike is ready; the third hit knocks you up. Fight right after he spends it.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

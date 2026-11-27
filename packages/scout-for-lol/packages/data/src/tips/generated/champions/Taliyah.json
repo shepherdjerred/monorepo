@@ -1,0 +1,978 @@
+{
+  "schemaVersion": 1,
+  "champion": "Taliyah",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "97a26abce4654e11c66ab50c5da2a551fc3feb4787e64c36748434a35e7b5b79",
+      "tips": [
+        {
+          "id": "middle:Taliyah:general:0",
+          "text": "Cast Seismic Shove on an enemy standing in Unraveled Earth's stones. Being knocked through them sets them off and stuns the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Taliyah:general:1",
+          "text": "Throw Unraveled Earth first, then Seismic Shove. Enemies are slowed in the stones, so the shove is easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 34, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Taliyah:general:2",
+          "text": "Cast Threaded Volley once to make Worked Ground, then cast it again while standing on it. The second cast is a cheap, fast boulder that slows.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 136, "end": 141 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Taliyah:general:3",
+          "text": "Aim Threaded Volley carefully. It fires in a straight line, so enemies can sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Taliyah:general:4",
+          "text": "Aim Seismic Shove so the enemy is pushed toward your stones or away from their team. It lands after a short delay, so aim where they will be.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Taliyah:general:5",
+          "text": "Stay near walls when you are not fighting. Rock Surfing makes you faster there, but it stops while you cast or fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taliyah-passive",
+              "start": 43,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Taliyah:general:6",
+          "text": "Use Weaver's Wall to cut off a fleeing enemy or split a fight. You only need to ride it when you want to, and you can't cast it right after taking damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-R", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Taliyah:combo:0",
+          "name": "Shove into stones",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Taliyah-E" },
+            { "kind": "ability", "key": "Taliyah-W" }
+          ],
+          "when": "Use it in lane when the enemy is standing near your minefield and you want a stun plus damage.",
+          "whenRefs": [],
+          "text": "Scatter the stones first, then aim Seismic Shove so it pushes the enemy across them. The knockback sets the stones off and stuns them.",
+          "textRefs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 35, "end": 48 }
+          ]
+        },
+        {
+          "id": "middle:Taliyah:combo:1",
+          "name": "Worked ground boulder",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Taliyah-Q" },
+            { "kind": "ability", "key": "Taliyah-Q" }
+          ],
+          "when": "Use it when you poke the enemy laner and want the slowing boulder for cheap.",
+          "whenRefs": [],
+          "text": "The first Threaded Volley leaves Worked Ground under you. Cast again while standing on it for a cheaper, faster boulder that slows.",
+          "textRefs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 10, "end": 25 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "d288976d584087995005830595d0c5e23f332932813d4e4a3f8eabcdde5c285f",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Ahri:0",
+          "text": "Cast Unraveled Earth first, then use Seismic Shove to throw Ahri into the stones for a stun and extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 37, "end": 50 },
+            { "kind": "champion", "key": "Ahri", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Taliyah:Ahri:1",
+          "text": "Stay behind your minions so Ahri's Charm hits them instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Ahri-E", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Taliyah:Ahri:2",
+          "text": "Fire Threaded Volley at Ahri when she walks up to farm. Cast it again on the Worked Ground for a slowing boulder.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Taliyah:Ahri:3",
+          "text": "Ahri is much easier to catch while Spirit Rush is on cooldown, so trade harder then.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-R", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Taliyah:Ahri:4",
+          "text": "Ahri's Orb of Deception goes out and comes back, so step out of its line instead of stopping in it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 7, "end": 23 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3aadde3e4e048f44fafa04a7e35f842d58fc497b69942890bf78a0295d44f448",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Akali:0",
+          "text": "Throw Akali with Seismic Shove into your Unraveled Earth stones when she closes in. The stun gives you time to hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Taliyah:Akali:1",
+          "text": "Put Unraveled Earth down where Akali will dash in with Shuriken Flip or Perfect Execution. Her dash sets off the stones and stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Akali-E", "start": 55, "end": 68 },
+            { "kind": "ability", "key": "Akali-R", "start": 72, "end": 89 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Taliyah:Akali:2",
+          "text": "Aim Threaded Volley at the smoke when Akali hides in Twilight Shroud. Area damage still hits her and reveals her.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Akali-W", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Taliyah:Akali:3",
+          "text": "Hit Akali when her energy is low, because Five Point Strike is much weaker then. Poke her first, then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Akali-Q", "start": 42, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Taliyah:Akali:4",
+          "text": "Play safe once Akali reaches level 6 with Perfect Execution ready, and keep your health high. A low-health Taliyah can be executed.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Akali-R", "start": 42, "end": 59 },
+            { "kind": "champion", "key": "Taliyah", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e09c1ead12858e483566a2b050775cd5629c02eedf916d5474a171d09fef4aa8",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Anivia:0",
+          "text": "Dodge Flash Frost sideways; the chunk is slow, so watch for the end of its range, where it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Taliyah:Anivia:1",
+          "text": "Use Seismic Shove to knock Anivia into your Unraveled Earth stones and stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 44, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Taliyah:Anivia:2",
+          "text": "Keep Threaded Volley going at Anivia while she stands in lane; she cannot easily dodge a barrage of rocks.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Taliyah:Anivia:3",
+          "text": "After her egg hatches, do not chase far; Rebirth gives her time to come back, so kill the egg only when it is safe.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 41,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Taliyah:Anivia:4",
+          "text": "Move out of Glacial Storm quickly; it slows you and ticks harder once fully formed.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ee446fffce5eb72518a84f26e1a12d51999fead766a3d22ae9cb7e36caf3f9d0",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Aurora:0",
+          "text": "Throw Aurora with Seismic Shove into your Unraveled Earth stones; she is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 42, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Taliyah:Aurora:1",
+          "text": "Put Unraveled Earth down where Aurora will land when she hops with Across the Veil or The Weirding; a dash sets off the stones.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Aurora-W", "start": 67, "end": 82 },
+            { "kind": "ability", "key": "Aurora-E", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Taliyah:Aurora:2",
+          "text": "Aurora's Across the Veil blink does not set off your stones if she lands on them, so aim at her path, not her landing spot.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Taliyah:Aurora:3",
+          "text": "Cast Threaded Volley twice in the same spot; the second cast is cheap, quick and slows Aurora.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 },
+            { "kind": "champion", "key": "Aurora", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Taliyah:Aurora:4",
+          "text": "Stay out of range of The Weirding line; sidestep it instead of walking straight at Aurora.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 21, "end": 33 },
+            { "kind": "champion", "key": "Aurora", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bb9e15e31245154b7e801cd1d847b34f523517e5af376778b1a0fe1dac014523",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Cassiopeia:0",
+          "text": "Use Seismic Shove to knock Cassiopeia through your Unraveled Earth stones; she gets stunned and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 27, "end": 37 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 51, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Taliyah:Cassiopeia:1",
+          "text": "Walk sideways to dodge Noxious Blast, since it lands after a short delay. Stay out of Miasma, because it blocks your dashes.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 23,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Taliyah:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Taliyah:Cassiopeia:3",
+          "text": "Throw Threaded Volley at her in a line when she is trying to poke you. It has long range and hits her even if she is moving.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "de68efd735a191c8c6bdc71e46c15eced32685359881f49c56c7b200b5c068dd",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Fizz:0",
+          "text": "Put Unraveled Earth down, then use Seismic Shove to push Fizz across the stones. He gets stunned and takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 35, "end": 48 },
+            { "kind": "champion", "key": "Fizz", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Taliyah:Fizz:1",
+          "text": "Drop Unraveled Earth where Fizz will jump in. If he dashes with Urchin Strike or Playful over the stones, he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Taliyah:Fizz:2",
+          "text": "Keep poking Fizz with Threaded Volley from range. Cast it again on the Worked Ground for a cheap, slowing boulder.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Fizz", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Taliyah:Fizz:3",
+          "text": "Wait for Fizz to use Playful before you cast anything big. He cannot be targeted while on his trident.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 9, "end": 13 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2198d0edc92210234e736842d1fafb2f4ab644c287db4155be8cac8b8e966902",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Malzahar:0",
+          "text": "Throw Malzahar into your Unraveled Earth stones with Seismic Shove; he is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 25, "end": 40 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 53, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Taliyah:Malzahar:1",
+          "text": "Hit Malzahar with Threaded Volley while he has been damaged; Void Shift only protects him when he has been left alone.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 18, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 61,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Taliyah:Malzahar:2",
+          "text": "Step out of the line of Call of the Void quickly; being silenced leaves you unable to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "silenced", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Taliyah:Malzahar:3",
+          "text": "Stay away from minions marked by Malefic Visions; when they die, it can jump onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Taliyah:Malzahar:4",
+          "text": "Kill Voidlings fast or move away; they go after targets marked by Malefic Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Taliyah:Malzahar:5",
+          "text": "Do not cast Weaver's Wall right after being hit; it cannot be used after recent damage from champions.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-R", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d626648c92989cdb1793531763caf1ece799caf2a473b741fe902ea1d0f170a3",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Orianna:0",
+          "text": "Land Seismic Shove to throw Orianna into your Unraveled Earth stones; she is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Orianna", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 46, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Taliyah:Orianna:1",
+          "text": "Orianna's attacks only reach where her Ball is, so check where it sits and stay out of that area.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Taliyah:Orianna:2",
+          "text": "Cast Threaded Volley again on the Worked Ground; the boulder hits harder and slows Orianna.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 },
+            { "kind": "champion", "key": "Orianna", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Taliyah:Orianna:3",
+          "text": "Respect Orianna at level 6; Command: Shockwave pulls you in and stuns you. Stay spread from her Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Orianna-R", "start": 28, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Taliyah:Orianna:4",
+          "text": "Fight near walls, where Rock Surfing gives you extra speed to dodge Command: Attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Taliyah-passive",
+              "start": 24,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Orianna-Q", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9d519e4269b0d30b708b509d4d43c918a170ca6c5e660abfdfecf2a7d0ae7c62",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Ryze:0",
+          "text": "Throw Ryze into your Unraveled Earth stones with Seismic Shove for a stun and extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 21, "end": 36 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 49, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Taliyah:Ryze:1",
+          "text": "Dodge Spell Flux when you can; Flux makes his Overload and Rune Prison much stronger against you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "Ryze-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Taliyah:Ryze:2",
+          "text": "Cast Threaded Volley while standing on Worked Ground for a cheap boulder that slows Ryze.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 },
+            { "kind": "champion", "key": "Ryze", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Taliyah:Ryze:3",
+          "text": "Hit Ryze with Unraveled Earth to slow him when he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1d5eecc788247f9dedbecce617657988746b4084bde5b0eb679508c7a4c2518c",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Sylas:0",
+          "text": "Aim Threaded Volley in a straight line at Sylas; the rocks fly the direction you point, so use them when he is walking toward you.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Taliyah:Sylas:1",
+          "text": "Shove Sylas with Seismic Shove into stones from Unraveled Earth; he is stunned when he lands, which sets up a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 48, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Taliyah:Sylas:2",
+          "text": "Lay Unraveled Earth on the ground before Sylas dashes in. If he uses Abscond or Kingslayer across the stones, he sets them off.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Sylas-W", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Taliyah:Sylas:3",
+          "text": "Back off when Sylas is low and Kingslayer is ready, since it heals him. Finish him with a poke from range rather than letting him dash on you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Sylas-W", "start": 31, "end": 41 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Taliyah:Sylas:4",
+          "text": "Stay out of his Abduct line; if he pulls himself to you, Seismic Shove can push him away from you afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Taliyah:Sylas:5",
+          "text": "Don't use Weaver's Wall right after taking damage from Sylas; it can't be cast for a short time after champion damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-R", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Sylas", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dd68f170d18d830b994df7588791353602594b9b719d9c98a0b19060ccb88541",
+      "tips": [
+        {
+          "id": "middle:Taliyah:TwistedFate:0",
+          "text": "Cast Unraveled Earth, then use Seismic Shove to throw the enemy through the stones so they are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Taliyah:TwistedFate:1",
+          "text": "Twisted Fate wants to land the Gold Card, so keep away when his cards are shuffling and he walks at you.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Taliyah:TwistedFate:2",
+          "text": "Threaded Volley creates Worked Ground; cast it again from there for a boulder that slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Taliyah:TwistedFate:3",
+          "text": "Watch for Destiny; when he marks you, expect a teleport gank and move toward safety.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Taliyah:TwistedFate:4",
+          "text": "Sidestep Wild Cards; the cards fly in a cone, so move out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "42954b1e89bc406ebdb4c2a19ef22f4c5be04c0c3f26b3a072ade3e4391ded7e",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Viktor:0",
+          "text": "Cast Unraveled Earth first, then use Seismic Shove to push Viktor over the stones for a stun and extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 37, "end": 50 },
+            { "kind": "champion", "key": "Viktor", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Taliyah:Viktor:1",
+          "text": "Don't stand inside Gravity Field for long; walk out before you are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Taliyah:Viktor:2",
+          "text": "Keep Viktor at range with Threaded Volley; he gets stronger the closer he is to you.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Taliyah:Viktor:3",
+          "text": "Sidestep Hextech Ray, since it is a line and its aftershock hits the same path again a moment later.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Taliyah:Viktor:4",
+          "text": "Look at his staff light to see how many upgrades he has, and play safer once he gets them.",
+          "refs": [],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "286f1cd649d72d428a3bd84cfb8f2afd5ed1c6a47a9c1434c63fc0d3f6de8af8",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Yasuo:0",
+          "text": "Throw Yasuo into Unraveled Earth with Seismic Shove; the stones stun him and deal extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Taliyah:Yasuo:1",
+          "text": "Lay Unraveled Earth where Yasuo wants to dash; if he dashes through it with Sweeping Blade, he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 76, "end": 90 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Taliyah:Yasuo:2",
+          "text": "Hold Threaded Volley while Wind Wall is up; it blocks your rocks and the boulder. Wait for it to fade.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Taliyah:Yasuo:3",
+          "text": "Do not cast Weaver's Wall in the middle of a fight if Yasuo has Wind Wall ready, because it stops the wall.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-R", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Yasuo", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 64, "end": 73 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Taliyah:Yasuo:4",
+          "text": "Do not use Seismic Shove to knock enemies up for Yasuo; he can follow it with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Yasuo", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 78, "end": 89 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "64d5b96affd2b11bfebd31b0d14933e54c6d274a82af27ea8c90417a7811625c",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Yone:0",
+          "text": "Cast Unraveled Earth on Yone's path, then watch for his dashes. When he dashes through the stones they go off and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Taliyah:Yone:1",
+          "text": "Throw Yone into your Unraveled Earth with Seismic Shove. Being knocked through the stones stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 21, "end": 36 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Taliyah:Yone:2",
+          "text": "Aim Threaded Volley at Yone from range, then recast it on the Worked Ground. The boulder leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Taliyah:Yone:3",
+          "text": "Stay out of Yone's short reach. His Mortal Steel knocks you up on the third cast, so keep your distance after he lands two hits.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Yone-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Taliyah:Yone:4",
+          "text": "Do not trade while Yone is in his spirit form. He hits you and then snaps back to his body, repeating part of the damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c9f75fe6eeb813235d896b88ec56654406945bbb14748c37758f6a93bc9381ad",
+      "tips": [
+        {
+          "id": "middle:Taliyah:Zed:0",
+          "text": "Throw Seismic Shove at Zed when he dashes in or stands near your Unraveled Earth stones; being knocked through them stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 65, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Taliyah:Zed:1",
+          "text": "Zed's dashes can set off Unraveled Earth stones too, so lay them where he has to come at you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Taliyah:Zed:2",
+          "text": "Aim Threaded Volley at Zed from range, and sidestep his Razor Shuriken, which flies in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Zed-Q", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Taliyah:Zed:3",
+          "text": "Cast Threaded Volley again from the Worked Ground it leaves behind. The boulder slows Zed and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 },
+            { "kind": "champion", "key": "Zed", "start": 86, "end": 89 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Taliyah:Zed:4",
+          "text": "Zed's Death Mark makes him untargetable while he dashes in, so don't waste spells on him then. Make him pay for it afterwards.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Taliyah:Zed:5",
+          "text": "Weaver's Wall can't be cast right after you take damage from a champion. Use it to move around before a fight, not as an escape.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-R", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

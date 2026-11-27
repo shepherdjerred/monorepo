@@ -1,0 +1,877 @@
+{
+  "schemaVersion": 1,
+  "champion": "Belveth",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "54eb046687846a7949fa8c1602dc737458f1a6b8e504b80d9540cad6e45a2045",
+      "tips": [
+        {
+          "id": "jungle:Belveth:general:0",
+          "text": "Clear camps with Void Surge and Royal Maelstrom; both deal extra damage to monsters, so use them to speed up your clear.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Belveth-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Belveth:general:1",
+          "text": "Dash in a different direction each time with Void Surge. Every direction has its own cooldown, so you can chain dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Belveth:general:2",
+          "text": "When Above and Below hits an enemy champion, you get that direction of Void Surge back. Slam, then dash again to stay on them.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Belveth:general:3",
+          "text": "Above and Below knocks up and slows. Use it to start a fight or to stop an enemy who is running away.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "knocked-up", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Belveth:general:4",
+          "text": "Get the last hit on large monsters and on champions. Death in Lavender gives you permanent attack speed for these takedowns.",
+          "refs": [],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Belveth:general:5",
+          "text": "Use Royal Maelstrom in a fight once you are in melee range. It cuts damage taken and heals you, but you can't move during it.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Belveth:general:6",
+          "text": "Don't use Royal Maelstrom while you are stunned or otherwise unable to cast, because you can't slash then.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Belveth:general:7",
+          "text": "After a champion or epic monster takedown, grab the Void Coral quickly with Endless Banquet. It disappears after a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-R", "start": 76, "end": 91 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Belveth:general:8",
+          "text": "Stay on one target. Basic attacks with Endless Banquet add more true damage on each hit against the same enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-R", "start": 39, "end": 54 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Belveth:general:9",
+          "text": "In true form, Void Surge can dash through walls. Use that to take shortcuts into camps or to chase and escape.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Belveth:combo:0",
+          "name": "Tail slam dash reset",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Belveth-W" },
+            { "kind": "ability", "key": "Belveth-Q" },
+            "attack"
+          ],
+          "when": "When trading with an enemy champion and you want to keep dashing in the same direction.",
+          "whenRefs": [],
+          "text": "Hitting a champion with the tail slam refreshes the dash in that direction, so you can dash again right after. Weave attacks between them.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Belveth:combo:1",
+          "name": "True form wall dash",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Belveth-Q" }],
+          "when": "While in true form, when you want to escape or reach a new jungle camp through the walls.",
+          "whenRefs": [],
+          "text": "In true form, Void Surge can pass through jungle walls. Dash across thin walls to cut through the jungle or flee a gank.",
+          "textRefs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 14, "end": 24 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "a982402a54a36132c468d67d37b83a0ef566a2ea4482eca97581154494d28dc4",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Graves:0",
+          "text": "Dodge or sidestep End of the Line; the powder trail explodes after a short time, so leave it quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Belveth:Graves:1",
+          "text": "Leave Smoke Screen quickly; the slow ends once you step out of the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Belveth:Graves:2",
+          "text": "Hit Graves with Above and Below to knock him up and refresh your Void Surge in that direction, then dash in again.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Belveth-W", "start": 16, "end": 31 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Belveth:Graves:3",
+          "text": "Close the gap with Void Surge and use Royal Maelstrom once you are on top of him; the damage reduction helps against his point-blank burst.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Belveth-E", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Belveth:Graves:4",
+          "text": "Save Endless Banquet for after a kill, when a Void Coral is left behind to pick up.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aac9ecf3394275bc450caed3c56e034e815755110289b4a63dde1822623bc617",
+      "tips": [
+        {
+          "id": "jungle:Belveth:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan IV and his Demacian Standard. Dragon Strike along that line knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 47, "end": 64 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Belveth:JarvanIV:1",
+          "text": "Save Above and Below for when Jarvan IV commits. It knocks him up and slows him, and hitting a champion refreshes a Void Surge direction.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "JarvanIV", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 116, "end": 126 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Belveth:JarvanIV:2",
+          "text": "Void Surge can still pass through Cataclysm's terrain in true form, so use it to escape the arena.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Belveth:JarvanIV:3",
+          "text": "Use Royal Maelstrom when Jarvan IV is on you, but expect it to be cut short if he knocks you up. Its damage reduction helps in a short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "JarvanIV", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "de50316e47beee4cd0a47b4391ad606686bdc8e50e1ab6b228baf9cd610d5740",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Kayn:0",
+          "text": "Dodge Blade's Reach where you can; if it hits you, Kayn can use Umbral Trespass from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Kayn-R", "start": 64, "end": 79 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Belveth:Kayn:1",
+          "text": "Fight Kayn in the open and take the fight when he has no wall to hop into. Chase him with Void Surge, since he can lose you through terrain with Shadow Step.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 90, "end": 100 },
+            { "kind": "ability", "key": "Kayn-E", "start": 145, "end": 156 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Belveth:Kayn:2",
+          "text": "Use Royal Maelstrom when Kayn is close and you want to survive a trade. It gives damage reduction and life steal, but you cannot move while it runs.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Belveth:Kayn:3",
+          "text": "Watch for a warning on the terrain edge near you; it shows Kayn is in a wall. Step away from it before he comes out.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "671c587a39a6b049f6a7c45770835005df23f409b2194804cb90ad6842b5b28c",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Khazix:0",
+          "text": "Keep minions or allies near you so Kha'Zix can't treat you as Isolated and hit you with the big Taste Their Fear damage.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "isolated", "start": 62, "end": 70 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 96, "end": 112 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Belveth:Khazix:1",
+          "text": "Hit Kha'Zix with Above and Below when he leaps in. It knocks him up and slows him, and a hit on a champion refreshes Void Surge.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Belveth-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 117, "end": 127 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Belveth:Khazix:2",
+          "text": "Fight him once Leap is on cooldown. He has few ways to escape without it.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Belveth:Khazix:3",
+          "text": "Use Royal Maelstrom when he commits to you. It gives you damage reduction and life steal, but you can't move while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Belveth:Khazix:4",
+          "text": "Watch for him to vanish from sight. His next attack after that slows you, so be ready to fight back or step away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "681942a3837c7622da621eae10083ea91c368c6e1b8202ee63c8c6e961b881d2",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Kindred:0",
+          "text": "Hit Kindred with Above and Below to knock her up and slow her. It also refreshes Void Surge in that direction, so you can dash right back in.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Belveth-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Belveth:Kindred:1",
+          "text": "Kindred is fragile, so jump on her when she's away from her team. Use Void Surge to close the gap quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Belveth:Kindred:2",
+          "text": "Use Royal Maelstrom when you commit to a fight with her. It gives you damage reduction and life steal while you slash the weakest enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Belveth:Kindred:3",
+          "text": "Don't fight inside Lamb's Respite. Nobody can die in it, so stop attacking and wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Belveth:Kindred:4",
+          "text": "Kill Kindred when you can. Each champion takedown gives you a permanent Lavender stack and leaves a Void Coral for Endless Banquet.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Belveth-R", "start": 115, "end": 130 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6cb7540cb3903ccdfdbf55c1642d2a0d2b1266b8fce88401918186a405600a71",
+      "tips": [
+        {
+          "id": "jungle:Belveth:LeeSin:0",
+          "text": "Dodge the Sonic Wave and Lee Sin cannot dash onto you. Void Surge sideways to get out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Belveth:LeeSin:1",
+          "text": "Hit Lee Sin with Above and Below to knock him up and slow him, which also refreshes your Void Surge in that direction.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Belveth-W", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Belveth:LeeSin:2",
+          "text": "Do not trade right after Lee Sin casts an ability. Use Royal Maelstrom when you fight him for damage reduction and healing.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Belveth-E", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Belveth:LeeSin:3",
+          "text": "Keep away from walls and your own allies when Lee Sin is near; Dragon's Rage hurts more if the kicked champion hits others.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 46, "end": 53 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "33301643afbb7e8a191b7cc28d7947f83a7574e22a7bb5f56597fe9718c95c08",
+      "tips": [
+        {
+          "id": "jungle:Belveth:MasterYi:0",
+          "text": "Hit Master Yi with Above and Below so he is knocked up and slowed, then fight him while he cannot run.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Belveth-W", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "knocked-up", "start": 44, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Belveth:MasterYi:1",
+          "text": "Once he uses Highlander, slows will not work on him; rely on the knock up from Above and Below instead.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 13, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Belveth-W", "start": 79, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Belveth:MasterYi:2",
+          "text": "Start Royal Maelstrom when he jumps in; the damage reduction helps, and she keeps hitting the lowest-health enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Belveth:MasterYi:3",
+          "text": "Do not rely on the Void Surge dash to escape while he is in Highlander; he moves faster than you.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "efcc3acb80077913633d83ed760df3237615fcadcae0418404ab47839d4b6504",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Naafiri:0",
+          "text": "Use Above and Below on Naafiri when she commits; it knocks her up and slows her, and it refreshes your Void Surge dash in that direction.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 103, "end": 113 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Belveth:Naafiri:1",
+          "text": "Start Royal Maelstrom when Naafiri's packmates and she jump on you; the damage reduction and life steal help you win the short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Naafiri", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Belveth:Naafiri:2",
+          "text": "Do not stand still in Royal Maelstrom against Hounds' Pursuit; you cannot move while it lasts, so she can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Belveth:Naafiri:3",
+          "text": "Take a kill and consume the Void Coral with Endless Banquet to get tougher before the next fight with Naafiri.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-R", "start": 44, "end": 59 },
+            { "kind": "champion", "key": "Naafiri", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e8783ca069253f2eb135a35bd9b2cb70fb9ca13d94e497cadf30d19d24d7813",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Nocturne:0",
+          "text": "Do not throw Above and Below into Nocturne when Shroud of Darkness is ready; it blocks the ability and he attacks faster.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Nocturne", "start": 34, "end": 42 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 48, "end": 66 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Belveth:Nocturne:1",
+          "text": "Stay near allies when Nocturne casts Paranoia; if he picks you, his dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Belveth:Nocturne:2",
+          "text": "Use Void Surge to dash away from Unspeakable Horror so the tether breaks before it ends and you are not feared.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 33, "end": 51 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Belveth:Nocturne:3",
+          "text": "Avoid his Duskbringer trail fights; he moves faster and hits harder while on it. Fight him when he is off it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "18346d79ed2854415bc2bb4fcf6e1c85121d5fca3e8c7bb6f17af736c9fde664",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Shyvana:0",
+          "text": "Hit Above and Below on Shyvana to knock her up, then dash with Void Surge; hitting a champion refreshes that dash direction.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Belveth:Shyvana:1",
+          "text": "Stay out of Shyvana's reach early and trade only when you have a clear window; she is weak if you keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Belveth:Shyvana:2",
+          "text": "Do not start Royal Maelstrom when Shyvana can interrupt you; you cannot move while it runs, and she can slow or stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Shyvana", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Belveth:Shyvana:3",
+          "text": "Hold back when Shyvana's Inferno Aegis is up; the shield is bigger when you are close, and the blast still lands.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Belveth:Shyvana:4",
+          "text": "Stay out of the fireball's line of fire from Molten Burst; it slows you and chases you down as it pierces in dragon form.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 45, "end": 57 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Belveth:Shyvana:5",
+          "text": "Poke Shyvana when her Dragon Fury is low; she can't transform, so her fights are weaker.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0374dab542295e8eddf22eeb5b07269641baf673ff880d1d8c1ba64afebbf98d",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Skarner:0",
+          "text": "Stay out of Skarner's line when his Ixtal's Impact is ready; if he grabs you near a wall you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Skarner-E", "start": 36, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 104 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Belveth:Skarner:1",
+          "text": "Hit him with Above and Below to knock him up and slow him; if it hits a champion, it also resets a Void Surge direction for a quick follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 13, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Belveth:Skarner:2",
+          "text": "Dodge Impale by dashing away with Void Surge as he winds up; it can be dodged.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Belveth:Skarner:3",
+          "text": "Do not ignore his Quaking; it adds up with each hit, so back off before it reaches full stacks.",
+          "refs": [],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "730588eedac0dca78ff3616f897b2970f0bb13407ac4ad9f1ad75d46f1cfd213",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Sylas:0",
+          "text": "Fight Sylas when his Chain Lash and Abduct are on cooldown; without them he has little to stop you reaching him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Belveth:Sylas:1",
+          "text": "Slam Above and Below onto Sylas to knock him up, then dash through him with Void Surge for a quick second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Belveth:Sylas:2",
+          "text": "Do not trade when Sylas is low and can dash in with Kingslayer; it heals him most when he is hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 52, "end": 62 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Belveth:Sylas:3",
+          "text": "Use Royal Maelstrom when Sylas commits to you; it cuts the damage you take and heals you while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Belveth:Sylas:4",
+          "text": "Keep attacking Sylas in a long fight; Endless Banquet adds more true damage with every hit on the same target.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Belveth-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "06b3bef96c240fdffcb75527d2d3b04bc7ef5a584a3e8d3a2e1fb254dcc051bd",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Talon:0",
+          "text": "Hit Talon with Above and Below when he jumps in; it knocks him up and slows him, and the hit refreshes your Void Surge dash in that direction.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Belveth-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 108, "end": 118 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Belveth:Talon:1",
+          "text": "Start Royal Maelstrom when Talon dives you; the damage reduction and life steal blunt his burst while you slash back.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Belveth:Talon:2",
+          "text": "Stay away from Talon when Rake lands twice and Noxian Diplomacy is ready; his bleed from Blade's End hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Talon-W", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Talon-Q", "start": 47, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 89,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Belveth:Talon:3",
+          "text": "Move out of the way of Rake and its returning blades; the slow it applies makes you easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Belveth:Talon:4",
+          "text": "Look for the fight when Talon has used Shadow Assault; without it he has little to escape with.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Talon-R", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "abbdf007f801f2450f9bc34a7d2c3f5e442451b42f779da8a88e16543e752906",
+      "tips": [
+        {
+          "id": "jungle:Belveth:Viego:0",
+          "text": "Hit Viego with Above and Below to knock him up and slow him, then chase with Void Surge, which comes back off cooldown when the tail hits a champion.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Belveth-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 77, "end": 87 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Belveth:Viego:1",
+          "text": "Fight Viego inside Royal Maelstrom when he jumps you; the damage reduction and life steal help you win a short trade.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Belveth-E", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Belveth:Viego:2",
+          "text": "Avoid dying to Viego near a kill. If he takes you down, he can possess your body and use your abilities against you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Belveth:Viego:3",
+          "text": "Keep fighting from range with Void Surge to dodge his Spectral Maw stun; it can be blocked by the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "Viego-W", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bc0cb3881615ba02f482d44d561d53d505884117dc4e44cac6d023989d49b270",
+      "tips": [
+        {
+          "id": "jungle:Belveth:XinZhao:0",
+          "text": "Hit Xin Zhao with Above and Below as he charges in; it knocks him up and resets your dash in that direction.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Belveth-W", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Belveth:XinZhao:1",
+          "text": "Stay away from his third Three Talon Strike attack, since it knocks you up. Dash away with Void Surge when he finishes his first attacks.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 25, "end": 43 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Belveth:XinZhao:2",
+          "text": "Use Royal Maelstrom to trade when he is already on you; it cuts damage and heals you, but you cannot move.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Belveth:XinZhao:3",
+          "text": "Do not stand close when Xin Zhao has Crescent Guard; it knocks you back and stuns you unless he has just hit you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 37, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Belveth:XinZhao:4",
+          "text": "Farm monsters and take fights later; your Lavender stacks grow your attack speed, and Xin Zhao is stronger early.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

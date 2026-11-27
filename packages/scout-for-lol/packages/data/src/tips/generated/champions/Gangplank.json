@@ -1,0 +1,3170 @@
+{
+  "schemaVersion": 1,
+  "champion": "Gangplank",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "f912c880b266cee76260149f458d585a5ac696495cf0c8b320133a04a325fa82",
+      "tips": [
+        {
+          "id": "top:Gangplank:general:0",
+          "text": "Pop a Powder Keg with Parrrley or an attack to slow the enemy and deal bonus damage. Use it when they walk up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gangplank:general:1",
+          "text": "Chain Powder Kegs with overlapping blast zones so one hit sets off all of them. Each enemy only takes damage once per chain.",
+          "refs": [],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gangplank:general:2",
+          "text": "Place kegs early and use them soon. A keg weakens over time, so an enemy can defuse an old one with a single hit.",
+          "refs": [],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Gangplank:general:3",
+          "text": "Last-hit minions with Parrrley. Killing an enemy with it earns extra gold and Silver Serpents, which you spend on Cannon Barrage upgrades.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 22, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-R",
+              "start": 114,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gangplank:general:4",
+          "text": "Use Remove Scurvy when you are stunned or slowed. It removes crowd control and heals you, and the heal is bigger when you are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Gangplank:general:5",
+          "text": "Start trades with a Trial by Fire hit. Exploding a keg resets it and gives you a burst of speed, so you can keep fighting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 20,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gangplank:general:6",
+          "text": "From level 6, use Cannon Barrage on the path a fleeing enemy will take, and watch other lanes for low-health targets you can finish.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Gangplank:combo:0",
+          "name": "Triple keg chain",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Gangplank-E" },
+            { "kind": "ability", "key": "Gangplank-E" },
+            { "kind": "ability", "key": "Gangplank-E" },
+            { "kind": "ability", "key": "Gangplank-Q" }
+          ],
+          "when": "When you have three or more keg charges and want a big burst on an enemy who is stuck in the area or has little room to run.",
+          "whenRefs": [],
+          "text": "Place kegs so their blast zones overlap, then shoot one with Parrrley. The chain explodes one keg after another and slows the enemy.",
+          "textRefs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 61, "end": 69 }
+          ]
+        },
+        {
+          "id": "top:Gangplank:combo:1",
+          "name": "Keg Q detonate",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Gangplank-E" },
+            { "kind": "ability", "key": "Gangplank-Q" }
+          ],
+          "when": "When you want to burst an enemy standing near a keg you just placed, and you have enough range to shoot it.",
+          "whenRefs": [],
+          "text": "Place a keg, then shoot it with Parrrley. The explosion uses the shot's damage and can crit, and the kill plunders gold and Silver Serpents.",
+          "textRefs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 32, "end": 40 }
+          ]
+        },
+        {
+          "id": "top:Gangplank:combo:2",
+          "name": "Cleanse then keg",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Gangplank-W" },
+            { "kind": "ability", "key": "Gangplank-E" },
+            { "kind": "ability", "key": "Gangplank-Q" }
+          ],
+          "when": "When you get stunned or slowed in a trade and still want to set off your kegs.",
+          "whenRefs": [],
+          "text": "Remove Scurvy clears the crowd control and heals you. Then follow up with a keg and a Parrrley shot to burst the enemy.",
+          "textRefs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 86, "end": 94 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "9ebdcb154b8a54806c974d2d3a7b52cad1da9df96f5424f3c2ff09b2624e103d",
+      "tips": [
+        {
+          "id": "top:Gangplank:Aatrox:0",
+          "text": "Use Remove Scurvy when Infernal Chains lands on you; it clears the slow and, if you cleanse before the pull, you stay put.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 23, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Aatrox:1",
+          "text": "Walk out of the Infernal Chains zone sideways or toward Aatrox, rather than saving Remove Scurvy every time.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 16, "end": 31 },
+            { "kind": "champion", "key": "Aatrox", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 83, "end": 96 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gangplank:Aatrox:2",
+          "text": "Poke with Parrrley from long range while he has to walk up to you; it never stops at the first target hit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 10, "end": 18 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gangplank:Aatrox:3",
+          "text": "Place a Powder Keg where Aatrox must step to trade, then pop it with Parrrley to slow him and deal extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 69, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gangplank:Aatrox:4",
+          "text": "Dodge The Darkin Blade by stepping out of its marked zone; its hits are slow and easy to read.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Gangplank:Aatrox:5",
+          "text": "Keep Cannon Barrage in mind once you reach level 6; aim it on his escape path when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ce05efbafd964176d01a46817c71b943ed9c9fe5de162d71d807d44e0b811a1f",
+      "tips": [
+        {
+          "id": "top:Gangplank:Akali:0",
+          "text": "Place a Powder Keg and break it with Parrrley when Akali steps in to trade; the slow stops her from backing out freely.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 37, "end": 45 },
+            { "kind": "champion", "key": "Akali", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Gangplank:Akali:1",
+          "text": "Save Remove Scurvy for when Akali slows you or locks you down; it cleanses crowd control and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gangplank:Akali:2",
+          "text": "Akali can turn invisible in her smoke, so put kegs ahead of where she will fight and not only where you can see her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Akali:3",
+          "text": "Poke her with Parrrley when she walks up to last-hit; it has long range and costs little.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Gangplank:Akali:4",
+          "text": "Once you reach level 6, aim Cannon Barrage on her escape path when she is low after diving in.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e1aa2026b631fa55059e07fe391feda2eb3d846ba7649710a8adc214e6b7fe22",
+      "tips": [
+        {
+          "id": "top:Gangplank:Ambessa:0",
+          "text": "Use Remove Scurvy to break out of Public Execution's grab? It cannot: she is unstoppable while casting, so save it for her Lacerate slow instead.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 123, "end": 131 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Gangplank:Ambessa:1",
+          "text": "Place a Powder Keg behind you before she closes in, then blow it with Parrrley when she steps on it. She gets slowed and takes bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 70, "end": 78 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Gangplank:Ambessa:2",
+          "text": "Poke her with Parrrley from long range while her abilities are on cooldown, and don't stand where she can reach you with a dash.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gangplank:Ambessa:3",
+          "text": "Use Remove Scurvy after she slows you with Lacerate, then fight back while she waits on cooldown. It also heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gangplank:Ambessa:4",
+          "text": "Hitting her with an attack sets her ablaze, so trade right after a keg explodes to get Trial by Fire ready again and gain speed.",
+          "refs": [
+            { "kind": "keyword", "key": "ablaze", "start": 36, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 87,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Gangplank:Ambessa:5",
+          "text": "Stay away from Repudiation's smash after she braces. Step out of its short range rather than trading into it.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c412c573e6db1bce53e6c0f81074894e1d651d903180deb3d13b38eba3694e52",
+      "tips": [
+        {
+          "id": "top:Gangplank:Anivia:0",
+          "text": "Dodge Flash Frost by standing out of line with it and stay away from where it bursts. Its stun at the end can set up a deadly Frostbite.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Anivia-E", "start": 126, "end": 135 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Gangplank:Anivia:1",
+          "text": "Hold Remove Scurvy for when Flash Frost stuns you. It clears the stun and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 28, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gangplank:Anivia:2",
+          "text": "Powder Keg slows enemies, so use it to catch Anivia when she steps forward, then chase with Parrrley.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 11, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Gangplank:Anivia:3",
+          "text": "Her egg is hard to kill early, so do not waste your cooldowns on it. Fight her again after it hatches.",
+          "refs": [],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Gangplank:Anivia:4",
+          "text": "Step out of Glacial Storm fast, because it grows stronger the longer you stay in it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "232c34ba0c2b5feb9cad998ce475f6ab250d733078d2f878777b3ddbfbd832b4",
+      "tips": [
+        {
+          "id": "top:Gangplank:Aurora:0",
+          "text": "Put a Powder Keg down and break it with Parrrley when Aurora walks up to trade; the explosion slows her and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 40, "end": 48 },
+            { "kind": "champion", "key": "Aurora", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gangplank:Aurora:1",
+          "text": "Use Remove Scurvy to cleanse her slows and heal when she lands a poke on you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "poke", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Gangplank:Aurora:2",
+          "text": "Aurora can turn invisible and hop away, so finish her fast with Parrrley and a keg before she escapes.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 64, "end": 72 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Gangplank:Aurora:3",
+          "text": "Hold your kegs back when she can hop away; a keg placed on her path of escape can still catch her.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Gangplank:Aurora:4",
+          "text": "After level 6, aim Cannon Barrage at where Aurora flees to, since her Between Worlds rift only lasts a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 19, "end": 33 },
+            { "kind": "champion", "key": "Aurora", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Aurora-R", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "61c4431426a58065d60082c302051c12c037b05eb00840aa84f098558b7ac5a9",
+      "tips": [
+        {
+          "id": "top:Gangplank:Briar:0",
+          "text": "Use Remove Scurvy when Briar stuns you with Head Rush; it clears the stun and heals you, so you can fight back right away.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-Q", "start": 44, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gangplank:Briar:1",
+          "text": "Place a Powder Keg near you before she jumps in. When she charges at you, blow it up with Parrrley to slow her and deal heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 90, "end": 98 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Gangplank:Briar:2",
+          "text": "Keep Remove Scurvy ready when you fight her. Her stuns are what let her stick to you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Gangplank:Briar:3",
+          "text": "Hit her with Parrrley from long range when she has no jump ready. She has no natural health regeneration, so early damage lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 13, "end": 21 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Gangplank:Briar:4",
+          "text": "Fire Cannon Barrage on her path when she is hunting you or a teammate with Certain Death. It slows her and punishes the chase.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Briar-R", "start": 75, "end": 88 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f3d0c68ff08ba7ca0956c02eadd293f9f3246381b034ff3bf7f4ac12e1165bce",
+      "tips": [
+        {
+          "id": "top:Gangplank:Camille:0",
+          "text": "Place a Powder Keg and hit it with Parrrley when Camille walks up to trade; the explosion slows her and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Camille", "start": 49, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Gangplank:Camille:1",
+          "text": "Save Remove Scurvy for when Camille stuns you with Hookshot or traps you with The Hextech Ultimatum; it cleanses disabling effects.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Camille", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Camille-E", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Camille-R", "start": 78, "end": 99 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Camille:2",
+          "text": "Keep Parrrley on Camille from range when she has no wall nearby to dash from, because Hookshot needs terrain to pull her in.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Camille", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Camille-E", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Gangplank:Camille:3",
+          "text": "Camille's shield only blocks one damage type; Parrrley and keg hits are physical, so expect them to be absorbed if it is a physical shield.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gangplank:Camille:4",
+          "text": "Plan Cannon Barrage on Camille's escape path after she commits, since it slows and hits everything in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Camille", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0d6b27385b9a7ec9e6edd0486f5185275df3f98f2b8965e9a3c6a0ab888fb34e",
+      "tips": [
+        {
+          "id": "top:Gangplank:Chogath:0",
+          "text": "Stay out of the smoke Rupture shows on the ground. Step sideways as it appears, because it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gangplank:Chogath:1",
+          "text": "If Cho'Gath knocks you up with Rupture, use Remove Scurvy to clear the stun, though it will not stop the slow that follows if the knock up already landed.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 3, "end": 11 },
+            { "kind": "ability", "key": "Chogath-Q", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gangplank:Chogath:2",
+          "text": "Poke with Parrrley from long range. Cho'Gath has to walk up to you to use Feral Scream.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Chogath", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Chogath-W", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Gangplank:Chogath:3",
+          "text": "Do not let Cho'Gath eat minions freely. Trade with Powder Keg when he steps up to last-hit, so he cannot grow.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ad4817064c940c6a40142d50a98ec3abd4484524a5522cb219f02967883543a4",
+      "tips": [
+        {
+          "id": "top:Gangplank:Darius:0",
+          "text": "Stay at long range and use Parrrley to poke Darius; you can shoot without walking into his axe reach.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Darius", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Gangplank:Darius:1",
+          "text": "Place Powder Keg away from Darius and blow it up with Parrrley, so he is slowed before he can get close.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 54, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Gangplank:Darius:2",
+          "text": "Save Remove Scurvy for after Apprehend lands; it clears the slow and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Darius-E", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Gangplank:Darius:3",
+          "text": "Trade right after Darius uses Apprehend or Decimate, while he is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Darius-E", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Darius-Q", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Gangplank:Darius:4",
+          "text": "Do not let Darius stack Hemorrhage on you in long trades; stay out of melee so Noxian Guillotine hits for less.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 24,
+              "end": 34
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 79, "end": 96 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Gangplank:Darius:5",
+          "text": "Step away from Decimate's outer edge; the blade hurts and heals him, while the handle is weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "08dc115d767417a6660a76e656ab896b85f64de79ab9207e086c1fb51430ad47",
+      "tips": [
+        {
+          "id": "top:Gangplank:DrMundo:0",
+          "text": "Keep your distance from Dr. Mundo and use Parrrley on him from range; do not let him close in with Infected Bonesaw hits.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 99, "end": 115 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Gangplank:DrMundo:1",
+          "text": "Goes Where He Pleases lets Dr. Mundo resist the first immobilizing effect, so don't waste crowd control on him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 0,
+              "end": 21
+            },
+            { "kind": "champion", "key": "DrMundo", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Gangplank:DrMundo:2",
+          "text": "Slow him with Powder Keg to kite him. Strike the keg only when he is close enough to be hit.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gangplank:DrMundo:3",
+          "text": "Wait for Dr. Mundo to use Maximum Dosage, then be ready to burst him down; if you can't kill him quickly, he will heal through it.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Gangplank:DrMundo:4",
+          "text": "Hit him with Cannon Barrage when he is low; it covers a large area and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 13, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d3b19e6a5b1dce9fe347862e09de434caa6e1e8b94cabdec1168cecb5330ac13",
+      "tips": [
+        {
+          "id": "top:Gangplank:Fiora:0",
+          "text": "Don't cast Powder Keg or Parrrley into Fiora while Riposte is ready; she blocks everything and the stab slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 25, "end": 33 },
+            { "kind": "champion", "key": "Fiora", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Fiora-W", "start": 51, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Fiora:1",
+          "text": "Wait for her to spend Riposte, then place kegs and pop them with Parrrley.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 65, "end": 73 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gangplank:Fiora:2",
+          "text": "Keep Remove Scurvy for when she stuns or slows you with Riposte or Bladework. It cleanses the effect and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Fiora-W", "start": 56, "end": 63 },
+            { "kind": "ability", "key": "Fiora-E", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Fiora:3",
+          "text": "Poke her from range with Parrrley. Back off when she has Lunge ready, since it closes the gap fast.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Gangplank:Fiora:4",
+          "text": "Use Cannon Barrage on her escape path after a fight. Its slow makes it hard for her to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e61136c9c99d8aa5709c82db73a9a712d74997bd5b81a262853d1f2c846cf14c",
+      "tips": [
+        {
+          "id": "top:Gangplank:Garen:0",
+          "text": "Use Parrrley to poke Garen from range while he is far away; walk back out of his reach afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Garen", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Gangplank:Garen:1",
+          "text": "Break a Powder Keg with Parrrley when Garen steps close; the explosion hurts and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 24, "end": 32 },
+            { "kind": "champion", "key": "Garen", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Gangplank:Garen:2",
+          "text": "Garen's Decisive Strike silences you, so keep your distance when it is ready, then cast Remove Scurvy to clear it if he lands it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 88, "end": 101 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Gangplank:Garen:3",
+          "text": "Garen's Decisive Strike clears slows from him, so do not count on Powder Keg to stop his run at you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 66, "end": 76 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gangplank:Garen:4",
+          "text": "Stay away from Garen when you are low on health; Demacian Justice finishes weakened targets. Heal with Remove Scurvy early.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 49, "end": 65 },
+            { "kind": "summoner-spell", "key": "7", "start": 93, "end": 97 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-W",
+              "start": 103,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "666419b361dcee320cccb34b305fb4fdac67ab65557de7252229e501453b1279",
+      "tips": [
+        {
+          "id": "top:Gangplank:Gnar:0",
+          "text": "Gnar outranges you as Mini Gnar, so use Parrrley to answer his poke and trade back when he steps close to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gnar", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 40, "end": 48 },
+            { "kind": "keyword", "key": "poke", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Gangplank:Gnar:1",
+          "text": "Place a Powder Keg and pop it with Parrrley when Gnar walks up to trade; he gets slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Gnar", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Gangplank:Gnar:2",
+          "text": "Fight Gnar while he is tired after leaving Mega form; he cannot turn big again for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gangplank:Gnar:3",
+          "text": "Stay away from walls when Mega Gnar is near; his GNAR! stuns you if he throws you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Gnar-R", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gangplank:Gnar:4",
+          "text": "Save Remove Scurvy for Mega Gnar's Wallop stun, since it clears the stun and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2261d6a1df7a25186bd205ac58357b9a6feb34571b79384400e3859ab5230ad5",
+      "tips": [
+        {
+          "id": "top:Gangplank:Gragas:0",
+          "text": "Save Remove Scurvy for when Gragas hits you with Body Slam or Barrel Roll; it clears the stun and the slow and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Gragas", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Gragas-E", "start": 49, "end": 58 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 62, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Gangplank:Gragas:1",
+          "text": "Hit Gragas with Parrrley from max range when he walks up to last-hit. He has no ranged answer except Barrel Roll.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Gangplank:Gragas:2",
+          "text": "Gragas will often Barrel Roll to a spot and wait. Step out of the area while it ferments, because it hurts and slows more the longer it sits.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 18, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gangplank:Gragas:3",
+          "text": "Do not stand next to a wall or tower when Gragas has Explosive Cask. It knocks you away and cannot push you through terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Gragas-R", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Gragas:4",
+          "text": "Place Powder Keg behind you before a trade. Gragas has to dash into you with Body Slam, so you can blow the keg right after.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Gragas", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Gragas-E", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "efe963d14fd6e98a8d325c127861315c3e07a863530273b13c1d3264d5bd1b6e",
+      "tips": [
+        {
+          "id": "top:Gangplank:Gwen:0",
+          "text": "Save Remove Scurvy for when Gwen's Needlework slows you or something else disables you, then fight on while healed.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Gwen", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Gwen-R", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Gangplank:Gwen:1",
+          "text": "Don't waste Parrrley or Powder Keg while Gwen is inside Hallowed Mist; she can't be targeted from outside it. Wait until the mist ends or she steps out.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 24, "end": 34 },
+            { "kind": "champion", "key": "Gwen", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Gwen-W", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Gangplank:Gwen:2",
+          "text": "Use Powder Keg to slow Gwen when she dashes in, then hit her while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Gwen", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Gangplank:Gwen:3",
+          "text": "Trade hard early. Gwen needs a few attacks to build up her damage, so poke her with Parrrley before she gets going.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "019158cefe19ae4bf96d0eb7c4c72c0ab865f79d4a68dd4d86b5f87de33fb57f",
+      "tips": [
+        {
+          "id": "top:Gangplank:Heimerdinger:0",
+          "text": "Walk up and hit Heimerdinger with Parrrley when his turrets are not near; it is a ranged shot, so you can poke without stepping into turret range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 34, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Gangplank:Heimerdinger:1",
+          "text": "Keep Remove Scurvy ready for his grenade; it clears the stun and slow so you can escape or keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Gangplank:Heimerdinger:2",
+          "text": "Stay out of the turrets' reach when you trade. Blow them up with a Powder Keg and Parrrley from a distance instead of walking into them.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 67, "end": 77 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Gangplank:Heimerdinger:3",
+          "text": "Use Cannon Barrage on him when he is low and trying to leave. It reaches anywhere on the map, so you can finish him from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "23df3f7d60ecb9c969d3f5f0efd8c7eb32e39f9b170ec83ec2cf6fac77bc755a",
+      "tips": [
+        {
+          "id": "top:Gangplank:Illaoi:0",
+          "text": "Cleanse with Remove Scurvy right after Illaoi's Test of Spirit slows you; it removes the slow and heals you.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "1", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Illaoi", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 48, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:Illaoi:1",
+          "text": "Poke with Parrrley from long range so Illaoi has to walk up to you, away from her Tentacles.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Illaoi", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Gangplank:Illaoi:2",
+          "text": "Use Powder Keg to slow Illaoi when she dashes in with Harsh Lesson, then back away from her Tentacles.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Illaoi", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gangplank:Illaoi:3",
+          "text": "Fight away from walls, where Tentacles spawn and heal Illaoi; she is far weaker in open ground.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Gangplank:Illaoi:4",
+          "text": "Cannon Barrage can finish Illaoi when she is low, from anywhere on the map. Aim at her escape path.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Illaoi", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a6f3fb9fd2c18cc171155eae5f39490b30892bd13db33a47467baa6be9545e0c",
+      "tips": [
+        {
+          "id": "top:Gangplank:Irelia:0",
+          "text": "Pop kegs next to you when Irelia dashes in; the slow and burst punish her for diving.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gangplank:Irelia:1",
+          "text": "Do not throw Parrrley or a keg into Defiant Dance; she takes much less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Irelia-W", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gangplank:Irelia:2",
+          "text": "Keep Remove Scurvy for her Flawless Duet stun or the Vanguard's Edge cage so you can fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Irelia-E", "start": 27, "end": 40 },
+            { "kind": "ability", "key": "Irelia-R", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Gangplank:Irelia:3",
+          "text": "Hit her with Parrrley from range when she has no low minion to dash to, and fight away from the minion wave.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 13, "end": 21 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Gangplank:Irelia:4",
+          "text": "Her Ionian Fervor fades after a few seconds; trade when it is down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 4,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ac856f8ff3581cc4b732b9317a5363aa6626970eb59d22d5ff9e3b17b5dd222c",
+      "tips": [
+        {
+          "id": "top:Gangplank:Jax:0",
+          "text": "Do not auto-attack or Parrrley Jax while Counter Strike is up; he dodges it and then stuns you. Wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 22, "end": 30 },
+            { "kind": "champion", "key": "Jax", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Jax-E", "start": 41, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Gangplank:Jax:1",
+          "text": "Hold Remove Scurvy until Jax's stun lands, then cleanse it and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jax", "start": 25, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Gangplank:Jax:2",
+          "text": "Poke Jax with Parrrley from range and keep him away from you; his damage climbs the longer he gets to hit you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gangplank:Jax:3",
+          "text": "Place Powder Keg where Jax will land so the explosion slows him, but expect him to Leap Strike away to any unit or ward.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Jax", "start": 23, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Jax-Q", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "000dd6ef3d141988547273a440f3520e706c2134f3be64c7174f2e2e62f1c223",
+      "tips": [
+        {
+          "id": "top:Gangplank:Jayce:0",
+          "text": "Place a Powder Keg and pop it with Parrrley when Jayce walks up to trade; he is slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Jayce", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gangplank:Jayce:1",
+          "text": "Keep Remove Scurvy ready for Thundering Blow; it clears the root and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:Jayce:2",
+          "text": "Hold your kegs back until you can use them; Jayce's long range can poke you down while you stand in the open.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Gangplank:Jayce:3",
+          "text": "Hit Jayce with a Trial by Fire attack, then pop a keg to reset it for another burn and a burst of speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 17,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "056ba4bb1aa2f622f281c00858ac35c539208956a3b115745d93c0af298e0e7f",
+      "tips": [
+        {
+          "id": "top:Gangplank:KSante:0",
+          "text": "Use Remove Scurvy right after K'Sante's Ntofo Strikes shockwave or Path Maker stun lands; it clears the stun and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "KSante", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "KSante-Q", "start": 40, "end": 53 },
+            { "kind": "ability", "key": "KSante-W", "start": 67, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:KSante:1",
+          "text": "Poke him with Parrrley from range while his Ntofo Strikes is on cooldown; he has to walk up to hit you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "KSante-Q", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Gangplank:KSante:2",
+          "text": "Watch for K'Sante's Path Maker charge. Step out of its line, since it dashes in the direction he aimed at the start.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "KSante-W", "start": 20, "end": 30 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Gangplank:KSante:3",
+          "text": "Keep Powder Keg slows for when he commits; being slowed makes it harder for him to line up his stun.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Gangplank:KSante:4",
+          "text": "When K'Sante goes All Out, he loses much of his health and defenses. Burst him with Parrrley and a Powder Keg explosion then.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 84, "end": 92 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Gangplank:KSante:5",
+          "text": "Don't stand near a wall with K'Sante close by; All Out throws you through it for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "KSante-R", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9701d9c469d289e55438d8be1161c4f760d7725cb5514bb424d16a206a21326d",
+      "tips": [
+        {
+          "id": "top:Gangplank:Kayle:0",
+          "text": "Fight Kayle before level 6, while she is stuck in melee range. Put her behind early.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Gangplank:Kayle:1",
+          "text": "Break a keg with Parrrley to hit Kayle from range; the explosion slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 17, "end": 25 },
+            { "kind": "champion", "key": "Kayle", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Gangplank:Kayle:2",
+          "text": "Save Remove Scurvy to cleanse the slow from Radiant Blast, and heal while you do it.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gangplank:Kayle:3",
+          "text": "Kayle is fragile. Use Cannon Barrage on her escape path when she is hurt, and punish her once she becomes ranged.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gangplank:Kayle:4",
+          "text": "When Kayle casts Divine Judgment on herself, don't waste burst on her. Wait out the invulnerability, then fight when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Kayle-R", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "799039ff080b5fb47ae2af6b09cec6b8be0434a8fc8f17f9a3c15233ea64e306",
+      "tips": [
+        {
+          "id": "top:Gangplank:Kennen:0",
+          "text": "Use Remove Scurvy the moment Kennen lands his third Mark of the Storm; it clears the stun and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kennen", "start": 29, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 52,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Gangplank:Kennen:1",
+          "text": "Place a Powder Keg and pop it with Parrrley when Kennen walks up to trade; he is slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Kennen", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Gangplank:Kennen:2",
+          "text": "Kennen is fragile, so punish him hard when he ends a Lightning Rush next to you.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kennen-E", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Gangplank:Kennen:3",
+          "text": "Look for Kennen's low health on the map; Cannon Barrage can finish him when he retreats.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "44f6e56224f47cccf8af3a9d0610dad2f3f78a5c2a413c94c481e409c4840d10",
+      "tips": [
+        {
+          "id": "top:Gangplank:Kled:0",
+          "text": "Trade with Parrrley from max range while Kled is mounted; his steed takes the damage, so wait until he dismounts to go for kills.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Kled", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Gangplank:Kled:1",
+          "text": "Place Powder Keg out of reach and blow it up to slow Kled when he dashes in, so he can't stay on you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 },
+            { "kind": "champion", "key": "Kled", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Gangplank:Kled:2",
+          "text": "Walk out of range of Bear Trap on a Rope once it hooks you, or he will pull you in and slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 21, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Gangplank:Kled:3",
+          "text": "Save Remove Scurvy for when Kled's Bear Trap on a Rope or his charge lands; it cleanses crowd control and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kled", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Kled-Q", "start": 35, "end": 54 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Gangplank:Kled:4",
+          "text": "Respect Kled's fourth hit from Violent Tendencies; step back after he starts attacking so he can't finish it.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Kled-W", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Gangplank:Kled:5",
+          "text": "Once Kled is dismounted, he can't use Jousting or his charge, so look to kill him with Powder Keg and Parrrley before he regains courage.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Kled-E", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 87, "end": 97 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-Q",
+              "start": 102,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Gangplank:Kled:6",
+          "text": "Use Cannon Barrage on Kled's escape path when he is low, since his dismounted form is slowed down by it.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kled", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ad316e9f435592b9a899bb26beaa2407212df70104fd204bf8df66998e8d0bc7",
+      "tips": [
+        {
+          "id": "top:Gangplank:Malphite:0",
+          "text": "Use Remove Scurvy when Malphite lands Unstoppable Force on you; it clears the knock up, so save it for his level 6 dash.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Malphite-R", "start": 38, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 86 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gangplank:Malphite:1",
+          "text": "Poke Malphite with Parrrley from range when his Granite Shield is down, and keep your distance so Seismic Shard has to chase you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 19, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 48,
+              "end": 62
+            },
+            { "kind": "ability", "key": "Malphite-Q", "start": 98, "end": 111 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gangplank:Malphite:2",
+          "text": "Place Powder Keg out of Malphite's reach and pop it with Parrrley so the blast slows him as he tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 57, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gangplank:Malphite:3",
+          "text": "Trade away from Malphite's Ground Slam range, because it cuts your Attack Speed and weakens your Trial by Fire hits.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Malphite-E", "start": 27, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 97,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f594b4d72f8b6afdddfd6b55c15409303316d8be9c56b6ec3554304fcc3ceb2a",
+      "tips": [
+        {
+          "id": "top:Gangplank:Mordekaiser:0",
+          "text": "Place a Powder Keg and pop it with Parrrley when Mordekaiser steps up to last-hit; he gets slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 49,
+              "end": 60
+            },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Gangplank:Mordekaiser:1",
+          "text": "Stay out of his reach once he has three hits on you; Darkness Rise burns everything near him, so trade in short bursts and step back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 53,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Gangplank:Mordekaiser:2",
+          "text": "Walk out of the line of Death's Grasp, or it pulls you into his Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 24,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 64,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gangplank:Mordekaiser:3",
+          "text": "Use Remove Scurvy when Death's Grasp or Cannon Barrage slows you, since it clears crowd control and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 23,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Gangplank-R", "start": 40, "end": 54 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gangplank:Mordekaiser:4",
+          "text": "Hit Mordekaiser with Parrrley when his Indestructible is down; the shield makes your trades much weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 21, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 39,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Gangplank:Mordekaiser:5",
+          "text": "Once you reach level 6, use Cannon Barrage to finish him when he runs low, or to cut off his escape.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bed7df525c37f93daab5daca719bb3f6ad3e2f5175808107c8508b628b73a06d",
+      "tips": [
+        {
+          "id": "top:Gangplank:Naafiri:0",
+          "text": "Place a Powder Keg near the lane and pop it with Parrrley when Naafiri steps in to trade; the explosion slows her so she can't easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 49, "end": 57 },
+            { "kind": "champion", "key": "Naafiri", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Gangplank:Naafiri:1",
+          "text": "Save Remove Scurvy for when Naafiri locks on with Hounds' Pursuit or lands her slow; it clears the slow and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 50, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Gangplank:Naafiri:2",
+          "text": "Keep a few kegs in stock before you fight, so you can chain explosions when she dashes in with her Packmates.",
+          "refs": [],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Gangplank:Naafiri:3",
+          "text": "Use Parrrley to hit her from range as she walks up; it reaches farther than her melee attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Gangplank:Naafiri:4",
+          "text": "After you ignite a fight with Trial by Fire, popping a keg resets it and gives you extra move speed to chase her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 30,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "45ebe88f2707f01a61a2fdcc7a520d55cfcbb94ca531b239c69eed1c40461aba",
+      "tips": [
+        {
+          "id": "top:Gangplank:Nasus:0",
+          "text": "Place a Powder Keg and pop it with Parrrley when Nasus walks up to last-hit; the blast slows him and hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Nasus", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gangplank:Nasus:1",
+          "text": "Harass Nasus with Parrrley from long range; he has to walk into you to use Siphoning Strike.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gangplank:Nasus:2",
+          "text": "Use Remove Scurvy when Wither lands. It clears the slow, and the heal helps too.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Nasus-W", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gangplank:Nasus:3",
+          "text": "Do not trade while Nasus has Fury of the Sands up. Kite away, or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Nasus-R", "start": 29, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gangplank:Nasus:4",
+          "text": "Keep Nasus from stacking Siphoning Strike by pushing him off his last-hits early, before it gets strong.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b23a8f2e33ffd0dbf55270da4519e826ab90facb99c341c7317a2f52cae3d280",
+      "tips": [
+        {
+          "id": "top:Gangplank:Olaf:0",
+          "text": "Keep Parrrley on Olaf to poke him from range and shoot kegs to hit him as he walks up.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Olaf", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Gangplank:Olaf:1",
+          "text": "Save Remove Scurvy for when Olaf stuns or slows you; it clears them, but not while he is in Ragnarok.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Olaf", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Olaf-R", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Gangplank:Olaf:2",
+          "text": "Place Powder Keg behind you in a fight, so Olaf takes the slow when he chases.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Olaf", "start": 43, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Gangplank:Olaf:3",
+          "text": "Do not let Olaf low on health get close; he hits harder and heals more the lower he is. Finish him fast or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Gangplank:Olaf:4",
+          "text": "Stay away from where Undertow lands so he can't pick the axe up and throw it again.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "45c9ef80305638906f5bdd7ec4b95c7ee57d0afe0872fdb69f4e99b05b01456f",
+      "tips": [
+        {
+          "id": "top:Gangplank:Ornn:0",
+          "text": "Use Remove Scurvy to cleanse the stun when Ornn's Searing Charge slams a wall near you, or when his Call of the Forge God knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ornn", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Ornn-E", "start": 50, "end": 64 },
+            { "kind": "ability", "key": "Ornn-R", "start": 100, "end": 121 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Ornn:1",
+          "text": "Fight away from walls and Volcanic Rupture pillars, so Searing Charge has nothing to slam into and cannot stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 26, "end": 42 },
+            { "kind": "ability", "key": "Ornn-E", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gangplank:Ornn:2",
+          "text": "Hit Ornn with Parrrley from long range, then place a Powder Keg and pop it. Slowed, he has a hard time reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 53, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Gangplank:Ornn:3",
+          "text": "Ornn can't forge items while taking damage, so poke him when he starts channeling to forge.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6fb85e70fc8080e1f3b1d83a9215957f29b4c6e0d35384b3612c9d7b7fc22698",
+      "tips": [
+        {
+          "id": "top:Gangplank:Pantheon:0",
+          "text": "Use Remove Scurvy right after Pantheon lands Shield Vault; it ends the stun and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Pantheon:1",
+          "text": "Place a Powder Keg and pop it with Parrrley when Pantheon walks in, so he is slowed and hurt before he can jump on you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Pantheon", "start": 49, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gangplank:Pantheon:2",
+          "text": "Do not hit kegs while Pantheon braces with Aegis Assault from the front; he ignores damage from that direction. Wait it out or hit from another side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Gangplank:Pantheon:3",
+          "text": "Watch for Pantheon's Grand Starfall landing on you. It gives warning, so step away from the area or fight back after he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gangplank:Pantheon:4",
+          "text": "Keep your health up against Pantheon; a thrown Comet Spear hits much harder on low health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ac2cae2b8d61a2f1e4b6683be8a518cca3a240768de0e1a748950f71249ff9b7",
+      "tips": [
+        {
+          "id": "top:Gangplank:Quinn:0",
+          "text": "Put a Powder Keg down and shoot it with Parrrley when Quinn steps in to trade; the explosion slows her and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 40, "end": 48 },
+            { "kind": "champion", "key": "Quinn", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Gangplank:Quinn:1",
+          "text": "Quinn's Vault bounces her back after she hits you, so poke her with Parrrley as she leaves instead of chasing.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-E", "start": 8, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Gangplank:Quinn:2",
+          "text": "Use Remove Scurvy when Quinn's Vault knocks you back and slows you; it clears the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Quinn", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Quinn-E", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:Quinn:3",
+          "text": "Quinn's Blinding Assault shrinks your sight. Back away from the fight until it ends so you don't walk into a trade blind.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 8, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gangplank:Quinn:4",
+          "text": "Quinn can roam fast with Behind Enemy Lines. Once you reach level 6, use Cannon Barrage to catch her when she shows up in another lane or runs away.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-R", "start": 25, "end": 43 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 73, "end": 87 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ff423f40ec0f3b0b564e315a0495c7a25d3f9dd04efb89e6a458366b7c323a19",
+      "tips": [
+        {
+          "id": "top:Gangplank:Renekton:0",
+          "text": "Cleanse Renekton's stun with Remove Scurvy right after Ruthless Predator lands; it also heals you and removes the slow.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "1", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Renekton", "start": 8, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Renekton-W", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Renekton:1",
+          "text": "Poke him with Parrrley from range while he has little Fury; his abilities lose their bonus effects without it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Gangplank:Renekton:2",
+          "text": "Place a Powder Keg and shoot it with Parrrley when Renekton dashes in, so he is slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 37, "end": 45 },
+            { "kind": "champion", "key": "Renekton", "start": 51, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:Renekton:3",
+          "text": "Do not stand next to your kegs. Renekton can attack them to defuse them safely.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Gangplank:Renekton:4",
+          "text": "Save Cannon Barrage for when Renekton is low and running; it can finish him from anywhere on the map once you reach level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Renekton", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e141409393f888523dda6fffa756c6c3336669568b2b7bbf92daf1484197aa6f",
+      "tips": [
+        {
+          "id": "top:Gangplank:Riven:0",
+          "text": "Save Remove Scurvy for when Riven stuns you with Ki Burst or knocks you up with Broken Wings; it cleanses them and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Riven", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Riven-W", "start": 49, "end": 57 },
+            { "kind": "ability", "key": "Riven-Q", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Riven:1",
+          "text": "Poke Riven with Parrrley from long range; she has to dash in to reach you and has no healing.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Riven", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 16, "end": 24 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Gangplank:Riven:2",
+          "text": "Place a Powder Keg where Riven will dash in, then blow it with Parrrley to slow her and deal heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Riven", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 63, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Gangplank:Riven:3",
+          "text": "Do not stand next to Riven when Ki Burst is ready; she stuns you and wins the close trade.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Riven-W", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Gangplank:Riven:4",
+          "text": "Hit Riven with Trial by Fire's attack after a keg explodes; the explosion resets it, so you can burn her again.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 15,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bdf378c7115b7e87722d66ca1825f4dca3e80e5d5eab437bbe5b7804d949402a",
+      "tips": [
+        {
+          "id": "top:Gangplank:Rumble:0",
+          "text": "Use Remove Scurvy when Rumble's Electro Harpoon or The Equalizer slows you. It clears every slow and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Rumble-E", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Rumble-R", "start": 51, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Gangplank:Rumble:1",
+          "text": "Step in when Rumble is Overheating. He can't cast spells, so you can trade freely with Parrrley and Powder Keg.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 87, "end": 95 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-E",
+              "start": 100,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gangplank:Rumble:2",
+          "text": "Place Powder Keg out of sight and blow it with Parrrley when Rumble walks to farm. He gets slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 47, "end": 55 },
+            { "kind": "champion", "key": "Rumble", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Gangplank:Rumble:3",
+          "text": "Stay out of the burning trail from The Equalizer. Walk out of it rather than fighting inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "97c75ec8468434f318cf71fda60af5ea8f322ac1f0fea910c50bacce8e4be43b",
+      "tips": [
+        {
+          "id": "top:Gangplank:Sett:0",
+          "text": "Place a Powder Keg behind you and pop it with Parrrley when Sett walks in; the slow stops him from closing the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 46, "end": 54 },
+            { "kind": "champion", "key": "Sett", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Gangplank:Sett:1",
+          "text": "Use Remove Scurvy when Sett lands Facebreaker on both sides; it cleanses the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Sett-E", "start": 34, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Gangplank:Sett:2",
+          "text": "Stay in range with Parrrley and keep trading at a distance, since Sett wants to fight up close.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Sett", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Gangplank:Sett:3",
+          "text": "Don't stand in a spot where Sett can reach you with The Show Stopper at level 6 when your health is low.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Sett-R", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Gangplank:Sett:4",
+          "text": "Hold Remove Scurvy against Sett's heavy Haymaker; the shield he gains comes from damage he has taken, so avoid feeding him free trades.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sett", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sett-W", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b2164399321afd4b72f03ff5e54e4eb0400db70c89da6eceddd921c033f0ae8e",
+      "tips": [
+        {
+          "id": "top:Gangplank:Shen:0",
+          "text": "Stay out of Shadow Dash range when Shen has energy; if he lands it you are taunted and forced to attack him.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Shen", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:Shen:1",
+          "text": "If Shen taunts you, Remove Scurvy cleanses it and heals you, so keep it ready for his dash.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Gangplank:Shen:2",
+          "text": "Hit Shen with Parrrley from long range and keep the distance; his Twilight Assault empowered attacks make trading up close costly.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Shen-Q", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Shen:3",
+          "text": "Parrrley can set off a Powder Keg from range, so blow kegs when Shen steps near them to leave him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Shen", "start": 64, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Gangplank:Shen:4",
+          "text": "Use Cannon Barrage to finish Shen or help allies when he teleports away with Stand United; place it on his escape path.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shen", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Shen-R", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3727413a716e7d32c1de7e6513fd593afcc577e34b8f21a946dd36d5321ff160",
+      "tips": [
+        {
+          "id": "top:Gangplank:Singed:0",
+          "text": "Use Remove Scurvy right after Singed's Fling lands you in his Mega Adhesive. It clears the root, so you don't have to wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Singed", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Singed-E", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Singed-W", "start": 62, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Gangplank:Singed:1",
+          "text": "Poke Singed with Parrrley from range. Don't chase him through his Poison Trail, because he wants you to follow.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Singed", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Singed-Q", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Singed:2",
+          "text": "Stay out of Fling range when Singed's Fling is ready. Don't stand beside your own Powder Keg either, because he can throw you away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Singed", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Singed-E", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gangplank:Singed:3",
+          "text": "Blow up a Powder Keg when Singed runs at you. The explosion leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Singed", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a3148ce7af54130a022528b7f98608963c68c1bd51c802ac6729a517b11c6fb",
+      "tips": [
+        {
+          "id": "top:Gangplank:Sion:0",
+          "text": "Hold Remove Scurvy for Decimating Smash; it cleanses the stun and knock up if you use it quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Sion-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Gangplank:Sion:1",
+          "text": "Step out of the swing when you see Sion charging. Decimating Smash is aimed in a direction, so sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Sion-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gangplank:Sion:2",
+          "text": "Shoot Sion with Parrrley from range as he walks up, since it has a short cooldown and hits hard.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 16, "end": 24 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gangplank:Sion:3",
+          "text": "Place Powder Keg away from Sion's path and blow it with Parrrley to slow him when he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Sion", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 56, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Gangplank:Sion:4",
+          "text": "Do not hit Sion's Soul Furnace shield for nothing; wait for it to expire or detonate, then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Sion-W", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Gangplank:Sion:5",
+          "text": "When Sion would die, back away and let Glory in Death burn out, because his health drains quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sion-passive", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "77e6e5df3736def9b47f782d186a557072b614a2577ed2b8151dd6a28e39655d",
+      "tips": [
+        {
+          "id": "top:Gangplank:TahmKench:0",
+          "text": "Stay out of Tongue Lash range early; if it lands you are slowed and Tahm Kench heals, and with enough stacks he can stun or Devour you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            { "kind": "champion", "key": "TahmKench", "start": 68, "end": 78 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 124,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Gangplank:TahmKench:1",
+          "text": "Use Remove Scurvy when Tahm Kench stuns or knocks you up. It cleanses the crowd control and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "TahmKench", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gangplank:TahmKench:2",
+          "text": "Wait out his Thick Skin shield before trading. Once he has spent it, he heals less and your Powder Keg and Parrrley damage lands for more.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 13, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-E",
+              "start": 92,
+              "end": 102
+            },
+            {
+              "kind": "ability",
+              "key": "Gangplank-Q",
+              "start": 107,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Gangplank:TahmKench:3",
+          "text": "Poke him with Parrrley while he is alone and he has no time to recover; he cannot easily heal through steady poke.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Gangplank:TahmKench:4",
+          "text": "When Tahm Kench channels Abyssal Dive, step away from the spot where he will land. Then punish him with a Powder Keg while he is unable to act.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 25, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-E",
+              "start": 106,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "83317069963e2cca1daf9b22bb82884c2873e3bd799d7278487fb803161f8b56",
+      "tips": [
+        {
+          "id": "top:Gangplank:Teemo:0",
+          "text": "Teemo's Blinding Dart can make your Parrrley attacks miss. Stay out of dart range or be ready to lose a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Gangplank:Teemo:1",
+          "text": "Assume there are Noxious Traps in the bushes and along his side of the lane. Walk around them and don't chase blindly.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gangplank:Teemo:2",
+          "text": "Save Remove Scurvy for when a Noxious Trap slows you, since it clears slows and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Teemo-R", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gangplank:Teemo:3",
+          "text": "Place Powder Keg and break it with Parrrley to hit Teemo from range. This is how you answer his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Teemo", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Gangplank:Teemo:4",
+          "text": "Look for Teemo's invisibility in bushes. Check them before you step in, and don't trade into his Toxic Shot.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Teemo-E", "start": 97, "end": 107 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a1cd47419b3afc503afa9dca11c2623c5c24b043721cbb6090b622aeedce14d",
+      "tips": [
+        {
+          "id": "top:Gangplank:Tryndamere:0",
+          "text": "Poke Tryndamere with Parrrley from range. It stops him killing minions to build Fury for Bloodlust.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Tryndamere", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 89, "end": 98 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Tryndamere:1",
+          "text": "Place Powder Keg where Tryndamere has to step to reach you, then pop it with Parrrley to slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Tryndamere", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 77, "end": 85 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Gangplank:Tryndamere:2",
+          "text": "Do not burn Remove Scurvy early. Hold it to clear a slow or stun and to heal in the middle of a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gangplank:Tryndamere:3",
+          "text": "Do not chase Tryndamere to the kill while he can use Undying Rage. Wait it out, then finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gangplank:Tryndamere:4",
+          "text": "Do not run away from Tryndamere with your back to him. Mocking Shout slows you when you face away.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 21, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 55,
+              "end": 68
+            },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "eabbacd661ea9f775b0d29925a239ff560190aab4b6cd4e02292cd542ccf6005",
+      "tips": [
+        {
+          "id": "top:Gangplank:Urgot:0",
+          "text": "Stay out of Corrosive Charge's landing spot; it goes off after a short delay, so step aside once you see it thrown.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-Q", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Gangplank:Urgot:1",
+          "text": "Use Remove Scurvy right after Disdain stuns you or Corrosive Charge slows you; it clears them and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Urgot-E", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Urgot-Q", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Gangplank:Urgot:2",
+          "text": "Keep Parrrley and your kegs ready for when Urgot dashes in with Disdain; keg slows help you get away from his legs.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Urgot", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Urgot-E", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Gangplank:Urgot:3",
+          "text": "Poke Urgot from range with Parrrley and kegs while his Purge is off; he moves slowly while it fires, so he cannot close in fast.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Urgot", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Urgot-W", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Gangplank:Urgot:4",
+          "text": "Once Urgot is low, stay away from him, since Fear Beyond Death can pull you in and kill you if you drop too low. Use Cannon Barrage to finish him from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Urgot-R", "start": 45, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-R",
+              "start": 117,
+              "end": 131
+            }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "71b25e4f5513ad50e3e0618099cc037eadb75ab8cd51e34af613b7bbfe76dd88",
+      "tips": [
+        {
+          "id": "top:Gangplank:Varus:0",
+          "text": "Use Remove Scurvy when Varus lands Chain of Corruption on you; it cleanses the root and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Varus", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Varus-R", "start": 35, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Gangplank:Varus:1",
+          "text": "Stay out of Varus's long Piercing Arrow line when he is charging it. Step aside or stand behind minions, since he must stand still to charge.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Varus-Q", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gangplank:Varus:2",
+          "text": "Place a Powder Keg and detonate it with Parrrley to slow Varus, then walk up and hit him with Trial by Fire.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 40, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 },
+            { "kind": "champion", "key": "Varus", "start": 57, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 94,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Gangplank:Varus:3",
+          "text": "Pressure Varus once he has used his Piercing Arrow. His main poke is on cooldown, so you can fight closer.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Varus-Q", "start": 36, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f2a74c874b4f0344bf260d0d476a0cfa8cecab93b18f73cfcb0f2445870c8fde",
+      "tips": [
+        {
+          "id": "top:Gangplank:Vayne:0",
+          "text": "Stay out of wall range when Vayne has Condemn ready; a knockback into terrain stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Vayne-E", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gangplank:Vayne:1",
+          "text": "Use Remove Scurvy right after Condemn slams you into a wall to clear the stun and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Vayne-E", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Gangplank:Vayne:2",
+          "text": "Place a Powder Keg and blow it up with Parrrley when Vayne steps in to trade; she is slowed and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 39, "end": 47 },
+            { "kind": "champion", "key": "Vayne", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Gangplank:Vayne:3",
+          "text": "Vayne is fragile, so push the fight when her Condemn is on cooldown and use Parrrley to poke her.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 45, "end": 52 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 76, "end": 84 },
+            { "kind": "keyword", "key": "poke", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Gangplank:Vayne:4",
+          "text": "Do not fight Vayne after she uses Final Hour in a long trade; she gets much faster and hits harder. Back off until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Vayne-R", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "95782f4e1c9aec6a979e0de6dd68cfcb00f594be9ed7aa5188ac95dc5fe4fdba",
+      "tips": [
+        {
+          "id": "top:Gangplank:Vladimir:0",
+          "text": "Place Powder Keg where Vladimir must walk to last-hit, then pop it with Parrrley from range.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Vladimir", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Gangplank:Vladimir:1",
+          "text": "Do not shoot a keg while Vladimir is in Sanguine Pool; he is untargetable. Wait until he surfaces.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Gangplank:Vladimir:2",
+          "text": "Save Remove Scurvy to heal and shake off slows during a trade, since Vladimir's Transfusion heals him back.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 },
+            { "kind": "champion", "key": "Vladimir", "start": 69, "end": 77 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Gangplank:Vladimir:3",
+          "text": "Back off when Hemoplague lands and avoid fighting until it bursts; it heals Vladimir if it hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "Vladimir", "start": 76, "end": 84 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1db1e38018194416e0ebe3f8bd0a4281d9c385d5b06a3308760880d4fc1ead08",
+      "tips": [
+        {
+          "id": "top:Gangplank:Volibear:0",
+          "text": "Cleanse Volibear's stun with Remove Scurvy after Thundering Smash lands; it also removes his slow and heals you.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "1", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Volibear", "start": 8, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Gangplank:Volibear:1",
+          "text": "Hit Volibear with Parrrley while he walks up to last-hit, so you can trade from range before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Gangplank:Volibear:2",
+          "text": "Slow Volibear with a Powder Keg when he runs at you; he cannot close in as fast, and his Thundering Smash is easier to avoid.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Gangplank:Volibear:3",
+          "text": "Step away from the Sky Splitter circle once you see his cast; the bolt lands after a delay and hurts big-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gangplank:Volibear:4",
+          "text": "Back off once Volibear has hit you a few times; his Relentless Storm attacks then deal extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fda3748692c7da76361ced5b035c3a89e32557fa6a63d8426a529621acac7f7c",
+      "tips": [
+        {
+          "id": "top:Gangplank:XinZhao:0",
+          "text": "Keep Parrrley and Powder Keg ready for when Xin Zhao charges in; hit a keg to slow him as he arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 18, "end": 28 },
+            { "kind": "champion", "key": "XinZhao", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Gangplank:XinZhao:1",
+          "text": "Save Remove Scurvy for when Xin Zhao's Three Talon Strike knocks you up or Wind Becomes Lightning slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 39, "end": 57 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 75, "end": 97 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gangplank:XinZhao:2",
+          "text": "Poke Xin Zhao with Parrrley before he gets close, and don't let him hit you three times in a row.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Gangplank:XinZhao:3",
+          "text": "Xin Zhao's Crescent Guard knocks you back and stuns you if you aren't Challenged, so stay away from him in fights at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 11, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 51 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "15479954d66d1d87508494ec9c7616ccd40282f097281395aedc13eacc5ac5df",
+      "tips": [
+        {
+          "id": "top:Gangplank:Yasuo:0",
+          "text": "Keep Powder Keg blasts away from Yasuo's Wind Wall? No: Parrrley is blocked by it, so wait for the wall to fade before you shoot him.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Yasuo", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 41, "end": 50 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Gangplank:Yasuo:1",
+          "text": "Use Remove Scurvy when Yasuo's whirlwind knocks you up; it cleanses the disabling effect and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Gangplank:Yasuo:2",
+          "text": "Place kegs where Yasuo wants to dash. He can't destroy them safely, so shoot them with Parrrley when he steps near.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gangplank:Yasuo:3",
+          "text": "Yasuo's Steel Tempest is narrow. When he has two stacks, step sideways and avoid the whirlwind rather than taking a knock up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 8, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 116, "end": 124 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "121255f751008000d5289d839e7dd3de87927f29bf6812c1dff0a89b8b0cbf8f",
+      "tips": [
+        {
+          "id": "top:Gangplank:Yone:0",
+          "text": "Use Remove Scurvy when Yone's Fate Sealed or a Mortal Steel whirlwind lands; it clears the stun but not the dash or pull.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Yone-R", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Yone-Q", "start": 47, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Gangplank:Yone:1",
+          "text": "Place a Powder Keg and pop it with Parrrley when Yone walks in to trade; the slow stops him running away from the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Yone", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Gangplank:Yone:2",
+          "text": "Yone's Spirit Cleave gives him a shield after it hits, so hold your damage until it fades.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-W", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Gangplank:Yone:3",
+          "text": "When Yone is in spirit form from Soul Unbound, back away; he deals extra damage when he snaps back to his body.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-E", "start": 33, "end": 45 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "077ed186eff9d7401887dd13599d5e9261034e2897eeb106a6ffdf73857a1b5f",
+      "tips": [
+        {
+          "id": "top:Gangplank:Yorick:0",
+          "text": "Place a Powder Keg and pop it with Parrrley to slow Yorick and hit him from range. Do it when he walks up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "champion", "key": "Yorick", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Gangplank:Yorick:1",
+          "text": "Break Dark Procession by attacking it if Yorick walls you in. Do not wait for it to fade if he is about to fight you.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yorick", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gangplank:Yorick:2",
+          "text": "Kill Mist Walkers quickly with a basic attack, and keep fighting away from graves so Yorick has fewer of them to raise.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Gangplank:Yorick:3",
+          "text": "Use Remove Scurvy when Yorick's Mourning Mist slows you, so you can walk away from his Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yorick", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Yorick-E", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Gangplank:Yorick:4",
+          "text": "Keep Cannon Barrage ready when Yorick is low or retreating, because the Maiden can be left behind. Aim it on his path home.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yorick", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "40b15b9ce90c99e1ada8a4735bdbf3ebbd05ba30506e420f3f53a794ef7fddae",
+      "tips": [
+        {
+          "id": "top:Gangplank:Zaahen:0",
+          "text": "Cleanse Dreaded Return's stun with Remove Scurvy if Zaahen catches you, then heal back some of the damage.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "1", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 8, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 35, "end": 48 },
+            { "kind": "champion", "key": "Zaahen", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Gangplank:Zaahen:1",
+          "text": "Slow Zaahen with a Powder Keg when he dashes in. Pop it with Parrrley from range so he has to walk through the blast.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zaahen", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gangplank:Zaahen:2",
+          "text": "Do not trade when Zaahen's bar under his health is nearly full. He hits much harder and can come back from a lethal hit.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Gangplank:Zaahen:3",
+          "text": "Use Parrrley to hit him from range while he has no way in. It keeps him from building up stacks in melee.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Gangplank:Zaahen:4",
+          "text": "Zaahen's Grim Deliverance makes him immune to crowd control while he casts it. Wait until he lands before you fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zaahen-R", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

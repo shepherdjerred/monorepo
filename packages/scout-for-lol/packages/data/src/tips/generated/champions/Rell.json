@@ -1,0 +1,807 @@
+{
+  "schemaVersion": 1,
+  "champion": "Rell",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "8e74cfb5c272be0e2bfe138a22dcb00f2f4c7738eb7be932081971b90e99f982",
+      "tips": [
+        {
+          "id": "support:Rell:general:0",
+          "text": "Stun enemies with Shattering Strike when they step up to last-hit or poke. It also destroys their shields, so use it when an enemy shield is up.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 18, "end": 35 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Rell:general:1",
+          "text": "Leap in with Ferromancy: Crash Down to knock enemies up, then take the shield it gives you. Cast it when your team can follow up on the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 13, "end": 35 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Rell:general:2",
+          "text": "Use Ferromancy: Mount Up after the leap. Your next attack charges at the target and stuns them, so aim it at the enemy you want to catch.",
+          "refs": [],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Rell:general:3",
+          "text": "Cast Full Tilt on your carry to engage or disengage together. Turn to face an enemy or your ally and you both get the bigger speed boost.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-E", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Rell:general:4",
+          "text": "Follow Full Tilt with Shattering Strike. The empowered hit explodes around the target for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-E", "start": 7, "end": 16 },
+            { "kind": "ability", "key": "Rell-Q", "start": 22, "end": 39 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Rell:general:5",
+          "text": "Save Magnet Storm for when enemies are grouped up in a fight. It pulls them to you and keeps dragging them while it damages them.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Rell:general:6",
+          "text": "Keep hitting enemies with attacks and abilities. Break the Mold lowers their resistances and raises yours, so you get tankier the longer a fight lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-passive", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Rell:combo:0",
+          "name": "Mount Up charge follow-up",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Rell-W" },
+            { "kind": "ability", "key": "Rell-R" },
+            { "kind": "ability", "key": "Rell-W" },
+            "attack"
+          ],
+          "when": "Full teamfight engage once Crash Down and Magnet Storm have both landed.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Rell-R", "start": 42, "end": 54 }
+          ],
+          "text": "Recast W to remount, then attack. The empowered attack charges at the target and stuns it, which adds more crowd control after the ultimate.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "203e0165af8e7d96a9e749a85f77164b1b4524dd7c89b6e7cf9edfe2081f55e2",
+      "tips": [
+        {
+          "id": "support:Rell:Bard:0",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Rell:Bard:1",
+          "text": "Dodge Cosmic Binding by staying out of line with minions and your ally. If it hits a second target or a wall, both of you are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 126, "end": 133 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Rell:Bard:2",
+          "text": "Engage when Bard's Cosmic Binding is on cooldown. Land Shattering Strike and follow up with Ferromancy: Crash Down.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Bard-Q", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Rell-Q", "start": 55, "end": 72 },
+            { "kind": "ability", "key": "Rell-W", "start": 92, "end": 114 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Rell:Bard:3",
+          "text": "You can step into Bard's Magical Journey portals to chase him when it looks safe. Do not follow it blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Bard-E", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9c6a47dc0e4cbd679c3ea87b7927989a6eaab6b0ebc4f5a1885680792ff988d8",
+      "tips": [
+        {
+          "id": "support:Rell:Karma:0",
+          "text": "Hold Shattering Strike until Karma has used Inspire; it destroys shields and stuns her ally or her.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Karma", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Karma-E", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Rell:Karma:1",
+          "text": "Stay out of Karma's range before you commit. Her Inner Flame is a straight shot that stops at the first unit it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Karma-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Rell:Karma:2",
+          "text": "Karma's Focused Resolve roots you if the tether lasts. Walk out of its range during the tether.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-W", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Rell:Karma:3",
+          "text": "Use Magnet Storm when Karma and her ally are together. It pulls them in and stops them from kiting you.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Karma", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "410685d3d4a3feb70490e7ac9719d7fa0e305d14b685f7bb01c378e2cbe07e5c",
+      "tips": [
+        {
+          "id": "support:Rell:Leona:0",
+          "text": "Hit Leona with Shattering Strike when she dashes in with Zenith Blade. It stuns her and breaks any shield she has.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rell-Q", "start": 15, "end": 32 },
+            { "kind": "ability", "key": "Leona-E", "start": 57, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Rell:Leona:1",
+          "text": "Sidestep Zenith Blade. If it misses, Leona cannot dash to you, so you can trade back safely.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Leona", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Rell:Leona:2",
+          "text": "When Leona raises Eclipse, back away for its duration before she can blast you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Rell:Leona:3",
+          "text": "Use Magnet Storm to pull Leona and her team together when she tries to run in, then fight there.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e70bd6d7fb05e543de6229da01ab30d9bb1a155a978963f1986b7a970b3d799a",
+      "tips": [
+        {
+          "id": "support:Rell:Lulu:0",
+          "text": "Hit Lulu with Shattering Strike when she steps up to attack; she is fragile and the stun lets you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rell-Q", "start": 14, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Rell:Lulu:1",
+          "text": "Wait for Lulu to use Whimsy before you charge in with Ferromancy: Crash Down; she can't polymorph you again soon.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Lulu-W", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Rell-W", "start": 54, "end": 76 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Rell:Lulu:2",
+          "text": "Walk behind minions to dodge Glitterlance, since it can hit you in a line and slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 29, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Rell:Lulu:3",
+          "text": "Use Magnet Storm when Lulu and her partner are close together; it pulls them in and she can't easily slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Rell:Lulu:4",
+          "text": "Hide behind your minions so Pix's extra bolts hit them, not you.",
+          "refs": [],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "be18977a067af566d5cdbc262e1fcec3cb393ddcdda9032ebbc4f1359010283d",
+      "tips": [
+        {
+          "id": "support:Rell:Lux:0",
+          "text": "Close in with Ferromancy: Crash Down, then follow with Shattering Strike. Lux has no easy escape from a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 14, "end": 36 },
+            { "kind": "ability", "key": "Rell-Q", "start": 55, "end": 72 },
+            { "kind": "champion", "key": "Lux", "start": 74, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Rell:Lux:1",
+          "text": "Use Shattering Strike when Lux has Prismatic Barrier up; it destroys her shield.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Lux-W", "start": 35, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Rell:Lux:2",
+          "text": "Stay out of a straight line with minions or allies. Light Binding roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Rell:Lux:3",
+          "text": "Use Magnet Storm at level 6 to pull Lux in once she has used Light Binding. She cannot keep her distance.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Lux-Q", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Rell:Lux:4",
+          "text": "Try to approach from the side so Lucent Singularity does not catch you in its slow.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 33, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "762d8c0b3299b0ee8db4ec450a4486bc7079b06debc45d304fc4164bf399e4be",
+      "tips": [
+        {
+          "id": "support:Rell:Milio:0",
+          "text": "Look for Milio when he is alone. With no ally near, he has little to escape with, so jump on him with Ferromancy: Crash Down.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Rell-W", "start": 102, "end": 124 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Rell:Milio:1",
+          "text": "Shattering Strike stuns quickly and destroys shields, so use it to pop the shield from Warm Hugs before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 0, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Milio-E", "start": 87, "end": 96 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Rell:Milio:2",
+          "text": "Use Magnet Storm when Milio and his carry are bunched up. It pulls them to you and keeps dragging them.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Rell:Milio:3",
+          "text": "Hold your crowd control until Breath of Life is spent. It cleanses most crowd control, so a fight won't go your way while it is up.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Rell:Milio:4",
+          "text": "Step out of the line of Ultra Mega Fire Kick. If it hits you, you are stunned and then slowed by the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 24, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2d22d27f95e8e5be2f31c2c8a945a84486d37d81c361c10981ce7eac0879d78c",
+      "tips": [
+        {
+          "id": "support:Rell:Nami:0",
+          "text": "Look for Shattering Strike when Nami has used Aqua Prison; she has little to stop you from stunning her.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 9, "end": 26 },
+            { "kind": "champion", "key": "Nami", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Nami-Q", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Rell:Nami:1",
+          "text": "Walk out of the path of Tidal Wave; it travels slowly and you can sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Rell:Nami:2",
+          "text": "Back off when the enemy carry has Tidecaller's Blessing; it fades fast, so wait it out before you engage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 34, "end": 55 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Rell:Nami:3",
+          "text": "Leap in with Ferromancy: Crash Down, then mount back up and hit Nami with your next attack to stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 13, "end": 35 },
+            { "kind": "champion", "key": "Nami", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Rell:Nami:4",
+          "text": "Use Magnet Storm when Nami and her carry are close together; it pulls them to you.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c6274d9eebafd08ce7a57ee35637c41c1547d5913578a94f3bfce65f23bee8d7",
+      "tips": [
+        {
+          "id": "support:Rell:Nautilus:0",
+          "text": "Hit Nautilus with Shattering Strike right after he casts Titan's Wrath. It destroys his shield and stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Rell-Q", "start": 18, "end": 35 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 57, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Rell:Nautilus:1",
+          "text": "Stay out of a straight line with Nautilus. Dredge Line stops on the first enemy it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Rell:Nautilus:2",
+          "text": "Use Ferromancy: Crash Down on Nautilus when he is close. Follow up quickly, since you gain a shield and he is knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 4, "end": 26 },
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "knocked-up", "start": 110, "end": 120 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Rell:Nautilus:3",
+          "text": "After Nautilus uses Riptide next to you, wait for the waves to finish before you run. Running early takes more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "571e2b37062cc0e151b878ee45785ff6656211482e4bec2a2a4cb20a8b8f1bc7",
+      "tips": [
+        {
+          "id": "support:Rell:Pantheon:0",
+          "text": "Land Shattering Strike on Pantheon when he leaps in; it destroys his shields and stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Rell:Pantheon:1",
+          "text": "Stay out of Shield Vault range, since a stun leaves you open for him to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Rell:Pantheon:2",
+          "text": "Hit Pantheon from the side or behind while Aegis Assault is up. He takes no damage from the front.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Rell:Pantheon:3",
+          "text": "Stay healthy; a thrown Comet Spear hurts a lot more once you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Rell:Pantheon:4",
+          "text": "Move out when Grand Starfall begins; there is a warning before he lands. Pull enemies in with Magnet Storm once he is down.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 14, "end": 28 },
+            { "kind": "ability", "key": "Rell-R", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0ba01b2eb2251f442965d6cef8c5043ac017d634322e3d304e455286152b6eae",
+      "tips": [
+        {
+          "id": "support:Rell:Pyke:0",
+          "text": "Keep your distance from Pyke when his Bone Skewer is ready; if he pulls you in, answer with Shattering Strike to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 38, "end": 49 },
+            { "kind": "ability", "key": "Rell-Q", "start": 92, "end": 109 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Rell:Pyke:1",
+          "text": "Use Ferromancy: Crash Down on Pyke after he commits to a dash or pull. It knocks him up and gives you a shield that soaks his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 4, "end": 26 },
+            { "kind": "champion", "key": "Pyke", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Rell:Pyke:2",
+          "text": "Stay away from low-health allies while Pyke is around. Death From Below can execute them, and you could be next.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Pyke-R", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Rell:Pyke:3",
+          "text": "Watch for sharks under your feet. They mean Pyke is hidden nearby in Ghostwater Dive, so back off or group up with your ally.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Pyke-W", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Rell:Pyke:4",
+          "text": "Pull Pyke back with Magnet Storm when he is low on health at level 6. It keeps him from slipping away after a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Rell-R", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f8770495be4f1c1f40a284bf89a191214a50e031225cd4d19513e25eb617bb9e",
+      "tips": [
+        {
+          "id": "support:Rell:Senna:0",
+          "text": "Dive Senna with Ferromancy: Crash Down when her Last Embrace is on cooldown. She has little way to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Rell-W", "start": 16, "end": 38 },
+            { "kind": "ability", "key": "Senna-W", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Rell:Senna:1",
+          "text": "Senna out-ranges you, so stay out of her Last Embrace line, and use minions to block it.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Rell:Senna:2",
+          "text": "Land Shattering Strike on Senna to stun her and break any shield she has.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Senna", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Rell:Senna:3",
+          "text": "Use Magnet Storm at level 6 to pull Senna in so she can't kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Rell:Senna:4",
+          "text": "Expect Senna to hide in Curse of the Black Mist before a gank. Watch for a sudden camouflaged approach.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Senna-E", "start": 24, "end": 47 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2593e23333061deaa48dfa0db3017cea031903b4685070965668ea78e9d6cc8a",
+      "tips": [
+        {
+          "id": "support:Rell:Seraphine:0",
+          "text": "Look for Seraphine's Beat Drop line and sidestep it. If you are slowed first, it roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Rell:Seraphine:1",
+          "text": "Use Shattering Strike on Seraphine right after she shields herself; it destroys her shield.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Seraphine", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Rell:Seraphine:2",
+          "text": "Leap on Seraphine with Ferromancy: Crash Down when her Beat Drop is on cooldown; she is squishy and the knock up lets you stick to her.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Rell-W", "start": 23, "end": 45 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 55, "end": 64 },
+            { "kind": "keyword", "key": "knocked-up", "start": 104, "end": 112 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Rell:Seraphine:3",
+          "text": "Hold Magnet Storm until Seraphine and her allies are bunched up, so you can pull them in together.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "caa6f8ad04b97a24ee489739afea6d1f49dc064138801621c31335ef7a2117b2",
+      "tips": [
+        {
+          "id": "support:Rell:Sona:0",
+          "text": "Look for Shattering Strike when Sona stands close to your carry. She has no dash to dodge it, and a stun gets her killed.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 9, "end": 26 },
+            { "kind": "champion", "key": "Sona", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Rell:Sona:1",
+          "text": "Use Shattering Strike to destroy the shield from Aria of Perseverance before you commit to a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "Sona-W", "start": 49, "end": 69 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Rell:Sona:2",
+          "text": "Leap in with Ferromancy: Crash Down once Sona has spent Song of Celerity. She will struggle to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 13, "end": 35 },
+            { "kind": "champion", "key": "Sona", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Sona-E", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Rell:Sona:3",
+          "text": "Stay out of Crescendo range when you charge in, or spread out from your team. One stun from Sona can lose the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 },
+            { "kind": "champion", "key": "Sona", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Rell:Sona:4",
+          "text": "Do not stand in range of Hymn of Valor for free. Step back out of her poke and trade only when you can reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 25, "end": 38 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f3b006b11c85c689a3a4626e2a013cd93a1fe2057733909b57790accd5dfae2d",
+      "tips": [
+        {
+          "id": "support:Rell:Thresh:0",
+          "text": "Step sideways when you see Thresh start Death Sentence; its cast takes a moment, and being pulled in puts you in easy range of his team.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Rell:Thresh:1",
+          "text": "Use Shattering Strike on Thresh or his ally to break the Dark Passage shield, then stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Thresh", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Thresh-W", "start": 57, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Rell:Thresh:2",
+          "text": "Hold Ferromancy: Crash Down until Thresh uses Death Sentence or Flay, then leap in while they are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 46, "end": 60 },
+            { "kind": "ability", "key": "Thresh-E", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Rell:Thresh:3",
+          "text": "If you are trapped by The Box, break a wall with a teammate rather than letting the whole team stay slowed. Magnet Storm drags Thresh back in if he flees.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 },
+            { "kind": "ability", "key": "Rell-R", "start": 108, "end": 120 },
+            { "kind": "champion", "key": "Thresh", "start": 127, "end": 133 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

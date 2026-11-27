@@ -1,0 +1,831 @@
+{
+  "schemaVersion": 1,
+  "champion": "Udyr",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "ba18ffc4c14fd5ae8f788159e87f084069df9b815e4ad088920a7469ac4ec777",
+      "tips": [
+        {
+          "id": "jungle:Udyr:general:0",
+          "text": "Start fights with Blazing Stampede: your next attack dashes onto the target and stuns them, so use it to catch runners or to open a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 18, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Udyr:general:1",
+          "text": "Use Iron Mantle when you take a lot of damage, such as after a camp or in a skirmish; it gives a shield and your next attacks heal you.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Udyr:general:2",
+          "text": "Cast Wilding Claw before you attack. It gives Attack Speed, and your next two attacks reach farther and deal extra damage based on the target's max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Udyr:general:3",
+          "text": "Use Wingborne Storm when you are surrounded. It damages and slows everyone close to you, so stay inside it while you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Udyr:general:4",
+          "text": "Cast an ability a second time to Awaken it. This is strong but then goes on a long cooldown, so save it for the moment that matters.",
+          "refs": [],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Udyr:general:5",
+          "text": "Swap between abilities often. Each cast gives bonus Attack Speed on your next two attacks and speeds up your Awaken cooldown.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Udyr:general:6",
+          "text": "Awakened Blazing Stampede makes you immune to crowd control for a short time. Cast it to dive through enemy stuns or slows.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Udyr:general:7",
+          "text": "Awakened Wingborne Storm moves on its own and follows the last enemy you hit, so attack your target first, then step back and let it keep hurting them.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "a8ab0c113c736edfde05f8a82fa1be836265bd766c22250c76520d418ed2e7b7",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Graves:0",
+          "text": "Use Blazing Stampede to get on top of Graves fast; your next attack dashes you to him and leaves him stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Graves", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Udyr:Graves:1",
+          "text": "Graves has to keep his distance, so stay close. Wingborne Storm keeps him slowed and hurt when he tries to back away.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Udyr-R", "start": 48, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Udyr:Graves:2",
+          "text": "Awaken Blazing Stampede when Graves is about to land a crowd control effect; you become immune to it for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Graves", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Udyr:Graves:3",
+          "text": "Open with Iron Mantle when you walk into Graves's range. Its shield soaks up his shotgun and ability damage.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Graves", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7088d8fd1da5e965b080afb7db89c862fa84c66619540e5085e2ffaa4831d519",
+      "tips": [
+        {
+          "id": "jungle:Udyr:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you get knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Udyr:JarvanIV:1",
+          "text": "Use Blazing Stampede to close in on Jarvan; when Awakened it also makes you immune to stuns and knock ups.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Udyr:JarvanIV:2",
+          "text": "Open with Iron Mantle when Jarvan engages; the shield and healing win longer trades.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Udyr:JarvanIV:3",
+          "text": "Use Wingborne Storm once Jarvan walls you in with Cataclysm; it slows him and keeps damaging inside the arena.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 50, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "26cb5928678966bc2e30a6482868c03e52e9a858189512629a05397ad0ae8311",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Kayn:0",
+          "text": "Cast Blazing Stampede, then attack Kayn to dash onto him and stun him. It also gives you speed to chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Udyr:Kayn:1",
+          "text": "Awaken Blazing Stampede before Kayn locks you down; it makes you immune to crowd control for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Udyr:Kayn:2",
+          "text": "Open a fight with Wingborne Storm when Kayn is on top of you. It keeps him slowed, so he struggles to dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 18, "end": 33 },
+            { "kind": "champion", "key": "Kayn", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Udyr:Kayn:3",
+          "text": "Kayn's Umbral Trespass needs him to damage you first. Stay stunning and sticking to him so he cannot easily get away.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-R", "start": 7, "end": 22 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Udyr:Kayn:4",
+          "text": "Use Iron Mantle for the shield and healing before you trade with Kayn. It makes his burst much weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kayn", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Udyr:Kayn:5",
+          "text": "Dodge Blade's Reach when you can. If it hits, you are slowed, and later he may knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d18e1eadac0d155b93afcc83742e748b8909149103d8acaacd120c1dceba0d7a",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Khazix:0",
+          "text": "Stay near your camps' allies when you can; Kha'Zix hits much harder on you when you are alone, so group with your team and fight beside them.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "isolated", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Udyr:Khazix:1",
+          "text": "Cast Wingborne Storm when Kha'Zix jumps on you; the enemy is slowed while inside it and takes damage each moment.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Khazix", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Udyr:Khazix:2",
+          "text": "Use Iron Mantle before he engages so the shield soaks his burst, then hit him back to heal.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Udyr:Khazix:3",
+          "text": "Chase him with Blazing Stampede; your attack dashes to him and stuns him, so he cannot easily jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Udyr:Khazix:4",
+          "text": "Fight when his Leap and Void Assault are on cooldown, because he has little escape then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Khazix-R", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "584a6c434636bd7ab243f4dcc724cb9c3e725b04fa9fa3cea4eca6a0baff6b85",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Kindred:0",
+          "text": "Use Blazing Stampede to chase Kindred; your attack dashes onto her and stuns her, and she is fragile with few ways to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Udyr:Kindred:1",
+          "text": "Run into her with Wingborne Storm active; it slows her so she can't kite you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Udyr:Kindred:2",
+          "text": "Do not fight inside Lamb's Respite; nobody inside can die, so wait for it to end before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Udyr:Kindred:3",
+          "text": "Use Iron Mantle before you trade with her; the shield and healing let you outlast her poke and Wolf's bites.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Udyr:Kindred:4",
+          "text": "Awaken Blazing Stampede when she tries to stop you; you can't be stunned or slowed for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0e620ef5ad81a16238121b84ff40a3217af37c18b655a47a53e34312ce46787d",
+      "tips": [
+        {
+          "id": "jungle:Udyr:LeeSin:0",
+          "text": "Stay out of Lee Sin's Sonic Wave line, and don't chase into the dash that follows. Lee Sin wants to hit it first, then close in.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 12, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Udyr:LeeSin:1",
+          "text": "Use Blazing Stampede to jump onto Lee Sin and stun him. His follow-up abilities are hard to chain while he's stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "LeeSin", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Udyr:LeeSin:2",
+          "text": "Awaken Blazing Stampede when you see Lee Sin start Dragon's Rage. Immunity to disables can save you from the kick.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "LeeSin", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Udyr:LeeSin:3",
+          "text": "Stay close to Lee Sin with Wingborne Storm. It slows him and keeps hurting him if he tries to run.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Udyr-R", "start": 27, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Udyr:LeeSin:4",
+          "text": "Lee Sin is weaker against magic damage, so use Wingborne Storm when you trade.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Udyr-R", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f032ad35352cc24e6e49cd8eeda192b8d120823405bdcee3a7c8213c5e6b2cca",
+      "tips": [
+        {
+          "id": "jungle:Udyr:MasterYi:0",
+          "text": "Attack Master Yi with Blazing Stampede to stun him and stop his attacks. Save it for when he jumps in.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 7, "end": 16 },
+            { "kind": "ability", "key": "Udyr-E", "start": 22, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Udyr:MasterYi:1",
+          "text": "Don't rely on Wingborne Storm's slow while Highlander is active. Use Iron Mantle to take his hits.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 43, "end": 53 },
+            { "kind": "ability", "key": "Udyr-W", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Udyr:MasterYi:2",
+          "text": "Hit Master Yi a few times so he has to spend mana on Meditate to heal.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Udyr:MasterYi:3",
+          "text": "Master Yi can dodge you with Alpha Strike. Wait until it is on cooldown, then fight him.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "18a692d961089ff5d0865c47884b9dda46fe6b70c61ce798f6dba194cb54b550",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Naafiri:0",
+          "text": "Use Blazing Stampede to run Naafiri down; your next attack dashes to her and stuns her. She cannot easily run from you once you are in range.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Udyr:Naafiri:1",
+          "text": "Cast Iron Mantle before she dives in. The shield and healing on your next attacks blunt her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Udyr:Naafiri:2",
+          "text": "Turn on Wingborne Storm when she jumps in. It slows her and damages her and her packmates standing around you.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Udyr:Naafiri:3",
+          "text": "Awaken Blazing Stampede when you expect her to dive in with Hounds' Pursuit; it makes you immune to crowd control and she cannot stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Udyr:Naafiri:4",
+          "text": "Fight with Wilding Claw up; her health is modest, so the extra damage from your attacks hurts her badly.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-Q", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "70cf33026c8c6b0e8a4c07ea94f9bc022517a3046f4dd7a5452584015e90b7b0",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Nocturne:0",
+          "text": "Do not walk into Nocturne with Blazing Stampede while Shroud of Darkness is ready. It blocks your stun.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Udyr-E", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 54, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Udyr:Nocturne:1",
+          "text": "Stay close to Nocturne so Unspeakable Horror's tether breaks. Use Blazing Stampede to dash away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 26, "end": 44 },
+            { "kind": "ability", "key": "Udyr-E", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Udyr:Nocturne:2",
+          "text": "When Nocturne casts Paranoia, group with allies. Cast Iron Mantle before his dash lands to take the hit on your shield.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Udyr-W", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4e6b8dadbbcddbcfca3a770fe528f9a16fdf41f2a041687a71a78e84215c7fce",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Shyvana:0",
+          "text": "Cast Blazing Stampede and attack Shyvana to dash onto her and stun her, then fight while she cannot hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Shyvana", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Udyr:Shyvana:1",
+          "text": "Open a fight with Iron Mantle so the shield soaks her early hits and you heal while attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Udyr:Shyvana:2",
+          "text": "Stay on Shyvana with Wingborne Storm; she is slowed and has trouble running at you or away.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Udyr-R", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Udyr:Shyvana:3",
+          "text": "Use Wilding Claw in a long fight; it adds attack speed and health-based damage, which helps against her high health in dragon form.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "20d3a53ab660b2b33519f4fdf66fc51ed8c041aa0bef9b751c5db18fa011b6eb",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Skarner:0",
+          "text": "Awaken Blazing Stampede when Skarner charges at you; the crowd control immunity stops Ixtal's Impact from grabbing you.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Skarner-E", "start": 86, "end": 100 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Udyr:Skarner:1",
+          "text": "Stay away from walls when Skarner charges. Being dragged into one stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Udyr:Skarner:2",
+          "text": "Hit Skarner with an attack from Blazing Stampede to stun him and interrupt his charge before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Udyr-E", "start": 32, "end": 48 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Udyr:Skarner:3",
+          "text": "Open with Iron Mantle in a fight; its shield and healing help you outlast Skarner's long damage.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Skarner", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "13e48d7a2ac051c73664004d28628b3eb80c63e046ede6a529d1ce269f8d7786",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Sylas:0",
+          "text": "Use Blazing Stampede to run at Sylas and stun him with your first attack. He has little to stop you once you are on him.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Udyr:Sylas:1",
+          "text": "Keep Sylas in Wingborne Storm when you fight; he is slowed and takes damage while he tries to trade or run.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Udyr-R", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Udyr:Sylas:2",
+          "text": "Cast Iron Mantle before you fight Sylas; the shield soaks his burst and the healing on your attacks helps you win a long fight.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Udyr:Sylas:3",
+          "text": "Stay out of Chain Lash range when you can. Sylas has long range and you have few ranged options.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f249220e0ebba406686d8f44b2732e1f833d11f37f831c0bf2ce786ee04d705a",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Talon:0",
+          "text": "Cast Iron Mantle before Talon bursts you; the shield soaks his first hits, and Talon's damage is all physical.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "champion", "key": "Talon", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Udyr:Talon:1",
+          "text": "Use Wingborne Storm when Talon dashes in; he is slowed while inside it, so he has a harder time escaping or chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Udyr:Talon:2",
+          "text": "Attack Talon through Blazing Stampede to dash onto him and stun him. It works well when he is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Udyr-E", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Udyr:Talon:3",
+          "text": "Awaken Blazing Stampede when you expect a fight; you become immune to crowd control and can chase down a Talon who tries to run.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Talon", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Udyr:Talon:4",
+          "text": "Fight Talon when Shadow Assault is down; he has a much harder time escaping you then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "35ef46901bd1ac3864c37be3f96c2579df37be601e67787eda959fb943fd2d0c",
+      "tips": [
+        {
+          "id": "jungle:Udyr:Viego:0",
+          "text": "Hit Viego with Blazing Stampede attacks to stun him when he tries to fight you; his Spectral Maw charge needs time he won't have.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Udyr-E", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Viego-W", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Udyr:Viego:1",
+          "text": "Open a fight with Wingborne Storm so Viego is slowed while he tries to dash and stab at you.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 18, "end": 33 },
+            { "kind": "champion", "key": "Viego", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Udyr:Viego:2",
+          "text": "Use Iron Mantle before a long trade; the shield and healing win the fight against his sustained hits.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Udyr:Viego:3",
+          "text": "Awaken Blazing Stampede when Viego's Spectral Maw is ready; you can't be stunned for a moment while you chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Viego", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Viego-W", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Udyr:Viego:4",
+          "text": "Wilding Claw hurts by max Health, so use it on Viego when he is alone in a fight to deal lots of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Viego", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "isolated", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b0df8d150d853d07640465c0deed52f02174251becb39d3b82263f497986b82c",
+      "tips": [
+        {
+          "id": "jungle:Udyr:XinZhao:0",
+          "text": "Don't stand and trade when Xin Zhao is Challenged and close. Spend Blazing Stampede to get on him first and stun him.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Udyr-E", "start": 67, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Udyr:XinZhao:1",
+          "text": "Open a fight with Iron Mantle; its shield and healing on hit let you outlast Xin Zhao's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-W", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "XinZhao", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Udyr:XinZhao:2",
+          "text": "Use Wingborne Storm when Xin Zhao is on you. It slows him and keeps damaging him while he stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Udyr:XinZhao:3",
+          "text": "After level 6, awaken Blazing Stampede before Xin Zhao's Crescent Guard lands; it blocks the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Udyr-E", "start": 22, "end": 38 },
+            { "kind": "champion", "key": "XinZhao", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 57, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,2967 @@
+{
+  "schemaVersion": 1,
+  "champion": "Fiora",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "e283452990cbef7c4a5ce1f31403c66098edba522c8ab3daf4cd9b7d1200a353",
+      "tips": [
+        {
+          "id": "top:Fiora:general:0",
+          "text": "Walk around the Vital Duelist's Dance shows on the enemy and hit it from that side. It heals you and gives a burst of Move Speed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiora-passive",
+              "start": 22,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Fiora:general:1",
+          "text": "Aim Lunge so the Vital is the closest target; it goes for Vitals first. Use the dash to start a trade or to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Fiora:general:2",
+          "text": "Use Riposte when the enemy casts a stun or other disable on you. You block it and your stab stuns them instead of slowing them.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Fiora:general:3",
+          "text": "Don't waste Riposte on weak hits. Hold it for the enemy's strongest damage, since it blocks all damage for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Fiora:general:4",
+          "text": "Hit with Bladework first to leave them slowed, then finish with the guaranteed critical second attack.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 9, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Fiora:general:5",
+          "text": "Use Grand Challenge on a durable target or the front line, then hit its Vitals. If you land them, your allies heal in the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Fiora:general:6",
+          "text": "Trade in short bursts. Hit a Vital, use the Move Speed to step out, then come back for the next one.",
+          "refs": [],
+          "pWrong": 0.08
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Fiora:combo:0",
+          "name": "Riposte cancel on Lunge",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Fiora-Q" },
+            { "kind": "ability", "key": "Fiora-W" }
+          ],
+          "when": "When you want to dodge a key enemy spell mid-dash, or turn the Lunge to hit a target behind you.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 63, "end": 68 }
+          ],
+          "text": "Fiora can cast during the Lunge dash, so you can start Riposte mid-dash. Riposte can also turn her to aim the stab at a target behind her.",
+          "textRefs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Fiora-W", "start": 55, "end": 62 },
+            { "kind": "ability", "key": "Fiora-W", "start": 73, "end": 80 }
+          ]
+        },
+        {
+          "id": "top:Fiora:combo:1",
+          "name": "Riposte to stun",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Fiora-W" }],
+          "when": "When an enemy is about to cast a crowd control spell on you, such as a stun, snare or knock-up.",
+          "whenRefs": [],
+          "text": "Cast Riposte just before the crowd control lands. It negates the effect and turns the stab into a stun on the enemy champion it hits.",
+          "textRefs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "8267b91389a0ea1e312d4f715e55b46eca7e5fd710ed3323feb975ca45474c59",
+      "tips": [
+        {
+          "id": "top:Fiora:Aatrox:0",
+          "text": "Use Riposte when Aatrox's Infernal Chains lands; it blocks the pull and the damage, and the enemy ends up slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 26, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Aatrox:1",
+          "text": "Hold Riposte for the sweetspot of The Darkin Blade. If it knocks you up, Riposte turns that into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "Fiora-W", "start": 73, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Fiora:Aatrox:2",
+          "text": "Aatrox's attacks are slow and easy to see. Lunge in once he has used The Darkin Blade, then trade quickly and get out.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 69, "end": 85 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Fiora:Aatrox:3",
+          "text": "Lunge at the Vital that faces you to get the heal and Move Speed. Use that speed to step out of his Infernal Chains area.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 100, "end": 115 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Fiora:Aatrox:4",
+          "text": "Fight when Aatrox is spent. His Umbral Dash heals him when he hits you, so avoid long trades when he is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4effb4a76171e161723eef2c3571229a5ab93d637df5ee250c0c78582f746cf7",
+      "tips": [
+        {
+          "id": "top:Fiora:Akali:0",
+          "text": "Keep Riposte ready for Akali's Shuriken Flip or Perfect Execution; blocking them wastes her trade and leaves her exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Akali", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Akali-E", "start": 31, "end": 44 },
+            { "kind": "ability", "key": "Akali-R", "start": 48, "end": 65 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Akali:1",
+          "text": "Lunge in as soon as she wastes her energy or abilities, and strike the Vital for health and speed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Fiora:Akali:2",
+          "text": "Do not chase Akali into Twilight Shroud; stay out of the smoke and wait for her to reveal herself.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Akali-W", "start": 24, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Fiora:Akali:3",
+          "text": "Aim Riposte at her when she dashes in; it slows or stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbd5651c195634a173181a8dab2fb1090b05cda2e2d0c6b92d99ba546c1f34ce",
+      "tips": [
+        {
+          "id": "top:Fiora:Ambessa:0",
+          "text": "Save Riposte for Lacerate or Public Execution; parrying the slow or the stun turns it into a stun on Ambessa instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 },
+            { "kind": "champion", "key": "Ambessa", "start": 101, "end": 108 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Fiora:Ambessa:1",
+          "text": "Use Lunge to hit a Vital, then walk away on the Move Speed you gain. Short trades suit you more than long brawls.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Fiora:Ambessa:2",
+          "text": "Hold Riposte when Repudiation is braced and about to land. It blocks the slam and the stab hits her back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Fiora:Ambessa:3",
+          "text": "Ambessa's abilities cost Energy. When she runs low, step in and trade with Bladework.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Fiora-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6b4985a18f4f3d1969aafbb2d7e63a33d48164a93c25c63115e2f31131fef1ca",
+      "tips": [
+        {
+          "id": "top:Fiora:Anivia:0",
+          "text": "Use Riposte when Anivia casts Flash Frost's stun or Crystallize at you. You can negate the stun and stun her back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Anivia", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Anivia-W", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Fiora:Anivia:1",
+          "text": "Close in with Lunge when Flash Frost is on cooldown. Anivia has little to stop you then.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 25, "end": 36 },
+            { "kind": "champion", "key": "Anivia", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Anivia:2",
+          "text": "Don't stand in Glacial Storm once it fully forms; it slows you and hurts. Step around it and go for Anivia.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 15, "end": 28 },
+            { "kind": "champion", "key": "Anivia", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Fiora:Anivia:3",
+          "text": "Anivia returns as an egg after she dies. Kill it before she is reborn, or don't over-commit when she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Fiora:Anivia:4",
+          "text": "Watch the Frostbite after a Flash Frost hit; it hits hard. Avoid the ice and you avoid the combo.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-E", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8a23f258604f2952ebc9218c1c49f2f89bf099b406a64679a6dec9b4b9e29619",
+      "tips": [
+        {
+          "id": "top:Fiora:Aurora:0",
+          "text": "Use Riposte on Aurora's Twofold Hex or The Weirding; it blocks the damage and the slow, and your stab slows her in return.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Aurora", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Aurora-E", "start": 39, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Aurora:1",
+          "text": "Lunge in when Aurora's Vital faces you; the stab goes for it first, so you heal and speed up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Aurora", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Fiora:Aurora:2",
+          "text": "Hold Riposte for Aurora's Between Worlds shockwave and slows if you are caught; it can stop them.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Aurora", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Aurora-R", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Fiora:Aurora:3",
+          "text": "Do not chase Aurora after Across the Veil; she turns invisible and gets faster. Save Lunge and go back to farming.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Aurora-W", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Fiora:Aurora:4",
+          "text": "Close the gap with Bladework's slow, then trade; Aurora's mana-heavy spells make long poke fights hard for her.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 19, "end": 28 },
+            { "kind": "champion", "key": "Aurora", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c21bfa2ba974d3e14c9a6616a7f802fdfad91b221c4c77b169468b9e92b600de",
+      "tips": [
+        {
+          "id": "top:Fiora:Briar:0",
+          "text": "Hold Riposte for Briar's Head Rush; parrying the stun turns it into a stun on her and wastes her best engage.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Briar", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Briar-Q", "start": 25, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Fiora:Briar:1",
+          "text": "Riposte her Chilling Scream when it knocks you into a wall, since you can negate the stun and hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Briar-E", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Fiora:Briar:2",
+          "text": "Use Lunge on the Vital to heal and gain speed while Briar is forced to run at you in Blood Frenzy.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Fiora:Briar:3",
+          "text": "Save Grand Challenge for when Briar is low, because her healing makes long fights hard to finish.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Briar", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "732d227f2260a16206de7d31f8e4ed51dac36125b3c6222fd68fb14491f2381a",
+      "tips": [
+        {
+          "id": "top:Fiora:Camille:0",
+          "text": "Hold Riposte for Camille's Hookshot dash. If it catches her stun, the enemy is stunned instead of slowed and you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Camille", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Camille-E", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Fiora:Camille:1",
+          "text": "Use Riposte when Camille locks you in with The Hextech Ultimatum. It blocks the effects of her cast, so time it for her leap landing.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Camille", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Camille-R", "start": 43, "end": 64 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Fiora:Camille:2",
+          "text": "Lunge onto Camille's Vital to heal and speed up, then step out of the outer half of Tactical Sweep so you are not slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Camille", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Camille-W", "start": 84, "end": 98 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Fiora:Camille:3",
+          "text": "Camille's shield only blocks one damage type. Trade with Bladework when it is down, since it slows her and the second hit is a guaranteed crit.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Fiora-E", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Fiora:Camille:4",
+          "text": "Save Lunge for a gap Camille makes with Hookshot, so you can chase her down after she dives.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Camille", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Camille-E", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6df6876496d3ec7d9d54806c02cd2a69e3c98289566dfb9ca7d5d6355a01a1fd",
+      "tips": [
+        {
+          "id": "top:Fiora:Chogath:0",
+          "text": "Use Riposte when Cho'Gath casts Rupture; you dodge the damage and stun him if you parry the knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Chogath", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Chogath-Q", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Fiora:Chogath:1",
+          "text": "Watch for the smoke from Rupture and step out of it. Lunge through the area only once it has landed.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Fiora:Chogath:2",
+          "text": "Stay out of close range of Feral Scream when your Riposte is down; being silenced leaves you with no escape or parry.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Fiora-W", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "silenced", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Fiora:Chogath:3",
+          "text": "Trade when his Vorpal Spikes are on cooldown, and hit his Vitals to heal and speed up.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-E", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Fiora:Chogath:4",
+          "text": "Use Grand Challenge on him early in a fight; he is a big target, but Feast lets him heal back with Carnivore.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Chogath-R", "start": 69, "end": 74 },
+            {
+              "kind": "ability",
+              "key": "Chogath-passive",
+              "start": 99,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0fd0539e9de54da47cd8262dd4871fe60a17297b0cd194826a2761a4a1fa5c05",
+      "tips": [
+        {
+          "id": "top:Fiora:Darius:0",
+          "text": "Hold Riposte for Apprehend. If you parry the pull, Darius is stunned instead of slowed, and you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "champion", "key": "Darius", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Fiora:Darius:1",
+          "text": "Use Lunge to hit a Vital and slip out of Decimate range. The Move Speed it gives helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Fiora:Darius:2",
+          "text": "Trade while Apprehend is on cooldown. Darius has a hard time catching you then.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Fiora:Darius:3",
+          "text": "Fight him in short trades. A long brawl lets Hemorrhage stack up and makes him much stronger.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 45,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Fiora:Darius:4",
+          "text": "Use Bladework to slow him when you walk in, so he has a harder time hitting you with Decimate.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Darius-Q", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2a72b94357da808d0cb89f0bffaf28833a7dd8d01a9f6645e16891b847148d98",
+      "tips": [
+        {
+          "id": "top:Fiora:DrMundo:0",
+          "text": "Hold Riposte for Dr. Mundo's Infected Bonesaw; parrying it stops the damage and the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "DrMundo", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Fiora:DrMundo:1",
+          "text": "Dodge the Infected Bonesaw by stepping aside, since it only hits the first enemy in its line. Don't walk straight at him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Fiora:DrMundo:2",
+          "text": "Dr. Mundo resists the first immobilizing effect he takes, so don't count on a Riposte stun; use it to block his damage.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Fiora-W", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Fiora:DrMundo:3",
+          "text": "Hit the Vital with Lunge to heal and speed away. Trade in short bursts, because he out-heals long fights.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Fiora:DrMundo:4",
+          "text": "Hit him with Riposte when his Heart Zapper is about to recast, so the blocked damage isn't stored and healed back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 30, "end": 42 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d3b19e6a5b1dce9fe347862e09de434caa6e1e8b94cabdec1168cecb5330ac13",
+      "tips": [
+        {
+          "id": "top:Fiora:Gangplank:0",
+          "text": "Use Riposte when Gangplank goes for a keg or Parrrley. It blocks the damage and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Gangplank", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 45, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Gangplank:1",
+          "text": "Lunge in when he has few kegs in stock, then trade with Bladework before he can set up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-E", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Fiora:Gangplank:2",
+          "text": "Stay out of keg blast zones. The explosions slow you and hit hard.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Fiora:Gangplank:3",
+          "text": "Don't rely on stunning him with Riposte when Remove Scurvy is ready. He can cleanse it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Fiora:Gangplank:4",
+          "text": "Once Gangplank hits level 6, stay near allies or out of the open. Cannon Barrage can hit you from anywhere on the map.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 66, "end": 80 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1c4efc5eb409fd32a5c7e05dc2f188997e4b33955af597d69b7c57eed5047f1e",
+      "tips": [
+        {
+          "id": "top:Fiora:Garen:0",
+          "text": "Hold Riposte for Garen's Decisive Strike. Parrying the silenced hit wastes his big damage and leaves you ready to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Garen", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Garen-Q", "start": 25, "end": 40 },
+            { "kind": "keyword", "key": "silenced", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Fiora:Garen:1",
+          "text": "Garen can't attack while spinning Judgment. Hit your Vitals and step out of the circle.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-E", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Fiora:Garen:2",
+          "text": "Trade in short bursts and then back off. Perseverance heals Garen when he isn't hit for a while, so keep hitting him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 41,
+              "end": 53
+            },
+            { "kind": "champion", "key": "Garen", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Fiora:Garen:3",
+          "text": "Keep your health high. Garen's Demacian Justice finishes low-health targets, so back off when you're hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Garen-R", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Fiora:Garen:4",
+          "text": "Lunge onto Garen when his Decisive Strike is spent. Bladework's slow then helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Garen", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Garen-Q", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Fiora-E", "start": 52, "end": 61 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9902606ba730b8a7e45d2da0a08f0853679bd23e5f4ef58eb09b0c8e69475a15",
+      "tips": [
+        {
+          "id": "top:Fiora:Gnar:0",
+          "text": "Hold Riposte for Gnar's Wallop or his GNAR! throw; it cancels the stun and he gets stunned instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Gnar", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Gnar-R", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Gnar:1",
+          "text": "Mini Gnar outranges you, so close the gap with Lunge and trade when his Hop is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Fiora:Gnar:2",
+          "text": "Fight Gnar right after he shrinks from Mega form; he can't build Rage for a while then.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Fiora:Gnar:3",
+          "text": "Hit him with Bladework's first attack to slow him, then keep fighting; the second attack always crits.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 13, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Fiora:Gnar:4",
+          "text": "Stay away from walls when Gnar is big, since GNAR! stuns anyone knocked into one.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gnar-R", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f5547822d7bd6cc6f81bd62df178695b94981736357977c557759bacad4fe675",
+      "tips": [
+        {
+          "id": "top:Fiora:Gragas:0",
+          "text": "Hold Riposte when Gragas goes for Body Slam; parrying it stuns him instead of slowing him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Gragas", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Gragas-E", "start": 34, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Fiora:Gragas:1",
+          "text": "Gragas's Barrel Roll is slow and easy to see; step out of it or Lunge away before it blows up.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Fiora:Gragas:2",
+          "text": "Trade when Drunken Rage is on cooldown; with it up, Gragas takes less damage and his next hit hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Gragas", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Fiora:Gragas:3",
+          "text": "Don't chase Gragas far; Body Slam comes back quickly, so he can escape or hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Gragas-E", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Fiora:Gragas:4",
+          "text": "Stay away from walls and your own tower when Gragas has Explosive Cask, since it knocks you away from him.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Gragas-R", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a63dea3b40da2686e06e516cd2caec1b7878f1e11580a2582ee74cda1989fdf",
+      "tips": [
+        {
+          "id": "top:Fiora:Gwen:0",
+          "text": "Hold Riposte for Gwen's Needlework slow or any crowd control she throws at you; parrying it turns the enemy stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Gwen", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Gwen-R", "start": 24, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 115 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Fiora:Gwen:1",
+          "text": "Don't chase into Hallowed Mist; Gwen can't be targeted from outside it. Wait for it to end, then go in.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 17, "end": 30 },
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Fiora:Gwen:2",
+          "text": "Use Lunge on the Vital to close the gap, then trade with Bladework so the first hit slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Fiora-E", "start": 57, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Fiora:Gwen:3",
+          "text": "Trade early, before Gwen has built up Snip Snip! stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Fiora:Gwen:4",
+          "text": "Use Grand Challenge when you commit to a kill; Gwen can't easily outrun the speed boost from the Vitals.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gwen", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1a205fed61f5eaf825468f8a6ee4dcabd32ba92a756b16153104e627369e14ae",
+      "tips": [
+        {
+          "id": "top:Fiora:Heimerdinger:0",
+          "text": "Hold Riposte for Heimerdinger's grenade. Parrying its stun makes your stab stun him instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 17,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Fiora:Heimerdinger:1",
+          "text": "Use Lunge to jump on Heimerdinger once his grenade is on cooldown. Then hit his Vital for speed and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 21,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Fiora:Heimerdinger:2",
+          "text": "Take out his turrets with the help of minions rather than one at a time, so they can't support each other.",
+          "refs": [],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Fiora:Heimerdinger:3",
+          "text": "Dodge Hextech Micro-Rockets by stepping out of their line. Parry them with Riposte if you can't.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 6,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Fiora-W", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Fiora:Heimerdinger:4",
+          "text": "Go in when his ultimate is on cooldown; he has far fewer ways out of trouble then.",
+          "refs": [],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "855c9e19e4ad2ffd5e2f7f249ff5b07846aaf1bfc8904c305a103a688676972c",
+      "tips": [
+        {
+          "id": "top:Fiora:Illaoi:0",
+          "text": "Hold Riposte for Test of Spirit; if you parry the tendril, the spirit is not pulled out of the target and the enemy is stunned instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Fiora:Illaoi:1",
+          "text": "Fight away from Illaoi's Tentacles. Tentacles only hit when she commands them, but they add a lot of damage and healing to her trades.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Fiora:Illaoi:2",
+          "text": "Use Lunge to reach Illaoi when a Vital is facing you, then step back out with the movement speed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Illaoi", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Fiora:Illaoi:3",
+          "text": "Dodge Tentacle Smash by moving sideways, or parry it with Riposte; it has a slow wind-up.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 6, "end": 20 },
+            { "kind": "ability", "key": "Fiora-W", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Fiora:Illaoi:4",
+          "text": "Trade with Bladework when she leaps in with Harsh Lesson; the slow lets you leave before the Tentacles finish.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 44, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a1b99d6450f40843c2751b5c016890b9d3bc61ad4b644d85771d828e25ef7cf",
+      "tips": [
+        {
+          "id": "top:Fiora:Irelia:0",
+          "text": "Keep Riposte for Irelia's Flawless Duet or Vanguard's Edge cage. Parrying her stun turns it into a stun on her.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Irelia", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Irelia-E", "start": 26, "end": 39 },
+            { "kind": "ability", "key": "Irelia-R", "start": 43, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Fiora:Irelia:1",
+          "text": "Don't spend your big spells on Defiant Dance. It can't be interrupted and cuts the damage she takes.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Fiora:Irelia:2",
+          "text": "Fight her away from the minion wave. Without minions, Bladesurge has little to dash to.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Fiora:Irelia:3",
+          "text": "Hit a Vital with Lunge to heal and gain speed, then trade. Fight her when Ionian Fervor stacks are low.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 17, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 74,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "55dd4be0b4f99656a0d715eccacb9de5ed0267b45c6f769a04108b615d89c18d",
+      "tips": [
+        {
+          "id": "top:Fiora:Jax:0",
+          "text": "Use Riposte to block Jax's Counter Strike stun or his Leap Strike; hitting him afterward leaves him stunned instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Jax", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Jax-E", "start": 27, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Jax-Q", "start": 54, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 125 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Jax:1",
+          "text": "Don't attack into Counter Strike. Wait it out, then strike after his dodge ends, or use Lunge to hit a Vital and still stay out of his stun.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Fiora:Jax:2",
+          "text": "Trade quickly and back out. Break Jax's chain of attacks so Relentless Assault never builds up.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Jax-passive", "start": 60, "end": 78 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Fiora:Jax:3",
+          "text": "Hit Vitals with Duelist's Dance for the speed boost, and use it to slip away from Jax once he gets his Grandmaster-at-Arms bonus.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiora-passive",
+              "start": 16,
+              "end": 31
+            },
+            { "kind": "champion", "key": "Jax", "start": 82, "end": 85 },
+            { "kind": "ability", "key": "Jax-R", "start": 103, "end": 122 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Fiora:Jax:4",
+          "text": "Use Bladework to slow Jax on your first attack when he dives in, then finish with the critical strike.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Jax", "start": 22, "end": 25 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b16f33f57e7b7a13feea8ed21d366fd36a4acd3305950e45a43a25e9786eb735",
+      "tips": [
+        {
+          "id": "top:Fiora:Jayce:0",
+          "text": "Hold Riposte for Thundering Blow. It stops the root and knockback, and Jayce is stunned instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Jayce", "start": 71, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Fiora:Jayce:1",
+          "text": "Time Riposte for the moment Jayce leaps in with To the Skies!, so he lands next to you and takes the stab.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Fiora:Jayce:2",
+          "text": "Use Lunge to close the gap when Jayce is in Cannon Stance, and hit the Vital to heal and speed up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Jayce", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Fiora:Jayce:3",
+          "text": "Don't stand in a line with Jayce at range. Riposte can parry a Shock Blast, so save it for that.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Fiora-W", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Fiora:Jayce:4",
+          "text": "Trade with Bladework and Lunge when Jayce is in Hammer Stance, then back off before his cooldowns return.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Jayce", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Fiora:Jayce:5",
+          "text": "Save Grand Challenge for a committed fight. Jayce is easy to burst once his abilities are used.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "31065e5c99056b776c67f22a718bc370b7ac7aa50239a1d67c1688e3fe34ef36",
+      "tips": [
+        {
+          "id": "top:Fiora:KSante:0",
+          "text": "Hold Riposte for K'Sante's stun from Ntofo Strikes or his ultimate; parrying it turns the stab into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 37, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Fiora:KSante:1",
+          "text": "Parry Path Maker as he finishes charging; Riposte negates the stun and he is stunned instead.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Fiora-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Fiora:KSante:2",
+          "text": "Once he goes All Out, he is much squishier. Use Grand Challenge and fight him then.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Fiora-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Fiora:KSante:3",
+          "text": "Lunge in to hit a Vital, then step out. Don't linger in his range after his Ntofo Strikes slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "KSante-Q", "start": 76, "end": 89 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bcf9b679b673e4021af408d184da5e0601cf6d38e1582639101c8c7bc1574095",
+      "tips": [
+        {
+          "id": "top:Fiora:Kayle:0",
+          "text": "Press your advantage before Kayle reaches level 6. She is a weak melee champion until then, so trade and push her back.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Fiora:Kayle:1",
+          "text": "Use Lunge to close in on Kayle, aiming at a Vital when you can. Kayle becomes dangerous once she has range.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Kayle", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Kayle", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Fiora:Kayle:2",
+          "text": "Use Riposte when Kayle fires Radiant Blast at you. It blocks the projectile, and you get a stab back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kayle", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Fiora:Kayle:3",
+          "text": "Look for the all-in with Grand Challenge when Kayle is on her own. She is fragile, so killing her fast works well.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 25, "end": 40 },
+            { "kind": "champion", "key": "Kayle", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Fiora:Kayle:4",
+          "text": "Do not chase Kayle during Divine Judgment. She or her ally cannot be damaged, so wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Kayle-R", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e2584a8f29fa78b22de89fabef463052656714641aa36dda86ce7c9dfb72b0e",
+      "tips": [
+        {
+          "id": "top:Fiora:Kennen:0",
+          "text": "Hold Riposte for Kennen's stun. If you block his stun with it, he gets stunned instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Kennen", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Fiora:Kennen:1",
+          "text": "Lunge in when Kennen has used Lightning Rush. He is flimsy, so punish him quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Kennen", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Kennen-E", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Fiora:Kennen:2",
+          "text": "Step out of range of Thundering Shuriken, then close the gap with Lunge so Kennen can't poke you freely.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 21, "end": 40 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 66, "end": 71 },
+            { "kind": "champion", "key": "Kennen", "start": 75, "end": 81 },
+            { "kind": "keyword", "key": "poke", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Fiora:Kennen:3",
+          "text": "Back off from Slicing Maelstrom at level 6. Fight him after it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 14, "end": 31 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2d4287d15afc3c1170448595ed17b242309a9f68ab3abd356b7abd6a616c63a3",
+      "tips": [
+        {
+          "id": "top:Fiora:Kled:0",
+          "text": "Hold Riposte for Bear Trap on a Rope. Parrying the hook turns your stab into a stun and wastes his best tool in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Kled-Q", "start": 17, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Fiora:Kled:1",
+          "text": "Use Lunge on the Vital to close the gap and escape his pull, then trade quickly and step away.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Fiora:Kled:2",
+          "text": "Once Kled is off his mount he is much weaker, so push the fight. Look for a kill with Grand Challenge before he rebuilds courage and remounts.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Fiora-R", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Fiora:Kled:3",
+          "text": "Riposte can be used when Kled's Violent Tendencies attacks are about to land. It blocks that damage and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Kled", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Kled-W", "start": 32, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3e577b79666858829184b7bd4f13963878a55f84fad2169c2e2845759f5e19f4",
+      "tips": [
+        {
+          "id": "top:Fiora:Malphite:0",
+          "text": "Keep Riposte for Malphite's Unstoppable Force; parrying the knock up turns it into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Malphite", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Malphite-R", "start": 28, "end": 45 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Fiora:Malphite:1",
+          "text": "Trade in short bursts, since Malphite's Granite Shield recharges when he is left alone. Hit him again before it refreshes.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 29, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 40,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Fiora:Malphite:2",
+          "text": "Do not rely on long auto-attack fights; Ground Slam cuts your Attack Speed. Use Lunge and Vitals for quick trades, then step away.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 40, "end": 51 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Fiora:Malphite:3",
+          "text": "Seismic Shard slows you and speeds him up, so do not try to run from him once it lands. Fight back or Riposte instead.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Fiora-W", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d9046f7dafbdc5e208010cd9fb4b7c216a1c6ab8784fc6b198f364afca14b1b",
+      "tips": [
+        {
+          "id": "top:Fiora:Mordekaiser:0",
+          "text": "Use Riposte when Mordekaiser casts Realm of Death. His ultimate fails and goes on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 17,
+              "end": 28
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 35,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Fiora:Mordekaiser:1",
+          "text": "Parry Death's Grasp with Riposte. His pull fails and the enemy champion gets stunned if you parry an immobilizing effect.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 6,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Fiora-W", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Fiora:Mordekaiser:2",
+          "text": "Hit the Vital with Lunge, then back away. Keep out of the Darkness Rise aura, which hurts anyone standing close to him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 58,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Fiora:Mordekaiser:3",
+          "text": "Trade in short bursts, because Indestructible turns his damage into a shield. Hit and leave before he can recast it for healing.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 31,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "30b3eaf4e0267b8463bca916e931e3fe3d65204487b45e4bee4aa93eedb9fd9c",
+      "tips": [
+        {
+          "id": "top:Fiora:Naafiri:0",
+          "text": "Hold Riposte for Hounds' Pursuit; if Naafiri's dash slows her, you only parry the hit and the stab follows.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 17, "end": 32 },
+            { "kind": "champion", "key": "Naafiri", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Fiora:Naafiri:1",
+          "text": "Time Riposte to Naafiri's Darkin Daggers or Eviscerate burst to take no damage and slow her with the stab.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Naafiri", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 26, "end": 40 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 44, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Fiora:Naafiri:2",
+          "text": "Lunge at the Vital on Naafiri; Lunge goes for a Vital first, so you hit her and not a Packmate.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Fiora:Naafiri:3",
+          "text": "Fight when her Packmates are gone or away; Eviscerate and The Call of the Pack send them out of the fight for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 43, "end": 53 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 58, "end": 78 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c1f1905a67516d862aa5acc870789f85eb3f1e02fe79b6a3889eb10f32d892d3",
+      "tips": [
+        {
+          "id": "top:Fiora:Nasus:0",
+          "text": "Hold Riposte for Wither or any stun or root. Parrying it blunts Nasus's best tool, and a parried disable stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Nasus-W", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Nasus", "start": 64, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Fiora:Nasus:1",
+          "text": "Use Lunge to hit the Vital on Nasus, then back out. It heals you and gives Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Nasus", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Fiora:Nasus:2",
+          "text": "Trade early and often, before Siphoning Strike has made Nasus hit hard. Pressure his farm so he cannot stack.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 30, "end": 46 },
+            { "kind": "champion", "key": "Nasus", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Fiora:Nasus:3",
+          "text": "Use Bladework to slow Nasus on your first attack, then finish the trade with the critical strike.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Nasus", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Fiora:Nasus:4",
+          "text": "Do not stand in Fury of the Sands to fight him. Wait for it to end, or kite out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dd4f93375111fc14494c42e6fd6989a9b8b3751e99d3fc4124db092978982cb0",
+      "tips": [
+        {
+          "id": "top:Fiora:Olaf:0",
+          "text": "Use Riposte on Olaf's Undertow or his chase to dodge it. A parried slow turns into a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Olaf", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Fiora:Olaf:1",
+          "text": "Step out of the line of Undertow's axe; being hit slows you and cuts your Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Fiora:Olaf:2",
+          "text": "Trade early and back off before he is low; Olaf grows much stronger the lower his Health gets.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Fiora:Olaf:3",
+          "text": "Hold Riposte and your disables until Ragnarok ends; during it he can't be disabled.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Olaf-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c3359f5c72642156780eae707f28c9b91a509af126d4e2064f91e510cb5054f7",
+      "tips": [
+        {
+          "id": "top:Fiora:Ornn:0",
+          "text": "Stay off Ornn's Volcanic Rupture line, or hold Riposte for it; Riposte blocks the damage and slow, and the fissure's pillar can block your path.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 16, "end": 32 },
+            { "kind": "ability", "key": "Fiora-W", "start": 47, "end": 54 },
+            { "kind": "ability", "key": "Fiora-W", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Fiora:Ornn:1",
+          "text": "Save Riposte for Searing Charge. If you parry the knock up, Ornn is stunned instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ornn-E", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "Ornn", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Fiora:Ornn:2",
+          "text": "Fight away from walls. Without terrain behind you, Searing Charge can't knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Fiora:Ornn:3",
+          "text": "Use Lunge to close the gap and hit the Vital. The heal and speed let you trade and leave before Ornn answers.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Ornn", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Fiora:Ornn:4",
+          "text": "Bellows Breath makes Ornn unstoppable as he marches. Don't try to stun or slow him mid-march; Riposte can still parry the flames.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Ornn", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Fiora-W", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Fiora:Ornn:5",
+          "text": "Use Grand Challenge when Ornn has used his crowd control. It reveals all four Vitals so you can finish him fast.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ornn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "73b6147a1a7ded6d1014c28ae7fec24581eeb540d02dd4c4ce01d0be28c6b41d",
+      "tips": [
+        {
+          "id": "top:Fiora:Pantheon:0",
+          "text": "Save Riposte for Pantheon's Shield Vault; parrying it stuns him instead of just slowing him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Pantheon", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Fiora:Pantheon:1",
+          "text": "Do not attack into Aegis Assault from the front; Lunge around to his side or back, or wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Fiora:Pantheon:2",
+          "text": "Stay healthy against Pantheon; a thrown Comet Spear hits hard once you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Fiora:Pantheon:3",
+          "text": "Hit the Vitals when Pantheon is busy; the speed boost helps you dodge Comet Spear and close in.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "66179f1ed21aa47bcf80fe9633aac50ab148034928a3f56e7344e48309ad9475",
+      "tips": [
+        {
+          "id": "top:Fiora:Quinn:0",
+          "text": "Save Riposte for Vault. If Quinn dashes in and you parry it, she is stunned instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Quinn-E", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Quinn", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Fiora:Quinn:1",
+          "text": "Quinn is a ranged champion, so close the gap with Lunge. Aim it at a Vital so you also heal and speed up.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Fiora:Quinn:2",
+          "text": "Sidestep Blinding Assault or use Riposte on it. The parry blocks the damage and the vision loss.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Fiora-W", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Fiora:Quinn:3",
+          "text": "Use Grand Challenge in a short trade when Quinn is cornered, since her Vault escape is on a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Quinn", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Quinn-E", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b82a1107dc804c5ed171ac9f2714df4851c8944255ecefb33579a819bb7abc3a",
+      "tips": [
+        {
+          "id": "top:Fiora:Renekton:0",
+          "text": "Hold Riposte for Renekton's Ruthless Predator or Slice and Dice. Parrying the stun turns it into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Renekton", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Renekton-W", "start": 28, "end": 45 },
+            { "kind": "ability", "key": "Renekton-E", "start": 49, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Fiora:Renekton:1",
+          "text": "Back off when Renekton's Fury is high; his empowered abilities stun longer and hit harder. Trade while his Fury is low.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Fiora:Renekton:2",
+          "text": "Avoid fighting him in the middle of minions; Cull the Meek heals him far more there.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Fiora:Renekton:3",
+          "text": "Use Lunge on a Vital, then leave once the Move Speed boost kicks in, rather than staying in range of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e047565f8551dc1699b7cb001c28624364bdf64f3e062637f97526397174a86d",
+      "tips": [
+        {
+          "id": "top:Fiora:Riven:0",
+          "text": "Hold Riposte for Riven's Ki Burst or Broken Wings third cast; parrying the stun or knock up lets you stun her back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Riven", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Riven-W", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Riven-Q", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Fiora:Riven:1",
+          "text": "Riven's dashes are short, so Lunge onto a Vital to chase her down and punish her when she backs off.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Fiora:Riven:2",
+          "text": "Use Bladework before she dashes in; the slow makes her combo harder to land.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Fiora:Riven:3",
+          "text": "Respect Riven once she uses Blade of the Exile; her range grows and Wind Slash finishes you if you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Riven-R", "start": 28, "end": 46 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d968e9a9f5c5b3428301029ccd5dc83ba7b8675a1af62048e1ce6b6e0ea3e688",
+      "tips": [
+        {
+          "id": "top:Fiora:Rumble:0",
+          "text": "Bait Rumble's Electro Harpoon with Riposte. If it hits you mid-stance it is blocked, and your stab slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Fiora-W", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Fiora:Rumble:1",
+          "text": "Time Riposte for when Rumble starts Flamespitter. It blocks the flames and punishes him for casting.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Rumble", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Rumble:2",
+          "text": "Go in with Lunge when Rumble overheats. He cannot cast spells then, so trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 11, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Fiora:Rumble:3",
+          "text": "Do not stand in The Equalizer's fire. Walk around the trail or wait it out before you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Fiora:Rumble:4",
+          "text": "Rumble's damage is magic, and Riposte cannot block it all. Hit the Vitals with Duelist's Dance for healing and Move Speed so you can close in on him.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Fiora-W", "start": 30, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Fiora-passive",
+              "start": 79,
+              "end": 94
+            }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a078c0dfbb195d394606bffd490b86e181d3d6e2ea843c5262f6772b6db76894",
+      "tips": [
+        {
+          "id": "top:Fiora:Sett:0",
+          "text": "Hold Riposte for Facebreaker. If you parry it, the enemy is stunned instead of slowed, and you take no damage from it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Sett-E", "start": 17, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Fiora:Sett:1",
+          "text": "Riposte also answers The Show Stopper's suppress. Time it on his cast and you cancel the grab, but only if you read it correctly.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Sett-R", "start": 21, "end": 37 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Sett:2",
+          "text": "Parry Haymaker's big punch with Riposte. It wastes his long cooldown and you hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Fiora-W", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Fiora:Sett:3",
+          "text": "Trade while Haymaker is on cooldown. He has no shield or big punch to answer you then.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Fiora:Sett:4",
+          "text": "Lunge onto the Vital and step back out. The move speed lets you leave before he can land Facebreaker.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sett-E", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Fiora:Sett:5",
+          "text": "Do not fight a low-health Sett for long. Pit Grit heals him more the lower he is, so finish him fast or leave.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Sett-passive", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "27f4fb32918edd5563828e49a73a79e4da7ad724e1e97c5b8b98afb5a97b4fc0",
+      "tips": [
+        {
+          "id": "top:Fiora:Shen:0",
+          "text": "Hold Riposte for Shen's Shadow Dash. Parrying the taunt turns it into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Shen", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Shen-E", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Fiora:Shen:1",
+          "text": "Don't fight inside Spirit's Refuge; it blocks your attacks. Wait for it to end or hit Shen when it's down.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 19, "end": 34 },
+            { "kind": "champion", "key": "Shen", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Fiora:Shen:2",
+          "text": "Look for the Vital and use Lunge to strike it, gaining speed to get away or press Shen.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 27, "end": 32 },
+            { "kind": "champion", "key": "Shen", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Fiora:Shen:3",
+          "text": "Stay out of Twilight Assault's range when you can. A hit slows you and powers up Shen's next attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "champion", "key": "Shen", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Fiora:Shen:4",
+          "text": "Watch for Shen vanishing at level 6 with Stand United. He may teleport to a fight; don't chase him far.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-R", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7d81fddc0abb718bad169d7d689f03c39943c96848905191cc3c821fed800c03",
+      "tips": [
+        {
+          "id": "top:Fiora:Singed:0",
+          "text": "Stay out of Poison Trail and do not chase Singed through it; he is hard to kill and the poison adds up.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Singed", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Fiora:Singed:1",
+          "text": "Hold Riposte for his Fling or Mega Adhesive. Parrying the root or slow means you stab him and he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Singed-E", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Singed-W", "start": 30, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Fiora:Singed:2",
+          "text": "Do not walk into the sticky puddle from Mega Adhesive. Lunge around it instead, because it slows you and keeps you on the ground.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 40, "end": 53 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Fiora:Singed:3",
+          "text": "Hit his Vital with Lunge to trade quickly, then run off with the Move Speed before his poison builds up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Fiora:Singed:4",
+          "text": "Use Grand Challenge to kill him once he has used Fling and Mega Adhesive; he runs away and his speed makes him hard to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Singed-E", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Singed-W", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "383a567ad2825fc067e1bd0f67d6a2efe49f1e44b19c07c42edff67ba38872ce",
+      "tips": [
+        {
+          "id": "top:Fiora:Sion:0",
+          "text": "Save Riposte for Sion's Decimating Smash. Parrying the stun turns it against him and wastes his best tool.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sion", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Sion-Q", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Fiora:Sion:1",
+          "text": "Stay out of Roar of the Slayer's line while Sion charges. Getting slowed by it is how he sets up the big hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 12, "end": 30 },
+            { "kind": "champion", "key": "Sion", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Fiora:Sion:2",
+          "text": "Use Lunge on a Vital to trade quickly. Then back off before Sion's shield is ready to blast you.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Sion", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Fiora:Sion:3",
+          "text": "Parry Unstoppable Onslaught with Riposte when it reaches you. Sion's stun then fails and you get the stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 6, "end": 27 },
+            { "kind": "ability", "key": "Fiora-W", "start": 33, "end": 40 },
+            { "kind": "champion", "key": "Sion", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9978295806ef0171607e57f29919a784097f5ce6c879cbe8c2cb2c8763dde36f",
+      "tips": [
+        {
+          "id": "top:Fiora:TahmKench:0",
+          "text": "Save Riposte for Abyssal Dive or Devour; if it blocks his knock up or stun, he gets stunned instead of slowed. Don't waste it on his Tongue Lash.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 133,
+              "end": 144
+            }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:TahmKench:1",
+          "text": "Tongue Lash stops at the first enemy it hits, so keep a minion between you and him when you stand in range.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:TahmKench:2",
+          "text": "Hit him with Lunge when his Vital is facing you, then back off. It restores your health and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 13, "end": 18 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Fiora:TahmKench:3",
+          "text": "Don't fight him at three stacks of An Acquired Taste. Another Tongue Lash then stuns you, and Devour can follow.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 35,
+              "end": 52
+            },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 62, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Fiora:TahmKench:4",
+          "text": "Use Grand Challenge when he has taken a lot of damage. His Thick Skin shield and healing blunt long fights, so finish the kill quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Fiora:TahmKench:5",
+          "text": "When he channels Abyssal Dive, step out of the landing circle or Riposte just as he lands.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Fiora-W", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b69149275f811c118cb2ec7c6a1a8ae1aaac52d8e989a7ab2086883a360ba8d",
+      "tips": [
+        {
+          "id": "top:Fiora:Teemo:0",
+          "text": "Save Riposte for Blinding Dart; parrying it wastes his key spell and blocks the blind.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Fiora:Teemo:1",
+          "text": "Use Lunge to close the gap fast, since Teemo outranges you; hit the Vital for speed and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Teemo", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Fiora:Teemo:2",
+          "text": "Watch for mushrooms in bushes and on your path before chasing; stepping on Noxious Trap slows you and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 75, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Fiora:Teemo:3",
+          "text": "Use Bladework to slow him as you close in, then finish the trade before his poison adds up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8de282e01ef16c86fa186f8f9056b62515d655b5952c78e10b5b317edc88ef9e",
+      "tips": [
+        {
+          "id": "top:Fiora:Tryndamere:0",
+          "text": "Hold Riposte for Tryndamere's Spinning Slash or his slows. Parrying a root or stun turns it into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Tryndamere", "start": 17, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 30,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Fiora:Tryndamere:1",
+          "text": "Don't all-in while Undying Rage is ready. He can't be killed for a few seconds, so trade out and wait for it to be used.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Fiora:Tryndamere:2",
+          "text": "Harass him early with Lunge so he can't last-hit freely and heal with Bloodlust.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Fiora:Tryndamere:3",
+          "text": "Hit his Vital with Lunge to heal and gain speed. Use that speed to trade and step out before he can respond.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Fiora:Tryndamere:4",
+          "text": "Don't run from him in a straight line. Mocking Shout slows you when you face away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c934bd1765f01cd48ed08288dc85b18458e5adfa0cdab4b2654be8acf75789f1",
+      "tips": [
+        {
+          "id": "top:Fiora:Urgot:0",
+          "text": "Wait for Urgot to cast Disdain or Corrosive Charge, then use Riposte. You turn his stun into one on him.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Urgot-E", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Urgot-Q", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "Fiora-W", "start": 61, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Fiora:Urgot:1",
+          "text": "Lunge in when Urgot's legs are on cooldown. His shotguns only fire in the direction they face.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Urgot", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Fiora:Urgot:2",
+          "text": "Close the distance with Lunge when Urgot has used Disdain. Trade quickly while it recharges.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 24, "end": 29 },
+            { "kind": "champion", "key": "Urgot", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Urgot-E", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Fiora:Urgot:3",
+          "text": "Don't stand and fight while he fires Purge; he deals and absorbs a lot of damage. Hit a Vital, then step out.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-W", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "090f799e9df96acf9416ec650c622ae5f20c783f601e7081a87847a86ff09f24",
+      "tips": [
+        {
+          "id": "top:Fiora:Varus:0",
+          "text": "Use Riposte when you see Varus start Chain of Corruption. The root turns into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Varus", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Varus-R", "start": 37, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Fiora:Varus:1",
+          "text": "Close the gap with Lunge as soon as Varus starts charging Piercing Arrow, because he moves slowly while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Varus", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Varus-Q", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Fiora:Varus:2",
+          "text": "Step out of Hail of Arrows' marked ground; it slows you. Lunge across it rather than walking through.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Fiora:Varus:3",
+          "text": "Once you reach Varus, hit his Vitals and stay on him. He has little to stop you up close.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "96a45e5e65e04c3d1becda0d6dcd94ea8d22a12ecb4ca3236249fb015b4b79f4",
+      "tips": [
+        {
+          "id": "top:Fiora:Vayne:0",
+          "text": "Keep Riposte ready for Vayne's Condemn; it blocks the knockback and she can't pin you to a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Vayne", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Vayne-E", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Fiora:Vayne:1",
+          "text": "Stay away from walls when Riposte is on cooldown; Condemn would stun you into them.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Vayne-E", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Fiora:Vayne:2",
+          "text": "Close the gap with Lunge when Vayne has used Tumble, then trade fast. She is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Vayne", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Fiora:Vayne:3",
+          "text": "Break off after a few hits so Vayne's third Silver Bolts hit doesn't land; fight in short trades.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Vayne-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "45f074c9fb192e87d26828eb2a659fb415760826d1f42632ec0c6bf7956c12ac",
+      "tips": [
+        {
+          "id": "top:Fiora:Vladimir:0",
+          "text": "Bait Sanguine Pool early in a fight, then trade when it ends; he cannot attack or cast while pooled.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Fiora:Vladimir:1",
+          "text": "Save Riposte for his Hemoplague or a Tides of Blood slow; it blocks them, and a stun only works if he uses a disable.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Vladimir:2",
+          "text": "Lunge onto Vladimir when the Vital is facing you, so you hit it for extra damage and gain speed to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Vladimir", "start": 11, "end": 19 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Fiora:Vladimir:3",
+          "text": "Stay out of Transfusion range early; it hurts and heals him. Fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Fiora:Vladimir:4",
+          "text": "Use Grand Challenge on Vladimir and kill him before Hemoplague bursts, or he heals back.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vladimir", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 52, "end": 62 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbab684f669c78800afeb14829c6f549b5be7754594a959532de662bd9ca10b2",
+      "tips": [
+        {
+          "id": "top:Fiora:Volibear:0",
+          "text": "Hold Riposte for when Volibear runs at you with Thundering Smash. Parrying his stun turns it into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Fiora:Volibear:1",
+          "text": "Keep Lunge ready to close the gap, and use it on a Vital when Volibear is low on Frenzied Maul bites.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Volibear", "start": 62, "end": 70 },
+            { "kind": "ability", "key": "Volibear-W", "start": 81, "end": 94 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Fiora:Volibear:2",
+          "text": "Trade in short bursts and leave. Volibear heals from a second Frenzied Maul on the same target in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Volibear-W", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Fiora:Volibear:3",
+          "text": "Step out of the Sky Splitter area when it lands. It slows you and hits for a share of your max health.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bc19dcc02221f6bd0a0281adc7a4391bfd4c76805a200975e3d594519a073f4e",
+      "tips": [
+        {
+          "id": "top:Fiora:XinZhao:0",
+          "text": "Keep Riposte ready for Xin Zhao's Audacious Charge or the third Three Talon Strike. Parrying a knock up gets you a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 64, "end": 82 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Fiora:XinZhao:1",
+          "text": "Back off when Xin Zhao starts Three Talon Strike. If he can't finish the three attacks, his damage and cooldown refunds drop a lot.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 30, "end": 48 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Fiora:XinZhao:2",
+          "text": "Use Lunge to stab Xin Zhao's Vital and disengage, since the speed boost helps you run. Lunge also cuts its own cooldown when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "XinZhao", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Fiora:XinZhao:3",
+          "text": "Keep your allies spread out before Crescent Guard. If you are caught inside it you will be stunned, and it hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 35, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2bfb48ff1890644d560d7c8415a081655a1abb90237e6b587cbd7bf039b98ef6",
+      "tips": [
+        {
+          "id": "top:Fiora:Yasuo:0",
+          "text": "Use Riposte on Yasuo's whirlwind from Steel Tempest; it blocks the knock up and stabs him back with a slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Fiora:Yasuo:1",
+          "text": "Hold Riposte for Yasuo's knock up and you turn his crowd control into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yasuo", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Fiora:Yasuo:2",
+          "text": "Yasuo's Wind Wall blocks projectiles, but Lunge is a dash and stab, so use it to close in and hit a Vital while the wall is up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Fiora:Yasuo:3",
+          "text": "Use Lunge to chase Yasuo after he dashes away; it prioritizes a champion whose Vital faces you.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Fiora:Yasuo:4",
+          "text": "Use Grand Challenge when you can fight him for a while; it reveals every Vital and heals your team if you succeed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Fiora:Yasuo:5",
+          "text": "Hit Yasuo with Bladework first to slow him, then use Lunge to stick to him.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Fiora-E", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b1f71240a9419d1fd5ca2811fde6192e71ec0ff21951b55b9dfe20ee1212f96f",
+      "tips": [
+        {
+          "id": "top:Fiora:Yone:0",
+          "text": "Hold Riposte for Yone's Mortal Steel at two stacks or Fate Sealed; parrying the knock up or stun turns your stab into a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Yone-Q", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Yone-R", "start": 54, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Fiora:Yone:1",
+          "text": "Use Lunge on the Vital he is showing you, then follow with Bladework to slow him and get a quick trade.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Fiora-E", "start": 59, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Fiora:Yone:2",
+          "text": "Do not walk into Spirit Cleave carelessly; it hurts more against high Health and gives him a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-W", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Fiora:Yone:3",
+          "text": "When he uses Soul Unbound, back off and let it run out, or trade carefully; he repeats part of the damage he dealt when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-E", "start": 13, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Fiora:Yone:4",
+          "text": "Grand Challenge on Yone shows all four Vitals; hit them and run the fight, since he cannot easily outrun your Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d32f78896cdd9b5be1c41b4e5d9d105f6b863671e3da773ba422f1a131f17fd2",
+      "tips": [
+        {
+          "id": "top:Fiora:Yorick:0",
+          "text": "Keep Riposte for Yorick's Mourning Mist or any stun or root; parrying one turns your stab into a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yorick", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Yorick-E", "start": 26, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Fiora:Yorick:1",
+          "text": "Kill his Mist Walkers with a quick attack before you fight Yorick; they die to one basic attack.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Fiora:Yorick:2",
+          "text": "Hit the Vital with Lunge to heal and speed up, then step away from his Last Rites and its healing.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Fiora:Yorick:3",
+          "text": "Attack Dark Procession to break it, or walk around it, before you chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 7, "end": 22 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Fiora:Yorick:4",
+          "text": "Use Grand Challenge on Yorick when his Maiden of the Mist is gone, so you can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yorick", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "738a93da0990b4e37227bcedaf1c4a76f4d5e269257799a255a0736483364087",
+      "tips": [
+        {
+          "id": "top:Fiora:Zaahen:0",
+          "text": "Hold Riposte for Dreaded Return. Parrying the pull stuns Zaahen instead of slowing him, and it blocks the damage too.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 },
+            { "kind": "champion", "key": "Zaahen", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Zaahen:1",
+          "text": "Time Riposte for the knock up from The Darkin Glaive. Parrying it turns your stab into a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 35, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Fiora:Zaahen:2",
+          "text": "Zaahen cannot be stopped during Grim Deliverance. Wait out the slam, then trade back when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zaahen-R", "start": 32, "end": 48 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "top:Fiora:Zaahen:3",
+          "text": "Use Lunge to hit the Vital as you close in, then back off with the Move Speed. Trade in short bursts so Zaahen cannot build his stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Zaahen", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Fiora:Zaahen:4",
+          "text": "Do not fight Zaahen when his stacks are full. He hits much harder and can come back from a kill, so let the stacks fade first.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 13, "end": 19 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

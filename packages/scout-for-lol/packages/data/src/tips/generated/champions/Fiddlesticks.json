@@ -1,0 +1,1395 @@
+{
+  "schemaVersion": 1,
+  "champion": "Fiddlesticks",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "f45c4e155c75aca7d7211b3be5bab4dd1576da790b0887eba2b1775f8cb5f97b",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:general:0",
+          "text": "Stay hidden in brush or stand still as a scarecrow, then open with Reap or Bountiful Harvest. Your first damaging ability will make them flee in fear.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 67,
+              "end": 71
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 75,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:1",
+          "text": "Hold still without moving, attacking or casting to turn into a scarecrow. Do it near a lane or an objective, because it hides you from view.",
+          "refs": [],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:2",
+          "text": "Use Terrify on a target who has already been feared. It then deals double damage, so save it as your follow-up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:3",
+          "text": "Use Reap to catch runners. They are slowed, and anyone hit in the center is also silenced and cannot cast spells.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 4,
+              "end": 8
+            },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "silenced", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:4",
+          "text": "Stay in the channel of Bountiful Harvest to the end. It deals extra damage on the last tick and refunds part of its cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 23,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:5",
+          "text": "Use Bountiful Harvest on jungle camps to heal while you clear. It also heals you in fights.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 4,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:6",
+          "text": "Start Crowstorm from out of sight, so your enemies can't see it coming. Cast Reap or Bountiful Harvest right after landing, and the fear still applies.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 6,
+              "end": 15
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 77,
+              "end": 81
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 85,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Fiddlesticks:general:7",
+          "text": "Don't use Flash or other movement during the Crowstorm channel. It stops you from casting, so only start it when you won't be interrupted.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 10, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 45,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Fiddlesticks:combo:0",
+          "name": "Crowstorm into Harvest into Flash",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Fiddlesticks-R" },
+            { "kind": "ability", "key": "Fiddlesticks-W" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "Engaging a fight from the fog or a brush when the enemy cannot see you coming.",
+          "whenRefs": [],
+          "text": "Cast Bountiful Harvest right after Crowstorm lands, then Flash. The fear still applies, and Flash lets you reposition or reach a target who runs.",
+          "textRefs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 5,
+              "end": 22
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 35,
+              "end": 44
+            },
+            { "kind": "summoner-spell", "key": "4", "start": 57, "end": 62 },
+            { "kind": "summoner-spell", "key": "4", "start": 92, "end": 97 }
+          ]
+        },
+        {
+          "id": "jungle:Fiddlesticks:combo:1",
+          "name": "Crowstorm into Reap",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Fiddlesticks-R" },
+            { "kind": "ability", "key": "Fiddlesticks-E" }
+          ],
+          "when": "Opening a fight from out of sight, such as a Crowstorm out of the fog.",
+          "whenRefs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 45,
+              "end": 54
+            }
+          ],
+          "text": "Cast Reap right after you arrive. The grace period after the blink means it still applies fear, even though the enemy can now see you.",
+          "textRefs": [
+            { "kind": "ability", "key": "Fiddlesticks-E", "start": 5, "end": 9 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "e83cb31018f8b2a98a57b14ac82dd119911924f2f0b74fa94477851a3b6f7f88",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Graves:0",
+          "text": "Hide in brush or stand still as an effigy, then open with Reap or Bountiful Harvest so Graves is feared and cannot clear you with his shotgun.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 58,
+              "end": 62
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 66,
+              "end": 83
+            },
+            { "kind": "champion", "key": "Graves", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Fiddlesticks:Graves:1",
+          "text": "Use Reap on Graves when he dashes in; the center silences him, so he cannot use Quickdraw to escape, and the rest slows him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 4,
+              "end": 8
+            },
+            { "kind": "champion", "key": "Graves", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "silenced", "start": 49, "end": 57 },
+            { "kind": "ability", "key": "Graves-E", "start": 80, "end": 89 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Fiddlesticks:Graves:2",
+          "text": "Fight inside Graves' Smoke Screen only if you must; it shrinks your sight, so step out of it and keep casting from outside.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Fiddlesticks:Graves:3",
+          "text": "Save Crowstorm for when Graves is caught away from allies. He has no escape from it once Quickdraw is on cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Graves-E", "start": 89, "end": 98 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Fiddlesticks:Graves:4",
+          "text": "Do not walk up to Graves in the open; his shotgun hits hardest up close, so look for a fear first.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "87dab4a2aeb5ff91fe19854a008cfa35dda876cc8eaeb420316071504a0a9732",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:JarvanIV:0",
+          "text": "Stay hidden in brush or stand still as a scarecrow, then open with Reap or Bountiful Harvest so the enemy is feared before Jarvan can start a fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 67,
+              "end": 71
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 75,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Fiddlesticks:JarvanIV:1",
+          "text": "Use Reap on Jarvan when he dives in with Dragon Strike. It leaves him slowed and, if he is in the center, silenced.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 4,
+              "end": 8
+            },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 41, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 },
+            { "kind": "keyword", "key": "silenced", "start": 106, "end": 114 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Fiddlesticks:JarvanIV:2",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you will be knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Fiddlesticks:JarvanIV:3",
+          "text": "Use Terrify on Jarvan when he lands Cataclysm on you, so you can walk away from the fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Fiddlesticks:JarvanIV:4",
+          "text": "Channel Crowstorm from out of sight, and stay out of Jarvan's reach while you channel.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 8,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8481e3f0368bd4c366235891f8d1346e515f07f48f8d11ea7f314aa53c2f876e",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Kayn:0",
+          "text": "Hide in brush or stand still as an effigy, then open with Reap or Crowstorm so Kayn is feared. It works best when he cannot see you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 58,
+              "end": 62
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 66,
+              "end": 75
+            },
+            { "kind": "champion", "key": "Kayn", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kayn:1",
+          "text": "Aim Reap at Kayn's centre when he dashes in; he is silenced and slowed, so he cannot use his abilities to escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 4,
+              "end": 8
+            },
+            { "kind": "champion", "key": "Kayn", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kayn:2",
+          "text": "Use Terrify on Kayn when he tries to leave through a wall. It fears him and lets you catch up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Kayn", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kayn:3",
+          "text": "Start Bountiful Harvest only when Kayn is close and cannot easily leave. It drains him and heals you, but moving or flashing cancels it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 6,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Kayn", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kayn:4",
+          "text": "Do not cast Crowstorm on Kayn when he is up close. He can escape it, and it cannot be cancelled once you start.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 12,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "810c8ac53d4e66df265ad2d9f99a805a78231e12f6cc1b79528c23eb5ce5aa73",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Khazix:0",
+          "text": "Stay near allied minions, champions or turrets so Kha'Zix is not hitting you while you are alone; Taste Their Fear hurts most against isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "isolated", "start": 91, "end": 96 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 98, "end": 114 },
+            { "kind": "keyword", "key": "isolated", "start": 134, "end": 142 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Fiddlesticks:Khazix:1",
+          "text": "Hit Kha'Zix with Reap when he leaps in; the slow and silence in the center stop him from chaining his attacks and escapes.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 17,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "silenced", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Fiddlesticks:Khazix:2",
+          "text": "Fight when Leap is on cooldown. Kha'Zix has much less to dodge or chase with then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 11, "end": 15 },
+            { "kind": "champion", "key": "Khazix", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Fiddlesticks:Khazix:3",
+          "text": "Use Terrify on Kha'Zix when he commits to you; it fears him and cuts his damage window.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Khazix", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Fiddlesticks:Khazix:4",
+          "text": "Start fights with Bountiful Harvest when he is close; it reveals him while you drain and heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 18,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c95bb5d4837974a57ed1ed43e22ae04e37e20c32bd1ef4b0b65d3cafc1de8915",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Kindred:0",
+          "text": "Hide in brush or stand still as a scarecrow, then open with Reap or Bountiful Harvest so the enemy is feared before Kindred can kite you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 60,
+              "end": 64
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 68,
+              "end": 85
+            },
+            { "kind": "champion", "key": "Kindred", "start": 116, "end": 123 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kindred:1",
+          "text": "Hit Kindred with Reap to leave her slowed. If she is in the center she is silenced too, so she can't use Dance of Arrows to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 17,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "silenced", "start": 74, "end": 82 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 105, "end": 120 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kindred:2",
+          "text": "Kindred is fragile. Jump on her with Crowstorm when she has used Dance of Arrows, and stay close so Bountiful Harvest heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 37,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Kindred-Q", "start": 65, "end": 80 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 100,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Fiddlesticks:Kindred:3",
+          "text": "Don't fight inside Lamb's Respite. Enemies there can't die, so back off or wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bd61810797a3323ae7c6cdc98f9d9022f99cd87202c5345a4555c234ad8c791f",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:LeeSin:0",
+          "text": "Reap Lee Sin when he dashes in with Resonating Strike; the slow and silence stop him from chaining his abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 0,
+              "end": 4
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 5, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Fiddlesticks:LeeSin:1",
+          "text": "Hide in brush or stand still out of combat, then open with Bountiful Harvest or Reap so Lee Sin is feared and can't jump on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 59,
+              "end": 76
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 80,
+              "end": 84
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Fiddlesticks:LeeSin:2",
+          "text": "Use Terrify when Lee Sin is low on health; the fear lets you finish him or escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Fiddlesticks:LeeSin:3",
+          "text": "Fight him with magic damage; he is weakest against it. Bountiful Harvest heals you while it drains him if you aren't interrupted.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 55,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Fiddlesticks:LeeSin:4",
+          "text": "Don't start Crowstorm with Lee Sin nearby, because he can jump in and kick you during the channel.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 12,
+              "end": 21
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3ee1bd56159398eabeaa380a64275116bfe91d5a1084ac8c4d070eb23f0690fd",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:MasterYi:0",
+          "text": "Cast Reap on Master Yi when he jumps in; the center silences him, so he can't use Meditate to heal or Alpha Strike to escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 5,
+              "end": 9
+            },
+            { "kind": "champion", "key": "MasterYi", "start": 13, "end": 22 },
+            { "kind": "keyword", "key": "silenced", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 82, "end": 90 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Fiddlesticks:MasterYi:1",
+          "text": "Save Terrify for when Master Yi commits to a fight; the fear stops his attacks. Hit him from hiding to get the fear.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "champion", "key": "MasterYi", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Fiddlesticks:MasterYi:2",
+          "text": "Don't rely on Reap's slow once Master Yi has Highlander active; he ignores slows. Use Terrify or the silence instead.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 14,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "MasterYi", "start": 31, "end": 40 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 45, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 86,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Fiddlesticks:MasterYi:3",
+          "text": "Start fights with Crowstorm from the dark, then Bountiful Harvest; fear and sustained damage punish a diving Master Yi.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 18,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 48,
+              "end": 65
+            },
+            { "kind": "champion", "key": "MasterYi", "start": 109, "end": 118 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c8347f6e1fae3c7e05a8240c841fea2f7fc22c656742c39247a259086436fd4f",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Naafiri:0",
+          "text": "Fight Naafiri from range with Reap; slowed and silenced, she cannot dive you with Eviscerate or her other abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 30,
+              "end": 34
+            },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "silenced", "start": 47, "end": 55 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 82, "end": 92 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Fiddlesticks:Naafiri:1",
+          "text": "Wait in brush or stand still as a scarecrow, then open with Terrify or Crowstorm so the enemy is feared.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 60,
+              "end": 67
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 71,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Fiddlesticks:Naafiri:2",
+          "text": "Use Bountiful Harvest when she jumps on you; it heals you, and her packmates take damage too.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 4,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Fiddlesticks:Naafiri:3",
+          "text": "Do not channel Bountiful Harvest or Crowstorm while she can reach you; her dash can cut the channel short.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 15,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 36,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bb8837e45cc7d2d776c898838a1d22cdc2564804c90d1bcfba23177b343edcdb",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Nocturne:0",
+          "text": "Hit Nocturne with Reap when he rushes in; he is slowed, and if you catch him in the center he is silenced and cannot use Shroud of Darkness.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 18,
+              "end": 22
+            },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "silenced", "start": 97, "end": 105 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 121, "end": 139 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Fiddlesticks:Nocturne:1",
+          "text": "Lead with Reap instead of Terrify when Nocturne has Shroud of Darkness ready; the shield blocks one ability and wastes your fear.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 10,
+              "end": 14
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 26,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Nocturne", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 52, "end": 70 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Fiddlesticks:Nocturne:2",
+          "text": "Stay hidden in a brush or pose as a scarecrow before a gank; your next damaging ability then fears Nocturne.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Fiddlesticks:Nocturne:3",
+          "text": "When Nocturne casts Paranoia, expect him to dive your carry; stay near allies so he cannot catch you alone.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb53ca2f3a21835d04a388953cdea6abe48201fb064ada49c0905d1613fae402",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Shyvana:0",
+          "text": "Hide in a bush or stand still as an effigy, then open with Reap or Bountiful Harvest so Shyvana is feared before she can react.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 59,
+              "end": 63
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 67,
+              "end": 84
+            },
+            { "kind": "champion", "key": "Shyvana", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Fiddlesticks:Shyvana:1",
+          "text": "Hit Shyvana with Reap and keep your distance. She is slowed, and silenced if caught in the center, so she cannot easily close in.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 17,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "silenced", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Fiddlesticks:Shyvana:2",
+          "text": "Use Terrify on Shyvana when she dashes or tries to chase you. The fear stops her attacks, and the Emberstrike damage she needs comes from hitting you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Shyvana", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 98, "end": 109 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Fiddlesticks:Shyvana:3",
+          "text": "Do not channel Bountiful Harvest when she is already on top of you with her shield up. Wait until she has used Inferno Aegis.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 15,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Shyvana-W", "start": 111, "end": 124 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Fiddlesticks:Shyvana:4",
+          "text": "Fight when Shyvana is low on Dragon Fury and cannot turn into a dragon. Poke her and hold back Crowstorm for a clean kill.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 11, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 72, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 95,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1ae23a6eba4e86c4545db518138b7ec1a243a215e596d11a75e3e45adf072d42",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Skarner:0",
+          "text": "Stay hidden in brush or stand still as a scarecrow, then open with Reap or Bountiful Harvest so Skarner is feared and cannot fight back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 67,
+              "end": 71
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 75,
+              "end": 92
+            },
+            { "kind": "champion", "key": "Skarner", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Fiddlesticks:Skarner:1",
+          "text": "Use Terrify on Skarner when he charges at you; it stops him from fighting back and gives you time to get away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Skarner", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Fiddlesticks:Skarner:2",
+          "text": "Hit Skarner with Reap before he closes in; the slow and silence make it hard for him to stick to you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 17,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "silenced", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Fiddlesticks:Skarner:3",
+          "text": "Do not stand in a long fight with Skarner while he keeps hitting you; his hits stack up and hurt over time. Drain him with Bountiful Harvest, then back off.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 34, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 123,
+              "end": 140
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Fiddlesticks:Skarner:4",
+          "text": "Keep Crowstorm for when Skarner is caught in the open or is not near allies. Skarner's Impale can pull you out of it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Skarner", "start": 77, "end": 84 },
+            { "kind": "ability", "key": "Skarner-R", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "96cc4e91a2a0ccafd9e249ba9eeb38687d0086db74b836a22cc17f841fe1f603",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Sylas:0",
+          "text": "Stay hidden in brush or stand still as a scarecrow, then open with Reap or Bountiful Harvest so the enemy is feared.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 67,
+              "end": 71
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 75,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Fiddlesticks:Sylas:1",
+          "text": "Aim Reap at Sylas's landing spot after he dashes in. Hitting him in the center silences him, so he cannot use his dashes.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 4,
+              "end": 8
+            },
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "silenced", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Fiddlesticks:Sylas:2",
+          "text": "Fight Sylas with Bountiful Harvest when he is low. It heals you, and the last tick hurts more the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 17,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Fiddlesticks:Sylas:3",
+          "text": "Hold Crowstorm for the moment Sylas is not ready to dash out, because his dashes can get him out of it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1d8653e0ceb5ae3e3b47c14a5c98e8845cbcc5b929e166b1a81454ddc051435a",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Talon:0",
+          "text": "Hold Reap for when Talon jumps in or tries to run; it slows him, and if he is in the center he is silenced and cannot use his abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 5,
+              "end": 9
+            },
+            { "kind": "champion", "key": "Talon", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "silenced", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Fiddlesticks:Talon:1",
+          "text": "Stay hidden in a brush or stand still as a scarecrow, then open with Terrify so Talon is feared before he can react.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 69,
+              "end": 76
+            },
+            { "kind": "champion", "key": "Talon", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Fiddlesticks:Talon:2",
+          "text": "Use Bountiful Harvest when Talon is committed on you; it deals damage and heals you. Do not move or cast mid-channel, or it gets interrupted.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 4,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Fiddlesticks:Talon:3",
+          "text": "Talon is weak while Shadow Assault is down. Use Crowstorm to catch him then, since he has no easy way to escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 20, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 48,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Fiddlesticks:Talon:4",
+          "text": "Ward and keep watch on the walls near your camps; Talon can vault over them with Assassin's Path to ambush you or invade.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Talon-E", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7889eb8ef5da836cb5f601f8784caef47d50912ad525426b03ca484aaedea6f4",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:Viego:0",
+          "text": "Stay unseen in brush, then open with Reap or Crowstorm on Viego so he is feared. The fear only works while he cannot see you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 37,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 45,
+              "end": 54
+            },
+            { "kind": "champion", "key": "Viego", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Fiddlesticks:Viego:1",
+          "text": "Use Reap when Viego charges Spectral Maw. He is slowed and silenced in the center, so he cannot use his abilities to chase or escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 4,
+              "end": 8
+            },
+            { "kind": "champion", "key": "Viego", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Viego-W", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "silenced", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Fiddlesticks:Viego:2",
+          "text": "Fight Viego inside Bountiful Harvest range, not at a distance. It heals you and deals extra damage at the end if you finish the channel.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 19,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Fiddlesticks:Viego:3",
+          "text": "Do not channel Bountiful Harvest while Viego can reach you with Spectral Maw. A stun interrupts the channel.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 15,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Viego", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Viego-W", "start": 64, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Fiddlesticks:Viego:4",
+          "text": "Hold Terrify for when Viego dashes at you or tries to leave. The fear stops his attacks and abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Fiddlesticks:Viego:5",
+          "text": "Do not use Crowstorm to start a fight if Viego is likely to see you. Viego's Heartbreaker can cut it short, and he can reach you if the channel is interrupted.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 11,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Viego", "start": 41, "end": 46 },
+            { "kind": "champion", "key": "Viego", "start": 69, "end": 74 },
+            { "kind": "ability", "key": "Viego-R", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9d766a37ed564f7cb323cd4d422eb7ed0f9845c0d2fa95ab9193af42b6899ec1",
+      "tips": [
+        {
+          "id": "jungle:Fiddlesticks:XinZhao:0",
+          "text": "Stay hidden before a gank so your first ability fears Xin Zhao, then lock him down with Reap.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 54, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 88,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Fiddlesticks:XinZhao:1",
+          "text": "Do not channel Bountiful Harvest when Xin Zhao can reach you; his Audacious Charge and knock up will interrupt it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 15,
+              "end": 32
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Fiddlesticks:XinZhao:2",
+          "text": "Use Terrify on Xin Zhao when he charges in to stop his three hits.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Fiddlesticks:XinZhao:3",
+          "text": "Reap hits him with a slow and silence; use it when he is stuck in the middle of the area, so he cannot charge at you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 0,
+              "end": 4
+            },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "silenced", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Fiddlesticks:XinZhao:4",
+          "text": "Spread out from your team before Crowstorm lands; Xin Zhao's Crescent Guard can punish those who bunch up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 33,
+              "end": 42
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 50, "end": 58 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

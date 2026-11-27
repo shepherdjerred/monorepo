@@ -1,0 +1,989 @@
+{
+  "schemaVersion": 1,
+  "champion": "Nasus",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "2fb4e6157c03657b66106b56ae038f7cb812c13a342adaa225286bde40d1daa3",
+      "tips": [
+        {
+          "id": "top:Nasus:general:0",
+          "text": "Last-hit every minion with Siphoning Strike when it is ready. Each kill adds permanent damage, and kills on champions and large minions add the most.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Nasus:general:1",
+          "text": "Cast Wither on the enemy when they walk up or run away. It slows them more each second and cuts their Attack Speed, so keep chasing them while it ramps up.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Nasus:general:2",
+          "text": "Use Spirit Fire on minion waves to farm and shred Armor. Don't push too far past your minions when you do.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Nasus:general:3",
+          "text": "Cast Spirit Fire on the enemy before you trade. It deals damage over time and lowers their Armor, so your attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Nasus:general:4",
+          "text": "Save Fury of the Sands for a fight you plan to win. Stay close to the enemies, because the sandstorm only hurts those nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Nasus:general:5",
+          "text": "Use Fury of the Sands to take a fight you would lose otherwise. It gives you extra Health and resistances, and Siphoning Strike comes back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 111, "end": 127 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Nasus:general:6",
+          "text": "Trade with Siphoning Strike when it is ready. It has extra range and your Soul Eater life steal heals you through the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 11, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Nasus-passive",
+              "start": 74,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "b730ffb9fbe303ef307b0ed5084dcc93f077d126fc14652b444280ab6cc32667",
+      "tips": [
+        {
+          "id": "top:Nasus:Aatrox:0",
+          "text": "Put Wither on Aatrox when he commits to a fight; it slows him and cuts his Attack Speed, so he is much easier to kite or trade with.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Aatrox", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Nasus:Aatrox:1",
+          "text": "Step out of the line of The Darkin Blade and stay away from the tip of each swing. The edge is where he deals the most damage and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Nasus:Aatrox:2",
+          "text": "Last-hit with Siphoning Strike every time you can, and trade only when Aatrox has used his Q or dash. Each kill makes your later hits stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 14, "end": 30 },
+            { "kind": "champion", "key": "Aatrox", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Nasus:Aatrox:3",
+          "text": "Use Spirit Fire on Aatrox when he stands in the lane. It lowers his Armor, so your Siphoning Strike hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aatrox", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Nasus:Aatrox:4",
+          "text": "Do not stand in the spot where Infernal Chains lands. Walk out of it quickly, toward the sides or at Aatrox, or you get pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 31, "end": 46 },
+            { "kind": "champion", "key": "Aatrox", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Nasus:Aatrox:5",
+          "text": "Turn on Fury of the Sands when you fight him, especially at level 6. It makes you much sturdier and burns him while he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 8, "end": 25 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0bb0eaedbb83c0200b1da51c887e2061139215cbd2d4b2cef9902c4bd6a9089e",
+      "tips": [
+        {
+          "id": "top:Nasus:Briar:0",
+          "text": "Put Wither on Briar when she jumps in; it slows her and cuts her Attack Speed, which weakens her frenzy trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Briar", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Nasus:Briar:1",
+          "text": "Use Spirit Fire on Briar when she is on you; it cuts her Armor and burns her over time while you keep hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Nasus:Briar:2",
+          "text": "Keep last-hitting with Siphoning Strike early; Briar is a strong skirmisher, so stack up safely and fight when you are ahead.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Briar", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Nasus:Briar:3",
+          "text": "Wait for Fury of the Sands before you take a long fight with Briar; the extra Health and resistances make her burst far weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 9, "end": 26 },
+            { "kind": "champion", "key": "Briar", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Nasus:Briar:4",
+          "text": "Do not stand still when Briar charges Chilling Scream near a wall; fully charged, it can leave you stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Briar-E", "start": 38, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7ecfa4decfaa225fcb124f26c77d44661e7ecf58bc0603dfe3b885ae61e1b4df",
+      "tips": [
+        {
+          "id": "top:Nasus:Darius:0",
+          "text": "Use Wither on Darius as soon as he walks up to trade; it slows him and cuts his Attack Speed, so he cannot stick to you.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Darius", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Nasus:Darius:1",
+          "text": "Stay out of Apprehend range when it is ready, because it pulls you in and knocks you up for a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Nasus:Darius:2",
+          "text": "Trade right after Darius uses Apprehend; he is easier to poke and cannot pull you again for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Darius-E", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Nasus:Darius:3",
+          "text": "Hit Darius with Spirit Fire to cut his Armor before you trade, then follow with a Siphoning Strike auto.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Nasus-E", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Nasus:Darius:4",
+          "text": "Do not fight a long trade when Darius has built up Hemorrhage stacks; his damage ramps up fast and Noxian Guillotine finishes you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 51,
+              "end": 61
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 99, "end": 116 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Nasus:Darius:5",
+          "text": "Activate Fury of the Sands when Darius commits; the extra health and resistances make his all-in much weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 9, "end": 26 },
+            { "kind": "champion", "key": "Darius", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c1f1905a67516d862aa5acc870789f85eb3f1e02fe79b6a3889eb10f32d892d3",
+      "tips": [
+        {
+          "id": "top:Nasus:Fiora:0",
+          "text": "Do not cast Wither while Fiora has Riposte ready; she parries it and you waste your best tool against her.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Fiora-W", "start": 35, "end": 42 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Nasus:Fiora:1",
+          "text": "Cast Wither once she has used Riposte or Lunge to close in. It slows her and cuts her Attack Speed, which hurts her hard-hitting trades.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Fiora-W", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Nasus:Fiora:2",
+          "text": "Keep last-hitting with Siphoning Strike when she is away from lane. The stacks make you stronger every wave.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Nasus:Fiora:3",
+          "text": "Use Spirit Fire on her when she steps up to trade. It cuts her Armor and deals damage over time while she stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Nasus:Fiora:4",
+          "text": "Do not fight her early with only your basic attacks. Trade with your abilities and farm safely until you have stacks.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Nasus:Fiora:5",
+          "text": "In a long fight, Fury of the Sands gives you extra Health and resistances and damages her each second. Start it before she commits.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 17, "end": 34 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "45ebe88f2707f01a61a2fdcc7a520d55cfcbb94ca531b239c69eed1c40461aba",
+      "tips": [
+        {
+          "id": "top:Nasus:Gangplank:0",
+          "text": "Break a Powder Keg yourself instead of letting Gangplank shoot it; if an enemy destroys it, it is defused.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Gangplank", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Nasus:Gangplank:1",
+          "text": "Put Wither on Gangplank when he steps in; his Attack Speed drops and he is slowed more the longer it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Gangplank", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Nasus:Gangplank:2",
+          "text": "Gangplank can cleanse Wither with Remove Scurvy, so bait it out before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Nasus-W", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Nasus:Gangplank:3",
+          "text": "Cast Spirit Fire on Gangplank before a trade; it cuts his Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Gangplank", "start": 20, "end": 29 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Nasus:Gangplank:4",
+          "text": "Once you reach level 6, use Fury of the Sands to chase Gangplank down. He cannot poke you while you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 28, "end": 45 },
+            { "kind": "champion", "key": "Gangplank", "start": 55, "end": 64 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c1ac0c625696be0aa373eafa054cff671e3c23e33340a8b5009c6bf30023568",
+      "tips": [
+        {
+          "id": "top:Nasus:Garen:0",
+          "text": "Put Wither on Garen when he runs at you; it slows him more each second and cuts his Attack Speed. Fight while he is still slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Garen", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 122, "end": 128 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Nasus:Garen:1",
+          "text": "Garen's Decisive Strike removes slows from him, so cast Wither after he has used it, not before.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Nasus-W", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Nasus:Garen:2",
+          "text": "Hold Siphoning Strike for the last hit on a minion, and do not waste it on Garen early. Each kill makes it hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Garen", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Nasus:Garen:3",
+          "text": "Spirit Fire cuts Garen's Armor and hits the minions around him too. Use it to farm and to weaken him before a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Garen", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Nasus:Garen:4",
+          "text": "Stay healthy when Garen has Demacian Justice. Low Health makes it hit much harder, so back off before he can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Garen-R", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Nasus:Garen:5",
+          "text": "Use Fury of the Sands when you fight Garen after level 6. The extra Health and resistances help you outlast Judgment.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Garen", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Garen-E", "start": 108, "end": 116 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "315f0f5a4e6336426d9b778fff09c00e3de142b83d4f55e30cb62322586bc30b",
+      "tips": [
+        {
+          "id": "top:Nasus:Jayce:0",
+          "text": "Early on, Jayce out-trades you at range. Farm safely with Siphoning Strike last hits and don't chase him while he pokes you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Nasus:Jayce:1",
+          "text": "Put Wither on Jayce when he jumps in or tries to leave; it slows him more each second and cuts his Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Jayce", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Nasus:Jayce:2",
+          "text": "Spirit Fire on Jayce and the wave together; it lowers his Armor, so your next trade hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Jayce", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Nasus:Jayce:3",
+          "text": "Take fights once Fury of the Sands is up; its damage over time hurts Jayce and you get much sturdier.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 17, "end": 34 },
+            { "kind": "champion", "key": "Jayce", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ef2b3df1c8d67ac9dd3cbbb753ef410e70f32810f352e12b9ac6dfd9273f3ab9",
+      "tips": [
+        {
+          "id": "top:Nasus:KSante:0",
+          "text": "Put Wither on K'Sante before he reaches you; it slows him and cuts his Attack Speed, so his trades get weaker the longer it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 14, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Nasus:KSante:1",
+          "text": "Use Spirit Fire on K'Sante before you trade. It cuts his Armor, and a tank with lots of Armor takes much less from your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "KSante", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Nasus:KSante:2",
+          "text": "Keep farming with Siphoning Strike and don't walk into K'Sante's range. If he hits you twice with Ntofo Strikes, you get pulled in and stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 18, "end": 34 },
+            { "kind": "champion", "key": "KSante", "start": 55, "end": 62 },
+            { "kind": "ability", "key": "KSante-Q", "start": 98, "end": 111 },
+            { "kind": "keyword", "key": "stunned", "start": 135, "end": 142 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Nasus:KSante:3",
+          "text": "Watch for the Path Maker charge. When K'Sante raises his weapons, step out of its line so you aren't stunned.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "KSante", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Nasus:KSante:4",
+          "text": "When K'Sante goes All Out he becomes much squishier. Fight him then, and use Fury of the Sands to stay on him.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Nasus-R", "start": 77, "end": 94 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c879ea5fc588c54f6bebbf8a15b3eac774ba47fdc9e909aae1018eaad66f70a9",
+      "tips": [
+        {
+          "id": "top:Nasus:Malphite:0",
+          "text": "Last-hit with Siphoning Strike only when Malphite is not ready to poke you; Seismic Shard slows you as you step up.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 14, "end": 30 },
+            { "kind": "champion", "key": "Malphite", "start": 41, "end": 49 },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Nasus:Malphite:1",
+          "text": "Use Wither on Malphite when he runs in to trade; it slows him and cuts his Attack Speed so Thunderclap hits fewer times.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Malphite", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Malphite-W", "start": 91, "end": 102 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Nasus:Malphite:2",
+          "text": "Spirit Fire cuts Malphite's Armor, which his damage scales with. Hit him with it before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Malphite", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Nasus:Malphite:3",
+          "text": "Stay out of his Unstoppable Force range at level 6 when you are low on health, because it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Nasus:Malphite:4",
+          "text": "Save Fury of the Sands for when Malphite has used his abilities; his Granite Shield is weak against its constant damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Malphite", "start": 32, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 69,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "13c9a2b440bb7d032fb2b8d03f199206d1af3a99567cc3f188c6c7a888f4b4a1",
+      "tips": [
+        {
+          "id": "top:Nasus:Mordekaiser:0",
+          "text": "Use Wither on Mordekaiser when he walks up to trade; it slows him and cuts his Attack Speed, so he struggles to stay on you.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 14,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Nasus:Mordekaiser:1",
+          "text": "Stay out of long fights early. Mordekaiser's Darkness Rise aura and Indestructible shield get stronger the longer he keeps trading with you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 31,
+              "end": 42
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 45,
+              "end": 58
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 68,
+              "end": 82
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Nasus:Mordekaiser:2",
+          "text": "Walk out of line of Death's Grasp or keep minions out of the way of your path. Being pulled in lets him land his full combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 20,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Nasus:Mordekaiser:3",
+          "text": "Farm with Spirit Fire when minions bunch up. It also cuts his Armor if he stands in it, which makes your trades better.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Nasus:Mordekaiser:4",
+          "text": "Keep last-hitting with Siphoning Strike. Mordekaiser is a strong lane pusher, so stacks are your way to out-scale him.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Nasus:Mordekaiser:5",
+          "text": "Fury of the Sands lets you fight him toe to toe. Use it to survive his Realm of Death, as the extra Health and resistances help a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 0, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 71,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72dbf583e46c7a9e75342a8c0730cda23e7118b96173a63cacdcd9d0479d753f",
+      "tips": [
+        {
+          "id": "top:Nasus:Rumble:0",
+          "text": "Rumble's Electro Harpoon slows you and cuts your Magic Resist, so step out of its line or let a minion block it.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Rumble-E", "start": 9, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Nasus:Rumble:1",
+          "text": "Put Wither on Rumble when you want to trade; once it builds up, he cannot run away or kite you.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Rumble", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Nasus:Rumble:2",
+          "text": "Hit Rumble when he overheats; he cannot cast spells for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Nasus:Rumble:3",
+          "text": "Use Spirit Fire on the minion wave to clear it, and keep last-hitting with Siphoning Strike so you grow stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Nasus:Rumble:4",
+          "text": "Do not stand in The Equalizer's fire; it burns and slows you. Leave the area, or use Fury of the Sands to survive it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Nasus-R", "start": 85, "end": 102 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6783f9f45cea3b175fb30975cc80c91ccdaf678c5e59a3f191b9df09e42ae140",
+      "tips": [
+        {
+          "id": "top:Nasus:Sion:0",
+          "text": "Stay out of range when Sion charges Decimating Smash; if you are hit, the stun is long and he follows up freely.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Sion-Q", "start": 36, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Nasus:Sion:1",
+          "text": "Put Wither on Sion when he commits to a trade; the slow lets you walk out of the fight and reduces his hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Sion", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Nasus:Sion:2",
+          "text": "Keep last-hitting with Siphoning Strike when it is safe; the stacks win the long game, so farm instead of trading into his stun.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Nasus:Sion:3",
+          "text": "Do not kill Sion carelessly when he is low; Glory in Death brings him back hitting fast, so step away and let it run out.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-passive", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Nasus:Sion:4",
+          "text": "Use Spirit Fire on the wave and on Sion together when he stands near minions; it cuts his Armor and helps your trades.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sion", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Nasus:Sion:5",
+          "text": "Save Fury of the Sands for when Sion has used Decimating Smash, so you are not stunned inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Sion", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Sion-Q", "start": 46, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dcfd91efd12af219ac61d5882605c47cc0016d14f9ef39d5b9338a4dd159d009",
+      "tips": [
+        {
+          "id": "top:Nasus:Teemo:0",
+          "text": "Put Wither on Teemo when he pokes you; it slows him more each second and he can no longer kite you.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Teemo", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Nasus:Teemo:1",
+          "text": "Blinding Dart makes your attacks miss, so do not walk up to last-hit with Siphoning Strike when Teemo has it ready.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 74, "end": 90 },
+            { "kind": "champion", "key": "Teemo", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Nasus:Teemo:2",
+          "text": "Watch the bushes and look for hidden Noxious Trap mushrooms before you walk in; they slow you and reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Nasus:Teemo:3",
+          "text": "Farm with Spirit Fire to clear waves from range, since Teemo's poison makes trading in melee costly.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Nasus:Teemo:4",
+          "text": "Fight Teemo with Fury of the Sands on; he cannot stand next to you and you can finally catch him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Nasus-R", "start": 17, "end": 34 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "176133fd476e93a4057ae58800ae050bd5628195d3c9df215a38d711711f0f2a",
+      "tips": [
+        {
+          "id": "top:Nasus:Vayne:0",
+          "text": "Put Wither on Vayne as soon as she gets close; it slows her and cuts her Attack Speed. Don't miss the chance to catch her.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Vayne", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Nasus:Vayne:1",
+          "text": "Stay away from walls when Vayne has Condemn ready, or you will be stunned and take heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Nasus:Vayne:2",
+          "text": "Don't chase Vayne around; Tumble lets her dodge away. Farm with Siphoning Strike and wait for her to make a mistake.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Nasus:Vayne:3",
+          "text": "Cast Spirit Fire on Vayne before you trade; it lowers her Armor and she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Nasus:Vayne:4",
+          "text": "Use Fury of the Sands to fight Vayne once you reach level 6; the storm damages her while she cannot easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a2b57a15c641444affb8749bfd70e1ea7b896e13606411b1c1ff47cb59384105",
+      "tips": [
+        {
+          "id": "top:Nasus:Yone:0",
+          "text": "Put Wither on Yone when he commits to a fight; it slows him and cuts his Attack Speed, so he struggles to chase you or trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Yone", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Nasus:Yone:1",
+          "text": "Last-hit with Siphoning Strike when Yone is far away, so he cannot punish you for stepping up.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 14, "end": 30 },
+            { "kind": "champion", "key": "Yone", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Nasus:Yone:2",
+          "text": "Use Spirit Fire to poke Yone and cut his Armor before you trade. It also pushes the wave, so watch for ganks.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Nasus:Yone:3",
+          "text": "Wait for Fury of the Sands before you fight Yone for real. You get much sturdier, and he takes damage while he stays near you.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 9, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Nasus:Yone:4",
+          "text": "Do not chase Yone while he is in spirit form. Wait for it to end, because he returns to his body and repeats damage he dealt to you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

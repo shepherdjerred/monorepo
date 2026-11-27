@@ -1,0 +1,709 @@
+{
+  "schemaVersion": 1,
+  "champion": "Nilah",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "3ee164f76e7c4ad0e01666dc820b4f17668d5644d1f19e664092f2ce4fa5a556",
+      "tips": [
+        {
+          "id": "adc:Nilah:general:0",
+          "text": "Last-hit minions with your attacks to level faster; Joy Unending gives you and your nearest ally extra experience.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Nilah-passive",
+              "start": 52,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Nilah:general:1",
+          "text": "Stay close to your support when they heal or shield; Joy Unending gives you both a bit extra.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Nilah-passive",
+              "start": 53,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Nilah:general:2",
+          "text": "Hit an enemy champion with Formless Blade before you trade; it gives you range and attack speed, and your attacks hit in a cone.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Nilah:general:3",
+          "text": "Use Formless Blade on minions standing near the enemy to start your bonus range and clear the wave with cone attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Nilah:general:4",
+          "text": "Attack champions to heal with Formless Blade; extra healing turns into a shield, so trade when you can keep hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Nilah:general:5",
+          "text": "Use Slipstream to dodge a skillshot or close in, and to reset your attack timer. It dashes through a unit, so you need a target to aim at.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Nilah:general:6",
+          "text": "Cast Jubilant Veil when an enemy marksman starts attacking you; it dodges their attacks and reduces magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Nilah:general:7",
+          "text": "Run into your ally to share Jubilant Veil with them. It only works on each ally once in a while, so save it for a real fight.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Nilah:general:8",
+          "text": "At level 6, use Apotheosis when several enemies are close. It pulls them in, leaves them slowed, and heals you and nearby allies.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Nilah:general:9",
+          "text": "Move while Apotheosis spins, but you can't attack or cast other abilities, so line up your dashes first.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 11, "end": 21 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Nilah:combo:0",
+          "name": "Slipstream-Q wave",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Nilah-E" },
+            { "kind": "ability", "key": "Nilah-Q" }
+          ],
+          "when": "When you dash through a minion or enemy and want extra poke or a safe trade.",
+          "whenRefs": [],
+          "text": "Cast Q while dashing. It leaves a wave behind that hits enemies on the way back to your landing spot, and the hit still powers up your attacks.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "f5a569b303430386bf3b0be45549420019ebc1123a79a6fd1cc089ad3dbe036b",
+      "tips": [
+        {
+          "id": "adc:Nilah:Ashe:0",
+          "text": "Use Jubilant Veil when Ashe shoots at you; it dodges her attacks and cuts magic damage, including from her Enchanted Crystal Arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ashe", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ashe-R", "start": 107, "end": 130 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Nilah:Ashe:1",
+          "text": "Close in with Slipstream, then use Formless Blade to get extra range. Ashe has few ways to escape you.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 35, "end": 49 },
+            { "kind": "champion", "key": "Ashe", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Nilah:Ashe:2",
+          "text": "Keep out of line with Ashe's Volley while walking up; the arrows go in a cone in front of her.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Ashe-W", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Nilah:Ashe:3",
+          "text": "Be careful moving alone when Ashe's Enchanted Crystal Arrow is ready. Stay close to your team.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ashe-R", "start": 36, "end": 59 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Nilah:Ashe:4",
+          "text": "Go in with Apotheosis once Ashe is committed; it pulls her toward you and heals you as it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Ashe", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "adc40a85a6f4bd68e991c85fbb1a1e5c87e781680a92552addc02b47a94046b5",
+      "tips": [
+        {
+          "id": "adc:Nilah:Caitlyn:0",
+          "text": "Watch for Yordle Snap Trap on the ground and do not dash across the spots where Caitlyn may have placed one.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Caitlyn", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Nilah:Caitlyn:1",
+          "text": "Slipstream onto Caitlyn only when her net is on cooldown, or she will leave you slowed and bounce away.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Caitlyn", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Nilah:Caitlyn:2",
+          "text": "Use Jubilant Veil when Caitlyn is about to land Headshot or when you walk in; it makes you dodge her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Caitlyn", "start": 23, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 48,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Nilah:Caitlyn:3",
+          "text": "Stand behind minions to blunt Piltover Peacemaker, which deals less damage to each target after the first.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 30, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Nilah:Caitlyn:4",
+          "text": "Once you are in range, use Apotheosis to pull Caitlyn toward you and heal while you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 27, "end": 37 },
+            { "kind": "champion", "key": "Caitlyn", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a739fc6c11da916717ed2e5a57d3fec7bedc80a64b6fd9b29a0e467f679774dc",
+      "tips": [
+        {
+          "id": "adc:Nilah:Ezreal:0",
+          "text": "Dash onto Ezreal with Slipstream when his Arcane Shift is down; he has little else to escape you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Nilah-E", "start": 22, "end": 32 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Nilah:Ezreal:1",
+          "text": "Use Jubilant Veil when Ezreal pokes you; his Essence Flux can only be set off by attacks you dodge or by abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Nilah:Ezreal:2",
+          "text": "Stand behind minions so Mystic Shot stops on them, then hit Ezreal with Formless Blade to gain range and attack speed.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Ezreal", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Nilah:Ezreal:3",
+          "text": "Ezreal is fragile, so use Apotheosis once you reach him to pull him in and slow him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Nilah-R", "start": 26, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "20f545a9bbd25fcdcfe35842aaa820e41488ac606625387085d7fb92f6a326b3",
+      "tips": [
+        {
+          "id": "adc:Nilah:Jhin:0",
+          "text": "Use Slipstream through a minion to close on Jhin, then hit him with Formless Blade for extra range and attack speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Jhin", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Nilah:Jhin:1",
+          "text": "Jhin's traps are invisible, so don't dash in blindly; they slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Nilah:Jhin:2",
+          "text": "Use Jubilant Veil to dodge Jhin's attacks, especially the strong fourth shot, while you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jhin", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Nilah:Jhin:3",
+          "text": "Jump on Jhin while he reloads, since he cannot attack then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Nilah:Jhin:4",
+          "text": "Stay out of Jhin's line when Deadly Flourish is ready after you take damage; being rooted gets you killed.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 29, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "09d7e7a952f785b1fc62a6ae16e3ee231ba6c3fc9fd8abdad705bce19b0ae9bf",
+      "tips": [
+        {
+          "id": "adc:Nilah:Jinx:0",
+          "text": "Look for the moment Jinx has used Flame Chompers!, then dash in with Slipstream. Without them she has a hard time escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Jinx-E", "start": 34, "end": 49 },
+            { "kind": "ability", "key": "Nilah-E", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Nilah:Jinx:1",
+          "text": "Dash with Slipstream around chompers rather than through them. If you are rooted by one, Jinx gets a free kill.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 10, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 },
+            { "kind": "champion", "key": "Jinx", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Nilah:Jinx:2",
+          "text": "Use Jubilant Veil to dodge Jinx's attacks while you close in. It also cuts magic damage from her chompers.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jinx", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Nilah:Jinx:3",
+          "text": "Hit Jinx with Formless Blade before you attack. It gives you range and attack speed to catch her while she is still slow to ramp up.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Nilah:Jinx:4",
+          "text": "Use Apotheosis once you are on her. It pulls her back toward you if she tries to run, and it heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d86f92e9bc05e7e02cf50067ac338903dce414c68d7c386927fb6af635199b28",
+      "tips": [
+        {
+          "id": "adc:Nilah:Kaisa:0",
+          "text": "Close the gap with Slipstream and hit Kai'Sa when she steps up for a last hit.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 19, "end": 29 },
+            { "kind": "champion", "key": "Kaisa", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Nilah:Kaisa:1",
+          "text": "Use Jubilant Veil to walk through Void Seeker's poke and to dodge Kai'Sa's attacks while you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 34, "end": 45 },
+            { "kind": "champion", "key": "Kaisa", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Nilah:Kaisa:2",
+          "text": "Land Formless Blade first, then attack; the extra range and cone hits help you stay on a retreating Kai'Sa.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kaisa", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Nilah:Kaisa:3",
+          "text": "Look out for Supercharge; Kai'Sa runs fast with it and may escape, so save Slipstream for when she is charging up.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Nilah-E", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Nilah:Kaisa:4",
+          "text": "Once Kai'Sa is in range, Apotheosis pulls her back to you, so she can't simply walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Nilah-R", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "09a106913fd6fd4df71190f2dfdef604e06818c3a45a03c4cc0dde7850aaa8d5",
+      "tips": [
+        {
+          "id": "adc:Nilah:MissFortune:0",
+          "text": "Dodge Make It Rain by stepping out of the area. Staying in it keeps you slowed and hurt.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Nilah:MissFortune:1",
+          "text": "Use Jubilant Veil when Miss Fortune starts shooting you; it dodges her basic attacks and cuts magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "MissFortune", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Nilah:MissFortune:2",
+          "text": "Hit Miss Fortune to break her Strut speed; she is easy to kill if you reach her.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 30,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Nilah:MissFortune:3",
+          "text": "Dash in with Slipstream once Miss Fortune has used her Make It Rain, then trade hard.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 13, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 55,
+              "end": 67
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Nilah:MissFortune:4",
+          "text": "Stay out of a line with minions and Miss Fortune's target; Double Up bounces to whoever stands behind.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 36,
+              "end": 48
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 59,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "335127ecd49c25622ebda44405022ed03a6444e299e6f8236a66e6969cfb0402",
+      "tips": [
+        {
+          "id": "adc:Nilah:Sivir:0",
+          "text": "Bait Spell Shield with a cheap Slipstream feint before you commit, or wait until it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Nilah-E", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Nilah:Sivir:1",
+          "text": "Use Formless Blade to hit Sivir first, then fight with the extra range; her Spell Shield cannot block your empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sivir", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Sivir-E", "start": 76, "end": 88 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Nilah:Sivir:2",
+          "text": "Activate Jubilant Veil when Sivir turns on Ricochet; you dodge her attacks and the bounces.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Sivir", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Sivir-W", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Nilah:Sivir:3",
+          "text": "Sidestep Boomerang Blade on its way out and avoid its path on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Nilah:Sivir:4",
+          "text": "Push Sivir out of lane when she is out of Boomerang Blade; she pushes hard, so punish her when she is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f5247e0662a14246d6c3e4b41b3182377d5be83bd302e3c20031ea115677dfc4",
+      "tips": [
+        {
+          "id": "adc:Nilah:Smolder:0",
+          "text": "Hit Smolder early and often; he is weak before he has stacked Dragon Practice, so press him while he is still weak.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 62,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Nilah:Smolder:1",
+          "text": "Use Formless Blade on Smolder or a minion first, then trade with attacks; the extra range and cone hits let you out-trade him.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Nilah:Smolder:2",
+          "text": "Hold Jubilant Veil for when Smolder attacks you; it dodges basic attacks and cuts magic damage, which blunts his Dragon Practice bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 28, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 113,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Nilah:Smolder:3",
+          "text": "Dash in with Slipstream when Achooo! is on cooldown, so you close the gap without taking the sneeze.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-E", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Smolder-W", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Nilah:Smolder:4",
+          "text": "Look for a fight when Smolder is cut off from his support; Apotheosis pulls him toward you and heals you for damage dealt.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Nilah-R", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Nilah:Smolder:5",
+          "text": "Do not stand close to him while he is flying with Flap, Flap, Flap; it hits the weakest enemy. Step back or use Jubilant Veil to dodge the bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 50, "end": 66 },
+            { "kind": "ability", "key": "Nilah-W", "start": 112, "end": 125 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "fe1ef3880a96ffe30266b0c812d23f9842196d501419c50e4f4c0cc96954a229",
+      "tips": [
+        {
+          "id": "adc:Nilah:Yunara:0",
+          "text": "Dash onto Yunara with Slipstream the moment her prayer bead is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Nilah-E", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Nilah:Yunara:1",
+          "text": "Use Jubilant Veil to dodge her basic attacks when she tries to trade with you.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Nilah:Yunara:2",
+          "text": "Her prayer bead leaves you slowed; walk around its line and use Slipstream to leave.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Nilah-E", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Nilah:Yunara:3",
+          "text": "Hit her with Formless Blade first to get extra attack range and attack speed for your fight.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Nilah:Yunara:4",
+          "text": "Be careful when Yunara uses her ultimate. Her laser then does more damage and her attacks hit many targets.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

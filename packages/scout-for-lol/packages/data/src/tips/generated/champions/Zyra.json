@@ -1,0 +1,1819 @@
+{
+  "schemaVersion": 1,
+  "champion": "Zyra",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "c748122f0e4b5411f8d0685138bf9801055bcb464e14b75bd83bf4900e21a1ba",
+      "tips": [
+        {
+          "id": "jungle:Zyra:general:0",
+          "text": "Plant a seed with Rampant Growth before you cast Grasping Roots or Deadly Spines near it. The seed grows into a plant that fights for you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Zyra-E", "start": 49, "end": 63 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Zyra:general:1",
+          "text": "Use Grasping Roots first on a target you want to catch. They are rooted and can't walk out of your Deadly Spines.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 99, "end": 112 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Zyra:general:2",
+          "text": "Set a trap by putting seeds in brush. Lure enemies in, then root them with Grasping Roots.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Zyra-E", "start": 75, "end": 89 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Zyra:general:3",
+          "text": "Vine Lashers from Grasping Roots slow with their attacks, so use them when you need to chase or hold an enemy in place.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 18, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Zyra:general:4",
+          "text": "Cast Stranglethorns on top of your plants. They get stronger and last longer, and enemies in the thicket are knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "knocked-up", "start": 109, "end": 119 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Zyra:general:5",
+          "text": "Aim Stranglethorns so enemies can't easily leave the area. They take damage at once and are knocked up after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Zyra:general:6",
+          "text": "Keep a charge of Rampant Growth for fights. Killing minions and monsters speeds up the recharge, and a champion takedown refills it fully.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Zyra:general:7",
+          "text": "Plant seeds on key paths and objectives to see what enemies are doing. Seeds give your team vision.",
+          "refs": [],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "929337c97fafa393e3e995d9053715ddb21f93e11ca7b2073c69281af1f037c9",
+      "tips": [
+        {
+          "id": "support:Zyra:general:0",
+          "text": "Plant a seed with Rampant Growth in a brush or near the lane, then cast Grasping Roots through it to grow a Vine Lasher that slows the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Zyra-E", "start": 72, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 125, "end": 130 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Zyra:general:1",
+          "text": "Cast Deadly Spines onto a seed to grow a Thorn Spitter. It adds steady ranged damage to your poke while the enemy is stuck near it.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Zyra:general:2",
+          "text": "Put a seed down after you cast your spell, so it lands where the spell is going to hit and the plant still grows.",
+          "refs": [],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Zyra:general:3",
+          "text": "Aim Grasping Roots at an enemy who is walking up to attack. Once they are rooted, follow up with Deadly Spines and let your ally finish them.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 97, "end": 110 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Zyra:general:4",
+          "text": "Seeds from Rampant Growth give your team vision. Put them in brush and river entrances to spot ganks and set traps.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 11, "end": 25 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Zyra:general:5",
+          "text": "Keep a charge of Rampant Growth in reserve. Seeds are what turn your spells into plants, so a fight without any seeds is much weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Zyra:general:6",
+          "text": "At level 6, cast Stranglethorns over enemies standing near your plants. It knocks them up and makes your plants stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Zyra:general:7",
+          "text": "Enemies can destroy your seeds by stepping on them. Plant seeds where they won't walk, or where you can use them straight away.",
+          "refs": [],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Zyra:combo:0",
+          "name": "Seed behind the cast",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zyra-E" },
+            { "kind": "ability", "key": "Zyra-W" }
+          ],
+          "when": "When you want a Vine Lasher out of a root cast and no seed is lying where the enemy is standing.",
+          "whenRefs": [],
+          "text": "Cast Grasping Roots first, then drop a seed in the path of the vines. They grow it into a Vine Lasher, and the enemy can't see the seed coming.",
+          "textRefs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "58a9188affd4a106989c5bd9619a2d539d0ab108e95f1ee8b610247957c2941f",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Graves:0",
+          "text": "Cast Grasping Roots on Graves when he dashes in; he is rooted and cannot dash away to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Zyra:Graves:1",
+          "text": "Place seeds with Rampant Growth in brush and along Graves' path, then grow them with Deadly Spines to catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Zyra:Graves:2",
+          "text": "Graves deals mostly physical damage with short range, so stay at long range and keep plants between you and him.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Zyra:Graves:3",
+          "text": "Use Stranglethorns on Graves when plants are nearby; it knocks him up and powers up your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9144295efcacff6b808a28af72e14dcc7d32e12d58b8ceb70a366c98c9a6892a",
+      "tips": [
+        {
+          "id": "jungle:Zyra:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard; Dragon Strike knocks you up along that path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Zyra:JarvanIV:1",
+          "text": "Save Grasping Roots for when Jarvan jumps in or dashes to his flag, so he is rooted and cannot follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Zyra:JarvanIV:2",
+          "text": "Place seeds with Rampant Growth in brush and near your fight spot. Jarvan can step on them to destroy them.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Zyra:JarvanIV:3",
+          "text": "Cast Stranglethorns on Jarvan's Cataclysm arena. He is stuck with your plants, and the knock up lands while he is trapped.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 32, "end": 41 },
+            { "kind": "keyword", "key": "knocked-up", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Zyra:JarvanIV:4",
+          "text": "Hit Jarvan with Deadly Spines from range before he reaches you, and fight near plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "76fb0fffea7b6ea1d79b5ca3742e6b4f8a6defa18da134f18eeb2f63d7bfd0de",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Kayn:0",
+          "text": "Save Grasping Roots for when Kayn dashes in or leaves a wall; being rooted ends his Shadow Step at once.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 },
+            { "kind": "ability", "key": "Kayn-E", "start": 84, "end": 95 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Zyra:Kayn:1",
+          "text": "Watch for the warning on the terrain edge when Kayn is in a wall near you, and keep Grasping Roots ready.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Zyra-E", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zyra:Kayn:2",
+          "text": "Dodge Blade's Reach so Kayn cannot easily start Umbral Trespass from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Kayn-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zyra:Kayn:3",
+          "text": "Plant seeds in brush and grow them with Deadly Spines or Grasping Roots to trap Kayn; plants help you hold him off.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 40, "end": 53 },
+            { "kind": "ability", "key": "Zyra-E", "start": 57, "end": 71 },
+            { "kind": "champion", "key": "Kayn", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Zyra:Kayn:4",
+          "text": "Use Stranglethorns on Kayn when he commits so the knock up lands, ideally over your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "knocked-up", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49f58df676593c5edc7e61029a04d5433df46744c81abd192ac70d2ed4dcd4e8",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Khazix:0",
+          "text": "Stay near your minions or allies. Kha'Zix's Taste Their Fear hits far harder when you are isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 44, "end": 60 },
+            { "kind": "keyword", "key": "isolated", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Zyra:Khazix:1",
+          "text": "Plant seeds in brush and on likely approach paths. If he steps on one, it reveals him and ruins his ambush.",
+          "refs": [],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Zyra:Khazix:2",
+          "text": "Root him with Grasping Roots when he leaps in, then back away. Do it over a seed to get a Vine Lasher that slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Zyra:Khazix:3",
+          "text": "Kha'Zix is weak while Leap and Void Assault are on cooldown. Hit him with Deadly Spines then, and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Khazix-E", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Khazix-R", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Zyra:Khazix:4",
+          "text": "Save Stranglethorns for when he dives onto you or a teammate. It knocks him up, and your plants in it get stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e8c2259a8915a67a24bcd6cfb858cfc6af843494c142210481d657c4f89fc20",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Kindred:0",
+          "text": "Hit Kindred with Grasping Roots when she dashes in or walks up to attack; she is fragile and cannot escape once rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Zyra-E", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Zyra:Kindred:1",
+          "text": "Put Rampant Growth seeds in brush and on her likely path, then cast Grasping Roots over them for a Vine Lasher that slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Zyra-E", "start": 68, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Zyra:Kindred:2",
+          "text": "Pressure Kindred early. She is fragile, and Deadly Spines hits hard on her when she stops to fight a camp.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Zyra:Kindred:3",
+          "text": "Hold Stranglethorns for a fight where Kindred has already used Lamb's Respite, or wait it out; it can save her and her team from dying.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kindred", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Kindred-R", "start": 63, "end": 77 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Zyra:Kindred:4",
+          "text": "Kill Kindred before her marks stack up. Every hunt she finishes makes her abilities stronger for the rest of the game.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0469712ea55b62a0ca4583ce07a6ca734b2fe139155588935ec85a9cea96a639",
+      "tips": [
+        {
+          "id": "jungle:Zyra:LeeSin:0",
+          "text": "Grasping Roots is your best answer when Lee Sin dashes in. Hold it until he commits with Resonating Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Zyra:LeeSin:1",
+          "text": "Plant seeds in brush and on his jungle paths, then grow them with Deadly Spines when he steps near for a trap.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Zyra:LeeSin:2",
+          "text": "Lee Sin can kick you with Dragon's Rage into your allies. Stay spread out.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zyra:LeeSin:3",
+          "text": "Deal magic damage to Lee Sin. He has tools against physical damage.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Zyra:LeeSin:4",
+          "text": "Keep your plants grown by Grasping Roots near you in a fight. Lee Sin must deal with them while chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 26, "end": 40 },
+            { "kind": "champion", "key": "LeeSin", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b6b0000b446b4771a244db7f34b9eaf9c4741dce90feb94300cfdef6871708c",
+      "tips": [
+        {
+          "id": "jungle:Zyra:MasterYi:0",
+          "text": "Aim Grasping Roots at Master Yi when he lands. Highlander won't stop a root, and he can't act while rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 47, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Zyra:MasterYi:1",
+          "text": "Stranglethorns knocks him up even with Highlander active. Save it for when he dives you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Zyra:MasterYi:2",
+          "text": "Don't expect Vine Lashers to slow him once Highlander is running. Rely on Grasping Roots instead.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 43, "end": 53 },
+            { "kind": "ability", "key": "Zyra-E", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Zyra:MasterYi:3",
+          "text": "Hide seeds in brush and lure him in; he often walks over them, which destroys them. Place them where he won't step on them.",
+          "refs": [],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Zyra:MasterYi:4",
+          "text": "Deadly Spines has a short delay, and Master Yi is untargetable during Alpha Strike. Hit him after he reappears.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "MasterYi", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Zyra:MasterYi:5",
+          "text": "Keep hitting him from range so he spends mana on Meditate to heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0195731210b1206ee9667e72e27e442b7ce322733388e8136ad7458d023978c2",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Naafiri:0",
+          "text": "Aim Grasping Roots at Naafiri when she is about to dash in. A rooted assassin cannot jump away, and she is easy to follow up on.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Zyra:Naafiri:1",
+          "text": "Save Stranglethorns for when Naafiri commits to a fight. It knocks her up and enrages your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Zyra:Naafiri:2",
+          "text": "Plant seeds with Rampant Growth in the brush and around your objective. Then grow them with Deadly Spines or Grasping Roots when she walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 92, "end": 105 },
+            { "kind": "ability", "key": "Zyra-E", "start": 109, "end": 123 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Zyra:Naafiri:3",
+          "text": "Stay near your plants and your team. Naafiri wants to catch you alone, so don't wander off to place seeds.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 37, "end": 44 },
+            { "kind": "keyword", "key": "isolated", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Zyra:Naafiri:4",
+          "text": "Use Deadly Spines on her early, when she is clearing camps. It hurts her and her packmates will stay on the target.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0afb81877e6299050e8d5fb676cb256b8e3998c36a60c99ae269fd246102842b",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Nocturne:0",
+          "text": "Aim Grasping Roots through a seed so a Vine Lasher grows. Its attacks slow Nocturne when he dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 74 },
+            { "kind": "champion", "key": "Nocturne", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Zyra:Nocturne:1",
+          "text": "Do not throw Grasping Roots at Nocturne while Shroud of Darkness is ready. It blocks the root and speeds up his attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Nocturne", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Zyra:Nocturne:2",
+          "text": "Stay near your allies once Paranoia goes off. Nocturne can dash to you and you cannot see far.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Nocturne", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Zyra:Nocturne:3",
+          "text": "Keep seeds planted around you with Rampant Growth before a fight. Nocturne's dash then lands among plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 35, "end": 49 },
+            { "kind": "champion", "key": "Nocturne", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Zyra:Nocturne:4",
+          "text": "Keep your distance from Nocturne when Unspeakable Horror is ready. Walk away to break the tether before the fear lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1d3983e9bcab5f986713e000e3f4867405874d981e2ddd52bcc9caa245fefb0b",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Shyvana:0",
+          "text": "Hit Shyvana with Grasping Roots as she runs at you, then back away so she can't reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Zyra-E", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zyra:Shyvana:1",
+          "text": "Keep your distance from Shyvana; she is weak against enemies who stay out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Zyra:Shyvana:2",
+          "text": "Hold Stranglethorns for when Shyvana dives in; it knocks her up and powers up your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Zyra:Shyvana:3",
+          "text": "Plant seeds with Rampant Growth in the brush and along her path, then grow them with Deadly Spines as she walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "91e26737485911f600a5e24c396cd7a33a9369f3da5bb0b376b73a2146b5e76e",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Skarner:0",
+          "text": "Keep Grasping Roots for when Skarner charges at you. Rooting him ends Ixtal's Impact.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Skarner-E", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Zyra:Skarner:1",
+          "text": "Place seeds with Rampant Growth in brush and near your lane. They show you Skarner when he steps on them and help you spot a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "Skarner", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Zyra:Skarner:2",
+          "text": "Stay away from walls when Skarner is close. A wall behind you lets Ixtal's Impact stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Skarner-E", "start": 67, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Zyra:Skarner:3",
+          "text": "Use Stranglethorns on Skarner when he is fighting among your plants. It knocks him up and makes the plants hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Skarner", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Zyra:Skarner:4",
+          "text": "Step out of the way of Impale, or use an escape. Skarner is easier to fight when you keep your distance and poke with Deadly Spines.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Skarner", "start": 49, "end": 56 },
+            { "kind": "keyword", "key": "poke", "start": 108, "end": 112 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 118, "end": 131 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e2f89e6d06eed1a724729ec849ef6fd168dade1a3a91bdb43a27c5f7edf47ab0",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Sylas:0",
+          "text": "Hit Sylas with Grasping Roots when he dashes in; rooted, he can't use Abscond or Kingslayer to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zyra-E", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Sylas-W", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Zyra:Sylas:1",
+          "text": "Do not trust Sylas's health bar; Kingslayer heals him more when he is low. Finish him fast or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Zyra:Sylas:2",
+          "text": "Plant seeds in brush and walk-up spots, then fight there. Grasping Roots or Deadly Spines through a seed gives you plants to help the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 58, "end": 72 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zyra:Sylas:3",
+          "text": "Save Stranglethorns for when Sylas is stuck in a fight; it knocks him up and powers up your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Zyra:Sylas:4",
+          "text": "Stay behind your team when you have your ultimate; Sylas can steal Stranglethorns, so do not use it when he can hijack you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Zyra-R", "start": 67, "end": 81 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9daef846fe19a088cf56eb569dbeb6c683434104a9924dd2856f8b65e3c12341",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Talon:0",
+          "text": "Keep Grasping Roots for when Talon jumps in. If he is rooted, he cannot easily escape you and your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Zyra:Talon:1",
+          "text": "Plant seeds with Rampant Growth in brush and around your camps. They show you Talon, who can turn invisible and roam.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "Talon", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Zyra:Talon:2",
+          "text": "When Talon vanishes with Shadow Assault, stay near your plants and wait for him to appear. He has to attack you to hurt you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Zyra:Talon:3",
+          "text": "Stranglethorns knocks Talon up and makes your plants stronger. Cast it on him when he dives onto you beside your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "250918da3102d482f30601e2f473935b829d73ac7e6607d15df2f7a9a61b1c9f",
+      "tips": [
+        {
+          "id": "jungle:Zyra:Viego:0",
+          "text": "Land Grasping Roots on Viego when he commits to a fight; he is rooted and can't dash in with Spectral Maw or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 },
+            { "kind": "ability", "key": "Viego-W", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Zyra:Viego:1",
+          "text": "Plant a seed in brush, then hit it with Grasping Roots or Deadly Spines so a plant helps when Viego walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 40, "end": 54 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 58, "end": 71 },
+            { "kind": "champion", "key": "Viego", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Zyra:Viego:2",
+          "text": "Cast Stranglethorns on Viego and your plants together; it knocks him up and makes the plants hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Zyra:Viego:3",
+          "text": "Fight away from Viego's kill zone; if a champion dies, he can possess them, so stay near your team and don't get picked off alone.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Zyra:Viego:4",
+          "text": "Stay behind your team when Viego is in his Mist; he is hidden there, so place seeds near it to spot him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ad25cda736a1b169d6d2cb76cfbdacc4dfafcd073b87c014d86420ddc2e6df99",
+      "tips": [
+        {
+          "id": "jungle:Zyra:XinZhao:0",
+          "text": "Keep Xin Zhao away with Grasping Roots when he charges. A rooted Xin Zhao cannot easily reach you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Zyra-E", "start": 24, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 64 },
+            { "kind": "champion", "key": "XinZhao", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Zyra:XinZhao:1",
+          "text": "Plant seeds with Rampant Growth near your fight spot, then hit them with Deadly Spines for plants that damage him while he tries to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Zyra:XinZhao:2",
+          "text": "Stay away from Xin Zhao once his Three Talon Strike is ready; the third attack knocks you up. Hit him before he lands it.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 33, "end": 51 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Zyra:XinZhao:3",
+          "text": "Use Stranglethorns on Xin Zhao and your plants when he dives in. It knocks him up and makes your plants stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e52e7bb7280899abf3aab15f6bb72a125f70374739ffb4043b55e6148a180324",
+      "tips": [
+        {
+          "id": "support:Zyra:Bard:0",
+          "text": "Aim Grasping Roots through a Seed when you can; the Vine Lasher it grows slows Bard and his partner when they fight near it.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 },
+            { "kind": "champion", "key": "Bard", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Zyra:Bard:1",
+          "text": "Keep your distance from Bard. Cosmic Binding stuns if it hits a second enemy or a wall, so don't line up behind your carry or next to terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Bard-Q", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Zyra:Bard:2",
+          "text": "Plant Rampant Growth seeds in the brush and on his usual paths. Bard can crush them by walking over them, but you will see him when he does.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Bard", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Zyra:Bard:3",
+          "text": "Wait for Bard to spend Magical Journey before you dive or all-in. A portal lets him and his ally escape or roam quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Bard-E", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Zyra:Bard:4",
+          "text": "Do not jump into Tempered Fate with Stranglethorns. Anyone caught in it is frozen in stasis, so hold your ultimate until it has ended.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Zyra-R", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Zyra:Bard:5",
+          "text": "Use Deadly Spines on Bard when he walks up to grab a chime or shrine. He is easy to hit while he is busy.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Bard", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "43ebbd7ddc4aa5b9c2f94b0a0a39e9b9e6b1a014d8b9277b4f786e2432021f1d",
+      "tips": [
+        {
+          "id": "support:Zyra:Braum:0",
+          "text": "Throw Grasping Roots when Braum has his shield down; Unbreakable intercepts it and the first hit deals no damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Braum", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Braum-E", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Zyra:Braum:1",
+          "text": "Aim Deadly Spines at the ground where Braum is going to stand. It lands after a short delay, so it is hard for him to block.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Braum", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Zyra:Braum:2",
+          "text": "Keep your distance from Braum and stay out of Winter's Bite range, since it stops at the first enemy it hits and slows. A minion in front of you can soak it.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Braum-Q", "start": 46, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 118 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Zyra:Braum:3",
+          "text": "Step out of the way during the long delay on Glacial Fissure, then avoid the frozen ground it leaves.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Zyra:Braum:4",
+          "text": "Do not stand beside Braum for long. Each hit adds to Concussive Blows and the fourth stack stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 20, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 53,
+              "end": 69
+            },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0b30e3075cf6df7b63a4a4656335aca15c3ab05c4a0254d4d649802fe5069bb4",
+      "tips": [
+        {
+          "id": "support:Zyra:Karma:0",
+          "text": "Grow plants with Deadly Spines or Grasping Roots from your seeds when Karma stands near them, since her blast hits only the first target.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Zyra-E", "start": 34, "end": 48 },
+            { "kind": "champion", "key": "Karma", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Zyra:Karma:1",
+          "text": "Karma's Inner Flame stops at the first unit it hits, so stand behind your plants or minions to block it.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-Q", "start": 8, "end": 19 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Zyra:Karma:2",
+          "text": "Move away when Karma tethers you with Focused Resolve; breaking the tether stops the root.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Karma-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Zyra:Karma:3",
+          "text": "Root Karma with Grasping Roots when she uses Mantra, then follow with Deadly Spines for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Zyra-E", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Karma-R", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7775014b5daf0401a9e0cb1e701bac75adc9cd008f6e2a1164a96f850f7609c3",
+      "tips": [
+        {
+          "id": "support:Zyra:Leona:0",
+          "text": "Keep Grasping Roots for when Leona starts to walk up. Rooting her stops the engage before her stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Leona", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Zyra:Leona:1",
+          "text": "Stay behind your plants and back away from Leona. Her Zenith Blade has long range, so do not stand in a straight line with allies.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Leona-E", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Zyra:Leona:2",
+          "text": "Plant seeds in brush and lane paths with Rampant Growth. Leona's Zenith Blade sets off the plants you grow when she walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 41, "end": 55 },
+            { "kind": "champion", "key": "Leona", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Leona-E", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Zyra:Leona:3",
+          "text": "Do not stand in the middle of Solar Flare. Walk out of the center and you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 30, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Zyra:Leona:4",
+          "text": "Use Deadly Spines on Leona from range while her Eclipse is down. Back off while Eclipse is up, since it makes her sturdy.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Leona-W", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Leona-W", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "29e3733745fd3762a0a1c1890468a4467b68a6c482756ef682a398654fed96f7",
+      "tips": [
+        {
+          "id": "support:Zyra:Lulu:0",
+          "text": "Plant seeds in the path of Grasping Roots so a Vine Lasher grows and slows Lulu and her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 27, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 },
+            { "kind": "champion", "key": "Lulu", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Zyra:Lulu:1",
+          "text": "Stay out of Glitterlance's line, because it passes through enemies and slows you; keep minions between you and Lulu.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 },
+            { "kind": "champion", "key": "Lulu", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Zyra:Lulu:2",
+          "text": "Use Deadly Spines on Lulu from long range when she walks up to attack; she is easy to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Zyra:Lulu:3",
+          "text": "Respect Whimsy; Lulu can polymorph you when you step forward, so stay away when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 8, "end": 14 },
+            { "kind": "champion", "key": "Lulu", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Zyra:Lulu:4",
+          "text": "Cast Stranglethorns over your plants so they grow stronger and the knock up catches enemies in them.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "knocked-up", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b546cc0ad475e8a621115f0f6b033327f85da0ce2ea3a26bed74b4f9004c508a",
+      "tips": [
+        {
+          "id": "support:Zyra:Lux:0",
+          "text": "Lux's Light Binding roots the first two enemies it hits. Stay out of line with your partner, and keep minions between you and Lux.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 20, "end": 25 },
+            { "kind": "champion", "key": "Lux", "start": 126, "end": 129 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Zyra:Lux:1",
+          "text": "Use Rampant Growth to place seeds in the grass or near the lane before you fight. Then Grasping Roots grows a Vine Lasher.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Zyra-E", "start": 87, "end": 101 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Zyra:Lux:2",
+          "text": "Lux is easy to hit when she stands still. Land Grasping Roots on her, then follow up with Deadly Spines while she is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zyra-E", "start": 47, "end": 61 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 90, "end": 103 },
+            { "kind": "keyword", "key": "rooted", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Zyra:Lux:3",
+          "text": "Lux's Lucent Singularity slows you when you walk through it. Step around it and don't stand in it while Lux is nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Lux", "start": 104, "end": 107 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Zyra:Lux:4",
+          "text": "Move to the side when Lux's Final Spark warning line appears. Stranglethorns on her team is a strong way to answer it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Lux-R", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Zyra-R", "start": 62, "end": 76 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e36d5962cc443295b8bee760272c5105ed4b7a63130654dbe810f091f008fa44",
+      "tips": [
+        {
+          "id": "support:Zyra:Milio:0",
+          "text": "Land Grasping Roots on Milio when he walks up to help his carry; being rooted in place stops him from escaping and keeps him in your damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Milio", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Zyra:Milio:1",
+          "text": "Aim Grasping Roots through a seed so a Vine Lasher grows and slows anyone who stays near it.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Zyra:Milio:2",
+          "text": "Dodge Ultra Mega Fire Kick by stepping aside; it stops at the first enemy it hits, so keep minions from standing in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 6, "end": 26 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Zyra:Milio:3",
+          "text": "Use Deadly Spines on Milio when he stands still to cast; his casts lock him in place briefly, so he can't dodge easily.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Zyra:Milio:4",
+          "text": "Save Stranglethorns for when Milio and his carry group up; it knocks them up and powers your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Milio", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0990c2c9b6f4836e926a1d3f092888bc5762797e5c92c6a54add4c8999b377c6",
+      "tips": [
+        {
+          "id": "support:Zyra:Nami:0",
+          "text": "Plant a seed with Rampant Growth near your lane, then hit it with Grasping Roots so a Vine Lasher grows and slows Nami when she steps up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Zyra-E", "start": 66, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 },
+            { "kind": "champion", "key": "Nami", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Zyra:Nami:1",
+          "text": "Aim Grasping Roots at Nami right after she misses Aqua Prison; she has no easy way to get away while rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nami", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Nami-Q", "start": 50, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Zyra:Nami:2",
+          "text": "Aqua Prison lands slowly, so keep walking and never stand still in the bubble's target area.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Zyra:Nami:3",
+          "text": "Use Deadly Spines on Nami from long range to poke her down, and grow a Thorn Spitter by casting it near a seed.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Nami", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Zyra:Nami:4",
+          "text": "Hold back when Nami's ally has Tidecaller's Blessing; it fades fast, so wait it out before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Nami-E", "start": 31, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Zyra:Nami:5",
+          "text": "Sidestep Tidal Wave when you see it coming; it travels slowly. At level 6, use Stranglethorns on grouped enemies and plants nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 9, "end": 19 },
+            { "kind": "ability", "key": "Zyra-R", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "dc917b8543ff4aae51b115bdf0a6fa2a6eac14438f0026e063a787ae81446988",
+      "tips": [
+        {
+          "id": "support:Zyra:Nautilus:0",
+          "text": "Keep your distance from Nautilus; Dredge Line pulls you in and stuns you, and Grasping Roots is your answer once he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 34, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Zyra-E", "start": 78, "end": 92 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Zyra:Nautilus:1",
+          "text": "Root Nautilus with Grasping Roots when he walks in; it also grows any seed it passes into a Vine Lasher.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Zyra-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Zyra:Nautilus:2",
+          "text": "Plant seeds with Rampant Growth around you and behind you so Nautilus has to step on them to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "Nautilus", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Zyra:Nautilus:3",
+          "text": "Hit Nautilus with Deadly Spines near a seed to make a Thorn Spitter that pokes him from range.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Zyra:Nautilus:4",
+          "text": "When Nautilus is shielded, don't fight his attacks; they also damage everyone near his target.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "40dc1410ee2ab5168270bf15fd174ea434d54e31b6356f386de283e17b8c39d1",
+      "tips": [
+        {
+          "id": "support:Zyra:Pantheon:0",
+          "text": "Plant seeds in brush and along the path Pantheon will take, then grow them when he walks in. Plants give you extra damage in a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Zyra:Pantheon:1",
+          "text": "Aim Grasping Roots at Pantheon as he jumps in. Rooted, he can't dash away and your plants get free hits.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Zyra:Pantheon:2",
+          "text": "Wait for Aegis Assault to end before you use your spells on Pantheon. Spells from the front do nothing to him while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Pantheon", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Zyra:Pantheon:3",
+          "text": "Stay away from Pantheon when your health is low. Comet Spear hits hard against low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Zyra:Pantheon:4",
+          "text": "Use Deadly Spines to damage Pantheon from range before he can reach you. Keep distance so Shield Vault has to cross the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 90, "end": 102 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Zyra:Pantheon:5",
+          "text": "Move out of the way when Grand Starfall gives its warning. Pantheon lands where he aimed, so don't stand there.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 25, "end": 39 },
+            { "kind": "champion", "key": "Pantheon", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "049827b574eb1b2c62c2911a95f3afcd9296d1ef76d6a5fb8405a10656bda846",
+      "tips": [
+        {
+          "id": "support:Zyra:Pyke:0",
+          "text": "Grow a plant with Grasping Roots when Pyke walks up to hook you; the root holds him in place and the Vine Lasher keeps slowing him.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 18, "end": 32 },
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Zyra:Pyke:1",
+          "text": "Keep Rampant Growth seeds in the bushes and near you. Pyke has to step on them to reach you, and that reveals him.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Zyra:Pyke:2",
+          "text": "Stay behind your minions. Bone Skewer stops at the first enemy it hits, so a minion in the way soaks the hook.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Zyra:Pyke:3",
+          "text": "Hold Grasping Roots for when Pyke dashes in with Phantom Undertow, so he is rooted before he can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Pyke-E", "start": 49, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Zyra:Pyke:4",
+          "text": "Stay away from low-health allies when Pyke is around. Death From Below can execute them and teleport him onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Zyra:Pyke:5",
+          "text": "Use Deadly Spines to poke Pyke while he stays in the lane. Once he hides and heals, change targets.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Pyke", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9c14eaa1a0952a74dbb76f01c58351e0979ba2651187170f64c7f840b62e481b",
+      "tips": [
+        {
+          "id": "support:Zyra:Senna:0",
+          "text": "Aim Grasping Roots at Senna when she walks up to attack; she has little room to dodge and is rooted where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Zyra:Senna:1",
+          "text": "Plant a seed with Rampant Growth, then hit it with Deadly Spines so a Thorn Spitter helps you poke Senna.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 51, "end": 64 },
+            { "kind": "keyword", "key": "poke", "start": 94, "end": 98 },
+            { "kind": "champion", "key": "Senna", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Zyra:Senna:2",
+          "text": "Senna outranges you, so stay out of her line and use plants to trade back when she pokes.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Zyra:Senna:3",
+          "text": "Stay out of Last Embrace's path; it rolls to the first enemy hit, so keep a minion in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Zyra:Senna:4",
+          "text": "Use Stranglethorns on Senna and her partner together, and it also powers up your plants nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d04956f70e7524869e47cefab60136448b95cd6fa21fd58d2f47c5193a0c5a52",
+      "tips": [
+        {
+          "id": "support:Zyra:Seraphine:0",
+          "text": "Plant a seed with Rampant Growth, then hit it with Grasping Roots to grow a Vine Lasher that slows Seraphine and her partner when they step up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Zyra-E", "start": 51, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 },
+            { "kind": "champion", "key": "Seraphine", "start": 99, "end": 108 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Zyra:Seraphine:1",
+          "text": "Aim Grasping Roots at Seraphine when she walks up to cast. Once she is rooted, follow with Deadly Spines.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Seraphine", "start": 22, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Zyra:Seraphine:2",
+          "text": "Keep your distance and use Deadly Spines on Seraphine. Grow a Thorn Spitter beside it to keep up the poke.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 27, "end": 40 },
+            { "kind": "champion", "key": "Seraphine", "start": 44, "end": 53 },
+            { "kind": "keyword", "key": "poke", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Zyra:Seraphine:3",
+          "text": "Don't stand in a line with your partner. Her Beat Drop slows everyone it hits, and a slowed target is rooted by her next one.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 45, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Zyra:Seraphine:4",
+          "text": "Wait for level 6. Stranglethorns knocks up everyone in the thicket and powers up your plants, so use it when the fight is around your plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 18, "end": 32 },
+            { "kind": "keyword", "key": "knocked-up", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b74ff4e5e02d88f79f6f25034b07eaad28c8b7db976ac6858355426886d3d522",
+      "tips": [
+        {
+          "id": "support:Zyra:Sona:0",
+          "text": "Plant seeds, then hit them with Grasping Roots or Deadly Spines so plants fight with you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 32, "end": 46 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Zyra:Sona:1",
+          "text": "Sona has few escapes, so catch her with Grasping Roots and then follow with Deadly Spines.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zyra-E", "start": 40, "end": 54 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Zyra:Sona:2",
+          "text": "Stay away from Sona's Hymn of Valor range; it hits your nearest plants and you, so keep the plants as a screen.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Sona-Q", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Zyra:Sona:3",
+          "text": "Stay spread from your carry when Crescendo is up, so one stun does not catch both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 33, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "40db7853752a6e9a15ad06a0c242f9e747e6d57e922bda08fadec41214d0adf1",
+      "tips": [
+        {
+          "id": "support:Zyra:Thresh:0",
+          "text": "Plant a seed with Rampant Growth, then cast Grasping Roots through it. A Vine Lasher then slows Thresh and his partner while you keep poking.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-W", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Zyra-E", "start": 44, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 },
+            { "kind": "champion", "key": "Thresh", "start": 96, "end": 102 },
+            { "kind": "keyword", "key": "poke", "start": 134, "end": 140 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Zyra:Thresh:1",
+          "text": "Stay out of Death Sentence range and watch his cast start. Step sideways, because the scythe stops at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Zyra:Thresh:2",
+          "text": "Land Grasping Roots on Thresh when he comes in to hook. Being rooted stops him from following up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Thresh", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "support:Zyra:Thresh:3",
+          "text": "Use Deadly Spines on seeds to grow Thorn Spitters. They keep poking from range and help you hold the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Zyra:Thresh:4",
+          "text": "Save Stranglethorns for when Thresh and his partner are grouped. Cast it over your plants so they get stronger too.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Thresh", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,607 @@
+{
+  "schemaVersion": 1,
+  "champion": "Xayah",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "e259afd0dab165420e176a603b9f597306403e6ddfe8e7b8d29aa93923d275e2",
+      "tips": [
+        {
+          "id": "adc:Xayah:general:0",
+          "text": "Cast Double Daggers on the enemy to leave Feathers behind them, then use Bladecaller to pull the Feathers back through them.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Xayah-E", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Xayah:general:1",
+          "text": "Bladecaller needs a Feather on the ground. Place Feathers before you cast it, because it can't be cast without one.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-E", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Xayah:general:2",
+          "text": "Try to get the enemy rooted with Bladecaller by hitting them with several Feathers. Then your team can attack them freely.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Xayah-E", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Xayah:general:3",
+          "text": "Use abilities between basic attacks. Each cast powers up your next attacks with Clean Cuts, so they hit everything in a line and leave more Feathers.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Xayah-passive",
+              "start": 80,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Xayah:general:4",
+          "text": "Turn on Deadly Plumage when a trade or fight starts. It gives you Attack Speed, and hitting a champion gives you Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-W", "start": 8, "end": 22 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Xayah:general:5",
+          "text": "Use Featherstorm to dodge a key enemy ability. You can't be targeted while in the air, and it leaves a line of Feathers.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Xayah:general:6",
+          "text": "You can't attack or cast abilities during Featherstorm, so don't use it just to deal damage when you could be hit afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Xayah:general:7",
+          "text": "Double Daggers hits harder against the first target it reaches. Aim it so the first thing hit is the enemy champion, not a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "a8d8abbdb777aaf2aed56badec1683363b982e1eb9b85ce8aca6e649e9d2c7c7",
+      "tips": [
+        {
+          "id": "adc:Xayah:Ashe:0",
+          "text": "Keep away from Ashe's Enchanted Crystal Arrow when you walk alone. Save Featherstorm to dodge it, since you can't be targeted while in the air.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ashe-R", "start": 22, "end": 45 },
+            { "kind": "ability", "key": "Xayah-R", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Xayah:Ashe:1",
+          "text": "Drop Feathers with Double Daggers and your empowered attacks. Then use Bladecaller when Ashe is standing on them, to root her.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Xayah-E", "start": 71, "end": 82 },
+            { "kind": "champion", "key": "Ashe", "start": 88, "end": 92 },
+            { "kind": "keyword", "key": "rooted", "start": 117, "end": 121 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Xayah:Ashe:2",
+          "text": "Stay out of Ashe's Volley line. Stand behind minions so they soak up the arrows.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ashe-W", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Xayah:Ashe:3",
+          "text": "Trade by casting Deadly Plumage, then attack Ashe. You get extra Attack Speed, and hitting her gives you Move Speed to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-W", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "Ashe", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1510cda65c7fb2a7ddb27bac135d6ac017051fb21c6cf52f7c7d835c786bec92",
+      "tips": [
+        {
+          "id": "adc:Xayah:Caitlyn:0",
+          "text": "Walk up to Caitlyn behind minions. Piltover Peacemaker deals less damage to every target after the first.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 35, "end": 54 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Xayah:Caitlyn:1",
+          "text": "Watch where Caitlyn has placed Yordle Snap Trap, especially in brush, and don't walk onto one. A trap roots you and sets up her Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 31, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 107 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 128,
+              "end": 136
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Xayah:Caitlyn:2",
+          "text": "Hold Featherstorm for when Caitlyn goes for a kill. You can't be targeted, so Ace in the Hole and her net can't hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Caitlyn", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Caitlyn-R", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Xayah:Caitlyn:3",
+          "text": "Trade with Double Daggers to plant Feathers, then use Bladecaller. Three or more Feathers hitting Caitlyn root her.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 11, "end": 25 },
+            { "kind": "ability", "key": "Xayah-E", "start": 54, "end": 65 },
+            { "kind": "champion", "key": "Caitlyn", "start": 98, "end": 105 },
+            { "kind": "keyword", "key": "rooted", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7fa0a0e7062154a4414cba361fc43f62bc90dd0bf1bc3f4cd7c32bb7e9335b52",
+      "tips": [
+        {
+          "id": "adc:Xayah:Ezreal:0",
+          "text": "Walk around the lane so Ezreal's Mystic Shot has to line up on you, and stand behind minions so it hits them first.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Xayah:Ezreal:1",
+          "text": "Fight when Ezreal has used Essence Flux or Mystic Shot. Turn on Deadly Plumage and go in with extra attack speed.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 43, "end": 54 },
+            { "kind": "ability", "key": "Xayah-W", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Xayah:Ezreal:2",
+          "text": "Throw Double Daggers at Ezreal to plant feathers, then pull them with Bladecaller. Three or more feathers will root him.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Xayah-E", "start": 70, "end": 81 },
+            { "kind": "keyword", "key": "rooted", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Xayah:Ezreal:3",
+          "text": "Expect Ezreal to blink away with Arcane Shift. Hold Bladecaller until he commits, so a root can catch him afterwards.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 33, "end": 45 },
+            { "kind": "ability", "key": "Xayah-E", "start": 52, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Xayah:Ezreal:4",
+          "text": "Use Featherstorm to dodge Ezreal's Trueshot Barrage or when you are being dived, since you can't be targeted in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ba6fd90c40f0fd1ababe8059206c5a5129705b2947b0587a924145af0a879ab5",
+      "tips": [
+        {
+          "id": "adc:Xayah:Jhin:0",
+          "text": "Stay out of Jhin's line when his Deadly Flourish is ready and you or your support have just been hit. It roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 33, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Xayah:Jhin:1",
+          "text": "Jump on Jhin when he has fired his fourth shot and is reloading. He cannot attack then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Xayah:Jhin:2",
+          "text": "Use Double Daggers and basic attacks to leave Feathers near Jhin. Then call them back with Bladecaller to root him.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jhin", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Xayah-E", "start": 91, "end": 102 },
+            { "kind": "keyword", "key": "rooted", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Xayah:Jhin:3",
+          "text": "Watch for Jhin's hidden traps in the lane bushes and on your path. Stepping on one slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Xayah:Jhin:4",
+          "text": "Use Featherstorm to dodge Curtain Call, since you cannot be targeted while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Jhin-R", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3d289cb93d38a0e37ff883927379848799834dc086b6fa748264a0dae0ee849c",
+      "tips": [
+        {
+          "id": "adc:Xayah:Jinx:0",
+          "text": "Jinx is easy to burst while she is rocket poking, so trade with Double Daggers and hit her when she's out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Xayah-Q", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Xayah:Jinx:1",
+          "text": "If she misses Flame Chompers!, dive her; she has a hard time escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Xayah:Jinx:2",
+          "text": "Use Deadly Plumage for a speed boost as you walk up to trade, since Zap! slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Jinx-W", "start": 68, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Xayah:Jinx:3",
+          "text": "Dodge Super Mega Death Rocket! by using Featherstorm; it makes you untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 6, "end": 30 },
+            { "kind": "ability", "key": "Xayah-R", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "33bfefaeb5ca838784bfbe7438c1d0a9a602e8c0d647538841d712ec475e2622",
+      "tips": [
+        {
+          "id": "adc:Xayah:Kaisa:0",
+          "text": "Plant Feathers with Double Daggers on Kai'Sa's side of the lane, then pull them back with Bladecaller to root her.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 20, "end": 34 },
+            { "kind": "champion", "key": "Kaisa", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Xayah-E", "start": 90, "end": 101 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Xayah:Kaisa:1",
+          "text": "Stay out of Void Seeker's long line, and don't stand alone with her nearby; she picks off isolated enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "isolated", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "isolated", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Xayah:Kaisa:2",
+          "text": "Trade with Deadly Plumage when Kai'Sa walks up to hit minions; the attack speed wins short fights.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-W", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "Kaisa", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Xayah:Kaisa:3",
+          "text": "Keep Featherstorm for when Kai'Sa dives with Killer Instinct; being untargetable lets you dodge her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Kaisa", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b331db82daeca62acfb44225a3461d304be56c0826d02518397ca5ad8504c6c9",
+      "tips": [
+        {
+          "id": "adc:Xayah:MissFortune:0",
+          "text": "Do not stand in a line behind your minions when Miss Fortune is nearby. Double Up bounces through them onto you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 48,
+              "end": 60
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 72,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Xayah:MissFortune:1",
+          "text": "Leave Make It Rain's area quickly. It slows you, and you cannot cleanse that slow.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Xayah:MissFortune:2",
+          "text": "Use Featherstorm to dodge Bullet Time. You cannot be targeted while you are in the air, and it leaves feathers behind.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 26,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Xayah:MissFortune:3",
+          "text": "Hit Miss Fortune with something to cancel her Strut speed boost. She is easy to kill once you reach her.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 46,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Xayah:MissFortune:4",
+          "text": "Use Double Daggers and basic attacks to plant feathers around the lane. Then call them back with Bladecaller to root her and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Xayah-E", "start": 97, "end": 108 },
+            { "kind": "keyword", "key": "rooted", "start": 112, "end": 116 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "87797bce6e11b3f0e599cd1e0ae3ff48216c79fd30ec7e791a561a63ab7f75b0",
+      "tips": [
+        {
+          "id": "adc:Xayah:Smolder:0",
+          "text": "Trade early while Smolder is weak: he has few stacks of Dragon Practice, so use Double Daggers and Deadly Plumage to out-damage him.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 18, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 56,
+              "end": 71
+            },
+            { "kind": "ability", "key": "Xayah-Q", "start": 80, "end": 94 },
+            { "kind": "ability", "key": "Xayah-W", "start": 99, "end": 113 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Xayah:Smolder:1",
+          "text": "Leave Feathers on the ground, then use Bladecaller when Smolder stands on them; three or more Feathers leave him rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-E", "start": 39, "end": 50 },
+            { "kind": "champion", "key": "Smolder", "start": 56, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Xayah:Smolder:2",
+          "text": "Stay out of a straight line with Smolder; Achooo! is a long-range shot that slows you, so sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Xayah:Smolder:3",
+          "text": "Use Featherstorm to dodge MMOOOMMMM! while you are untargetable, then rain daggers back on him.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Smolder-R", "start": 26, "end": 36 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Xayah:Smolder:4",
+          "text": "Hold Bladecaller until Smolder flies in with Flap, Flap, Flap; rooting him stops his flight.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Smolder-E", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "dbdb4bfc94c9de67abd5c272b13ac564f05bbeb04147681fd330d0ca9851f79f",
+      "tips": [
+        {
+          "id": "adc:Xayah:Yunara:0",
+          "text": "Trade with Double Daggers when Yunara walks up to last-hit, then follow with auto attacks while your passive Clean Cuts is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-Q", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "Yunara", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Xayah-passive",
+              "start": 109,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Xayah:Yunara:1",
+          "text": "Use Deadly Plumage when you commit to a fight. The extra Attack Speed wins short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Xayah:Yunara:2",
+          "text": "Call Feathers back with Bladecaller once Yunara stands on several of them. Three or more Feathers will leave her rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-E", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Yunara", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Xayah:Yunara:3",
+          "text": "Yunara's prayer bead leaves you slowed. Stay out of its line, and keep minions between you and the bead.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Xayah:Yunara:4",
+          "text": "Respect Yunara once she reaches level 6. Back off and do not trade into her extra damage and Attack Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Xayah:Yunara:5",
+          "text": "Save Featherstorm to dodge her Arc of Ruin or to escape a gank. You cannot be targeted while in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

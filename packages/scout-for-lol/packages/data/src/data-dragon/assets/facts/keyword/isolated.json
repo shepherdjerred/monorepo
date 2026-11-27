@@ -1,0 +1,11 @@
+{
+  "kind": "keyword",
+  "patch": "16.23.1",
+  "key": "isolated",
+  "name": "Isolated",
+  "description": "An enemy with no allied champions, minions or outer turrets close to them. Some abilities do extra damage to them.",
+  "facts": [],
+  "parts": [],
+  "icon": null,
+  "keyFact": null
+}

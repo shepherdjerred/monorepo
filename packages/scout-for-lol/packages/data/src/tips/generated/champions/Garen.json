@@ -1,0 +1,3506 @@
+{
+  "schemaVersion": 1,
+  "champion": "Garen",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "a37ed83aff77e6c84bbf58d658a370e436d8f3ab3cb3c3d3f5263f08e589fc1b",
+      "tips": [
+        {
+          "id": "top:Garen:general:0",
+          "text": "Stay out of damage for a few seconds and Perseverance heals you fast. Back off after a trade and let your health refill.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 41,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Garen:general:1",
+          "text": "Open a trade with Decisive Strike on your next attack. The enemy is silenced, so they can't cast abilities to escape or fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Garen:general:2",
+          "text": "Use Decisive Strike to get away from slows. It removes them and gives you speed to chase or run.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:general:3",
+          "text": "Aim Judgment so it hits only the enemy champion, not the minions. It does the most damage to a single target.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Garen:general:4",
+          "text": "Stay on the enemy for the whole of Judgment. Enough hits cut their Armor, and your follow-up attacks then hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Garen:general:5",
+          "text": "Press Courage when the enemy starts a big trade or burst. It cuts damage and gives a brief shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Garen:general:6",
+          "text": "Last-hit minions and kill enemies yourself. Each kill permanently adds Armor and Magic Resist through Courage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Garen:general:7",
+          "text": "Finish low-health enemies with Demacian Justice. It does more damage the less health they have, so use it to close a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Garen:combo:0",
+          "name": "Q reset auto",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Garen-Q" }, "attack"],
+          "when": "When you want to start a trade or chase a fleeing enemy.",
+          "whenRefs": [],
+          "text": "Decisive Strike gives move speed and resets your attack timer. The empowered attack lunges at the target and silences it, so cast Q as you close in.",
+          "textRefs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "5ff6087bddc273f74f66469025debb78df8a581d286e16efd4c015dc9273b7ca",
+      "tips": [
+        {
+          "id": "top:Garen:Aatrox:0",
+          "text": "Use Decisive Strike to clear Infernal Chains' slow and run down the enemy, then hit them to silence them.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 29, "end": 44 },
+            { "kind": "keyword", "key": "silenced", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Garen:Aatrox:1",
+          "text": "Walk toward the sides or straight at Aatrox to escape Infernal Chains instead of away from him. Stay out of the pull.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Garen:Aatrox:2",
+          "text": "Step out of the telegraphed zones of The Darkin Blade. Its edge knocks you up, so don't stand at the far end.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Garen:Aatrox:3",
+          "text": "Trade with Judgment when only Aatrox is in range, so he takes full damage and gets his Armor cut.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Garen:Aatrox:4",
+          "text": "Use Courage when Aatrox lands a combo on you; it cuts incoming damage and gives a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Aatrox:5",
+          "text": "Finish Aatrox with Demacian Justice when he is low. His healing makes it best to strike as soon as he is in range.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Garen-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "86ad27a2cd33579a3f183150c3f18edac3544900f799625eaa2cf205519fafa9",
+      "tips": [
+        {
+          "id": "top:Garen:Akali:0",
+          "text": "Close the gap with Decisive Strike's speed, then hit Akali to silence her. She can't cast abilities to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 19, "end": 34 },
+            { "kind": "champion", "key": "Akali", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "silenced", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Garen:Akali:1",
+          "text": "Decisive Strike also removes slows, so use it when Five Point Strike slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Akali-Q", "start": 51, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Akali:2",
+          "text": "Use Courage when Akali commits her combo; it cuts her damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Akali", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Akali:3",
+          "text": "Start Judgment when Akali is on top of you, with only her in range, so it deals full damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Akali", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Garen:Akali:4",
+          "text": "Akali can still be hit by area damage in Twilight Shroud, so Judgment can reveal her. Do not chase blindly into smoke.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-W", "start": 41, "end": 56 },
+            { "kind": "ability", "key": "Garen-E", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Garen:Akali:5",
+          "text": "Use Demacian Justice when Akali is low on health; it deals more the more health she is missing.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Akali:6",
+          "text": "Avoid damage between fights so Perseverance heals you; stay out of poke range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 31,
+              "end": 43
+            },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "08f6a0c2779fd4049c66a458485b7dc6a5595a073c6e0d15ba9e69db400d5827",
+      "tips": [
+        {
+          "id": "top:Garen:Ambessa:0",
+          "text": "Use Decisive Strike to cleanse Ambessa's slow from Lacerate, then hit her to silence her so she can't cast her abilities or dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ambessa", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 51, "end": 59 },
+            { "kind": "keyword", "key": "silenced", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Garen:Ambessa:1",
+          "text": "Press Courage when Ambessa starts Repudiation or dives on you; it cuts the damage you take and gives a brief shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Ambessa", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Garen:Ambessa:2",
+          "text": "Trade with Judgment when only Ambessa is in range; a lone target takes the most damage, and enough spins also lower her Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Ambessa", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Ambessa:3",
+          "text": "Stay healthy as the lane goes on. Once her health is low, Demacian Justice finishes her fast, so use it on her when she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Garen:Ambessa:4",
+          "text": "Step out of range after a trade and avoid damage so Perseverance heals you back up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 52,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "67d266fddb562e62ca6a01ddb86a24d14d015f88e0510735ef651f1422a6c608",
+      "tips": [
+        {
+          "id": "top:Garen:Anivia:0",
+          "text": "Use Decisive Strike when Anivia's Flash Frost slows you; it removes the slow and speeds you up to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 34, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Anivia:1",
+          "text": "Silence Anivia with Decisive Strike once you reach her; she cannot cast spells while silenced.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Anivia", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Garen-Q", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Garen:Anivia:2",
+          "text": "Walk around Crystallize rather than waiting; the wall melts after a few seconds, so do not waste cooldowns on it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Garen:Anivia:3",
+          "text": "Her egg is hard to kill early, so use Demacian Justice on her only when it finishes her, not before Rebirth is used up.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 38, "end": 54 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 100,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Garen:Anivia:4",
+          "text": "Use Courage to blunt her Frostbite and Flash Frost damage when she starts a combo.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Anivia-E", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2be6fe01e3c072c3ed2d6f2ab395770c3331ddf3009210e580cb573f637f9bee",
+      "tips": [
+        {
+          "id": "top:Garen:Aurora:0",
+          "text": "Walk up and hit Aurora with Decisive Strike when she is close; it silences her, so she can't use her dashes or spells for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Garen-Q", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "silenced", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Garen:Aurora:1",
+          "text": "Decisive Strike also clears slows, so use it when The Weirding hits you and you want to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aurora-E", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Garen:Aurora:2",
+          "text": "Aurora wins at long range, so don't chase her blindly. Wait for her to use up Twofold Hex and The Weirding, then go in.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 78, "end": 89 },
+            { "kind": "ability", "key": "Aurora-E", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:Aurora:3",
+          "text": "Press Courage when Aurora's burst is coming; it cuts the damage you take and gives a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Aurora", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Garen:Aurora:4",
+          "text": "Aurora is a mage with little to stop you once you're on her. Keep Judgment on her alone, since she is then the nearest enemy and takes extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Garen-E", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Garen:Aurora:5",
+          "text": "Finish her with Demacian Justice once she is low. It can't be dodged by her invisibility if you are already in range.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Garen:Aurora:6",
+          "text": "Stay out of damage between fights so Perseverance heals you. Aurora's poke keeps it off, so punish her when she wastes her spells.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 37,
+              "end": 49
+            },
+            { "kind": "champion", "key": "Aurora", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f0a4f8b21a4a017a4f697cd8fc5744008b40dc1ed239a2eb027c5f014f157f00",
+      "tips": [
+        {
+          "id": "top:Garen:Briar:0",
+          "text": "Save Decisive Strike for when Briar leaps in; it silences her, and she is stunned by nothing of yours so land it on her first hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Briar", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Garen:Briar:1",
+          "text": "Use Courage when Briar is on you in Blood Frenzy; the damage reduction and shield blunt her fast attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Garen:Briar:2",
+          "text": "Spin Judgment when Briar is stuck attacking you; she is forced to hit the nearest enemy, so she stays in range.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Garen:Briar:3",
+          "text": "Finish Briar with Demacian Justice when she is low; her healing is strong, so do not wait for her to bleed you first.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-R", "start": 18, "end": 34 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Garen:Briar:4",
+          "text": "Stay out of the wall when Briar charges Chilling Scream; a full charge knocks you back and stuns you if you hit terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "154021278cbc966a1b34be9d853d1d8f49cc47e785ea803c8a036dcebcffd3f3",
+      "tips": [
+        {
+          "id": "top:Garen:Camille:0",
+          "text": "Use Decisive Strike to walk up and hit Camille; it silences her, so she can't use her abilities for a moment to trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Camille", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Garen:Camille:1",
+          "text": "Decisive Strike removes slows from you, so walk into Tactical Sweep's outer edge without fear and close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Camille-W", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Garen:Camille:2",
+          "text": "Press Courage when Camille's Hookshot stun is about to land or she starts a trade; it cuts damage and gives you tenacity briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Camille", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Camille-E", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Garen:Camille:3",
+          "text": "Fight Camille with Judgment when only she is in range; it hits hardest on one target and cuts her Armor if it keeps hitting.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Garen-E", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Garen:Camille:4",
+          "text": "Stay out of unwarded brush and walls where Camille can dive in with Hookshot. Staying healthy lets Perseverance heal you.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Camille-E", "start": 68, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 99,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Garen:Camille:5",
+          "text": "Finish Camille with Demacian Justice once she is low; her Hextech Ultimatum zone won't save her from it.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Garen-R", "start": 20, "end": 36 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1fb0ffe7a3236e5c1c9f39406473df8238c072f890b1fdae4af94f1ea35e4d47",
+      "tips": [
+        {
+          "id": "top:Garen:Chogath:0",
+          "text": "Watch for the smoke cloud on the ground from Rupture and walk out of it. The knock up leaves you open to Cho'Gath's follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 85 },
+            { "kind": "champion", "key": "Chogath", "start": 105, "end": 113 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Chogath:1",
+          "text": "Use Decisive Strike to remove a slow and close the gap. Its silence stops Cho'Gath casting abilities on you.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 67 },
+            { "kind": "champion", "key": "Chogath", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Chogath:2",
+          "text": "Trade with Judgment when Cho'Gath is close and alone, so it all lands on him. Walk up and spin when his Feral Scream is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Chogath", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Chogath-W", "start": 104, "end": 116 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:Chogath:3",
+          "text": "Press Courage when Cho'Gath goes for a combo. It cuts the damage and gives a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Chogath", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Chogath:4",
+          "text": "Don't let Cho'Gath grow. Keep pressure on him and kill him before he stacks Feast, then finish him with Demacian Justice once his health is low.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Chogath-R", "start": 76, "end": 81 },
+            { "kind": "ability", "key": "Garen-R", "start": 104, "end": 120 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1764ff2d30c4dc4059fc98f27b024e62694ae0a06345a966d578f3594e09a15e",
+      "tips": [
+        {
+          "id": "top:Garen:Darius:0",
+          "text": "Use Decisive Strike to cleanse the slow when Darius hits you with Crippling Strike or Apprehend, then run him down or step away.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Darius-W", "start": 66, "end": 82 },
+            { "kind": "ability", "key": "Darius-E", "start": 86, "end": 95 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Garen:Darius:1",
+          "text": "Hit Darius with Decisive Strike to silence him in a trade; he can't use his abilities for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Garen-Q", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "silenced", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Garen:Darius:2",
+          "text": "Use Courage when Darius swings Decimate or goes for a full trade; it cuts his damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Darius", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Darius-Q", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Garen:Darius:3",
+          "text": "Spin Judgment when Darius walks up to you, but stay inside his reach only while it is worth the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Garen:Darius:4",
+          "text": "Stay away from Darius when he has full Hemorrhage stacks; his damage jumps. Fight when his stacks are low.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 15, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 39,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Garen:Darius:5",
+          "text": "Finish Darius with Demacian Justice once he is low; it deals true damage that grows with his missing health.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Garen-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Garen:Darius:6",
+          "text": "Stay out of the pull when Apprehend is ready; step out of its cone and Darius loses his best way to start a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 26, "end": 35 },
+            { "kind": "champion", "key": "Darius", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Garen:Darius:7",
+          "text": "Back off and let Perseverance heal you when you are not being hit. Darius's poke can break it, so stay out of his range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 17,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Darius", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "poke", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72f6a164362d4dc0aaf9b582130611e9d0e8e94852cbecb0c63c3d7e5b4aca1b",
+      "tips": [
+        {
+          "id": "top:Garen:DrMundo:0",
+          "text": "Walk through your minions when Mundo throws Infected Bonesaw; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Garen:DrMundo:1",
+          "text": "Use Decisive Strike to remove the slow from Infected Bonesaw and run at Mundo. Its silence stops Heart Zapper.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 44, "end": 60 },
+            { "kind": "keyword", "key": "silenced", "start": 83, "end": 90 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 97, "end": 109 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Garen:DrMundo:2",
+          "text": "When Mundo starts Heart Zapper, back off or use Courage. His heal is smaller if his recast hits nothing.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Garen-W", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Garen:DrMundo:3",
+          "text": "Mundo regenerates fast. Burst him with Demacian Justice when he is low and Maximum Dosage is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 39, "end": 55 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 75, "end": 89 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Garen:DrMundo:4",
+          "text": "Stay out of Mundo's Infected Bonesaw range to keep Perseverance regenerating your health.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 20, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 51,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1c4efc5eb409fd32a5c7e05dc2f188997e4b33955af597d69b7c57eed5047f1e",
+      "tips": [
+        {
+          "id": "top:Garen:Fiora:0",
+          "text": "Don't use Decisive Strike or Courage while Fiora is in Riposte. She parries the silence and shrugs off the hit, so wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Garen-W", "start": 29, "end": 36 },
+            { "kind": "champion", "key": "Fiora", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Fiora-W", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Garen:Fiora:1",
+          "text": "Bait out Riposte with a cheap hit, then start your trade. Spin Judgment once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Garen-E", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Garen:Fiora:2",
+          "text": "Use Decisive Strike to catch Fiora when she lunges in. The silence stops her from casting Riposte or Lunge.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 59, "end": 66 },
+            { "kind": "ability", "key": "Fiora-W", "start": 90, "end": 97 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Fiora:3",
+          "text": "Decisive Strike clears slows, so Bladework's slow won't hold you. Use its speed boost to close the gap on Fiora.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Fiora-E", "start": 33, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Fiora", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Garen:Fiora:4",
+          "text": "Look for the kill with Demacian Justice once Fiora is low. Her Vital healing is easy to out-damage with a burst.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Fiora", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Garen:Fiora:5",
+          "text": "Stay out of fights when she has Grand Challenge up on you. Fall back and let Perseverance heal you.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 32, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 77,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e61136c9c99d8aa5709c82db73a9a712d74997bd5b81a262853d1f2c846cf14c",
+      "tips": [
+        {
+          "id": "top:Garen:Gangplank:0",
+          "text": "Close in with Decisive Strike for speed, then hit Gangplank to silence him so he cannot heal with Remove Scurvy.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Gangplank", "start": 50, "end": 59 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 70 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 98, "end": 111 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Garen:Gangplank:1",
+          "text": "Do not stand beside Gangplank's Powder Keg when he can shoot it; step away or you take the blast and get slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 32, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Gangplank:2",
+          "text": "Use Courage when Gangplank starts a keg combo to take less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Gangplank", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Garen:Gangplank:3",
+          "text": "Spin with Judgment once you are on top of Gangplank; it hurts most when he is the only one hit.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Gangplank", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Garen:Gangplank:4",
+          "text": "When Gangplank is low, finish him with Demacian Justice.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Garen-R", "start": 39, "end": 55 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ba849b29672dec7d3b9378c833c9cce0925de5fec6ba2448711cba7a37b02a46",
+      "tips": [
+        {
+          "id": "top:Garen:Gnar:0",
+          "text": "Gnar outranges you as Mini Gnar, so don't chase him down in the open. Wait until he throws Boomerang Throw or Hop, then walk up and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gnar", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Garen:Gnar:1",
+          "text": "Use Decisive Strike when Gnar slows you; it removes the slow and speeds you up so you can close the gap, and your next hit silences him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gnar", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "silenced", "start": 123, "end": 131 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Garen:Gnar:2",
+          "text": "Fight Gnar while he is Mini Gnar, since he is squishy. Be ready to back off when his Rage is full, because Mega Gnar is much tougher.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 },
+            { "kind": "champion", "key": "Gnar", "start": 112, "end": 116 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Garen:Gnar:3",
+          "text": "Stay away from walls when Gnar is big, because GNAR! stuns you and hurts more if it throws you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gnar-R", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Gnar:4",
+          "text": "Press Courage when Mega Gnar is about to use Wallop or GNAR!. It cuts the damage you take and gives you a shield and tenacity for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Gnar", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Gnar-R", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Garen:Gnar:5",
+          "text": "Gnar can't gain Rage for a while after he turns small again. Push the fight then, and use Judgment while only he is in range to deal the most damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Garen-E", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Garen:Gnar:6",
+          "text": "Finish Gnar with Demacian Justice once he is low, since it deals more damage the less health he has.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Garen-R", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "afacc0c7d2667f70bd81fd395396c8a05dbe5b08fac0fd663d716df13982244e",
+      "tips": [
+        {
+          "id": "top:Garen:Gragas:0",
+          "text": "Walk out of Barrel Roll's area or use Decisive Strike to shake off its slow.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Garen-Q", "start": 38, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Garen:Gragas:1",
+          "text": "Use Decisive Strike on Gragas when he goes for a trade; the silence stops his abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gragas", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Gragas:2",
+          "text": "Press Courage when Gragas starts a Body Slam combo; the shield and tenacity cut the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Gragas", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Gragas-E", "start": 35, "end": 44 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Garen:Gragas:3",
+          "text": "Gragas can knock you away with Explosive Cask, so do not stand near your own tower when he has it up.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Gragas-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Garen:Gragas:4",
+          "text": "Spin Judgment only when Gragas is the single target near you, to make it hit hardest.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Gragas", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Garen:Gragas:5",
+          "text": "Gragas's Drunken Rage cuts his damage taken, so wait for it to end before you burst him with Demacian Justice.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Gragas-W", "start": 9, "end": 21 },
+            { "kind": "ability", "key": "Garen-R", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4f2a15ff19098909c188e9151f224a6b55607911d99b9f139dde2f5d46711bf8",
+      "tips": [
+        {
+          "id": "top:Garen:Gwen:0",
+          "text": "Use Decisive Strike to chase Gwen; the move speed closes the gap and the silence stops her from escaping with Hallowed Mist or dashing away.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gwen", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 73, "end": 80 },
+            { "kind": "ability", "key": "Gwen-W", "start": 110, "end": 123 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Gwen:1",
+          "text": "Gwen's Needlework slows, so Decisive Strike is a good answer: it removes slows from you and lets you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gwen-R", "start": 7, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Garen-Q", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Garen:Gwen:2",
+          "text": "Don't waste Demacian Justice while Gwen stands in Hallowed Mist; you can't target her from outside it. Wait for her to leave or for the Mist to end.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Gwen", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Gwen-W", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Garen:Gwen:3",
+          "text": "Trade when Gwen's Skip 'n Slash is on cooldown, because her empowered attacks are what let her out-trade you.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Gwen-E", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Garen:Gwen:4",
+          "text": "Use Courage when Gwen commits a full Snip Snip! or Needlework combo; it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Gwen", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 37, "end": 47 },
+            { "kind": "ability", "key": "Gwen-R", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:Gwen:5",
+          "text": "Finish Gwen with Demacian Justice once she is low; it deals true damage based on her missing health.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Garen-R", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "772916e257dbbc32e1f44feecdd27004d1e562c8f838f65754813edc21d35819",
+      "tips": [
+        {
+          "id": "top:Garen:Heimerdinger:0",
+          "text": "Walk through your minions and stay out of the grenade's centre; Heimerdinger's stun is what lets him win the trade.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 64,
+              "end": 76
+            },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Garen:Heimerdinger:1",
+          "text": "Use Decisive Strike to remove his slows and run in; the speed boost helps you close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Garen:Heimerdinger:2",
+          "text": "Hit Heimerdinger with Decisive Strike when you reach him; the silence stops him from casting for a moment.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Garen-Q", "start": 22, "end": 37 },
+            { "kind": "keyword", "key": "silenced", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Garen:Heimerdinger:3",
+          "text": "Use Courage when his grenade or rockets are about to land; the shield and tenacity cut the stun short.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Garen:Heimerdinger:4",
+          "text": "Spin Judgment on Heimerdinger and his turrets together once you are on him; he cannot easily escape it.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 17,
+              "end": 29
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Garen:Heimerdinger:5",
+          "text": "Finish Heimerdinger with Demacian Justice when he is low; he has few ways to heal.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 7,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Garen-R", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ba2683b27a7af187d804f457239d5684380b898b55a93dd5b68417dff2e7f17c",
+      "tips": [
+        {
+          "id": "top:Garen:Illaoi:0",
+          "text": "Kill Tentacles when they are alone and out of Illaoi's reach; she is much weaker in fights without them.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Garen:Illaoi:1",
+          "text": "Use Judgment on Illaoi only, away from her Tentacles and minions, so the nearest-enemy bonus lands on her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Illaoi", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Garen:Illaoi:2",
+          "text": "Use Decisive Strike to remove the slow when she pulls your spirit out with Test of Spirit, then silence her with your next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 75, "end": 89 },
+            { "kind": "keyword", "key": "silenced", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Garen:Illaoi:3",
+          "text": "Press Courage when Illaoi leaps in with Harsh Lesson and her Tentacles slam; it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Illaoi", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Garen:Illaoi:4",
+          "text": "Look for Demacian Justice once Illaoi is low, since it deals more damage the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Illaoi", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "362b3239bd0266a6ad91d6ce586c5f0de388276238490ed4d94dcb611dd69d59",
+      "tips": [
+        {
+          "id": "top:Garen:Irelia:0",
+          "text": "Hold Decisive Strike for when Irelia dashes at you. The Silence stops her casting abilities and you can chase her down.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Irelia", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "silenced", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Garen:Irelia:1",
+          "text": "Step out of the line between Irelia's two blades from Flawless Duet, or you'll be stunned. Decisive Strike will not free you from it.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Irelia-E", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 },
+            { "kind": "ability", "key": "Garen-Q", "start": 91, "end": 106 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Garen:Irelia:2",
+          "text": "Don't spend Judgment or Demacian Justice on Irelia while she's charging Defiant Dance, because it cuts the damage she takes.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "Irelia", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Irelia-W", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Garen:Irelia:3",
+          "text": "Fight Irelia when her Ionian Fervor stacks have run out. She loses a lot of Attack Speed and damage then.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 22,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Garen:Irelia:4",
+          "text": "Push the wave so Irelia has fewer minions to dash through, and fight her away from the minions.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Garen:Irelia:5",
+          "text": "Use Courage when Irelia commits to a trade. It reduces her damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Irelia", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5aeea7a4768237bcbd6f4b5866c38320a4188252c2628b2e001914c7f399fde7",
+      "tips": [
+        {
+          "id": "top:Garen:Jax:0",
+          "text": "Do not attack Jax while he is in Counter Strike. Wait for it to end, then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Jax-E", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Garen:Jax:1",
+          "text": "Use Judgment while Jax is stunned or dodging; its spins are not basic attacks, so he cannot dodge them.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Jax", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Garen:Jax:2",
+          "text": "Decisive Strike silences Jax, so use it to stop him from casting Leap Strike when he tries to jump on you or away.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "silenced", "start": 16, "end": 24 },
+            { "kind": "champion", "key": "Jax", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Jax-Q", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Garen:Jax:3",
+          "text": "Jax gets stronger the longer he keeps hitting you. Use Courage to cut his damage when he is attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Garen-W", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "164422b67936573e36af29bec515a4022c977ff66a195c4066d388b89ab3cbe0",
+      "tips": [
+        {
+          "id": "top:Garen:Jayce:0",
+          "text": "Use Decisive Strike to remove the slow from To the Skies!, then run him down and silence him with your next attack so he can't jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Garen:Jayce:1",
+          "text": "Press Courage when Jayce starts a big trade; it cuts incoming damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Garen:Jayce:2",
+          "text": "Walk through your minions when he fires Shock Blast. It stops at the first enemy it hits.",
+          "refs": [],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Garen:Jayce:3",
+          "text": "Stay close to Jayce and spin Judgment when only he is in range. It hurts most against a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Garen-E", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Garen:Jayce:4",
+          "text": "Hold Demacian Justice until Jayce is low. It deals more damage the less health he has, so use it to finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Jayce:5",
+          "text": "Stay out of his poke range when his Cannon is out. Shove the wave and let Perseverance heal you when he leaves.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 74,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e66211970ecdb43b5d71b16d98b8034d1611662eaa4b6e2e7670e23b117a7432",
+      "tips": [
+        {
+          "id": "top:Garen:KSante:0",
+          "text": "Use Decisive Strike when K'Sante's Ntofo Strikes slows you; it removes the slow and speeds you up so you can close in.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "KSante-Q", "start": 35, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Garen:KSante:1",
+          "text": "Hit K'Sante with Decisive Strike to silence him, so he can't dash away or stun you with Path Maker for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Garen-Q", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "silenced", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "KSante-W", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Garen:KSante:2",
+          "text": "Press Courage when K'Sante starts charging Path Maker or lands a pull; it cuts damage and shortens the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "KSante", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "KSante-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Garen:KSante:3",
+          "text": "Hold Demacian Justice until K'Sante is low or has gone All Out; he loses health then, so the true damage finishes him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "KSante-R", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Garen:KSante:4",
+          "text": "Spin with Judgment only when K'Sante is the sole target nearby, so he takes full damage and loses Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "14c04c650c9fcd5f31e654b4ca6b7888d3950c7b2fdf83a8259fee074e7e8374",
+      "tips": [
+        {
+          "id": "top:Garen:Kayle:0",
+          "text": "Pressure Kayle hard before level 6. She is a weak melee champion until she ascends, so trade and push her out of lane.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 9, "end": 14 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Garen:Kayle:1",
+          "text": "Use Decisive Strike to close the gap; it speeds you up and silences Kayle, so she can't cast her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 59, "end": 67 },
+            { "kind": "champion", "key": "Kayle", "start": 68, "end": 73 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Garen:Kayle:2",
+          "text": "Decisive Strike also removes slows, so Radiant Blast won't stop your chase for long.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Garen:Kayle:3",
+          "text": "Spin Judgment while you stand next to Kayle. She is fragile and it hurts most when it hits only her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Kayle", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Garen:Kayle:4",
+          "text": "Once Kayle has range, her attacks get dangerous. Don't walk into her unless you can reach her.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Garen:Kayle:5",
+          "text": "When Kayle casts Divine Judgment, don't waste damage on the invulnerable target. Back off, then hit whoever is left standing.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Kayle-R", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Garen:Kayle:6",
+          "text": "Finish Kayle with Demacian Justice once she is low. She is fragile and has little else to stop it.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-R", "start": 18, "end": 34 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "617ac6ecbfda248958b1806792cc5d8e0f36ba9f8667884d452c287edb0079f5",
+      "tips": [
+        {
+          "id": "top:Garen:Kennen:0",
+          "text": "Close in on Kennen when he uses Lightning Rush carelessly. He is flimsy and can't attack while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Kennen-E", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Garen:Kennen:1",
+          "text": "Use Decisive Strike to chase Kennen. It removes slows from you, gives you speed, and silences him on the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kennen", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Kennen:2",
+          "text": "Step into the lane's side to dodge Thundering Shuriken, and stand behind minions so it hits them instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 35, "end": 54 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Garen:Kennen:3",
+          "text": "Turn on Courage when Kennen has landed marks on you, to blunt the damage and gain a shield before the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 8, "end": 15 },
+            { "kind": "champion", "key": "Kennen", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Garen:Kennen:4",
+          "text": "Spin with Judgment once you reach Kennen, since he has little health to survive it. Keep him as the only target so it hits hardest.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Kennen", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Garen:Kennen:5",
+          "text": "Finish a hurt Kennen with Demacian Justice at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c5c4c4678c6243b8ec082a8a0927a0dabad485b5472dd5f645f68680dd0745e",
+      "tips": [
+        {
+          "id": "top:Garen:Kled:0",
+          "text": "Start your trade with Decisive Strike on the first hit; the silence stops Kled from casting right away and the move speed helps you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 22, "end": 37 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 67 },
+            { "kind": "champion", "key": "Kled", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Garen:Kled:1",
+          "text": "Decisive Strike removes slows, so use it when Bear Trap on a Rope has pulled you and you are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Kled-Q", "start": 46, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Garen:Kled:2",
+          "text": "Use Courage when Kled's Violent Tendencies is ready; it cuts the damage of his fast attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kled", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Kled-W", "start": 24, "end": 42 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Kled:3",
+          "text": "Keep Judgment for when Kled is alone next to you, so he takes full damage and loses Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Kled", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:Kled:4",
+          "text": "Finish Kled with Demacian Justice once Skaarl is gone and he is low; he is easier to kill while dismounted.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Garen-R", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Garen:Kled:5",
+          "text": "Step out of the line of Bear Trap on a Rope, because it hooks the first champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 24, "end": 43 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "38da13d9ac8f6fc337134a985fc3f0b6a4a187aed6b431a595bfd85ed92b5a05",
+      "tips": [
+        {
+          "id": "top:Garen:Malphite:0",
+          "text": "Use Decisive Strike right after Seismic Shard hits; it clears the slow so you can keep chasing or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Malphite:1",
+          "text": "Silence Malphite with Decisive Strike when he walks up to trade, so he cannot cast his spells.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Malphite", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Garen-Q", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Garen:Malphite:2",
+          "text": "Press Courage when Malphite casts Ground Slam or Thunderclap; it cuts the damage you take and gives a brief shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Malphite", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Malphite-E", "start": 34, "end": 45 },
+            { "kind": "ability", "key": "Malphite-W", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Malphite:3",
+          "text": "Break Granite Shield before you commit with Judgment, or your damage is wasted on his high Armor.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "ability", "key": "Garen-E", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Garen:Malphite:4",
+          "text": "Keep Demacian Justice for when Malphite is low; his shield does not stop true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Malphite", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c718f57bd3bb63ccdaf5045fd9343770473486693d6e5bf88a5fc4f5b534a52",
+      "tips": [
+        {
+          "id": "top:Garen:Mordekaiser:0",
+          "text": "Use Decisive Strike to get close. It makes Mordekaiser silenced, so he cannot cast Obliterate or Death's Grasp.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 43,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "silenced", "start": 55, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 83,
+              "end": 93
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 97,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Garen:Mordekaiser:1",
+          "text": "Stay out of a long fight once Darkness Rise is on. His aura hurts you every second near him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 30,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Garen:Mordekaiser:2",
+          "text": "Walk beside minions when Death's Grasp is coming. Stand away from them when you want to hit him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 25,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Garen:Mordekaiser:3",
+          "text": "Use Courage when his Obliterate lands, to shrink the hit. It also helps against his aura.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 21,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Garen:Mordekaiser:4",
+          "text": "Hit Mordekaiser when his Indestructible is on cooldown, so he has no shield to take your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 25,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Garen:Mordekaiser:5",
+          "text": "Stay away from low health around Mordekaiser. Realm of Death cuts you off from help and from your own ultimate.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 46,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "de52fca67cf051aba35498ed289d32e5548db56daedcbd005ca0c20831c67f67",
+      "tips": [
+        {
+          "id": "top:Garen:Naafiri:0",
+          "text": "Use Decisive Strike to silence Naafiri when she dashes in, so she cannot use her abilities mid-trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Naafiri", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Garen:Naafiri:1",
+          "text": "Spin Judgment when Naafiri and her packmates are all close; it hits everything around you. Step in only when you can stay on her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Garen:Naafiri:2",
+          "text": "Press Courage just before her burst lands; the damage cut and shield blunt her trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Naafiri:3",
+          "text": "Finish Naafiri with Demacian Justice once she is low. It does more damage the less health she has.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Garen-R", "start": 20, "end": 36 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Naafiri:4",
+          "text": "Stay out of her fights when you are hurt. Perseverance heals you only after you avoid damage for a while, so back off and let it work.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 42,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c1ac0c625696be0aa373eafa054cff671e3c23e33340a8b5009c6bf30023568",
+      "tips": [
+        {
+          "id": "top:Garen:Nasus:0",
+          "text": "Save Decisive Strike for when Nasus has used Wither. It removes the slow and gives you speed to close in, and the hit silences him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nasus", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Nasus-W", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "silenced", "start": 118, "end": 126 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Garen:Nasus:1",
+          "text": "Trade with Judgment when only Nasus is near you, so he takes full damage. Spin away from minions that soak it up.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Nasus", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Garen:Nasus:2",
+          "text": "Hit Nasus early, before Siphoning Strike has stacked up. His last hits grow his damage over time.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Nasus:3",
+          "text": "Use Courage when Nasus goes for a big trade. It cuts the damage you take and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Nasus", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Nasus:4",
+          "text": "Finish Nasus with Demacian Justice once his Health is low. Do not chase him into Fury of the Sands, where he is far tougher.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-R", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Nasus-R", "start": 81, "end": 98 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fd72b3765742b4400c5e808e88d5cc24445401de5cb87cb21708e6d03049e185",
+      "tips": [
+        {
+          "id": "top:Garen:Olaf:0",
+          "text": "Walk out of the way of Olaf's Undertow axe; if it hits, you are slowed and lose Armor.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Olaf:1",
+          "text": "Use Decisive Strike to remove the slow from Undertow and close in. Your next attack silences him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "silenced", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Garen:Olaf:2",
+          "text": "Stand between Olaf and his axe so he cannot pick it up and throw Undertow again quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Garen:Olaf:3",
+          "text": "Do not try to stun or lock Olaf down while Ragnarok is up; he is immune. Back off or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Olaf-R", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Olaf:4",
+          "text": "Use Courage when Olaf comes in with Tough It Out, to blunt his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Olaf", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Olaf-W", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Olaf:5",
+          "text": "Finish a hurt Olaf with Demacian Justice before he becomes dangerous.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Garen-R", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ded62652fa1b14571219b3a3a74e3c8204b75d0383c3b11332070177fcfec64a",
+      "tips": [
+        {
+          "id": "top:Garen:Ornn:0",
+          "text": "Stay out of walls' reach when Ornn is near; Searing Charge only stuns you if he slams into terrain beside you. Fight in open space.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Ornn-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Garen:Ornn:1",
+          "text": "Use Decisive Strike to shake off the slow from Volcanic Rupture, then hit Ornn to silence him and stop his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 47, "end": 63 },
+            { "kind": "champion", "key": "Ornn", "start": 74, "end": 78 },
+            { "kind": "keyword", "key": "silenced", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Garen:Ornn:2",
+          "text": "Trade with Judgment when only Ornn is in range, so he takes the full damage. Back off before his Bellows Breath lands.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Ornn", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Ornn-W", "start": 97, "end": 111 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Garen:Ornn:3",
+          "text": "Press Courage when Ornn commits to a trade; it cuts the damage you take and gives a brief shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Ornn", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Garen:Ornn:4",
+          "text": "Stay out of his fire and keep your distance; Perseverance only heals you when you avoid damage for a while.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 45,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Garen:Ornn:5",
+          "text": "Finish a hurt Ornn with Demacian Justice. It deals true damage, so his armor and magic resist won't reduce it.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Garen-R", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c3d24e781d01490fc19d8c2d428821441c35ee284d0d3cd752234f2bb022127e",
+      "tips": [
+        {
+          "id": "top:Garen:Pantheon:0",
+          "text": "Walk up and use Judgment only when Pantheon is close, and keep minions out of its range so it hits only him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 16, "end": 24 },
+            { "kind": "champion", "key": "Pantheon", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Garen:Pantheon:1",
+          "text": "Save Courage for when Pantheon jumps on you with Shield Vault. It cuts the damage you take in the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Pantheon:2",
+          "text": "Use Decisive Strike to close the gap when Pantheon backs off, since it also gives you move speed. His spells go quiet while he is silenced.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 42, "end": 50 },
+            { "kind": "keyword", "key": "silenced", "start": 130, "end": 138 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Garen:Pantheon:3",
+          "text": "Go around Pantheon when he braces with Aegis Assault, since he blocks damage from the front. Wait out the channel.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Garen:Pantheon:4",
+          "text": "Step out of the way of Comet Spear when he holds it to throw it. His spear hurts more against low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Garen:Pantheon:5",
+          "text": "Look for Demacian Justice once Pantheon is low, as the damage grows with his missing health. Do not let him trade you down first.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Pantheon", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7db7a6796322b0cf1c8ca94b299fa216e28892fb1a107d56e33061c1009e337b",
+      "tips": [
+        {
+          "id": "top:Garen:Quinn:0",
+          "text": "Quinn's Blinding Assault is a straight line that stops at the first enemy. Stand behind a minion so it hits that minion instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 8, "end": 24 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Garen:Quinn:1",
+          "text": "Use Decisive Strike after she slows you with Vault; it removes the slow and gives you speed to close the gap. Your next hit silences her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Quinn-E", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "silenced", "start": 124, "end": 132 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Garen:Quinn:2",
+          "text": "Fight in a lane where she is alone. Spin Judgment on only her, because it hits hardest on a single target.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Garen:Quinn:3",
+          "text": "Turn on Courage when she starts a trade. It cuts her damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Quinn:4",
+          "text": "Hit her with Demacian Justice when she is low. She is easy to finish after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 13, "end": 29 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Garen:Quinn:5",
+          "text": "Stay out of her reach after trades so Perseverance heals you. Use the time to farm.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 38,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "eeadb3dbf454d12467122267008ad7aaede1ee37f8936403b43ade86c31b447f",
+      "tips": [
+        {
+          "id": "top:Garen:Renekton:0",
+          "text": "Spin Judgment only when Renekton is near and your Decisive Strike is ready; the silence stops his Slice and Dice escape.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Renekton", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Garen-Q", "start": 50, "end": 65 },
+            { "kind": "keyword", "key": "silenced", "start": 80, "end": 87 },
+            { "kind": "ability", "key": "Renekton-E", "start": 98, "end": 112 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Renekton:1",
+          "text": "Press Courage as Renekton hits you with Ruthless Predator; it shields you and cuts the damage, and it makes you harder to stun.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Renekton", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Renekton-W", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Garen:Renekton:2",
+          "text": "Watch his Fury; once it is high his stun lasts longer and his Slice and Dice hits harder, so back off or save Courage.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 62, "end": 76 },
+            { "kind": "ability", "key": "Garen-W", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Garen:Renekton:3",
+          "text": "Stay out of reach when your health is low and use Demacian Justice when Renekton is low enough to be finished.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 50, "end": 66 },
+            { "kind": "champion", "key": "Renekton", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9d3bf2e5eb08d7dd5a8513991769f8daca9495602ddaabe4b677dac03d6692e9",
+      "tips": [
+        {
+          "id": "top:Garen:Riven:0",
+          "text": "Use Decisive Strike when Riven dashes in; it silences her on your next attack and cuts her combo short.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Riven", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Garen:Riven:1",
+          "text": "Press Courage just before her Ki Burst lands; the shield and tenacity shorten the stun and soften her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Riven-W", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:Riven:2",
+          "text": "Use Demacian Justice when Riven is low on health; it deals true damage and hits harder the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Riven", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Riven:3",
+          "text": "Stay out of fights when you are hurt and wait for Perseverance to heal you, since she is hard to chase down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 50,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Garen:Riven:4",
+          "text": "Start Judgment when she is next to you and no minions are near, so she is the nearest enemy and takes the most damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f257e60d4056e94a21cda17c48f378a9db28782ec25eaebea958089299ecc14a",
+      "tips": [
+        {
+          "id": "top:Garen:Rumble:0",
+          "text": "Close the gap on Rumble while his Electro Harpoon is on cooldown. Walk up through minions so you are harder to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Rumble-E", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Garen:Rumble:1",
+          "text": "Use Decisive Strike to clear his slow and sprint in. Then hit him to silence him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "silenced", "start": 69, "end": 76 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Garen:Rumble:2",
+          "text": "Trade with Judgment when Rumble is next to you. It's strongest on a single target, so avoid hitting minions.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Rumble", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Garen:Rumble:3",
+          "text": "Go in when Rumble Overheats. He can't cast spells for a few seconds and his Flamespitter can't hurt you.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 76, "end": 88 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Garen:Rumble:4",
+          "text": "Use Courage when Flamespitter or Electro Harpoon is coming at you. It cuts damage, and Rumble deals magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Rumble-E", "start": 33, "end": 48 },
+            { "kind": "champion", "key": "Rumble", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Garen:Rumble:5",
+          "text": "Step out of The Equalizer's fire quickly. Standing in it costs you a lot of Health.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Rumble:6",
+          "text": "Finish Rumble with Demacian Justice once he is low on Health.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Garen-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a7c8e39e0c7c6e44d5a348055fe2e1f8588693a5e803ae1b805dfc8f681f3a7b",
+      "tips": [
+        {
+          "id": "top:Garen:Sett:0",
+          "text": "Hit Sett with Decisive Strike before he can punch you; the silence stops his Haymaker and Facebreaker follow-up for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Garen-Q", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 59, "end": 66 },
+            { "kind": "ability", "key": "Sett-W", "start": 77, "end": 85 },
+            { "kind": "ability", "key": "Sett-E", "start": 90, "end": 101 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Sett:1",
+          "text": "Use Decisive Strike to shake off the slow from Facebreaker and keep chasing him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Sett-E", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Garen:Sett:2",
+          "text": "Press Courage when Sett starts Haymaker; it cuts the damage you take and gives a brief shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Sett", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Sett-W", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Garen:Sett:3",
+          "text": "Keep minions out of Judgment's spin when you trade so Sett takes the full damage; fight him alone.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "Sett", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Garen:Sett:4",
+          "text": "Take cheap trades while Sett has little Grit stored; hits you take feed Haymaker, so avoid long punch-ups.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sett-W", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Garen:Sett:5",
+          "text": "Finish a hurt Sett with Demacian Justice; he will out-heal you in long fights as his health drops.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Garen-R", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e309a7ecafda1a3bf3382f9b8aea2ca05e88f247e198eae77cdc0b8a3ff18fb",
+      "tips": [
+        {
+          "id": "top:Garen:Shen:0",
+          "text": "Walk up with Decisive Strike ready; it removes slows from Shen's Twilight Assault and its silence stops him from casting abilities mid-trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Shen", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Shen-Q", "start": 65, "end": 81 },
+            { "kind": "keyword", "key": "silenced", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Shen:1",
+          "text": "Step out of the way of Shadow Dash. If Shen misses, jump on him with Judgment while his dash is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Shen", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Garen-E", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Garen:Shen:2",
+          "text": "Use Courage when Shen's taunt lands on you; it cuts the damage you take while he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Shen", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Shen:3",
+          "text": "Stay out of Shen's reach after a trade so Perseverance heals you back up.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 12, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 42,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Garen:Shen:4",
+          "text": "Finish a low-health Shen with Demacian Justice. Watch for his global ultimate when an ally is in trouble elsewhere.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Garen-R", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "de9e22c08cb32990a3463d3dc97b1a7d85aaad1a4f13327cc7e28b4acf40493b",
+      "tips": [
+        {
+          "id": "top:Garen:Singed:0",
+          "text": "Do not chase Singed through his Poison Trail. He wants you to follow, and it hurts you the whole way.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Singed-Q", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Garen:Singed:1",
+          "text": "Stay out of Mega Adhesive when Singed goes for Fling. Landing in it roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Singed", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Singed-E", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Garen:Singed:2",
+          "text": "Use Decisive Strike to shake off Mega Adhesive's slow, then hit Singed and silence him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Singed-W", "start": 33, "end": 46 },
+            { "kind": "champion", "key": "Singed", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "silenced", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Garen:Singed:3",
+          "text": "Press Courage when Singed starts Fling. It shields you and makes you harder to stop.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Singed", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Singed-E", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Garen:Singed:4",
+          "text": "Use Demacian Justice on a hurt Singed who tries to run. It deals more damage the lower his health is.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Singed", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "18f94ce886ed6faa72f9e795e9622478b98151ca4d4e0219aba5085e1ae5fa1e",
+      "tips": [
+        {
+          "id": "top:Garen:Sion:0",
+          "text": "Step out of Decimating Smash's line, or walk away as Sion charges it. A long charge is easy to see coming and costly to eat.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Garen:Sion:1",
+          "text": "Use Decisive Strike to clear the slow from Roar of the Slayer and close the gap. Then hit Sion to silence him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Sion-E", "start": 43, "end": 61 },
+            { "kind": "champion", "key": "Sion", "start": 90, "end": 94 },
+            { "kind": "keyword", "key": "silenced", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Garen:Sion:2",
+          "text": "Press Courage when Sion starts a long charge. The shield and Tenacity shorten the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Sion", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Garen:Sion:3",
+          "text": "Spin Judgment with only Sion in range for full damage. Its Armor shred makes later trades hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Garen:Sion:4",
+          "text": "Do not finish Sion carelessly with low health. His Glory in Death brings him back with fast, healing attacks, so walk away from him.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Sion-passive", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d9611cfa656689be29ea95f0a37c64477dbfe8da0f0f0fb7dcbc7a013999ed0",
+      "tips": [
+        {
+          "id": "top:Garen:TahmKench:0",
+          "text": "Walk up with Decisive Strike ready; it clears any slow Tahm Kench puts on you and speeds you up to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 13, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "TahmKench", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Garen:TahmKench:1",
+          "text": "Trade with Judgment when Tahm Kench stands alone near you, so every spin hits him and the nearest-enemy bonus lands on him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "TahmKench", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Garen:TahmKench:2",
+          "text": "Fight him when he has just spent Thick Skin on a shield; he gave up his healing and stores no new grey health for a while.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Garen:TahmKench:3",
+          "text": "Hit him and walk away so Perseverance can heal you, because it only starts after you have gone unhurt for a while.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 25,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:TahmKench:4",
+          "text": "Press Courage before his Tongue Lash stun or Abyssal Dive lands to cut the damage. It also gives tenacity briefly, so you are stunned for less time.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 25, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 126, "end": 133 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Garen:TahmKench:5",
+          "text": "Use Demacian Justice once he is low; the true damage can finish him, and Devour is no help to him once he has been hit by it.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b0812ea1b81fb045c9ce2e2d936dbead35020c9c8298695406b870cde8585359",
+      "tips": [
+        {
+          "id": "top:Garen:Teemo:0",
+          "text": "Close the gap when Blinding Dart is on cooldown; Teemo is weak up close and cannot easily escape you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 19, "end": 32 },
+            { "kind": "champion", "key": "Teemo", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Garen:Teemo:1",
+          "text": "Use Decisive Strike to remove slows from a Noxious Trap and silence Teemo as you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Teemo-R", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 67 },
+            { "kind": "champion", "key": "Teemo", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Garen:Teemo:2",
+          "text": "Do not walk into brush blindly; Teemo can sit there invisible with Guerrilla Warfare and get a free attack on you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 67,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Garen:Teemo:3",
+          "text": "Use Courage when you are about to take his darts and poison; it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Garen:Teemo:4",
+          "text": "Mushrooms can be shot down by your attacks; clear them where you plan to walk instead of stepping on them.",
+          "refs": [],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Garen:Teemo:5",
+          "text": "Finish Teemo with Demacian Justice once his health is low; he cannot easily dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-R", "start": 18, "end": 34 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d7913ecbc9bd9132879e71444423babcb71c45a24cbd3c05af56e63491c875f",
+      "tips": [
+        {
+          "id": "top:Garen:Tryndamere:0",
+          "text": "Hit Tryndamere with Decisive Strike when he steps up; it silences him and removes slows from you.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Garen-Q", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 57, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Garen:Tryndamere:1",
+          "text": "Do not use Demacian Justice while Undying Rage is active. Wait until it ends, then finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 11, "end": 27 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Garen:Tryndamere:2",
+          "text": "Press Courage when Tryndamere commits to a trade; it reduces his damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Tryndamere", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Tryndamere:3",
+          "text": "Harass Tryndamere early and stay out of reach, so he cannot build Fury or heal with Bloodlust.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 7, "end": 17 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 84, "end": 93 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Garen:Tryndamere:4",
+          "text": "Mocking Shout slows you when you face away. Turn and fight, or use Decisive Strike to clear the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Garen-Q", "start": 67, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b5083540fe337324e27bd4bdd38debe4bdc4cb44de519f48026f5e3babe236a9",
+      "tips": [
+        {
+          "id": "top:Garen:Urgot:0",
+          "text": "Use Decisive Strike to clear Corrosive Charge's slow and run down Urgot. Then silence him so he cannot cast.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Urgot-Q", "start": 29, "end": 45 },
+            { "kind": "champion", "key": "Urgot", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "silenced", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Garen:Urgot:1",
+          "text": "Do not walk straight at Urgot when Disdain is ready; it stuns you and throws you back.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Urgot-E", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Garen:Urgot:2",
+          "text": "Press Courage when Urgot starts Purge; it cuts the damage you take from his steady fire.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Urgot", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Urgot-W", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Garen:Urgot:3",
+          "text": "Urgot moves slower while he fires Purge, so catch him then and spin Judgment on him.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Urgot-W", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Garen-E", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:Urgot:4",
+          "text": "Stay out of his legs' reach and avoid trading often; each hit stops your Perseverance regeneration.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 73,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Garen:Urgot:5",
+          "text": "Save Demacian Justice for when Urgot is hurt; it hits harder the less health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Urgot", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "01d5e790221c358d684940ba2a8a31a8dd359bd12a78fd5fb485afc605024e91",
+      "tips": [
+        {
+          "id": "top:Garen:Varus:0",
+          "text": "Hit Varus with Decisive Strike when you walk up; he is silenced and cannot cast Piercing Arrow or Hail of Arrows while you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Garen-Q", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 55, "end": 63 },
+            { "kind": "ability", "key": "Varus-Q", "start": 80, "end": 94 },
+            { "kind": "ability", "key": "Varus-E", "start": 98, "end": 112 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Garen:Varus:1",
+          "text": "Decisive Strike removes slows and speeds you up, so use it to close the gap if Hail of Arrows slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Varus-E", "start": 79, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Garen:Varus:2",
+          "text": "Use Courage when Varus lands a charged Piercing Arrow or when you are about to be rooted and burst.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Varus", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Varus-Q", "start": 39, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Garen:Varus:3",
+          "text": "Spin with Judgment once you are on top of Varus; he is squishy, and the spin shreds his Armor if it keeps hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Varus", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Garen:Varus:4",
+          "text": "Stay out of his long Piercing Arrow range and avoid being poked for free, so Perseverance can heal you.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 21, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 77,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Garen:Varus:5",
+          "text": "Finish a low-health Varus with Demacian Justice; he cannot easily escape once you are on him.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Garen-R", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b07ce42b4e8768a8b69095ec109c5cacf236c8688604f6fbd64ae799748154b9",
+      "tips": [
+        {
+          "id": "top:Garen:Vayne:0",
+          "text": "Use Decisive Strike to chase Vayne. The speed boost closes the gap, and the silence stops her Tumble.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 76, "end": 83 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Garen:Vayne:1",
+          "text": "Stay away from walls when Vayne has Condemn ready. A wall hit stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Garen:Vayne:2",
+          "text": "Use Courage when Vayne is about to hit you with a Silver Bolts attack. It cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Vayne", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Vayne-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Garen:Vayne:3",
+          "text": "Fight Vayne in the open and spin Judgment once you are next to her. She is fragile and can't stand up to your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Garen-E", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Garen:Vayne:4",
+          "text": "Be careful when Vayne uses Final Hour, because her Tumble then makes her invisible. Don't chase her blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Vayne-R", "start": 27, "end": 37 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Vayne:5",
+          "text": "Finish Vayne with Demacian Justice once she is low. She has little health, so it kills quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-R", "start": 18, "end": 34 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e03551606a32d911d081c2e5ad9a7237d1106e4b957dca7718b095100dee0a34",
+      "tips": [
+        {
+          "id": "top:Garen:Vladimir:0",
+          "text": "Close the gap with Decisive Strike; the speed boost lets you catch Vladimir, and the silence stops his Sanguine Pool.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 19, "end": 34 },
+            { "kind": "champion", "key": "Vladimir", "start": 67, "end": 75 },
+            { "kind": "keyword", "key": "silenced", "start": 85, "end": 92 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 103, "end": 116 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Vladimir:1",
+          "text": "Use Decisive Strike to clear Vladimir's slows and run him down.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vladimir", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Garen:Vladimir:2",
+          "text": "Do not start Judgment when Vladimir has Sanguine Pool ready; he can vanish while you spin at nothing.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Vladimir", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Garen:Vladimir:3",
+          "text": "Use Courage to blunt his Transfusion trades and Tides of Blood, and walk up while it is active.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Garen:Vladimir:4",
+          "text": "Finish him with Demacian Justice when he is low; Hemoplague healing can bring him back if you wait.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 16, "end": 32 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d45f2661484db4f15933471051ecd2dde420120524e4dc3a49b77f036f060d88",
+      "tips": [
+        {
+          "id": "top:Garen:Volibear:0",
+          "text": "Use Decisive Strike to clear a slow, then hit him to silence him before he can follow up with Thundering Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 53, "end": 60 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 94, "end": 110 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Garen:Volibear:1",
+          "text": "Press Courage just before his Thundering Smash lands; it cuts the damage and gives a shield and tenacity at the start.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Garen:Volibear:2",
+          "text": "Step out of the Sky Splitter circle once you see him cast it. It takes a moment to land and slows you if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Garen:Volibear:3",
+          "text": "Stay away from him when you are low. Demacian Justice finishes him off, but only if you get close enough to cast it.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Garen:Volibear:4",
+          "text": "Spin Judgment when only he is near, so he is the closest target and takes the extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1a7c290d74bd218e88e373b5f63e4e2db297b6d33638e3bb7800cd361c523b41",
+      "tips": [
+        {
+          "id": "top:Garen:XinZhao:0",
+          "text": "Keep Decisive Strike ready for when Xin Zhao charges in. It frees you from his slows and silences him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 36, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 },
+            { "kind": "keyword", "key": "silenced", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Garen:XinZhao:1",
+          "text": "Use Courage as Xin Zhao starts his combo; it cuts his damage and its shield helps against his knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Garen:XinZhao:2",
+          "text": "Spin Judgment when Xin Zhao is alone next to you, so he is the nearest enemy and takes the extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Garen:XinZhao:3",
+          "text": "Stay out of damage between fights so Perseverance heals you. Xin Zhao's short trades will cut that off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 37,
+              "end": 49
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Garen:XinZhao:4",
+          "text": "Finish Xin Zhao with Demacian Justice once his health is low; Crescent Guard's immunity can stop you reaching him later.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Garen-R", "start": 21, "end": 37 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 62, "end": 76 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e1eac2374e21155ed444e6a782c24668528e5b9cd1bb710f20dbcbde546911e2",
+      "tips": [
+        {
+          "id": "top:Garen:Yasuo:0",
+          "text": "Use Decisive Strike when Yasuo dashes at you or tries to trade; it silences him so he cannot use his abilities for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Garen:Yasuo:1",
+          "text": "Keep Courage ready for his whirlwind or a full trade; it cuts the damage you take and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Garen:Yasuo:2",
+          "text": "Spin Judgment when Yasuo is next to you and no minions are in range, so the full damage lands on him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Garen:Yasuo:3",
+          "text": "Finish him with Demacian Justice once he is low; it deals more damage the less health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Garen:Yasuo:4",
+          "text": "Stay out of his hits when you can; Perseverance heals you quickly once you go a while without taking damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 35,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "886e32e656e8b92edcb8c026257a243b909047507722707bf1f3eeec66803867",
+      "tips": [
+        {
+          "id": "top:Garen:Yone:0",
+          "text": "Walk up with Decisive Strike ready; its silence stops Yone from using his abilities to escape or fight back when you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 13, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 40, "end": 47 },
+            { "kind": "champion", "key": "Yone", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Yone:1",
+          "text": "Use Judgment when Yone is the only enemy near you, so he is the nearest target and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Garen:Yone:2",
+          "text": "Press Courage as Yone starts a trade, so you take less damage and get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Yone:3",
+          "text": "Stay out of Yone's range when you are hurt, and wait for Perseverance to heal you back up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 12, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 57,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Garen:Yone:4",
+          "text": "Finish Yone with Demacian Justice once he is low; it deals more damage the less health he has.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Garen-R", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b0c8e91e8aebf0c95b7ff1090307c5c757d9285fc055166b3e701a3fcae261ef",
+      "tips": [
+        {
+          "id": "top:Garen:Yorick:0",
+          "text": "Save Decisive Strike to silence Yorick when he commits, and to shake off his Mourning Mist slow.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Yorick", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Yorick-E", "start": 77, "end": 90 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Garen:Yorick:1",
+          "text": "Kill Mist Walkers quickly; a single attack kills one. Judgment spins through several at once.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Garen:Yorick:2",
+          "text": "Hit Dark Procession's wall to break it, or walk away from it. It only blocks you for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Garen:Yorick:3",
+          "text": "Avoid long trades after Mourning Mist; it cuts your Armor. Use Courage to take less damage when Yorick's Last Rites lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Garen-W", "start": 63, "end": 70 },
+            { "kind": "champion", "key": "Yorick", "start": 96, "end": 102 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 105, "end": 115 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Garen:Yorick:4",
+          "text": "Use Demacian Justice on a Yorick who has been hurt, ideally before he heals back up.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yorick", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Garen:Yorick:5",
+          "text": "Avoid fighting beside a freshly summoned Maiden of the Mist; kill Yorick first or walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dedf746077dc4c9c798510c46f5d0f0410ac29d8f6325db0e183f908a6978e9d",
+      "tips": [
+        {
+          "id": "top:Garen:Zaahen:0",
+          "text": "Use Decisive Strike when Zaahen pulls you in with Dreaded Return; it clears slows and its silence stops his follow-up abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zaahen", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 50, "end": 64 },
+            { "kind": "keyword", "key": "silenced", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Garen:Zaahen:1",
+          "text": "Sidestep the line of Dreaded Return, or stand behind minions. Minions in its path will stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "top:Garen:Zaahen:2",
+          "text": "Spin Judgment only when Zaahen is the lone target, so he is the nearest enemy and takes the extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Zaahen", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Garen:Zaahen:3",
+          "text": "Do not trade for long once Zaahen has landed several hits and is hitting harder. Back off and let Perseverance heal you.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 27, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 98,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Garen:Zaahen:4",
+          "text": "Finish Zaahen with Demacian Justice when he is low, but know he can revive if his stacks from Cultivation of War are full.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Garen-R", "start": 19, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 94,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Garen:Zaahen:5",
+          "text": "Press Courage as Zaahen goes for a big trade; it cuts his damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Zaahen", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

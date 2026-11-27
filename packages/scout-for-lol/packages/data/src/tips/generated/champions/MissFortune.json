@@ -1,0 +1,2713 @@
+{
+  "schemaVersion": 1,
+  "champion": "MissFortune",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "a64a96fa8d68f977b664faec99e8cc8bf4bb989532562b6c40730c07d331798f",
+      "tips": [
+        {
+          "id": "adc:MissFortune:general:0",
+          "text": "Use Double Up on the minion in front of an enemy champion who is hiding behind it; the shot bounces back to hit them.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:MissFortune:general:1",
+          "text": "Try to avoid taking damage so Strut gives you big Move Speed. Then you can step in to trade and step back out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 30,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:MissFortune:general:2",
+          "text": "Keep attacking new targets with Love Tap while Strut is on cooldown; each new target shortens the wait.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 32,
+              "end": 40
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 47,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:MissFortune:general:3",
+          "text": "Switch targets between auto attacks so Love Tap's bonus damage goes off more often.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 39,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:MissFortune:general:4",
+          "text": "Cast Make It Rain on enemies who are chasing you or standing in a choke; they are slowed and you see the area.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 5,
+              "end": 17
+            },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:MissFortune:general:5",
+          "text": "Start Bullet Time when enemies are bunched up in front of you and cannot easily leave. Stay still, because moving or casting other abilities cancels it.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-R", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "adc:MissFortune:general:6",
+          "text": "Flash or being hit by a hard disruption can stop Bullet Time, so wait until the enemy's key disables are used.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 49,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:MissFortune:combo:0",
+          "name": "Minion bounce Double Up",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "MissFortune-Q" }],
+          "when": "When an enemy champion stands behind their minion wave and you can't poke them directly.",
+          "whenRefs": [],
+          "text": "Cast it on the minion directly in front of the champion. The shot bounces onto the champion behind it, and it crits if the minion dies.",
+          "textRefs": []
+        },
+        {
+          "id": "adc:MissFortune:combo:1",
+          "name": "Flash Bullet Time redirect",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "MissFortune-R" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When enemies are trying to dodge your ultimate or are standing off to the side of your cast.",
+          "whenRefs": [],
+          "text": "Start the ultimate, then Flash right away in the cast time. Flash turns your facing, so the cone fires in the new direction and catches them off guard.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 25, "end": 30 },
+            { "kind": "summoner-spell", "key": "4", "start": 60, "end": 65 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "dfd0caabd7e7b1734b1a524b5fc1ab277c3a2f4426bba8537c1840d71296df40",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Aphelios:0",
+          "text": "Stay out of Aphelios's reach when his Gravitum is out; its slow sets up a root, so don't walk up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 12, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:MissFortune:Aphelios:1",
+          "text": "Put Make It Rain on him when he stands in a clump of minions or walks up to trade; it slows him and reveals the area.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:MissFortune:Aphelios:2",
+          "text": "Aim Double Up at a minion standing in front of Aphelios so the bounce reaches him from outside his range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Aphelios", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:MissFortune:Aphelios:3",
+          "text": "Use Strut to walk away from his trades; Love Tap on new targets shortens its cooldown, so hit both him and his support.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-W", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 40,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:MissFortune:Aphelios:4",
+          "text": "At level 6, fire Bullet Time when he and his support are close together and have no escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 17,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d6f2175382a10d9a93c45bcfeb766e368ef68d219ca8e7bda778a8e73a895f94",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Ashe:0",
+          "text": "Use Double Up on a minion standing in front of Ashe so the shot bounces onto her. It gets you poke without walking into her range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Ashe", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:MissFortune:Ashe:1",
+          "text": "Put Make It Rain on Ashe when she steps up to trade. It slows her so she cannot easily kite you or run away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Ashe", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:MissFortune:Ashe:2",
+          "text": "Keep your distance from Ashe's arrows. If a minion is between you, her Volley hits the minion first and not you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Ashe-W", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "adc:MissFortune:Ashe:3",
+          "text": "Stay out of her damage and Strut makes you very fast. Use that speed to walk away from her slow and her arrow.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 27,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:MissFortune:Ashe:4",
+          "text": "Ashe has few escapes, so Bullet Time at level 6 can punish her if she is stuck or slowed. Aim it where she is standing.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 25,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:MissFortune:Ashe:5",
+          "text": "Stay out of Enchanted Crystal Arrow's line when it is ready, especially when you are far from allies. A hit means a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 12, "end": 35 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a9f1df70ab92a3e0c09f496539f6ab12373b68c6e40bc216c51fca2d581194e7",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Brand:0",
+          "text": "Stay out of Sear's line, and keep a minion between you and Brand. Sear stops at the first unit it hits, so a minion in front of you soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Brand", "start": 59, "end": 64 },
+            { "kind": "ability", "key": "Brand-Q", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:MissFortune:Brand:1",
+          "text": "Walk out of Pillar of Flame once you see it start. It lands after a short delay, so sidestepping it is easy.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:MissFortune:Brand:2",
+          "text": "Use Make It Rain on Brand when he steps up to cast. It slows him and forces him back out of range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Brand", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "adc:MissFortune:Brand:3",
+          "text": "Keep Strut ready to run. It speeds you up so you can dodge his spells and get away from the burn.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-W", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:MissFortune:Brand:4",
+          "text": "Stay away from your support when Brand's Conflagration is ready. Standing close together lets the spread hit you both.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-E", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:MissFortune:Brand:5",
+          "text": "Use Double Up on a minion so it bounces to Brand when he stands behind his wave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Brand", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:MissFortune:Brand:6",
+          "text": "Step away from your allies as soon as you see Pyroclasm launch. The missile starts slow, so you have time to spread out.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "be26ba139ee5f6d43436926723752e9df2ce891cbb1e85314bd341079c9e4bd7",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Caitlyn:0",
+          "text": "Stay out of Caitlyn's long basic attack range early; she outranges you, so trade only when her minions or Piltover Peacemaker are not lined up on you.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 106, "end": 125 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Caitlyn:1",
+          "text": "Do not walk over a Yordle Snap Trap; being rooted next to her is deadly. Wait for the trap to be sprung or hit her with Make It Rain from a distance first.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 120,
+              "end": 132
+            }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:MissFortune:Caitlyn:2",
+          "text": "Cast Double Up on a minion that has Caitlyn behind it so the shot bounces to her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Caitlyn", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:MissFortune:Caitlyn:3",
+          "text": "Make It Rain slows Caitlyn when she steps up to last-hit. Follow it with your attacks, then leave before she trades back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 0,
+              "end": 12
+            },
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Caitlyn", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:MissFortune:Caitlyn:4",
+          "text": "Keep Strut ready when you walk away from a trade. Her damage cancels the speed bonus, so use the active to get it back.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-W", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:MissFortune:Caitlyn:5",
+          "text": "Once you have level 6, Bullet Time can punish Caitlyn when she is stuck in her own net recoil or rooted. Do not use it if she can walk out of the cone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Caitlyn", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0353b6134cc58cfd6c1fcf4a105f95f28283051c55e689e133647ca28aaa8b9f",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Cassiopeia:0",
+          "text": "Keep moving and avoid damage so Strut gives you its full speed bonus; it helps you step out of Cassiopeia's range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 32,
+              "end": 37
+            },
+            { "kind": "champion", "key": "Cassiopeia", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:MissFortune:Cassiopeia:1",
+          "text": "Dodge Noxious Blast by walking sideways after it lands; it explodes after a short delay, so don't stand still.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:MissFortune:Cassiopeia:2",
+          "text": "Hit Cassiopeia with Make It Rain when she walks forward to trade; she is slowed and you get sight of the area.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 20,
+              "end": 32
+            },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:MissFortune:Cassiopeia:3",
+          "text": "Bounce Double Up off a minion to reach Cassiopeia when she stays back behind her wave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 7,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Cassiopeia", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:MissFortune:Cassiopeia:4",
+          "text": "Stay out of Miasma; you are slowed and cannot use movement abilities inside it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 12,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:MissFortune:Cassiopeia:5",
+          "text": "Face away from Cassiopeia when she casts Petrifying Gaze so you are slowed instead of stunned. Then fight back with Bullet Time.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 41,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 116,
+              "end": 127
+            }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4e85d48fba15e95281d81443f0e71ec85de9f168aeef6ed40b1f23999025a40b",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Corki:0",
+          "text": "Walk up and use Double Up on a minion standing in front of Corki; the shot bounces to him, so you can poke without aiming at him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 16,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Corki", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "poke", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:MissFortune:Corki:1",
+          "text": "Keep away from Phosphorus Bomb. Staying out of the brush matters little, since the bomb lights you up anyway.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:MissFortune:Corki:2",
+          "text": "Use Make It Rain to slow Corki when he flies in with Valkyrie, then hit him while he is exposed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Corki", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Corki-W", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:MissFortune:Corki:3",
+          "text": "Stay behind your minions and avoid being hit, so Strut keeps giving you the speed to dodge his missiles.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 49,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:MissFortune:Corki:4",
+          "text": "Corki's missiles explode on the first enemy they hit, so use your minions as a shield. Splash can still reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bae46ed2b4519d50af6bbebf85ca674cb414c38ca9e61cabcd1cbb40e62aa15a",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Draven:0",
+          "text": "Use Double Up on a minion standing in front of Draven so the shot bounces to him, especially when he stays behind his minions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Draven", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:MissFortune:Draven:1",
+          "text": "Make It Rain on Draven when he steps up to catch an axe; he is slowed and takes damage over time while he lines up the catch.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 0,
+              "end": 12
+            },
+            { "kind": "champion", "key": "Draven", "start": 16, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:MissFortune:Draven:2",
+          "text": "Keep hitting Draven with Love Tap on fresh targets while Strut is down; each new target shortens its cooldown for a quick speed burst.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 13, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 25,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 57,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:MissFortune:Draven:3",
+          "text": "Stay out of his damage so Strut's speed bonus builds, then use it to dodge Stand Aside or chase him down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 26,
+              "end": 31
+            },
+            { "kind": "ability", "key": "Draven-E", "start": 75, "end": 86 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:MissFortune:Draven:4",
+          "text": "Sidestep Stand Aside; it is a straight line that knocks you aside and slows you, and he usually follows it with a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:MissFortune:Draven:5",
+          "text": "Start Bullet Time when Draven is slowed or stuck in a fight; it fires in a cone, so keep him in front of you for the whole channel.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 6,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Draven", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "22ccb1c5d55800499017149b5448b0bcd5355a14b1916910c9b4e78640898e18",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Ezreal:0",
+          "text": "Stay behind your minions so Mystic Shot hits them first; it stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:MissFortune:Ezreal:1",
+          "text": "Walk up and hit Ezreal with Love Tap, then use Double Up on a minion in front of him so it bounces to him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 16, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 28,
+              "end": 36
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 47,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:MissFortune:Ezreal:2",
+          "text": "Put Make It Rain where Ezreal wants to stand to last-hit. He is slowed and takes damage, so he can't farm freely.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Ezreal:3",
+          "text": "Ezreal is fragile, so look for a trade when his Arcane Shift is on cooldown. Without it he has a hard time escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Ezreal:4",
+          "text": "Use Strut to chase him down or to get out of range after a trade. Any damage you take cancels its passive speed.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-W", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:MissFortune:Ezreal:5",
+          "text": "Aim Bullet Time at Ezreal once he is slowed or has used Arcane Shift. Channeling in a cone punishes him for trying to run.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bdaf7cd48b41a79a858b1ccf410749ce7a4225226a55d90e9d241e856df30ddd",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Hwei:0",
+          "text": "Walk out of Hwei's Crushing Maw and Gaze of the Abyss range and keep your distance. Staying out of his skillshots keeps Strut's speed bonus ticking.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 12, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 120,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:MissFortune:Hwei:1",
+          "text": "Rush Hwei right after he paints a Torment spell; he is open to a fast trade. Start with Double Up, then keep shooting.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 88,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "adc:MissFortune:Hwei:2",
+          "text": "Hwei's Severing Bolt hits hard when you are alone or can't move. Keep moving and stay near minions or allies so you aren't isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "isolated", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "isolated", "start": 123, "end": 131 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:MissFortune:Hwei:3",
+          "text": "Use Make It Rain to slow Hwei when he steps up to cast, then trade while he is slowed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Hwei", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a96c9d67bddd0d1a0d8052bed08b7325bc51d248b45ea60edc63d98b5c362c86",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Jhin:0",
+          "text": "Walk up and use Double Up on a minion in front of Jhin so the shot bounces onto him; it works well when he stands behind his minions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 16,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Jhin", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:MissFortune:Jhin:1",
+          "text": "Stay out of damage so Strut gives you full speed. Jhin's Deadly Flourish only roots a target that was recently hurt, so avoid trading early with your support.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 22,
+              "end": 27
+            },
+            { "kind": "champion", "key": "Jhin", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Jhin-W", "start": 57, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:MissFortune:Jhin:2",
+          "text": "Trade with Love Tap and Make It Rain when Jhin is reloading, since he cannot attack then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 11,
+              "end": 19
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 24,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Jhin", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:MissFortune:Jhin:3",
+          "text": "Use Make It Rain to slow Jhin when he walks into a trap. It also reveals the area, so you can see where he is.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Jhin", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:MissFortune:Jhin:4",
+          "text": "Bullet Time pins him down if you cast it while he is rooted by your support or slowed, but he can still shoot you back with his long-range shots.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-R", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8f6464e12789b62136992134547cfaf8869093bc423947c8dbab140378ac5ee9",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Jinx:0",
+          "text": "Use Double Up on a minion standing in front of Jinx so the shot bounces onto her. It hurts her without you walking into her range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Jinx", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:MissFortune:Jinx:1",
+          "text": "Jinx outranges you with her rockets, so trade when she is busy with minions. Make It Rain keeps her slowed while you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 77,
+              "end": 89
+            },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:MissFortune:Jinx:2",
+          "text": "Keep Strut ready and stay out of her damage so your Move Speed builds up and you can dodge Zap!",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 5,
+              "end": 10
+            },
+            { "kind": "ability", "key": "Jinx-W", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:MissFortune:Jinx:3",
+          "text": "Step up when Flame Chompers! is on cooldown; without it Jinx has little to stop you from reaching her.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Jinx", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:MissFortune:Jinx:4",
+          "text": "Aim Bullet Time at Jinx and her support when they are stuck together. Jinx is easy to burst down in a fight, so make her your first target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Jinx", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Jinx", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "576ee80b699464b585d00c59ceb6b9dea229655f0b7afcdd7360479062bac6d2",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Kaisa:0",
+          "text": "Poke with Double Up by aiming at a minion standing in front of the enemy; it bounces on to Kai'Sa behind it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 10,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Kaisa", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:MissFortune:Kaisa:1",
+          "text": "Put Make It Rain on Kai'Sa when she walks up; she is slowed and cannot easily cleanse it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Kaisa", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:MissFortune:Kaisa:2",
+          "text": "Stay out of damage so Strut gives you full speed, then use it to walk away from her all-in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 22,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:MissFortune:Kaisa:3",
+          "text": "Kai'Sa wants to catch you alone. Stand near your support and keep your Bullet Time ready for when she jumps in with Killer Instinct.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 71,
+              "end": 82
+            },
+            { "kind": "ability", "key": "Kaisa-R", "start": 116, "end": 131 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:MissFortune:Kaisa:4",
+          "text": "Hit minions with Love Tap attacks on different targets while Strut recharges, so you can use its attack speed in trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 17,
+              "end": 25
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 61,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "feefb341ce7150e86cfbc2497119cb1832c8514b3e80d244c03a97d27bdb15bd",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Kalista:0",
+          "text": "Hit Kalista with Make It Rain when she hops in to trade; she is slowed, so her Martial Poise dashes cover less ground.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 17,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "Kalista-passive",
+              "start": 79,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:MissFortune:Kalista:1",
+          "text": "Aim Double Up at a minion standing in front of Kalista so the shot bounces onto her. It lets you poke from long range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Kalista", "start": 47, "end": 54 },
+            { "kind": "keyword", "key": "poke", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:MissFortune:Kalista:2",
+          "text": "Take as little damage as you can between trades. Strut then keeps your speed high, so you can step away from Kalista's dashes.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 49,
+              "end": 54
+            },
+            { "kind": "champion", "key": "Kalista", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:MissFortune:Kalista:3",
+          "text": "Hit Kalista with Love Tap on each new target in a trade. It adds damage and shortens the wait for Strut.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 17,
+              "end": 25
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 98,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:MissFortune:Kalista:4",
+          "text": "Use Bullet Time when Kalista is caught in a fight. If she is held in place, the whole channel can land.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Kalista", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0d5439a714956a6a80ed85f3e274e956b5495b9fb85e7b8dcd7ff06356d7edc4",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Karthus:0",
+          "text": "Stay out of Lay Waste range and keep moving; Strut's speed bonus is lost if Karthus hits you, so dodge his blasts.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 12, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 45,
+              "end": 50
+            },
+            { "kind": "champion", "key": "Karthus", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "adc:MissFortune:Karthus:1",
+          "text": "Use Double Up on a minion standing in front of Karthus so the shot bounces to him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Karthus", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:MissFortune:Karthus:2",
+          "text": "Step out of Defile range when he walks up, then hit him with Make It Rain so he is slowed while he backs off.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 12, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 61,
+              "end": 73
+            },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:MissFortune:Karthus:3",
+          "text": "When Karthus dies he can still cast for a short time, so move away from his body before you fight on.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:MissFortune:Karthus:4",
+          "text": "Watch for the beam of light when he channels Requiem; keep your health high and use Bullet Time to kill him before it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 45, "end": 52 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 84,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "117c802f3b4770ea1bc13932207fa824fb92282cd108e960f93a0a40ac479187",
+      "tips": [
+        {
+          "id": "adc:MissFortune:KogMaw:0",
+          "text": "Walk up and trade when Kog'Maw has used Caustic Spittle; he has little to stop you reaching him and no escape, so stay close and keep hitting.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:MissFortune:KogMaw:1",
+          "text": "Use Double Up on a minion standing in front of Kog'Maw so the shot bounces onto him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "KogMaw", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:MissFortune:KogMaw:2",
+          "text": "Keep Strut ready to close the gap; if you haven't been hit, you move very fast. Keep Love Tap hitting new targets to reduce its cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 5,
+              "end": 10
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 85,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:MissFortune:KogMaw:3",
+          "text": "Make It Rain slows Kog'Maw and can't be cleansed. Use it to stop him backing away, or to cut off his path when he is chasing you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 0,
+              "end": 12
+            },
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "KogMaw", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:MissFortune:KogMaw:4",
+          "text": "Step out of the Void Ooze trail, or you will be slowed. Don't walk through it while fighting.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:MissFortune:KogMaw:5",
+          "text": "Don't stand next to Kog'Maw when he dies; he explodes for true damage after a few seconds, so run away.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f2b14b01aa7d063ad50e7f26657b9efb1c70a20098e3a3fb1d275e4ed6ab92be",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Lucian:0",
+          "text": "Use Double Up on a minion standing in front of Lucian so the shot bounces to him. It lets you poke from outside his range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Lucian", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "adc:MissFortune:Lucian:1",
+          "text": "Drop Make It Rain on Lucian when he dashes in to trade. He is slowed, so he has a harder time getting away from you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 5,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Lucian", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:MissFortune:Lucian:2",
+          "text": "Trade back right after Lucian spends his abilities. He has strong burst but little sustained damage, so a longer fight favors you.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:MissFortune:Lucian:3",
+          "text": "Stay out of his damage so Strut keeps its move speed. It gets you out of his range, and the active gives you attack speed for a fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 26,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:MissFortune:Lucian:4",
+          "text": "Aim Bullet Time at Lucian once he has used Relentless Pursuit. It is channeled and a dash away breaks the lock, so wait until he has no escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Lucian", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Lucian-E", "start": 43, "end": 61 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f34e0595dd1c1a46f29e18afad867c64e6da6b1f4c4218ae8b5bec5108850d89",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Lux:0",
+          "text": "Stay out of a straight line with Lux; Light Binding roots you and leaves you open to her follow-up. Keep minions between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Lux-Q", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:MissFortune:Lux:1",
+          "text": "Step to the side when Lux lines up Final Spark. Its red warning shows first, so move out before the beam fires.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Lux-R", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:MissFortune:Lux:2",
+          "text": "Use Double Up on a minion so the shot bounces to Lux standing behind it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Lux", "start": 49, "end": 52 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:MissFortune:Lux:3",
+          "text": "Hold Strut for when you need to close in or get away. Its speed boost is lost when Lux hits you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 5,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Lux", "start": 83, "end": 86 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:MissFortune:Lux:4",
+          "text": "Use Make It Rain on Lux when she steps forward to poke. It slows her and keeps her from stepping back easily.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Lux", "start": 20, "end": 23 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:MissFortune:Lux:5",
+          "text": "Lux has little protection once her Light Binding is spent, so go for her then. Bullet Time can finish her if she is rooted or stuck in place.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-Q", "start": 35, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 79,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "09a106913fd6fd4df71190f2dfdef604e06818c3a45a03c4cc0dde7850aaa8d5",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Nilah:0",
+          "text": "Poke Nilah with Make It Rain when she walks up to last-hit; it slows her and she cannot cleanse that slow.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nilah", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:MissFortune:Nilah:1",
+          "text": "Keep your distance and use Double Up on a minion so the shot bounces to Nilah behind it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 27,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Nilah", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:MissFortune:Nilah:2",
+          "text": "Do not auto-attack Nilah while Jubilant Veil is up; she dodges basic attacks. Wait it out or use abilities instead.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Nilah-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:MissFortune:Nilah:3",
+          "text": "Hold Strut for when Nilah dashes in; the speed and attack speed help you back away and hit her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 5,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Nilah", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:MissFortune:Nilah:4",
+          "text": "Save Bullet Time for when Nilah is pulled into a fight or stuck in place. She can't easily dodge it, but it is interrupted if you are hit by crowd control.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Nilah", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "60ba49588e8ac433dce128bb82430d74ce63bcac7647dcf29b15d2879cc90d65",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Samira:0",
+          "text": "Hold Make It Rain until Samira dashes in; it leaves her slowed so she can't easily chase you or escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 5,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Samira", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:MissFortune:Samira:1",
+          "text": "Stay out of melee range. Samira's sword attacks only work up close, and her Wild Rush needs a target to dash through.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Samira-E", "start": 76, "end": 85 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:MissFortune:Samira:2",
+          "text": "Poke with Double Up on a minion when Samira stands behind it, so the shot bounces to her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 10,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Samira", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:MissFortune:Samira:3",
+          "text": "Don't use Bullet Time when Samira can cast Blade Whirl. It destroys incoming missiles and could cancel much of your damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 10,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Samira", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Samira-W", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:MissFortune:Samira:4",
+          "text": "Samira with a high Style rating can use Inferno Trigger. Back off or kite away, because she will be slower while firing.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Samira-R", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6f2940384543ed3402fe4bcb3be4c6eada987241e0078ec0e308f995cf278557",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Senna:0",
+          "text": "Stay out of Piercing Darkness range; getting hit slows you and ends your Strut speed bonus.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 12, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 73,
+              "end": 78
+            }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "adc:MissFortune:Senna:1",
+          "text": "Sidestep Last Embrace; if it lands you are rooted and Senna's team can follow up. It is a thrown shot, so minions in the way can block it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 9, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 49 },
+            { "kind": "champion", "key": "Senna", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "adc:MissFortune:Senna:2",
+          "text": "Use Double Up on a minion so it bounces to Senna when she stands behind it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Senna", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Senna:3",
+          "text": "Make It Rain slows Senna and reveals the area, so use it to stop her walking up or to chase her off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 0,
+              "end": 12
+            },
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:MissFortune:Senna:4",
+          "text": "Senna outranges you as she collects Mist, so trade early in the lane before her range grows.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:MissFortune:Senna:5",
+          "text": "At level 6, fire Bullet Time when Senna is rooted or slowed and cannot step out of the cone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 17,
+              "end": 28
+            },
+            { "kind": "champion", "key": "Senna", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6a69cfc0e531e0681ead9ed594c9ad94d816e94d51fa962a1800c5da0ac147d9",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Sivir:0",
+          "text": "Stay out of Boomerang Blade's path. If it hit you going out, step aside before it returns.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:MissFortune:Sivir:1",
+          "text": "Wait until Sivir spends Spell Shield before casting Make It Rain; it is blocked outright.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Sivir-E", "start": 24, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 52,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "adc:MissFortune:Sivir:2",
+          "text": "Start bullets with Bullet Time while Spell Shield is up; it cannot block the channel.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 19,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Sivir-E", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:MissFortune:Sivir:3",
+          "text": "Use Double Up on the far minion so it bounces to Sivir when she stands behind her wave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Sivir", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:MissFortune:Sivir:4",
+          "text": "Sivir pushes hard with Ricochet, so don't let the wave crash into your turret; slow her with Make It Rain when she walks up.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sivir-W", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 83 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 93,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a4edfcd250dfb84df53a4cfcbf37cc2ba83035be47f0d883b0076f225a3c1a86",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Smolder:0",
+          "text": "Hit Smolder early with Make It Rain; he is weak before his stacks build, and the slow lets you walk up and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 23,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:MissFortune:Smolder:1",
+          "text": "Use Double Up on a minion standing in front of Smolder so the shot bounces to him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Smolder", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:MissFortune:Smolder:2",
+          "text": "Stay out of his poke so Strut keeps its speed bonus, and use Love Taps to bring Strut back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 24,
+              "end": 29
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 80,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:MissFortune:Smolder:3",
+          "text": "Aim Bullet Time at Smolder when he is stuck in a fight; he is easy to kill if you reach him, but the channel breaks if you are moved or stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Smolder", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7a61f1c207e70c3baec9ffa31b0f5887e79a4f20cfc81bbe449a012274eb48fa",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Tristana:0",
+          "text": "Avoid taking damage before a trade so Strut gives you full Move Speed, then use it to walk away or close in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 38,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Tristana:1",
+          "text": "Do not stand near Tristana at level 6; Buster Shot knocks you back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Tristana-R", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:MissFortune:Tristana:2",
+          "text": "Make It Rain slows Tristana when she jumps in or chases; start it where she must walk.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 0,
+              "end": 12
+            },
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Tristana", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:MissFortune:Tristana:3",
+          "text": "Back off when Tristana activates Rapid Fire; her attacks get much faster for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Tristana-Q", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:MissFortune:Tristana:4",
+          "text": "Bounce Double Up off a minion onto Tristana to hit her from range, since her Draw a Bead range gets long as she levels.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 7,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Tristana", "start": 35, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Tristana-passive",
+              "start": 77,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1e0c089d4b27add7c03be3f12efdf81266ca3afc39f35cf35bb1476b68a82bd3",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Twitch:0",
+          "text": "Use Make It Rain on Twitch when he walks up to trade; it slows him and reveals the area, so he cannot sneak away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Twitch", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:MissFortune:Twitch:1",
+          "text": "Hit Twitch with Double Up through a minion standing in front of him. The shot bounces onto him, and he is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 16,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:MissFortune:Twitch:2",
+          "text": "Take your free poke with Love Tap whenever you switch targets, and use Strut to walk out of range of his Venom Cask.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 15, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 25,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 71,
+              "end": 76
+            },
+            { "kind": "ability", "key": "Twitch-W", "start": 105, "end": 115 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:MissFortune:Twitch:3",
+          "text": "Aim Bullet Time at Twitch in a fight once he is visible. He is fragile and cannot take the full channel.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Twitch", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8bc69c794efb46e7a24c2b7ecaa6d687353ef3c9e61a6e5743b24e80624883cc",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Varus:0",
+          "text": "Stay out of Piercing Arrow's long range when Varus starts charging; sidestep it, because the arrow flies in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Varus", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:MissFortune:Varus:1",
+          "text": "Hit the enemy with Make It Rain when they walk up to trade; it slows them so you can back out or finish with attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 19,
+              "end": 31
+            },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:MissFortune:Varus:2",
+          "text": "Avoid taking damage so Strut keeps your movement speed high; it makes dodging Varus' arrows much easier.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 23,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:MissFortune:Varus:3",
+          "text": "Aim Double Up at a minion in front of Varus so it bounces to him when he stands behind his minions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Varus", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:MissFortune:Varus:4",
+          "text": "Do not stand in Hail of Arrows; the ground slows you and cuts your healing for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:MissFortune:Varus:5",
+          "text": "Keep distance from Varus at level 6; if Chain of Corruption roots you, you cannot move away.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Varus-R", "start": 40, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:MissFortune:Varus:6",
+          "text": "Use Bullet Time when Varus is rooted or slowed or caught close to you; you cannot move while channeling it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Varus", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "85b3428d3b5878183278978e9682a78f1fce797cc0136b48fbd5ceef772f5e44",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Vayne:0",
+          "text": "Poke with Double Up on a minion standing in front of Vayne so the shot bounces onto her. Do it when she walks up to last-hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 10,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Vayne", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:MissFortune:Vayne:1",
+          "text": "Use Make It Rain to leave Vayne slowed when she tries to close the gap, then back away while she is trapped in the rain.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:MissFortune:Vayne:2",
+          "text": "Stay away from walls behind you. Vayne's Condemn pushes you back and stuns you if you hit terrain, and she will kill you from there.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Vayne-E", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:MissFortune:Vayne:3",
+          "text": "Vayne is fragile, so use Bullet Time when she is stuck in range, such as when she is slowed or stunned by your team.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 25,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:MissFortune:Vayne:4",
+          "text": "Take your trades before Vayne has Silver Bolts ready on you. Her third hit on you in a row hurts, so step back after two.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Vayne-W", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:MissFortune:Vayne:5",
+          "text": "Hit new targets with Love Tap, such as a minion and then Vayne, to shorten the cooldown of Strut. You can then use Strut to chase or escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 21,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Vayne", "start": 57, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 91,
+              "end": 96
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 115,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2092977c38c7131595a68043eba84059056ac2755e931111e87bfaac19fe5cdd",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Veigar:0",
+          "text": "Keep moving and stay out of damage so Strut gives you its full speed; it helps you step out of Dark Matter.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 38,
+              "end": 43
+            },
+            { "kind": "ability", "key": "Veigar-W", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:MissFortune:Veigar:1",
+          "text": "Watch the ground for Dark Matter's warning and walk out of it. It lands after a short delay, so do not stand still while you last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:MissFortune:Veigar:2",
+          "text": "Do not walk to the edge of Event Horizon's cage, because that is where enemies get stunned. Stay inside it or well clear of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:MissFortune:Veigar:3",
+          "text": "Use Double Up on a minion so the shot bounces to Veigar standing behind it. It is a safe way to poke him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Veigar", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:MissFortune:Veigar:4",
+          "text": "Veigar is fragile, so once you are close, hit him with Bullet Time. Be ready to be stunned if you channel inside his cage.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 55,
+              "end": 66
+            },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:MissFortune:Veigar:5",
+          "text": "Use Make It Rain to slow Veigar when he steps up to hit Baleful Strike, then trade back with your attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Veigar", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b331db82daeca62acfb44225a3461d304be56c0826d02518397ca5ad8504c6c9",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Xayah:0",
+          "text": "Aim Make It Rain where Xayah and her support stand when they trade; it slows them and hits everyone in the area.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Xayah", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Xayah:1",
+          "text": "Shoot Double Up at a minion standing in front of Xayah so the shot bounces onto her. It is a safe way to hurt her from range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 6,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Xayah", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:MissFortune:Xayah:2",
+          "text": "Stay out of her reach and keep moving. Strut gives you a speed boost while you are not being hit, so you can walk away from her trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 39,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:MissFortune:Xayah:3",
+          "text": "Do not fire Bullet Time just as Xayah can jump. Featherstorm makes her untargetable, so the channel would be wasted.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 12,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Xayah", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Xayah-R", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:MissFortune:Xayah:4",
+          "text": "Step away from fights where Xayah has scattered feathers on the ground. Bladecaller will root you if three of them hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Xayah-E", "start": 72, "end": 83 },
+            { "kind": "keyword", "key": "rooted", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "39b7d47670ba4b3c0b5065bb32f9600a35b8188d08b88ec261be56feb2199fb0",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Yasuo:0",
+          "text": "Aim Make It Rain where Yasuo will dash or stand. It slows him, so he has a harder time closing on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:MissFortune:Yasuo:1",
+          "text": "Stay out of his reach and poke him with Double Up. Hit a minion behind him or in front so the shot bounces onto him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 40,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:MissFortune:Yasuo:2",
+          "text": "Be ready to dodge sideways when Yasuo has two Steel Tempest stacks. His whirlwind is narrow and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:MissFortune:Yasuo:3",
+          "text": "Avoid taking damage so Strut gives you full speed. Use it to walk away from his dashes.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 23,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:MissFortune:Yasuo:4",
+          "text": "Do not fire Bullet Time at Yasuo if he can hide behind Wind Wall. The wall destroys the bullets, so wait until it is gone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 12,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:MissFortune:Yasuo:5",
+          "text": "Hold Double Up and Make It Rain until Wind Wall is used, since the wall blocks them. Then trade freely while it recharges.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 5,
+              "end": 14
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 19,
+              "end": 31
+            },
+            { "kind": "ability", "key": "Yasuo-W", "start": 38, "end": 47 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "adc:MissFortune:Yasuo:6",
+          "text": "Do not stand next to a knocked-up ally. Yasuo can use Last Breath on them and reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "474b56a8b274711469bebbf4b9e82fbad54e7a6789b71db0e047e4a6cafd7bbf",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Yunara:0",
+          "text": "Use Double Up on a minion standing in front of Yunara so the shot bounces onto her. It lets you poke from long range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Yunara", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:MissFortune:Yunara:1",
+          "text": "Put Make It Rain on Yunara when she walks up to trade. She is slowed and takes damage over time, so she cannot pick the fight on her terms.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Yunara", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Yunara:2",
+          "text": "Stay out of her prayer bead's path. Being hit slows you heavily and breaks Strut's speed bonus.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 75,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:MissFortune:Yunara:3",
+          "text": "Be ready for her ultimate. She gets a dash and a long beam, so keep your distance and don't line up with her.",
+          "refs": [],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:MissFortune:Yunara:4",
+          "text": "Hold Bullet Time for when Yunara is slowed or has spent her dash. Aim the cone at her and your lane partner's range will keep her there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Yunara", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1247b8269ebc21c3d4fad6cf8e5e1fed21751335b56ae5b722d2887b236b30e8",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Zeri:0",
+          "text": "Fire Make It Rain onto Zeri when she walks up to trade; it slows her and its damage adds up if she stays inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 5,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Zeri", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:MissFortune:Zeri:1",
+          "text": "Stay out of Zeri's long Ultrashock Laser line and sidestep it. Once it has hit a wall, the laser fires a moment later.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Zeri-W", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:MissFortune:Zeri:2",
+          "text": "Use Double Up on a minion standing in front of Zeri so the shot bounces onto her. It is a safe way to poke her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 4,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Zeri", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "poke", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:MissFortune:Zeri:3",
+          "text": "Zeri can dash over walls with Spark Surge, so do not trust a wall to keep you safe. Keep Bullet Time ready for when she jumps in.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-E", "start": 30, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 89,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:MissFortune:Zeri:4",
+          "text": "Zeri is fragile, so Bullet Time can kill her if she is slowed and cannot get away. Stay out of danger while you channel.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 20,
+              "end": 31
+            },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "14bca23cec5d4c3395def238d1207fbcd95bc2b4d29e33f7b908a04c41d8d664",
+      "tips": [
+        {
+          "id": "adc:MissFortune:Ziggs:0",
+          "text": "Stay out of Ziggs' Hexplosive Minefield; getting slowed there makes his Bouncing Bomb and Satchel Charge much easier to land on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 19, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 72, "end": 85 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:MissFortune:Ziggs:1",
+          "text": "Hold Strut for when you need to move fast; any damage from Ziggs cancels its passive speed, so stay out of his poke to keep it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 5,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Ziggs", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "poke", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:MissFortune:Ziggs:2",
+          "text": "Hit Ziggs with Love Tap and Double Up when he walks up to push the wave. Trade right after he has spent his abilities, since they have long cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-passive",
+              "start": 15,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 28,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:MissFortune:Ziggs:3",
+          "text": "Use Make It Rain to slow Ziggs when he steps forward, then follow up with attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Ziggs", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:MissFortune:Ziggs:4",
+          "text": "Don't channel Bullet Time while Ziggs can drop his Mega Inferno Bomb on you. Check that he has used it, and watch where he stands.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 14,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Ziggs", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Ziggs-R", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

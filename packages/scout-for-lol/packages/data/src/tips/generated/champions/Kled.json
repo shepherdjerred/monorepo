@@ -1,0 +1,914 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kled",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "9097800905cbc9156fa57ca54f1e927a84ca6d5193ef0e8e1d25cdd9fdb2cd30",
+      "tips": [
+        {
+          "id": "top:Kled:general:0",
+          "text": "Hit Bear Trap on a Rope on a champion, then stay close for the pull. The yank deals big damage and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kled:general:1",
+          "text": "Start trades by landing a Bear Trap on a Rope, then use Violent Tendencies. Its fourth hit deals bonus damage, so make sure you land it.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 26, "end": 45 },
+            { "kind": "ability", "key": "Kled-W", "start": 56, "end": 74 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Kled:general:2",
+          "text": "Hit an enemy champion with Jousting, then recast it to dash back through them. You also get a burst of Move Speed for chasing or escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kled:general:3",
+          "text": "Use Jousting to pull minions toward you. It pulls them into the path of your trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Kled:general:4",
+          "text": "Skaarl soaks damage while you are mounted. Once Skaarl flees, you are dismounted and can't use Jousting or Chaaaaaaaarge!!!, so don't take bad trades early.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 95, "end": 103 },
+            { "kind": "ability", "key": "Kled-R", "start": 107, "end": 123 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Kled:general:5",
+          "text": "When dismounted, fight enemy champions to refill courage. At full courage you remount.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kled:general:6",
+          "text": "Cast Chaaaaaaaarge!!!, aiming where the enemy team will be when you arrive; it shields you and knocks back the first champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kled:general:7",
+          "text": "Join fights across the map with Chaaaaaaaarge!!!, since allies who follow its trail gain Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-R", "start": 32, "end": 48 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Kled:combo:0",
+          "name": "Dash-cast trap",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Kled-E" },
+            { "kind": "ability", "key": "Kled-Q" }
+          ],
+          "when": "Engaging or chasing an enemy champion within dash range.",
+          "whenRefs": [],
+          "text": "Jousting lets you cast the trap mid-dash. It leaves from where the dash ends, so you stay close and the tether doesn't snap.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kled-E", "start": 0, "end": 8 }
+          ]
+        },
+        {
+          "id": "top:Kled:combo:1",
+          "name": "Dismount pistol buffer",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Kled-Q" }],
+          "when": "Skaarl is about to break while you are pressing the trap button.",
+          "whenRefs": [],
+          "text": "If you dismount as you cast, give a movement command straight after. Otherwise the cast buffers into Pocket Pistol and fires at the wrong time.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "80d0b3f871ebc2a1fff3bf19e620ec3f20631d5fcfe56139f0fe7c2a8699c499",
+      "tips": [
+        {
+          "id": "top:Kled:Aatrox:0",
+          "text": "Throw Bear Trap on a Rope at Aatrox when he walks up, then stay close so the trap yanks him in and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Aatrox", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Kled:Aatrox:1",
+          "text": "Aatrox's Darkin Blade is slow and easy to see coming. Sidestep it, then jump in with Jousting while he is recovering.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kled-E", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kled:Aatrox:2",
+          "text": "Break the Infernal Chains by walking toward Aatrox or to the side, or you get pulled back and hit again.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Aatrox", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kled:Aatrox:3",
+          "text": "Start trades with Violent Tendencies ready. Its fourth hit hits hard, so make sure you land it.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Kled:Aatrox:4",
+          "text": "While Skaarl is alive, Aatrox's damage hits her, not you. Fight him then and trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f1d7ce60f8e407902f65d202af28f3a643d815cc2dee9fe1f87305b63f6d206b",
+      "tips": [
+        {
+          "id": "top:Kled:Briar:0",
+          "text": "Hook Briar with Bear Trap on a Rope when she jumps in, then stay close so you can yank her. Her Head Rush stun can set up your own trade.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Kled-Q", "start": 16, "end": 35 },
+            { "kind": "ability", "key": "Briar-Q", "start": 96, "end": 105 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Kled:Briar:1",
+          "text": "Briar's Blood Frenzy forces her to attack the nearest enemy. Use that to pull her into your trades and keep your Violent Tendencies ready.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kled-W", "start": 113, "end": 131 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Kled:Briar:2",
+          "text": "Don't stand near a wall when Briar charges Chilling Scream. A full charge knocks you back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-E", "start": 43, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Kled:Briar:3",
+          "text": "Use Jousting to dash through Briar and get out, or back in for a second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "895eac32a8e34c56356817c924dc6712bb0c66a3f0c2fbca7f70510cdf556d69",
+      "tips": [
+        {
+          "id": "top:Kled:Darius:0",
+          "text": "Hit Darius with Bear Trap on a Rope from long range. Stay near him until the tether pulls, because the pull does extra damage and slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kled-Q", "start": 16, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 130, "end": 135 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Kled:Darius:1",
+          "text": "Stay out of Apprehend's cone and away from walls of minions. If he pulls you, expect Crippling Strike to follow.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Darius-W", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Kled:Darius:2",
+          "text": "Trade while Apprehend is on cooldown. Without the pull he has trouble catching you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Kled:Darius:3",
+          "text": "Do not let Darius stack up Hemorrhage on you. Back off when his stacks are high, because he becomes much stronger and Noxian Guillotine hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 27,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 118, "end": 135 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Kled:Darius:4",
+          "text": "Use the dash from Jousting to slip out of Decimate. Dash through Darius and follow up with Violent Tendencies for a quick trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Darius-Q", "start": 42, "end": 50 },
+            { "kind": "champion", "key": "Darius", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Kled-W", "start": 91, "end": 109 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2d4287d15afc3c1170448595ed17b242309a9f68ab3abd356b7abd6a616c63a3",
+      "tips": [
+        {
+          "id": "top:Kled:Fiora:0",
+          "text": "Aim Bear Trap on a Rope when Fiora's Riposte is on cooldown. If she parries it, she stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Fiora", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Fiora-W", "start": 37, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Kled:Fiora:1",
+          "text": "Bait out Riposte with a cheap move first. Then commit Jousting and Violent Tendencies while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Kled-E", "start": 54, "end": 62 },
+            { "kind": "ability", "key": "Kled-W", "start": 67, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Kled:Fiora:2",
+          "text": "Watch where her Vital is. She will Lunge in from that side, so be ready to punish her landing.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Kled:Fiora:3",
+          "text": "Fiora's Bladework slows you with her first hit. Use Jousting to get away or to hit her again from the other side.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-E", "start": 8, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Kled-E", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "44f6e56224f47cccf8af3a9d0610dad2f3f78a5c2a413c94c481e409c4840d10",
+      "tips": [
+        {
+          "id": "top:Kled:Gangplank:0",
+          "text": "Aim Bear Trap on a Rope when Gangplank walks up to a keg or last-hit; stay close so you pull him in and slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Gangplank", "start": 29, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Kled:Gangplank:1",
+          "text": "Dash in with Jousting only when Gangplank has few kegs ready; then use Violent Tendencies to finish the fight fast.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "Kled-W", "start": 71, "end": 89 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Kled:Gangplank:2",
+          "text": "Stay out of keg blast zones; their explosion slows you and hits hard. Gangplank has to hit the keg himself, so make that costly.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            { "kind": "champion", "key": "Gangplank", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Kled:Gangplank:3",
+          "text": "Hold your trap until Remove Scurvy is used, since it cleanses the pull; then trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:Kled:Gangplank:4",
+          "text": "Watch your steed's health against Parrrley and Trial by Fire; when you dismount, fight to refill courage and remount.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 34, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 47,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Kled:Gangplank:5",
+          "text": "Watch for level 6; Cannon Barrage can hit you from anywhere, so don't stay low and alone.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 19, "end": 33 },
+            { "kind": "keyword", "key": "isolated", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c5c4c4678c6243b8ec082a8a0927a0dabad485b5472dd5f645f68680dd0745e",
+      "tips": [
+        {
+          "id": "top:Kled:Garen:0",
+          "text": "Hit Garen with Bear Trap on a Rope from range and stay close to pull him in.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kled-Q", "start": 15, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Kled:Garen:1",
+          "text": "Don't fight inside Judgment for long. Jousting through Garen and back out gets you away from the spin.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Kled-E", "start": 38, "end": 46 },
+            { "kind": "champion", "key": "Garen", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Kled:Garen:2",
+          "text": "Garen's Decisive Strike silences you, so don't rely on abilities in the moment after his first hit.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kled:Garen:3",
+          "text": "Use Violent Tendencies so that its fourth hit lands on Garen, and fight when he is hurt, before Perseverance heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Garen", "start": 55, "end": 60 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 96,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Kled:Garen:4",
+          "text": "Stay healthy when you are low, since Demacian Justice deals more damage to hurt targets.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6b9cd147d49f87849fd884bc6255e9ea16d787d706398f94a4d4dea5b0b2c12d",
+      "tips": [
+        {
+          "id": "top:Kled:Jayce:0",
+          "text": "Dodge the Shock Blast and walk up to Jayce; he is weak in close fights if you land Bear Trap on a Rope.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Kled-Q", "start": 83, "end": 102 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Kled:Jayce:1",
+          "text": "Stay close to Jayce after hooking him so the trap pulls and slows him, then finish with Violent Tendencies.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Kled-W", "start": 88, "end": 106 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Kled:Jayce:2",
+          "text": "Be careful when Jayce places an Acceleration Gate; a stronger Shock Blast is likely coming.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Kled:Jayce:3",
+          "text": "Do not stand next to Jayce after he swaps to the hammer; Thundering Blow knocks you back and hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "62284d454076636ac0e3def924efa555aec7f8384c326642690c34d0eef8aeb6",
+      "tips": [
+        {
+          "id": "top:Kled:KSante:0",
+          "text": "Hit Bear Trap on a Rope on K'Sante, then stay close so the trap yanks him back to you and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "KSante", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kled:KSante:1",
+          "text": "Watch K'Sante's Path Maker charge. He cannot be pulled or knocked away while charging, and the end of it stuns, so step aside instead of walking into it.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "KSante-W", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Kled:KSante:2",
+          "text": "Trade with Violent Tendencies ready and land the fourth hit, which deals extra damage based on his max health. K'Sante has plenty of health.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 11, "end": 29 },
+            { "kind": "champion", "key": "KSante", "start": 111, "end": 118 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kled:KSante:3",
+          "text": "Do not stand still when K'Sante goes All Out. He loses health and defenses but hits much harder, so use Jousting to back away and let it run out.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-R", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Kled-E", "start": 104, "end": 112 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7846a94a917da28dc6985dfe2b6d02fc9be459444d5c9890954e4c04d5701218",
+      "tips": [
+        {
+          "id": "top:Kled:Malphite:0",
+          "text": "Stay out of Seismic Shard range early; its slow makes it hard to land Bear Trap on a Rope follow-ups and hands Malphite speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Kled-Q", "start": 70, "end": 89 },
+            { "kind": "champion", "key": "Malphite", "start": 111, "end": 119 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Kled:Malphite:1",
+          "text": "Do not rely on Violent Tendencies if Ground Slam just hit you; it slows your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 15, "end": 33 },
+            { "kind": "ability", "key": "Malphite-E", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Kled:Malphite:2",
+          "text": "Throw Bear Trap on a Rope when Malphite walks up to last-hit; it hits at long range and keeps going after a hit.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Malphite", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Kled:Malphite:3",
+          "text": "Break Granite Shield with a quick Violent Tendencies burst, then trade; his Armor drops sharply once it is gone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "ability", "key": "Kled-W", "start": 34, "end": 52 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Kled:Malphite:4",
+          "text": "Keep Chaaaaaaaarge!!! or Jousting ready near level 6; Malphite's Unstoppable Force is a big threat when you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Kled-E", "start": 25, "end": 33 },
+            { "kind": "champion", "key": "Malphite", "start": 54, "end": 62 },
+            { "kind": "ability", "key": "Malphite-R", "start": 65, "end": 82 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c8c6190c7fca7e188d35474d314856f6b07cc7202fd0f42aeabaabd272918bb1",
+      "tips": [
+        {
+          "id": "top:Kled:Mordekaiser:0",
+          "text": "Aim Bear Trap on a Rope at Mordekaiser and stay near him to pull him out of his aura.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 27, "end": 38 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Kled:Mordekaiser:1",
+          "text": "Do not stand close to Mordekaiser while Darkness Rise is active; it hurts you every second, so trade in short bursts.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 22,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 40,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Kled:Mordekaiser:2",
+          "text": "Watch for Death's Grasp when you step up to the wave; sidestep it or you get pulled into his combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 10,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Kled:Mordekaiser:3",
+          "text": "Use Violent Tendencies to hit all four attacks; the last one deals extra damage. Fight him before his shield builds up.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Kled:Mordekaiser:4",
+          "text": "Stay mounted and keep Skaarl healthy; Realm of Death takes you away from your team and any escapes you have.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 38,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0b181b4f9271e41a0038061615ff4a83d342640b13a4b1b186983e21f461ffcb",
+      "tips": [
+        {
+          "id": "top:Kled:Rumble:0",
+          "text": "Dodge or block the harpoon: the Electro Harpoon slows and strips Magic Resist, and a second hit makes both stronger. Don't walk in a straight line at Rumble.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 32, "end": 47 },
+            { "kind": "champion", "key": "Rumble", "start": 150, "end": 156 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Kled:Rumble:1",
+          "text": "Land Bear Trap on a Rope when Rumble is overheating or low on options, and stay close so the pull goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Rumble", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Kled:Rumble:2",
+          "text": "Step out of Flamespitter's cone as soon as you can; it deals damage based on your max health, so a tanky Kled still takes a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Kled", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Kled:Rumble:3",
+          "text": "Use Jousting to get close to Rumble, then hit him with Violent Tendencies for the fourth, stronger hit.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Rumble", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Kled-W", "start": 55, "end": 73 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Kled:Rumble:4",
+          "text": "Don't stand in the fire of The Equalizer; walk out of the trail sideways, since it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7fc2b8e9b8de2c0b3fbe5749fd8635334242b3f86bb7e6b720688a92892676e3",
+      "tips": [
+        {
+          "id": "top:Kled:Sion:0",
+          "text": "Do not stand still in front of Sion's charging Decimating Smash. When you see the axe being raised, step out of its path or dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Sion-Q", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Kled:Sion:1",
+          "text": "Land Bear Trap on a Rope on Sion, then stay close so the tether pulls him in and slows him before you start your attack-speed burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Sion", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Kled:Sion:2",
+          "text": "Sion's Soul Furnace shield blunts your burst. Hit it hard or wait it out before committing, because it explodes if left up.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sion-W", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Kled:Sion:3",
+          "text": "Use Jousting to dash out of range when Sion starts charging, then come back through him once the stun window has passed.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Sion", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Kled:Sion:4",
+          "text": "Do not chase Sion low on health; Glory in Death brings him back with heavy hits. Back off until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e13f10b9e2e6de625784c2bbb6358aa14999225cfc3e198088c23a70b36e687f",
+      "tips": [
+        {
+          "id": "top:Kled:Teemo:0",
+          "text": "Dodge Blinding Dart if you can. Blinded attacks miss, which ruins your Violent Tendencies burst.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Kled-W", "start": 71, "end": 89 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Kled:Teemo:1",
+          "text": "Land Bear Trap on a Rope on Teemo, then stay close until the pull. It drags him into your range.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Teemo", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Kled:Teemo:2",
+          "text": "Do not chase Teemo into bushes or unwarded ground. Noxious Trap mushrooms hide there and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Teemo-R", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Kled:Teemo:3",
+          "text": "Use Jousting to close the gap to Teemo, then fight him up close, where he cannot kite you.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Teemo", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Kled:Teemo:4",
+          "text": "Skaarl soaks Toxic Shot damage while you are mounted. Fight while mounted, because dismounting makes you weak.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 13, "end": 23 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "21dc2b77603a89334b569a4c0dc681cbd08757bcc80091f76bd5a416df1a6a37",
+      "tips": [
+        {
+          "id": "top:Kled:Vayne:0",
+          "text": "Dash in with Jousting to reach Vayne, then recast to dash back out. She is fragile, so stay on her.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Kled:Vayne:1",
+          "text": "Stay out of walls' reach; Condemn pins you against terrain. Fight in open space.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Kled:Vayne:2",
+          "text": "Land Bear Trap on a Rope when Vayne is trying to Tumble away; staying near her pulls her in and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Vayne", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Kled:Vayne:3",
+          "text": "Start trades with Violent Tendencies up, and land the fourth hit for its extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c4710bffbb8a83010e476d8a12718234e3087e690bf8f54ef9d80f1ea81e40df",
+      "tips": [
+        {
+          "id": "top:Kled:Yone:0",
+          "text": "Throw Bear Trap on a Rope at Yone and stay close until the tether pulls him in; the pull deals big damage and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Kled:Yone:1",
+          "text": "Use Jousting on Yone to dash through him, then recast it to dash back through him. It deals damage both times.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Kled:Yone:2",
+          "text": "Hit Yone four times with Violent Tendencies up. The fourth hit does extra damage based on his max health.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kled-W", "start": 25, "end": 43 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Kled:Yone:3",
+          "text": "Once Skaarl flees, fight Yone to refill courage and remount. Kled gets much more courage from champions than from minions.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Kled", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

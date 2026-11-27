@@ -1,0 +1,2003 @@
+{
+  "schemaVersion": 1,
+  "champion": "TahmKench",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "97bffe5c06113ad505139bafabe064909935fb8bdd29d40ce79f6500f0929b28",
+      "tips": [
+        {
+          "id": "top:TahmKench:general:0",
+          "text": "Hit the enemy with Tongue Lash early in the lane. It slows them, heals Tahm Kench, and adds a stack of An Acquired Taste.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 },
+            { "kind": "champion", "key": "TahmKench", "start": 71, "end": 81 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 103,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:TahmKench:general:1",
+          "text": "Land Tongue Lash on an enemy who already has three stacks to stun them. Then you can walk up and finish the trade.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:TahmKench:general:2",
+          "text": "Build stacks with basic attacks between Tongue Lash casts. Three stacks unlock the stun and Devour on an enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 40, "end": 51 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:TahmKench:general:3",
+          "text": "Press Devour while Tongue Lash is in the air. It pulls an enemy with three stacks straight to you, and it costs nothing if the tongue misses.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:TahmKench:general:4",
+          "text": "Take trades you can't avoid, then wait out the grey health. Thick Skin heals you back if you go a few seconds without damage.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:TahmKench:general:5",
+          "text": "Use the Thick Skin shield when burst or a gank is about to kill you. If you can disengage safely, let it heal you instead.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:TahmKench:general:6",
+          "text": "Abyssal Dive takes a moment to channel, and enemies can see where you will land. Use it on a fleeing or stationary enemy, not one who can walk away.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:TahmKench:general:7",
+          "text": "Hit an enemy champion with Abyssal Dive to get back part of its cooldown and mana. It also knocks them up, so you can follow with Tongue Lash.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 27, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 130,
+              "end": 141
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:TahmKench:general:8",
+          "text": "Don't swing at a distant target with Tongue Lash if a minion is in the way. It stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cbb5f82a528e792764962bb2bc6ada5b7a3a8f22f60f94a205082f39756423dd",
+      "tips": [
+        {
+          "id": "support:TahmKench:general:0",
+          "text": "Hit the enemy champion with basic attacks and Tongue Lash to build An Acquired Taste. At three stacks, your next Tongue Lash stuns them.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 46, "end": 57 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 67,
+              "end": 84
+            },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 113,
+              "end": 124
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:TahmKench:general:1",
+          "text": "Aim Tongue Lash carefully. It stops at the first enemy it hits, so a minion in the way will block it.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:TahmKench:general:2",
+          "text": "Cast Devour while your tongue is in the air to pull in an enemy with three stacks. Devour doesn't go on cooldown if the tongue misses.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:TahmKench:general:3",
+          "text": "Devour a fragile ally who is being chased. They are untargetable and get a shield, and you can spit them out toward safety.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:TahmKench:general:4",
+          "text": "You can still cast Abyssal Dive while an ally is devoured, so use it to carry them out of a fight.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:TahmKench:general:5",
+          "text": "Abyssal Dive has a long channel, and enemies can see where you will land. Use it when they can't easily step away, and hit a champion to get some cooldown back.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:TahmKench:general:6",
+          "text": "Enemy stuns or knock-ups, or a Flash, will cancel your Abyssal Dive channel. Don't start it when the enemy can interrupt you.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 55, "end": 67 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:TahmKench:general:7",
+          "text": "Let Thick Skin build gray health while you trade. Press its active for a shield when more damage is coming, or wait out of combat to heal.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:TahmKench:general:8",
+          "text": "Stay near your carry and keep Devour ready. Position so you can reach them when an enemy dives in.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "c221593c7dabdd73772d64c1b270777276043e1e15c6fa70127227672cd0b9c8",
+      "tips": [
+        {
+          "id": "top:TahmKench:Aatrox:0",
+          "text": "Hit Aatrox with Tongue Lash to slow him and heal, then trade back while he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:TahmKench:Aatrox:1",
+          "text": "Take small trades to build An Acquired Taste stacks. At three stacks, Tongue Lash stuns him, so follow it with your attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 27,
+              "end": 44
+            },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 70, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:TahmKench:Aatrox:2",
+          "text": "Stay out of the sweet spot at the end of The Darkin Blade. Step sideways, since each swing covers a different area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 41, "end": 57 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:TahmKench:Aatrox:3",
+          "text": "Press Thick Skin when you are low and about to take more damage. If you can back off safely, let it heal you instead.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:TahmKench:Aatrox:4",
+          "text": "Use Abyssal Dive to escape or to hit him in a fight. It can be interrupted while you channel, so don't start it right next to him.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "25ab9ef7e2fda80bf1fe46e84361110dbde0ff9292dd7ebadf63d0e0f7a3574a",
+      "tips": [
+        {
+          "id": "top:TahmKench:Briar:0",
+          "text": "Hit Briar with Tongue Lash when she leaps in; she can't control her movement during Blood Frenzy, so she is easy to line up and she ends up slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 140, "end": 146 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:TahmKench:Briar:1",
+          "text": "Press Thick Skin when Briar is about to burst you, since it turns the damage you stored into a shield. Let it heal you instead when she backs off.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:TahmKench:Briar:2",
+          "text": "Start Abyssal Dive early or away from Briar. It takes a moment to channel, and her Head Rush stun can interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Briar-Q", "start": 83, "end": 92 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:TahmKench:Briar:3",
+          "text": "Land Abyssal Dive on her once she is stuck in melee with you. It knocks her up and refunds some cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:TahmKench:Briar:4",
+          "text": "Build three stacks of An Acquired Taste with attacks, then use Tongue Lash to stun her. Follow with Devour to swallow her and win the trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 22,
+              "end": 39
+            },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 63, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 100,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fc777e9d880dcd479ae6862f4e26861249fc6debf5452f346c36815d058fcf9f",
+      "tips": [
+        {
+          "id": "top:TahmKench:Darius:0",
+          "text": "Hit Darius with Tongue Lash as he walks up. It slows him, and each hit heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:TahmKench:Darius:1",
+          "text": "Stay out of Apprehend range, since it pulls you in and knocks you up. Tongue Lash him while Apprehend is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 70, "end": 81 },
+            { "kind": "ability", "key": "Darius-E", "start": 92, "end": 101 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:TahmKench:Darius:2",
+          "text": "Use the Thick Skin shield when Darius is stacking Hemorrhage for a fight. Don't let him get his Noxian Guillotine kill.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 50,
+              "end": 60
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 96, "end": 113 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:TahmKench:Darius:3",
+          "text": "Use Abyssal Dive to get away from Darius. Dive only when he can't punish the channel with a pull.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9978295806ef0171607e57f29919a784097f5ce6c879cbe8c2cb2c8763dde36f",
+      "tips": [
+        {
+          "id": "top:TahmKench:Fiora:0",
+          "text": "Don't cast Abyssal Dive or Devour onto Fiora while her Riposte is ready. She turns it into a stun on you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 27, "end": 33 },
+            { "kind": "champion", "key": "Fiora", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Fiora-W", "start": 55, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:TahmKench:Fiora:1",
+          "text": "Poke her with Tongue Lash from long range. It slows her and heals you, and she has to close the gap.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:TahmKench:Fiora:2",
+          "text": "Bait her Riposte with a Tongue Lash, then Abyssal Dive once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:TahmKench:Fiora:3",
+          "text": "Hold the Thick Skin shield for when she lunges in to trade. Use the heal instead if she backs off.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:TahmKench:Fiora:4",
+          "text": "Watch the Vital marked on you; Fiora will try to hit it with Lunge. Step away from that side so she cannot get it.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "77e6e5df3736def9b47f782d186a557072b614a2577ed2b8151dd6a28e39655d",
+      "tips": [
+        {
+          "id": "top:TahmKench:Gangplank:0",
+          "text": "Hit Gangplank with Tongue Lash for the slow and a heal. Use it to start your stacks so you can stun or Devour him later.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 103,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:TahmKench:Gangplank:1",
+          "text": "Do not hit Powder Kegs. When an enemy destroys one it is defused, and only Gangplank can make it explode.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:TahmKench:Gangplank:2",
+          "text": "Do not hold Abyssal Dive's channel while Gangplank is ready to cleanse. Remove Scurvy removes the knock up, so land it when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Gangplank", "start": 41, "end": 50 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:TahmKench:Gangplank:3",
+          "text": "Use the Thick Skin shield when you take a big burst, such as a keg blast. Otherwise let it heal you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:TahmKench:Gangplank:4",
+          "text": "After level 6, expect Cannon Barrage anywhere on the map when you are low. Back off, since its slow makes it hard to run.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d9611cfa656689be29ea95f0a37c64477dbfe8da0f0f0fb7dcbc7a013999ed0",
+      "tips": [
+        {
+          "id": "top:TahmKench:Garen:0",
+          "text": "Hit Garen with Tongue Lash as he walks up; it slows him and heals you. Decisive Strike will clear that slow, so do not count on it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Garen-Q", "start": 71, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:TahmKench:Garen:1",
+          "text": "Keep poking Garen while he is hurt; each hit stops Perseverance from healing him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Garen", "start": 12, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 51,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:TahmKench:Garen:2",
+          "text": "Do not sit in melee while Judgment is spinning. Back out of its range, since he cannot attack while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:TahmKench:Garen:3",
+          "text": "Save Thick Skin as a shield when Garen commits to a fight with Demacian Justice up; the shield soaks damage when it matters.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Garen", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Garen-R", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:TahmKench:Garen:4",
+          "text": "Stun him with Tongue Lash after three stacks of An Acquired Taste, then back away before he can use Decisive Strike on you.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 48,
+              "end": 65
+            },
+            { "kind": "ability", "key": "Garen-Q", "start": 100, "end": 115 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b9a068e27d3620bbd7cb6626101282ada027f7ebaa29ac0832a0a79730d9660",
+      "tips": [
+        {
+          "id": "top:TahmKench:Jayce:0",
+          "text": "Land Tongue Lash on Jayce when he leaps in or lines up a poke. It slows him and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:TahmKench:Jayce:1",
+          "text": "Build three stacks on Jayce, then use Tongue Lash to stun him. Devour him mid-lash and he can't fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 38, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:TahmKench:Jayce:2",
+          "text": "Use the Thick Skin shield when Jayce's poke is landing, but only if you won't be healing soon. Using it means you skip the healing.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:TahmKench:Jayce:3",
+          "text": "Abyssal Dive is easy to read, because Jayce can swap stance and run away during the channel. Use it when he is walled in or already hurt.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Jayce", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:TahmKench:Jayce:4",
+          "text": "Jayce's Thundering Blow can knock you back out of range. Stay out of melee range unless you have stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "745e573a413c89fa12e2124bec039403156db809842e92793cc27af990af561e",
+      "tips": [
+        {
+          "id": "top:TahmKench:KSante:0",
+          "text": "Build up An Acquired Taste with basic attacks, then land Tongue Lash to stun him. Do it when he has no Footwork ready to dash away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 9,
+              "end": 26
+            },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 57, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 },
+            { "kind": "ability", "key": "KSante-E", "start": 103, "end": 111 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:TahmKench:KSante:1",
+          "text": "Aim Tongue Lash carefully. It stops at the first enemy it hits, so a minion in the way takes the hit instead of him.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:TahmKench:KSante:2",
+          "text": "Use Thick Skin's shield when you expect a long trade, and take the healing when you can back off safely. The shield gives up the healing.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:TahmKench:KSante:3",
+          "text": "Before you dive, remember he can charge Path Maker and stun you. Abyssal Dive can be interrupted by crowd control while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 40, "end": 50 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 65, "end": 77 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:TahmKench:KSante:4",
+          "text": "Don't Devour him while All Out is ready; he can blink behind you. Use Devour once he has used his ultimate and you have three stacks.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "25b9d2174727bfbd7c99378f8f0996df588a3fac16536b26edfd696d0d26d2c4",
+      "tips": [
+        {
+          "id": "top:TahmKench:Malphite:0",
+          "text": "Poke Malphite with Tongue Lash when he stands near minions; the slow and heal make trades good for you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:TahmKench:Malphite:1",
+          "text": "Avoid fighting while Malphite's Granite Shield is up, because his Armor is much higher. Wait until it breaks.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 21, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 32,
+              "end": 46
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:TahmKench:Malphite:2",
+          "text": "Respect Malphite at level 6; Unstoppable Force knocks you up and cannot be stopped once he starts.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Malphite-R", "start": 29, "end": 46 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:TahmKench:Malphite:3",
+          "text": "Press Thick Skin's active to shield when Malphite bursts you, rather than waiting to heal it back.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:TahmKench:Malphite:4",
+          "text": "Malphite's Seismic Shard is blocked by the first unit in its path? No: it targets you, so staying behind minions will not stop it.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d927b7994ac9de177a78598dc7a88827f3d8acc24ab23e6d9653c8e9fdae67d",
+      "tips": [
+        {
+          "id": "top:TahmKench:Mordekaiser:0",
+          "text": "Stay out of the line of Death's Grasp. Being pulled into Mordekaiser means Obliterate and his aura hit you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 24,
+              "end": 37
+            },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 57,
+              "end": 68
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 75,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:TahmKench:Mordekaiser:1",
+          "text": "Hit Mordekaiser with Tongue Lash to slow him and heal yourself, then walk away before his Darkness Rise aura starts.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 21, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 90,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:TahmKench:Mordekaiser:2",
+          "text": "Do not trade into Indestructible. It turns his damage into a shield, so wait for it to be used or to run out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 18,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:TahmKench:Mordekaiser:3",
+          "text": "Use Thick Skin's shield when he commits to a fight. Otherwise let the stored health heal you once he is gone.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:TahmKench:Mordekaiser:4",
+          "text": "Keep Abyssal Dive for escaping or for engaging after he has used his abilities; the long channel is easy to see.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:TahmKench:Mordekaiser:5",
+          "text": "If Mordekaiser uses Realm of Death on you, expect to be alone with him, so fight it out or save your escapes for inside.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 3, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 20,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a5bb278a0d3b74a24bad521cfe7a546870772706619dd1815c1adf46c8733ef9",
+      "tips": [
+        {
+          "id": "top:TahmKench:Rumble:0",
+          "text": "Land Tongue Lash on Rumble to slow him, and heal. Keep hitting him to build stacks.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:TahmKench:Rumble:1",
+          "text": "Rumble cannot cast spells while he overheats, so go in then and trade hard.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:TahmKench:Rumble:2",
+          "text": "Hold Thick Skin's shield for when Flamespitter is burning you. It turns the grey health into a shield.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:TahmKench:Rumble:3",
+          "text": "Walk out of The Equalizer's fire; staying in it hurts a lot and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:TahmKench:Rumble:4",
+          "text": "Use Abyssal Dive only when Rumble can't punish the long channel. Enemies can cancel it by stunning you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "062f710ed6b759821dfb5878acb15838007ab48ad12ae9aa01face3429221647",
+      "tips": [
+        {
+          "id": "top:TahmKench:Sion:0",
+          "text": "Hit Sion with Tongue Lash when he starts charging Decimating Smash; it slows him and you heal.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Sion-Q", "start": 50, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:TahmKench:Sion:1",
+          "text": "Stay out of Sion's charge line, and sidestep a long Decimating Smash before it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:TahmKench:Sion:2",
+          "text": "Use Thick Skin's shield when Sion's Soul Furnace burst or a full Smash is coming, and heal instead when you can disengage.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Sion-W", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:TahmKench:Sion:3",
+          "text": "Do not chase Sion into a kill. His Glory in Death brings him back, hits fast and heals him.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b7cbdd1ff9109f171def7d6143865877c65d3de2e768164b349927fb97ea93f0",
+      "tips": [
+        {
+          "id": "top:TahmKench:Teemo:0",
+          "text": "Land Tongue Lash on Teemo to slow him and start stacking An Acquired Taste; he has little way to stop you closing in.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Teemo", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 57,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:TahmKench:Teemo:1",
+          "text": "Walk through enemy mushrooms carefully; Noxious Trap is hidden. Shoot them with attacks to clear them before you push.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:TahmKench:Teemo:2",
+          "text": "Use Thick Skin's shield when Teemo's poison and darts have built up damage, since Toxic Shot hurts over time.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Teemo", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Teemo-E", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:TahmKench:Teemo:3",
+          "text": "Expect Teemo to vanish in brush with Guerrilla Warfare; stay out of it or ward it before you walk in.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 7, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 37,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:TahmKench:Teemo:4",
+          "text": "Use Abyssal Dive to close the gap once Teemo is out of reach or to escape, as he is hard to catch on foot.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Teemo", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:TahmKench:Teemo:5",
+          "text": "Once Teemo has three stacks, Tongue Lash stuns him, so follow up with Devour at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f60162f83591857e17652c7ac06f4d075fb33c46832642127df48edd06f4476d",
+      "tips": [
+        {
+          "id": "top:TahmKench:Vayne:0",
+          "text": "Hit Vayne with Tongue Lash to slow her. She is fragile, so lean on her when she steps up.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:TahmKench:Vayne:1",
+          "text": "Stay away from walls behind you. Condemn stuns you if it pushes you into terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:TahmKench:Vayne:2",
+          "text": "Press Thick Skin when you take a big hit and need to survive. Save the healing for when you can disengage.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:TahmKench:Vayne:3",
+          "text": "Abyssal Dive knocks Vayne up when you land it. Aim it where she will be, not where she stands, since she tumbles away.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f5a6d213407ef6bc504f522a8aca4e79e78fa16d805f55dee8d4544f5bee3d85",
+      "tips": [
+        {
+          "id": "top:TahmKench:Yone:0",
+          "text": "Hit Yone with Tongue Lash to slow him and heal, then keep attacking to build stacks of An Acquired Taste.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 87,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:TahmKench:Yone:1",
+          "text": "Yone's dashes and shield make him slippery, so use Tongue Lash when he walks up to trade. At three stacks it stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 51, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:TahmKench:Yone:2",
+          "text": "Press Thick Skin to shield only when you expect more damage soon. If you can break off the fight, let it heal you instead.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:TahmKench:Yone:3",
+          "text": "Yone's Mortal Steel knock up hits at his third cast, so stay out of his reach once he has stacks. Bait the dash, then trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-Q", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "knocked-up", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:TahmKench:Yone:4",
+          "text": "Yone can't be pulled by Devour while he is in spirit form with displacement immunity on recast. Save Devour for a moment he can't escape.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 24, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 101,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "161abdb33506793e1691ab0af148da54a49ed0960df5f41cce4bb9f4ae0538ca",
+      "tips": [
+        {
+          "id": "support:TahmKench:Bard:0",
+          "text": "Hit Bard with Tongue Lash to start building An Acquired Taste. At three stacks, your next Tongue Lash stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 44,
+              "end": 61
+            },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 90,
+              "end": 101
+            },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:TahmKench:Bard:1",
+          "text": "Walk over Caretaker's Shrine as the enemy. It is destroyed and nobody gets the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 10, "end": 28 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:TahmKench:Bard:2",
+          "text": "Stay out of a straight line with your ally and keep minions out of the line. Cosmic Binding stuns when it hits a second enemy or a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 77, "end": 91 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:TahmKench:Bard:3",
+          "text": "Use the Thick Skin shield when you are about to be stunned or burst. Take the heal instead when you can disengage and be left alone.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:TahmKench:Bard:4",
+          "text": "When Bard's Tempered Fate lands, don't dive into it. Wait it out, because nobody can be hurt inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Bard-R", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f2c05c9b067a98e13ab8b350323fc07927d1c9ce07e60a39fb511f8fbcf2f032",
+      "tips": [
+        {
+          "id": "support:TahmKench:Braum:0",
+          "text": "Aim Tongue Lash around Unbreakable or wait until Braum's shield is down; he blocks it when facing you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Braum-E", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Braum", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:TahmKench:Braum:1",
+          "text": "Stay out of Braum's reach once he marks you; three more hits from him or his ally means you are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:TahmKench:Braum:2",
+          "text": "Stay out of Glacial Fissure's line. When it lands, don't walk across the ice, since it leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:TahmKench:Braum:3",
+          "text": "Use Thick Skin's shield when you expect a burst of damage; Braum's slow and stun mean you cannot always wait for the healing.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Braum", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "23028627edbf904121c58b95b241caa2e86d8cc3010788cf1bcef74d4ec55cb9",
+      "tips": [
+        {
+          "id": "support:TahmKench:Karma:0",
+          "text": "Land Tongue Lash on Karma. It slows her, heals you, and she has no dash to escape the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Karma", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:TahmKench:Karma:1",
+          "text": "Build stacks of An Acquired Taste with attacks, then stun Karma with Tongue Lash for a safe all-in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 16,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Karma", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:TahmKench:Karma:2",
+          "text": "Karma is slowed by nothing, so stay out of Inner Flame's line. It stops at the first unit it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:TahmKench:Karma:3",
+          "text": "Watch for the circle left by a Mantra-boosted Inner Flame and leave it quickly, because it slows you and then bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Karma-Q", "start": 46, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:TahmKench:Karma:4",
+          "text": "Move away from Focused Resolve's tether to break it. If it holds, you are rooted and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cf4c307f5dbc9b9bed069b6a24bd9c576619f3efac94432e2c4a03aa1b62e4f7",
+      "tips": [
+        {
+          "id": "support:TahmKench:Leona:0",
+          "text": "Stay out of Leona's Zenith Blade line, because a hit means she dashes onto you and roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Leona-E", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:TahmKench:Leona:1",
+          "text": "Hit Leona with Tongue Lash as she walks up. It slows her and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:TahmKench:Leona:2",
+          "text": "Use Thick Skin's shield when Leona is about to burst you. Skip it if you want the healing.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Leona", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:TahmKench:Leona:3",
+          "text": "Don't start Abyssal Dive with Leona nearby. Her stun or root can interrupt the channel.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:TahmKench:Leona:4",
+          "text": "When Leona raises Eclipse, step back out of range before it detonates.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e861ba0d62ffe632288be2faeee02cec67157e6f1a900b96dc8b909990f7e45a",
+      "tips": [
+        {
+          "id": "support:TahmKench:Lulu:0",
+          "text": "Do not channel Abyssal Dive while Lulu can reach you with Whimsy. A polymorph during the channel cancels the dive.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "Lulu", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Lulu-W", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:TahmKench:Lulu:1",
+          "text": "Hit Lulu with Tongue Lash to build stacks. Three stacks lets you stun her or Devour her.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:TahmKench:Lulu:2",
+          "text": "Stand behind minions when Lulu attacks. They block Pix's bolts, and the slow from Glitterlance is easier to dodge.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:TahmKench:Lulu:3",
+          "text": "Take Lulu's poke by storing it in Thick Skin. Hold the shield for a big hit, because using it stops the healing.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "poke", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f221713a74ec579f3d0570d5a795671518aac439cd3f0779d309b26f4b24a665",
+      "tips": [
+        {
+          "id": "support:TahmKench:Lux:0",
+          "text": "Stand behind minions to stop Light Binding from reaching you, since it only roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 29, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:TahmKench:Lux:1",
+          "text": "Put stacks on Lux with basic attacks and Tongue Lash when she steps forward. Her low health makes a stun and Devour deadly.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 41, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 109,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:TahmKench:Lux:2",
+          "text": "Use the Thick Skin shield when Lux is about to fire Final Spark.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Lux", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Lux-R", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:TahmKench:Lux:3",
+          "text": "Use Abyssal Dive to cut across the lane onto Lux when she has used Lucent Singularity or Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 45, "end": 48 },
+            { "kind": "ability", "key": "Lux-E", "start": 67, "end": 85 },
+            { "kind": "ability", "key": "Lux-Q", "start": 89, "end": 102 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:TahmKench:Lux:4",
+          "text": "Move out of Lucent Singularity quickly. It slows you, and its blast slows you more.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f8ab3c08317f5b4c133df2590a72dde0dcbd83794e215739e148d5768c739df6",
+      "tips": [
+        {
+          "id": "support:TahmKench:Milio:0",
+          "text": "Land Tongue Lash on Milio to build stacks of An Acquired Taste. At three stacks, the next Tongue Lash stuns him, so keep poking until then.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 20, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 45,
+              "end": 62
+            },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 90,
+              "end": 101
+            },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 },
+            { "kind": "keyword", "key": "poke", "start": 121, "end": 127 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:TahmKench:Milio:1",
+          "text": "Milio is fragile and has no dash of his own. Cast Devour during Tongue Lash on him at three stacks to pull him away from his carry.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:TahmKench:Milio:2",
+          "text": "Stay behind your minions. Ultra Mega Fire Kick stuns the first enemy it hits, and a minion in front of you can block it.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 26, "end": 46 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:TahmKench:Milio:3",
+          "text": "Use the Thick Skin shield after taking a big hit from Milio's poke, or let it heal you if the fight is over.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:TahmKench:Milio:4",
+          "text": "Wait out Breath of Life before you dive in. It cleanses crowd control from his allies, so a stun or knock up is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 },
+            { "kind": "keyword", "key": "knocked-up", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "20e64cab7e8fdb97956c9546399461740737c9ea2bcdffd233a26231aa819dc6",
+      "tips": [
+        {
+          "id": "support:TahmKench:Nami:0",
+          "text": "Dodge Aqua Prison by moving sideways once Nami throws it; the bubble lands after a delay. If it misses, step in and trade, because her cooldown is long.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Nami", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:TahmKench:Nami:1",
+          "text": "Hit Nami with Tongue Lash three times, with basic attacks or the ability, then Devour her. Her Aqua Prison stun can't save her.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 79, "end": 85 },
+            { "kind": "ability", "key": "Nami-Q", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:TahmKench:Nami:2",
+          "text": "Land Tongue Lash on Nami when she steps up to cast; it slows her and heals you. Nami is fragile, so a few hits hurt her.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 },
+            { "kind": "champion", "key": "Nami", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:TahmKench:Nami:3",
+          "text": "Use Abyssal Dive to jump onto Nami when she is out of position. It knocks up everything in the area.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "knocked-up", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:TahmKench:Nami:4",
+          "text": "Her enemy-hitting spells cost her mana, so poke her with Tongue Lash when she wastes them.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:TahmKench:Nami:5",
+          "text": "Back off when her ally is empowered by Tidecaller's Blessing; the slow and extra damage only last a few hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 39, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:TahmKench:Nami:6",
+          "text": "Step out of the path of Tidal Wave; it travels slowly. Press Thick Skin if you can't dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "36ed447042fce08ddf6315e9d198001a40421ea3eac540347bd3bfeda4a89b3a",
+      "tips": [
+        {
+          "id": "support:TahmKench:Nautilus:0",
+          "text": "Stay behind your minions so Dredge Line stops on them; Nautilus's anchor hits the first enemy in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Nautilus", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:TahmKench:Nautilus:1",
+          "text": "Use Tongue Lash to slow Nautilus when he walks up, and watch your stacks of An Acquired Taste to know when you can stun him.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 24, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 76,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:TahmKench:Nautilus:2",
+          "text": "Press the Thick Skin shield when Nautilus dives in with a stun combo; he will burst you before healing matters.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Nautilus", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:TahmKench:Nautilus:3",
+          "text": "Hold still when Riptide goes off next to you until the waves finish, instead of running into the later explosions.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:TahmKench:Nautilus:4",
+          "text": "Kill or avoid Nautilus's shield when he has Titan's Wrath up; his attacks then hurt everyone near the target.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a0d54674c691ec9a8784b4f615ff2eec50dfd41622f0e40fc1de8e3080169520",
+      "tips": [
+        {
+          "id": "support:TahmKench:Pantheon:0",
+          "text": "Land Tongue Lash on Pantheon when he steps up; it slows him and builds stacks toward a stun.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:TahmKench:Pantheon:1",
+          "text": "Do not walk into Aegis Assault from the front; hit Pantheon from the side or wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 17, "end": 30 },
+            { "kind": "champion", "key": "Pantheon", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:TahmKench:Pantheon:2",
+          "text": "Use Thick Skin's shield when Pantheon jumps in with Shield Vault, since it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Pantheon", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 52, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:TahmKench:Pantheon:3",
+          "text": "Keep your health up; Comet Spear hits much harder against low health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:TahmKench:Pantheon:4",
+          "text": "Move out of the marker when Grand Starfall begins; there is a long warning before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "886312543c2aed22d4d9cd4beea047569a0b5adae1383b523931163245942f67",
+      "tips": [
+        {
+          "id": "support:TahmKench:Pyke:0",
+          "text": "Keep Thick Skin's shield for when Pyke is about to burst you; the shield only lasts a short time, so press it as he commits.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Pyke", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:TahmKench:Pyke:1",
+          "text": "Hit Pyke with Tongue Lash to slow him, then follow with your basic attacks to build stacks of An Acquired Taste.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 94,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:TahmKench:Pyke:2",
+          "text": "Pyke is fragile, so with three stacks, use Tongue Lash to stun him and punish him while he cannot act.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:TahmKench:Pyke:3",
+          "text": "Do not chase Pyke when he vanishes; he heals back damage while hidden. Back off and wait for him to show himself.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:TahmKench:Pyke:4",
+          "text": "Stay close to your ally. Devour can pull them out of danger, and its shield soaks up a Pyke combo.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 25, "end": 31 },
+            { "kind": "champion", "key": "Pyke", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "908d12d92aabaefa8958db8a8a9c589b5f7a763217f48bd82190014d8f106530",
+      "tips": [
+        {
+          "id": "support:TahmKench:Senna:0",
+          "text": "Hit Senna with Tongue Lash when she walks up to attack. She has no escape, and the slow makes her an easy target for your next hit.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:TahmKench:Senna:1",
+          "text": "Stay out of Senna's long attack range early, because she outranges you and will poke you down. Close in only once your Tongue Lash is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 119,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:TahmKench:Senna:2",
+          "text": "Use Thick Skin's shield after Senna's poke lands if you plan to keep trading. If you plan to back off, let the stored health heal you instead.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Senna", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:TahmKench:Senna:3",
+          "text": "Build three stacks of An Acquired Taste on Senna, then cast Devour on her. She loses her damage and her allies see you carry her away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 22,
+              "end": 39
+            },
+            { "kind": "champion", "key": "Senna", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:TahmKench:Senna:4",
+          "text": "Dodge Last Embrace by moving sideways before it sticks. Being rooted lets her team punish you, and Abyssal Dive can't be cast while you are stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 99, "end": 111 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "972dcd031d210a38839b6ab27d1435748e292917480e0c4c965c755769e20bab",
+      "tips": [
+        {
+          "id": "support:TahmKench:Seraphine:0",
+          "text": "Keep Abyssal Dive for when Seraphine is locked in place or you need to close the gap. It knocks up everyone it lands on.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 27, "end": 36 },
+            { "kind": "keyword", "key": "knocked-up", "start": 89, "end": 98 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:TahmKench:Seraphine:1",
+          "text": "Step out of the line of Beat Drop. Once you are slowed, her next hit roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:TahmKench:Seraphine:2",
+          "text": "Land Tongue Lash on Seraphine to slow her and heal yourself. It is your best answer when she stands at range.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Seraphine", "start": 20, "end": 29 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:TahmKench:Seraphine:3",
+          "text": "Use the Thick Skin shield when she lands a big hit and you can't safely wait for the heal.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ef4ee82de25ca1375d7f8f7eb2f07ab7acef50c582aeafef39d46413294207f2",
+      "tips": [
+        {
+          "id": "support:TahmKench:Sona:0",
+          "text": "Land Tongue Lash on Sona when she steps forward to cast. It slows her and heals you, and she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:TahmKench:Sona:1",
+          "text": "Build three stacks on Sona, then Devour her. She cannot act while swallowed, and it takes her out of the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:TahmKench:Sona:2",
+          "text": "Use Thick Skin's shield when Sona's poke is heavy. Let it heal you if you can stay out of damage for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sona", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:TahmKench:Sona:3",
+          "text": "Do not stand where Crescendo can reach you when you commit. It stuns you and your team can be caught.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:TahmKench:Sona:4",
+          "text": "Hit Sona with Abyssal Dive when she is out of position. It knocks her up and you get part of the cooldown back.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f7f99a94b3aa4b42f68059b76fb3506407951da3b70a1968504ea8f383232d0b",
+      "tips": [
+        {
+          "id": "support:TahmKench:Thresh:0",
+          "text": "Watch for Thresh starting Death Sentence; it has a long cast time, so step aside or break line of sight before the scythe leaves.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:TahmKench:Thresh:1",
+          "text": "Use Thick Skin's shield when Thresh and his partner are poking you hard, and let it heal you when they back off.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Thresh", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:TahmKench:Thresh:2",
+          "text": "Hit Thresh with Tongue Lash to slow him, then follow with attacks to build An Acquired Taste toward a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 75,
+              "end": 92
+            },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:TahmKench:Thresh:3",
+          "text": "Do not channel Abyssal Dive near Thresh. A pull or stun from Flay or Death Sentence can interrupt your dive.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "Thresh", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Thresh-E", "start": 61, "end": 65 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 69, "end": 83 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:TahmKench:Thresh:4",
+          "text": "Devour your ally when Thresh aims at them. They dodge the hook and get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-R", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Thresh", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,859 @@
+{
+  "schemaVersion": 1,
+  "champion": "Rammus",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "58991634b0327daf41e5973456d029711435d6eab545c4ec69ed3b411609f415",
+      "tips": [
+        {
+          "id": "jungle:Rammus:general:0",
+          "text": "Use Frenzying Taunt on jungle monsters as well as champions; it deals extra damage to them, which helps your clears.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Rammus:general:1",
+          "text": "Taunt an enemy standing near your tower so the tower attacks them while they cannot walk away.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Rammus:general:2",
+          "text": "Roll with Powerball to cross the map fast and start a gank from out of sight. The enemy is slowed when you hit.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 10, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Rammus:general:3",
+          "text": "Use Powerball to run away when a fight turns bad. Recast it to stop early if you need to.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Rammus:general:4",
+          "text": "Use Defensive Ball Curl when enemies are attacking you with basic attacks; they take magic damage back for each hit.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Rammus:general:5",
+          "text": "Cast Soaring Slam while rolling in Powerball so enemies in the center are knocked up and take extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-R", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 35, "end": 44 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Rammus:general:6",
+          "text": "Late in the game, use Soaring Slam on towers; it deals double damage to them. Slip away to hit buildings if a team fight is going badly.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-R", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "1ed82054e935abd20b7b58c88ab62165322ea53ced5ffde508446b893f45a8fd",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Graves:0",
+          "text": "Use Frenzying Taunt on Graves when he is close, so he can't shoot and you can walk up to him. It works on monsters too, so it also helps you clear camps.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Rammus:Graves:1",
+          "text": "Graves deals mostly physical damage. Turn on Defensive Ball Curl before his shotgun fight starts, and enemies who attack you take damage back.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Rammus-W", "start": 45, "end": 64 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Rammus:Graves:2",
+          "text": "Roll at Graves with Powerball to close the gap. When it hits, he is knocked back and slowed, so you can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Rammus:Graves:3",
+          "text": "Cast Soaring Slam during Powerball when you can reach Graves. Anyone in the center is knocked up and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-R", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 25, "end": 34 },
+            { "kind": "champion", "key": "Graves", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 96 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Rammus:Graves:4",
+          "text": "Defensive Ball Curl is off when you are out of the stance, and you are much weaker then. Graves' End of the Line hurts most in that window.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 0, "end": 19 },
+            { "kind": "ability", "key": "Graves-Q", "start": 97, "end": 112 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b44c9afdc3bb20fa6b36d5cf5ebc042840ba537443495e26b31507ee34bf68ad",
+      "tips": [
+        {
+          "id": "jungle:Rammus:JarvanIV:0",
+          "text": "Use Frenzying Taunt on Jarvan when he leaps in or tries to engage, then punish him while he can only walk at you.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Rammus:JarvanIV:1",
+          "text": "Turn on Defensive Ball Curl before Jarvan hits you; his basic attacks hurt him and his lance damage is physical.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Rammus:JarvanIV:2",
+          "text": "Roll Powerball into Jarvan when he is stuck inside his Cataclysm arena; he cannot easily get away from the knockback and slow.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 55, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Rammus:JarvanIV:3",
+          "text": "Powerball is your escape if Jarvan jumps on you. Roll away before his arena closes you in.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 0, "end": 9 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Rammus:JarvanIV:4",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you get knocked up by Dragon Strike.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 88, "end": 101 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "25a9aeea00617ec4599d44b2025b81f086e072fb1e9956df3e12a041d53d5688",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Kayn:0",
+          "text": "Use Frenzying Taunt on Kayn when he commits to a fight. He can't act while taunted, and Rammus gets free hits on him.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Rammus", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Rammus:Kayn:1",
+          "text": "Turn on Defensive Ball Curl before Kayn dives in. His attacks and spells are physical, so the extra Armor blunts them and he takes damage for attacking you.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "Kayn", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Rammus:Kayn:2",
+          "text": "Chase Kayn with Powerball when he tries to run. He is slowed and knocked back when you hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Rammus:Kayn:3",
+          "text": "Taunt Kayn near your tower so the tower hits him as well.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3cdb2e7b2cd7c20e76d71bd24493656e9f8fb8426581bff55f06f2fb162a20f9",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Khazix:0",
+          "text": "Stay near allied minions, champions or your tower so Kha'Zix cannot treat you as isolated; Taste Their Fear hurts far more on a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 53, "end": 60 },
+            { "kind": "keyword", "key": "isolated", "start": 81, "end": 89 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 91, "end": 107 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Rammus:Khazix:1",
+          "text": "Use Frenzying Taunt on Kha'Zix when he jumps in, so he cannot fight back or flee for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Rammus:Khazix:2",
+          "text": "Turn on Defensive Ball Curl before he attacks; his basic attacks, including the Unseen Threat hit, take damage back.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 80,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Rammus:Khazix:3",
+          "text": "Roll into Kha'Zix with Powerball to knock him back and leave him slowed, then taunt him once he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Rammus:Khazix:4",
+          "text": "Chase him down with Powerball when his Leap and Void Assault are on cooldown; he has no easy escape then.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "Khazix-E", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Khazix-R", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fd11ec9f6a73602722a1287f28569c4a030fd909612d5a19744e62f06b7ce901",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Kindred:0",
+          "text": "Use Frenzying Taunt on Kindred when she is close to your team. She is fragile, so a taunt lets your allies burst her down.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kindred", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Rammus:Kindred:1",
+          "text": "Chase Kindred with Powerball. She is fragile, and being slowed after the hit makes it hard for her to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Rammus:Kindred:2",
+          "text": "Turn on Defensive Ball Curl when Kindred attacks you. Each basic attack she lands on you hurts her back.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "Kindred", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Rammus:Kindred:3",
+          "text": "Do not jump in while Lamb's Respite is up. Nobody inside can die, so wait for it to end before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Rammus:Kindred:4",
+          "text": "Kill the jungle camps that Wolf has marked for a Hunt. It slows down her growth.",
+          "refs": [],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2d7bf38156c13f7631c2b55e4858a0a4870608bcacb9e2703f306921eaafffe8",
+      "tips": [
+        {
+          "id": "jungle:Rammus:LeeSin:0",
+          "text": "Use Frenzying Taunt on Lee Sin when he commits to a fight or invades your camps; he cannot kick or dash while taunted.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Rammus:LeeSin:1",
+          "text": "Stay in Defensive Ball Curl when Lee Sin hits you with basic attacks; his attacks hurt him and his physical damage does little to you.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "LeeSin", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Rammus:LeeSin:2",
+          "text": "Roll at Lee Sin with Powerball to chase him; he is slowed and stunned when you hit, so you can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Rammus:LeeSin:3",
+          "text": "Use Soaring Slam to leap out of Dragon's Rage's reach; you ignore crowd control while in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "127cd725f31ce7ae0269024e1fd085e0d64554adf079933fea86f7dce1eb16d8",
+      "tips": [
+        {
+          "id": "jungle:Rammus:MasterYi:0",
+          "text": "Keep Defensive Ball Curl up when Master Yi dives on you. His attacks hurt him and your armor makes his hits weak.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "MasterYi", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Rammus:MasterYi:1",
+          "text": "Taunt Master Yi with Frenzying Taunt when he commits, so he can't attack your carry.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Rammus-E", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Rammus:MasterYi:2",
+          "text": "Master Yi can't be slowed during Highlander, so don't rely on Powerball's slow then. Wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 62, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Rammus:MasterYi:3",
+          "text": "Master Yi is untargetable during Alpha Strike, so don't waste Frenzying Taunt on him while it is happening.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 33, "end": 45 },
+            { "kind": "ability", "key": "Rammus-E", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Rammus:MasterYi:4",
+          "text": "Roll into Master Yi with Powerball while he heals in Meditate; you stun him and cut the heal short.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 53, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac08e7718a9963c504d12d1f4e306bec0c15f57f98ae8212a5b3c5f1a0441db2",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Naafiri:0",
+          "text": "Use Frenzying Taunt on Naafiri when she commits to you; she can't attack or use her abilities while taunted, so your team gets free hits.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Rammus:Naafiri:1",
+          "text": "Turn on Defensive Ball Curl before she jumps in. She deals physical damage, so the extra Armor cuts her burst, and her packmates take damage for hitting you.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Rammus:Naafiri:2",
+          "text": "Open with Powerball to catch her; she is slowed and knocked back when you hit. Follow with Frenzying Taunt while she is in reach.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 10, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Rammus-E", "start": 91, "end": 106 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Rammus:Naafiri:3",
+          "text": "Use Soaring Slam on her after she kills someone and dives; the slow makes her hard to escape with.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4fbaba58b2658af17aec45f939e967fc8a11f1452f8d8bc90d02231a4f02203c",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Nocturne:0",
+          "text": "Keep Defensive Ball Curl ready for when Nocturne jumps on you with Paranoia; his attacks then hurt him, and his physical damage is cut sharply.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Nocturne", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Rammus:Nocturne:1",
+          "text": "Taunt Nocturne with Frenzying Taunt when he dives in, so he stops hitting your carry and attacks you instead.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Rammus-E", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Rammus:Nocturne:2",
+          "text": "Nocturne's Shroud of Darkness blocks the next enemy ability. Bait it with a less important spell, then use Frenzying Taunt.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 11, "end": 29 },
+            { "kind": "ability", "key": "Rammus-E", "start": 107, "end": 122 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Rammus:Nocturne:3",
+          "text": "Chase Nocturne with Powerball when he is off his Dusk Trail; he gets slowed and knocked back when you hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Rammus:Nocturne:4",
+          "text": "Break away with Powerball if Unspeakable Horror lands on you. Moving out of range breaks the tether before the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4dfaa6e65d35b6f29ae12a61f738a5de47b8e438b33264b6c98b80a7270c5dc9",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Shyvana:0",
+          "text": "Use Frenzying Taunt on Shyvana when she dives in, then fight her while she can't act. It also hits monsters, so it helps with your own camps.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Rammus:Shyvana:1",
+          "text": "Turn on Defensive Ball Curl before Shyvana attacks you. Her basic attacks hurt her back, and her Emberstrike damage is cut by your resistances.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "Shyvana", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Rammus:Shyvana:2",
+          "text": "Roll into Shyvana with Powerball to knock her back and leave her slowed. She then can't easily stay on you or chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Rammus:Shyvana:3",
+          "text": "Use Powerball to run away when Shyvana's Dragon's Descent flies at you. Her fear and slow only last briefly, so don't stand still in the flames.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Shyvana", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 41, "end": 57 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6bfbc1abda02e6d2ba98baab570af1c32b7eea6b7b7e5335152563b0b8b4dfa0",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Skarner:0",
+          "text": "Use Frenzying Taunt on Skarner when he starts Ixtal's Impact; the taunt can stop his charge before he drags anyone.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Skarner-E", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Rammus:Skarner:1",
+          "text": "Skarner's Shattered Earth and basic attacks hit physical damage, so Defensive Ball Curl lets you shrug off his fights and hurts him for attacking you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Rammus-W", "start": 68, "end": 87 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Rammus:Skarner:2",
+          "text": "Hold Soaring Slam for the fight after Skarner commits his Impale, so you can slow his whole team as they chase.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Skarner", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Skarner-R", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Rammus:Skarner:3",
+          "text": "Do not stay near Skarner with Defensive Ball Curl down; his attacks stack up and hurt you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Rammus-W", "start": 30, "end": 49 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "55be2e5a8dbe62ddfe59f865b8009c3c90d5406a691f5b747ec5fcb9efdc88cb",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Sylas:0",
+          "text": "Use Frenzying Taunt on Sylas when he dashes in, then hit him while he can't act. He has few ways to escape it.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Rammus:Sylas:1",
+          "text": "Turn on Defensive Ball Curl when Sylas attacks you; his attacks take damage back, and his magic damage is weakened by your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Rammus:Sylas:2",
+          "text": "Roll into Sylas with Powerball to slow him, then follow up. He can't easily run from your speed.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Rammus:Sylas:3",
+          "text": "Expect Sylas to steal Soaring Slam with Hijack once you reach level 6. Don't use it carelessly when he is nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Rammus-R", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Sylas-R", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a0bab3ddea9d8434029211e0517250c7e2682f520695368b6c09d815c04e42bc",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Talon:0",
+          "text": "Use Frenzying Taunt on Talon when he jumps in; he has to stop and can't use his abilities to escape while taunted.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Rammus:Talon:1",
+          "text": "Turn on Defensive Ball Curl as Talon dives in. His damage is all physical, and attacks on you hurt him back.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Rammus:Talon:2",
+          "text": "Build up armor and stay tanky; Talon deals physical damage, so Spiked Shell turns that armor into more damage for you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 31, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Rammus-passive",
+              "start": 63,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Rammus:Talon:3",
+          "text": "Use Powerball to chase Talon when his Shadow Assault is down, because he has no easy way out then.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Talon-R", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Rammus:Talon:4",
+          "text": "Powerball into Soaring Slam to knock Talon up and slow him when he is caught out, but expect him to roam and gank, so keep track of where he is.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Rammus-R", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d85bc1087435f3e650505baff9c02bbbd0258efe8dad25403c09c7e50929cc94",
+      "tips": [
+        {
+          "id": "jungle:Rammus:Viego:0",
+          "text": "Use Frenzying Taunt on Viego when he commits to a fight; he can't attack or cast while taunted, so your team gets free hits.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Rammus:Viego:1",
+          "text": "Keep Defensive Ball Curl up when Viego attacks you; it adds armor and magic resist and hurts him for every basic attack.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Rammus:Viego:2",
+          "text": "Roll into Viego with Powerball so he is slowed and can't easily walk away, then follow up with a taunt.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Rammus:Viego:3",
+          "text": "Watch for Viego's Spectral Maw; it stuns the first enemy it hits, so stay out of its line when he is charging.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Viego-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Rammus:Viego:4",
+          "text": "Look for Viego near his Harrowed Path mist; he can vanish there, so check it before you chase.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Viego-E", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c83ae6558cf73f56eeaef50e4a38f4b5488606970e6832e4bffef5c40a80e7b1",
+      "tips": [
+        {
+          "id": "jungle:Rammus:XinZhao:0",
+          "text": "Use Frenzying Taunt on Xin Zhao when he commits to a fight, so he must attack you instead of your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Rammus:XinZhao:1",
+          "text": "Turn on Defensive Ball Curl as Xin Zhao starts attacking; his Three Talon Strike hits are physical and he takes damage back from each basic attack.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 62, "end": 80 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Rammus:XinZhao:2",
+          "text": "Keep Powerball ready to catch Xin Zhao after he charges in; it knocks him back and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Rammus:XinZhao:3",
+          "text": "Keep your team spread out until Xin Zhao has used Crescent Guard, so it hits as few of you as possible.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Rammus:XinZhao:4",
+          "text": "Don't stand in the open without Defensive Ball Curl; Rammus is fragile out of the stance and Xin Zhao will punish it.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 32, "end": 51 },
+            { "kind": "champion", "key": "Rammus", "start": 53, "end": 59 },
+            { "kind": "champion", "key": "XinZhao", "start": 93, "end": 101 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

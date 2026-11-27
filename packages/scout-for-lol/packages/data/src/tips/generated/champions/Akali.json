@@ -1,0 +1,3392 @@
+{
+  "schemaVersion": 1,
+  "champion": "Akali",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "c73fbc40c5c4e96f1bbea0a79ab551df7cfbafc37ae63c720e7f90d94a524b1b",
+      "tips": [
+        {
+          "id": "top:Akali:general:0",
+          "text": "Throw Five Point Strike so the enemy is at the tip of the arc, because only the tip leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 6, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Akali:general:1",
+          "text": "Watch your energy bar. Five Point Strike costs a lot, so don't spam it and leave yourself empty when the enemy fights back.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 23, "end": 40 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Akali:general:2",
+          "text": "Use Twilight Shroud to escape a bad fight. It makes you invisible and fast, and it refills your energy.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Akali:general:3",
+          "text": "Attacking or casting inside Twilight Shroud breaks your invisibility. Area spells can also reveal you, so don't treat it as a perfect hiding spot.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Akali:general:4",
+          "text": "Cast Shuriken Flip, then recast it to dash to the marked enemy. It can also mark a smoke cloud, so you can use it to escape or close in.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Akali:general:5",
+          "text": "Save Perfect Execution for when the enemy is hurt. The second dash hits harder the lower their health is, so wait to recast it until they are low.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Akali:general:6",
+          "text": "After you hit an enemy with an ability, step out of the ring around them. Your next attack then has longer range and deals bonus damage.",
+          "refs": [],
+          "pWrong": 0.07
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Akali:combo:0",
+          "name": "Ultimate between dashes",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Akali-E" },
+            { "kind": "ability", "key": "Akali-E" },
+            { "kind": "ability", "key": "Akali-R" }
+          ],
+          "when": "When engaging a target and you want the ultimate to start mid-dash.",
+          "whenRefs": [],
+          "text": "Perfect Execution can be cast during the Shuriken Flip recast dash. Casting it there saves time on the engage and gives the target less time to react.",
+          "textRefs": [
+            { "kind": "ability", "key": "Akali-R", "start": 0, "end": 17 },
+            { "kind": "ability", "key": "Akali-E", "start": 41, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ae1733610aa1964eb980ec641eac73e0b304872d419c57a83cffa0c8c3970d3b",
+      "tips": [
+        {
+          "id": "middle:Akali:general:0",
+          "text": "Cast Twilight Shroud to turn invisible and walk away from danger. Attacking or casting a spell breaks the invisibility for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Akali:general:1",
+          "text": "Throw Shuriken Flip at an enemy or at your own smoke, then recast it to dash to the mark. The dash can cross walls.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Akali:general:2",
+          "text": "Use Five Point Strike at the edge of its range. Only enemies hit by the tip are slowed, and it hits harder when you have full energy.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Akali:general:3",
+          "text": "After you hit a champion with a spell, step out of the ring around them. Your next attack then has extra range and damage.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Akali:general:4",
+          "text": "Go for fragile champions at the back after your team starts the fight. Use Perfect Execution to jump in, then recast it to finish a weakened target.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 75, "end": 92 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Akali:general:5",
+          "text": "Save Twilight Shroud for escaping and for refilling energy before a trade. It adds to your max energy while the smoke is up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Akali:combo:0",
+          "name": "Shroud into Shuriken dash",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Akali-W" },
+            { "kind": "ability", "key": "Akali-E" },
+            { "kind": "ability", "key": "Akali-E" }
+          ],
+          "when": "When you want to close distance on a target from inside the smoke without being seen coming.",
+          "whenRefs": [],
+          "text": "Throw the shuriken so it marks the smoke cloud, then recast to dash through it. You get a stealthy gap close and can follow with your other spells.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Akali:combo:1",
+          "name": "Dash buffered Five Point Strike",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Akali-E" },
+            { "kind": "ability", "key": "Akali-E" },
+            { "kind": "ability", "key": "Akali-Q" }
+          ],
+          "when": "When dashing onto a target and you want the kunai to go out the moment you land.",
+          "whenRefs": [],
+          "text": "Press Q during the recast dash and it buffers, casting as soon as the dash ends. This saves time and keeps the damage tight.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "1698934a039eb871216dec8b152a20ea10ac7bd30a934c06b496189ee495da2d",
+      "tips": [
+        {
+          "id": "top:Akali:Aatrox:0",
+          "text": "Use Five Point Strike at its far edge so the enemy is slowed, and you can poke Aatrox without being easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 78 },
+            { "kind": "champion", "key": "Aatrox", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Akali:Aatrox:1",
+          "text": "Step out of The Darkin Blade's long first strike and its wide sweep, and trade back while his ability is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Akali:Aatrox:2",
+          "text": "Drop Twilight Shroud when Aatrox commits to a fight. It makes you invisible, and your speed boost lets you walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Akali:Aatrox:3",
+          "text": "Leave Infernal Chains by moving to the side before the pull happens.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Akali:Aatrox:4",
+          "text": "Use Perfect Execution to finish Aatrox when he is low on health, because the second dash hits harder against low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Akali:Aatrox:5",
+          "text": "Use Shuriken Flip to dash in and out of a trade, and take the second cast when you want to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a7dacb07a1b0a1ef1112b4d2269d810ed0ab47b01dc6aa03aaada3153661aff5",
+      "tips": [
+        {
+          "id": "top:Akali:Briar:0",
+          "text": "Use Twilight Shroud to turn invisible when Briar leaps at you; her frenzy can still lock onto you, so keep your distance and stay moving.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Akali:Briar:1",
+          "text": "Hit Briar with Five Point Strike at the edge of its range so she is slowed. Without that, she closes the gap fast.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Akali-Q", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Akali:Briar:2",
+          "text": "Save Shuriken Flip to escape or to chase a fleeing Briar. Its recast dash tracks the marked target and has no range limit.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Akali:Briar:3",
+          "text": "Fight Briar when she is low on health, since Perfect Execution hits harder on missing health. Do not chase a Briar who is healing.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-R", "start": 45, "end": 62 },
+            { "kind": "champion", "key": "Briar", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dc804d71cabb9088909c2ada9a4b1355c14ad1cd0aeac88e956d47daf34289bb",
+      "tips": [
+        {
+          "id": "top:Akali:Darius:0",
+          "text": "Poke Darius from the edge of range with Five Point Strike; at long range it also leaves him slowed, so he can't catch you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Akali:Darius:1",
+          "text": "Stay out of Apprehend's reach; if he pulls you in, he gets a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Akali:Darius:2",
+          "text": "Fight him when Apprehend is on cooldown. Then he has no way to drag you back.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Akali:Darius:3",
+          "text": "Drop Twilight Shroud to disengage when he closes in. Don't stay in melee, because Hemorrhage stacks up fast.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 82,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Akali:Darius:4",
+          "text": "Shuriken Flip's recast gets you out or in. Use it to leave after a trade, since Darius has little reach to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Akali:Darius:5",
+          "text": "Save Perfect Execution to finish Darius once he is low. Don't use it while he is healthy, because Decimate heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Darius-Q", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4effb4a76171e161723eef2c3571229a5ab93d637df5ee250c0c78582f746cf7",
+      "tips": [
+        {
+          "id": "top:Akali:Fiora:0",
+          "text": "Do not use Five Point Strike or Shuriken Flip into Fiora while she can use Riposte; she blocks the damage and slows or stuns you back.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 11, "end": 28 },
+            { "kind": "ability", "key": "Akali-E", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Fiora", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Fiora-W", "start": 75, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 115 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 124 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Akali:Fiora:1",
+          "text": "Bait Riposte with a cheap poke, then trade once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Akali:Fiora:2",
+          "text": "Hit Five Point Strike at its tip so Fiora is slowed and cannot easily close in with Lunge.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Fiora", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Akali:Fiora:3",
+          "text": "Hold Perfect Execution until Riposte is spent, then kill her with the second thrust once she is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "Fiora-W", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Akali:Fiora:4",
+          "text": "Use Twilight Shroud to disengage when Fiora commits to a fight; smoke hides you and the speed gets you away.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ce05efbafd964176d01a46817c71b943ed9c9fe5de162d71d807d44e0b811a1f",
+      "tips": [
+        {
+          "id": "top:Akali:Gangplank:0",
+          "text": "Hit Gangplank with Five Point Strike at its maximum range so he is slowed and you can poke without being punished.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Akali-Q", "start": 19, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Akali:Gangplank:1",
+          "text": "Stay out of range of his Powder Keg explosions; they slow you and hurt a lot. Walk around kegs you see instead of through them.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Akali:Gangplank:2",
+          "text": "Wait until Remove Scurvy is used before going all in; it cleanses crowd control and heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Akali:Gangplank:3",
+          "text": "Use Twilight Shroud to break line of sight and reset the fight when he has kegs ready.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Akali:Gangplank:4",
+          "text": "Watch for level 6; Cannon Barrage can hit you anywhere on the map, so do not sit low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "86ad27a2cd33579a3f183150c3f18edac3544900f799625eaa2cf205519fafa9",
+      "tips": [
+        {
+          "id": "top:Akali:Garen:0",
+          "text": "Fight Garen from long range with Five Point Strike; his slow only lands on enemies at the tip, so poke him from max range and step back.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 33, "end": 50 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Akali:Garen:1",
+          "text": "Garen's Decisive Strike silences you on his next hit, so back off when he uses it. Do not walk into him while he has it ready.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Akali:Garen:2",
+          "text": "Use Shuriken Flip to hit him, then recast to dash in. Flip back out before Judgment can spin on you for long.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Garen-E", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Akali:Garen:3",
+          "text": "Use Twilight Shroud to escape or reposition if he gets close. Pick when to attack from inside the smoke.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Akali:Garen:4",
+          "text": "Keep trading while he is hurt, since Perseverance heals him only when he is not being hit. Keep poking so he cannot recover.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 37,
+              "end": 49
+            },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Akali:Garen:5",
+          "text": "Save Perfect Execution to finish him once he is low, because the second dash hurts more the lower his health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Akali:Garen:6",
+          "text": "Garen's Courage shield and damage reduction blunt a trade. Wait for it to end before going all in.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ad4db51b2dd42b62d4f76d458e558794d5a3d45de0c81a86be66b9bb0297a1c3",
+      "tips": [
+        {
+          "id": "top:Akali:Jayce:0",
+          "text": "Fight when Jayce has used his Shock Blast or To the Skies!; his poke is weaker and he has less to punish you with.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 11, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Akali:Jayce:1",
+          "text": "Drop Twilight Shroud on yourself when Jayce tries to trade at range; you turn invisible and move faster, so his shots are hard to line up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Akali:Jayce:2",
+          "text": "Throw Shuriken Flip at Jayce, then recast it to dash onto him. It also dashes you to a smoke cloud, which gives you a way to close or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Akali:Jayce:3",
+          "text": "Use Perfect Execution on Jayce when he is low. Its second thrust hurts more the less health he has, so save it to finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Akali:Jayce:4",
+          "text": "Stay at the tip of your range with Five Point Strike; Jayce is slowed there and has a harder time swinging his hammer at you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 35, "end": 52 },
+            { "kind": "champion", "key": "Jayce", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b8fdaeb9a102922c7bdf66964ccc63911d203d9bbaa5f94a066521185c18bb55",
+      "tips": [
+        {
+          "id": "top:Akali:KSante:0",
+          "text": "Use Twilight Shroud to dodge K'Sante's all-in; he cannot easily follow once you are invisible inside the smoke.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Akali:KSante:1",
+          "text": "Hit K'Sante with Five Point Strike at its tip so he is slowed, then step back out of his reach.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 17, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Akali:KSante:2",
+          "text": "Stay out of Ntofo Strikes range. After one hit, the next one stuns and pulls you in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Akali:KSante:3",
+          "text": "Save Shuriken Flip to escape or to close the gap on a wounded K'Sante, rather than using it just to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Akali:KSante:4",
+          "text": "When K'Sante is All Out he has far less health, so look to kill him then with Perfect Execution.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Akali-R", "start": 78, "end": 95 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5fb23af8d6b972d9b5325bd05ca2f2fcc9dac9fbc92a2f5396d792b1e07d38d7",
+      "tips": [
+        {
+          "id": "top:Akali:Malphite:0",
+          "text": "Trade with Five Point Strike at long range so the enemy is slowed. Avoid fighting Malphite while his shield is up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 11, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "champion", "key": "Malphite", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Akali:Malphite:1",
+          "text": "Malphite's Unstoppable Force can't be stopped once it starts. Keep Twilight Shroud or Shuriken Flip ready to get away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "ability", "key": "Akali-W", "start": 67, "end": 82 },
+            { "kind": "ability", "key": "Akali-E", "start": 86, "end": 99 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Akali:Malphite:2",
+          "text": "Wait for his Seismic Shard to be spent before you go in. Without it he has trouble catching you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Akali:Malphite:3",
+          "text": "Stay out of Ground Slam range between trades. It cuts your Attack Speed, which hurts your empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "019e84b40ae5463e5c0bab2c3baead71733a1548a2ad41ddb8a800e2b7acfa09",
+      "tips": [
+        {
+          "id": "top:Akali:Mordekaiser:0",
+          "text": "Stay out of Death's Grasp range and watch for it when you walk up to trade; being pulled in sets up Mordekaiser's combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 12,
+              "end": 25
+            },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 100,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Akali:Mordekaiser:1",
+          "text": "Hit Mordekaiser with Five Point Strike at its edge so he is slowed, and do not stay in melee when his aura is active.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Akali-Q", "start": 21, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Akali:Mordekaiser:2",
+          "text": "Do not burst into his Indestructible shield. Wait for it to fade, then trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 22,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Akali:Mordekaiser:3",
+          "text": "Keep Perfect Execution or Shuriken Flip ready to escape once he has Realm of Death at level 6. Once you are inside, you are cut off from help.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "Akali-E", "start": 26, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 68,
+              "end": 82
+            }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d8a56f7ef49fbeecc1ed577c47d19055b2248ad4ae7e60bbf1d4c50ceccb24bf",
+      "tips": [
+        {
+          "id": "top:Akali:Rumble:0",
+          "text": "Fight Rumble when he is Overheating, since he cannot cast spells then. Keep your distance from his basic attacks, which hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Akali:Rumble:1",
+          "text": "Use Five Point Strike at its tip to hit him and slow him. Stay out of his Flamespitter range when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Akali:Rumble:2",
+          "text": "Do not stand in The Equalizer's fire. Leave with Shuriken Flip or Perfect Execution rather than staying to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Akali-E", "start": 49, "end": 62 },
+            { "kind": "ability", "key": "Akali-R", "start": 66, "end": 83 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Akali:Rumble:3",
+          "text": "Dodge Electro Harpoon where you can, since two hits slow you heavily and make you take more damage from your enemy's magic.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "df8ccf72c1cd5ee3b61c4271709e4666255b75cb94c6a353691e9bfeac4456d9",
+      "tips": [
+        {
+          "id": "top:Akali:Sion:0",
+          "text": "Stay out of Decimating Smash range while Sion charges it. Step sideways or dash away, because a long charge means a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Akali:Sion:1",
+          "text": "Poke with Five Point Strike at max range so the enemy is slowed, and walk away before Sion can answer.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Akali-Q", "start": 10, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            { "kind": "champion", "key": "Sion", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Akali:Sion:2",
+          "text": "Use Shuriken Flip to escape or to reach Sion only when his Decimating Smash is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Sion-Q", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Akali:Sion:3",
+          "text": "Do not finish Sion in a long fight. Glory in Death brings him back with fast, healing attacks, so back away until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Sion-passive", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Akali:Sion:4",
+          "text": "Drop Twilight Shroud to break away when Sion starts charging his ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sion", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6dbcc4d23c6ff2224e11c45391123f8dcc6f929ed2baa90d8a84607514c6e0b5",
+      "tips": [
+        {
+          "id": "top:Akali:Teemo:0",
+          "text": "Stay out of Blinding Dart range when you can; the blind makes your attacks miss and ruins your Swinging Kama poke.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Akali:Teemo:1",
+          "text": "Look for Teemo mushrooms before dashing with Shuriken Flip or Perfect Execution; landing on one slows you and reveals you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Akali-E", "start": 45, "end": 58 },
+            { "kind": "ability", "key": "Akali-R", "start": 62, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Akali:Teemo:2",
+          "text": "Do not walk up and trade then back out; Toxic Shot keeps hurting you as you retreat. Commit fully or stay away.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Akali:Teemo:3",
+          "text": "Use Five Point Strike at long range to slow Teemo, and keep up your energy so you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Akali:Teemo:4",
+          "text": "Check brush before you step in, since Teemo can hide there invisible while moving.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Akali:Teemo:5",
+          "text": "Use Twilight Shroud to escape after a trade, but shuriken or Five Point Strike can break it, so wait out the cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Akali-Q", "start": 61, "end": 78 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bf3d8d848d9a3ddbb2710bd373ee4282013d98f91dd9c262859654ef19001a97",
+      "tips": [
+        {
+          "id": "top:Akali:Vayne:0",
+          "text": "Fight Vayne when she has used Tumble; her short dash is her best way out of your burst.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Akali:Vayne:1",
+          "text": "Never stand with a wall behind you when Vayne has Condemn up; it stuns you and hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Vayne-E", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Akali:Vayne:2",
+          "text": "Vayne is fragile, so jump on her with Perfect Execution once she is low, then finish with the second thrust.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-R", "start": 38, "end": 55 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Akali:Vayne:3",
+          "text": "Use Twilight Shroud to escape or to reset your energy after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Akali:Vayne:4",
+          "text": "Don't let Vayne attack you three times in a row; Silver Bolts deals extra damage on the third hit.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Vayne-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b362244eb4407271c5cc5f572c2c36c15e1a618f78f7f0bc0209f03475282356",
+      "tips": [
+        {
+          "id": "top:Akali:Yone:0",
+          "text": "Throw Five Point Strike at its edge of range so the enemy is slowed, then use Shuriken Flip to stay on them or leave.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 6, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "ability", "key": "Akali-E", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Akali:Yone:1",
+          "text": "Do not stand in a line with Yone when Mortal Steel is ready. Two hits make it dash and knock you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Yone-Q", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Akali:Yone:2",
+          "text": "Yone's Fate Sealed stuns and pulls you in, so keep your own Perfect Execution ready for when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-R", "start": 7, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Akali-R", "start": 60, "end": 77 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Akali:Yone:3",
+          "text": "Fight him when Soul Unbound is on cooldown. Without it he cannot dash away or snap back to deal extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-E", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Akali:Yone:4",
+          "text": "Use Twilight Shroud to reset an even fight and regain energy. Hold your energy for a burst when Yone is low.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b2153e1d136e9ef78699845f8e888d4363a7f1526134922e2a523c1aaa22a019",
+      "tips": [
+        {
+          "id": "middle:Akali:Ahri:0",
+          "text": "Walk behind minions when Ahri has Charm ready; it stops at the first enemy it hits, so minions in the way soak it for you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akali:Ahri:1",
+          "text": "Trade with Five Point Strike when Ahri walks up to farm. Hit her at the tip of the kunai to leave her slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Akali:Ahri:2",
+          "text": "Keep Perfect Execution for when Ahri is low on health. Her Spirit Rush is her escape, so wait until it is on cooldown to go in.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Ahri", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Ahri-R", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Akali:Ahri:3",
+          "text": "Use Twilight Shroud to break line of sight and walk out of Charm range. Ahri's Fox-Fire cannot home in on you while you are invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Ahri-E", "start": 59, "end": 64 },
+            { "kind": "champion", "key": "Ahri", "start": 72, "end": 76 },
+            { "kind": "ability", "key": "Ahri-W", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Akali:Ahri:4",
+          "text": "Shuriken Flip flips you backward, so you can use it to step out of the path of an Orb of Deception.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "00f0677e147f51bc073aedf8cb59c61ae83a1c8d7532e8c354011405dfad0fa4",
+      "tips": [
+        {
+          "id": "middle:Akali:Akshan:0",
+          "text": "Trade with Five Point Strike at its far tip so the enemy is slowed, then back off before Akshan can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 11, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            { "kind": "champion", "key": "Akshan", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Akali:Akshan:1",
+          "text": "Drop Twilight Shroud when you need to disengage or hide. Akshan can still hit you with area spells, and doing so briefly reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Akshan", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Akali:Akshan:2",
+          "text": "Hold Perfect Execution for when Akshan is low on health. The second thrust hurts most against a wounded target.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Akshan", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Akshan:3",
+          "text": "Use Shuriken Flip to mark Akshan, then recast to dash onto him once your Energy allows a follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Akshan", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2a6d35ffa9a20b52d7d64c78fd3668e037ee8d28d252e02af6e14c4669656930",
+      "tips": [
+        {
+          "id": "middle:Akali:Anivia:0",
+          "text": "Dodge Flash Frost by stepping sideways; it is wide and slow, so don't walk straight at Anivia.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akali:Anivia:1",
+          "text": "Never dash in with Shuriken Flip or Perfect Execution right after Crystallize goes down; the wall can block you and push you back.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Akali-R", "start": 36, "end": 53 },
+            { "kind": "ability", "key": "Anivia-W", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Akali:Anivia:2",
+          "text": "Use Five Point Strike at its far edge to slow Anivia, then trade while her Frostbite is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Anivia", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Anivia-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Akali:Anivia:3",
+          "text": "Once Anivia turns into an egg, don't waste your ultimate on her; kill the egg or leave.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "202a6923db36aa5d16d5421db97e4dae9367e69b03bd88d3c8420dec2393d2f2",
+      "tips": [
+        {
+          "id": "middle:Akali:Annie:0",
+          "text": "Fight Annie when she has no stun stored; with her counter lit, back off or stay out of her range.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Akali:Annie:1",
+          "text": "Trade with Five Point Strike at its far tip so the enemy is slowed, and step back before she can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 11, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Akali:Annie:2",
+          "text": "Use Twilight Shroud to escape or reposition after a trade. Attacking or casting from inside it breaks your invisibility.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Akali:Annie:3",
+          "text": "Use Shuriken Flip to dash in and out of range of Annie. The recast follows the marked target, so mark her or a smoke cloud before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Annie", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Akali:Annie:4",
+          "text": "Go for Annie with Perfect Execution when she has no stun ready, and use the recast to finish her once she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Akali-R", "start": 18, "end": 35 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Akali:Annie:5",
+          "text": "Move away from Tibbers after Annie summons him, since he burns anyone close.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "28170c51ac47d48585cf090279fd33a35442f1a4c2f103ffd22dd2bf40fef3bd",
+      "tips": [
+        {
+          "id": "middle:Akali:AurelionSol:0",
+          "text": "Wait for Aurelion Sol to use Singularity or Falling Star, then go in. Both are slow to land, and without them he has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "AurelionSol", "start": 9, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 29,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Akali:AurelionSol:1",
+          "text": "Use Twilight Shroud to fight in smoke and to escape when he gets close, since the black hole drags enemies inward.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Akali:AurelionSol:2",
+          "text": "Stay out of the middle of Singularity. Enemies there below a certain Health die instantly, and he gets stronger as the game goes on.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 26,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Akali:AurelionSol:3",
+          "text": "Break line of sight or dash away when Breath of Light starts. It does more damage the longer it stays on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 38,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Akali:AurelionSol:4",
+          "text": "Use Perfect Execution to finish him once he has spent his abilities. Her second thrust hits harder the lower his Health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Akali:AurelionSol:5",
+          "text": "Use Shuriken Flip to jump onto him, or to get away when he is slowed or dragged. It can chase him across any distance.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "83249ec5aef33bf925822e808ec4a77b5a105d923e0d3c3ad9cc0b71c52db7f3",
+      "tips": [
+        {
+          "id": "middle:Akali:Aurora:0",
+          "text": "Fight Aurora when she has used The Weirding; she is slow to get away and you can dash in with Shuriken Flip.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Aurora-E", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Akali-E", "start": 94, "end": 107 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Akali:Aurora:1",
+          "text": "Use Twilight Shroud to hide when Aurora is ready to trade, and save your energy for a quick kill.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Akali:Aurora:2",
+          "text": "Hold Perfect Execution for when Aurora is low on health; the second thrust hurts more the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Aurora", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Akali:Aurora:3",
+          "text": "Aurora's Across the Veil makes her invisible and lets her hop away. Keep Shuriken Flip ready to follow her.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 9, "end": 24 },
+            { "kind": "ability", "key": "Akali-E", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Akali:Aurora:4",
+          "text": "Step out of Twofold Hex's line; it is a straight shot that curses you, and the recast hits harder on low health.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fcbff7d1154c1b81566ab44339d8d4ee99d09317cf1ab6360abe3183fd0bf600",
+      "tips": [
+        {
+          "id": "middle:Akali:Azir:0",
+          "text": "Fight Azir when his Sand Soldiers are not near him. Without soldiers he cannot use Conquering Sands or Shifting Sands, so he has little way to respond.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Azir-Q", "start": 83, "end": 99 },
+            { "kind": "ability", "key": "Azir-E", "start": 103, "end": 117 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Akali:Azir:1",
+          "text": "Do not stand next to his soldiers. Their stabs hit hard and he can swing them at you from range, so trade from outside them.",
+          "refs": [],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Akali:Azir:2",
+          "text": "Save Perfect Execution for when Azir has used Shifting Sands. He has no other dash to get away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Azir", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Azir-E", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Akali:Azir:3",
+          "text": "Take care when you chase him into his Emperor's Divide. It knocks you back, and the soldiers it leaves behind block your path for a while.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Akali:Azir:4",
+          "text": "Drop Twilight Shroud to break his line of sight and walk away when he has his soldiers out. Do not stay in the fight on a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3946754df6ce8642aef9ef347a30b2d3fe8ae3de562536666a6af00734e88e79",
+      "tips": [
+        {
+          "id": "middle:Akali:Brand:0",
+          "text": "Dodge Brand's Sear and Pillar of Flame. Without a first hit he cannot start his combo, so stay out of a straight line.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Akali:Brand:1",
+          "text": "Do not sit in Twilight Shroud and think you are safe. Brand's Pillar of Flame hits an area and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Brand", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Brand-W", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "middle:Akali:Brand:2",
+          "text": "Go in with Perfect Execution once Brand's Sear is on cooldown. Without it he has little to stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Brand", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Brand-Q", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Akali:Brand:3",
+          "text": "Back off when Brand has an unstable ring on you. Leave it before it explodes, because it hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a778ba4db665cf1f6b3fff47e8a2cbc220a3fa83e5908f7b10b780a041dfbfd",
+      "tips": [
+        {
+          "id": "middle:Akali:Briar:0",
+          "text": "Keep Twilight Shroud for when Briar leaps in; you turn invisible and gain speed to walk away from her forced attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Briar", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Akali:Briar:1",
+          "text": "Poke with Five Point Strike at its far edge so Briar is slowed, and keep your distance before she can leap on you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Akali-Q", "start": 10, "end": 27 },
+            { "kind": "champion", "key": "Briar", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Akali:Briar:2",
+          "text": "Hold Shuriken Flip as your escape; the flip sends you backward away from Briar, and you can recast it to dash to a marked target or smoke.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Akali:Briar:3",
+          "text": "Use Perfect Execution on Briar when she is low, since its second thrust hurts more the less health she has. Her healing can undo it, so finish quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8f046eb2e57238aab1e27ca233f4588b683119271c5ecc35c1d0554c5f2fa2b3",
+      "tips": [
+        {
+          "id": "middle:Akali:Cassiopeia:0",
+          "text": "Turn away from Cassiopeia as Petrifying Gaze goes off so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Akali:Cassiopeia:1",
+          "text": "Avoid walking into Miasma; it grounds you, so Shuriken Flip and Perfect Execution cannot get you out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 19,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Akali-E", "start": 46, "end": 59 },
+            { "kind": "ability", "key": "Akali-R", "start": 64, "end": 81 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Akali:Cassiopeia:2",
+          "text": "Dodge Noxious Blast by sidestepping after the cast; it lands after a short delay. Each hit speeds Cassiopeia up.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 98, "end": 108 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akali:Cassiopeia:3",
+          "text": "Fight her when her Miasma is on cooldown, since she has no way to stop your dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 19, "end": 25 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a5a5121fedf7eb6ac727ebe5d881945a899320fc17ab4e8441fdaeacfff4208a",
+      "tips": [
+        {
+          "id": "middle:Akali:Diana:0",
+          "text": "Fight Diana when she has just used Lunar Rush with no Moonlight on the target; she has no quick way back in, so trade with Five Point Strike then.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Diana-E", "start": 35, "end": 45 },
+            { "kind": "ability", "key": "Akali-Q", "start": 123, "end": 140 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Akali:Diana:1",
+          "text": "Throw Five Point Strike at its edge so Diana is slowed and cannot close the gap easily.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Diana", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Akali:Diana:2",
+          "text": "Step out of Crescent Strike's path; if you are marked with Moonlight, expect Diana to dash onto you, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Diana", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Diana:3",
+          "text": "Use Twilight Shroud to escape when Diana jumps on you, but expect Moonfall to pull you out and reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Diana-R", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Akali:Diana:4",
+          "text": "Wait out Pale Cascade before you trade; its shield and orbs make early all-in fights poor.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Diana:5",
+          "text": "Save Perfect Execution to finish Diana once she is low, and leave the fight if your Health is low when her Moonfall is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Diana", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Diana-R", "start": 107, "end": 115 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f2f919cd29a7ca80e1aa343a04358ceee62c232836b1cbbb2c9b2aa139be03c9",
+      "tips": [
+        {
+          "id": "middle:Akali:Ekko:0",
+          "text": "Fight Ekko when his Chronobreak is on cooldown; he can't rewind out of your combo, so Perfect Execution can finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Ekko-R", "start": 20, "end": 31 },
+            { "kind": "ability", "key": "Akali-R", "start": 86, "end": 103 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Akali:Ekko:1",
+          "text": "Use Twilight Shroud to make Ekko lose sight of you, then hit him with Shuriken Flip and dash in when he steps toward the smoke.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ekko", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Akali-E", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Akali:Ekko:2",
+          "text": "Don't dash into the area of Parallel Convergence. If he enters it, you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 28, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Akali:Ekko:3",
+          "text": "Sidestep Timewinder when you can. It comes back for a second hit, so avoid standing in its field.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Akali:Ekko:4",
+          "text": "Hit Ekko with Five Point Strike at the edge of its range so he is slowed and can't easily trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Akali-Q", "start": 14, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a940b194fe6518c493059fd57348bdfde1e10917132b8aa1d9dd987d3c9d1aa9",
+      "tips": [
+        {
+          "id": "middle:Akali:Ezreal:0",
+          "text": "Stay out of Ezreal's Mystic Shot line behind minions, since it stops at the first enemy. Then close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Akali:Ezreal:1",
+          "text": "Use Five Point Strike at its edge so it slows Ezreal, then follow with Shuriken Flip to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Ezreal", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Akali-E", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Akali:Ezreal:2",
+          "text": "Go for the kill when Ezreal has used Arcane Shift. Perfect Execution deals more damage to a low-health target and he is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 37, "end": 49 },
+            { "kind": "ability", "key": "Akali-R", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akali:Ezreal:3",
+          "text": "Duck into Twilight Shroud to dodge his poke and reset your energy. Attacking or casting from inside it reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 10, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9005e68a72dcb7a9bb36078990b98be088a505fd2d53bb9fd53db6cf29889be3",
+      "tips": [
+        {
+          "id": "middle:Akali:Fizz:0",
+          "text": "Stay out of Fizz's Playful / Trickster range when it is ready; he can hop out of your trades and punish you with a slow and burst.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Fizz-E", "start": 19, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Akali:Fizz:1",
+          "text": "Hold Perfect Execution until Fizz has used Playful / Trickster, because he cannot be targeted while he balances on his trident.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Fizz", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Fizz-E", "start": 43, "end": 62 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Akali:Fizz:2",
+          "text": "Hit Fizz with Five Point Strike at the tip of its range so he is slowed, then back away from his short-range dives.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Akali-Q", "start": 14, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Akali:Fizz:3",
+          "text": "Walk away from Chum the Waters if you can; it slows you, and the shark knocks you up if the fish lands on you. Twilight Shroud does not remove the fish.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Akali-W", "start": 111, "end": 126 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Akali:Fizz:4",
+          "text": "Trade when Fizz has used Urchin Strike, because his dash is on a long cooldown and he will struggle to get in on you.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "89f939f3d4a23668d10d5905c029f8c5b0af110af6cdba8ceebdc4bf32b2e737",
+      "tips": [
+        {
+          "id": "middle:Akali:Galio:0",
+          "text": "Stay out of Justice Punch's line. Galio steps back first, so a quick sidestep or dash can avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Galio", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Galio:1",
+          "text": "Do not dive into a Galio who is charging Shield of Durand; it taunts you and cuts the damage he takes.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Galio-W", "start": 41, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akali:Galio:2",
+          "text": "Poke with Five Point Strike at long range so the enemy is slowed, and trade when Galio's Shield of Durand is on cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Akali-Q", "start": 10, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 },
+            { "kind": "champion", "key": "Galio", "start": 81, "end": 86 },
+            { "kind": "ability", "key": "Galio-W", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Akali:Galio:3",
+          "text": "Watch for Hero's Entrance from the enemy team; Galio can land far away and knock you up, so stay spread out.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Galio", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Akali:Galio:4",
+          "text": "Step out of the Winds of War tornado quickly; it deals damage based on your health.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "295394017a2e9121b3a1f2781922f59b591eaa053f07859119b17d25d6d15871",
+      "tips": [
+        {
+          "id": "middle:Akali:Hwei:0",
+          "text": "Dash in with Perfect Execution when Hwei has just spent his Torment spells; he is easy to rush down then.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 13, "end": 30 },
+            { "kind": "champion", "key": "Hwei", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Akali:Hwei:1",
+          "text": "Stay out of his Severing Bolt when you are alone or stuck; it hits much harder then. Keep moving and step aside before it lands.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akali:Hwei:2",
+          "text": "Use Twilight Shroud to break his aim; he must predict where you walk. Fight from inside the smoke.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Akali:Hwei:3",
+          "text": "Save Shuriken Flip to dash through his Crushing Maw or out of a root, and never stand still in his lava.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b679d00493aaf69d704d5562d16f4416db3213ef60c04a51e8ffe570831383d2",
+      "tips": [
+        {
+          "id": "middle:Akali:Irelia:0",
+          "text": "Stay out of Irelia's Bladesurge range when you can. Without a minion for her to dash to, she has a hard time reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Akali:Irelia:1",
+          "text": "Dodge Flawless Duet by moving sideways as the blades close. A stun from it leaves you open to a full combo.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akali:Irelia:2",
+          "text": "Don't spend your burst on Irelia while she charges Defiant Dance. Wait until the charge ends before you use Perfect Execution.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Irelia-W", "start": 51, "end": 64 },
+            { "kind": "ability", "key": "Akali-R", "start": 108, "end": 125 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Akali:Irelia:3",
+          "text": "Use Five Point Strike at max range to poke Irelia when her Ionian Fervor stacks are down. Trade then, not when her stacks are full.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "Irelia", "start": 43, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 59,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Akali:Irelia:4",
+          "text": "Use Twilight Shroud to break away once Irelia has dived on you. It makes you invisible and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Irelia", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "771e96d44a1d489cc93888fa3807ec75fddab121c2da2c95029c2be3fd808a9d",
+      "tips": [
+        {
+          "id": "middle:Akali:Kassadin:0",
+          "text": "Use Five Point Strike at its edge to slow Kassadin, and keep out of his Null Sphere range.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Kassadin", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Akali:Kassadin:1",
+          "text": "Kassadin takes less magic damage from Void Stone, so trade carefully before level 6 and wait for your ultimate.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 38,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Akali:Kassadin:2",
+          "text": "Dodge his Force Pulse cone before you jump in with Shuriken Flip, since being slowed costs you the escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 10, "end": 21 },
+            { "kind": "ability", "key": "Akali-E", "start": 51, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Akali:Kassadin:3",
+          "text": "Use Twilight Shroud to gain energy and break line of sight when Kassadin chases you with Riftwalk.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kassadin", "start": 64, "end": 72 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9edf134501a923025e76e53e45d237b2ac0c56037201d6d154df5e8046a71400",
+      "tips": [
+        {
+          "id": "middle:Akali:Katarina:0",
+          "text": "Fight Katarina when Shunpo is on cooldown. She has few ways to escape or chase without it.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Katarina-E", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Akali:Katarina:1",
+          "text": "Stay away from her Daggers on the ground. Picking one up makes her slash everyone nearby and refreshes Shunpo.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Akali:Katarina:2",
+          "text": "Hit Katarina with Five Point Strike at long range so she is slowed. It's hard for her to close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Akali-Q", "start": 18, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Akali:Katarina:3",
+          "text": "Back off when Katarina's Death Lotus is ready and you are low. Hide in Twilight Shroud to break the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Katarina-R", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Akali-W", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Akali:Katarina:4",
+          "text": "Hold Perfect Execution for when Katarina uses Shunpo. She can't dodge without it, and her low health makes her easy to finish.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Katarina", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Katarina-E", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8ef6b4c0ec516ce31e6f5404c04f0dcf85884bc2e784ec83c28ec53be4475743",
+      "tips": [
+        {
+          "id": "middle:Akali:Leblanc:0",
+          "text": "Use Five Point Strike at long range so the enemy is slowed, but only with enough energy to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Akali:Leblanc:1",
+          "text": "Step out of the line of Ethereal Chains; if you are shackled, break away before it roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 24, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akali:Leblanc:2",
+          "text": "Hit LeBlanc first; she is weaker when she has already used Distortion, and her tricks mostly fail.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Akali:Leblanc:3",
+          "text": "Stay out of long range when Sigil of Malice is ready, because it marks you for a second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Akali:Leblanc:4",
+          "text": "Drop Twilight Shroud to break away after a trade, and use Shuriken Flip to dash back in when she is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Akali-E", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Akali:Leblanc:5",
+          "text": "Chase a weakened LeBlanc with Perfect Execution, but be aware that she turns invisible at low health and leaves a fake behind.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Akali-R", "start": 30, "end": 47 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "82fb569f5445d272fb132717290239b87f9dc9d8a9bc76ba6f7342149f0a5718",
+      "tips": [
+        {
+          "id": "middle:Akali:Lissandra:0",
+          "text": "Fight Lissandra when Ring of Frost is on cooldown; without it she has far fewer ways to stop you from jumping out.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Akali:Lissandra:1",
+          "text": "Stay out of Ring of Frost range when you jump in with Shuriken Flip; being rooted next to her is how you die.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Akali-E", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Akali:Lissandra:2",
+          "text": "Hold Twilight Shroud for when Lissandra goes for Frozen Tomb or tries to chase you; the smoke gives you speed and hides you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Lissandra", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Akali:Lissandra:3",
+          "text": "Step to the side of Ice Shard, or keep a minion in front of you, so you are not slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Akali:Lissandra:4",
+          "text": "Watch for her Glacial Path; she can blink through walls with it, so do not count on terrain to stop her escape.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-E", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akali:Lissandra:5",
+          "text": "Use Perfect Execution on her once she has spent her escapes, then finish with the second thrust when she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e3fe86055eaf3860574eb67bcf8b8a3bb69da076a80eab35cd4f9a8fc27c69e6",
+      "tips": [
+        {
+          "id": "middle:Akali:Lux:0",
+          "text": "Stay out of Light Binding's line, ideally behind a minion. Being rooted in range of Lux's follow-up is how you die.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 },
+            { "kind": "champion", "key": "Lux", "start": 84, "end": 87 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Akali:Lux:1",
+          "text": "Drop Twilight Shroud to dodge Lux's burst or to close in unseen. She can still hit you with area spells, which briefly reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Lux", "start": 30, "end": 33 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Akali:Lux:2",
+          "text": "Look for the all-in when Lux has used Light Binding. Then Shuriken Flip and Five Point Strike can reach her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Lux-Q", "start": 38, "end": 51 },
+            { "kind": "ability", "key": "Akali-E", "start": 58, "end": 71 },
+            { "kind": "ability", "key": "Akali-Q", "start": 76, "end": 93 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Akali:Lux:3",
+          "text": "Save Perfect Execution for when Lux is low on health. Her Prismatic Barrier shield can soak the first hit, so wait until it fades.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Lux", "start": 32, "end": 35 },
+            { "kind": "ability", "key": "Lux-W", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Akali:Lux:4",
+          "text": "Leave Lucent Singularity's area quickly. Staying in it keeps you slowed, and the blast hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0cf8418abd5a4622f904db7d7f9e543c6cde04d2b9b2f9e51b6f39682c3ed2e",
+      "tips": [
+        {
+          "id": "middle:Akali:Malzahar:0",
+          "text": "Poke Malzahar with Five Point Strike only when his Void Shift is down. While it is up, he takes very little damage from you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malzahar", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Akali-Q", "start": 19, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 51,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Akali:Malzahar:1",
+          "text": "Fight when his Call of the Void is on cooldown. Once he is silenced you can't cast, so stay out of the line between the two portals.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "silenced", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Akali:Malzahar:2",
+          "text": "Hold Perfect Execution until Malzahar has used Nether Grasp or Void Shift is gone. Then you can finish him without his protection.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Malzahar", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 47, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 63,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Akali:Malzahar:3",
+          "text": "Use Twilight Shroud to dodge his combo and to reposition. You can't be seen inside the smoke, so he must guess where you are.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Akali:Malzahar:4",
+          "text": "Use Shuriken Flip to dash out of range of his Nether Grasp, or to close in on him once Call of the Void is spent.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 46, "end": 58 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 87, "end": 103 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "898fdba67be5c6f1af2b581a162fb6dab632074b60a4f8c4eb2a360c967d0095",
+      "tips": [
+        {
+          "id": "middle:Akali:Mel:0",
+          "text": "Walk up and trade when Mel has just used Rebuttal; she has little protection left and Shuriken Flip will land.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Mel-W", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Akali-E", "start": 86, "end": 99 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Akali:Mel:1",
+          "text": "Mel's Rebuttal destroys projectiles, so throw Shuriken Flip after she has used it, not into it.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Mel-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Akali-E", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Akali:Mel:2",
+          "text": "Step out of the way of Solar Snare; being rooted in the middle of her damage is how you die. Use Twilight Shroud to get away from her slowing field.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 23, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Akali-W", "start": 97, "end": 112 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Akali:Mel:3",
+          "text": "Back off when you are low on health; the more Mel hits you, the more Overwhelm stacks build up, and she can execute you.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 46, "end": 49 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Akali:Mel:4",
+          "text": "Use Perfect Execution on Mel once she has spent her Rebuttal and Solar Snare; she cannot easily answer the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Mel", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Mel-W", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "Mel-E", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "655f3587b9310c8b6273614f447e2b1c4d555fb377376b4fa94e4384666a48e6",
+      "tips": [
+        {
+          "id": "middle:Akali:Naafiri:0",
+          "text": "Use Twilight Shroud when Naafiri commits to a trade; you turn invisible inside the smoke and she loses her target.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Akali:Naafiri:1",
+          "text": "Hold Perfect Execution until Naafiri is hurt. Its second thrust hits harder the lower her Health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Akali:Naafiri:2",
+          "text": "Hit Naafiri with Five Point Strike at the tip of its range so she is slowed, then step away from her trade.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 17, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akali:Naafiri:3",
+          "text": "Save Shuriken Flip to escape after she dives you, or to chase her when she flees. The recast dash follows the marked target.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akali:Naafiri:4",
+          "text": "Watch your Energy before you trade; Naafiri gets her best chance to fight you when you run low.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f0118c9ca30228e7a628bdf42b6f8d6068f1c92244020ed77097dc0e28ee697f",
+      "tips": [
+        {
+          "id": "middle:Akali:Orianna:0",
+          "text": "Stay out of Orianna's Ball range; her spells only hit around the Ball, so check where it sits before you go in.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Akali:Orianna:1",
+          "text": "Wait until Orianna spends Command: Shockwave before diving with Perfect Execution, or she can pull you back in and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Orianna-R", "start": 26, "end": 44 },
+            { "kind": "ability", "key": "Akali-R", "start": 64, "end": 81 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Akali:Orianna:2",
+          "text": "Use Five Point Strike at max range to slow her, and keep out of the field from Command: Dissonance.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "Orianna-W", "start": 79, "end": 98 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Akali:Orianna:3",
+          "text": "Sidestep Command: Attack; it is a narrow line, and her shield from Command: Protect is weaker once she has spent it.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 9, "end": 24 },
+            { "kind": "ability", "key": "Orianna-E", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "92db8c4c5cae8d35be7c56bf86b6480c104d714fdcb475eed39e4319248de7b7",
+      "tips": [
+        {
+          "id": "middle:Akali:Qiyana:0",
+          "text": "Cast Twilight Shroud when Qiyana dives on you; you turn invisible inside the smoke and she loses her target.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Qiyana", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Akali:Qiyana:1",
+          "text": "Fight Qiyana when she has no element. Her Elemental Wrath loses its root and extra damage then.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Akali:Qiyana:2",
+          "text": "Hit Qiyana with Five Point Strike at the tip of its range so she is slowed and cannot easily dash back onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Akali-Q", "start": 16, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Akali:Qiyana:3",
+          "text": "Keep Perfect Execution for when Qiyana is low on health. Its second dash hurts more the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Qiyana", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Akali:Qiyana:4",
+          "text": "Stay out of Qiyana's ultimate range near walls and river. Use Shuriken Flip to leave before the blast goes off.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Akali-E", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7c7d8e5989049f3c988683bb35d29efd579cb31de43aa93dc52e6cf542dbfa6f",
+      "tips": [
+        {
+          "id": "middle:Akali:Ryze:0",
+          "text": "Don't trade while Ryze has Flux on you. Overload then hits harder and Rune Prison roots you instead of slowing.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Ryze-W", "start": 70, "end": 81 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akali:Ryze:1",
+          "text": "Stay at the edge of your range with Five Point Strike so the enemy is slowed. Ryze then struggles to catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 36, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 },
+            { "kind": "champion", "key": "Ryze", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Akali:Ryze:2",
+          "text": "Use Shuriken Flip to dash in and out. It also marks Ryze, so you can recast it to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Akali:Ryze:3",
+          "text": "Kill Ryze with Perfect Execution. Hit him with the recast when he is hurt for the biggest damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Akali-R", "start": 15, "end": 32 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Akali:Ryze:4",
+          "text": "Use Twilight Shroud to escape when Ryze catches you, or to restore Energy before you strike again.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ba33dab60cba01f1cbafc642e3ce02655707c098e0828f46294d5eb504dcc1cb",
+      "tips": [
+        {
+          "id": "middle:Akali:Sylas:0",
+          "text": "Fight Sylas when his Kingslayer is on cooldown; it is his main way to heal and punish you in a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akali:Sylas:1",
+          "text": "Duck into Twilight Shroud when Sylas lines up Abduct; he needs to see you to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Akali:Sylas:2",
+          "text": "Hit Sylas with Five Point Strike at the edge of its range so he is slowed, then follow with Shuriken Flip.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Akali-Q", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "ability", "key": "Akali-E", "start": 92, "end": 105 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Akali:Sylas:3",
+          "text": "Hold Perfect Execution until Sylas is low. Its second dash hurts more the less Health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Sylas:4",
+          "text": "Do not use Perfect Execution while Hijack is ready; Sylas can steal it and use it on you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 11, "end": 28 },
+            { "kind": "ability", "key": "Sylas-R", "start": 35, "end": 41 },
+            { "kind": "champion", "key": "Sylas", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "52c03ef2d6971d3f160b8a3e03881a4d913587e57d4369fedaf997ee9a4daed1",
+      "tips": [
+        {
+          "id": "middle:Akali:Syndra:0",
+          "text": "Close the gap with Perfect Execution when Syndra has used Scatter the Weak; her main escape is on a long cooldown, so she is easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 19, "end": 36 },
+            { "kind": "champion", "key": "Syndra", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Syndra-E", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Akali:Syndra:1",
+          "text": "Step out of Dark Sphere's landing spot; it appears after a short delay, so keep moving while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Akali:Syndra:2",
+          "text": "Do not stand near a lingering Dark Sphere. Scatter the Weak can knock it into you and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Syndra-E", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Akali:Syndra:3",
+          "text": "Use Twilight Shroud to hide and reset when your energy is low or Syndra is hunting you. It also refills your energy.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Syndra", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akali:Syndra:4",
+          "text": "Use Shuriken Flip to dash back out after a trade, then recast it to return and finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Akali:Syndra:5",
+          "text": "Stay healthy once Syndra has her ultimate. Unleashed Power hits hard when many spheres are around, so do not fight with low Health.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Syndra-R", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3aadde3e4e048f44fafa04a7e35f842d58fc497b69942890bf78a0295d44f448",
+      "tips": [
+        {
+          "id": "middle:Akali:Taliyah:0",
+          "text": "Stay out of Unraveled Earth's stones; if Taliyah knocks you or you dash through them, you get stunned. Walk around the field instead.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Taliyah", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Akali:Taliyah:1",
+          "text": "Watch for Seismic Shove's marked ground. It lands after a short delay, so step out of the area before it rises.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Akali:Taliyah:2",
+          "text": "Sidestep Threaded Volley; the rocks fly in a fixed line. Taliyah's follow-up boulder slows you, so don't stand on her Worked Ground.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Taliyah", "start": 57, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Akali:Taliyah:3",
+          "text": "Use Twilight Shroud to escape or to wait out her cooldowns. Her area spells can still hit you inside it and briefly reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Akali:Taliyah:4",
+          "text": "Go in with Perfect Execution once Seismic Shove is on cooldown. Taliyah has little to stop you after that.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 11, "end": 28 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Taliyah", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "middle:Akali:Taliyah:5",
+          "text": "Do not dash in with Shuriken Flip while her stones are on the ground; the dash sets them off and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3b484878b62dccb15c547264f9395c16706c9b174d5a853e5ba6645aac13c484",
+      "tips": [
+        {
+          "id": "middle:Akali:Talon:0",
+          "text": "Use Twilight Shroud when Talon jumps in; he can lose you inside the smoke, and the speed boost lets you walk away from his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Akali:Talon:1",
+          "text": "Hold Perfect Execution until Talon is hurt, then use the second thrust to finish him, since it hits harder the lower his Health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Akali:Talon:2",
+          "text": "Fight Talon with Five Point Strike at full range so he is slowed, and trade when your Energy is high.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 17, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Akali:Talon:3",
+          "text": "Look for Shadow Assault being on cooldown, then go in on Talon, because he has no easy escape.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Talon", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Akali:Talon:4",
+          "text": "Use Shuriken Flip to dash back out after a trade so Talon cannot punish you for staying.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "381ba7643be2a311e22664aeff3ea3067f2051cbc252bf56a68f121aae30ce9e",
+      "tips": [
+        {
+          "id": "middle:Akali:TwistedFate:0",
+          "text": "Fight when Twisted Fate's Pick a Card is on cooldown; the Gold Card stun is his best answer to your dive.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 11,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 26,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Akali:TwistedFate:1",
+          "text": "Sidestep Wild Cards while you farm; they are his main way to poke you down.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Akali:TwistedFate:2",
+          "text": "Twisted Fate's Destiny reveals you even in Twilight Shroud, so don't count on hiding while it is active.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 0, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 15,
+              "end": 22
+            },
+            { "kind": "ability", "key": "Akali-W", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Akali:TwistedFate:3",
+          "text": "Hit him with Five Point Strike at its edge so he is slowed, then follow with Shuriken Flip to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 13, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Akali-E", "start": 77, "end": 90 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ff8b038839e27dcc1c4ec701c86348fc857542d0f75c6e76fe56bf88d66cc31e",
+      "tips": [
+        {
+          "id": "middle:Akali:Veigar:0",
+          "text": "Walk around Event Horizon's cage edge instead of through it; touching the edge stuns you, and Veigar will follow with Dark Matter.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 },
+            { "kind": "champion", "key": "Veigar", "start": 94, "end": 100 },
+            { "kind": "ability", "key": "Veigar-W", "start": 118, "end": 129 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Akali:Veigar:1",
+          "text": "Bait out Event Horizon before you go in; with it on cooldown, Veigar has little way to stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Veigar", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "middle:Akali:Veigar:2",
+          "text": "Keep moving when Dark Matter is falling; it has a delay and can be dodged by sidestepping.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Veigar:3",
+          "text": "Hit Veigar with Five Point Strike at full range to slow him, then punish him; he is very fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Akali-Q", "start": 16, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Akali:Veigar:4",
+          "text": "Don't let your health drop low near Veigar; Primordial Burst hits harder the less health you have.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Veigar-R", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3d9dadbe2b0ef9f315afdf51086d727473f19d64878d6aeb4123d827a05f66a7",
+      "tips": [
+        {
+          "id": "middle:Akali:Vex:0",
+          "text": "Do not dash into Vex with Shuriken Flip or Perfect Execution while her fear is ready; the fear interrupts dashes and leaves you open.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 17, "end": 20 },
+            { "kind": "ability", "key": "Akali-E", "start": 26, "end": 39 },
+            { "kind": "ability", "key": "Akali-R", "start": 43, "end": 60 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "middle:Akali:Vex:1",
+          "text": "Every dash you make near Vex marks you with Gloom, so expect extra damage from her next attack or basic ability.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Akali:Vex:2",
+          "text": "Use Twilight Shroud to escape Vex's slow from Looming Darkness. Fight her while her shield and fear are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vex", "start": 30, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Vex-E", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Akali:Vex:3",
+          "text": "Hit Vex with Five Point Strike at the edge of its range so she is slowed, then trade before she can answer.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Akali-Q", "start": 13, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1685728f4fd4265801e23ac5ab269aa4762f44e535b4aff777540e6196bf5f9c",
+      "tips": [
+        {
+          "id": "middle:Akali:Viktor:0",
+          "text": "Dash onto Viktor with Shuriken Flip's recast when he is out of position; he has no escape from you once you are on him.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Akali-E", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Akali:Viktor:1",
+          "text": "Stay out of Gravity Field. Walk out of it quickly before the stun lands, and never fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Akali:Viktor:2",
+          "text": "Step sideways out of Hextech Ray instead of walking straight along it; it is a narrow line.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Akali:Viktor:3",
+          "text": "Drop Twilight Shroud to escape or reset a fight. Viktor can still hit you with area spells, which reveals you briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Viktor", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akali:Viktor:4",
+          "text": "Hit Viktor with Five Point Strike at its far tip so he is slowed, then close in with Shuriken Flip.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Akali-Q", "start": 16, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 },
+            { "kind": "ability", "key": "Akali-E", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Akali:Viktor:5",
+          "text": "Use Perfect Execution on a weakened Viktor; the second thrust hurts more the lower his health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Viktor", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e03e2a45d45d5c333874c0fd8f1b7bcd8aac81b18070993a4172c96c98af0f16",
+      "tips": [
+        {
+          "id": "middle:Akali:Vladimir:0",
+          "text": "Stay out of Transfusion range and fight Vladimir early before he builds health. Once he has the health, he is much sturdier.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Vladimir", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Akali:Vladimir:1",
+          "text": "Wait out Sanguine Pool before you use Perfect Execution; he can't be targeted in it and it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Akali-R", "start": 38, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Akali:Vladimir:2",
+          "text": "Hit Vladimir with Five Point Strike at its far edge to slow him, then leave before he can cast Tides of Blood.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Akali-Q", "start": 18, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 95, "end": 109 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Akali:Vladimir:3",
+          "text": "Don't stay in Hemoplague. Retreat or hide in Twilight Shroud, because he takes a lot of healing from it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Akali-W", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "09c2b25835096af4f8acfcc646b68e4a4c612f442d8571262951d48262eeffbc",
+      "tips": [
+        {
+          "id": "middle:Akali:Xerath:0",
+          "text": "Stay out of his Shocking Orb line; it stuns the first enemy it hits, so walk at an angle or keep a minion in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Akali:Xerath:1",
+          "text": "Close the distance with Shuriken Flip, then recast to dash onto him. Xerath has no easy escape once you are on top of him.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 24, "end": 37 },
+            { "kind": "champion", "key": "Xerath", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Akali:Xerath:2",
+          "text": "Step into Twilight Shroud when he aims Eye of Destruction or Arcanopulse at you. It restores your energy and makes you hard to target.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Xerath-W", "start": 39, "end": 57 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Akali:Xerath:3",
+          "text": "Hit him with Five Point Strike at its far tip when he is charging Arcanopulse. He is already slowed and cannot dodge well.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 13, "end": 30 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Akali:Xerath:4",
+          "text": "Use Perfect Execution at level 6 to jump on him when he is low. He has no dash, so the second thrust usually finishes him.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "50e594dd1b0b44aff78ec7d4708bf924fe039fc439a9e6cd174bfbcc9c528d42",
+      "tips": [
+        {
+          "id": "middle:Akali:XinZhao:0",
+          "text": "Stay at the far edge of Five Point Strike range so the slow lands, and Xin Zhao has to work to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 24, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 },
+            { "kind": "champion", "key": "XinZhao", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Akali:XinZhao:1",
+          "text": "Use Shuriken Flip to jump back out when Xin Zhao charges in, then come back in with the recast.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Akali:XinZhao:2",
+          "text": "Don't let Xin Zhao land a third Three Talon Strike hit; the knock up leaves you stuck next to him.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 32, "end": 50 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Akali:XinZhao:3",
+          "text": "Save Twilight Shroud to slip away after his Audacious Charge, and don't stand in a straight line from Wind Becomes Lightning.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 44, "end": 60 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 102, "end": 124 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Akali:XinZhao:4",
+          "text": "Don't jump in with Perfect Execution while Crescent Guard is ready; it can knock you back, and his guard blocks your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 19, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 43, "end": 57 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "74781c9acee717799ce0c4e567f953734bc594126547fb76a57da49bac6c5769",
+      "tips": [
+        {
+          "id": "middle:Akali:Yasuo:0",
+          "text": "Drop Twilight Shroud on yourself when Yasuo tries to trade; he can't see you inside, and the smoke gives you speed to walk away or reset.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yasuo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Akali:Yasuo:1",
+          "text": "Poke with Five Point Strike at its far tip so Yasuo is slowed, then step back before he can dash onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 10, "end": 27 },
+            { "kind": "champion", "key": "Yasuo", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Akali:Yasuo:2",
+          "text": "Yasuo's Wind Wall blocks Five Point Strike and Shuriken Flip. Wait for it to fall before you throw them.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Akali-Q", "start": 25, "end": 42 },
+            { "kind": "ability", "key": "Akali-E", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Akali:Yasuo:3",
+          "text": "Hold Perfect Execution until Yasuo is hurt. The second dash hits harder the lower his health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Akali:Yasuo:4",
+          "text": "Stay out of Steel Tempest's range and sidestep it. When he has two stacks, expect a whirlwind that knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "56d3d9178186fa5df48395d3ce2449741bb4fd76353d345d60657654dc05f55e",
+      "tips": [
+        {
+          "id": "middle:Akali:Yone:0",
+          "text": "Trade with Five Point Strike at its far tip so the enemy is slowed, then step away before Yone can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 11, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            { "kind": "champion", "key": "Yone", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Akali:Yone:1",
+          "text": "When Yone dashes in with a spirit form, use Twilight Shroud to break his fight and reposition rather than trading blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Akali-W", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Akali:Yone:2",
+          "text": "Use Shuriken Flip to jump in and out of a trade. Recast it only when the dash is safe.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Akali:Yone:3",
+          "text": "Hold Perfect Execution for when Yone is low. Its second dash hurts more the less health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akali:Yone:4",
+          "text": "Keep your distance when Yone has two Mortal Steel stacks, since his next one dashes and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Yone-Q", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ec589dcf5dcf57ea41a01dac5543eb6855fa6bfea3bae6b92f217c7180ada0bd",
+      "tips": [
+        {
+          "id": "middle:Akali:Zed:0",
+          "text": "Hold Twilight Shroud for when Zed commits Death Mark; the smoke hides you and the speed boost helps you get out.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Zed-R", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Akali:Zed:1",
+          "text": "Trade right after Zed uses Living Shadow, when his damage and escape are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Zed-W", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Akali:Zed:2",
+          "text": "Hit Zed with Five Point Strike at the tip of its range so he is slowed, then leave before his shadows join in.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Akali-Q", "start": 13, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Akali:Zed:3",
+          "text": "Use Shuriken Flip to hit him, then recast to close the gap when he is weak. It also dashes you back away when you throw it.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Akali:Zed:4",
+          "text": "Save Perfect Execution to finish Zed when he is low, or to jump away when he is on top of you. The second dash hurts more the lower he is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Zed", "start": 33, "end": 36 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a7b1144c32039f25af2227e9728a8eceb30c49a21fdfc62e069768108b98ef6b",
+      "tips": [
+        {
+          "id": "middle:Akali:Zoe:0",
+          "text": "Stay out of Sleepy Trouble Bubble's line, since a sleeping Akali takes extra damage. Walk around minions so the bubble hits them first.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 12, "end": 33 },
+            { "kind": "champion", "key": "Akali", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Akali:Zoe:1",
+          "text": "Punish Zoe right after she misses Sleepy Trouble Bubble; her best tool is on a long cooldown and she is easier to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-E", "start": 34, "end": 55 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Akali:Zoe:2",
+          "text": "Zoe's Paddle Star! hits hardest from far away, so close the gap and fight her up close.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Akali:Zoe:3",
+          "text": "Use Twilight Shroud to turn invisible and break her aim, then come out with Shuriken Flip to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Akali-E", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Akali:Zoe:4",
+          "text": "After Zoe uses Portal Jump she cannot move and must return to where she started. Dive onto that spot with Perfect Execution.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "Zoe-R", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Akali-R", "start": 106, "end": 123 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Akali:Zoe:5",
+          "text": "Go for the kill at level 6 once she is hurt; the second Perfect Execution cast hits harder the lower her health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 56, "end": 73 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

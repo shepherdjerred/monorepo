@@ -1,0 +1,2056 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ashe",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "9a75ef1bca1d580b4777ceb582f1be82419f24e963a062db94541c47de41d072",
+      "tips": [
+        {
+          "id": "adc:Ashe:general:0",
+          "text": "Fire Volley from a distance so minions and frontliners in front of you don't soak up the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ashe:general:1",
+          "text": "Aim Enchanted Crystal Arrow in the direction the enemy is running, so it is more likely to land. A far-away hit stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 4, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ashe:general:2",
+          "text": "Use Hawkshot to check the brush before you step up, and again before a fight in the jungle.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ashe:general:3",
+          "text": "Keep attacking to build four stacks, then use Ranger's Focus for fast extra damage in a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-Q", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ashe:general:4",
+          "text": "Chase and kite with Frost Shot; enemies hit are slowed, so stay at range and keep hitting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 20,
+              "end": 30
+            },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ashe:general:5",
+          "text": "Stay near your support and don't wander alone; Ashe has few ways to escape a gank.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "9a3a122308a3781491d08f19aa81991675c25c75489b17e0264c85117122a7df",
+      "tips": [
+        {
+          "id": "adc:Ashe:Aphelios:0",
+          "text": "Fire Volley at Aphelios when he steps up to last-hit, and stand back so minions don't soak the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Aphelios", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Ashe:Aphelios:1",
+          "text": "Aphelios has no dash or escape on his own, so hit him with Enchanted Crystal Arrow when he is pushed up or caught out.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Ashe-R", "start": 59, "end": 82 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Ashe:Aphelios:2",
+          "text": "Check the bushes with Hawkshot before you walk up, so you see the enemy jungler coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ashe:Aphelios:3",
+          "text": "Keep your attacks on him so Frost Shot keeps him slowed and easier to chase or escape from.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 28,
+              "end": 38
+            },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "266e686f4cf37ef0afbf926725cb65981128e4c000b7fec3b82218af595cede8",
+      "tips": [
+        {
+          "id": "adc:Ashe:Brand:0",
+          "text": "Stay out of Sear range and sidestep it. Brand needs to land one spell to start his combo, and the fireball stops at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Brand", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:Brand:1",
+          "text": "Fire Volley at Brand when he steps up to cast. It does good damage and slows him, which makes it harder for him to line up his next spell.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Brand", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Ashe:Brand:2",
+          "text": "Stand away from your minions and your support. Conflagration spreads to nearby units, and it spreads twice as far from a target that is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 47, "end": 60 },
+            { "kind": "keyword", "key": "ablaze", "start": 136, "end": 142 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Ashe:Brand:3",
+          "text": "Keep Volley aimed at Brand, not at the minions in front of him. The arrows are blocked by the first enemy they hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Brand", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Ashe:Brand:4",
+          "text": "Once Brand's Pyroclasm is on cooldown after level 6, push in and trade. Enchanted Crystal Arrow can also catch him if he walks forward to cast.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Brand-R", "start": 13, "end": 22 },
+            { "kind": "ability", "key": "Ashe-R", "start": 72, "end": 95 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Ashe:Brand:5",
+          "text": "Move away from your support when Brand casts Pyroclasm. The fireball starts slowly, so you have time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-R", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "689d37e56ceecdcaa01dd70c2ae5ca83fdb41a58b787425c873f4fbe677a6382",
+      "tips": [
+        {
+          "id": "adc:Ashe:Caitlyn:0",
+          "text": "Stay out of Caitlyn's long reach; her Headshot range is much longer against anyone she has trapped or netted. Don't walk onto a Yordle Snap Trap.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 38,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 128, "end": 144 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Ashe:Caitlyn:1",
+          "text": "Hold Volley until the enemy is in a straight line with no minions in front. Minions block the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Ashe:Caitlyn:2",
+          "text": "Look in the brush with Hawkshot before you step up. Caitlyn can hide there and her Headshot comes faster from brush.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 23, "end": 31 },
+            { "kind": "champion", "key": "Caitlyn", "start": 52, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 83,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Ashe:Caitlyn:3",
+          "text": "Fire Enchanted Crystal Arrow at Caitlyn when she is rooted or slowed, or when she is far from you. A long flight means a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Caitlyn", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:Caitlyn:4",
+          "text": "Once Caitlyn fires her net, she has less escape. Go after her then.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e82577f51f6b636c5a51908398d1c81cab9737f28a63d93286719ce5a74ba24b",
+      "tips": [
+        {
+          "id": "adc:Ashe:Cassiopeia:0",
+          "text": "Stay at long range and poke with Volley when Cassiopeia steps up to last-hit; she has no way to close the gap quickly.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ashe-W", "start": 33, "end": 39 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Ashe:Cassiopeia:1",
+          "text": "Keep minions out of the line before firing Volley, because the first enemy hit absorbs each arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Ashe:Cassiopeia:2",
+          "text": "Walk sideways out of Noxious Blast as it lands; it explodes after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ashe:Cassiopeia:3",
+          "text": "Use Hawkshot on the bushes before you step up, and ping the jungle so your jungler can come for a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ashe:Cassiopeia:4",
+          "text": "If Cassiopeia is facing you when she is about to cast Petrifying Gaze, keep your distance, since you will be stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 3, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 54,
+              "end": 69
+            },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ashe:Cassiopeia:5",
+          "text": "Fire Enchanted Crystal Arrow at Cassiopeia from far away when she commits to a fight; the stun gets longer with distance.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 32, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c5130951f8d512e90d4bdbb66a13c1c4e6dfd880776c0ab95b5c24cafedec1eb",
+      "tips": [
+        {
+          "id": "adc:Ashe:Corki:0",
+          "text": "Hit Corki with Volley when he walks up to last-hit; it slows him and he has few ways to dodge it at range.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ashe-W", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Ashe:Corki:1",
+          "text": "Stay behind your minions when Corki has missiles ready. His Missile Barrage splashes, so hiding is not enough, and you should stay out of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Corki-R", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Ashe:Corki:2",
+          "text": "Use Hawkshot to check the brush before you step in; Corki's Phosphorus Bomb poke is easier to avoid when you see him coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Corki", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Corki-Q", "start": 60, "end": 75 },
+            { "kind": "keyword", "key": "poke", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Ashe:Corki:3",
+          "text": "Punish Corki right after he uses Valkyrie to jump in. He is exposed then, so hit him with Volley and your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Corki-W", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Ashe-W", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Ashe:Corki:4",
+          "text": "Look for Enchanted Crystal Arrow on Corki when he dashes in or chases you. A long shot stuns him for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 9, "end": 32 },
+            { "kind": "champion", "key": "Corki", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "758ef1a643500d9ce37074afffb312af9cc05e5646360aa37d343b165692800d",
+      "tips": [
+        {
+          "id": "adc:Ashe:Draven:0",
+          "text": "Hold Volley until Draven steps up to attack; the arrows slow him and hit hard if he is alone in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Draven", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Ashe:Draven:1",
+          "text": "Keep minions between you and Draven's Stand Aside only if you can; stay out of its line so you are not knocked away from your wave.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Draven-E", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Ashe:Draven:2",
+          "text": "Fire Enchanted Crystal Arrow at Draven from far away when he commits to a fight; a long flight means a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Draven", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ashe:Draven:3",
+          "text": "Attack Draven while his axes are in the air and he is busy catching them; your Frost Shot slow makes him miss the catch.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 7, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 79,
+              "end": 89
+            },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Ashe:Draven:4",
+          "text": "Use Hawkshot to check the brush before you walk up, so a gank or Draven's all-in does not surprise you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Draven", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "50832995d71f037dd3076f0f36160d28239e88c6601eff0f90ab8877a137f97a",
+      "tips": [
+        {
+          "id": "adc:Ashe:Ezreal:0",
+          "text": "Hit Ezreal with Frost Shot attacks to keep him slowed; he can't easily line up Mystic Shot while you chase him back.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 16,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Ashe:Ezreal:1",
+          "text": "Fire Volley when minions are out of the way. The first enemy hit blocks the arrows, so stay back if minions are in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Ashe:Ezreal:2",
+          "text": "Ezreal is fragile and has few ways to stop a dive. Use Enchanted Crystal Arrow from far away on him after he uses Arcane Shift, and kill him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ashe-R", "start": 55, "end": 78 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 114, "end": 126 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Ashe:Ezreal:3",
+          "text": "Send Hawkshot into the brush before you step forward, so you can see Ezreal and your jungler's ganks coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Ezreal", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Ashe:Ezreal:4",
+          "text": "Stay behind your minions when Ezreal's Mystic Shot is ready; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "64d9ad3e5b8c23c56cc85e922b59dc459598f90ac128ad09966171986cbcec87",
+      "tips": [
+        {
+          "id": "adc:Ashe:Hwei:0",
+          "text": "Stay out of the line of Devastating Fire; it is a fast fireball that explodes on the first enemy it hits, so keep a minion between you and Hwei.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 139, "end": 143 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Ashe:Hwei:1",
+          "text": "Walk sideways when Hwei is setting up a spell. His Torment spells need aiming and take time, so unpredictable movement makes them miss.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ashe:Hwei:2",
+          "text": "Hit Hwei with Volley right after he casts a Torment spell. He has to wait on cooldown, so you can also walk up and attack him.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ashe-W", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Ashe:Hwei:3",
+          "text": "Stay near your support and your minions. Hwei's lightning bolt hurts far more when you are alone or can't move.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ashe:Hwei:4",
+          "text": "Use Enchanted Crystal Arrow on Hwei when he is far away or retreating. Aim it where he is walking, since it stuns for longer over a long distance.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Hwei", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ashe:Hwei:5",
+          "text": "Check the brush with Hawkshot before you walk up, so Hwei can't catch you with an unseen spell.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "Hwei", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3c8c8ae2c3ad8dac9780588cc4cfca4f7e62bda9e8117f83b070f1112186a726",
+      "tips": [
+        {
+          "id": "adc:Ashe:Jhin:0",
+          "text": "Hit Jhin with Frost Shot when he walks up to last-hit; he is slowed and has to stop shooting or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 14,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "adc:Ashe:Jhin:1",
+          "text": "Trade while Jhin is reloading after his fourth shot, because he cannot attack then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Ashe:Jhin:2",
+          "text": "Watch for bushes and ground where Jhin may have placed a Captive Audience trap. Don't chase him over unwarded ground.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Jhin-E", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Ashe:Jhin:3",
+          "text": "Stay out of line with Jhin's Deadly Flourish when an ally has just hit you; being rooted there gets you killed.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Jhin-W", "start": 29, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Ashe:Jhin:4",
+          "text": "Fire Volley at Jhin when no minions stand between you, since the first enemy hit absorbs each arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Jhin", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Ashe:Jhin:5",
+          "text": "Use Hawkshot to check bushes before you step forward, so Jhin cannot surprise you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Jhin", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Ashe:Jhin:6",
+          "text": "Use Enchanted Crystal Arrow on Jhin from far away when he is channeling Curtain Call or has just fired. A long flight gives a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Jhin", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Jhin-R", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "548f0635a0853ef8b86dc28e30daed51d077d10a16b1df55399d60bdbfebabbd",
+      "tips": [
+        {
+          "id": "adc:Ashe:Jinx:0",
+          "text": "Fire Volley at Jinx when she steps up to last-hit; it slows her and she has few ways to answer. Stay at long range so minions don't soak the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Jinx", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Ashe:Jinx:1",
+          "text": "Trade hard once Jinx has missed with her chompers, since she struggles to escape without Flame Chompers!",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Jinx-E", "start": 89, "end": 104 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Ashe:Jinx:2",
+          "text": "Use Hawkshot to check the brush before you step forward. It also shows you where Jinx is when she hides.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Jinx", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Ashe:Jinx:3",
+          "text": "Aim Enchanted Crystal Arrow at Jinx when she is low on health or caught out of position. A long flight gives a longer stun, so a kill is easy to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Jinx", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Ashe:Jinx:4",
+          "text": "Keep hitting Jinx with attacks to keep her slowed. A slowed Jinx struggles to get into range or dodge Ranger's Focus.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 },
+            { "kind": "champion", "key": "Jinx", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Ashe-Q", "start": 102, "end": 116 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "82979a342873a4356038e3cc992a511cb1e35e46d5030f945c6637c606a0aa66",
+      "tips": [
+        {
+          "id": "adc:Ashe:Kaisa:0",
+          "text": "Use Volley to poke Kai'Sa when she steps up to last-hit; she is slowed and has to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Kaisa", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Ashe:Kaisa:1",
+          "text": "Keep Volley aimed past the minions, because the first enemy hit blocks the arrows. Step to a clear angle first.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Ashe:Kaisa:2",
+          "text": "Fire Enchanted Crystal Arrow from far away when Kai'Sa dashes in with Killer Instinct. A long flight means a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Kaisa", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Ashe:Kaisa:3",
+          "text": "Place Hawkshot in the brush before Kai'Sa walks in. She picks off lone targets, so you want to see her coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Kaisa", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Ashe:Kaisa:4",
+          "text": "Stay out of Icathian Rain range when you can. She needs a nearby enemy to cast it, and it hurts most when you are alone.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7547088fdb8e2d729d1afed67e16702f251af5f14fc46b2b5077100c0e233bf3",
+      "tips": [
+        {
+          "id": "adc:Ashe:Kalista:0",
+          "text": "Hit Kalista with Volley when she dashes in to attack; it slows her, and slowed attack speed cuts how far she can hop.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ashe-W", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Ashe:Kalista:1",
+          "text": "Keep Volley aimed at Kalista rather than at minions in front, since the first enemy hit absorbs each arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Kalista", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Ashe:Kalista:2",
+          "text": "Use Hawkshot to check the brush before you step up; Kalista can poke from there with her spears.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Kalista", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ashe:Kalista:3",
+          "text": "Fire Enchanted Crystal Arrow at Kalista or her partner when they jump in with Fate's Call; the stun gives your team time to kill them.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Kalista", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Kalista-R", "start": 78, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Ashe:Kalista:4",
+          "text": "Trade with Frost Shot attacks when Kalista has just used Pierce; her slowed movement makes it hard for her to dodge back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Kalista", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1ca6f0192f3c853d83b52b04e296a96a9073be904b063fbe5670ac1b35eac0fb",
+      "tips": [
+        {
+          "id": "adc:Ashe:Karthus:0",
+          "text": "Stay out of Lay Waste range and keep to the sides of the lane; it hits hardest when only one enemy is in the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Ashe:Karthus:1",
+          "text": "Hold Volley for when Karthus steps forward to last-hit; it hurts and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Karthus", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Ashe:Karthus:2",
+          "text": "Fire Volley from a distance, with no minions in front of you, so the minions do not absorb the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Ashe:Karthus:3",
+          "text": "Karthus has no escape, so Enchanted Crystal Arrow from far away can set up a kill for your team.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Ashe-R", "start": 26, "end": 49 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ashe:Karthus:4",
+          "text": "Do not stand on a dead Karthus; he can keep casting Defile and Lay Waste for a few seconds after he dies.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Karthus-E", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Ashe:Karthus:5",
+          "text": "Use Hawkshot to check the brush before you step up, and watch for Wall of Pain that slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Karthus-W", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "27e4e57a4b0ebffcf36f935af0aed3e5e17dbf3becf53aa39b572cfc1a391648",
+      "tips": [
+        {
+          "id": "adc:Ashe:KogMaw:0",
+          "text": "Poke Kog'Maw with Volley when he steps up to last-hit. He has no escape, so keep the pressure on.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "KogMaw", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ashe-W", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Ashe:KogMaw:1",
+          "text": "Aim Volley so minions are not in the way, because the first enemy hit absorbs each arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Ashe:KogMaw:2",
+          "text": "Stay out of the line of Caustic Spittle and Void Ooze. Standing in the ooze leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-Q", "start": 24, "end": 39 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 44, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:KogMaw:3",
+          "text": "Fire Enchanted Crystal Arrow from far away at Kog'Maw. He cannot escape it, and a long flight gives a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "KogMaw", "start": 46, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Ashe:KogMaw:4",
+          "text": "Back off from Kog'Maw's Bio-Arcane Barrage while it is active, because it gives him extra range and hits you with extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "KogMaw-W", "start": 24, "end": 42 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ashe:KogMaw:5",
+          "text": "Move away from the spot where Kog'Maw dies. Icathian Surprise explodes on anyone standing close.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 30, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "KogMaw-passive",
+              "start": 44,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b9ba575d067291a3c9e16a7c11df17fa3855549a37e49262be3382be2c5a314d",
+      "tips": [
+        {
+          "id": "adc:Ashe:Lucian:0",
+          "text": "Trade with Frost Shot attacks when Lucian steps up to last-hit; he is slowed and has a hard time chasing or escaping.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Lucian", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Ashe:Lucian:1",
+          "text": "Fire Volley when Lucian dashes in to trade. His Piercing Light and Ardent Blaze need lining up, and Volley punishes him for standing close.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Lucian", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 48, "end": 62 },
+            { "kind": "ability", "key": "Lucian-W", "start": 67, "end": 79 },
+            { "kind": "ability", "key": "Ashe-W", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Ashe:Lucian:2",
+          "text": "Keep minions out of the line when you cast Volley, because the first enemy hit absorbs the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Ashe:Lucian:3",
+          "text": "Lucian has strong burst but little sustained damage. Stay back after his combo is spent and trade then.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ashe:Lucian:4",
+          "text": "Use Hawkshot to check the brush before you step up, so a ganker does not catch you alongside Lucian.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Lucian", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:Lucian:5",
+          "text": "If Lucian gets low or runs away, hit him with Enchanted Crystal Arrow at long range; the stun lasts longer the farther it flies.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Ashe-R", "start": 46, "end": 69 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "97f0472632bb16f0e093bd9b424681a57e03cc46b0edced2c45a52b42aab2308",
+      "tips": [
+        {
+          "id": "adc:Ashe:Lux:0",
+          "text": "Stay behind your minions so Light Binding hits them first; it only roots the first two enemies it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ashe:Lux:1",
+          "text": "Lux has no escape, so when you land Enchanted Crystal Arrow from far away, your team can kill her easily.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Ashe-R", "start": 36, "end": 59 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Ashe:Lux:2",
+          "text": "Trade with Volley when Lux steps up to last-hit; it slows her and she cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 23, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Ashe:Lux:3",
+          "text": "Step out of the Lucent Singularity zone, or fight outside it; it slows you and bursts after a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 16, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ashe:Lux:4",
+          "text": "Send Hawkshot into the brush before you walk up to it, to check for Lux and a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Lux", "start": 68, "end": 71 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ashe:Lux:5",
+          "text": "When Lux aims Final Spark, sidestep the red warning line it shows first.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-R", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d6f2175382a10d9a93c45bcfeb766e368ef68d219ca8e7bda778a8e73a895f94",
+      "tips": [
+        {
+          "id": "adc:Ashe:MissFortune:0",
+          "text": "Walk behind minions when Miss Fortune has Double Up ready. Her shot bounces to hit you from the minion in front.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 25,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 42,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Ashe:MissFortune:1",
+          "text": "Fire Volley at her when she walks up for a trade. She has little else to do except dodge it, and it slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Ashe:MissFortune:2",
+          "text": "Hit Miss Fortune once to cancel her Strut speed boost. After that she is easier to catch and to poke.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 36,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Ashe:MissFortune:3",
+          "text": "Move out of Make It Rain quickly. It reveals the area and slows you, so do not stand in it while she trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ashe:MissFortune:4",
+          "text": "Look for the moment Miss Fortune uses Bullet Time. Her channel is interrupted if she is stunned, so Enchanted Crystal Arrow can stop it.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 20,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 38,
+              "end": 49
+            },
+            { "kind": "ability", "key": "Ashe-R", "start": 100, "end": 123 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:MissFortune:5",
+          "text": "Use Hawkshot to check the bushes around the lane before you move up. It shows you if Miss Fortune's team is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "MissFortune", "start": 85, "end": 97 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f5a569b303430386bf3b0be45549420019ebc1123a79a6fd1cc089ad3dbe036b",
+      "tips": [
+        {
+          "id": "adc:Ashe:Nilah:0",
+          "text": "Aim Enchanted Crystal Arrow at Nilah when she dashes in or out; a long flight stuns her for longer, and she has no way to block it.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Nilah", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Ashe:Nilah:1",
+          "text": "Keep Frost Shot on Nilah so she stays slowed. It makes it harder for her to close the gap on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-passive", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Nilah", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Ashe:Nilah:2",
+          "text": "Do not fire Volley at Nilah while Jubilant Veil is up if you can wait; it dodges attacks, so shoot after it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Nilah", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Nilah-W", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Ashe:Nilah:3",
+          "text": "Stay back from Nilah and use Volley when she steps up for minions. Her reach is short before she hits you with Formless Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Ashe-W", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 111, "end": 125 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Ashe:Nilah:4",
+          "text": "Use Hawkshot on the brush before you walk up. It shows where Nilah is waiting to dash onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nilah", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1de8cdadf5f0af70630d50b65ccc3e1b80da3d79071ba7065ffedb3356c4990d",
+      "tips": [
+        {
+          "id": "adc:Ashe:Samira:0",
+          "text": "Aim Volley at Samira before she closes in; it slows her, and she cannot easily get in close once she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Samira", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Ashe:Samira:1",
+          "text": "Stay at long range and keep hitting her with Frost Shot; slowed, she has a hard time reaching you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 45,
+              "end": 55
+            },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Ashe:Samira:2",
+          "text": "Do not fire Volley while Samira stands in Blade Whirl; it destroys missiles that enter its area.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Samira", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Samira-W", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ashe:Samira:3",
+          "text": "Wait for Blade Whirl to be used, then fire Volley or Enchanted Crystal Arrow at her while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Ashe-W", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Ashe-R", "start": 53, "end": 76 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ashe:Samira:4",
+          "text": "Samira's Wild Rush needs a target to dash through. Keep minions away from her path, and hold your own escape for when she uses it.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Samira-E", "start": 9, "end": 18 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Ashe:Samira:5",
+          "text": "Fire Enchanted Crystal Arrow at her from far away when she dives; the stun lasts longer and she cannot finish her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Ashe:Samira:6",
+          "text": "Do not get stunned near Samira at full Style; Inferno Trigger hurts a lot when she can use it on you.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 11, "end": 18 },
+            { "kind": "champion", "key": "Samira", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Samira-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9ecfc25ab5c19dd3b571894aacfd669760de01a5f759c762e90b9828975db6bb",
+      "tips": [
+        {
+          "id": "adc:Ashe:Senna:0",
+          "text": "Stay out of Senna's long attack range in lane; Frost Shot slows her only when you are already trading, so do not walk up first.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Ashe-passive", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Ashe:Senna:1",
+          "text": "Fire Volley from a distance so a minion does not soak the arrows, and so Senna is slowed and has to stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Senna", "start": 73, "end": 78 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Ashe:Senna:2",
+          "text": "Step out of the way of Last Embrace; once it sticks to you the root lands a moment later, so move away before it spreads.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 23, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ashe:Senna:3",
+          "text": "Use Enchanted Crystal Arrow on Senna when she is caught out; she has few ways to escape once stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Senna", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ashe:Senna:4",
+          "text": "Check bushes with Hawkshot before you push up, so a Senna gank or Curse of the Black Mist camouflage does not surprise you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 18, "end": 26 },
+            { "kind": "champion", "key": "Senna", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Senna-E", "start": 66, "end": 89 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a5900c9ac116e189e60a27ae404b705ccc59085617463e5f167228f086e55dc4",
+      "tips": [
+        {
+          "id": "adc:Ashe:Sivir:0",
+          "text": "Stay behind your minions. Sivir's Boomerang Blade hurts less after hitting them, and her Ricochet loses value.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 34, "end": 49 },
+            { "kind": "ability", "key": "Sivir-W", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ashe:Sivir:1",
+          "text": "Don't fire Enchanted Crystal Arrow while Spell Shield is ready. Make her waste it first.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 11, "end": 34 },
+            { "kind": "ability", "key": "Sivir-E", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Ashe:Sivir:2",
+          "text": "Bait Spell Shield with a Volley when she is on guard. Her shield is short, so fake it first and fire after it fades.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Ashe-W", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Ashe:Sivir:3",
+          "text": "Sivir pushes the lane fast. Use Hawkshot to watch for ganks and keep your own team safe.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ashe-E", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "55da8207bfc4b4a171a2978ab42530ce8ebb6664a4f32365504edac6cc779005",
+      "tips": [
+        {
+          "id": "adc:Ashe:Smolder:0",
+          "text": "Hit Smolder early with Volley; he is weak before he stacks Dragon Practice, so poke him down and keep him from getting hits on champions.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ashe-W", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 59,
+              "end": 74
+            },
+            { "kind": "keyword", "key": "poke", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Ashe:Smolder:1",
+          "text": "Stay out of his range. Super Scorcher Breath has shorter range than your attacks, so keep your distance and attack from behind your minions.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 23, "end": 44 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Ashe:Smolder:2",
+          "text": "Keep your Frost Shot slow on Smolder while you walk back; a slowed target is easier to hit with Volley.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 10,
+              "end": 20
+            },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Smolder", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Ashe-W", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ashe:Smolder:3",
+          "text": "Do not group tightly with your support when Smolder has Achooo! ready, because its explosion hurts everyone near the target.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 44, "end": 51 },
+            { "kind": "ability", "key": "Smolder-W", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ashe:Smolder:4",
+          "text": "Fire Enchanted Crystal Arrow at Smolder when he flies with Flap, Flap, Flap; a stun ends his flight and he is easy prey.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Smolder", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Smolder-E", "start": 59, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Ashe:Smolder:5",
+          "text": "Use Hawkshot to check the brush before you step up, so Smolder's team cannot surprise you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Smolder", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "10b4495cc8eb1572664ac815cc675ea3449f976ae757df25ea79b1cba02d63ed",
+      "tips": [
+        {
+          "id": "adc:Ashe:Tristana:0",
+          "text": "Your Frost Shot slows Tristana on every auto. Poke her and keep her from walking up.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-passive", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 21 },
+            { "kind": "champion", "key": "Tristana", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Ashe:Tristana:1",
+          "text": "Fire Volley at Tristana when she goes for a trade. Keep minions out of its path, because the first enemy hit blocks each arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Tristana", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Ashe:Tristana:2",
+          "text": "Back off when Tristana puts Explosive Charge on you. Her bomb gets stronger with each hit, so don't let her auto you.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Tristana-E", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Ashe:Tristana:3",
+          "text": "Stay away from her minions, since Explosive Charge also hurts nearby enemies when she kills one.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 34, "end": 50 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ashe:Tristana:4",
+          "text": "Don't stand close to Tristana at level 6. Buster Shot hits hard, knocks you back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Tristana-R", "start": 42, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Ashe:Tristana:5",
+          "text": "Use Hawkshot to scout the brush and the river before you push up.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f81222eedcaccbae9f49d1d5ec98b259f07e8df27ecd16ec98f511587afc8892",
+      "tips": [
+        {
+          "id": "adc:Ashe:Twitch:0",
+          "text": "Look for Enchanted Crystal Arrow when Twitch is camouflaged and moving; fire it in the direction he is running so it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 9, "end": 32 },
+            { "kind": "champion", "key": "Twitch", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Ashe:Twitch:1",
+          "text": "Use Hawkshot on the brush around your lane to spot Twitch before he jumps you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Twitch", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Ashe:Twitch:2",
+          "text": "Twitch is fragile, so poke him with Volley whenever he steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "poke", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Ashe-W", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Ashe:Twitch:3",
+          "text": "Keep your distance with Volley so minions in front don't soak up the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Ashe:Twitch:4",
+          "text": "Your attacks keep him slowed with Frost Shot, so chase him when he is low or has used his escapes.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Ashe-passive", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b64344ab110ff4df951e88ab47d758983f6e1dca6921fc352c2cdb99932feeaf",
+      "tips": [
+        {
+          "id": "adc:Ashe:Varus:0",
+          "text": "Stay out of Hail of Arrows; the ground it leaves slows you and cuts your healing, which makes you easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:Varus:1",
+          "text": "Keep Volley aimed at Varus while minions are out of the way; the first enemy hit absorbs each arrow.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Varus", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Ashe:Varus:2",
+          "text": "Step sideways when Varus starts charging Piercing Arrow; it is a long, narrow line and he moves slowly while charging.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Varus-Q", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ashe:Varus:3",
+          "text": "Fire Enchanted Crystal Arrow at Varus when he commits to a fight or runs away; a long flight means a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Varus", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Ashe:Varus:4",
+          "text": "Do not stand next to your teammate when Varus is near; Chain of Corruption spreads between nearby champions and roots them.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Varus-R", "start": 55, "end": 74 },
+            { "kind": "keyword", "key": "rooted", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Ashe:Varus:5",
+          "text": "Use Hawkshot on the brush around lane to spot Varus and his support before they poke or gank.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Varus", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "037de3f51fde24b3553b6a65dd44648bd4e11c364239d44c45c003ea5e1a1dac",
+      "tips": [
+        {
+          "id": "adc:Ashe:Vayne:0",
+          "text": "Stay out of Vayne's Condemn range near walls; being knocked into terrain stuns you and she wins the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Vayne-E", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Ashe:Vayne:1",
+          "text": "Use Volley to poke Vayne when she walks up to last-hit; the arrows slow her so she cannot close the gap easily.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Vayne", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ashe:Vayne:2",
+          "text": "Hold Enchanted Crystal Arrow for when Vayne dives in or runs at you; a long-range hit stuns her for a long time and she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Vayne", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Ashe:Vayne:3",
+          "text": "Send Hawkshot into the brush before you step up, so Vayne cannot surprise you from it.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Vayne", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Ashe:Vayne:4",
+          "text": "Early on, trade with Frost Shot slows and back off, and call your jungler: Vayne is weak before she has items.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 21,
+              "end": 31
+            },
+            { "kind": "champion", "key": "Vayne", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "92650faab3b11d75263d4595e9846fde46632cef40ad05257ac2006d8a5ac61a",
+      "tips": [
+        {
+          "id": "adc:Ashe:Veigar:0",
+          "text": "Keep your distance from Veigar and poke him with Volley when he steps up to last-hit; he has little way to answer long range.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ashe-W", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ashe:Veigar:1",
+          "text": "Watch the cage from Event Horizon. Enemies are stunned only when they touch its edge, so do not walk through the rim.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 20, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Ashe:Veigar:2",
+          "text": "Walk sideways when Veigar casts Dark Matter at you. It lands after a short delay, so you can step out of the circle.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Veigar-W", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ashe:Veigar:3",
+          "text": "Stay behind your minions so Baleful Strike hits them first. It only hits the first two enemies in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Ashe:Veigar:4",
+          "text": "Hit Veigar with Enchanted Crystal Arrow from far away to stun him, then finish him with your team. He is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ashe-R", "start": 16, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a8d8abbdb777aaf2aed56badec1683363b982e1eb9b85ce8aca6e649e9d2c7c7",
+      "tips": [
+        {
+          "id": "adc:Ashe:Xayah:0",
+          "text": "Fire Enchanted Crystal Arrow from far away at Xayah. Aim where she is walking, because the stun lasts longer the farther the arrow has flown.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Xayah", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Ashe:Xayah:1",
+          "text": "Hold Enchanted Crystal Arrow until Featherstorm is spent. Xayah is untargetable while she is in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "ability", "key": "Xayah-R", "start": 35, "end": 47 },
+            { "kind": "champion", "key": "Xayah", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Ashe:Xayah:2",
+          "text": "Keep Xayah slowed with your attacks so she can't easily walk onto her Feathers. It also makes her an easier target for Volley.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Ashe-W", "start": 119, "end": 125 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Ashe:Xayah:3",
+          "text": "Aim Volley so it reaches Xayah, not the minions in front of her. Minions soak up the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Xayah", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:Ashe:Xayah:4",
+          "text": "Use Hawkshot on the brush before you walk up. Xayah can't surprise you from the grass, and your jungler can see her.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Xayah", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9a277cf373bab5774d79ba7c40b8a4a7cd248ef5ea64586e713bd8db0f9a6e1e",
+      "tips": [
+        {
+          "id": "adc:Ashe:Yasuo:0",
+          "text": "Keep Volley for when Yasuo walks toward you; its arrows slow him and deal solid damage if he has no minion in front to absorb them.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Ashe:Yasuo:1",
+          "text": "Do not rely on Volley or Enchanted Crystal Arrow when Yasuo's Wind Wall is up. It destroys projectiles, so wait for it to drop or fire around it.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Ashe-R", "start": 25, "end": 48 },
+            { "kind": "champion", "key": "Yasuo", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Ashe:Yasuo:2",
+          "text": "Stay back from his minions. Yasuo uses Sweeping Blade on them to close the gap, and your attacks slow him only while you are in range.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Ashe:Yasuo:3",
+          "text": "Dodge sideways when his Steel Tempest becomes a whirlwind. If it knocks you up, his allies can follow with Last Breath, so keep your team close.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 107, "end": 118 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Ashe:Yasuo:4",
+          "text": "Look for a long-range Enchanted Crystal Arrow on Yasuo once he commits to a fight. A longer flight means a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 22, "end": 45 },
+            { "kind": "champion", "key": "Yasuo", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a87ed654b902b82265ac200f88eeb0c968a07ad1924117436cfe5d4f7d120320",
+      "tips": [
+        {
+          "id": "adc:Ashe:Yunara:0",
+          "text": "Poke Yunara with Volley when she steps up to last-hit; the arrows leave her slowed and she has few ways to answer from range.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ashe-W", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Ashe:Yunara:1",
+          "text": "Fire Enchanted Crystal Arrow at Yunara when she dashes or chases; a long shot stuns her for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Yunara", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Ashe:Yunara:2",
+          "text": "Watch for her Transcend One's Self; she gets a dash and a beam, so stay back from her until it runs out.",
+          "refs": [
+            { "kind": "ability", "key": "Yunara-R", "start": 14, "end": 34 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:Ashe:Yunara:3",
+          "text": "Hit her with attacks as she walks up; Frost Shot keeps her slowed so you can kite her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 38,
+              "end": 48
+            },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:Yunara:4",
+          "text": "Send Hawkshot into the brush before you step up, so you can see whether Yunara's team is ready to jump you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Yunara", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f28c91a8c9b87823f99d4a719e7b950d5f294e4df01c43b9cabf6edc1c07fc27",
+      "tips": [
+        {
+          "id": "adc:Ashe:Zeri:0",
+          "text": "Hit Zeri with Volley while she is close; she is slowed, so she has a harder time staying on you or running away.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ashe-W", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ashe:Zeri:1",
+          "text": "Keep attacking Zeri in lane, because Frost Shot slows her and makes her dashes and short attack range harder to use.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 15, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Ashe-passive",
+              "start": 37,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Ashe:Zeri:2",
+          "text": "Fire Enchanted Crystal Arrow at Zeri from far away when she dashes in or walks toward you. It stuns her for longer the farther it flies.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 5, "end": 28 },
+            { "kind": "champion", "key": "Zeri", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ashe:Zeri:3",
+          "text": "Send Hawkshot into the brush before you step up, so Zeri cannot surprise you with a dash from the bushes.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Zeri", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Ashe:Zeri:4",
+          "text": "Stand behind your minions when you use Volley. Its arrows are blocked by the first enemy they hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "dce2b1035fc309751534e766824cfc45810db5b55a1ef373f0f9262229f4de3f",
+      "tips": [
+        {
+          "id": "adc:Ashe:Ziggs:0",
+          "text": "Stay out of Hexplosive Minefield; the mines slow you and make Ziggs' other abilities much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 12, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ashe:Ziggs:1",
+          "text": "Look for Enchanted Crystal Arrow on Ziggs when he is out of position. A long shot stuns for longer, so fire it from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 9, "end": 32 },
+            { "kind": "champion", "key": "Ziggs", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ashe:Ziggs:2",
+          "text": "Trade when Ziggs has just used Bouncing Bomb and Satchel Charge, because both have fairly long cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 31, "end": 44 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Ashe:Ziggs:3",
+          "text": "Use Volley to poke Ziggs, and aim it so minions don't absorb the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "poke", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "Ziggs", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:Ashe:Ziggs:4",
+          "text": "Ziggs can use Satchel Charge to hop away from you. Keep your Enchanted Crystal Arrow ready for when he runs.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 14, "end": 28 },
+            { "kind": "ability", "key": "Ashe-R", "start": 61, "end": 84 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

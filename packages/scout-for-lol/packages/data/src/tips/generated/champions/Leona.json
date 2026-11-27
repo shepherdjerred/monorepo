@@ -1,0 +1,2123 @@
+{
+  "schemaVersion": 1,
+  "champion": "Leona",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "6c5b7111d669e494571a8db9e92067dbef6e2c4f5e18a84b8ffad9f067908bc4",
+      "tips": [
+        {
+          "id": "support:Leona:general:0",
+          "text": "Start a fight with Zenith Blade on the enemy you want to catch. Leona dashes to the last champion it hit and roots them, so you can follow up right away.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 19, "end": 31 },
+            { "kind": "champion", "key": "Leona", "start": 64, "end": 69 },
+            { "kind": "keyword", "key": "rooted", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Leona:general:1",
+          "text": "Cast Shield of Daybreak as you dash in, then attack. The empowered attack stuns, so your carry gets a free window to deal damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-Q", "start": 5, "end": 23 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Leona:general:2",
+          "text": "Shield of Daybreak's stun only lands if your attack connects. Do not use it when the target can step away or a spell shield will block it.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-Q", "start": 0, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Leona:general:3",
+          "text": "Use Eclipse when you are about to take a trade. Stay close to the enemies so its blast hits and you keep the extra Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Leona:general:4",
+          "text": "Hit enemies with an ability before your allies attack. Sunlight marks them, and your allies' damage then deals bonus damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Leona-passive",
+              "start": 55,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Leona:general:5",
+          "text": "Aim Solar Flare so the enemy is in the center. Only the center stuns, and the edge only leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Leona:general:6",
+          "text": "Cast Solar Flare while Leona is dashing in with Zenith Blade, so the enemies are stunned and cannot escape.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Leona-E", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "a7f2f0a6f8f0445c202189479f2ca2d62ec57f2525b0bd1bbba483e65455a19e",
+      "tips": [
+        {
+          "id": "support:Leona:Alistar:0",
+          "text": "Keep Eclipse ready for when Alistar commits. It gives you armor and magic resist against his Pulverize and Headbutt damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Alistar", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 93, "end": 102 },
+            { "kind": "ability", "key": "Alistar-W", "start": 107, "end": 115 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Leona:Alistar:1",
+          "text": "Alistar can cleanse your stun with Unbreakable Will. Wait until he has used it before you go all in.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Alistar-R", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Leona:Alistar:2",
+          "text": "Stay out of Pulverize range near your turret. His Headbutt into Pulverize combo is strongest there.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-Q", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Alistar-W", "start": 50, "end": 58 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 64, "end": 73 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Leona:Alistar:3",
+          "text": "Start fights with Zenith Blade, then hit with Shield of Daybreak to stun him. Alistar often waits for you to step in first.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Leona-Q", "start": 46, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 },
+            { "kind": "champion", "key": "Alistar", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e92939f4a1096397aad6ea6642fb4dbed2ce7db32536da7538808bf742e870cc",
+      "tips": [
+        {
+          "id": "support:Leona:Anivia:0",
+          "text": "Start your engage with Zenith Blade when Anivia is in range; the dash and root put you right on her.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "Anivia", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Leona:Anivia:1",
+          "text": "Follow Zenith Blade with Shield of Daybreak to stun Anivia, who has no easy way to escape once you are on her.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 7, "end": 19 },
+            { "kind": "ability", "key": "Leona-Q", "start": 25, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "champion", "key": "Anivia", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Leona:Anivia:2",
+          "text": "Watch for Crystallize before you dash; a wall can block your path and knock you aside.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Leona:Anivia:3",
+          "text": "Raise Eclipse when Anivia sends Flash Frost your way so you take less damage, then stay near her to keep the armor.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Anivia", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Leona:Anivia:4",
+          "text": "Kill Anivia and then finish her egg; she comes back fully healed if it survives. Use Solar Flare to keep her from escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Leona-R", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9e6d5209d280be6e31412a368ed5dc6cf3482437ba63c241b2afe2445a55df81",
+      "tips": [
+        {
+          "id": "support:Leona:Bard:0",
+          "text": "Walk up and land Zenith Blade on Bard, then hit him with a Shield of Daybreak attack. The root from the dash gives you time to land the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Leona-Q", "start": 59, "end": 77 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Leona:Bard:1",
+          "text": "Stay out of a straight line with your own minions and your partner. Cosmic Binding stuns when it hits a second target or a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Leona:Bard:2",
+          "text": "Raise Eclipse when Bard is about to fire Cosmic Binding or trade with you. Stay close to the enemy so the guard lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Bard-Q", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Leona:Bard:3",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his partner can take the healing.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Leona:Bard:4",
+          "text": "Don't use Solar Flare on a Bard who is about to use Tempered Fate. Wait until the stasis ends, then hit the center so he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Bard", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Bard-R", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "bbf53e24cef656e6c87986c3735804ca918db8fbb73c13be0672b91f4dda3546",
+      "tips": [
+        {
+          "id": "support:Leona:Blitzcrank:0",
+          "text": "Stay behind your minions when Blitzcrank is up, since Rocket Grab only pulls the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Leona:Blitzcrank:1",
+          "text": "Wait for Blitzcrank to miss Rocket Grab, then engage with Zenith Blade and Shield of Daybreak to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 9, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-Q",
+              "start": 28,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Leona-E", "start": 58, "end": 70 },
+            { "kind": "ability", "key": "Leona-Q", "start": 75, "end": 93 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Leona:Blitzcrank:2",
+          "text": "Zenith Blade is a projectile and can be blocked by a minion in front of you, so line it up so it reaches the enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Leona:Blitzcrank:3",
+          "text": "Use Eclipse when Blitzcrank is about to land his combo; it adds armor and magic resist, and lasts longer if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Leona:Blitzcrank:4",
+          "text": "Do not rely on a shield against Blitzcrank's Static Field; it destroys shields.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 32, "end": 42 },
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "855588edca60ba0bf1685d2721c9b3012dd84119763f42fe250bec09a6793e87",
+      "tips": [
+        {
+          "id": "support:Leona:Brand:0",
+          "text": "Walk up with Eclipse raised so Brand's pokes hurt less, then close in with Zenith Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 13, "end": 20 },
+            { "kind": "champion", "key": "Brand", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Leona-E", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Leona:Brand:1",
+          "text": "Dodge Brand's Sear and Pillar of Flame. Without a hit landing he cannot start his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Leona:Brand:2",
+          "text": "Stay behind minions in the way of Sear, since it ends at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Leona:Brand:3",
+          "text": "Once Zenith Blade roots Brand, hit him with Shield of Daybreak to stun him. He has no escape and is easy to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Brand", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Leona-Q", "start": 44, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Leona:Brand:4",
+          "text": "Aim Solar Flare so Brand is in the center of it. The center stuns, and the edge only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Brand", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f59ee1c06ff4eb7b4c3511a21e09cdd396ff9d17c89470c8e0649ee32268ea5d",
+      "tips": [
+        {
+          "id": "support:Leona:Braum:0",
+          "text": "Start fights with Zenith Blade only when Braum has no Unbreakable up; his shield destroys the blade and he takes much less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 18, "end": 30 },
+            { "kind": "champion", "key": "Braum", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Braum-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Leona:Braum:1",
+          "text": "Wait out Unbreakable, then go in. Its shield lasts only a few seconds and then has a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Leona:Braum:2",
+          "text": "Hit Braum with Zenith Blade and then Shield of Daybreak to stun him. Braum's team then has little chance to fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Leona-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Leona-Q", "start": 37, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 },
+            { "kind": "champion", "key": "Braum", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Leona:Braum:3",
+          "text": "Use Eclipse when you expect Winter's Bite or an all-in trade, then stay close so the armor lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Braum-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Leona:Braum:4",
+          "text": "Leave the center of Solar Flare on whoever you want stunned. Aim it at the target, not at Braum.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 },
+            { "kind": "champion", "key": "Braum", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b8b8e2e5e1dd8e6d824d46a153dc40a6146037a0bff8251ca1ff5ec8e944b5cc",
+      "tips": [
+        {
+          "id": "support:Leona:Camille:0",
+          "text": "Walk up and land Zenith Blade on Camille, then hit her with an empowered Shield of Daybreak attack so she is rooted and stunned in a row.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Camille", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Leona-Q", "start": 73, "end": 91 },
+            { "kind": "keyword", "key": "rooted", "start": 109, "end": 115 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 127 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Leona:Camille:1",
+          "text": "Raise Eclipse when Camille starts a trade; the extra armor and magic resist blunt her damage and her shield only covers one damage type.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Camille", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Leona:Camille:2",
+          "text": "Stay close to Camille after Eclipse so it hits her and your armor and magic resist last longer.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Leona-W", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Leona:Camille:3",
+          "text": "Aim Solar Flare so Camille is in the center; she is stunned there and cannot escape, so your team can kill her.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Camille", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Leona:Camille:4",
+          "text": "Camille can dash in on your carry with Hookshot. Stay close so you can stun her with Shield of Daybreak when she lands.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-E", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Leona-Q", "start": 85, "end": 103 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a4078559b69ee80885057fb6ff76fe798f9efff15190dac267b806234681792c",
+      "tips": [
+        {
+          "id": "support:Leona:Janna:0",
+          "text": "Use Zenith Blade on Janna or her carry to close the gap; the root leaves them stuck for your stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Janna", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Leona:Janna:1",
+          "text": "Follow Zenith Blade with Shield of Daybreak so the stun lands as soon as you arrive.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 7, "end": 19 },
+            { "kind": "ability", "key": "Leona-Q", "start": 25, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Leona:Janna:2",
+          "text": "Watch for Howling Gale charging, and do not dash in while it is ready. It can knock you up mid-engage.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 10, "end": 22 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Leona:Janna:3",
+          "text": "Raise Eclipse before trading with Janna and stay close to her, so you keep the extra defenses.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Janna", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Leona:Janna:4",
+          "text": "Do not stand in the middle of your ultimate with Janna close. Her Monsoon can push your team back out.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Janna-R", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "66a339a2baf990c29c40c8f82ff09a7567c015dfabaa2e9e2743753203b00a4f",
+      "tips": [
+        {
+          "id": "support:Leona:Karma:0",
+          "text": "Dash in with Zenith Blade only when Karma has no Inspire or Focused Resolve ready, since either one helps her escape.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Karma", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Karma-E", "start": 49, "end": 56 },
+            { "kind": "ability", "key": "Karma-W", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Leona:Karma:1",
+          "text": "Karma's Inner Flame stops at the first enemy it hits, so walk in behind minions to avoid it.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-Q", "start": 8, "end": 19 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Leona:Karma:2",
+          "text": "Break Karma's tether by walking out of range before it ends, or you will be rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Leona:Karma:3",
+          "text": "Stun Karma with Shield of Daybreak right after Zenith Blade lands. She is fragile, so this is your chance to kill her.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-Q", "start": 16, "end": 34 },
+            { "kind": "ability", "key": "Leona-E", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Leona:Karma:4",
+          "text": "Use Eclipse to absorb Karma's poke, but stay near her so your guard lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Karma", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d77c6d58279487a39ecad92948ae41a424deecf21893781e1138f4c2b4cce0b2",
+      "tips": [
+        {
+          "id": "support:Leona:Lulu:0",
+          "text": "Walk up with Shield of Daybreak ready and attack Lulu with it, then dash in with Zenith Blade so she cannot easily walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-Q", "start": 13, "end": 31 },
+            { "kind": "champion", "key": "Lulu", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Leona-E", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Leona:Lulu:1",
+          "text": "Zenith Blade keeps going after it hits, so aim it through minions at Lulu or her partner. Leona only dashes if it hit an enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Lulu", "start": 69, "end": 73 },
+            { "kind": "champion", "key": "Leona", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Leona:Lulu:2",
+          "text": "Lulu can polymorph you with Whimsy as you go in. Stay out of her range until she has used it, then engage.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-W", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Leona:Lulu:3",
+          "text": "Raise Eclipse when Lulu's Glitterlance is about to hit you in a trade. Stay close to enemies so the extra armor and magic resist last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Lulu", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Leona:Lulu:4",
+          "text": "Use Solar Flare to catch Lulu or her carry after they commit. Only the center stuns, so aim at where they will be standing.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Lulu", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "887e9debb05c15ac184905d86852aa814541b5127bb0b7cd22663f8abd14869d",
+      "tips": [
+        {
+          "id": "support:Leona:Lux:0",
+          "text": "Stay out of Lux's Light Binding range until you are ready to go in; if you are rooted at range, you will take a lot of damage.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Lux-Q", "start": 18, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Leona:Lux:1",
+          "text": "Stand behind a minion in lane. Light Binding only hits two enemies, so a minion in front soaks up part of it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Leona:Lux:2",
+          "text": "Once Lux has used Light Binding, go in with Zenith Blade, then hit her with Shield of Daybreak to stun her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-Q", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Leona-E", "start": 44, "end": 56 },
+            { "kind": "ability", "key": "Leona-Q", "start": 76, "end": 94 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Leona:Lux:3",
+          "text": "Cast Shield of Daybreak just before Zenith Blade lands so the stun follows right after the root.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-Q", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Leona-E", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Leona:Lux:4",
+          "text": "Raise Eclipse when you walk into her range and stay close to her. Hitting her extends the armor and magic resist bonus.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Leona:Lux:5",
+          "text": "Aim Zenith Blade through minions to reach Lux; it keeps going after hitting them and dashes to the last champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 42, "end": 45 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Leona:Lux:6",
+          "text": "Lux is fragile, so a successful engage with Solar Flare at level 6 can finish her. Aim the center to stun her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Leona-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "22f3ccca625219d5d363f0a8d11b3d449a5556775d5070ed72d2d343096a9e32",
+      "tips": [
+        {
+          "id": "support:Leona:Maokai:0",
+          "text": "Hit Maokai with Zenith Blade only when his Bramble Smash is on cooldown. Otherwise you dash into a knockback and stun.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Leona-E", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 43, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Leona:Maokai:1",
+          "text": "Don't waste spells on Maokai. Each one you land shortens his Sap Magic cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 61,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Leona:Maokai:2",
+          "text": "Stay away from saplings in brush. They chase you, and the empowered ones hurt more and slow you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Leona:Maokai:3",
+          "text": "Aim Solar Flare so the center hits Maokai. The edge only slows, and the center stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Maokai", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Leona:Maokai:4",
+          "text": "Dodge Nature's Grasp by stepping out of its path early. The wall moves slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "251a8d69662a68ab024f90fafe619668ea47923431323b01b8f2682a01e0c572",
+      "tips": [
+        {
+          "id": "support:Leona:Mel:0",
+          "text": "Hold Zenith Blade until Mel has used Rebuttal. Her nova destroys enemy projectiles, so a sword thrown into it is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Mel", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Mel-W", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Leona:Mel:1",
+          "text": "Once Mel is rooted by Zenith Blade, hit her with an empowered attack from Shield of Daybreak to stun her.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Leona-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Leona-Q", "start": 74, "end": 92 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Leona:Mel:2",
+          "text": "Raise Eclipse when Mel's allies are about to poke you. Stay close to enemies so the extra armor and magic resist last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Mel", "start": 19, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Leona:Mel:3",
+          "text": "Step out of Solar Snare's line or stay close to Mel. If you are rooted at long range, you stay stuck for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Mel", "start": 48, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "aeff04e86e3c04716f07649f52b829e0708d49347b1d389ece1527f83a851d64",
+      "tips": [
+        {
+          "id": "support:Leona:Milio:0",
+          "text": "Land Zenith Blade on Milio, then hit him with the empowered attack from Shield of Daybreak while he is rooted. He stays stunned and in reach.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Leona-Q", "start": 72, "end": 90 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 109 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 127 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Leona:Milio:1",
+          "text": "Milio is fragile and slow without allies near him. Look for the moment he steps away from his partner and engage then.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Leona:Milio:2",
+          "text": "Stay out of a straight line with Milio so Ultra Mega Fire Kick has to hit you first. It stops your engage when it connects.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 42, "end": 62 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Leona:Milio:3",
+          "text": "Use Eclipse before you walk into his poke, and stay close to him so the shield stays up longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Leona:Milio:4",
+          "text": "Aim Solar Flare at the middle of his group so the enemies you most want to catch are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "74c3b9c95ed44625958259dd55f8fc62d41f6225be75e60e72add1c247cccc77",
+      "tips": [
+        {
+          "id": "support:Leona:Morgana:0",
+          "text": "Stand behind minions so Dark Binding hits them first. Getting rooted by Morgana while you are close is how Leona's lane is lost.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 24, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 },
+            { "kind": "champion", "key": "Morgana", "start": 72, "end": 79 },
+            { "kind": "champion", "key": "Leona", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Leona:Morgana:1",
+          "text": "Wait for Morgana to spend Black Shield before you go in. While it holds, Shield of Daybreak and Zenith Blade will not disable.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Morgana-E", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Leona-Q", "start": 73, "end": 91 },
+            { "kind": "ability", "key": "Leona-E", "start": 96, "end": 108 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Leona:Morgana:2",
+          "text": "Raise Eclipse when you take Dark Binding or her damage; the armor and magic resist help, and it lasts longer if the blast hits.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Leona:Morgana:3",
+          "text": "Zenith Blade can be blocked by minions in its path, so cast it with a clear line to Morgana.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Morgana", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Leona:Morgana:4",
+          "text": "Leave the Tormented Shadow area when you are low on health, since it hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Leona:Morgana:5",
+          "text": "Break the Soul Shackles chains by walking out of range before they end; the stun only hits if you stay tethered.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3445b1c7d0eb7c793365dab66d837764d0545e23a032f7bd474c36d3d381b50f",
+      "tips": [
+        {
+          "id": "support:Leona:Nami:0",
+          "text": "Start fights with Zenith Blade onto Nami, then use Shield of Daybreak on your next attack so she stays rooted and stunned with nowhere to go.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 18, "end": 30 },
+            { "kind": "champion", "key": "Nami", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Leona-Q", "start": 51, "end": 69 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 109 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Leona:Nami:1",
+          "text": "Wait for Nami to use Aqua Prison before you go in. If she misses it, she has a long wait before she can stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Nami-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Leona:Nami:2",
+          "text": "Raise Eclipse before you walk into her range. Stay next to the enemies so you keep the extra armor and magic resist.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Leona:Nami:3",
+          "text": "Her Tidecaller's Blessing slows whoever the ally hits. Back off for a moment when an empowered enemy is about to attack, then go in once it runs out.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Leona:Nami:4",
+          "text": "Use Solar Flare when you and your ally are ready to follow up. Only enemies in the center get stunned, so aim for the middle of the group.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c438f65cc65b24d85585f1ac8e2a62988b13ed7d4c8beade6ae5ae38ac23d654",
+      "tips": [
+        {
+          "id": "support:Leona:Nautilus:0",
+          "text": "Stay out of Dredge Line range; if Nautilus hooks you, Leona is dragged into his reach, so keep minions or terrain between you when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 34, "end": 42 },
+            { "kind": "champion", "key": "Leona", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Leona:Nautilus:1",
+          "text": "Start your trade with Zenith Blade, then hit with Shield of Daybreak so the enemy is rooted and stunned in a row.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Leona-Q", "start": 50, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Leona:Nautilus:2",
+          "text": "Pop Eclipse when Nautilus walks up with his shield on; it cuts the damage from his empowered attacks, and staying near him extends it.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Nautilus", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Leona:Nautilus:3",
+          "text": "Aim Solar Flare at the middle of the enemies so Nautilus is stunned rather than just slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nautilus", "start": 48, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f393174430c56e6011fb9a07728099d89eaf3c412e54378c99d4c279412da441",
+      "tips": [
+        {
+          "id": "support:Leona:Neeko:0",
+          "text": "Walk up and land Zenith Blade on Neeko, then hit her with an empowered attack from Shield of Daybreak. The root and stun together make a reliable lockdown.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Neeko", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Leona-Q", "start": 83, "end": 101 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Leona:Neeko:1",
+          "text": "Eclipse gives you armor and magic resist. Cast it when Neeko is about to trade with Blooming Burst, and stay close to her so you keep the extra duration.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Neeko", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Neeko-Q", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Leona:Neeko:2",
+          "text": "Stay out of a straight line with Neeko when minions are between you. Tangle-Barbs grows stronger and roots for much longer after it hits something.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Neeko-E", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Leona:Neeko:3",
+          "text": "Aim Solar Flare at Neeko's centre so she is stunned rather than just slowed. Use it to catch her after she has used her escape or her Pop Blossom.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Neeko", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "ability", "key": "Neeko-R", "start": 134, "end": 145 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Leona:Neeko:4",
+          "text": "Be wary of allies who suddenly look odd or stand still. Neeko may be disguised, so check before you engage on one.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c9f79883c7a35ce06a4c3a82a6b2f4342e2cd182e1ecd0cefb5382d9e9c14b71",
+      "tips": [
+        {
+          "id": "support:Leona:Pantheon:0",
+          "text": "Aim Zenith Blade through Pantheon so it roots him and pulls you in, then hit him with Shield of Daybreak for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Leona-Q", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Leona:Pantheon:1",
+          "text": "Attack Pantheon from the side or behind while Aegis Assault is up; it only protects him from the front.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Leona:Pantheon:2",
+          "text": "Stay away from Pantheon when low on health; a thrown Comet Spear executes weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Leona:Pantheon:3",
+          "text": "Eclipse before Pantheon leaps on you with Shield Vault, so you take less damage and your shield hits him back.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Leona:Pantheon:4",
+          "text": "Move away when Grand Starfall is pinged; it warns you before Pantheon lands, so leave the area or prepare your stun.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Pantheon", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b48bb2734fa1df98c71ff6622695f90ba21ae3a4b5d51b9947bcbd0c5c6fe5a4",
+      "tips": [
+        {
+          "id": "support:Leona:Poppy:0",
+          "text": "Do not dash in with Zenith Blade while Poppy's Steadfast Presence is up. It stops your dash and leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 20, "end": 32 },
+            { "kind": "champion", "key": "Poppy", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Poppy-W", "start": 47, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Leona:Poppy:1",
+          "text": "Stay away from walls behind you when Poppy is near. Heroic Charge into terrain stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Poppy-E", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Leona:Poppy:2",
+          "text": "Step on Poppy's dropped buckler to destroy it and deny her the shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Leona:Poppy:3",
+          "text": "Wait for Poppy to spend Steadfast Presence, then engage with Zenith Blade into Shield of Daybreak.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Poppy-W", "start": 24, "end": 42 },
+            { "kind": "ability", "key": "Leona-E", "start": 61, "end": 73 },
+            { "kind": "ability", "key": "Leona-Q", "start": 79, "end": 97 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "eb1dcd87a94890159048da7fb81f03a7020a5a9ad4409079d3a32d220b996454",
+      "tips": [
+        {
+          "id": "support:Leona:Pyke:0",
+          "text": "Start fights with Zenith Blade, then hit with Shield of Daybreak as you land; Pyke is fragile and a stun usually wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Leona-Q", "start": 46, "end": 64 },
+            { "kind": "champion", "key": "Pyke", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Leona:Pyke:1",
+          "text": "Use Eclipse before a trade against Pyke's Bone Skewer; it adds armor and magic resist, and lasts longer if it hits an enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Pyke", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Leona:Pyke:2",
+          "text": "Pyke heals back damage when you cannot see him, so keep pressure on and do not let him slip away after a trade.",
+          "refs": [{ "kind": "champion", "key": "Pyke", "start": 0, "end": 4 }],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Leona:Pyke:3",
+          "text": "Stand back from low health allies when Pyke is around; Death From Below can execute them and then target you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Pyke-R", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Leona:Pyke:4",
+          "text": "Watch for sharks under your feet: Pyke is hiding nearby in Ghostwater Dive, so stay close to your ally.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Pyke-W", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "32f95e3c5c4f82f31d0dedd4d6e45290cee4165175043468d9d07e6186547245",
+      "tips": [
+        {
+          "id": "support:Leona:Rakan:0",
+          "text": "Hit Zenith Blade on Rakan or his partner to dash in and root them, then hit them with an empowered Shield of Daybreak attack to stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Leona-Q", "start": 99, "end": 117 },
+            { "kind": "keyword", "key": "stunned", "start": 128, "end": 132 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Leona:Rakan:1",
+          "text": "Use Eclipse before a trade to take less damage, and stay near enemies so it lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Leona:Rakan:2",
+          "text": "Look for Rakan when he is alone. Without an ally to dash to with Battle Dance, he has a hard time escaping your Zenith Blade combo.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Rakan-E", "start": 65, "end": 77 },
+            { "kind": "ability", "key": "Leona-E", "start": 112, "end": 124 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Leona:Rakan:3",
+          "text": "Rakan's Grand Entrance shows where he lands and has a short delay. Step out of the area, then go in on him.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Rakan-W", "start": 8, "end": 22 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Leona:Rakan:4",
+          "text": "Save Solar Flare for when Rakan is committed to a dash, and aim at the center so he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "410685d3d4a3feb70490e7ac9719d7fa0e305d14b685f7bb01c378e2cbe07e5c",
+      "tips": [
+        {
+          "id": "support:Leona:Rell:0",
+          "text": "Hit Rell with Zenith Blade to root her and dash in, then attack with Shield of Daybreak to stun her. Zenith Blade keeps going past minions.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Leona-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Leona-Q", "start": 69, "end": 87 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 },
+            { "kind": "ability", "key": "Leona-E", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Leona:Rell:1",
+          "text": "Rell's Shattering Strike stuns on a slow swing. Step out of its line, then engage while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rell-Q", "start": 7, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Leona:Rell:2",
+          "text": "Use Eclipse when Rell leaps in with Ferromancy: Crash Down. You take less damage, and the blast hurts her if she stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Rell", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Rell-W", "start": 36, "end": 58 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Leona:Rell:3",
+          "text": "Aim Solar Flare so Rell is in the center. Rell is hard to peel off once she is stunned, so use it to start or finish a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Rell", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Rell", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7abcf551d4c28ea980fe1a5fc7dfbfd76677d950f4b61d9aa2ef2e677a05bca3",
+      "tips": [
+        {
+          "id": "support:Leona:Senna:0",
+          "text": "Hit Zenith Blade through minions to reach Senna, then follow with Shield of Daybreak to stun her. She has no dash, so she can't escape the combo.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Leona-Q", "start": 66, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Leona:Senna:1",
+          "text": "Raise Eclipse before Senna's poke lands, then stay close to her so the shield lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "poke", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Leona:Senna:2",
+          "text": "Senna's Last Embrace roots after a delay, so step out of its path or stay behind minions rather than eat it.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 8, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Leona:Senna:3",
+          "text": "Senna is fragile and wants range. Engage when her Last Embrace is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Leona:Senna:4",
+          "text": "Use Solar Flare on Senna when your team can follow up. Aim at the center so she is stunned, not just slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Senna", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f94dd964ec62d6f44ade4bd9bbb63abd4ad9d48a875ff8771a30c9bcd6145f8f",
+      "tips": [
+        {
+          "id": "support:Leona:Seraphine:0",
+          "text": "Hit Seraphine with Zenith Blade, then use Shield of Daybreak on your next attack. She has little to stop you once you are on top of her.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Leona-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Leona-Q", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Leona:Seraphine:1",
+          "text": "Step into the lane with Eclipse up when Seraphine pokes. Stay near enemies so the shield lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Seraphine", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Leona:Seraphine:2",
+          "text": "Seraphine's Beat Drop is a line. Stay out of line with her, or you get slowed and then pinned.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Leona:Seraphine:3",
+          "text": "Aim Solar Flare so she is in the center. She is stunned there, and the slow alone is easier to fight through.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b508e79acdeedfdaaee401591fb54f05271cd8b7f0f1e4400ca524cea3a73189",
+      "tips": [
+        {
+          "id": "support:Leona:Shen:0",
+          "text": "Hit Shen with Shield of Daybreak when he walks up to poke or last-hit; the stun gives you time to follow up with Zenith Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Leona-Q", "start": 14, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Leona-E", "start": 113, "end": 125 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Leona:Shen:1",
+          "text": "Use Eclipse when Shen dashes in with his taunt; you stay tough, and staying near him extends the bonus.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Shen", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Leona:Shen:2",
+          "text": "Aim Zenith Blade through minions toward Shen. It keeps going after a hit, so it can still reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Leona:Shen:3",
+          "text": "Land Solar Flare so its center catches Shen; he is stunned there and cannot easily slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "fbc60decd10fe5e648176dc2b6dcf25510ee59a49db53f0a72c5df570d87e826",
+      "tips": [
+        {
+          "id": "support:Leona:Sona:0",
+          "text": "Hit Zenith Blade on Sona to dash onto her and root her. Follow up with Shield of Daybreak for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Leona-Q", "start": 71, "end": 89 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Leona:Sona:1",
+          "text": "Sona has little protection of her own, so kill her first. Her heals and shields keep her team alive if you leave her alone.",
+          "refs": [{ "kind": "champion", "key": "Sona", "start": 0, "end": 4 }],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Leona:Sona:2",
+          "text": "Raise Eclipse when Sona's Hymn of Valor and Power Chord start landing. The armor and magic resist cut her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Sona", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Sona-Q", "start": 26, "end": 39 },
+            { "kind": "ability", "key": "Sona-passive", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Leona:Sona:3",
+          "text": "Keep your distance from Sona's Crescendo, and don't walk in a clump with your partner. A stun would cost you your engage.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sona-R", "start": 31, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ff4b8985463e71b95f17445440575ec7fbfe646f74a7c076b2fd786fd633ee9b",
+      "tips": [
+        {
+          "id": "support:Leona:Soraka:0",
+          "text": "Hit Soraka with Zenith Blade to dash onto her. She is fragile, so follow up with Shield of Daybreak.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Leona-E", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Leona-Q", "start": 81, "end": 99 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Leona:Soraka:1",
+          "text": "Hold back when Equinox is ready, since it silences you and roots you at the end. Fight after she uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "silenced", "start": 42, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Leona:Soraka:2",
+          "text": "Use Eclipse when you expect Soraka's poke, then stay close to enemies to keep the extra armor and magic resist.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Soraka", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Leona:Soraka:3",
+          "text": "Aim Solar Flare at Soraka when she is caught out. The center stuns her, and she can't heal while stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Soraka", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 104 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e0c2430cb3a2d6ba347ba445dd13a39889937b14cac5caded60a13c1265d77d2",
+      "tips": [
+        {
+          "id": "support:Leona:Swain:0",
+          "text": "Hit the enemy with Zenith Blade, then use Shield of Daybreak as you land to stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Leona-Q", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Leona:Swain:1",
+          "text": "Swain's Nevermove roots you when it detonates. Stay out of its line, or keep minions between you so it hits them first.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Swain-E", "start": 8, "end": 17 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Leona:Swain:2",
+          "text": "Raise Eclipse when Swain's Death's Hand is coming at you. It gives you armor and magic resist, so you can walk up.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Swain", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Swain-Q", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Leona:Swain:3",
+          "text": "Don't stay near Swain once Demonic Ascension starts; it drains you and heals him. Fight him before he transforms.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Swain-R", "start": 27, "end": 44 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cf4c307f5dbc9b9bed069b6a24bd9c576619f3efac94432e2c4a03aa1b62e4f7",
+      "tips": [
+        {
+          "id": "support:Leona:TahmKench:0",
+          "text": "Walk up and use Zenith Blade through the enemy lane; if it hits Tahm Kench you dash to him and root him, so follow with Shield of Daybreak.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "TahmKench", "start": 64, "end": 74 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 99 },
+            { "kind": "ability", "key": "Leona-Q", "start": 120, "end": 138 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Leona:TahmKench:1",
+          "text": "Hit Tahm Kench with Shield of Daybreak to stun him, then attack. Stunning him cancels the Abyssal Dive he is channeling.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Leona-Q", "start": 20, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 90, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Leona:TahmKench:2",
+          "text": "Use Eclipse when you trade with Tahm Kench. Stay close enough to hit an enemy with the detonation so you keep the extra defense.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "TahmKench", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Leona:TahmKench:3",
+          "text": "Tahm Kench stores damage as grey health and heals it back if he goes a few seconds without being hit. Keep trading so he can't recover.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Leona:TahmKench:4",
+          "text": "Aim Solar Flare so the center lands on Tahm Kench or his carry. Those in the center are stunned, and the rest are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "TahmKench", "start": 39, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "73d387a08d33f9c4faae83b9ae06c5ac3feb088936aa91ad0b136425eca74772",
+      "tips": [
+        {
+          "id": "support:Leona:Taric:0",
+          "text": "Hit an enemy champion with Zenith Blade, then use Shield of Daybreak on landing for a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Leona-Q", "start": 50, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Leona:Taric:1",
+          "text": "Stay out of Taric's Dazzle line when you walk up. Move sideways during its wind-up and it misses.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Taric-E", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Leona:Taric:2",
+          "text": "Taric's Bravado makes his attacks quick, so don't stand next to him for long trades. Fight when his abilities are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Taric-passive", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Leona:Taric:3",
+          "text": "Be ready to kill someone or back off once Taric starts Cosmic Radiance; the delay lets you act first.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Taric-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Leona:Taric:4",
+          "text": "Use Eclipse when you walk into Taric's range, and stay near him so the shield lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Taric", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "607ddd20a6dc42aba9ef913bc2475dca725c4146861504ee59bf44eee7a92749",
+      "tips": [
+        {
+          "id": "support:Leona:Thresh:0",
+          "text": "Watch for Thresh starting Death Sentence; his cast is slow, so sidestep it or step behind a minion, because the scythe stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Leona:Thresh:1",
+          "text": "Use Zenith Blade to reach Thresh, then hit him with Shield of Daybreak to stun him. He cannot easily leave once you are on him.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Leona-Q", "start": 52, "end": 70 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Leona:Thresh:2",
+          "text": "Raise Eclipse before a trade and stay next to the enemy, so the shield lasts longer when it detonates on them.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Leona:Thresh:3",
+          "text": "Keep your distance when Flay is ready; it pushes or pulls you, and it can wreck your engage.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Leona:Thresh:4",
+          "text": "Aim Solar Flare so Thresh is at the center; only the center stuns, and the edge only slows.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Thresh", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "66ee3b5369ae09d5197f06e6a5a856a06c874145db3921c1bf6b423bd8531c01",
+      "tips": [
+        {
+          "id": "support:Leona:Velkoz:0",
+          "text": "Hit Vel'Koz with Zenith Blade, then use Shield of Daybreak on your first attack to stun him. He has low mobility and little room to escape once you are on him.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Leona-E", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Leona-Q", "start": 40, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Leona:Velkoz:1",
+          "text": "Zenith Blade keeps flying after it hits a minion, so you can start the engage from behind your minions.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Leona:Velkoz:2",
+          "text": "Press Eclipse when you walk into his poke. Stay close to him so the shield detonates on him and the armor and magic resist last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Leona:Velkoz:3",
+          "text": "Stand off the line of Plasma Fission, because the bolt slows you when it hits. Watch for its split bolts too, since they can reach you from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 22, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Leona:Velkoz:4",
+          "text": "Use Solar Flare to catch him, or when his Life Form Disintegration Ray starts. Putting him in the center of the flare stuns him and breaks his channel.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 42, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Leona:Velkoz:5",
+          "text": "Move out of the way of Tectonic Disruption before it lands. It knocks you up and stops you from engaging.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 23, "end": 42 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a1bb9bac8e34bfdf3564222d8c8e24ab61d182191decfa032f755d926c52188e",
+      "tips": [
+        {
+          "id": "support:Leona:Xerath:0",
+          "text": "Hit Zenith Blade on Xerath to dash onto him, then attack with Shield of Daybreak to stun him. Look for it when he steps up to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Leona-Q", "start": 62, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 },
+            { "kind": "keyword", "key": "poke", "start": 126, "end": 130 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Leona:Xerath:1",
+          "text": "Close the distance on Xerath; he is weak up close. Once you are on him, he has little way to get away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Leona:Xerath:2",
+          "text": "Zenith Blade is a projectile that Xerath can block with spell shields, so use it when he cannot dodge it. Keep minions out of your line if you can.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Xerath", "start": 34, "end": 40 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:Leona:Xerath:3",
+          "text": "Walk toward him with Eclipse up while he pokes you. It cuts the damage you take and its blast hits him if he is close.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Leona:Xerath:4",
+          "text": "Use Solar Flare when Xerath is slowed or stunned by your team. Only enemies in the center get stunned, so aim at him.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Xerath", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Leona:Xerath:5",
+          "text": "Step sideways when you see Xerath start Rite of the Arcane. Its shots land after a delay, so keep moving.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Xerath-R", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "560169290c18f3a03441c0fcf163d9bb7bcbc46f0eb99ad8c71079fe89fd49ac",
+      "tips": [
+        {
+          "id": "support:Leona:Yuumi:0",
+          "text": "Yuumi is untargetable while attached, so wait until she detaches or is caught alone, then land Zenith Blade on her.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Leona-E", "start": 95, "end": 107 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Leona:Yuumi:1",
+          "text": "Aim at the enemy carry with Zenith Blade, then hit them with Shield of Daybreak. Yuumi can't block it while attached, and the carry is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 28, "end": 40 },
+            { "kind": "ability", "key": "Leona-Q", "start": 61, "end": 79 },
+            { "kind": "champion", "key": "Yuumi", "start": 81, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 135, "end": 142 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Leona:Yuumi:2",
+          "text": "Yuumi's Zoomies shields her partner and speeds them up. Hit them with Eclipse and Shield of Daybreak when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yuumi-E", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Leona-W", "start": 70, "end": 77 },
+            { "kind": "ability", "key": "Leona-Q", "start": 82, "end": 100 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Leona:Yuumi:3",
+          "text": "Use Eclipse when you walk up to trade and stay close to the enemies. Hitting one makes your armor and magic resist last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Leona:Yuumi:4",
+          "text": "Yuumi's Prowling Projectile stops at the first enemy it hits, so you can step behind a minion to dodge it while you walk up.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 8, "end": 27 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "813257745d93dae413c20ca5bce475258a6773bb0bc198dbef749358d8860b1e",
+      "tips": [
+        {
+          "id": "support:Leona:Zilean:0",
+          "text": "Dash onto Zilean with Zenith Blade, then hit him with an empowered attack from Shield of Daybreak to stun him. He is fragile, so go for him.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Leona-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Leona-Q", "start": 79, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Leona:Zilean:1",
+          "text": "Step out of the way of Time Bomb, and do not stand next to an ally who is carrying one. A second bomb stuns everyone nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Leona:Zilean:2",
+          "text": "Raise Eclipse when Zilean throws Time Bomb at you, because it blunts the damage. Stay near enemies so it lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Zilean", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Leona:Zilean:3",
+          "text": "Aim Solar Flare at the center on Zilean to stun him. If Chronoshift is up on his ally, wait for it to fade before you kill them.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zilean", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Zilean-R", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7775014b5daf0401a9e0cb1e701bac75adc9cd008f6e2a1164a96f850f7609c3",
+      "tips": [
+        {
+          "id": "support:Leona:Zyra:0",
+          "text": "Walk up and hit Zyra with a Shield of Daybreak attack to stun her, then follow with Zenith Blade to stay on her. She has no escape of her own.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Leona-Q", "start": 28, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Leona-E", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Leona:Zyra:1",
+          "text": "Zenith Blade roots whoever it struck last, so aim it so Zyra is the last champion in line. Then you can dash in and land your stun.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 0, "end": 12 },
+            { "kind": "keyword", "key": "rooted", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Zyra", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Leona:Zyra:2",
+          "text": "Step on Zyra's seeds as you walk up so she has fewer plants to grow. Do it before she can cast on them.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Leona:Zyra:3",
+          "text": "Raise Eclipse when you walk into her Grasping Roots and plant range. Stay close to her so the shield blast lands and the bonus defenses last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Zyra-E", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Leona:Zyra:4",
+          "text": "Aim Solar Flare so Zyra is in the center, which stuns her. Use it when she has used Grasping Roots and her team is committed.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zyra", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Zyra-E", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Leona:Zyra:5",
+          "text": "Kill plants only when they are in your way. Move the fight to somewhere she has no seeds, since she gets weaker there.",
+          "refs": [],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

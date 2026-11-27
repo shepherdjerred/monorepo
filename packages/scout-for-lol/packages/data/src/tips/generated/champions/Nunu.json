@@ -1,0 +1,944 @@
+{
+  "schemaVersion": 1,
+  "champion": "Nunu",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "b406b7f2e5c2e2e3c85b659ec20e5298f8199ad7dd247e515d4310f4026c48d1",
+      "tips": [
+        {
+          "id": "jungle:Nunu:general:0",
+          "text": "Use Consume on jungle monsters to clear camps faster and heal. It deals big damage to them and restores your health.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nunu:general:1",
+          "text": "Save Consume for a champion when you are low on health. The heal is stronger below half health.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Nunu:general:2",
+          "text": "Hold the turn to steer Biggest Snowball Ever!, and let it roll far before it hits. It hits harder and knocks up longer.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 23, "end": 45 },
+            { "kind": "keyword", "key": "knocked-up", "start": 102, "end": 111 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nunu:general:3",
+          "text": "Recast Biggest Snowball Ever! to release it early when the target is close or about to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 7, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nunu:general:4",
+          "text": "Land all three snowballs of Snowball Barrage to slow the enemy. The root only hits enemies the snowballs marked, so keep them near you.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Nunu:general:5",
+          "text": "Snowball Barrage stops at the first enemy it hits. Aim it so minions are not in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 0, "end": 16 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nunu:general:6",
+          "text": "Wait for the first round of enemy disables before using Absolute Zero. Stay back until then so the channel is not interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Nunu:general:7",
+          "text": "Recast Absolute Zero early for partial damage if enemies are about to leave the area.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Nunu:general:8",
+          "text": "Attack enemy champions to trigger Call of the Freljord. It gives you and a nearby ally extra attack speed and Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-passive", "start": 34, "end": 54 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Nunu:combo:0",
+          "name": "Consume smite steal",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Nunu-Q" },
+            { "kind": "summoner-spell", "key": "11" }
+          ],
+          "when": "Contesting or stealing Dragon, Baron or Rift Herald when the monster is low.",
+          "whenRefs": [],
+          "text": "Consume deals true damage to monsters and Smite adds more. Use both together to finish the objective before the enemy team can.",
+          "textRefs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "11", "start": 42, "end": 47 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "1ad0c143c95491b9acee017c0e5a62461e83aaa330a7381dc87ef0a03d938e05",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Graves:0",
+          "text": "Use Consume on jungle monsters to clear fast and heal back the damage you take. Graves clears quickly, so keep your camps moving.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Graves", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Nunu:Graves:1",
+          "text": "Roll Biggest Snowball Ever! at Graves from far away, so it hits harder and knocks him up. Steer with sharp turns to stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Graves", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Nunu:Graves:2",
+          "text": "Stay out of Smoke Screen when you can, since it slows you and hides your view. Walk out of it quickly, because leaving ends the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 128, "end": 132 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Nunu:Graves:3",
+          "text": "Hit Graves with Snowball Barrage and keep him near you. The root lands a few seconds later on enemies it hit, and it can stop his Quickdraw escape.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Nunu-E", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Graves-E", "start": 130, "end": 139 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nunu:Graves:4",
+          "text": "Cast Absolute Zero when Graves is stuck in a fight with you. Let it charge for more damage, and end it early if he is about to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8412d203b221d7364dc29c0300c77f36387ba29f35f87cf0c5d21d58be1116f5",
+      "tips": [
+        {
+          "id": "jungle:Nunu:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard; Dragon Strike pulls him along it and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Nunu:JarvanIV:1",
+          "text": "Turn sharply while rolling Biggest Snowball Ever! near Jarvan, because he can slow you with Golden Aegis and it is hard to steer in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 27, "end": 49 },
+            { "kind": "ability", "key": "JarvanIV-W", "start": 92, "end": 104 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Nunu:JarvanIV:2",
+          "text": "Hit Jarvan with Snowball Barrage and stay near him; if he stays slowed from the snowballs, the root lands a few seconds later.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Nunu:JarvanIV:3",
+          "text": "Wait for Jarvan to use Cataclysm before you start Absolute Zero in a fight. His terrain traps you in too, so don't channel inside it unless your team is ready.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "Nunu-R", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Nunu:JarvanIV:4",
+          "text": "Use Consume on jungle monsters to heal and stay healthy, since Jarvan's fights early are strong.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c87458d5d6d7903460a6644fd6393d2d1afc040e3b1e29bd703e4c1336f81c5e",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Kayn:0",
+          "text": "Use Consume on big jungle monsters to heal and clear fast; save it for a clash only when you need the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Nunu:Kayn:1",
+          "text": "Roll Biggest Snowball Ever! at Kayn when he can't dodge it; a longer roll means a harder hit, a longer knock up and a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            {
+              "kind": "keyword",
+              "key": "knocked-up",
+              "start": 103,
+              "end": 111
+            },
+            { "kind": "keyword", "key": "stunned", "start": 118, "end": 122 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Nunu:Kayn:2",
+          "text": "Hit Kayn with Snowball Barrage and keep him near you; if he stays close, he gets rooted when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Nunu-E", "start": 14, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Nunu:Kayn:3",
+          "text": "Wait for Kayn to burst out of his target before using Absolute Zero. Then stay inside it with him slowed, and Flash is his best escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Nunu-R", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 },
+            { "kind": "summoner-spell", "key": "4", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Nunu:Kayn:4",
+          "text": "Kayn can hide in walls with Shadow Step. Don't chase him into terrain; fight in open ground where your snowball and barrage land.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-E", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb50d255c57a9da378b8e5a1150f446199615211dc71b35b3087a51bd97e9fe9",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Khazix:0",
+          "text": "Stay near your allies, minions or a turret when Kha'Zix is around. Alone, you are isolated and Taste Their Fear hits you much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "keyword", "key": "isolated", "start": 67, "end": 72 },
+            { "kind": "keyword", "key": "isolated", "start": 82, "end": 90 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 95, "end": 111 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Nunu:Khazix:1",
+          "text": "Use Consume on Kha'Zix when he jumps on you. It hurts him and heals you, which helps you survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Khazix", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Nunu:Khazix:2",
+          "text": "Save Absolute Zero for when Kha'Zix commits. Its shield and heavy slow make it hard for him to get in or run away.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Nunu:Khazix:3",
+          "text": "Hit Kha'Zix with Snowball Barrage and stay close to him. He is rooted a few seconds later if he has not moved out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nunu-E", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Nunu:Khazix:4",
+          "text": "Roll Biggest Snowball Ever! at him and turn sharply to track him, since it knocks him up when it lands, even if he has Leap.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "ability", "key": "Khazix-E", "start": 119, "end": 123 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Nunu:Khazix:5",
+          "text": "Fight him when Leap is on cooldown. He has few ways to get away or reach you then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bffe1ec203ca2bccbbf335fbbd993024555e1214499da2849b44a1da23d32fc7",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Kindred:0",
+          "text": "Roll Biggest Snowball Ever! at Kindred and let it grow; a big snowball knocks her up and hits hard, and she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Kindred", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Nunu:Kindred:1",
+          "text": "Hit Kindred with Snowball Barrage, then stay close. If she stays slowed, she is rooted when the barrage finishes.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nunu-E", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Nunu:Kindred:2",
+          "text": "Hold Absolute Zero until Kindred has spent her dash. Then stay on her so the blizzard slows her and she can't easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kindred", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Nunu:Kindred:3",
+          "text": "Take the camps Wolf marks with Consume before she can. Each Hunt she completes makes her stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Nunu:Kindred:4",
+          "text": "Don't fight inside Lamb's Respite. Nobody can die there, so back off and wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bf6d43e9a4a574399a5ce2e0fe91c771e01eaf4c90207a720400f2d9043a8683",
+      "tips": [
+        {
+          "id": "jungle:Nunu:LeeSin:0",
+          "text": "Fight Lee Sin when he is low on Energy; his abilities and Flurry attacks depend on it.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 58,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Nunu:LeeSin:1",
+          "text": "Use Consume on him in a trade; it heals you and he is a champion you can reach with it.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Nunu:LeeSin:2",
+          "text": "Roll Biggest Snowball Ever! at him from far away and turn sharply to keep tracking him; it knocks him up when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Nunu:LeeSin:3",
+          "text": "Hit him with all of Snowball Barrage so he is slowed, then stay close so the root catches him.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 20, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Nunu:LeeSin:4",
+          "text": "Start Absolute Zero when Lee Sin dives in. The shield and slow blunt his chase.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Nunu:LeeSin:5",
+          "text": "Spread out from teammates before a fight so Dragon's Rage cannot knock Lee Sin's target into them.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 44, "end": 57 },
+            { "kind": "champion", "key": "LeeSin", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e2568fcfc498c9a6da6df056f87b9ce349ec58e57dc3f8e31da2aae9b07f13d3",
+      "tips": [
+        {
+          "id": "jungle:Nunu:MasterYi:0",
+          "text": "Hold Absolute Zero until Master Yi has used Alpha Strike. His untargetable window is gone and he is easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Nunu:MasterYi:1",
+          "text": "Slows fail once Master Yi has Highlander active, so stop him with the root from Snowball Barrage or Biggest Snowball Ever!",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "MasterYi", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 30, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 },
+            { "kind": "ability", "key": "Nunu-E", "start": 80, "end": 96 },
+            { "kind": "ability", "key": "Nunu-W", "start": 100, "end": 122 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Nunu:MasterYi:2",
+          "text": "Hit Master Yi with Consume when he is not using Alpha Strike. It deals damage and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Nunu-Q", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Nunu:MasterYi:3",
+          "text": "Hit him often so he has to spend mana on Meditate. Stun or root him before he heals.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 41, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "814be62a6a895e5bb18e0daa3175dbc133f22d01c5b0bade167db509fe4fc806",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Naafiri:0",
+          "text": "Use Consume on big jungle monsters to heal and clear fast; Naafiri is an assassin who will try to invade, so keep your health up.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Naafiri", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Nunu:Naafiri:1",
+          "text": "Roll Biggest Snowball Ever! at Naafiri when she has nowhere to dash; the knock up and stun let you lock her down.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Naafiri", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Nunu:Naafiri:2",
+          "text": "Hit Naafiri with Snowball Barrage and stay near her; the delayed root catches her if she was hit.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nunu-E", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Nunu:Naafiri:3",
+          "text": "Start Absolute Zero when she dives you; the shield and growing slow blunt her burst, and her packmates are caught too.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Nunu:Naafiri:4",
+          "text": "Naafiri's Hounds' Pursuit takes a moment to wind up; Absolute Zero is cancelled by her pursuit only if you are interrupted, so keep your shield up.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Nunu-R", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "46b155c4a149ded3b10f89dbf224aacd0f5171f1e56e878d2fb2f0d3772ba9e8",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Nocturne:0",
+          "text": "Save Biggest Snowball Ever! for when Nocturne is committed to a fight; a clean hit knocks him up and sets up your team.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Nocturne", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Nunu:Nocturne:1",
+          "text": "Nocturne's Shroud of Darkness blocks the next enemy ability. Bait it with a cheap Snowball Barrage before you commit Absolute Zero.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 11, "end": 29 },
+            { "kind": "ability", "key": "Nunu-E", "start": 82, "end": 98 },
+            { "kind": "ability", "key": "Nunu-R", "start": 117, "end": 130 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Nunu:Nocturne:2",
+          "text": "Stay close to your team when Nocturne uses Paranoia. He picks someone to jump to, and you can help the target by standing near them.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Nunu:Nocturne:3",
+          "text": "Hit Nocturne with Snowball Barrage to slow him and root him shortly after. That stops him from walking away from your team.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Nunu-E", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "abd40089f90f2475d5bd107b47cbba1992b7ac83b4207cf37fa28fc5e3cc57cb",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Shyvana:0",
+          "text": "Use Consume on big jungle monsters to heal and clear fast, and save it for Shyvana in a fight so you can bite and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Shyvana", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Nunu:Shyvana:1",
+          "text": "Roll Biggest Snowball Ever! in a long line before you hit Shyvana; it knocks her up and stuns her, and a bigger snowball does more.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Shyvana", "start": 58, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Nunu:Shyvana:2",
+          "text": "Shyvana in Dragon Form flies in with Dragon's Descent. Stay out of her reach until she commits, then fight back with Absolute Zero.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 37, "end": 53 },
+            { "kind": "ability", "key": "Nunu-R", "start": 117, "end": 130 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Nunu:Shyvana:3",
+          "text": "Start Absolute Zero when Shyvana is close, since she needs to hit you to build her power. Let it run on her so she is slowed hard before it explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Nunu:Shyvana:4",
+          "text": "Hit Shyvana with all three Snowball Barrage volleys so she is slowed, then she gets rooted shortly after if she stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nunu-E", "start": 27, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "067871dd00d0c7d6c1ddbcaaf2447075eff52dcddfcf619b4419303e4a146400",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Skarner:0",
+          "text": "Steer Biggest Snowball Ever! at Skarner; hitting him knocks him up, and a longer roll hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 6, "end": 28 },
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Nunu:Skarner:1",
+          "text": "Hit Skarner with Snowball Barrage before he charges in. If you are rooted by nothing, you can still slow him and set up the root.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nunu-E", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nunu:Skarner:2",
+          "text": "Save your stun or root for when Skarner charges with Ixtal's Impact. Any stun, root or knock up stops his charge.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 10, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 83 },
+            { "kind": "keyword", "key": "knocked-up", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Nunu:Skarner:3",
+          "text": "Do not trade for long against Skarner. His attacks stack Quaking and wear you down, so use Consume on a minion or camp to heal back.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Nunu-Q", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Nunu:Skarner:4",
+          "text": "Use Absolute Zero when Skarner is bunched up with his team. Flash out of his Impale if he is near you.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 },
+            { "kind": "summoner-spell", "key": "4", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Skarner-R", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "374596ed7ebc15ec386802f9d7fcdc6f4c134d08aa9530fff779cdf02dc854b0",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Sylas:0",
+          "text": "Sylas can steal Absolute Zero with Hijack, so hold your ultimate until you must use it, and do not count on it landing unanswered.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Nunu-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Sylas-R", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Nunu:Sylas:1",
+          "text": "Keep Consume ready for a fight with Sylas. It heals you, and he will often try to burst you down.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Nunu:Sylas:2",
+          "text": "Hit Sylas with Snowball Barrage and Biggest Snowball Ever! and he is slowed and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nunu-E", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Nunu-W", "start": 36, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Nunu:Sylas:3",
+          "text": "Sylas heals with Kingslayer when he is low. Finish him off before he can dash in, or hold your own damage back until you can kill him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Nunu:Sylas:4",
+          "text": "Walk through Chain Lash's slow with Biggest Snowball Ever!, which clears slows and makes you immune to them while you roll.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Nunu-W", "start": 36, "end": 58 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fad95dac592933e5b624256c53efc24f959c6711d6e1ff4795ed9f7e6f5d510",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Talon:0",
+          "text": "Use Consume on Talon only when you need the heal; it costs him nothing, so save it for the camps and for clearing quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 15, "end": 20 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Nunu:Talon:1",
+          "text": "Hit Talon with Snowball Barrage first when he jumps in; if all three snowballs land he is slowed, and he is rooted a few seconds later if he stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nunu-E", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 },
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Nunu:Talon:2",
+          "text": "Hold Absolute Zero until Talon commits to a fight. He can vanish and run, so end it early if he turns invisible and leaves.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Nunu:Talon:3",
+          "text": "Roll Biggest Snowball Ever! at Talon when he walks down a lane to gank; a long roll knocks him up, so turn sharply to follow him.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f399746324131574edf563fc9d2e5903d7ec99902434aeb1f5dbf16c0fdbc914",
+      "tips": [
+        {
+          "id": "jungle:Nunu:Viego:0",
+          "text": "Roll Biggest Snowball Ever! at Viego from far away; a longer roll hits harder and knocks him up longer.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Viego", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Nunu:Viego:1",
+          "text": "Hit Viego with Snowball Barrage and stay close; after a short delay he is rooted if he was marked.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nunu-E", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Nunu:Viego:2",
+          "text": "Wait to cast Absolute Zero until Viego has used his stun and dash. Cancelling it early is fine if he runs out.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Nunu:Viego:3",
+          "text": "Use Consume on Viego in a drawn-out fight to heal back damage, especially when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Viego", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "327a70f0b100e1e17afd64873593d277fd0dd94288712cf21f2a5a5caa956aed",
+      "tips": [
+        {
+          "id": "jungle:Nunu:XinZhao:0",
+          "text": "Roll Biggest Snowball Ever! at Xin Zhao when he comes at you; it knocks him up and cuts off his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Nunu:XinZhao:1",
+          "text": "Stay out of Xin Zhao's range once Audacious Charge is ready, since it reaches a long way against a Challenged target.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 34, "end": 50 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Nunu:XinZhao:2",
+          "text": "Use Snowball Barrage to slow and root Xin Zhao when he runs in; the snowballs stop at the first enemy they hit.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "XinZhao", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nunu:XinZhao:3",
+          "text": "Don't cast Absolute Zero when Xin Zhao is near; Crescent Guard lets him ignore outside damage while he fights you inside the blizzard.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Nunu:XinZhao:4",
+          "text": "Take a bite of Xin Zhao with Consume when his Three Talon Strike is on cooldown; it heals you and costs him his burst.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nunu-Q", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

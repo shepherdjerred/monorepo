@@ -1,0 +1,2233 @@
+{
+  "schemaVersion": 1,
+  "champion": "Seraphine",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "9f3b0894e5d0d609beb29019018ef0343e130e17c6a176d43a4a2ecb46eb153c",
+      "tips": [
+        {
+          "id": "support:Seraphine:general:0",
+          "text": "Aim High Note at the enemy's feet, then poke again once they are low. It hurts much more the lower their health is.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Seraphine:general:1",
+          "text": "Start with Beat Drop on an enemy who is already slowed so they get rooted. Hit one who can't move and they are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 11, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Seraphine:general:2",
+          "text": "Cast Surround Sound when you already have a shield to heal your team after a short delay. It shields and speeds up you and your allies too.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Seraphine:general:3",
+          "text": "Cast your spells near your partner so you both get Notes. Then auto-attack to fire them for extra range and damage.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Seraphine:general:4",
+          "text": "Watch your Echo stacks. When the last one is lit, your next basic spell casts twice, so save it for a key poke or a pick.",
+          "refs": [],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Seraphine:general:5",
+          "text": "Hit an enemy with Encore, then follow up with Beat Drop. The charm lets it stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Seraphine:general:6",
+          "text": "In a team fight, fire Encore through your allies. Each champion it hits extends its range, so it can reach far-off enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Seraphine:general:7",
+          "text": "Hold Beat Drop to stop enemies diving you. It travels a long way and hits every enemy in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Seraphine:combo:0",
+          "name": "Charm into stun",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Seraphine-R" },
+            { "kind": "ability", "key": "Seraphine-E" }
+          ],
+          "when": "When your ultimate has charmed an enemy and you want a longer lockdown.",
+          "whenRefs": [],
+          "text": "The charm counts as an immobilize, so Beat Drop on a charmed enemy stuns them instead of only slowing. It chains well with allied follow-up.",
+          "textRefs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 38, "end": 47 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "941b3e4bc69822510975499849fc08a189125bb9f68648315ef4e4a31b34d0e1",
+      "tips": [
+        {
+          "id": "support:Seraphine:Alistar:0",
+          "text": "Keep your distance from Alistar. Headbutt and Pulverize together can lock you down, and you are fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Alistar-W", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Seraphine:Alistar:1",
+          "text": "Hit Alistar with Beat Drop as he runs in. The slow gives you time to back away.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Seraphine:Alistar:2",
+          "text": "Cast Surround Sound before Alistar engages. The shield absorbs some of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Alistar", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Seraphine:Alistar:3",
+          "text": "Hold Encore for when Alistar commits. While Unbreakable Will is active, wait before you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Alistar", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Alistar-R", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7600afacc46c8ba0edcf01b6341de73bb6c305c5df3be24e9821cb29229301dd",
+      "tips": [
+        {
+          "id": "support:Seraphine:Anivia:0",
+          "text": "Dodge Flash Frost by staying out of its line. Its stun only lands where the ice detonates, so step aside.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Seraphine:Anivia:1",
+          "text": "Hit Anivia with Beat Drop when she is slowed by your ally. It roots her and gives you time to follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Seraphine:Anivia:2",
+          "text": "Use Surround Sound before you trade. Its shield absorbs some of her Frostbite damage.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Anivia-E", "start": 68, "end": 77 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Seraphine:Anivia:3",
+          "text": "Stand away from Glacial Storm. It slows you, and over time it deals heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Seraphine:Anivia:4",
+          "text": "Kill Anivia's egg quickly after Rebirth. Use Encore to pull your team in on her, and do not leave it to chance.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 32,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Seraphine-R", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "74f03374a54f639b13f92cd2ea19d416d9d5a2922e781ced9b718006f2053613",
+      "tips": [
+        {
+          "id": "support:Seraphine:Bard:0",
+          "text": "Fire Beat Drop at Bard after your ally slows him; he is rooted instead, which makes your follow-up spells much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Bard", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Seraphine:Bard:1",
+          "text": "Aim Beat Drop down the lane so it hits Bard and his partner together; it keeps going after the first hit.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Bard", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Seraphine:Bard:2",
+          "text": "Stay out of a straight line with Bard's allies. Cosmic Binding stuns if it hits a second enemy or a wall, so step out of the line when it comes.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Bard-Q", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Seraphine:Bard:3",
+          "text": "Hit Bard with High Note once he is hurt; it deals much more damage to low-health champions.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 14, "end": 23 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Seraphine:Bard:4",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his partner can use it.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Seraphine:Bard:5",
+          "text": "Use Surround Sound before a trade to shield yourself and your partner, then cast it again later while shielded to heal.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "91f2817b2ce2dd56273f01ea38f66b353ad5aa0076c5bcbe44563ebfe8f7b977",
+      "tips": [
+        {
+          "id": "support:Seraphine:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits one of them first; it only pulls the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Seraphine:Blitzcrank:1",
+          "text": "Hit Blitzcrank with Beat Drop when he runs in with Overdrive; his self-slow afterwards makes him easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 51, "end": 60 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Seraphine:Blitzcrank:2",
+          "text": "Poke with High Note from long range, since Blitzcrank must come close to do anything.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Seraphine:Blitzcrank:3",
+          "text": "Don't rely on a shield against Blitzcrank's ultimate; Static Field destroys it and silences you.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 31, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 54,
+              "end": 66
+            },
+            { "kind": "keyword", "key": "silenced", "start": 83, "end": 91 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Seraphine:Blitzcrank:4",
+          "text": "Use Encore to charm Blitzcrank if he gets close, then follow with Beat Drop to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 20, "end": 30 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d9963aafbe0a5e3f6ecedbcd1f3bc8e159e267d8960268639bcae54f5db82583",
+      "tips": [
+        {
+          "id": "support:Seraphine:Brand:0",
+          "text": "Dodge Sear and Pillar of Flame; Brand needs one to land before his stun combo works. Walk sideways out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Seraphine:Brand:1",
+          "text": "Hit Brand with Beat Drop when he commits to a cast; it slows him, and rooting a slowed target keeps him there for your allies.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Seraphine:Brand:2",
+          "text": "Cast Surround Sound before Brand's burst so you and your partner have a shield. Cast it twice for a delayed heal.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Seraphine:Brand:3",
+          "text": "Stay apart from your partner when Brand casts Pyroclasm; it bounces between close enemies and its first missile is slow.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Brand-R", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Seraphine:Brand:4",
+          "text": "Poke Brand with High Note from long range; it hits harder against low health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 16, "end": 25 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a36379ace1f7c1ed1fe5227b9ae0d3f198765cfe57a535d9aad87a8b7229b331",
+      "tips": [
+        {
+          "id": "support:Seraphine:Braum:0",
+          "text": "Aim High Note around Braum's raised shield, or wait for Unbreakable to end. His shield destroys projectiles from the side it faces.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Braum", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Braum-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Seraphine:Braum:1",
+          "text": "Use Beat Drop when Braum drops Unbreakable. Fire it before he faces you, so he can't absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Braum", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Braum-E", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Seraphine:Braum:2",
+          "text": "Hit an enemy who is already slowed with Beat Drop to root them. Your carry's slows set it up.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 40, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Seraphine:Braum:3",
+          "text": "Stay out of Winter's Bite range. It starts his stun stacks, and your allies' attacks add to them.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Seraphine:Braum:4",
+          "text": "Cast Surround Sound before a trade to shield your lane partner and yourself against his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Seraphine:Braum:5",
+          "text": "Use Encore when Braum and his carry are lined up. It can hit allies too, so it reaches further.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Braum", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9ecf1de1d79d70932f078068a7cf0d84e5d3856aeec174f342acdcefb3980b6f",
+      "tips": [
+        {
+          "id": "support:Seraphine:Camille:0",
+          "text": "Hit Camille with Beat Drop after she is slowed by your ally; she is rooted instead, which makes her easy to hit with High Note.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 },
+            {
+              "kind": "ability",
+              "key": "Seraphine-Q",
+              "start": 117,
+              "end": 126
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Seraphine:Camille:1",
+          "text": "Keep Beat Drop ready for when Camille dashes in with Hookshot; she is a short-range fighter and a slow stops her from reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Camille", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Camille-E", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Seraphine:Camille:2",
+          "text": "Poke Camille with High Note from long range; it hits harder the lower her health is.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Seraphine:Camille:3",
+          "text": "Cast Surround Sound before Camille closes in on you or your ally; the shield soaks her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Camille", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Seraphine:Camille:4",
+          "text": "Encore's charm lets Beat Drop stun Camille, so use it to catch her when she locks onto your carry with The Hextech Ultimatum.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 20, "end": 29 },
+            { "kind": "champion", "key": "Camille", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Camille-R", "start": 103, "end": 124 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1bbe4f60d8f9796b1e4c1516257cad30511c4c1a6102cd2c66f1c24c0715abed",
+      "tips": [
+        {
+          "id": "support:Seraphine:Janna:0",
+          "text": "Hit Janna with Beat Drop after something slows her. She gets rooted instead, which sets up your next spells.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Seraphine:Janna:1",
+          "text": "Stay out of Zephyr range when you can. Her slow makes you easy to hit with her Howling Gale.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Janna-Q", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Seraphine:Janna:2",
+          "text": "Aim High Note at Janna when she is low, because it hits harder the less health a champion has.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Janna", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Seraphine:Janna:3",
+          "text": "Do not use Encore when Janna's Monsoon is ready; she can knock your team back and ruin the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Janna", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Janna-R", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Seraphine:Janna:4",
+          "text": "Listen for Howling Gale charging in the brush and sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "348ef8c6d7b7d2d4c56c0f473922f94973f253303b0186fbcdca578d1a52e3c0",
+      "tips": [
+        {
+          "id": "support:Seraphine:Karma:0",
+          "text": "Stay out of Karma's Inner Flame line; getting slowed lets her Focused Resolve root you, and then Beat Drop will not save you.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Karma-Q", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Karma-W", "start": 62, "end": 77 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 97, "end": 106 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Seraphine:Karma:1",
+          "text": "Use Beat Drop on Karma when she is already slowed by your ally; it roots her instead.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Karma", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Seraphine:Karma:2",
+          "text": "Move away from Karma's Focused Resolve tether before it ends, and do not stand still near her.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Karma-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Seraphine:Karma:3",
+          "text": "Run out of the circle Karma leaves behind with Mantra on Inner Flame; it ruptures for heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Karma-R", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Karma-Q", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Seraphine:Karma:4",
+          "text": "Use High Note when Karma is low on health; it hurts more the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Karma", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f94dd964ec62d6f44ade4bd9bbb63abd4ad9d48a875ff8771a30c9bcd6145f8f",
+      "tips": [
+        {
+          "id": "support:Seraphine:Leona:0",
+          "text": "Keep Beat Drop for when Leona dashes in. She is rooted only briefly, so slow her first if you can to get a longer disable.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Leona", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Seraphine:Leona:1",
+          "text": "Poke Leona with High Note from long range. Stay far back, since Zenith Blade gets her to you fast.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Leona-E", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Seraphine:Leona:2",
+          "text": "Cast Surround Sound before Leona lands her combo. The shield absorbs some of the damage and the speed helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Leona", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Seraphine:Leona:3",
+          "text": "Walk out of the center of Solar Flare. Only the center stuns you, so move quickly when it appears.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cd7945ee42e4857607624bdbf28f5032d0d960456b95a4a2d0f54e930aff2bc6",
+      "tips": [
+        {
+          "id": "support:Seraphine:Lulu:0",
+          "text": "Stay out of Lulu's Glitterlance line; being slowed makes your Beat Drop root you if it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Seraphine:Lulu:1",
+          "text": "Hit Lulu with Beat Drop after your ally slows her; she is then rooted and easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Seraphine:Lulu:2",
+          "text": "Use High Note on Lulu when she is low on health; it deals much more damage then.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lulu", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Seraphine:Lulu:3",
+          "text": "Keep Surround Sound ready for when Lulu's Whimsy or Glitterlance comes; the shield softens the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Lulu", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Lulu-W", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Seraphine:Lulu:4",
+          "text": "Lulu's Wild Growth knocks up and slows when your team commits; make fights short or stay back from the enlarged ally.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-R", "start": 7, "end": 18 },
+            { "kind": "keyword", "key": "knocked-up", "start": 19, "end": 28 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "17912a30908afa83a85ff765780125cb3187e514a83357a96017d2f8c25f8b39",
+      "tips": [
+        {
+          "id": "support:Seraphine:Lux:0",
+          "text": "Use Beat Drop on Lux right after she is slowed by your ally. It roots her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lux", "start": 17, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Seraphine:Lux:1",
+          "text": "Sidestep Light Binding. It roots the first two enemies it hits, so do not stand in line with your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Seraphine:Lux:2",
+          "text": "Cast Surround Sound with a shield already up when you expect to trade. It heals you and your ally afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Seraphine:Lux:3",
+          "text": "Use High Note on Lux when she is low. Her missing health makes it hit much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lux", "start": 17, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Seraphine:Lux:4",
+          "text": "Do not stand in Lucent Singularity. Leave before it bursts, or you take damage and a lingering slow.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 16, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Seraphine:Lux:5",
+          "text": "Watch for the red line before Final Spark and step aside. Encore's charm can start a fight, but only if you do not get hit first.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "afad6d37c0a986029bcac4bc0654cbd82d359d4f220a32aaa62f0fa014848923",
+      "tips": [
+        {
+          "id": "support:Seraphine:Maokai:0",
+          "text": "Keep Beat Drop ready for when Maokai dashes in or walks up. It slows him, and a slowed target who is hit again gets rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Maokai", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 },
+            { "kind": "keyword", "key": "rooted", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Seraphine:Maokai:1",
+          "text": "Do not throw spells at Maokai while he is dashing with Twisted Advance. He cannot be targeted, so the spells are wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Maokai-W", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Seraphine:Maokai:2",
+          "text": "Hold your spells when only Maokai is in range, since every spell that hits him shortens his self-heal cooldown. Aim High Note at his partner instead.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 27, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Seraphine-Q",
+              "start": 116,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Seraphine:Maokai:3",
+          "text": "Stay out of brush where a Sapling could be waiting. Walking past one gets you slowed and revealed.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Seraphine:Maokai:4",
+          "text": "Use Encore to charm Maokai if he ults you or your partner. Spread out and watch for his Nature's Grasp wall, because it is a projectile that can be dodged.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Maokai", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Maokai-R", "start": 88, "end": 102 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e1d197e69efb8e2e6678c27d9a3145840754100500db53800d3e39dbc1bbd63d",
+      "tips": [
+        {
+          "id": "support:Seraphine:Mel:0",
+          "text": "Wait for Mel to use Rebuttal before you throw High Note or Beat Drop; it destroys enemy projectiles in its nova.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 46, "end": 55 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 59, "end": 68 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Seraphine:Mel:1",
+          "text": "Hit Mel with Beat Drop when she is already slowed so she is rooted, then follow with High Note while she can't move.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 13, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 85, "end": 94 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Seraphine:Mel:2",
+          "text": "Step out of the lingering field from Solar Snare, or you will keep taking damage and be slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 37, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Seraphine:Mel:3",
+          "text": "Keep your health up against Mel's trades. Her hits stack Overwhelm, and a low-health target gets executed.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Seraphine:Mel:4",
+          "text": "Use Surround Sound to shield yourself and your carry before Mel trades; the shield soaks her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Mel", "start": 60, "end": 63 },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "fa11ba1f3cef87c81d5979c27164c8ee929490abea11a0cbd81cd7d151bbc01b",
+      "tips": [
+        {
+          "id": "support:Seraphine:Milio:0",
+          "text": "Aim Beat Drop at Milio after he is slowed by an ally; the slow becomes a root, and a charm from Encore turns it into a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Milio", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 77 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Seraphine:Milio:1",
+          "text": "Throw High Note at Milio when he is low on Health; it hits much harder on weakened champions.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 6, "end": 15 },
+            { "kind": "champion", "key": "Milio", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Seraphine:Milio:2",
+          "text": "Catch Milio without his allies close; Riot says he is much less mobile alone. Poke him then.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Seraphine:Milio:3",
+          "text": "Stand out of line when Milio casts Ultra Mega Fire Kick; it is a straight shot that stops on the first enemy, so keep a minion or ally in front.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Milio-Q", "start": 35, "end": 55 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Seraphine:Milio:4",
+          "text": "Cast Surround Sound before a trade so your Shield is up; recasting it with a Shield already up adds a heal.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Seraphine:Milio:5",
+          "text": "Hit Milio with Encore before he can press Breath of Life; it cleanses charm, so bait it out first.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Milio-R", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1a8f55700b4bc1a1f38e2926b7a4cbe0284da0ae6739d4ae6a3d79cfbd182086",
+      "tips": [
+        {
+          "id": "support:Seraphine:Morgana:0",
+          "text": "Stand behind minions so Dark Binding hits them first and not you.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Seraphine:Morgana:1",
+          "text": "Wait for Morgana to use Black Shield before you go in with Beat Drop or Encore; the shield blocks your crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Morgana-E", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 59, "end": 68 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Seraphine:Morgana:2",
+          "text": "Hit Morgana with High Note to break her Black Shield; it deals magic damage.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Morgana-E", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Seraphine:Morgana:3",
+          "text": "Use Surround Sound to shield yourself against her poke, and walk out of Tormented Shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Morgana-W", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a3caf6fb18349f68921eda628b4c2020d0a7aabda1fba3c231f690b94e8bf388",
+      "tips": [
+        {
+          "id": "support:Seraphine:Nami:0",
+          "text": "Stay out of Aqua Prison range and walk around the slow bubble; it lands after a delay, so keep moving sideways when Nami casts it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Seraphine:Nami:1",
+          "text": "Once Nami has wasted Aqua Prison, step up and trade with High Note, since her long cooldown leaves you safe for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Nami-Q", "start": 21, "end": 32 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Seraphine:Nami:2",
+          "text": "Hit Nami with Beat Drop after her allies have slowed her, so she is rooted instead of just slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Seraphine:Nami:3",
+          "text": "Keep Surround Sound for when you get shielded or hit; casting it while already shielded adds a heal for you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Seraphine:Nami:4",
+          "text": "Use Encore on the enemy when they are far away or hit by Tidal Wave; it charms them and can reach farther through other champions.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Nami-R", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "30bf2bc84c967398b4a929bb0de9816bcd495e58c9a34ac24504cc2654e5517a",
+      "tips": [
+        {
+          "id": "support:Seraphine:Nautilus:0",
+          "text": "Stay behind your minions and away from Nautilus. Dredge Line stops at the first enemy it hits, so a minion in the way can block it.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Seraphine:Nautilus:1",
+          "text": "Poke Nautilus with High Note when he stays back. It deals more damage as his health drops, so keep it for when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 19, "end": 28 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Seraphine:Nautilus:2",
+          "text": "If Nautilus hooks you or your ally, hit him with Beat Drop. He is stunned, and the pull slows him too.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 3, "end": 11 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Seraphine:Nautilus:3",
+          "text": "Use Surround Sound on you and your carry when Nautilus comes in. The shield and speed help you avoid his hook and dive.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Seraphine:Nautilus:4",
+          "text": "Use Encore on Nautilus when he dives in. A charmed Nautilus cannot move in to hook, and your team can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Nautilus", "start": 14, "end": 22 },
+            { "kind": "champion", "key": "Nautilus", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Seraphine:Nautilus:5",
+          "text": "Do not walk into Nautilus when his first attack will root you. After Riptide, wait for the waves to finish before you move.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 69, "end": 76 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c1792ec5bf29011534045ec24fe496efff76b7934269be07db2a45db39bb476b",
+      "tips": [
+        {
+          "id": "support:Seraphine:Neeko:0",
+          "text": "Aim Beat Drop at Neeko when she is already slowed so it roots her instead; it also stuns her if she is immobilized.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Neeko", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Seraphine:Neeko:1",
+          "text": "Hold Encore for when Neeko tries to disguise and jump in; its charm lets Beat Drop stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Neeko", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Seraphine:Neeko:2",
+          "text": "Throw High Note at Neeko when she is hurt; it hits harder the lower her health is.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 6, "end": 15 },
+            { "kind": "champion", "key": "Neeko", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Seraphine:Neeko:3",
+          "text": "Cast Surround Sound before Neeko's Tangle-Barbs lands; the shield soaks some damage and the speed helps you step away.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Neeko", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Neeko-E", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Seraphine:Neeko:4",
+          "text": "Stay out of line with Tangle-Barbs and keep minions out of its path; it grows stronger after it hits one.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f0225068f176ef16f912a2155915b74b0be6333ad76ecc1e8a67aa5ec8c1aa38",
+      "tips": [
+        {
+          "id": "support:Seraphine:Pantheon:0",
+          "text": "Aim Beat Drop at Pantheon as he leaps in; he is slowed and then rooted if it hits twice, which makes him easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Pantheon", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Seraphine:Pantheon:1",
+          "text": "Do not throw spells into Aegis Assault from the front; wait for it to end or hit him from the side or behind.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Seraphine:Pantheon:2",
+          "text": "Use High Note to poke from range. Stay healthy, because Pantheon's thrown Comet Spear hurts you more when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Pantheon", "start": 56, "end": 64 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 74, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Seraphine:Pantheon:3",
+          "text": "Cast Surround Sound before Pantheon jumps on you or your ally; the shield soaks his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Seraphine:Pantheon:4",
+          "text": "When Pantheon starts Grand Starfall, move away from the marked area, or charm him with Encore when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "68f1af07ebb6f17dbad558def5456cacb755fc90580608407a15a0ae47efed78",
+      "tips": [
+        {
+          "id": "support:Seraphine:Poppy:0",
+          "text": "Keep Beat Drop for when Poppy commits with Heroic Charge or walks up to trade. Slowed first, she gets rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Poppy", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Poppy-E", "start": 43, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Seraphine:Poppy:1",
+          "text": "Stand away from walls. Heroic Charge into terrain stuns you and hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Seraphine:Poppy:2",
+          "text": "Poppy's Steadfast Presence stops dashes, so do not rely on a dash to escape while it is active.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Seraphine:Poppy:3",
+          "text": "Use High Note to poke from long range. Poppy has no ranged attack but Hammer Shock, so stay outside its reach.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Poppy", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Poppy-Q", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Seraphine:Poppy:4",
+          "text": "When Poppy starts spinning her hammer for Keeper's Verdict, step out of its path or charm her with Encore.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 42, "end": 58 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Seraphine:Poppy:5",
+          "text": "Step on Poppy's dropped buckler to destroy it and deny her shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ce342ffa60c27e9367a68912797a7afae22e8aa5677f30bb33b73edcc54837cd",
+      "tips": [
+        {
+          "id": "support:Seraphine:Pyke:0",
+          "text": "Aim High Note at Pyke when he is low; it hits much harder on hurt targets, and the area catches him when he is hidden nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Pyke", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Seraphine:Pyke:1",
+          "text": "Hold Beat Drop for when Pyke dashes or pulls someone in. It slows him, and if he is already slowed or stopped it roots or stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Pyke", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 },
+            { "kind": "keyword", "key": "rooted", "start": 113, "end": 118 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Seraphine:Pyke:2",
+          "text": "Use Encore on Pyke when he dives in. The charm stops him, and Beat Drop then stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Pyke", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Seraphine:Pyke:3",
+          "text": "Cast Surround Sound when Pyke's hook is about to land. The shield soaks the damage, and the speed helps your ally get away.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Seraphine:Pyke:4",
+          "text": "Stay behind your minions. Pyke's Bone Skewer stops at the first enemy it hits and has short range uncharged.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Seraphine:Pyke:5",
+          "text": "Stay away from low-health allies. Pyke can execute them with Death From Below and then reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Pyke-R", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c5731de62342bb23ca472a52ccf1025bca9cc6f9d319d6aaf5cdaef1bc53268f",
+      "tips": [
+        {
+          "id": "support:Seraphine:Rakan:0",
+          "text": "Hit Rakan with Beat Drop after something else has slowed him; he gets rooted instead of just slowed, which sets up your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 76 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Seraphine:Rakan:1",
+          "text": "Catch Rakan with Beat Drop when he is knocked up or charmed. It stuns him for as long as the effect lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "knocked-up", "start": 38, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Seraphine:Rakan:2",
+          "text": "Aim Encore at Rakan when he is alone. It charms him, and his dashes mostly need an ally to land on.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Rakan", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Seraphine:Rakan:3",
+          "text": "Use High Note on Rakan after he lands Grand Entrance. He stands still briefly, and it hurts most when he is low on Health.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Rakan", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Rakan-W", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Seraphine:Rakan:4",
+          "text": "Cast Surround Sound before Rakan's burst lands, so you and your carry have a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Rakan", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2593e23333061deaa48dfa0db3017cea031903b4685070965668ea78e9d6cc8a",
+      "tips": [
+        {
+          "id": "support:Seraphine:Rell:0",
+          "text": "Aim Beat Drop at Rell when she leaps in or gets close; she is then slowed or stopped, which sets up your next hit.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Rell", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Seraphine:Rell:1",
+          "text": "Stay out of Shattering Strike range and Rell has to walk up to you. Her stun is short, but she can follow it with her allies.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 12, "end": 29 },
+            { "kind": "champion", "key": "Rell", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Seraphine:Rell:2",
+          "text": "Don't rely on Surround Sound's shield when Rell is near; Shattering Strike destroys shields before it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Rell", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Rell-Q", "start": 57, "end": 74 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Seraphine:Rell:3",
+          "text": "Use High Note from long range to poke Rell while she is mounted and slower to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Rell", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Seraphine:Rell:4",
+          "text": "Save Encore for when Rell is committed; the charm can also let Beat Drop stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Rell", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "deb6c1d7629d013ac9167816c8c829145d6f77b6ab96ba65348f7847b75c4759",
+      "tips": [
+        {
+          "id": "support:Seraphine:Senna:0",
+          "text": "Aim Beat Drop at Senna when she is already slowed or rooted; it then roots or stuns her for a long time, which sets up a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Seraphine:Senna:1",
+          "text": "Use High Note on Senna once her health is low; it hits much harder on missing health and the area is wide.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Seraphine:Senna:2",
+          "text": "Stay out of Senna's long attack range and walk out of the line before Last Embrace sticks; its root comes about a second after it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 70, "end": 82 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Seraphine:Senna:3",
+          "text": "Cast Surround Sound before the enemy trades so your shield soaks the poke. Cast it again while shielded to heal your team afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Seraphine:Senna:4",
+          "text": "Use Encore on a grouped enemy team in a fight. It charms them and can reach far by passing through allies.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "510a168aadbba7e587958e6fc92fbb22230f99e89e2f037a71f8721da87e5bcb",
+      "tips": [
+        {
+          "id": "support:Seraphine:Shen:0",
+          "text": "Hit Shen with Beat Drop when he dashes in; he is stunned if he is immobilized, so combine it with your ally's crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Seraphine:Shen:1",
+          "text": "Keep your distance and poke with High Note; Shen has no ranged attack to answer it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 33, "end": 42 },
+            { "kind": "champion", "key": "Shen", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Seraphine:Shen:2",
+          "text": "Watch for Shadow Dash; the taunt forces you to attack him, so stay behind your allies when he is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Seraphine:Shen:3",
+          "text": "Don't rely on Surround Sound's shield into Shen's empowered attacks; his Twilight Assault deals extra damage based on your max health.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Shen", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Shen-Q", "start": 73, "end": 89 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Seraphine:Shen:4",
+          "text": "After level 6, Shen can teleport to a hurt ally with Stand United, so don't chase a kill far from your team.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Shen-R", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e656f23327d6ac119ac5c4b307db45c12092daaeaaa60376e261502ec2517783",
+      "tips": [
+        {
+          "id": "support:Seraphine:Sona:0",
+          "text": "Aim Beat Drop at Sona when she walks up to cast; if she is already slowed, she gets rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sona", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Seraphine:Sona:1",
+          "text": "Sona is fragile, so use High Note on her when she is hurt; it deals more damage the lower her health.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Seraphine:Sona:2",
+          "text": "Stay out of Crescendo's line. Don't stand next to your carry when Sona's ultimate is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Sona", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Seraphine:Sona:3",
+          "text": "Use Surround Sound before Sona's poke lands, so the shield soaks the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sona", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Seraphine:Sona:4",
+          "text": "Use Encore when Sona is far from her team; the charm stops her from casting while you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Sona", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "534157008a4482cb987d2b573081f196d00f01fff81c0cb039dd079bae1bcec1",
+      "tips": [
+        {
+          "id": "support:Seraphine:Soraka:0",
+          "text": "Use Beat Drop on Soraka after something slows her. She is then rooted, and an Encore charm lets Beat Drop stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Soraka", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 78, "end": 84 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 96, "end": 105 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Seraphine:Soraka:1",
+          "text": "Dodge Starcall by moving sideways. It is a slow star and hitting you heals her.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Seraphine:Soraka:2",
+          "text": "Stay out of Equinox. Leave the area before it ends, or you are silenced and then rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Seraphine:Soraka:3",
+          "text": "Cast Surround Sound before fighting so you and your ally have a shield. A second cast while shielded also heals later.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Seraphine:Soraka:4",
+          "text": "Use High Note on Soraka once she is low on health. It deals more damage the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Soraka", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "218b43efc19e4e952f4232647ac7eddfd8bc0a89e4d8725e5fd14670a0baeba6",
+      "tips": [
+        {
+          "id": "support:Seraphine:Swain:0",
+          "text": "Hit Swain with Beat Drop after something slows him. He gets rooted instead of just slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Seraphine:Swain:1",
+          "text": "Swain's Nevermove roots you when it comes back to him. Stay out of its path and out of range of his Death's Hand.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Swain-E", "start": 8, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Swain-Q", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Seraphine:Swain:2",
+          "text": "Use High Note from long range to poke. It hurts more when Swain is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Swain", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Seraphine:Swain:3",
+          "text": "Move out of the area Vision of Empire marks when you see it appear. It explodes late and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Seraphine:Swain:4",
+          "text": "Cast Surround Sound when Swain threatens you, to shield yourself and your ally. Casting it again while shielded adds a delayed heal.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Swain", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "972dcd031d210a38839b6ab27d1435748e292917480e0c4c965c755769e20bab",
+      "tips": [
+        {
+          "id": "support:Seraphine:TahmKench:0",
+          "text": "Hit Tahm Kench with Beat Drop after something else has slowed him; he gets rooted instead of just slowed, which makes him easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Seraphine:TahmKench:1",
+          "text": "Stand back and poke with High Note. It reaches far and hits harder the lower his Health gets.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Seraphine:TahmKench:2",
+          "text": "Keep your distance when Tahm Kench has Tongue Lash ready. Being hit can start stacks toward a Devour on you.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 39, "end": 50 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Seraphine:TahmKench:3",
+          "text": "Cast Surround Sound before a trade to shield you and your ally, then cast it again while shielded to heal after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Seraphine:TahmKench:4",
+          "text": "Use Encore on Tahm Kench to charm him. A charm is an immobilize, so Beat Drop then stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "TahmKench", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 68, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b1140fe8e58a7a8cbaf0860292116ad0618342e7f2b87e3b92daa3a4094eaf93",
+      "tips": [
+        {
+          "id": "support:Seraphine:Taric:0",
+          "text": "Don't stand in a line with minions when Taric is near; Dazzle bursts after a delay, so step out of the beam as it winds up.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Taric-E", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Seraphine:Taric:1",
+          "text": "Hit Taric with Beat Drop when he walks up to a minion wave. Punish his approach, since his basic attacks lower his cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Seraphine:Taric:2",
+          "text": "Use High Note from long range. It hurts more as Taric's health drops, so keep poking him between his heals.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Taric", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "poke", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Seraphine:Taric:3",
+          "text": "Charm with Encore, then follow with Beat Drop to stun them. Against Taric's ultimate, kill someone or back off before it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 36, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Taric", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "19b10bbe24104336b9ed4d2ae74598e77ec652e705eff783e049f5c4130c8e97",
+      "tips": [
+        {
+          "id": "support:Seraphine:Thresh:0",
+          "text": "Stay out of Death Sentence range, and keep minions between you and Thresh. His scythe stops at the first enemy it hits, so a minion in the way blocks it.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Thresh", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Seraphine:Thresh:1",
+          "text": "Move as soon as you see Thresh start throwing his scythe. The cast takes a moment, so you can sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Seraphine:Thresh:2",
+          "text": "Use Beat Drop to slow Thresh when he walks up. Follow with a second Beat Drop and he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Thresh", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 68, "end": 77 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Seraphine:Thresh:3",
+          "text": "Cast Surround Sound before a trade so you have a shield up. Cast it again while shielded to heal your team later.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Seraphine:Thresh:4",
+          "text": "Aim High Note at Thresh when he is low. It hits harder the less health he has, and it keeps going after a hit.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Thresh", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Seraphine:Thresh:5",
+          "text": "Hold Encore for when Thresh commits to a hook or Flay. The charm lets you land Beat Drop's stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Thresh", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Thresh-E", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 79, "end": 88 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e0ee08d69acb5a3f9a747a6138ef2e35efe6221fd3139213019a0d2bc32ea2ab",
+      "tips": [
+        {
+          "id": "support:Seraphine:Velkoz:0",
+          "text": "Keep Beat Drop for when Vel'Koz is already slowed or stuck, so he is rooted or stunned and cannot dodge his way out.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Velkoz", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Seraphine:Velkoz:1",
+          "text": "Hit Vel'Koz with Encore when he starts channeling his ray. The charm interrupts him, and allies you pass through extend its range.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Seraphine:Velkoz:2",
+          "text": "Charm him with Encore, then follow with Beat Drop for a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 40, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Seraphine:Velkoz:3",
+          "text": "Vel'Koz has little mobility, so line up Beat Drop and High Note when your jungler comes to gank.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 40, "end": 49 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Seraphine:Velkoz:4",
+          "text": "Use Surround Sound to absorb his poke, and cast it again while the shield is up to heal your team.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1986783343ab9e4a11e8198d60ef691b1bb45ad5913d61565594d3d6184ab47a",
+      "tips": [
+        {
+          "id": "support:Seraphine:Xerath:0",
+          "text": "Close the distance on Xerath. Beat Drop hits him from long range and he has little escape once it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Seraphine:Xerath:1",
+          "text": "Hit Xerath with High Note when he stands still charging Arcanopulse; he is slowed and easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Seraphine:Xerath:2",
+          "text": "Use Surround Sound on yourself and your ally before he throws Shocking Orb to soak poke.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Xerath-E", "start": 62, "end": 74 },
+            { "kind": "keyword", "key": "poke", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Seraphine:Xerath:3",
+          "text": "Stay out of a straight line with Xerath, and keep a minion between you so Shocking Orb is blocked.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Seraphine:Xerath:4",
+          "text": "Charm him with Encore when he channels Rite of the Arcane to interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Xerath-R", "start": 39, "end": 57 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5493004261c2e037dcbc43c18095553c03a80b45441aced967e599d57e6c3d62",
+      "tips": [
+        {
+          "id": "support:Seraphine:Yuumi:0",
+          "text": "Aim Beat Drop at Yuumi when she is not attached to an ally. Attached, she can't be targeted except by towers, so wait for her to detach.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yuumi", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Seraphine:Yuumi:1",
+          "text": "Hit the enemy carry with High Note while Yuumi is off them. She protects them only when attached.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 25, "end": 34 },
+            { "kind": "champion", "key": "Yuumi", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Seraphine:Yuumi:2",
+          "text": "Open with High Note, then use Beat Drop. The enemy is slowed first, so Beat Drop roots them.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 71, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Seraphine:Yuumi:3",
+          "text": "Charm with Encore, then use Beat Drop to stun them. Yuumi's Final Chapter waves can't be dodged easily, so fight at range.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 28, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Yuumi", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Yuumi-R", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Seraphine:Yuumi:4",
+          "text": "Use Surround Sound before trades so the shield absorbs Prowling Projectile poke.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 55, "end": 74 },
+            { "kind": "keyword", "key": "poke", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "61877f7e87087e6c3f080b602d43cf1830bb71b1dac421f74b1411a058eb2823",
+      "tips": [
+        {
+          "id": "support:Seraphine:Zilean:0",
+          "text": "Hit Zilean with Beat Drop when he is already slowed. The root keeps him still for a Time Bomb-free follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 84, "end": 93 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Seraphine:Zilean:1",
+          "text": "Use High Note on Zilean once he is low on health. It hits harder the more health he has missing.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Zilean", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Seraphine:Zilean:2",
+          "text": "Step out of any Time Bomb quickly. A second bomb on you sets off the first and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Seraphine:Zilean:3",
+          "text": "Zilean is fragile, so focus him with your ally. Charm him with Encore to get the kill.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Seraphine:Zilean:4",
+          "text": "If you can match his speed, wait until his Chronoshift has faded before you land the killing blow on his ally.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-R", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d04956f70e7524869e47cefab60136448b95cd6fa21fd58d2f47c5193a0c5a52",
+      "tips": [
+        {
+          "id": "support:Seraphine:Zyra:0",
+          "text": "Walk over Zyra's seeds to destroy them before she can grow plants from them. Do it before she casts.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Seraphine:Zyra:1",
+          "text": "Stay out of Grasping Roots range and sidestep it. Being rooted in lane gets you hit by her plants.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Seraphine:Zyra:2",
+          "text": "Hit Zyra with High Note when she steps up to place seeds. It has long range and hits harder the lower her health is.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 14, "end": 23 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Seraphine:Zyra:3",
+          "text": "Use Beat Drop to slow Zyra when she commits. If she is already slowed, it roots her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Zyra", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Seraphine:Zyra:4",
+          "text": "Cast Surround Sound for the shield when Zyra threatens a trade. It helps you and your partner take less damage from her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zyra", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,1073 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kennen",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "97ca7e24b22af002b2bc716a2eae8b172d4abc0c9852e1cc8fbc91ccba12cd87",
+      "tips": [
+        {
+          "id": "top:Kennen:general:0",
+          "text": "Open a trade with Thundering Shuriken, then use Electrical Surge to add a second Mark of the Storm. A third mark stuns, so finish with another ability.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 18, "end": 37 },
+            { "kind": "ability", "key": "Kennen-W", "start": 48, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 81,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Kennen:general:1",
+          "text": "Aim Thundering Shuriken carefully; it stops at the first enemy it hits, so minions in the way will soak it up.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Kennen:general:2",
+          "text": "Start a fight with Lightning Rush. It damages the enemy and gives back Energy, so you can keep casting afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Kennen:general:3",
+          "text": "Press Lightning Rush again to end it early when you want to start hitting; you gain Attack Speed afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kennen:general:4",
+          "text": "Keep hitting the enemy with basic attacks between spells; every few attacks, Electrical Surge adds a bonus hit and a Mark of the Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-W", "start": 77, "end": 93 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 117,
+              "end": 134
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Kennen:general:5",
+          "text": "Use Slicing Maelstrom when several enemies are close to you in a fight. It also makes you tankier while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kennen:general:6",
+          "text": "Don't chase a stunned enemy twice in a row; the stun is much shorter if the same target is stunned again soon.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 14, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Kennen:combo:0",
+          "name": "Rush into Maelstrom",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Kennen-E" },
+            { "kind": "ability", "key": "Kennen-R" },
+            { "kind": "ability", "key": "Kennen-W" }
+          ],
+          "when": "Use it in teamfights or all-ins when you want to stack marks on several enemies.",
+          "whenRefs": [],
+          "text": "Lightning Rush gets you inside the enemy team and refunds energy. Slicing Maelstrom then adds marks, and Electrical Surge hits everyone marked.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Kennen-R", "start": 66, "end": 83 },
+            { "kind": "ability", "key": "Kennen-W", "start": 105, "end": 121 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "3c0504f742a5bd0ea977372d865562e4f040604869e25d1f3b708d2045ca8a4b",
+      "tips": [
+        {
+          "id": "top:Kennen:Aatrox:0",
+          "text": "Poke with Thundering Shuriken from long range; it hits the first enemy in its path, so keep minions out of the line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 10, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Kennen:Aatrox:1",
+          "text": "Follow Thundering Shuriken with Electrical Surge to add a second Mark of the Storm. A third mark stuns him, so look for it before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 7, "end": 26 },
+            { "kind": "ability", "key": "Kennen-W", "start": 32, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 65,
+              "end": 82
+            },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kennen:Aatrox:2",
+          "text": "Stay out of the long reach of The Darkin Blade. Its hits are telegraphed, so sidestep them.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kennen:Aatrox:3",
+          "text": "Step sideways or toward Aatrox when Infernal Chains lands. That gets you out of the circle before it pulls you back.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Kennen:Aatrox:4",
+          "text": "Use Lightning Rush to dodge a Darkin Blade and to get away after a trade. It also gives energy back if it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kennen:Aatrox:5",
+          "text": "Use Slicing Maelstrom when he commits to a fight. It makes you sturdier and keeps hitting him as he dashes around.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Kennen:Aatrox:6",
+          "text": "Do not fight him once World Ender is active. He hits harder and heals more, so poke from range and wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 22, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e64ce4bd57684b679e01aba38fb510a296a08b5ca37126ea5f28df3f3d32e917",
+      "tips": [
+        {
+          "id": "top:Kennen:Briar:0",
+          "text": "Throw Thundering Shuriken from long range before Briar closes in; it hits the first enemy in its path, so keep minions out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Briar", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kennen:Briar:1",
+          "text": "Hold Lightning Rush for when Briar jumps on you. It gives you speed, passes through her, and lets you walk away from her leap.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Kennen:Briar:2",
+          "text": "Briar's Head Rush stuns you, so stay away from her when it is ready. Spend your Marks of the Storm on her first, so your stun is ready before hers.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Briar-Q", "start": 8, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Kennen:Briar:3",
+          "text": "Use Slicing Maelstrom when Briar commits to you. It makes you tougher, and she can't easily stay on you and win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Kennen:Briar:4",
+          "text": "Don't stand near a wall when Briar charges Chilling Scream. A full charge knocks you back and stuns you if you hit the wall.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-E", "start": 43, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "64797198c3063c82744b92cd3223765a7844581f4cd9173478929d4392f3b864",
+      "tips": [
+        {
+          "id": "top:Kennen:Darius:0",
+          "text": "Poke Darius with Thundering Shuriken from long range and stay out of his reach. It stops at the first enemy it hits, so keep minions out of the line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 17, "end": 36 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kennen:Darius:1",
+          "text": "Land Thundering Shuriken, then Electrical Surge, then one more hit to stun Darius with Mark of the Storm. Stunned, he can't close the gap on you.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Kennen-W", "start": 31, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 },
+            { "kind": "champion", "key": "Darius", "start": 75, "end": 81 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 87,
+              "end": 104
+            },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Kennen:Darius:2",
+          "text": "Step out of range when Apprehend is ready. Its pull drags you into his axe, where you are easy to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Kennen:Darius:3",
+          "text": "Harass him while Apprehend is on cooldown. He has no easy way to reach you then.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Kennen:Darius:4",
+          "text": "Keep your distance from Decimate. If he swings and misses, trade back with Thundering Shuriken.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 75, "end": 94 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Kennen:Darius:5",
+          "text": "Use Lightning Rush to run away from Darius or to start a trade. Hitting an enemy with it gives back Energy.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kennen:Darius:6",
+          "text": "Use Slicing Maelstrom when Darius dives you. It makes you tougher and hits him over and over.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kennen:Darius:7",
+          "text": "Stay healthy once Darius has high Hemorrhage stacks, because Noxian Guillotine finishes hurt targets.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 34,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 61, "end": 78 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e2584a8f29fa78b22de89fabef463052656714641aa36dda86ce7c9dfb72b0e",
+      "tips": [
+        {
+          "id": "top:Kennen:Fiora:0",
+          "text": "Poke with Thundering Shuriken from long range as Fiora walks up. It stops at the first enemy hit, so keep minions out of the line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 10, "end": 29 },
+            { "kind": "champion", "key": "Fiora", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kennen:Fiora:1",
+          "text": "Do not cast Lightning Rush or Thundering Shuriken at Fiora while Riposte is ready. If you stun her, Riposte turns it into a stun on you.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 12, "end": 26 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 30, "end": 49 },
+            { "kind": "champion", "key": "Fiora", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Fiora-W", "start": 65, "end": 72 },
+            { "kind": "ability", "key": "Fiora-W", "start": 100, "end": 107 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Kennen:Fiora:2",
+          "text": "Use Lightning Rush to get away when Fiora lunges at you. It makes you move faster and walk through units.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kennen:Fiora:3",
+          "text": "Use Slicing Maelstrom when Fiora commits to a fight. It makes you tougher, and she can't easily run from the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Fiora", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "799039ff080b5fb47ae2af6b09cec6b8be0434a8fc8f17f9a3c15233ea64e306",
+      "tips": [
+        {
+          "id": "top:Kennen:Gangplank:0",
+          "text": "Hit Gangplank with Thundering Shuriken, then Electrical Surge, to build Marks and stun him for a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 19, "end": 38 },
+            { "kind": "ability", "key": "Kennen-W", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Kennen:Gangplank:1",
+          "text": "Hold your stun until Remove Scurvy is used or on cooldown; it cleanses stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Kennen:Gangplank:2",
+          "text": "Stay out of Powder Keg blast range; being slowed there makes you easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Kennen:Gangplank:3",
+          "text": "Use Lightning Rush to close in and get your energy back, then trade before Gangplank sets up kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Gangplank", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Kennen:Gangplank:4",
+          "text": "Watch for level 6; Gangplank's Cannon Barrage can hit you from anywhere on the map.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "617ac6ecbfda248958b1806792cc5d8e0f36ba9f8667884d452c287edb0079f5",
+      "tips": [
+        {
+          "id": "top:Kennen:Garen:0",
+          "text": "Poke with Thundering Shuriken from max range while Garen walks up to last-hit; it stops at the first enemy it hits, so aim it clear of minions.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 10, "end": 29 },
+            { "kind": "champion", "key": "Garen", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Kennen:Garen:1",
+          "text": "Land Thundering Shuriken, then press Electrical Surge to add a second Mark of the Storm. A third mark stuns Garen, so finish with an attack or ability.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Kennen-W", "start": 37, "end": 53 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 70,
+              "end": 87
+            },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 },
+            { "kind": "champion", "key": "Garen", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kennen:Garen:2",
+          "text": "Keep your distance when Garen's Decisive Strike is ready; if it lands he silences you and you can't cast.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Garen-Q", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "silenced", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Kennen:Garen:3",
+          "text": "Use Lightning Rush to escape when Garen closes in, since it lets you pass through units. Damaging an enemy with it also returns energy.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Kennen:Garen:4",
+          "text": "Stay healthy at level 6. Demacian Justice deals more damage the lower your health is, so back off once you are hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Kennen:Garen:5",
+          "text": "Hit Garen while he is not in Perseverance recovery. Keep poking so he can't regenerate back to full.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 29,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8b4231f2cb438c4d574f2e515ada4240f2e172629568048af602a65ec3f8e3f5",
+      "tips": [
+        {
+          "id": "top:Kennen:Jayce:0",
+          "text": "Land Thundering Shuriken first, then use Electrical Surge to add a second Mark of the Storm. A third mark stuns Jayce, so follow up right away.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Kennen-W", "start": 41, "end": 57 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 74,
+              "end": 91
+            },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 111 },
+            { "kind": "champion", "key": "Jayce", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Kennen:Jayce:1",
+          "text": "Aim Thundering Shuriken at Jayce from long range. It stops at the first enemy it hits, so keep minions out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Kennen:Jayce:2",
+          "text": "Jayce is strongest early, so do not take long trades. Poke him when he steps up and back off before he can jump onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Kennen:Jayce:3",
+          "text": "Use Lightning Rush to dash through Jayce and get your energy back. Then follow with your other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Kennen:Jayce:4",
+          "text": "Use Slicing Maelstrom when Jayce commits to a fight. The extra Armor and Magic Resist help you survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a1ef0a2b59aa4bf46d3973634ae7484702fdf7199b5f276b56f29956dd8478af",
+      "tips": [
+        {
+          "id": "top:Kennen:KSante:0",
+          "text": "Poke K'Sante with Thundering Shuriken from long range early; it stops at the first enemy hit, so aim it when no minion is in the way.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 18, "end": 37 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kennen:KSante:1",
+          "text": "Land Thundering Shuriken, then Electrical Surge, to build Mark of the Storm toward a stun on K'Sante.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Kennen-W", "start": 31, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 58,
+              "end": 75
+            },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 },
+            { "kind": "champion", "key": "KSante", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kennen:KSante:2",
+          "text": "Stay out of Path Maker's reach. If K'Sante charges it, step sideways before he dashes, or you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "KSante", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Kennen:KSante:3",
+          "text": "Don't stand in a line with K'Sante after he hits you once with Ntofo Strikes. The second hit pulls and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "KSante-Q", "start": 63, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Kennen:KSante:4",
+          "text": "Use Lightning Rush to run away from K'Sante's burst, or to enter a trade and regain energy.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Kennen:KSante:5",
+          "text": "Once K'Sante goes All Out his health drops and he loses most of his armor and magic resist. Burst him with your spells, but stay away from his strong attacks.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d8dee1661b086ac8222be155bb1c7a0a8198dfcc2a2b86323da6792f708786ee",
+      "tips": [
+        {
+          "id": "top:Kennen:Malphite:0",
+          "text": "Throw Thundering Shuriken at Malphite from range; he must walk up to you, and it starts your Mark of the Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Malphite", "start": 29, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 93,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Kennen:Malphite:1",
+          "text": "Add Electrical Surge after a shuriken lands to stack marks fast; three marks and Malphite is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 81, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Kennen:Malphite:2",
+          "text": "Do not stand near Malphite at level 6 without a plan. Unstoppable Force can't be stopped once he starts, so keep your distance when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Malphite-R", "start": 54, "end": 71 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Kennen:Malphite:3",
+          "text": "Save Lightning Rush to get away from Malphite once Seismic Shard has slowed you, or to start a trade. It also gives back Energy.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Malphite", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 51, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fea66ef2c0066e784160806a8401a8736ae6e479b62438b373ed13434ed47af5",
+      "tips": [
+        {
+          "id": "top:Kennen:Mordekaiser:0",
+          "text": "Hit Mordekaiser with Thundering Shuriken from long range, and do not let him close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 21, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Kennen:Mordekaiser:1",
+          "text": "Stay out of a straight line from Mordekaiser; Death's Grasp pulls you in and sets up his Obliterate.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 46,
+              "end": 59
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 89,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Kennen:Mordekaiser:2",
+          "text": "Use Electrical Surge only when Mordekaiser carries Marks, then stun him with the third one when he is ready to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-W", "start": 4, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 31,
+              "end": 42
+            },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Kennen:Mordekaiser:3",
+          "text": "Use Lightning Rush to slip away from Mordekaiser's trades; it lets you pass through enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Kennen:Mordekaiser:4",
+          "text": "Don't fight Mordekaiser while his Darkness Rise aura is active; back away until it ends.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 12,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 34,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d91c743317691c74a1ed80698f73ee8a2e23d51100ec80202041ff7b9b60ac41",
+      "tips": [
+        {
+          "id": "top:Kennen:Rumble:0",
+          "text": "Avoid being hit by three of your abilities' marks only if you want a stun. Land Thundering Shuriken first, then use Electrical Surge to add marks.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 80, "end": 99 },
+            { "kind": "ability", "key": "Kennen-W", "start": 116, "end": 132 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Kennen:Rumble:1",
+          "text": "When Rumble overheats, go in and trade. He cannot cast spells for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kennen:Rumble:2",
+          "text": "Step out of Flamespitter's cone quickly. Lightning Rush gets you out and gives you Energy back if it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Kennen-E", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Kennen:Rumble:3",
+          "text": "Dodge Electro Harpoon sideways. Two hits slow you badly, and it keeps flying past the first target.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Kennen:Rumble:4",
+          "text": "Use Slicing Maelstrom when Rumble ults you or fights close. It gives you armor and magic resist while it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d0164abb03416a0f667fd39658ee25d8a66b9f1b357a6d582c421e7f359bb569",
+      "tips": [
+        {
+          "id": "top:Kennen:Sion:0",
+          "text": "Keep your distance from Sion and poke him with Thundering Shuriken. He has to walk up to you to land anything.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 47, "end": 66 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Kennen:Sion:1",
+          "text": "When Sion starts charging Decimating Smash, step out of its path. A long charge means a long stun, so do not stand still.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sion-Q", "start": 26, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Kennen:Sion:2",
+          "text": "Save Lightning Rush to escape Sion's charge or Roar of the Slayer. It lets you pass through units and move fast.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sion", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Sion-E", "start": 47, "end": 65 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Kennen:Sion:3",
+          "text": "Do not trade into Sion while Soul Furnace's shield is up. Wait until it breaks or he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Sion-W", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Kennen:Sion:4",
+          "text": "Stack three Marks of the Storm with Thundering Shuriken and Electrical Surge to stun Sion, then back away.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 36, "end": 55 },
+            { "kind": "ability", "key": "Kennen-W", "start": 60, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 },
+            { "kind": "champion", "key": "Sion", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Kennen:Sion:5",
+          "text": "Sion comes back after dying, so do not chase him. Back off and wait out Glory in Death.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sion-passive", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "06e00e3b281dc0056a9641526e7398974f9db3712c00048ded0e3e42533795df",
+      "tips": [
+        {
+          "id": "top:Kennen:Teemo:0",
+          "text": "Walk into Teemo's dart and you can lose your empowered attack. Dodge Blinding Dart or wait out the blind before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Kennen:Teemo:1",
+          "text": "Land Thundering Shuriken on Teemo, then add marks with Electrical Surge to stun him. He is easy to catch when he is not hidden.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Teemo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Kennen-W", "start": 55, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Kennen:Teemo:2",
+          "text": "Check bushes before you walk in. Teemo can hide there and place Noxious Trap mushrooms, which slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Teemo-R", "start": 64, "end": 76 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Kennen:Teemo:3",
+          "text": "Use Lightning Rush to close the gap quickly, then trade while Teemo's Toxic Shot is on cooldown from range.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 62, "end": 67 },
+            { "kind": "ability", "key": "Teemo-E", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Kennen:Teemo:4",
+          "text": "Save Slicing Maelstrom for when Teemo is close to you. The extra Armor and Magic Resist help you survive his poison.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "19ad0b0d15a236b85ad1e07462dd878f606d5792f0d935286f3b106896eba490",
+      "tips": [
+        {
+          "id": "top:Kennen:Vayne:0",
+          "text": "Stay away from walls when Vayne is near; Condemn pins you into terrain for a stun and heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Kennen:Vayne:1",
+          "text": "Land Thundering Shuriken first, then add Electrical Surge to build Mark of the Storm toward a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Kennen-W", "start": 41, "end": 57 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 67,
+              "end": 84
+            },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Kennen:Vayne:2",
+          "text": "Use Lightning Rush to close the gap on Vayne; it gives energy back if it hits, so you can follow with more abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Kennen:Vayne:3",
+          "text": "Do not chase Vayne into a long fight; Tumble and her speed let her slip away and win the longer trade.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "145d595011e8bd4bb599f1cd89a8bdade9df48ae4d19a72144fc623b0b938d80",
+      "tips": [
+        {
+          "id": "top:Kennen:Yone:0",
+          "text": "Hit Yone with Thundering Shuriken first, then use Electrical Surge to add a second Mark of the Storm. A third hit stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 14, "end": 33 },
+            { "kind": "ability", "key": "Kennen-W", "start": 50, "end": 66 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 83,
+              "end": 100
+            },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Kennen:Yone:1",
+          "text": "Throw Thundering Shuriken from long range at Yone. It stops at the first enemy it hits, so aim it where no minion stands in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Kennen:Yone:2",
+          "text": "Use Lightning Rush to close in and refill your energy, then trade. Leave with it again before Yone's damage catches up.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Kennen:Yone:3",
+          "text": "Stay back when Yone is close to a second Mortal Steel hit. His third cast dashes at you and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Yone-Q", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Kennen:Yone:4",
+          "text": "Turn on Yone with Slicing Maelstrom when he commits to a fight. It makes you much tougher and hits him over and over.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Kennen-R", "start": 18, "end": 35 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

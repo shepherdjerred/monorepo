@@ -1,0 +1,1094 @@
+{
+  "schemaVersion": 1,
+  "champion": "Heimerdinger",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "08d7cf6ccc932b20a710e3e28cb209bfc56bb45faca4a36b74c806583e900226",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:general:0",
+          "text": "Place turrets with H-28 G Evolution Turret near each other and away from the enemy's reach, so they cover one another and punish anyone who walks up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-Q",
+              "start": 19,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Heimerdinger:general:1",
+          "text": "Land CH-2 Electron Storm Grenade on a champion to fully charge nearby turrets. Aim it at the center so the enemy is stunned, not just slowed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-E",
+              "start": 5,
+              "end": 32
+            },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 123 },
+            { "kind": "keyword", "key": "slowed", "start": 134, "end": 140 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Heimerdinger:general:2",
+          "text": "Keep CH-2 Electron Storm Grenade ready as your escape when a jungler shows up. Stun the attacker, then walk back to your turrets.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-E",
+              "start": 5,
+              "end": 32
+            },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Heimerdinger:general:3",
+          "text": "Fire Hextech Micro-Rockets from long range to poke. Rockets that hit a champion also charge nearby turrets.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 5,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Heimerdinger:general:4",
+          "text": "Use Hextech Micro-Rockets on the minion wave too. Rockets after the first hit minions much harder, which helps you clear and push.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 4,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Heimerdinger:general:5",
+          "text": "Stay close to your turrets when you fight. Hextech Affinity gives you extra Move Speed near them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-passive",
+              "start": 43,
+              "end": 59
+            }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Heimerdinger:general:6",
+          "text": "Use UPGRADE!!! to make your next ability stronger. Save it for a kill or to get out of trouble, since it has a long cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-R",
+              "start": 4,
+              "end": 14
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Heimerdinger:general:7",
+          "text": "Upgrade your turret ability for a strong turret that slows enemies and ignores crowd control. It is great for holding a spot in a fight.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Heimerdinger:general:8",
+          "text": "Watch for enemies with area damage, because they can destroy your turrets quickly. Pull the turrets back or place them out of reach.",
+          "refs": [],
+          "pWrong": 0.05
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Heimerdinger:combo:0",
+          "name": "Upgraded grenade into rockets",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Heimerdinger-R" },
+            { "kind": "ability", "key": "Heimerdinger-E" },
+            { "kind": "ability", "key": "Heimerdinger-W" }
+          ],
+          "when": "Use it when an enemy champion walks into your turrets or dives you and you want a guaranteed stun.",
+          "whenRefs": [],
+          "text": "Toggle the upgrade first so the next grenade is the big one with a wider stun. Then follow with rockets on the stunned target.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Heimerdinger:combo:1",
+          "name": "Grenade charges turrets",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Heimerdinger-Q" },
+            { "kind": "ability", "key": "Heimerdinger-E" },
+            { "kind": "ability", "key": "Heimerdinger-W" }
+          ],
+          "when": "Use it when you are trading near your turrets and want their strong beams ready immediately.",
+          "whenRefs": [],
+          "text": "Place a turret by the enemy, then hit them with the grenade, which fully charges nearby turrets. Rockets add more damage while they are stuck.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "1d24873560ff6730b4f87fdd3f8afa699d121a62b2607ddd0d51fb0af7d08149",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Aatrox:0",
+          "text": "Keep your turrets back from Aatrox. His Umbral Dash lets him close the gap fast, so place them where he has to walk into them.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Heimerdinger:Aatrox:1",
+          "text": "Throw your grenade at his feet when he walks in. The stun at the center stops him mid-attack, and it fully charges your turrets.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Heimerdinger:Aatrox:2",
+          "text": "Stay out of the long reach of The Darkin Blade. Step sideways when you see it wind up, since it is aimed in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Heimerdinger:Aatrox:3",
+          "text": "Use Hextech Micro-Rockets to poke him from long range while he is on cooldown. Keep him from reaching you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 4,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "poke", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Heimerdinger:Aatrox:4",
+          "text": "If Infernal Chains pins you, walk out of the area toward him or to the side so you are not pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 3, "end": 18 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0f7b89c6cebb235182ecf093c0b233baa120760ac59d59874c55c28f31585d60",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Briar:0",
+          "text": "Save your grenade for when Briar leaps in; the stun at the center stops her, and the grenade also slows her.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Heimerdinger:Briar:1",
+          "text": "Build turrets behind you before she arrives. Hextech Micro-Rockets or a grenade that hits her charges nearby turrets for a stronger shot.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 45,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Heimerdinger:Briar:2",
+          "text": "Keep your distance and use Hextech Micro-Rockets from long range while she walks up. It is a good way to poke her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 27,
+              "end": 48
+            },
+            { "kind": "keyword", "key": "poke", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Heimerdinger:Briar:3",
+          "text": "Fight near your turrets; Hextech Affinity gives you extra Move Speed there, which helps you back away from her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-passive",
+              "start": 25,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Heimerdinger:Briar:4",
+          "text": "Hold UPGRADE!!! for her level 6 all-in, since an upgraded grenade has a bigger stun and slow area that is harder to dodge.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-R",
+              "start": 5,
+              "end": 15
+            }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c01a88abb288a1341c07222b01b9eec10b9302a609f3844823c699e560c17f12",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Darius:0",
+          "text": "Throw your grenade at Darius's path when he walks up, because only enemies in the center get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Heimerdinger:Darius:1",
+          "text": "Hit Darius with Hextech Micro-Rockets from long range while he is stuck last-hitting. He has no ranged way to answer you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 16,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Heimerdinger:Darius:2",
+          "text": "Place your turrets behind you, not in front. Darius hits hard up close and can pull you into range.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Heimerdinger:Darius:3",
+          "text": "Stay out of Darius's Apprehend range. When it is on cooldown, step up and poke him.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Darius-E", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Heimerdinger:Darius:4",
+          "text": "Save your ultimate for when Darius closes in; an upgraded grenade or turret can stop him from killing you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Heimerdinger:Darius:5",
+          "text": "Hit Darius with Hextech Micro-Rockets to charge your turrets, then fight him near them.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 16,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1a205fed61f5eaf825468f8a6ee4dcabd32ba92a756b16153104e627369e14ae",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Fiora:0",
+          "text": "Don't throw your grenade at Fiora when Riposte is ready. She can turn the stun back on you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Fiora-W", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Heimerdinger:Fiora:1",
+          "text": "Wait until Riposte is spent, then throw your grenade. She can't turn it back on you.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 11, "end": 18 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Heimerdinger:Fiora:2",
+          "text": "Place your turrets behind you and spread out. Fiora has to get past them to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Heimerdinger:Fiora:3",
+          "text": "Poke her with Hextech Micro-Rockets from long range as she walks up. It also charges your nearby turrets.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 14,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Heimerdinger:Fiora:4",
+          "text": "Stay away from her when Lunge is ready. Fiora closes the gap fast, so keep your turrets between you.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 24, "end": 29 },
+            { "kind": "champion", "key": "Fiora", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "019158cefe19ae4bf96d0eb7c4c72c0ab865f79d4a68dd4d86b5f87de33fb57f",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Gangplank:0",
+          "text": "Throw your grenade when Gangplank walks up. It stuns in the center, and it fully charges your nearby turrets.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Heimerdinger:Gangplank:1",
+          "text": "Keep your turrets close together and near you. Hextech Micro-Rockets from range will charge them, and Gangplank has to come close to trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 47,
+              "end": 68
+            },
+            { "kind": "champion", "key": "Gangplank", "start": 102, "end": 111 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Heimerdinger:Gangplank:2",
+          "text": "Do not rely on a stun to kill Gangplank. Remove Scurvy cleanses it, so wait until it is on cooldown before you go all in.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Heimerdinger:Gangplank:3",
+          "text": "Stay out of range when his Powder Kegs are placed, because their explosions slow you and hit hard.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Heimerdinger:Gangplank:4",
+          "text": "Stay wary at level 6, when Cannon Barrage can come from anywhere. Move out of the area when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "772916e257dbbc32e1f44feecdd27004d1e562c8f838f65754813edc21d35819",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Garen:0",
+          "text": "Stun Garen with your grenade when he runs at you, then back away while he is stunned. It also charges your turrets.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Heimerdinger:Garen:1",
+          "text": "Place turrets behind you and fight near them, so Garen has to walk into them to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Heimerdinger:Garen:2",
+          "text": "Poke Garen with Hextech Micro-Rockets from long range while he has no way to close in. Fire it when he walks up to last-hit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 16,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Heimerdinger:Garen:3",
+          "text": "Stay away from Garen when his Perseverance has restored his health; keep him taking damage so it stays off.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 30,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Heimerdinger:Garen:4",
+          "text": "Garen can finish you quickly at low health, so keep your health up and your distance once you are hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Heimerdinger:Garen:5",
+          "text": "Save UPGRADE!!! for your grenade when Garen dives you; its larger stun area makes it hard for him to avoid.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-R",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Garen", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e2e9ae9239e3cd397d2101868f6a55f2b9a633b0d8008e732ad37b38f6fb191",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Jayce:0",
+          "text": "Place your turrets behind you and fight near them. Jayce has to come to you, and your turrets give you extra Move Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Heimerdinger:Jayce:1",
+          "text": "Aim your stun grenade at Jayce when he leaps in. The center stuns him and charges your nearby turrets.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 9, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Heimerdinger:Jayce:2",
+          "text": "Fire Hextech Micro-Rockets at Jayce from long range when he is in Cannon Stance, and keep poking him when he cannot reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 5,
+              "end": 26
+            },
+            { "kind": "champion", "key": "Jayce", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Heimerdinger:Jayce:3",
+          "text": "Keep your distance when Jayce drops an Acceleration Gate. A boosted Shock Blast is coming and it flies far.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Heimerdinger:Jayce:4",
+          "text": "Save your ultimate for a fight Jayce starts, since an upgraded grenade or turret can get you out of his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "04e087412872115ab0735939c1d9367a8571b03a37b0b551799e7f7a0e9caf75",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:KSante:0",
+          "text": "Keep your distance and poke with Hextech Micro-Rockets; K'Sante has no ranged way to reach you except Ntofo Strikes, which has short range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 33,
+              "end": 54
+            },
+            { "kind": "champion", "key": "KSante", "start": 56, "end": 63 },
+            { "kind": "ability", "key": "KSante-Q", "start": 102, "end": 115 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Heimerdinger:KSante:1",
+          "text": "Save CH-2 Electron Storm Grenade for when K'Sante charges Path Maker; stun him as he comes in so the dash does not reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-E",
+              "start": 5,
+              "end": 32
+            },
+            { "kind": "champion", "key": "KSante", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "KSante-W", "start": 58, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Heimerdinger:KSante:2",
+          "text": "Place turrets behind you, away from K'Sante, and fight near them; they hit him while he is slowed and stunned by your grenade.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Heimerdinger:KSante:3",
+          "text": "Do not rely on stunning K'Sante for long while he is in All Out; he becomes much weaker to damage, so punish him hard with Hextech Micro-Rockets.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-R", "start": 56, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 123,
+              "end": 144
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Heimerdinger:KSante:4",
+          "text": "Stay out of range of K'Sante's Ntofo Strikes when he has two stacks; the second hit pulls and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "KSante-Q", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3107a13eccea70cdb53a02639bb00f10783516cc98b1ac6153e47ab5af618e5b",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Malphite:0",
+          "text": "Keep Electron Storm Grenade ready for when Malphite dashes in; stunning him in the center gives your turrets time to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Heimerdinger:Malphite:1",
+          "text": "Place turrets back from Malphite's reach and keep them close together. Hextech Micro-Rockets from range charge them without you stepping forward.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 71,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Heimerdinger:Malphite:2",
+          "text": "Malphite deals magic damage, so his Ground Slam hurts your turrets. Fight him away from them when his Ground Slam is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-E", "start": 36, "end": 47 },
+            { "kind": "ability", "key": "Malphite-E", "start": 102, "end": 113 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9ddb3e071f0028f94195d88e1738a0d5bf260c552751ef4753c8b2291a7f4e46",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Mordekaiser:0",
+          "text": "Keep your distance from Mordekaiser once Darkness Rise is active; its aura hurts anyone close, so poke him instead of trading up close.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 41,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "poke", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Heimerdinger:Mordekaiser:1",
+          "text": "Hit Mordekaiser with your grenade when he walks up. He is stunned if caught in the center, and your turrets charge up.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Heimerdinger:Mordekaiser:2",
+          "text": "Place your turrets behind you, away from Mordekaiser, and fight near them. Death's Grasp pulls you toward him, so stay out of its line.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 41,
+              "end": 52
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 75,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Heimerdinger:Mordekaiser:3",
+          "text": "Do not fight him once Indestructible is up; he turns damage into a shield. Wait for it to be used, then use Hextech Micro-Rockets.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 22,
+              "end": 36
+            },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 108,
+              "end": 129
+            }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Heimerdinger:Mordekaiser:4",
+          "text": "At level 6, expect Realm of Death. Keep your grenade ready to stun him before he can reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 19,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a0abc7e38a496956216421e02987a1c67cd7a9374687f3155445d63aec38a16",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Rumble:0",
+          "text": "Throw your grenade at Rumble when he steps in to burn you; the stun at the centre stops Flamespitter.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Heimerdinger:Rumble:1",
+          "text": "Poke Rumble with Hextech Micro-Rockets from long range so he can't use Flamespitter freely.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 17,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Rumble-Q", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Heimerdinger:Rumble:2",
+          "text": "Place turrets behind you, not in the lane front. The Equalizer burns the area and can wipe them out with you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Heimerdinger:Rumble:3",
+          "text": "Step out of the fire of The Equalizer, but if he overheats, stun him and push in.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "381ed91f0e1e3051b8735f7412a8bf621c4cea3eb3615f3ebe8a4660c4f814db",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Sion:0",
+          "text": "Keep your grenade for when Sion starts charging Decimating Smash; stunning him cancels the big hit.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sion-Q", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Heimerdinger:Sion:1",
+          "text": "Poke Sion with Hextech Micro-Rockets from long range while he has no shield up.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 15,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Heimerdinger:Sion:2",
+          "text": "Stay clear of Roar of the Slayer; it slows you and cuts your Armor, which makes turrets and you easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 14, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Heimerdinger:Sion:3",
+          "text": "Watch for Sion's Unstoppable Onslaught at level 6; keep turrets between you and him and save your grenade for when he arrives.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Sion-R", "start": 17, "end": 38 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e0b6c35719eacad7fb21b7c905b8be82535f460aaf81d882a17c59aef742b7ec",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Teemo:0",
+          "text": "Keep Teemo at a distance. Blinding Dart outranges your basic attacks, so be ready to answer with Hextech Micro-Rockets.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 26, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 97,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Heimerdinger:Teemo:1",
+          "text": "Land your grenade on Teemo when he closes in. It stuns him and fully charges your turrets.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Heimerdinger:Teemo:2",
+          "text": "Look at bushes before you walk past. Teemo can sit invisible in them, and his mushrooms are hidden too.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Heimerdinger:Teemo:3",
+          "text": "Mushrooms break to enemy basic attacks, so clear them with your turrets or minions near your turrets before you step forward.",
+          "refs": [],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Heimerdinger:Teemo:4",
+          "text": "Use Hextech Micro-Rockets when Teemo is running at you to poke him, as the rockets travel fast over a long range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 4,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Teemo", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72c48c78b6d5e2e7d7a5717b501fc3126c920e2cbf7902c39875624e3fbf6691",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Vayne:0",
+          "text": "Throw your grenade at Vayne when she walks up to attack. The stun gives your turrets time to hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Heimerdinger:Vayne:1",
+          "text": "Do not stand with a wall behind you. Vayne's Condemn pins you to terrain for a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Vayne-E", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Heimerdinger:Vayne:2",
+          "text": "Use Hextech Micro-Rockets from long range. Vayne is fragile and must play carefully when you keep pressure on her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 4,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Vayne", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Heimerdinger:Vayne:3",
+          "text": "Fight near your turrets, and do not chase her once she uses Tumble to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "93b8b61b33de32c9c39a0674c3768b69dc8abafa357b17cb0d24b41d7bd7ae7c",
+      "tips": [
+        {
+          "id": "top:Heimerdinger:Yone:0",
+          "text": "Save CH-2 Electron Storm Grenade for when Yone dashes in with Mortal Steel or Fate Sealed; the stun at the center gives your turrets time to shoot him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-E",
+              "start": 5,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Yone", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Yone-Q", "start": 62, "end": 74 },
+            { "kind": "ability", "key": "Yone-R", "start": 78, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Heimerdinger:Yone:1",
+          "text": "Place your H-28 G Evolution Turret behind minions or in brush, away from where Yone can easily reach it. Keep a few Turret Kit charges so you can rebuild.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-Q",
+              "start": 11,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Yone", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Heimerdinger:Yone:2",
+          "text": "Poke with Hextech Micro-Rockets from long range when Yone goes for minions. Each rocket that hits him also charges your turrets.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 10,
+              "end": 31
+            },
+            { "kind": "champion", "key": "Yone", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Heimerdinger:Yone:3",
+          "text": "Hit Yone with CH-2 Electron Storm Grenade when he is in spirit form. It fully charges your turrets, so they hit hard while he is far from his body.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-E",
+              "start": 14,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Heimerdinger:Yone:4",
+          "text": "Keep UPGRADE!!! ready for when Yone gets close. An upgraded grenade or Apex turret slows him and punishes his dive.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-R",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

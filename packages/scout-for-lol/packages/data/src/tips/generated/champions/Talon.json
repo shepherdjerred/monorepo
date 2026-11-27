@@ -1,0 +1,3883 @@
+{
+  "schemaVersion": 1,
+  "champion": "Talon",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "3eedc61550a1df986b8415ffa3fec431d8ba8535c02f33cd15d711e8fe6d2ea2",
+      "tips": [
+        {
+          "id": "jungle:Talon:general:0",
+          "text": "Use Rake, Noxian Diplomacy, then an attack on one champion. Three Wound stacks let your next attack make them bleed for heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-Q", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Talon:general:1",
+          "text": "Cast Noxian Diplomacy when you are already in melee range. It then critically strikes for more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Talon:general:2",
+          "text": "Vault over a wall with Assassin's Path to get behind a target or to leave a fight. You can't cross the same wall again for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Talon:general:3",
+          "text": "Rake hits everything in a cone on the way out and again on the way back. Stand so enemies are in the cone for both hits, and they will be slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 138, "end": 144 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Talon:general:4",
+          "text": "Save Shadow Assault to escape or to start a fight. Invisibility and extra Move Speed let you walk away or close in on a target.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Talon:general:5",
+          "text": "Pick off a target that is low on health with Noxian Diplomacy. A kill heals you and cuts its cooldown, so you can chain into the next target.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Talon:general:6",
+          "text": "Choose your target before the fight and put all your abilities on them. Splitting damage between several enemies leaves you without a kill.",
+          "refs": [],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Talon:general:7",
+          "text": "Hit large monsters with your abilities to build Wound stacks on them, then finish with an attack for extra damage.",
+          "refs": [],
+          "pWrong": 0.52
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Talon:combo:0",
+          "name": "Wall hop into Q",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Talon-E" },
+            { "kind": "ability", "key": "Talon-Q" }
+          ],
+          "when": "Closing on a target who is standing near a wall, or cutting off one who is running.",
+          "whenRefs": [],
+          "text": "Vault the wall to get in close, then use the melee-range version of the leap so it crits. Close-range casting is what makes the leap hit harder.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Talon:combo:1",
+          "name": "Ult during the leap",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Talon-Q" },
+            { "kind": "ability", "key": "Talon-R" }
+          ],
+          "when": "Going in on a target when you want the invisibility and the blade damage during your dash.",
+          "whenRefs": [],
+          "text": "The wiki notes that Shadow Assault can be cast while Noxian Diplomacy is dashing. Cast it mid-leap so you don't waste time before the attack.",
+          "textRefs": [
+            { "kind": "ability", "key": "Talon-R", "start": 20, "end": 34 },
+            { "kind": "ability", "key": "Talon-Q", "start": 53, "end": 69 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "336fe57a64ad3403a9b492e256a359855bfb24f3d30a11822038bf83bed05ce9",
+      "tips": [
+        {
+          "id": "middle:Talon:general:0",
+          "text": "Hit the enemy with Rake, Noxian Diplomacy or Shadow Assault, three times in a row, then auto attack. Blade's End then makes them bleed for heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Talon-Q", "start": 25, "end": 41 },
+            { "kind": "ability", "key": "Talon-R", "start": 45, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 101,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Talon:general:1",
+          "text": "Cast Noxian Diplomacy when you are already next to the enemy; up close it hits much harder as a critical strike.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Talon:general:2",
+          "text": "Use Assassin's Path to vault a wall and land behind the enemy, then jump on them with Noxian Diplomacy.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Talon-Q", "start": 86, "end": 102 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Talon:general:3",
+          "text": "Use Noxian Diplomacy on a low-health minion or enemy to heal and get part of its cooldown back.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Talon:general:4",
+          "text": "Throw Rake so it hits several enemies on the way out and again on the way back; the return leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 6, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Talon:general:5",
+          "text": "Pick one target before the fight and put all your abilities on them. Splitting damage across many enemies leaves you weak.",
+          "refs": [],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Talon:general:6",
+          "text": "Save Shadow Assault as your escape, since it makes you invisible and fast. Without it you are easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Talon:general:7",
+          "text": "Each wall can only be vaulted with Assassin's Path once in a long while, so pick which walls to use when roaming or fleeing.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Talon:combo:0",
+          "name": "Wall hop",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Talon-E" }],
+          "when": "When roaming, chasing or escaping around mid lane walls.",
+          "whenRefs": [],
+          "text": "Vault over the thin walls near mid lane to roam or cut off a target. Each wall has its own cooldown, so you can't hop the same one again straight away.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Talon:combo:1",
+          "name": "Shadow Assault into Q",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Talon-R" },
+            { "kind": "ability", "key": "Talon-Q" }
+          ],
+          "when": "When you want to burst an enemy after a quiet approach.",
+          "whenRefs": [],
+          "text": "Cast the ultimate to go invisible, then leap onto the target with Q. This breaks stealth and sends the blades back to the target, not to you.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Talon:combo:2",
+          "name": "Melee Q crit",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Talon-E" },
+            { "kind": "ability", "key": "Talon-Q" },
+            "attack"
+          ],
+          "when": "When you can get next to an enemy champion in a trade or kill.",
+          "whenRefs": [],
+          "text": "Vault past the enemy, then use Q at melee range to get the critical version. It lands a bigger hit and makes the next basic attack reach further.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "0caba62b08aa952f6ae048503370154ec424ccc66722679c2cac6a093111b3b3",
+      "tips": [
+        {
+          "id": "jungle:Talon:Aatrox:0",
+          "text": "Look for Aatrox when Infernal Chains is on cooldown; without it he struggles to pin you down or drag you back.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Talon:Aatrox:1",
+          "text": "Use Rake and Noxian Diplomacy together on Aatrox so Blade's End is ready, then hit him with a basic attack to make him bleed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Aatrox", "start": 42, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 52,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Talon:Aatrox:2",
+          "text": "Slip away with Shadow Assault when Aatrox has landed his big hits. He cannot follow what he cannot see.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Aatrox", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Talon:Aatrox:3",
+          "text": "Do not fight Aatrox once he uses World Ender. Back off and wait out his extra damage, healing and speed.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Talon:Aatrox:4",
+          "text": "Step sideways out of The Darkin Blade; its edge knocks you up, so do not stand at its tip.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 21, "end": 37 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f465f550c1eefc4cc8c616e453481eba31852e23c5fc62de04195b7acf1ca05",
+      "tips": [
+        {
+          "id": "jungle:Talon:Ambessa:0",
+          "text": "Hit Ambessa with Rake, then Noxian Diplomacy, then a basic attack, so Blade's End has its three stacks and she bleeds.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Talon-W", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Talon-Q", "start": 28, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 70,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Talon:Ambessa:1",
+          "text": "Don't jump on Ambessa while Repudiation's shield is up. Wait for it to end, then go in.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Talon:Ambessa:2",
+          "text": "Use Rake on Ambessa as she closes in. It slows her, so she has a harder time diving you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Ambessa", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Talon:Ambessa:3",
+          "text": "Keep Shadow Assault ready when you fight Ambessa. Its invisibility and speed let you escape when Public Execution is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Ambessa", "start": 41, "end": 48 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 97, "end": 113 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e325df91531d8ca05b28b493cd37124c8776455a24706f8160161e865d93dd79",
+      "tips": [
+        {
+          "id": "jungle:Talon:Amumu:0",
+          "text": "Keep your distance from Amumu so Bandage Toss misses; if he lands it, he can stun you and your team can kill you.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 33, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Talon:Amumu:1",
+          "text": "Fight Amumu with Noxian Diplomacy and Rake only when his Tantrum is down; Tantrum reduces your physical damage.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-Q", "start": 17, "end": 33 },
+            { "kind": "ability", "key": "Talon-W", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Amumu-E", "start": 57, "end": 64 },
+            { "kind": "ability", "key": "Amumu-E", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Talon:Amumu:2",
+          "text": "Do not dive into a group when Curse of the Sad Mummy is ready; a stun there loses you the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 30, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Talon:Amumu:3",
+          "text": "Look for easier targets than Amumu, since he is tanky and punishes a fight. Use Shadow Assault to escape if he catches you.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Talon-R", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "06b3bef96c240fdffcb75527d2d3b04bc7ef5a584a3e8d3a2e1fb254dcc051bd",
+      "tips": [
+        {
+          "id": "jungle:Talon:Belveth:0",
+          "text": "Hit Bel'Veth with Rake and then a basic attack; two spells plus the attack consume Wound stacks for big bleed damage while she is still weak early.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Talon-W", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Talon:Belveth:1",
+          "text": "Jump in with Noxian Diplomacy when Bel'Veth uses Void Surge on a camp or wastes it; she has fewer ways to get out afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Belveth", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Talon:Belveth:2",
+          "text": "Do not stand beside Bel'Veth when she has Royal Maelstrom ready; it cuts the damage she takes. Wait for it to end, then burst her.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Belveth-E", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Talon:Belveth:3",
+          "text": "Use Assassin's Path over walls to get behind Bel'Veth, so Above and Below and her dashes have a harder time catching you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Belveth", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "Belveth-W", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Talon:Belveth:4",
+          "text": "Fight her early; the longer the game goes, the more attack speed she stacks from takedowns, so deny her kills and big camps.",
+          "refs": [],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c0a8f4b5c1a80a8cda890ffc4c766ad1afbeb06568271f37882f42bdb5e93bf2",
+      "tips": [
+        {
+          "id": "jungle:Talon:Brand:0",
+          "text": "Dodge Brand's Sear. Without a first hit he cannot stun you, so his combo never gets going.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Talon:Brand:1",
+          "text": "Jump on Brand with Noxian Diplomacy once his key spells are on cooldown; he has little to stop you then.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Talon-Q", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Talon:Brand:2",
+          "text": "Use Shadow Assault to slip away when Brand has you ablaze and is about to stun you or fire Pyroclasm.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "ablaze", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 },
+            { "kind": "ability", "key": "Brand-R", "start": 91, "end": 100 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Talon:Brand:3",
+          "text": "Walk out of Pillar of Flame as soon as you see it start; the delay gives you time to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5ce1f960f111c7ad84017d6329292373b64016f8e86109836b80325b178ef910",
+      "tips": [
+        {
+          "id": "jungle:Talon:Briar:0",
+          "text": "Hold Rake for when Briar leaps in; the slow from the returning blades helps you walk away from her fast, healing attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Talon:Briar:1",
+          "text": "Fight Briar when Head Rush is down; without her stun she is much easier to burst and to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Briar-Q", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Talon:Briar:2",
+          "text": "Burst Briar quickly with Noxian Diplomacy and Rake; the longer a fight lasts, the more her bleed heals her.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-Q", "start": 25, "end": 41 },
+            { "kind": "ability", "key": "Talon-W", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Talon:Briar:3",
+          "text": "Keep Shadow Assault to get away if Briar locks onto you with Certain Death; it also makes you invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Briar-R", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c3fdd4c71a8e1e273523b6fe112414a0ee64312feac604b459ef2254e9515681",
+      "tips": [
+        {
+          "id": "jungle:Talon:Darius:0",
+          "text": "Pick fights away from Darius. Open with Rake, then jump in with Noxian Diplomacy and finish before he can pull you with Apprehend.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Talon-W", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Talon-Q", "start": 64, "end": 80 },
+            { "kind": "ability", "key": "Darius-E", "start": 120, "end": 129 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Talon:Darius:1",
+          "text": "Hit Darius with all three Wound stacks, then attack him so he bleeds. Use Rake and Noxian Diplomacy first.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Talon-W", "start": 74, "end": 78 },
+            { "kind": "ability", "key": "Talon-Q", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Talon:Darius:2",
+          "text": "Use Shadow Assault to get out when Darius lands his pull. Without it you are easy for him to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Talon:Darius:3",
+          "text": "Do not stay in a long brawl. Darius gets stronger the longer a fight lasts, so burst him and leave.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Talon:Darius:4",
+          "text": "Use Assassin's Path to jump over walls and escape when Darius's pull is on cooldown or you are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6c669ad1ff72567ef20e8f69c11e7a138aa74d457a71edbf4e411e912a12691a",
+      "tips": [
+        {
+          "id": "jungle:Talon:Diana:0",
+          "text": "Dodge Crescent Strike when you can; if Diana lands it, she can Lunar Rush onto you at once. Step out of its arc rather than running straight away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Diana-E", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Talon:Diana:1",
+          "text": "Hold Shadow Assault until Diana has used Lunar Rush; with her dash down she cannot easily chase you or follow your escape.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Diana-E", "start": 41, "end": 51 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Talon:Diana:2",
+          "text": "Wait out Pale Cascade before you commit; her orbs hurt you on contact and the shield soaks your burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Talon:Diana:3",
+          "text": "Use Rake on Diana as she dashes in; it leaves her slowed when the blades return.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Diana", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Talon:Diana:4",
+          "text": "Stay out of Moonfall range in a fight. If it pulls you in, you cannot dash away in time.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "cf16c1d17ea5abe5364597e729858169c3b02fb0f2be2786f00f45707e7ea1d6",
+      "tips": [
+        {
+          "id": "jungle:Talon:DrMundo:0",
+          "text": "Dodge the Infected Bonesaw line when Mundo throws it; it slows you and hurts more the healthier you are.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Talon:DrMundo:1",
+          "text": "Do not trade into Heart Zapper for long. Mundo heals back what you deal if he recasts it on you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Talon:DrMundo:2",
+          "text": "Kill Mundo fast with burst after he uses Maximum Dosage; otherwise he heals through your damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Talon:DrMundo:3",
+          "text": "Use Shadow Assault to leave when Mundo gets close; his Infected Bonesaw slows you and makes you easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Talon:DrMundo:4",
+          "text": "Roam and gank other lanes rather than fighting Mundo head on. He is slow to chase down a Talon who vaults walls with Assassin's Path.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 89, "end": 94 },
+            { "kind": "ability", "key": "Talon-E", "start": 117, "end": 132 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d5af6248ec191444991be80a7b5b6760843f7b3a866561ea39ab3455d606db44",
+      "tips": [
+        {
+          "id": "jungle:Talon:Ekko:0",
+          "text": "Hit Ekko with Rake, Noxian Diplomacy and Shadow Assault in one burst, then attack him so Blade's End finishes the job.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-W", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Talon-Q", "start": 20, "end": 36 },
+            { "kind": "ability", "key": "Talon-R", "start": 41, "end": 55 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 89,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Talon:Ekko:1",
+          "text": "Fight when Chronobreak is down. Ekko can rewind out of your burst and heal if it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Ekko", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Talon:Ekko:2",
+          "text": "Ekko's Parallel Convergence is a stun zone that takes time to arm. Leave it with Assassin's Path or stay outside the circle.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ekko-W", "start": 7, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Talon-E", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Talon:Ekko:3",
+          "text": "Use Shadow Assault to slip away when Ekko has his Timewinder or Phase Dive ready to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ekko", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 50, "end": 60 },
+            { "kind": "ability", "key": "Ekko-E", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a0eb5718997b53b15747e09531ce9b869d7516762d8e34add84ad9053a50411",
+      "tips": [
+        {
+          "id": "jungle:Talon:Evelynn:0",
+          "text": "Keep Assassin's Path ready for when Evelynn charms you. Vault a wall to get out before her burst lands.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Evelynn", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Talon:Evelynn:1",
+          "text": "Watch for the arrow that points to Evelynn once her mark on you has formed. Walk away or toward your team.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Talon:Evelynn:2",
+          "text": "Shadow Assault is your escape when Evelynn jumps on you, and your best way to chase her. Use it to dodge her before she comes out of stealth.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Evelynn", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Talon:Evelynn:3",
+          "text": "Fight Evelynn when her Demon Shade is broken. Hit her with Rake and then Noxian Diplomacy to burst her.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "ability", "key": "Talon-W", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Talon-Q", "start": 73, "end": 89 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1d8653e0ceb5ae3e3b47c14a5c98e8845cbcc5b929e166b1a81454ddc051435a",
+      "tips": [
+        {
+          "id": "jungle:Talon:Fiddlesticks:0",
+          "text": "Do not jump onto Fiddlesticks while he is hidden or standing still as a scarecrow; he can fear you with his next ability.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 17,
+              "end": 29
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Talon:Fiddlesticks:1",
+          "text": "Dodge Reap or fight outside its center; being silenced stops Noxian Diplomacy and your escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 6,
+              "end": 10
+            },
+            { "kind": "keyword", "key": "silenced", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "Talon-Q", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Talon:Fiddlesticks:2",
+          "text": "Hit Fiddlesticks with Rake, then Noxian Diplomacy and your basic attacks to burst him before Bountiful Harvest heals him.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Talon-W", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Talon-Q", "start": 33, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 93,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Talon:Fiddlesticks:3",
+          "text": "Hit Fiddlesticks while he channels Bountiful Harvest or Crowstorm to deal damage, and use Shadow Assault to slip away from Crowstorm.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 4,
+              "end": 16
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 35,
+              "end": 52
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 56,
+              "end": 65
+            },
+            { "kind": "ability", "key": "Talon-R", "start": 90, "end": 104 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 123,
+              "end": 132
+            }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fb77cc9a387a48a351928dee806517bbc36c4845a6d5973963004d90a34bf5e7",
+      "tips": [
+        {
+          "id": "jungle:Talon:Graves:0",
+          "text": "Fight Graves when Quickdraw is on cooldown; without that dash he has little to escape your burst with.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Graves-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Talon:Graves:1",
+          "text": "Jump on Graves with Noxian Diplomacy, then use Rake and attack to finish the Wound stacks. Focus him instead of splitting your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Talon-Q", "start": 20, "end": 36 },
+            { "kind": "ability", "key": "Talon-W", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Talon:Graves:2",
+          "text": "Do not walk into Smoke Screen. Wait for it to fade or go around it, because you are slowed and cannot see out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Talon:Graves:3",
+          "text": "Use Shadow Assault to close the gap when Graves backs away, and to escape if his burst lands.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Talon:Graves:4",
+          "text": "Keep Rake aimed so Graves is in the cone when you throw it. The slow on its return helps you stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Graves", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d7c48dcbcc2ba7f3e2462a5b8a5ed88949dcc7945bc694606e242604d786faa2",
+      "tips": [
+        {
+          "id": "jungle:Talon:Gwen:0",
+          "text": "Hold Rake and Noxian Diplomacy until Gwen's Hallowed Mist is used; she can't be targeted from outside it while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Talon-Q", "start": 14, "end": 30 },
+            { "kind": "champion", "key": "Gwen", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Gwen-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Talon:Gwen:1",
+          "text": "Hit Gwen with Rake, then Noxian Diplomacy, then an attack to finish building Wound before she can set up her attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-W", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Talon-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Talon:Gwen:2",
+          "text": "Jump her first. She needs a few attacks to build her damage, so strike before she has stacks.",
+          "refs": [],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Talon:Gwen:3",
+          "text": "Use Shadow Assault to escape or to chase when she is out of Hallowed Mist.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Gwen-W", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Talon:Gwen:4",
+          "text": "Use Assassin's Path to get behind her and set up a close-range Noxian Diplomacy.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Talon-Q", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6f42ed3e34b33a3d28ce907f4163c4195c55a7fe64ee933afdedf046e614a834",
+      "tips": [
+        {
+          "id": "jungle:Talon:Hecarim:0",
+          "text": "Hit Hecarim with Rake and Noxian Diplomacy, then attack him to finish Blade's End. Stack all three Wound marks before you swing so the bleed lands.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Talon-W", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Talon-Q", "start": 26, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 70,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Talon:Hecarim:1",
+          "text": "Fight Hecarim early, before he has stacked up. He lacks durability, so burst him down fast.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Talon:Hecarim:2",
+          "text": "Stay out of Spirit of Dread when you can. It heals Hecarim for damage he deals, so a long brawl inside it favors him.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Hecarim", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Talon:Hecarim:3",
+          "text": "Save Shadow Assault to escape his Onslaught of Shadows fear. Turn invisible and run once he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 34, "end": 54 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Talon:Hecarim:4",
+          "text": "Use Assassin's Path over a wall to break away when Hecarim charges you. His knock back does not carry you through terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Hecarim", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "146fe3d93a771cc80657f0ed8d27481f49fbd42138f1fbc2a2b3d6f35505c064",
+      "tips": [
+        {
+          "id": "jungle:Talon:Ivern:0",
+          "text": "Ivern is a squishy support-style jungler, so pick him as your target and dive him with Noxian Diplomacy when Rootcaller is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-Q", "start": 87, "end": 103 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 109, "end": 119 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Talon:Ivern:1",
+          "text": "Hold Assassin's Path to jump out if Ivern roots you with Rootcaller; dodge the vine by not walking in a straight line toward him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ivern", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Talon:Ivern:2",
+          "text": "Be careful fighting Ivern alone when Daisy is out. Wait for her to expire or kill Ivern first with a full burst.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 20, "end": 25 },
+            { "kind": "champion", "key": "Ivern", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Talon:Ivern:3",
+          "text": "Use Shadow Assault to get away if Daisy knocks you up or you get caught; its invisibility lets you leave the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Talon:Ivern:4",
+          "text": "Rake's blades are blocked by projectiles; Daisy can block skillshots too, so aim at Ivern, not at her.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ivern", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Talon:Ivern:5",
+          "text": "Check Ivern's brush before roaming through it; Brushmaker can hide an ambush and reveal your path.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Ivern-W", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "64cdeadf12920183b9ec8d30ad33b1f9870fd8899e03f532d95fd0c6508b91f8",
+      "tips": [
+        {
+          "id": "jungle:Talon:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you get knocked up and burst down.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Talon:JarvanIV:1",
+          "text": "Jump into Jarvan with Noxian Diplomacy only when his Dragon Strike and Demacian Standard are down. Otherwise he can knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 22, "end": 38 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 53, "end": 66 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 71, "end": 88 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Talon:JarvanIV:2",
+          "text": "If Jarvan lands Cataclysm on you, vault out with Assassin's Path. It crosses the walls of terrain.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Talon-E", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Talon:JarvanIV:3",
+          "text": "Hold Shadow Assault as your escape when Jarvan is near. Stay out of his reach before he reaches level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "602d9bd5a34ef8539a13ba2a260aec596b8076931a9e63e82f41889cd15b3f2e",
+      "tips": [
+        {
+          "id": "jungle:Talon:Jax:0",
+          "text": "Do not auto attack Jax while Counter Strike is up; wait until it ends and the stun has passed.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Jax-E", "start": 29, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Talon:Jax:1",
+          "text": "Hit Jax in short bursts with Rake and Noxian Diplomacy, then leave. A long fight lets Relentless Assault build his attack speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Talon-W", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Talon-Q", "start": 38, "end": 54 },
+            { "kind": "ability", "key": "Jax-passive", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Talon:Jax:2",
+          "text": "Use Rake to hold Jax back when he leaps in; the slow gives you room to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Jax", "start": 17, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Talon:Jax:3",
+          "text": "Keep Shadow Assault ready to escape once Jax gets his armor and magic resist from Grandmaster-at-Arms.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jax", "start": 41, "end": 44 },
+            { "kind": "ability", "key": "Jax-R", "start": 82, "end": 101 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Talon:Jax:4",
+          "text": "Use Assassin's Path to get around Jax and out of reach; he can still follow with Leap Strike to a ward or unit.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jax", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Jax-Q", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a56c916ad916406accc4cecfb1a907f0a410da56dd82109f3860be0f33043e58",
+      "tips": [
+        {
+          "id": "jungle:Talon:Jayce:0",
+          "text": "Use Assassin's Path to vault a wall and come at Jayce from behind, then jump on him with Noxian Diplomacy before he can line up Shock Blast.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Talon-Q", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Talon:Jayce:1",
+          "text": "Hit Jayce with Rake, then Noxian Diplomacy, then a basic attack. Three Wound stacks make Blade's End bleed him for heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Talon-W", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Talon-Q", "start": 26, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 89,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Talon:Jayce:2",
+          "text": "Hold Shadow Assault to escape or to finish a fight. Jayce has little to stop you once you turn invisible and run.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Talon:Jayce:3",
+          "text": "Stay out of Jayce's Shock Blast line when he is in cannon form. Fight him up close, where his cannon range does not help him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5389f54d59d9420ebdcf9d9344c5d60762e6ed059b4a80fd7f9d37ac71d260db",
+      "tips": [
+        {
+          "id": "jungle:Talon:Karthus:0",
+          "text": "Dive Karthus with Noxian Diplomacy and Rake together; he has no dash to escape and your burst kills him fast.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Talon-Q", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Talon-W", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Talon:Karthus:1",
+          "text": "Do not hover over a dead Karthus; his Death Defied lets him keep casting, so step away from his corpse.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 25, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 38,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Talon:Karthus:2",
+          "text": "Use Shadow Assault to vanish and escape a Requiem channel, or to get to him; the beam of light shows he is channeling.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Karthus-R", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Talon:Karthus:3",
+          "text": "Cross a wall with Assassin's Path to reach Karthus from an unexpected side, and avoid walking through his Wall of Pain.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 18, "end": 33 },
+            { "kind": "champion", "key": "Karthus", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Karthus-W", "start": 106, "end": 118 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2b9eea7e62dc4200fbc33d3306ba9f0ad18eea267efa1fb5530e946e27b0a3b5",
+      "tips": [
+        {
+          "id": "jungle:Talon:Kayn:0",
+          "text": "Hit Kayn with Rake when he fights in the open; the blades come back and leave him slowed, so you can follow with Noxian Diplomacy.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-W", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 },
+            { "kind": "ability", "key": "Talon-Q", "start": 113, "end": 129 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Talon:Kayn:1",
+          "text": "Pick your fight before Kayn gets his form. Early on he has no big bonus, so a quick burst from Talon wins more often.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Talon:Kayn:2",
+          "text": "Use Shadow Assault to escape if Kayn grabs you with Blade's Reach. Hold it for fights you can't win otherwise.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Kayn-W", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Talon:Kayn:3",
+          "text": "Stack three Wound with your spells, then attack to make Kayn bleed. Spread-out spells waste it.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6539dd61d4ea631ec55acdad2d3709ca6d469ee854b357613a410d10dcaf3094",
+      "tips": [
+        {
+          "id": "jungle:Talon:Khazix:0",
+          "text": "Stay near your minions, allies or a turret when Kha'Zix is close. Taste Their Fear hits much harder on someone who is isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 66, "end": 82 },
+            { "kind": "keyword", "key": "isolated", "start": 118, "end": 126 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Talon:Khazix:1",
+          "text": "Throw Rake when Kha'Zix steps in. It hits twice and leaves him slowed on the way back, so he can't chase you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Khazix", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Talon:Khazix:2",
+          "text": "Wait until Kha'Zix has used Leap before you commit to him. Without it he has a hard time getting away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Khazix-E", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Talon:Khazix:3",
+          "text": "Hit Kha'Zix with Rake, then Noxian Diplomacy, then attack. Three stacks of Wound make Blade's End bleed him heavily.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Talon-W", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Talon-Q", "start": 28, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 86,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Talon:Khazix:4",
+          "text": "Keep Shadow Assault ready to escape if Kha'Zix jumps on you. Its speed and invisibility let you get out of a bad fight.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "22bb3529b394597ea172f4ad0c87b438d8c43b32dec6f99df55bd6eacfc743f2",
+      "tips": [
+        {
+          "id": "jungle:Talon:Kindred:0",
+          "text": "Kindred is fragile, so pick her as your target and burst her with Noxian Diplomacy, Rake and a basic attack to finish with Blade's End.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Talon-Q", "start": 66, "end": 82 },
+            { "kind": "ability", "key": "Talon-W", "start": 84, "end": 88 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 123,
+              "end": 134
+            }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Talon:Kindred:1",
+          "text": "Do not fight her inside Lamb's Respite; nobody inside can die. Wait out the zone or back off until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Talon:Kindred:2",
+          "text": "Use Assassin's Path over a wall to get behind her and cut off her escape.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Talon:Kindred:3",
+          "text": "If Kindred slows you with Mounting Dread, finish her fast or leave, since her third attack adds a pounce.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 3, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Kindred-E", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Talon:Kindred:4",
+          "text": "Use Shadow Assault to dive in or escape after your burst; the blades hit her on the way out and back.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "632a2736d84f8c23086e2db0994c972cf5f6ff19847ae59ffa3e8eee79dc28b3",
+      "tips": [
+        {
+          "id": "jungle:Talon:LeeSin:0",
+          "text": "Use Assassin's Path over walls to get behind Lee Sin or to leave when he has used Sonic Wave.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Talon:LeeSin:1",
+          "text": "Stay away from Lee Sin when Dragon's Rage is ready; being kicked into your allies hurts them too.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Talon:LeeSin:2",
+          "text": "Save Shadow Assault as your escape. Once Lee Sin has used his dash and kick, you can fight him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Talon:LeeSin:3",
+          "text": "Lee Sin is weaker to magic damage than physical. Fight him with Rake when he has just spent his shield.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Talon-W", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e5b29f8b597f77cf220cacfdc5d81810a71af7ddc70e459cd8517299c7efaeaa",
+      "tips": [
+        {
+          "id": "jungle:Talon:Lillia:0",
+          "text": "Get behind Lillia with Assassin's Path, then jump in with Noxian Diplomacy up close so it hits as a critical strike.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Talon-E", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Talon-Q", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Talon:Lillia:1",
+          "text": "Fight Lillia when Shadow Assault is ready; the invisibility lets you finish her or escape if her Swirlseed misses you.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Talon-R", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Lillia-E", "start": 97, "end": 106 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Talon:Lillia:2",
+          "text": "Hit Lillia with Rake, then Noxian Diplomacy, to build Wound stacks fast; one basic attack then makes her bleed.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Talon-W", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Talon-Q", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Talon:Lillia:3",
+          "text": "Do not sit still when Lillia lands Watch Out! Eep!; walk out of the center to take less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Lillia-W", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Talon:Lillia:4",
+          "text": "Once Lillia has been hit by her own spells, her Lilting Lullaby can put you to sleep, so strike first and kill her before it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Lillia-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c67a635421b8babfdc38e107dbcbe071fc2700b7acfb62d474d587a5def81ad",
+      "tips": [
+        {
+          "id": "jungle:Talon:MasterYi:0",
+          "text": "Rake slows Master Yi only if Highlander is off, so throw it before he activates it.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "MasterYi", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 29, "end": 39 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Talon:MasterYi:1",
+          "text": "Hit Master Yi with Noxian Diplomacy and Rake early, before he heals back with Meditate.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Talon-Q", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Talon-W", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Talon:MasterYi:2",
+          "text": "Master Yi can't act during Alpha Strike, so step away or use Shadow Assault to avoid his dive.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Talon-R", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Talon:MasterYi:3",
+          "text": "Use Assassin's Path to vault walls and escape when Master Yi has Highlander running, since you can't outrun him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "MasterYi", "start": 51, "end": 60 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "04d5ccb4b76c6cc45dfc2f9627bf147a88da34fdccf75d78ec9f084ea6c42b5c",
+      "tips": [
+        {
+          "id": "jungle:Talon:MonkeyKing:0",
+          "text": "Wait a moment after Wukong uses Warrior Trickster so you hit the real Wukong, not his clone.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 20, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 32,
+              "end": 49
+            },
+            { "kind": "champion", "key": "MonkeyKing", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Talon:MonkeyKing:1",
+          "text": "Burst Wukong early with your abilities, then a basic attack; he gets much tougher as a fight drags on.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Talon:MonkeyKing:2",
+          "text": "Do not dive into Wukong when Cyclone is ready; being knocked up ends your burst. Bait it out first.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 17, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 29,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Talon:MonkeyKing:3",
+          "text": "Keep Shadow Assault ready to escape if Wukong lands Nimbus Strike on you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b8e1e2e9f2e255e209ff0285bc2b8d86acf3f6a15c4bf21806fae7594acdd76d",
+      "tips": [
+        {
+          "id": "jungle:Talon:Naafiri:0",
+          "text": "Kill Naafiri's Packmates first only if you must; otherwise aim Rake so the blades hit her and the Packmates together on both passes.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Talon-W", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Talon:Naafiri:1",
+          "text": "Save Shadow Assault for when Naafiri commits to her fight. Turn invisible to escape or to reset onto her with Noxian Diplomacy.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Talon-Q", "start": 110, "end": 126 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Talon:Naafiri:2",
+          "text": "Stack Wound with your abilities, then finish with one basic attack to make Naafiri bleed heavily before she can Eviscerate away.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 75, "end": 82 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 112, "end": 122 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Talon:Naafiri:3",
+          "text": "Use Assassin's Path to jump a wall and cut off Naafiri when she is low. She is easier to catch right after she spends Eviscerate.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 47, "end": 54 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 118, "end": 128 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "764b08ca75cd55ebab6bf29a0adb91d7dab4a1643b4236d6c675fbd9fc0513f8",
+      "tips": [
+        {
+          "id": "jungle:Talon:Nidalee:0",
+          "text": "Use Noxian Diplomacy to jump onto Nidalee. She is weak up close in human form, so burst her before she can switch to cougar form.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Nidalee", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Talon:Nidalee:1",
+          "text": "Stay out of a straight line with Nidalee. Her Javelin Toss hurts most from far away, and a hit on you makes her faster and her follow-up stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Talon:Nidalee:2",
+          "text": "Walk around brush and unclear ground, since Nidalee's invisible Bushwhack traps damage you over time. Vaulting with Assassin's Path over a trap avoids it.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 44, "end": 51 },
+            { "kind": "ability", "key": "Talon-E", "start": 116, "end": 131 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Talon:Nidalee:3",
+          "text": "Save Shadow Assault to escape if Nidalee Hunts you. It makes you invisible and fast, and she cannot easily finish you in cougar form.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nidalee", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Talon:Nidalee:4",
+          "text": "Use Rake on Nidalee when she steps into cougar form to chase you; it slows her and pushes your Wound stacks toward your passive burst.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Nidalee", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e792f9eb02ebadd49f22ca224dbc2e0b8e9906e4c45302bb21942aab614249ea",
+      "tips": [
+        {
+          "id": "jungle:Talon:Nocturne:0",
+          "text": "Don't spend Rake or Noxian Diplomacy into Nocturne while Shroud of Darkness is up. Wait for it to fade first.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Talon-Q", "start": 20, "end": 36 },
+            { "kind": "champion", "key": "Nocturne", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 57, "end": 75 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Talon:Nocturne:1",
+          "text": "Move away or vault with Assassin's Path when Nocturne starts Unspeakable Horror. Breaking the tether stops the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 24, "end": 39 },
+            { "kind": "champion", "key": "Nocturne", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 61, "end": 79 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Talon:Nocturne:2",
+          "text": "Stay near your team once Nocturne casts Paranoia. His dash can't be stopped by crowd control, but a spell shield blocks it.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Talon:Nocturne:3",
+          "text": "Keep Shadow Assault for escaping Nocturne's dash or his fear. Without it you are easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nocturne", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fad95dac592933e5b624256c53efc24f959c6711d6e1ff4795ed9f7e6f5d510",
+      "tips": [
+        {
+          "id": "jungle:Talon:Nunu:0",
+          "text": "Jump on Nunu with Noxian Diplomacy only when his Snowball Barrage is on cooldown; if you get slowed and rooted you will be caught.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Nunu-E", "start": 49, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Talon:Nunu:1",
+          "text": "Stay away from Absolute Zero. Use Shadow Assault to get out of the blizzard before it explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Talon-R", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Talon:Nunu:2",
+          "text": "Watch for Biggest Snowball Ever! rolling at you, and use Assassin's Path to vault a wall and dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 10, "end": 32 },
+            { "kind": "ability", "key": "Talon-E", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Talon:Nunu:3",
+          "text": "Gank when Nunu has used his Biggest Snowball Ever!, since he cannot stop you easily afterwards. Use Rake to slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 28, "end": 50 },
+            { "kind": "ability", "key": "Talon-W", "start": 100, "end": 104 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7b4b33ceb73c82d0e54c6f63d2c2ba50dc5ed40e28179e7481b3aa9377bc370c",
+      "tips": [
+        {
+          "id": "jungle:Talon:Pantheon:0",
+          "text": "Do not fight Pantheon head-on while Aegis Assault is up. He takes no damage from the front, so wait it out or attack from behind with Assassin's Path.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 36, "end": 49 },
+            { "kind": "ability", "key": "Talon-E", "start": 134, "end": 149 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Talon:Pantheon:1",
+          "text": "Keep Shadow Assault ready when you fight Pantheon. His Shield Vault stuns, and the invisibility lets you escape.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 55, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Talon:Pantheon:2",
+          "text": "Stay away from Pantheon when your health is low; a thrown Comet Spear deals heavy damage to low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Talon:Pantheon:3",
+          "text": "When Pantheon starts Grand Starfall, you have warning. Move out of the area or get ready to fight him when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Talon:Pantheon:4",
+          "text": "Use Rake and Noxian Diplomacy to build Wound stacks, then attack to cause bleeding. Strike when Pantheon's Aegis Assault is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Pantheon", "start": 96, "end": 104 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 107, "end": 120 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c83362973911e42cd11a1178835e2b501fb7a2907072d6938cf8b9f69315d5a4",
+      "tips": [
+        {
+          "id": "jungle:Talon:Qiyana:0",
+          "text": "Cast Shadow Assault to turn invisible when Qiyana tries to lock you down, then walk out or strike back when you reappear.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Qiyana", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Talon:Qiyana:1",
+          "text": "Open on Qiyana with Rake and Noxian Diplomacy, then hit her with a basic attack to finish the Wound stacks and make her bleed.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Talon-W", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Talon-Q", "start": 29, "end": 45 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Talon:Qiyana:2",
+          "text": "Fight Qiyana away from walls and brush. Her Supreme Display of Talent needs terrain to stun, so a fight in open ground is safer for you.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 44, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Talon:Qiyana:3",
+          "text": "Keep Assassin's Path ready to vault a wall if Qiyana dashes in, so you can get away or reposition behind her.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Qiyana", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a0bab3ddea9d8434029211e0517250c7e2682f520695368b6c09d815c04e42bc",
+      "tips": [
+        {
+          "id": "jungle:Talon:Rammus:0",
+          "text": "Don't dive Rammus with Noxian Diplomacy while Frenzying Taunt is ready; being taunted ends your burst.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Talon-Q", "start": 23, "end": 39 },
+            { "kind": "ability", "key": "Rammus-E", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Talon:Rammus:1",
+          "text": "Skip fighting Rammus while Defensive Ball Curl is on; your physical damage does little and every attack hurts you. Hit him when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Rammus-W", "start": 27, "end": 46 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Talon:Rammus:2",
+          "text": "Hold Shadow Assault as your escape from Rammus; when it is down, Powerball can catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Rammus", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 65, "end": 74 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Talon:Rammus:3",
+          "text": "Use Assassin's Path to roam and pressure other lanes rather than trading with Rammus; target squishier champions instead.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Rammus", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d61aaf1efcde033148e9e544282fda57f3249f60c0d74af87843d0c9adb9ba7b",
+      "tips": [
+        {
+          "id": "jungle:Talon:RekSai:0",
+          "text": "Rek'Sai senses you through Tremor Sense only while you move. Stand still in a bush or use Shadow Assault to slip away.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Talon-R", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Talon:RekSai:1",
+          "text": "Stay out of her reach when she is Burrowed; she can knock you up by attacking, which breaks your chain of abilities.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Talon:RekSai:2",
+          "text": "Save Assassin's Path for fleeing over a wall. Rek'Sai can follow through her tunnels, so do not assume a wall is safe.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "RekSai", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Talon:RekSai:3",
+          "text": "Hit her with Rake, then Noxian Diplomacy, then attack to burst her down. Rek'Sai is slowed and has little reach to answer.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Talon-Q", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "RekSai", "start": 73, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "cc0218873a8d4bc04ecc5604b51037e4014210cae2f67afd7e4a4181d3331b58",
+      "tips": [
+        {
+          "id": "jungle:Talon:Rengar:0",
+          "text": "Fight Rengar when his Ferocity is low; his empowered Bola Strike roots, so stay out of its line when he is full.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Rengar-E", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Talon:Rengar:1",
+          "text": "Keep away from brush when Rengar is near, because his passive lets him leap out of it at you.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Talon:Rengar:2",
+          "text": "Save Shadow Assault to escape a gank; it makes you invisible and fast. Rengar is much harder to run from when it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Rengar", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Talon:Rengar:3",
+          "text": "Hit Rengar with Rake as he leaps in; the returning blades slow him so you can step away.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Talon-W", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Talon:Rengar:4",
+          "text": "Fight on your terms: Rake, Noxian Diplomacy, then an attack to finish the Wound bleed before Rengar builds Ferocity.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Talon-Q", "start": 27, "end": 43 },
+            { "kind": "champion", "key": "Rengar", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e8001a22351d06df2ccc7be35fb2a0fa74d7973efe27a8ea317786c3d9b495ac",
+      "tips": [
+        {
+          "id": "jungle:Talon:Sejuani:0",
+          "text": "Keep Shadow Assault ready when you gank or fight near Sejuani; without it you have no easy way out of her stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sejuani", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Talon:Sejuani:1",
+          "text": "Walk away from Sejuani when her Permafrost is ready. Fight her only when her stacks are low.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Talon:Sejuani:2",
+          "text": "Stay out of a straight line from Sejuani so Glacial Prison and Arctic Assault miss. Hop a wall with Assassin's Path if she gets close.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 44, "end": 58 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 63, "end": 77 },
+            { "kind": "ability", "key": "Talon-E", "start": 100, "end": 115 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Talon:Sejuani:3",
+          "text": "Aim to kill squishy targets rather than fighting Sejuani. She is a tank, and Noxian Diplomacy gets more from a kill on an easy target.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 49, "end": 56 },
+            { "kind": "ability", "key": "Talon-Q", "start": 77, "end": 93 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Talon:Sejuani:4",
+          "text": "Slow Sejuani's melee allies with Rake. They need to reach their targets to build stacks for her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sejuani", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Talon-W", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f9331f402e9eab8dad238ca23f902d15ed8ef29d0e9e222d3f42d410908c17a",
+      "tips": [
+        {
+          "id": "jungle:Talon:Shaco:0",
+          "text": "Watch for Shaco's boxes before jumping into a fight. Use Rake to clear a path, and don't run over unseen ground when he is near.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-W", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Talon:Shaco:1",
+          "text": "Hold Shadow Assault to escape or to burst Shaco after he spends Deceive. Without it, Talon is exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Shaco", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 64, "end": 71 },
+            { "kind": "champion", "key": "Talon", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Talon:Shaco:2",
+          "text": "Shaco is fragile, so jump onto him with Noxian Diplomacy right after he reveals himself, and finish with Blade's End.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-Q", "start": 40, "end": 56 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 105,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75f0527ce91f5b4dd164fcb3055085e811cd6f5669582a5bd2ab0a155f0883f8",
+      "tips": [
+        {
+          "id": "jungle:Talon:Shyvana:0",
+          "text": "Fight Shyvana before she has Dragon Fury for Dragon's Descent; she is far weaker as a human than as a dragon.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Talon:Shyvana:1",
+          "text": "Hit her with Rake, then Noxian Diplomacy, then a basic attack. Three Wound stacks make Blade's End bleed her.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Talon-Q", "start": 24, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 87,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Talon:Shyvana:2",
+          "text": "Use Rake from range and stay out of melee. It leaves her slowed, which cuts down her chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Talon:Shyvana:3",
+          "text": "Hold Shadow Assault to escape if she turns into a dragon on you. Her Dragon's Descent flight makes her hard to outrun otherwise.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 69, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Talon:Shyvana:4",
+          "text": "Vault over a wall with Assassin's Path to escape or to reach her flank when she is farming camps.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c65ee8f9e8dd29a1a6b2682af24fc44872d292f52541f855b65f6ef01da1349b",
+      "tips": [
+        {
+          "id": "jungle:Talon:Skarner:0",
+          "text": "Avoid Skarner's Ixtal's Impact when you are near walls. Jump away or use Shadow Assault before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Skarner-E", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Talon-R", "start": 73, "end": 87 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Talon:Skarner:1",
+          "text": "Keep Shadow Assault for escaping Skarner's Impale or for a quick kill. Without it you are an easy target for him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Skarner-R", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Talon:Skarner:2",
+          "text": "Hit squishy targets, not Skarner. Use Rake and Noxian Diplomacy on his laners and avoid long fights with him.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Talon-W", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Talon-Q", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0fe579298d3aed7339a795d3a22c969d482e12a4d36aa49885160b9135f526ea",
+      "tips": [
+        {
+          "id": "jungle:Talon:Sylas:0",
+          "text": "Fight Sylas when Hijack is on cooldown, or when your own ultimate is ready, so he cannot turn Shadow Assault against you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-R", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Talon-R", "start": 94, "end": 108 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Talon:Sylas:1",
+          "text": "Do not trade into Sylas when he is low on health; Kingslayer heals him back up and can turn the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Talon:Sylas:2",
+          "text": "Hit Sylas with Rake, then Noxian Diplomacy, then a basic attack. Three Wound stacks make him bleed hard.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Talon-W", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Talon-Q", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Talon:Sylas:3",
+          "text": "Stay out of line with Abduct. If he stuns you, he follows with a knock up and a burst of damage.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Talon:Sylas:4",
+          "text": "Use Assassin's Path to jump over a wall when you need to dodge his Chain Lash or break away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 67, "end": 77 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b902c152bda595bd794003d9cebca93f6a590091b75af17589fba708285cd76",
+      "tips": [
+        {
+          "id": "jungle:Talon:Trundle:0",
+          "text": "Do not fight Trundle on his Frozen Domain. Pull the fight away from it or wait until it fades.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Trundle-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Talon:Trundle:1",
+          "text": "Leave Pillar of Ice quickly, or vault out with Assassin's Path. Staying in it keeps you slowed and easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Talon-E", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Talon:Trundle:2",
+          "text": "Burst Trundle fast with your abilities and Blade's End. A long fight lets him heal and shrug off your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 43,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Talon:Trundle:3",
+          "text": "Keep Shadow Assault ready to escape if Trundle lands Subjugate on you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Trundle", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Trundle-R", "start": 53, "end": 62 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Talon:Trundle:4",
+          "text": "Chomp lowers your Attack Damage, so avoid trading autos with Trundle right after he hits you with it.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Trundle", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f249220e0ebba406686d8f44b2732e1f833d11f37f831c0bf2ce786ee04d705a",
+      "tips": [
+        {
+          "id": "jungle:Talon:Udyr:0",
+          "text": "Poke Udyr with Rake from range, since he has few ranged options. Do not stay in melee range of him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Udyr", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Talon-W", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Talon:Udyr:1",
+          "text": "Save Shadow Assault to escape when Udyr's stun lands or he catches you; invisibility and move speed get you out.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Udyr", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Talon:Udyr:2",
+          "text": "Jump away from Udyr with Assassin's Path over a wall when he closes in. Being slowed by his storm makes running away on foot hard.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Talon-E", "start": 25, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Talon:Udyr:3",
+          "text": "Wait for Udyr to spend his shield before you burst him with Noxian Diplomacy and your Wound stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Talon-Q", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49452428764ea587af865f802ff13c3bedea7fdc13b21b057d6247f5909963fd",
+      "tips": [
+        {
+          "id": "jungle:Talon:Vi:0",
+          "text": "Don't brawl with Vi in extended fights; her third hit in a row cuts your Armor and speeds her up. Trade quickly and leave.",
+          "refs": [],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Talon:Vi:1",
+          "text": "Throw Rake as Vi closes in; the returning blades leave her slowed, so Vault Breaker has a harder time catching you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 6, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Vi-Q", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Talon:Vi:2",
+          "text": "Use Assassin's Path over a wall when Vi starts charging Vault Breaker. She can only punch in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Vi-Q", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Talon:Vi:3",
+          "text": "Save Shadow Assault to escape when Vi ults you. Her Cease and Desist cannot be stopped, so don't waste it trying to block the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Vi-R", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Talon:Vi:4",
+          "text": "Land three Wound stacks on Vi, then attack her so Blade's End bleeds her. Kill her quickly before her shield and Attack Speed come online.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 50,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bf080df22758c51ff99dada89244ca0ef58d7ccadbab8050cf4fc4284e18a6f9",
+      "tips": [
+        {
+          "id": "jungle:Talon:Viego:0",
+          "text": "Fight Viego before he takes a kill. Once a Mist Wraith appears he can possess a dead champion and heal, so avoid fights where he finishes someone off.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Talon:Viego:1",
+          "text": "Use Rake and Noxian Diplomacy in the same fight to build Wound stacks, then attack once for the bleed. Do it when Viego has no way to stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Viego", "start": 114, "end": 119 },
+            { "kind": "keyword", "key": "stunned", "start": 134, "end": 138 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Talon:Viego:2",
+          "text": "Hold Shadow Assault to escape if Viego lands his Spectral Maw. Becoming invisible lets you slip away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Viego-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Talon:Viego:3",
+          "text": "Use Assassin's Path to jump over jungle walls and cut off Viego or chase him. Each wall can only be vaulted occasionally, so pick your walls carefully.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "87c353288e9760582e30ef2757779d46bc9b4dbd462c92f31b7db92436073efb",
+      "tips": [
+        {
+          "id": "jungle:Talon:Volibear:0",
+          "text": "Stay out of a long fight with Volibear. He gets tougher and heals as he keeps hitting, so burst him and leave.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Talon:Volibear:1",
+          "text": "Hit Volibear with Rake, then Noxian Diplomacy, then an attack. Three Wound stacks make Blade's End bleed him for heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Talon-W", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Talon-Q", "start": 29, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 87,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Talon:Volibear:2",
+          "text": "Use Rake to keep Volibear slowed when he runs at you; the slow comes from the blades returning.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Volibear", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Talon:Volibear:3",
+          "text": "Jump away with Assassin's Path when Volibear's Thundering Smash is active. It stuns him onto you, so do not let him reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Volibear", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 47, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Talon:Volibear:4",
+          "text": "Save Shadow Assault to escape if Volibear lands on you after his leap. It makes you invisible and fast.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Volibear", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "94f78a869533fc3d4ab3cf4ead3c524d33c6c5f469e44f8f77298e5916223395",
+      "tips": [
+        {
+          "id": "jungle:Talon:Warwick:0",
+          "text": "Pick a fight when Warwick is above half health; below it, Eternal Hunger heals him with every attack.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 18, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 58,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Talon:Warwick:1",
+          "text": "Stay healthy; Blood Hunt lets Warwick sense you below half health and run you down fast.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "Warwick", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Talon:Warwick:2",
+          "text": "Use Shadow Assault to get away when Warwick locks on, since he follows you through Assassin's Path.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Warwick", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Talon-E", "start": 83, "end": 98 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Talon:Warwick:3",
+          "text": "Do not attack right into Primal Howl; wait for it to end, then jump in with Noxian Diplomacy.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Talon-Q", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Talon:Warwick:4",
+          "text": "Use Rake to slow Warwick as he closes in, so he has a harder time reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Warwick", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d5ea3a0495210e58ca46de9cc0d5de38475f4ed1cfb5a207b2c0deb505ebfbd0",
+      "tips": [
+        {
+          "id": "jungle:Talon:XinZhao:0",
+          "text": "Do not jump onto Xin Zhao when Crescent Guard is ready; it knocks you back and he takes no damage from your allies outside the sweep.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Talon:XinZhao:1",
+          "text": "Open on Xin Zhao with Rake from range, then fight when he has to chase you; his Audacious Charge closes gaps fast, so stay near an exit.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Talon-W", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Talon:XinZhao:2",
+          "text": "Break his combo: when his third strike is coming, move out so Three Talon Strike does not knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 62, "end": 80 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Talon:XinZhao:3",
+          "text": "Use Shadow Assault to escape once Xin Zhao has you slowed or pinned; keep it for that rather than starting fights.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 34, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b79c3d4c08c3ff40147ccd8d14dcdf8a54e1d76349e52619f0e661bddb65251b",
+      "tips": [
+        {
+          "id": "jungle:Talon:Zac:0",
+          "text": "Stay out of the goo Zac drops; if an enemy steps on a chunk it is destroyed, so walk over his chunks to deny his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 20, "end": 23 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Talon:Zac:1",
+          "text": "Hit him with Rake before you jump in, so you can start stacking Wound and slow him as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Talon:Zac:2",
+          "text": "Keep Shadow Assault ready as your way out; without it Talon has a hard time getting away from Zac's crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 54, "end": 59 },
+            { "kind": "champion", "key": "Zac", "start": 94, "end": 97 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Talon:Zac:3",
+          "text": "When Zac splits into bloblets, kill them all or he comes back. Use Rake on the bloblets to hit several at once.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Talon-W", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Talon:Zac:4",
+          "text": "Do not stand where Zac can land Stretching Strikes on you and a teammate or minion; he pulls you together and you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Zac-Q", "start": 32, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 118, "end": 125 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Talon:Zac:5",
+          "text": "Use Assassin's Path over a wall to escape or reposition when Zac starts charging Elastic Slingshot.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zac", "start": 61, "end": 64 },
+            { "kind": "ability", "key": "Zac-E", "start": 81, "end": 98 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "77d90030e04e905a4296701f1c0644121d7a2fdbf0145249705abd8c172ceb4f",
+      "tips": [
+        {
+          "id": "jungle:Talon:Zed:0",
+          "text": "Save Shadow Assault for when Zed marks you or when you need to leave. Going invisible helps you get away from his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Talon:Zed:1",
+          "text": "Hit Zed with Rake, then Noxian Diplomacy, then a basic attack to finish him with Blade's End. Do it when his Living Shadow is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Talon-W", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Talon-Q", "start": 24, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 81,
+              "end": 92
+            },
+            { "kind": "ability", "key": "Zed-W", "start": 109, "end": 122 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Talon:Zed:2",
+          "text": "Use Rake to keep Zed slowed when he tries to run or swap back. His damage depends on staying close.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Zed", "start": 17, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Talon:Zed:3",
+          "text": "Use Assassin's Path to get behind Zed and cut off his escape. You can also vault away when he shows up on you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 34, "end": 37 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9daef846fe19a088cf56eb569dbeb6c683434104a9924dd2856f8b65e3c12341",
+      "tips": [
+        {
+          "id": "jungle:Talon:Zyra:0",
+          "text": "Jump on Zyra with Noxian Diplomacy when her Grasping Roots is down; she has little to stop you, and she dies fast once you reach her.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Talon-Q", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Zyra-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Talon:Zyra:1",
+          "text": "Step over her seeds before they turn into plants. If she grows one next to you, back off rather than fight it.",
+          "refs": [],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Talon:Zyra:2",
+          "text": "Use Shadow Assault to slip away after Zyra hits you with Stranglethorns or Grasping Roots, or to get past her plants.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zyra", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Zyra-R", "start": 57, "end": 71 },
+            { "kind": "ability", "key": "Zyra-E", "start": 75, "end": 89 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Talon:Zyra:3",
+          "text": "Open with Rake, then Noxian Diplomacy and a basic attack, so you reach three Wound stacks and Blade's End bleeds her.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Talon-Q", "start": 21, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 94,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cbd8620531a0c2fdc30292c250ab50c2e5ba8890eba5ed4bf468b6699943e01e",
+      "tips": [
+        {
+          "id": "middle:Talon:Ahri:0",
+          "text": "Stay behind minions so Charm cannot reach you; it stops at the first enemy it hits. Ahri's damage drops a lot when she misses it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Talon:Ahri:1",
+          "text": "Go in once Charm is on cooldown. Leap with Noxian Diplomacy, then use Rake and an attack to finish the fight before it comes back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Talon-Q", "start": 43, "end": 59 },
+            { "kind": "ability", "key": "Talon-W", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Talon:Ahri:2",
+          "text": "Hit Ahri with three abilities and then attack her to make her bleed heavily. Use Noxian Diplomacy and both passes of Rake to build the stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Talon-Q", "start": 81, "end": 97 },
+            { "kind": "ability", "key": "Talon-W", "start": 117, "end": 121 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Talon:Ahri:3",
+          "text": "Use Shadow Assault to escape after a trade or to go in. Ahri has trouble hitting you while you are invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ahri", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Talon:Ahri:4",
+          "text": "Roam with Assassin's Path while Ahri is pushed in. Hop over walls to reach the side lanes before she can follow.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Ahri", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Talon:Ahri:5",
+          "text": "Ahri is weaker when Spirit Rush is down, so pick fights then. Her escape is gone and she cannot easily get away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-R", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3b484878b62dccb15c547264f9395c16706c9b174d5a853e5ba6645aac13c484",
+      "tips": [
+        {
+          "id": "middle:Talon:Akali:0",
+          "text": "Aim Rake at Akali at long range, so the returning blades slow her. Then back off before she can trade.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Akali", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Talon:Akali:1",
+          "text": "Hit Akali with your spells, then attack her to trigger Blade's End. This is how you burst her down.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 55,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Talon:Akali:2",
+          "text": "Hold Shadow Assault for when Akali goes all in, since it lets you escape her ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Talon:Akali:3",
+          "text": "Hit Akali's smoke with spells; area damage reveals her briefly. Then jump on her with Noxian Diplomacy.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Talon-Q", "start": 86, "end": 102 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "middle:Talon:Akali:4",
+          "text": "Push the wave and use Assassin's Path to roam while Akali is low on Energy. She trades poorly then.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 22, "end": 37 },
+            { "kind": "champion", "key": "Akali", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ceeafbc79cc5d286b533172523c3cead448458c167f2fa628e9b88dc1739e18e",
+      "tips": [
+        {
+          "id": "middle:Talon:Anivia:0",
+          "text": "Dodge Flash Frost by staying out of its line, and do not jump in while it is ready; the stun at its end can ruin your fight.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Talon:Anivia:1",
+          "text": "Use Assassin's Path to go around a Crystallize wall instead of walking into it, and attack from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Anivia-W", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Talon:Anivia:2",
+          "text": "Anivia's egg from Rebirth cannot act, so finish her with burst before she can use it, or wait it out and hit it once she returns.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 18,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Talon:Anivia:3",
+          "text": "Do not stand in Glacial Storm for long; it slows you. Roam instead when Anivia is busy pushing the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "champion", "key": "Anivia", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Talon:Anivia:4",
+          "text": "Go in with Noxian Diplomacy and Rake, then attack to trigger Blade's End. Burst Anivia when she has used Flash Frost.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 11, "end": 27 },
+            { "kind": "ability", "key": "Talon-W", "start": 32, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 61,
+              "end": 72
+            },
+            { "kind": "champion", "key": "Anivia", "start": 80, "end": 86 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4adefa1e19ad105c0e5b8104f65608f53b687db894183855bc6b78558ebe4377",
+      "tips": [
+        {
+          "id": "middle:Talon:Aurora:0",
+          "text": "Use Rake on Aurora to slow her, then jump in with Noxian Diplomacy; both hits count toward Wound.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Aurora", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Talon-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Talon:Aurora:1",
+          "text": "Stay out of a straight line from Aurora when you can; The Weirding slows you and she hops back out of your reach.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Aurora-E", "start": 54, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Talon:Aurora:2",
+          "text": "Aurora can slip away with Across the Veil. Save Shadow Assault to chase her down, since the extra move speed catches her.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Talon-R", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Talon:Aurora:3",
+          "text": "Do not follow Aurora into the ring from Between Worlds. Enemies who touch its edge are slowed and she can hop across it.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Aurora-R", "start": 40, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Talon:Aurora:4",
+          "text": "Hit three Wound stacks, then attack her to make her bleed. Burst her down before her recast of Twofold Hex hurts you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "584d0593abd2a8ca57aedf0c59a5414846c986bd97a22df52d406d9be097e3ab",
+      "tips": [
+        {
+          "id": "middle:Talon:Cassiopeia:0",
+          "text": "Face away from Cassiopeia or stay out of her cone when she casts Petrifying Gaze. Otherwise you are stunned and killed.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 65,
+              "end": 80
+            },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Talon:Cassiopeia:1",
+          "text": "Do not walk into Miasma. It slows you and blocks Assassin's Path while you stand in it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 17,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Talon-E", "start": 49, "end": 64 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Talon:Cassiopeia:2",
+          "text": "Dodge Noxious Blast by moving as it lands. It is slow to explode, and each hit makes Twin Fang stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 85, "end": 94 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Talon:Cassiopeia:3",
+          "text": "Hold Shadow Assault until her Petrifying Gaze is spent. Then dive her with Noxian Diplomacy and Rake.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 30,
+              "end": 45
+            },
+            { "kind": "ability", "key": "Talon-Q", "start": 75, "end": 91 },
+            { "kind": "ability", "key": "Talon-W", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "20f0e41cb21c76c6ec0e061f9e84d0ff073ec3bc115fefe80a5c001d4c9783a1",
+      "tips": [
+        {
+          "id": "middle:Talon:Fizz:0",
+          "text": "Hold Noxian Diplomacy until Fizz has used Playful; while he is untargetable it will not hit him, and it is your main way to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Talon:Fizz:1",
+          "text": "Land Rake on Fizz when he walks up to trade; the returning blades leave him slowed and add stacks of Blade's End.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Fizz", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 101,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Talon:Fizz:2",
+          "text": "Fizz is hard to burst when his spells are ready. Bait out Playful, then jump in with Noxian Diplomacy and finish with a Blade's End attack.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Talon-Q", "start": 85, "end": 101 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 120,
+              "end": 131
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Talon:Fizz:3",
+          "text": "Keep Shadow Assault ready for the fight. Its invisibility lets you escape when Fizz's Chum the Waters is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Fizz", "start": 79, "end": 83 },
+            { "kind": "ability", "key": "Fizz-R", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Talon:Fizz:4",
+          "text": "Move out of the way of the shark when Chum the Waters hits you, or leave with Assassin's Path over a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 38, "end": 53 },
+            { "kind": "ability", "key": "Talon-E", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cd37cd6f763ae9489d460d9e4f88e140499aa818693aa5900176e49f989e8ed7",
+      "tips": [
+        {
+          "id": "middle:Talon:Malzahar:0",
+          "text": "Wait until Void Shift has been used up before you jump on Malzahar; while it is active he takes far less damage and ignores your Rake slow.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "Talon-W", "start": 129, "end": 133 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Talon:Malzahar:1",
+          "text": "Stay out of the line between Call of the Void's portals; being silenced in the middle of your combo leaves you helpless.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Talon:Malzahar:2",
+          "text": "Do not walk into Malzahar's reach with Shadow Assault down; Nether Grasp suppresses you and lets him finish the job.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Talon-R", "start": 39, "end": 53 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 60, "end": 72 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Talon:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions; when they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Talon:Malzahar:4",
+          "text": "Use Assassin's Path to roam while Malzahar is pushing, and punish him when he has spent his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Malzahar", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "718398e7b0f5cc76225b39f938af822bf979d90068a841ccd9b017ebfb56ff62",
+      "tips": [
+        {
+          "id": "middle:Talon:Orianna:0",
+          "text": "Dodge Command: Attack, then jump in with Noxian Diplomacy while the Ball is far from Orianna and the ability is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Talon-Q", "start": 41, "end": 57 },
+            { "kind": "champion", "key": "Orianna", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Talon:Orianna:1",
+          "text": "Do not dive in while Orianna's Command: Shockwave is ready. It stuns you and pulls you into her Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Orianna-R", "start": 31, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Talon:Orianna:2",
+          "text": "Keep Shadow Assault for escaping after a trade. Its speed and invisibility get you out of her slows.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Talon:Orianna:3",
+          "text": "Hit her with Rake and Noxian Diplomacy to build Wound stacks, then attack to make her bleed.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Talon-Q", "start": 22, "end": 38 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "506cc578c7d27a75e965575caf8d87df2870417e754479112fd8697552a347d9",
+      "tips": [
+        {
+          "id": "middle:Talon:Ryze:0",
+          "text": "Stay out of Ryze's range when you can. Once he has Flux on you, his Overload and Rune Prison hit much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 68, "end": 76 },
+            { "kind": "ability", "key": "Ryze-W", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Talon:Ryze:1",
+          "text": "Don't jump in with Noxian Diplomacy while Ryze has Rune Prison ready. If you get rooted, you can't escape.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Ryze", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Ryze-W", "start": 51, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Talon:Ryze:2",
+          "text": "Use Rake to hit Ryze and the minions near him. It slows him on its return, and its hits build Wound stacks on him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Ryze", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Talon:Ryze:3",
+          "text": "Get to Ryze fast with Noxian Diplomacy, then finish with an attack once you have three Wound stacks on him.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Talon-Q", "start": 22, "end": 38 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Talon:Ryze:4",
+          "text": "Roam with Assassin's Path when Ryze pushes the wave. Ryze can follow with Realm Warp, but you can still win a side lane first.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Ryze", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Ryze", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Ryze-R", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Talon:Ryze:5",
+          "text": "Stun or slow Ryze while his Realm Warp is charging, and the portal cancels. Rake's slow can help you do it.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Ryze-R", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Talon-W", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2a2a587ff73fe7a845020d10318bae662a9b0a9a9fc1517275e8ce2d6de4942b",
+      "tips": [
+        {
+          "id": "middle:Talon:Sylas:0",
+          "text": "Hit Sylas with Rake and then a basic attack. Two Rake passes and Noxian Diplomacy stack Wound quickly, and the bleed finishes him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Talon-W", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Talon-W", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Talon-Q", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Talon:Sylas:1",
+          "text": "Fight Sylas while he is healthy and has no Kingslayer ready. Its heal is small at high health, so he can't win a long trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Talon:Sylas:2",
+          "text": "Don't finish Sylas with a bare minimum of damage left. When he is low, Kingslayer heals him a lot, so burst him down in one go.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Talon:Sylas:3",
+          "text": "Stay out of a straight line to Sylas when Abscond is ready. Abduct stuns you and pulls him onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Talon:Sylas:4",
+          "text": "Use Shadow Assault to leave or to chase once Sylas has used his key spells. Your invisibility makes it hard for him to answer.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Talon:Sylas:5",
+          "text": "Save Assassin's Path for dodging or escaping a Sylas fight. Vaulting a wall can break his Chain Lash and Abduct lines.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 90, "end": 100 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cc5c233c16793d38145b4ca1c702518fbe1848469293b029b83cbc2a78d1b8a4",
+      "tips": [
+        {
+          "id": "middle:Talon:TwistedFate:0",
+          "text": "Don't jump onto Twisted Fate while he is shuffling for a Gold Card; the stun will cost you your fight.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Talon:TwistedFate:1",
+          "text": "Stay out of line of Wild Cards when you walk up to the wave. Twisted Fate will poke you down if you let him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 20,
+              "end": 30
+            },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 61,
+              "end": 73
+            },
+            { "kind": "keyword", "key": "poke", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Talon:TwistedFate:2",
+          "text": "Put Rake on Twisted Fate to slow him, then jump in with Noxian Diplomacy once his card is used up.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 4, "end": 8 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Talon-Q", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Talon:TwistedFate:3",
+          "text": "When Twisted Fate uses Destiny, expect him to arrive from the side; leave the lane or watch the map before he arrives.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Talon:TwistedFate:4",
+          "text": "Roam with Assassin's Path while Twisted Fate is pushed up, but know that his Destiny will reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 10, "end": 25 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 32,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 77,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "92d62e92653d899b3c75d4b8f79d849ef734de669ae24f50d54da00cfc884440",
+      "tips": [
+        {
+          "id": "middle:Talon:Viktor:0",
+          "text": "Dodge Gravity Field's circle or wait it out; if you stay inside, you get slowed and then stunned, and Viktor kills you from there.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 },
+            { "kind": "champion", "key": "Viktor", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Talon:Viktor:1",
+          "text": "Leap in with Noxian Diplomacy when Gravity Field is on cooldown. Viktor has much less to stop you then.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 13, "end": 29 },
+            { "kind": "ability", "key": "Viktor-W", "start": 35, "end": 48 },
+            { "kind": "champion", "key": "Viktor", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "middle:Talon:Viktor:2",
+          "text": "Hit Viktor with Rake and Noxian Diplomacy, then attack him. That builds Wound to the third stack, and his next hit makes him bleed.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Talon-W", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Talon-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Talon:Viktor:3",
+          "text": "Save Shadow Assault for escaping or finishing a kill. Without it, Viktor's Arcane Storm will chase you down.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viktor", "start": 66, "end": 72 },
+            { "kind": "ability", "key": "Viktor-R", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Talon:Viktor:4",
+          "text": "Step out of Hextech Ray's line early. It is slow, so sidestep it and then close in on Viktor.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Talon:Viktor:5",
+          "text": "Roam over walls with Assassin's Path when you push the wave. Viktor is slow to follow you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Viktor", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bebb4178d73fcefb2616cc5ffa78f13f9326ed2f2979db67b8688e5e31bcec51",
+      "tips": [
+        {
+          "id": "middle:Talon:Yasuo:0",
+          "text": "Hold Rake until Yasuo steps up to trade; it hurts on the way out and on the way back, and the return slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Yasuo", "start": 16, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Talon:Yasuo:1",
+          "text": "Yasuo's Wind Wall blocks your Rake blades, so throw Rake after it fades or from an angle around it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Talon-W", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Talon-W", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Talon:Yasuo:2",
+          "text": "Land two abilities, then a basic attack, to make Blade's End bleed him. Pick him as your single target and burst him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 49,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Talon:Yasuo:3",
+          "text": "Use Noxian Diplomacy from point-blank range so it critically strikes, then follow with Rake.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Talon-W", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Talon:Yasuo:4",
+          "text": "Keep Shadow Assault ready as your escape. Yasuo's Last Breath needs an airborne target, so be careful around knock-ups from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b00017c7f123c8abf4227629d682a583367cb90e084b536c9e21d3ea203887ce",
+      "tips": [
+        {
+          "id": "middle:Talon:Yone:0",
+          "text": "Trade with Rake when Yone walks up to last-hit; the blades hurt on the way out and again on the way back, and the return slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 11, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 126 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Talon:Yone:1",
+          "text": "Fight when Spirit Cleave is on cooldown, since its shield makes your burst weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-W", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Talon:Yone:2",
+          "text": "Hit Yone with your abilities to stack Wound, then finish with a basic attack so he bleeds heavily.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 4, "end": 8 }],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Talon:Yone:3",
+          "text": "Use Noxian Diplomacy up close for a critical hit, then roam. Yone is slow to follow you out of lane.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Talon:Yone:4",
+          "text": "Stay away from Yone when Fate Sealed is ready. It can stun you and pull you to him, so keep Shadow Assault ready as your escape.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Yone-R", "start": 25, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Talon-R", "start": 92, "end": 106 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bd422f8f90e3a6399765b81f293efa40337fb136ced504bb49c8ff5ad5351036",
+      "tips": [
+        {
+          "id": "middle:Talon:Zed:0",
+          "text": "Hit Zed with Rake when he walks up to trade; the returning blades slow him, so he can't easily chase or flee.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Talon-W", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Talon:Zed:1",
+          "text": "Use Assassin's Path over a wall to flank Zed, then jump in with Noxian Diplomacy in melee range for its stronger hit.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 41, "end": 44 },
+            { "kind": "ability", "key": "Talon-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Talon:Zed:2",
+          "text": "Hold Shadow Assault for when Zed uses Death Mark on you; it lets you turn invisible and run, or fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Zed-R", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Talon:Zed:3",
+          "text": "Land three hits from your abilities, then attack once, so Blade's End bleeds Zed for heavy damage before he can burst you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 58,
+              "end": 69
+            },
+            { "kind": "champion", "key": "Zed", "start": 77, "end": 80 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Talon:Zed:4",
+          "text": "Zed's Shadow Slash only slows you if his shadow hits you, so stay out of range of both his shadow and him.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-E", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,918 @@
+{
+  "schemaVersion": 1,
+  "champion": "Rengar",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "d6f4c9848371f8662543501524b39fd4d48e21bc09581e8c655ad7d64d6f0943",
+      "tips": [
+        {
+          "id": "jungle:Rengar:general:0",
+          "text": "Cast Savagery, Battle Roar and Bola Strike in any order to fill Ferocity, then use your next ability for its empowered effect.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-Q", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Rengar-W", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Rengar-E", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Rengar:general:1",
+          "text": "Walk through brush toward your target. Unseen Predator makes your attack leap at them from far away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 39,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Rengar:general:2",
+          "text": "Save the empowered Bola Strike for a runner; it roots them instead of slowing them.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Rengar:general:3",
+          "text": "Use empowered Battle Roar when you are stunned or held down; it cleanses crowd control and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Rengar:general:4",
+          "text": "Aim Bola Strike down a line. The bola keeps flying after a hit, but it only affects the first enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Rengar:general:5",
+          "text": "Use Thrill of the Hunt to find a target far away, then leap onto them. It shows you the nearest enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Rengar:general:6",
+          "text": "Leap first, then use your abilities, because Thrill of the Hunt ends if you cast anything except Savagery.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 45, "end": 63 },
+            { "kind": "ability", "key": "Rengar-Q", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Rengar:general:7",
+          "text": "Battle Roar heals you based on damage you recently took, so use it right after a fight starts. It also hurts nearby monsters.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Rengar:combo:0",
+          "name": "Leap Savagery reset",
+          "category": "trick",
+          "sequence": ["attack", { "kind": "ability", "key": "Rengar-Q" }],
+          "when": "Leaping out of brush or ultimate onto a target and you want an immediate second hit.",
+          "whenRefs": [],
+          "text": "The leap puts the attack timer on cooldown at its start. Casting Q during the leap resets the timer, so a second attack follows as soon as the leap lands.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Rengar:combo:1",
+          "name": "Bola buffer",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Rengar-E" },
+            { "kind": "ability", "key": "Rengar-Q" },
+            { "kind": "ability", "key": "Rengar-W" }
+          ],
+          "when": "Casting Bola Strike when you want your other abilities to come out at once.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 8, "end": 19 }
+          ],
+          "text": "Press Q or W during the bola cast time and Rengar buffers them. They fire as soon as the bola leaves, so the follow-up is instant.",
+          "textRefs": [
+            { "kind": "champion", "key": "Rengar", "start": 43, "end": 49 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "d05a7d060e63364a8c6d3c40370e59d53b80634ff16812716f0ff1a16bf3455d",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Graves:0",
+          "text": "Leap on Graves from brush with Unseen Predator. Graves is hurt most when you're close to him, so stay on him.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 31,
+              "end": 46
+            },
+            { "kind": "champion", "key": "Graves", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Rengar:Graves:1",
+          "text": "Dodge Graves' Smoke Screen. If you land inside it, walk out; leaving removes the slow right away.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Rengar:Graves:2",
+          "text": "Save your empowered Bola Strike to root Graves after he uses Quickdraw. He can't dash away from the root.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Graves", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Graves-E", "start": 61, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Rengar:Graves:3",
+          "text": "Use Battle Roar to heal back damage from Graves' shotgun hits. His shotgun hurts most at point blank.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c5013a5923293d471cc0423faa02a547151b1a4989ba6df46c44a78ef04f4b4a",
+      "tips": [
+        {
+          "id": "jungle:Rengar:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan's Demacian Standard and him, or you will be knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 38, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Rengar:JarvanIV:1",
+          "text": "Save the empowered Bola Strike to root Jarvan when he tries to run or dive.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Rengar:JarvanIV:2",
+          "text": "Use Battle Roar at full Ferocity to cleanse crowd control after Jarvan's combo lands.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Rengar:JarvanIV:3",
+          "text": "Be wary of Cataclysm: the terrain traps you inside, but your leap can't cross it unless you are already outside.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 11, "end": 20 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "cde7041b359b0e0a0f0e71842bda7eff7ef296f375b167a6f084bfe3d610545a",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Kayn:0",
+          "text": "Stay out of Kayn's Blade's Reach when you go in; it slows you hard and lets him mark you for Umbral Trespass.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Kayn-W", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Kayn-R", "start": 93, "end": 108 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Rengar:Kayn:1",
+          "text": "Save an empowered Battle Roar for when you get stunned or slowed. It cleanses you, so you can keep chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 18, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Rengar:Kayn:2",
+          "text": "Hit Kayn with an empowered Bola Strike as he escapes. It roots him, so he can't slip away.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rengar-E", "start": 27, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Rengar:Kayn:3",
+          "text": "Approach through brush so Unseen Predator leaps you onto Kayn before he can react.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Kayn", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e66064dcdd8a5f25c8e29d6b95691608e3c8cc00171e594c94666519a123a508",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Khazix:0",
+          "text": "Hit Kha'Zix with Bola Strike when he leaps in or tries to run; the bola slows him, or roots him at full Ferocity.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Rengar-E", "start": 17, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Rengar:Khazix:1",
+          "text": "Keep your Ferocity full before you commit; an empowered Savagery and Bola Strike beat his burst in a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-Q", "start": 56, "end": 64 },
+            { "kind": "ability", "key": "Rengar-E", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Rengar:Khazix:2",
+          "text": "Use an empowered Battle Roar to cleanse yourself when he locks you down mid-fight.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Rengar:Khazix:3",
+          "text": "Wait for his burst to land, then cast Battle Roar; it heals you for part of the damage you just took.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Rengar:Khazix:4",
+          "text": "Fight near your allies so you don't get isolated; Kha'Zix hits an isolated target far harder.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 48 },
+            { "kind": "champion", "key": "Khazix", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "isolated", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Rengar:Khazix:5",
+          "text": "Chase through brush so your leaping attack closes the gap when he escapes with Leap.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Rengar:Khazix:6",
+          "text": "Use Thrill of the Hunt to find him; it reveals the nearest enemy champion even when he turns invisible with Void Assault.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 4, "end": 22 },
+            { "kind": "ability", "key": "Khazix-R", "start": 108, "end": 120 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3667787748731a991698bf8954881c3412bc57e28ebc56b3c862da5d59534ea8",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Kindred:0",
+          "text": "Kindred is fragile, so hunt her in brush with Unseen Predator and leap onto her before she can vault away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 46,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Rengar:Kindred:1",
+          "text": "Land an empowered Bola Strike on Kindred to root her; she can't vault away with Dance of Arrows while rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Kindred", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 80, "end": 95 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Rengar:Kindred:2",
+          "text": "Fight her away from Wolf's Frenzy; inside that area Dance of Arrows comes back much sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Rengar:Kindred:3",
+          "text": "Do not commit to a kill while Lamb's Respite is active; no one inside can die. Wait for it to end, then finish.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Rengar:Kindred:4",
+          "text": "Use Battle Roar at full Ferocity to clear crowd control, then keep chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c1cc2ca8cc5971518527c649627c1e7c2aa7c5c11c0c22b6fc4471854de14242",
+      "tips": [
+        {
+          "id": "jungle:Rengar:LeeSin:0",
+          "text": "Hold Bola Strike for Lee Sin's dash in; at full Ferocity it roots him instead of slowing.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Rengar:LeeSin:1",
+          "text": "Wait in brush so Unseen Predator lets you leap onto Lee Sin from far away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 17,
+              "end": 32
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Rengar:LeeSin:2",
+          "text": "Keep your Ferocity full before fighting Lee Sin; empowered Battle Roar also cleanses crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Rengar-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Rengar:LeeSin:3",
+          "text": "Dodge Sonic Wave if you can; once it hits, Lee Sin dashes to you with Resonating Strike.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Rengar:LeeSin:4",
+          "text": "Stay spread from your allies when Lee Sin has Dragon's Rage, since a kicked target knocks up others it hits.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 46, "end": 59 },
+            { "kind": "keyword", "key": "knocked-up", "start": 83, "end": 92 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "34240445be31829854a5996921ca81d35effc0ca92a70cdfaaa692e6b3aa1d60",
+      "tips": [
+        {
+          "id": "jungle:Rengar:MasterYi:0",
+          "text": "Jump on Yi from brush when his Alpha Strike is on cooldown; he cannot dodge you then.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Rengar:MasterYi:1",
+          "text": "Save your empowered Bola Strike for Yi; it roots him, and Highlander's slow immunity does nothing against it.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Rengar:MasterYi:2",
+          "text": "Do not count on a normal Bola Strike to slow Yi while Highlander is active.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 25, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Rengar:MasterYi:3",
+          "text": "Hit Yi a few times so he must spend mana on Meditate to heal. Battle Roar's damage also helps.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 44, "end": 52 },
+            { "kind": "ability", "key": "Rengar-W", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fde86456d4a321c8286211b8dc411b0a130694d728723762f4d13dad176140c4",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Naafiri:0",
+          "text": "Bola Strike roots Naafiri when Ferocity is full, so save it for when she dashes in or tries to escape. A rooted Naafiri can't get away.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "rooted", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 111 },
+            { "kind": "champion", "key": "Naafiri", "start": 112, "end": 119 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Rengar:Naafiri:1",
+          "text": "Wait for Naafiri to dash in with Eviscerate before you use Battle Roar. Cast it again at full Ferocity to cleanse crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Rengar-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Rengar:Naafiri:2",
+          "text": "Use Thrill of the Hunt to catch Naafiri alone. Leap on her and fight her away from her Packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Rengar:Naafiri:3",
+          "text": "Approach through brush so your leap lands first. Naafiri is fragile, so a quick burst can kill her before her Packmates matter.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9285d5dab15a864868898d768b92cc2d79af8a3f1df0f16d860e8d8c62cf14c5",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Nocturne:0",
+          "text": "Hold your empowered Bola Strike for when Nocturne has used Shroud of Darkness; a blocked cast is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 20, "end": 31 },
+            { "kind": "champion", "key": "Nocturne", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 59, "end": 77 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Rengar:Nocturne:1",
+          "text": "Bait the shield with a cheap ability first, then commit your full combo once it is gone.",
+          "refs": [],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Rengar:Nocturne:2",
+          "text": "Use Battle Roar after Nocturne's Unspeakable Horror lands to heal back damage; at full Ferocity it also cleanses crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 33, "end": 51 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Rengar:Nocturne:3",
+          "text": "Walk out of Unspeakable Horror's range or use a dash before the tether ends so you are not feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 12, "end": 30 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Rengar:Nocturne:4",
+          "text": "When Nocturne casts Paranoia, stay near your team; he will dash onto one target and you can't see far.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Rengar:Nocturne:5",
+          "text": "Duskbringer's trail shows Nocturne's path to you; don't fight him on it, since it boosts his speed and damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Nocturne", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9e160f59d85a418b935bc61d4d2826ddf751b6c87088a0263cf361e99055828b",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Shyvana:0",
+          "text": "Look for Shyvana when her Dragon Fury is low; she is weak and can't turn into a dragon.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 9, "end": 16 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Rengar:Shyvana:1",
+          "text": "Save an empowered Bola Strike for when Shyvana tries to run or fight; it roots her instead of slowing her.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Shyvana", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Rengar:Shyvana:2",
+          "text": "Use Battle Roar right after Shyvana hits you; it heals back some of the damage you just took.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Shyvana", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Rengar:Shyvana:3",
+          "text": "Try not to leap into Inferno Aegis; her shield and burst punish an attack straight into her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Rengar:Shyvana:4",
+          "text": "Use Thrill of the Hunt to catch Shyvana when she is alone and low on health, before she gets her dragon form.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Shyvana", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "isolated", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fd4ea4274d0605bb60215d03c4ab87e781a0cff55ca4696f6dcc40751be3e2dd",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Skarner:0",
+          "text": "Stay out of a straight line with Skarner when he has Ixtal's Impact ready. Being dragged into a wall stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Rengar:Skarner:1",
+          "text": "Save your fully charged Battle Roar to cleanse crowd control. Use it when Skarner catches you.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Skarner", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Rengar:Skarner:2",
+          "text": "Step away from Impale's line, or leap in only after it has been used. It is a long cooldown, so wait for it to be spent before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Rengar:Skarner:3",
+          "text": "Use a fully charged Bola Strike to root Skarner before he reaches you. He will have a hard time closing in.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Skarner", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "cfd61ca11bd88b89ddbaa3bafa11d1eff55c4e71bf35436d54361febada0f18f",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Sylas:0",
+          "text": "Wait for Sylas to spend Abduct before you go in; without it he has little way to get away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 9, "end": 14 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Rengar:Sylas:1",
+          "text": "Land Bola Strike at full Ferocity to root Sylas, then finish him before he can dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Rengar:Sylas:2",
+          "text": "Save Battle Roar for the moment you are crowd controlled at full Ferocity; it cleanses you and heals back damage you just took.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Rengar:Sylas:3",
+          "text": "Hit Sylas hard early, because Kingslayer heals him more as his health drops.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sylas-W", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Rengar:Sylas:4",
+          "text": "Approach through brush so Unseen Predator makes you leap onto Sylas before he can react.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Sylas", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "cc0218873a8d4bc04ecc5604b51037e4014210cae2f67afd7e4a4181d3331b58",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Talon:0",
+          "text": "Look for the marker over your target when Thrill of the Hunt is active; Talon can be revealed, so hunt him down.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 42, "end": 60 },
+            { "kind": "champion", "key": "Talon", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Rengar:Talon:1",
+          "text": "Use Bola Strike at full Ferocity to root Talon when he dashes in or tries to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "rooted", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Talon", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Rengar:Talon:2",
+          "text": "Wait until Shadow Assault is spent before you commit to a fight. Talon relies on it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "Talon", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Rengar:Talon:3",
+          "text": "Cast Battle Roar after Talon bursts you to heal back some of the damage; at full Ferocity it also cleanses crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Rengar:Talon:4",
+          "text": "Leap on Talon from brush with Unseen Predator when he walks near it; he may not expect it.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 8, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 30,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c29a7f88513ea6ee3e6175e5792f9c6afd8f943850f2dac445eaabb8bbeb8c5a",
+      "tips": [
+        {
+          "id": "jungle:Rengar:Viego:0",
+          "text": "Throw Bola Strike at Viego when he dashes in with Spectral Maw or tries to run; at full Ferocity it roots him instead of slowing.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Viego", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Viego-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Rengar:Viego:1",
+          "text": "Save an empowered Battle Roar for when Viego stuns you; at full Ferocity it cleanses crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Viego", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Rengar:Viego:2",
+          "text": "Hunt Viego when he has used Spectral Maw, since its long charge is hard to land on a target that jumps from brush.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Viego-W", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Rengar:Viego:3",
+          "text": "Kill Viego before he gets a takedown, or he gets a Mist Wraith, heals and turns into the dead champion. Burst him fast and avoid trading when allies are low.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Rengar:Viego:4",
+          "text": "Use Thrill of the Hunt to find Viego when he hides in the Mist from Harrowed Path; it reveals the nearest enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Viego", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Viego-E", "start": 68, "end": 81 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "466f76bab3d1408009bfab79480b62c7586ecf6b083ab98cde017e11682f2a23",
+      "tips": [
+        {
+          "id": "jungle:Rengar:XinZhao:0",
+          "text": "Fight Xin Zhao from range with Bola Strike; with full Ferocity it roots him, so he can't charge at you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Rengar-E", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Rengar:XinZhao:1",
+          "text": "Don't stand still when Xin Zhao's third Three Talon Strike is close; it knocks you up and breaks your combo.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Rengar:XinZhao:2",
+          "text": "Use Battle Roar at full Ferocity to cleanse crowd control, and it also heals back damage you just took.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Rengar:XinZhao:3",
+          "text": "Don't commit while Crescent Guard is up. Xin Zhao takes no damage from enemies outside its sweep, so wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 19, "end": 33 },
+            { "kind": "champion", "key": "XinZhao", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

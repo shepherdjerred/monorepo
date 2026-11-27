@@ -1,0 +1,3723 @@
+{
+  "schemaVersion": 1,
+  "champion": "Cassiopeia",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "586dca01d5a1cb0318053574b1a612bd938d427010c3751655defc9c8f380def",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:general:0",
+          "text": "Aim Noxious Blast slightly ahead of where the enemy is walking, because it explodes after a short delay. Hitting a champion also makes you faster for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Cassiopeia:general:1",
+          "text": "Follow Noxious Blast with Twin Fang while the enemy is still poisoned. The poisoned hit does much more damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:general:2",
+          "text": "Use Twin Fang on minions only to finish them off. A kill refunds its mana, and the heal from minions is small.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Cassiopeia:general:3",
+          "text": "Throw Miasma at an enemy's escape path. It slows them and stops dashes and other movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 6, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Cassiopeia:general:4",
+          "text": "Wait for the enemy to face you before casting Petrifying Gaze. Enemies facing away are only slowed, not stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 46,
+              "end": 61
+            },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Cassiopeia:general:5",
+          "text": "Use Twin Fang on a poisoned enemy you have stunned with Petrifying Gaze. They can't move, so it's a safe, high-damage follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Cassiopeia:general:6",
+          "text": "Kite while you fight. Twin Fang doesn't interrupt your movement, so keep walking between casts and stay out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Cassiopeia:combo:0",
+          "name": "Flash Petrifying Gaze",
+          "category": "trick",
+          "sequence": [
+            { "kind": "summoner-spell", "key": "2202" },
+            { "kind": "ability", "key": "Cassiopeia-R" }
+          ],
+          "when": "When an enemy is just outside ultimate range, facing you, and a stun would let you or your team kill them.",
+          "whenRefs": [],
+          "text": "Flash toward the enemy and cast the gaze right away so they are still facing you and get stunned. Flash first so the cone lands from the new spot.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "summoner-spell", "key": "4", "start": 98, "end": 103 }
+          ]
+        },
+        {
+          "id": "middle:Cassiopeia:combo:1",
+          "name": "Stun then fang spam",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Cassiopeia-R" },
+            { "kind": "ability", "key": "Cassiopeia-E" },
+            { "kind": "ability", "key": "Cassiopeia-E" },
+            { "kind": "ability", "key": "Cassiopeia-E" }
+          ],
+          "when": "After your gaze stuns an enemy who is already poisoned and you want maximum damage.",
+          "whenRefs": [],
+          "text": "A stunned target can't dodge or move, so the poisoned fang bonus keeps landing and heals you. Spam Twin Fang for the whole stun.",
+          "textRefs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 99,
+              "end": 108
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "923fd316e104660b2b6b4ef000e6d07c7b9af87fe54c709cb14dfc4c28b59f52",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:general:0",
+          "text": "Cast Noxious Blast ahead of where the enemy is walking, not on them; it explodes after a short delay. Hitting a champion also speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Cassiopeia:general:1",
+          "text": "Follow Noxious Blast with Twin Fang while the enemy is still poisoned; the bonus damage and healing only happen against poisoned targets.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Cassiopeia:general:2",
+          "text": "Use Twin Fang on enemy minions to last-hit. A kill gives your Mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Cassiopeia:general:3",
+          "text": "Drop Miasma on enemies who try to dash in or run away. They are slowed and cannot use movement abilities while standing in it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Cassiopeia:general:4",
+          "text": "Aim Petrifying Gaze so enemies are looking at you. Those facing you are stunned; those turned away are only slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Cassiopeia:general:5",
+          "text": "Keep moving between spells. Twin Fang does not stop your movement, so you can kite while firing it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 28, "end": 37 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "5c874ad354929684b6003ae3f4401ac672ec35efa0daa3deb6d31b7f85aaf629",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Ahri:0",
+          "text": "Stay behind minions so Ahri's Charm hits them first and not you. Charm stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ahri-E", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Ahri-E", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Ahri:1",
+          "text": "Open with Noxious Blast and follow with Twin Fang on the poisoned Ahri. The extra damage and healing make trades favor you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 40,
+              "end": 49
+            },
+            { "kind": "champion", "key": "Ahri", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Cassiopeia:Ahri:2",
+          "text": "Cast Miasma on Ahri's path when she dashes in or out. She is slowed and grounded, so she can't use movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Ahri", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Cassiopeia:Ahri:3",
+          "text": "Hold Petrifying Gaze until Ahri faces you, as when she walks in to cast. Facing you gets her stunned, and a stunned target is easy to hit with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ahri", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 115 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 143,
+              "end": 152
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Cassiopeia:Ahri:4",
+          "text": "Lead Noxious Blast toward where Ahri is walking, because it lands after a short delay. Hitting a champion with it speeds you up, so use it to dodge Charm.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ahri", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Ahri-E", "start": 148, "end": 153 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Cassiopeia:Ahri:5",
+          "text": "Be more aggressive when Ahri's Spirit Rush is on cooldown. She has little means to escape or dive you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Ahri-R", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8f046eb2e57238aab1e27ca233f4588b683119271c5ecc35c1d0554c5f2fa2b3",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Akali:0",
+          "text": "Put Miasma on Akali when she dives in; she is grounded and slowed, so she cannot use her dashes to escape or close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Akali", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Cassiopeia:Akali:1",
+          "text": "Keep poisoning her with Noxious Blast, then hit her with Twin Fang for big damage and healing.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 24,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Cassiopeia:Akali:2",
+          "text": "Face Akali and cast Petrifying Gaze when she jumps onto you; she is stunned if she faces you.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Akali:3",
+          "text": "Throw Noxious Blast at the edge of her Twilight Shroud when she hides; area spells still hit her and reveal her.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Akali-W", "start": 39, "end": 54 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c69c8029fd8b926ccead1e6bfd68fd297e5f787833fb38d47ff7548598f7303e",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Akshan:0",
+          "text": "Cast Miasma on Akshan when he swings in or out; he is grounded, so he can't use movement abilities, and he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Akshan", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Cassiopeia:Akshan:1",
+          "text": "Land Noxious Blast on Akshan, then hit him with Twin Fang while he is poisoned for big damage and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Akshan", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Cassiopeia:Akshan:2",
+          "text": "Aim Noxious Blast ahead of where he is walking; it explodes after a short delay, and his move speed bursts make it easy to miss.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Cassiopeia:Akshan:3",
+          "text": "Use Petrifying Gaze when Akshan is facing you, such as when he runs in to attack, so he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akshan", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dfbfd644ab46360d0e576ded1cc8044b1e42081267f9b6ff0fc2cca215717480",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Anivia:0",
+          "text": "Sidestep Flash Frost; it keeps flying after it hits. Dodge the detonation at the end too, since it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Cassiopeia:Anivia:1",
+          "text": "Hit Anivia with Noxious Blast when she is stationary or casting, then use Twin Fang on her while she is poisoned.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 74, "end": 83 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Cassiopeia:Anivia:2",
+          "text": "Do not stand in Glacial Storm; it slows you more as it grows. Step out of it early.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Cassiopeia:Anivia:3",
+          "text": "Use Petrifying Gaze when Anivia is facing you to stun her. Her egg will be vulnerable, so be ready to kill it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Cassiopeia:Anivia:4",
+          "text": "Frostbite hits much harder on chilled targets, so avoid being hit by Flash Frost and then taking a quick follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-E", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e9972d88dad8a6d74c675cd3fa4f266fdd13db00991a73b81a29ccbe5e49ba7a",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Annie:0",
+          "text": "Watch Annie's Pyromania counter. When her stun is ready, stay out of range of her Disintegrate and Incinerate.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 14,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 82, "end": 94 },
+            { "kind": "ability", "key": "Annie-W", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Cassiopeia:Annie:1",
+          "text": "Poke Annie with Noxious Blast, then hit her with Twin Fang while she is poisoned for extra damage and healing.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Annie", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Cassiopeia:Annie:2",
+          "text": "Put Miasma on Annie when she steps in to trade. It slows her and stops her dashing, so she cannot easily close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Annie", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Cassiopeia:Annie:3",
+          "text": "Use Petrifying Gaze when Annie or Tibbers charges at you. If she is facing you, she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Annie", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Cassiopeia:Annie:4",
+          "text": "Stay away from Tibbers once Annie summons him. He burns everyone nearby, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7329c334180ea0bf33a1d542a72b5ee48d624e92fdd42dadd9ad58c024b6b6da",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:AurelionSol:0",
+          "text": "Poke with Noxious Blast when Aurelion Sol walks up to last-hit; it also gives you a burst of speed when it hits him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "champion", "key": "AurelionSol", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Cassiopeia:AurelionSol:1",
+          "text": "Use Twin Fang on him whenever Noxious Blast or Miasma has poisoned him; the hit does much more damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 30,
+              "end": 43
+            },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Cassiopeia:AurelionSol:2",
+          "text": "Put Miasma on his landing spot when he flies in; he can't use movement abilities inside it and is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Cassiopeia:AurelionSol:3",
+          "text": "Step out of the center of Singularity quickly; it drags you in and can kill you if you are low on health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 26,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Cassiopeia:AurelionSol:4",
+          "text": "Move sideways when Falling Star is aimed at you; it lands after a delay and stuns, so you can dodge it.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Cassiopeia:AurelionSol:5",
+          "text": "Cast Petrifying Gaze when he is facing you, such as after he breathes at you, for a stun. Follow with Twin Fang on the stunned target.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 102,
+              "end": 111
+            },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "be05d662d1daee31ac733fa90f455a568aaf82dfd83ede5bc2a1ff0d0a1cd13b",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Aurora:0",
+          "text": "Aim Noxious Blast at where Aurora will step, not where she stands; it lands after a short delay and gives you a burst of speed if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aurora", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Aurora:1",
+          "text": "Follow a poisoned Aurora with Twin Fang; it hits much harder on poisoned targets and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Cassiopeia:Aurora:2",
+          "text": "Drop Miasma where Aurora will land after Across the Veil or Between Worlds; she is grounded and slowed there and cannot use movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Aurora", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Aurora-W", "start": 41, "end": 56 },
+            { "kind": "ability", "key": "Aurora-R", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Cassiopeia:Aurora:3",
+          "text": "Save Petrifying Gaze for when Aurora is facing you, such as when she dashes in; she is stunned only if she faces you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Aurora", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Cassiopeia:Aurora:4",
+          "text": "Step out of the line of The Weirding; her slow makes you easy to hit with her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "81bbbbc5d1e94be2fbf0a8e5e7aff62dd7caa6e388a5ca588e44cd00d886ad57",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Azir:0",
+          "text": "Aim Noxious Blast at where Azir will step, not where he stands. Hitting him gives you a burst of Move Speed to chase or step away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Azir", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Cassiopeia:Azir:1",
+          "text": "Use Twin Fang on Azir once Noxious Blast has him poisoned. It hits much harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Azir", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Cassiopeia:Azir:2",
+          "text": "Drop Miasma where Azir wants to dash. He gets grounded and slowed, so Shifting Sands cannot be used to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Azir", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Azir-E", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Cassiopeia:Azir:3",
+          "text": "Cast Petrifying Gaze while Azir faces you, such as when he dashes in or walks up. He gets stunned, so follow with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Azir", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 97 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 114,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Cassiopeia:Azir:4",
+          "text": "Stay out of his Sand Soldiers' stab range. Trade when his soldiers have expired or been used.",
+          "refs": [],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "08d5f9a8f15d9be5df7c92433068972ce361c733099a32c8419666cf21ac0af0",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Brand:0",
+          "text": "Dodge Brand's Sear. He needs to land a spell first, so missing it breaks his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Cassiopeia:Brand:1",
+          "text": "Keep Noxious Blast on him to poison him, then use Twin Fang for extra damage and healing while he stays in range.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Cassiopeia:Brand:2",
+          "text": "Stay away from your minions when Brand is up; Conflagration spreads through them and onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-E", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Cassiopeia:Brand:3",
+          "text": "Use Petrifying Gaze when he walks toward you, so he faces you and is stunned. Then follow with Twin Fang on his poisoned body.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 95,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Cassiopeia:Brand:4",
+          "text": "Walk out of Pillar of Flame as soon as it appears under you. It lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "208da0a7b8e3fc6e737178f6190ee04daf8168563b48ceda809b600e45dfe002",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Briar:0",
+          "text": "Cast Miasma on the ground Briar will leap to; it grounds her, so she can't use movement abilities inside the clouds, and it slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Briar:1",
+          "text": "Poke with Noxious Blast while Briar walks up, then follow with Twin Fang for the bonus damage on a poisoned target.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Briar", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Briar:2",
+          "text": "Face Briar and use Petrifying Gaze when she charges in, so she is stunned. If she has her back turned, she is only slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 19,
+              "end": 34
+            },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Cassiopeia:Briar:3",
+          "text": "Keep your distance from Briar. Head Rush stuns her target, so stay out of its range and don't let her reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Briar-Q", "start": 31, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Cassiopeia:Briar:4",
+          "text": "Briar heals from her bleed and her attacks, so don't take long trades. Poison her and hit her with Twin Fang at range, then back off.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 99,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f3eb6bdaa722cd38e4183eb99599fbdba9a07d8e45ac2f4e0bd4fe3077f32835",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Diana:0",
+          "text": "Keep Miasma ready for when Diana dashes in with Lunar Rush; it leaves her grounded and slowed, so she can't use movement abilities to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Diana", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Diana-E", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Cassiopeia:Diana:1",
+          "text": "Face Diana when you cast Petrifying Gaze at level 6. She is stunned only if she is facing you, so use it as she walks toward you.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 25,
+              "end": 40
+            },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Cassiopeia:Diana:2",
+          "text": "Poke with Noxious Blast and Twin Fang from range. Twin Fang hits much harder and heals you when Diana is poisoned.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 28,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 50,
+              "end": 59
+            },
+            { "kind": "champion", "key": "Diana", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Cassiopeia:Diana:3",
+          "text": "Step out of the way of Crescent Strike. A hit reveals you and lets Diana dash to you and use Lunar Rush again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 23, "end": 38 },
+            { "kind": "champion", "key": "Diana", "start": 67, "end": 72 },
+            { "kind": "ability", "key": "Diana-E", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Cassiopeia:Diana:4",
+          "text": "Hold your damage while Pale Cascade's shield is up. Poke her after the orbs fade.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 23, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6ecd6c2d1ccf4f74e997f5ab48272fa928627b7a9993ef92620dc44701baa903",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Ekko:0",
+          "text": "Cast Miasma on Phase Dive's landing spot; it grounds Ekko, so he loses the bonus range on his dash attack.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ekko-E", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "Ekko", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Cassiopeia:Ekko:1",
+          "text": "Land Noxious Blast, then follow with Twin Fang on the poisoned Ekko for strong damage and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 37,
+              "end": 46
+            },
+            { "kind": "champion", "key": "Ekko", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Cassiopeia:Ekko:2",
+          "text": "Step out of the Timewinder line, because it hits you again when it returns. Stay away from the field it leaves, which slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Ekko:3",
+          "text": "Use Petrifying Gaze when Ekko dives at you, facing you. He is stunned and can't escape easily.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ekko", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Cassiopeia:Ekko:4",
+          "text": "Walk out of the Parallel Convergence zone before it arms. If Ekko can't reach it, it only slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "champion", "key": "Ekko", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5f18554283beef0277e85f9daf9f1c4698e80aa0b15495994fdc0a401b3ba8be",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Ezreal:0",
+          "text": "Cast Miasma on Ezreal's side when he blinks; the clouds leave him grounded, so Arcane Shift cannot be used to escape them.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Cassiopeia:Ezreal:1",
+          "text": "Lead your Noxious Blast toward where Ezreal is walking; he is fragile, and each hit on him gives you a burst of Move Speed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Cassiopeia:Ezreal:2",
+          "text": "Follow Noxious Blast with Twin Fang while he is poisoned; it hits much harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Ezreal:3",
+          "text": "Stay out of a straight line with Ezreal and keep minions between you, so Mystic Shot hits a minion instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Cassiopeia:Ezreal:4",
+          "text": "Use Petrifying Gaze when Ezreal is facing you; he is stunned, and Twin Fang on a stunned, poisoned target does full damage.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 60 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 66,
+              "end": 75
+            },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "543f9c23ddc6d8f87e09b38fa578124f8ccd095e864c3222538677658032e005",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Fizz:0",
+          "text": "Keep Miasma ready for when Fizz jumps in; it grounds him, so he can't use movement abilities while he stands in the clouds.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Fizz:1",
+          "text": "Hit Fizz with Noxious Blast, then follow with Twin Fang. Poisoned targets take much more damage and you heal.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Cassiopeia:Fizz:2",
+          "text": "Keep your distance from Fizz and poke him with Twin Fang, because he has to dash in to fight you.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Cassiopeia:Fizz:3",
+          "text": "Save Petrifying Gaze until Fizz is facing you. He is stunned only if he looks at you, and slowed if he turns away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Cassiopeia:Fizz:4",
+          "text": "Move away from the target spot when Fizz uses Chum the Waters on you. The shark knocks you up after a delay.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Fizz-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7f39810323588593af60eb81e3bbed994074fcc4aef718df3eba22d4c56dab84",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Galio:0",
+          "text": "Stay out of Justice Punch range, and do not walk up to hit him; it knocks you up for her whole poison rotation to be wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Cassiopeia:Galio:1",
+          "text": "Poke with Noxious Blast, then follow with Twin Fang on the poisoned Galio for extra damage and healing.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 42,
+              "end": 51
+            },
+            { "kind": "champion", "key": "Galio", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Cassiopeia:Galio:2",
+          "text": "Galio is slowed while charging Shield of Durand; hit him with Miasma then. His magic shield still absorbs some of your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Galio-W", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Cassiopeia:Galio:3",
+          "text": "Do not stand close when Galio releases Shield of Durand; the taunt forces you toward him. Wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Galio-W", "start": 39, "end": 55 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Cassiopeia:Galio:4",
+          "text": "Face Galio when you cast Petrifying Gaze so it stuns him, then finish with Twin Fang.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 25,
+              "end": 40
+            },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Cassiopeia:Galio:5",
+          "text": "Watch for Hero's Entrance across the map. Stay clear of the landing spot, and stun him while he is channeling.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dbf0eaca601d33e8ac8159a7042d74904b69d1fc9a6c159ea1840faeefe6c9ea",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Hwei:0",
+          "text": "Punish Hwei right after he casts a Torment spell; he is easy to rush down then. Step in with Noxious Blast and Twin Fang.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 7, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 93,
+              "end": 106
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 111,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Cassiopeia:Hwei:1",
+          "text": "Hit Hwei with Noxious Blast, then follow with Twin Fang while he is poisoned for much bigger damage.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Cassiopeia:Hwei:2",
+          "text": "Keep moving unpredictably; Hwei needs to guess where you will be. Noxious Blast hitting him gives you extra speed to dodge his spells.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Cassiopeia:Hwei:3",
+          "text": "Do not stand still or alone in lane; his lightning hits much harder on an isolated target. Move around between casts.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "isolated", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Cassiopeia:Hwei:4",
+          "text": "Aim Petrifying Gaze at Hwei while he faces you to stun him, then finish with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Hwei", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3f1d0a709ecb947e98129d88d2e226f6f3ec7f52dd3c4b8f07be6ba1c3bcd9b2",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Irelia:0",
+          "text": "Keep Miasma ready for when Irelia dashes in. It grounds her so she can't use Bladesurge, and it slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Irelia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 77, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Cassiopeia:Irelia:1",
+          "text": "Face Irelia when you cast Petrifying Gaze. She is stunned if she is facing you, so use it as she dashes at you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Cassiopeia:Irelia:2",
+          "text": "Clear the minions near you. Irelia needs them to dash with Bladesurge, and a lane with few minions leaves her with fewer ways to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Cassiopeia:Irelia:3",
+          "text": "Don't waste Petrifying Gaze on Defiant Dance. She takes less damage while charging, so wait for her to finish.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 12,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Irelia-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Cassiopeia:Irelia:4",
+          "text": "Poison Irelia with Noxious Blast and follow with Twin Fang for big damage and healing. Hit her as she walks up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 7, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 19,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Cassiopeia:Irelia:5",
+          "text": "Stay away from where Flawless Duet could catch you. If you are stunned, Irelia's follow-up comes quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 },
+            { "kind": "champion", "key": "Irelia", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ae4b70d2f096cf1eb1510c37b6e0cf4b06392140700549f18ae25acd6358c457",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Kassadin:0",
+          "text": "Poison Kassadin with Noxious Blast as he walks up, then follow with Twin Fang for the big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 7, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 21,
+              "end": 34
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 68, "end": 77 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Kassadin:1",
+          "text": "Place Miasma where Kassadin will land; it slows him and stops him using Riftwalk to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Kassadin", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Cassiopeia:Kassadin:2",
+          "text": "Kassadin takes reduced magic damage, so kite him and keep your distance rather than trading all in.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Kassadin:3",
+          "text": "Do not channel near him; Null Sphere interrupts channels and shields him.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Cassiopeia:Kassadin:4",
+          "text": "Face Kassadin when he blinks in with Riftwalk and use Petrifying Gaze to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 37, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 54,
+              "end": 69
+            },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "718dd2211fac533ff48f5ed201c432c22132b46234df4cc7e9ac7b305d55935c",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Katarina:0",
+          "text": "Put Miasma on the spot where Katarina wants to land. Grounded, she cannot use Shunpo, and she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Katarina", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Katarina-E", "start": 78, "end": 84 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Cassiopeia:Katarina:1",
+          "text": "Hold Petrifying Gaze until Katarina dashes in facing you. Then she is stunned and cannot use Death Lotus.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Katarina", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 },
+            { "kind": "ability", "key": "Katarina-R", "start": 93, "end": 104 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Cassiopeia:Katarina:2",
+          "text": "Hit her with Noxious Blast when she walks up to Daggers. It poisons her, so Twin Fang then hits much harder.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 13,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 76, "end": 85 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Cassiopeia:Katarina:3",
+          "text": "Death Lotus is cast on the nearest champions and can be interrupted. Stun her mid-channel with Petrifying Gaze.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 0, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 95,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "190dc7f7495271659d136f5e383e7d18c5c143fab52b90e929edd11f0395b439",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Leblanc:0",
+          "text": "Poison LeBlanc with Noxious Blast, then follow with Twin Fang for extra damage and healing.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 7, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 20,
+              "end": 33
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 52, "end": 61 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Cassiopeia:Leblanc:1",
+          "text": "Put Miasma where LeBlanc will land. Her Distortion is blocked while grounded, so she cannot dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Leblanc", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "middle:Cassiopeia:Leblanc:2",
+          "text": "Save Petrifying Gaze for when LeBlanc dashes at you and faces you. She will be stunned and cannot return with Distortion.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Leblanc", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 110, "end": 120 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Cassiopeia:Leblanc:3",
+          "text": "Sidestep Ethereal Chains and keep moving. Breaking the tether before it ends avoids the root.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ccdd84a44d56163cd7afb768ce2d3df9cdb67c94211492598d7c269b491a7215",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Lissandra:0",
+          "text": "Keep Noxious Blast and Twin Fang going from long range; Lissandra has to come close to use Ring of Frost.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 23,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Lissandra", "start": 56, "end": 65 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Cassiopeia:Lissandra:1",
+          "text": "Stay out of Ring of Frost range when it is ready. Once it is on cooldown, step in and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Cassiopeia:Lissandra:2",
+          "text": "Lissandra can't use Glacial Path to escape while she is grounded, so put Miasma on her when she tries to dash away or in.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Cassiopeia:Lissandra:3",
+          "text": "Stand behind your minions so Ice Shard hits them first and you avoid the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Cassiopeia:Lissandra:4",
+          "text": "Dodge Ice Shard by sidestepping; the missile is narrow. Hitting her with Noxious Blast gives you speed to move away.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Cassiopeia:Lissandra:5",
+          "text": "Face Lissandra when you cast Petrifying Gaze so she is stunned, but expect her to turn and dash away with Glacial Path.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 5, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "Lissandra-E",
+              "start": 106,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3368092e39eaf4032ae45450119e693f289ebace5196a38308384ca44c5499a3",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Lux:0",
+          "text": "Step sideways out of the line when Lux casts Light Binding. Being rooted stops you from trading back with Twin Fang and Noxious Blast.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 35, "end": 38 },
+            { "kind": "ability", "key": "Lux-Q", "start": 45, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 106,
+              "end": 115
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 120,
+              "end": 133
+            }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "middle:Cassiopeia:Lux:1",
+          "text": "Stand behind a minion so Light Binding hits it first; it only roots the first two enemies it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Cassiopeia:Lux:2",
+          "text": "Hit Lux with Noxious Blast, then follow with Twin Fang while she is poisoned for big damage and healing.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 13,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Cassiopeia:Lux:3",
+          "text": "Use Noxious Blast on Lux for the Move Speed it gives, then walk out of the area of Lucent Singularity.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Lux-E", "start": 83, "end": 101 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Cassiopeia:Lux:4",
+          "text": "At level 6, face Lux and cast Petrifying Gaze when she is close. If she is facing you, she gets stunned and can't answer.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 17, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 30,
+              "end": 45
+            },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Cassiopeia:Lux:5",
+          "text": "Respect Final Spark when low on health. Move to the side as soon as you see the red line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 8, "end": 19 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "98099a31fac0e8df71c2e3a13e87d64de694e98f7e07acc820d4792cfaa298e6",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Malzahar:0",
+          "text": "Poke with Noxious Blast, then follow with Twin Fang while he is still poisoned for the bonus damage and healing.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Cassiopeia:Malzahar:1",
+          "text": "Stay out of his Call of the Void line and sidestep it; being silenced stops you from casting Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 69 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 93,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Cassiopeia:Malzahar:2",
+          "text": "Wait for his Void Shift to be used up before you commit to a trade; it cuts most damage and blocks your stun.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 13,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "middle:Cassiopeia:Malzahar:3",
+          "text": "Drop Miasma on him when he tries to escape; it slows him and he cannot use movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Malzahar:4",
+          "text": "Use Petrifying Gaze only when he faces you, or he is merely slowed. Then finish with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 85, "end": 94 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Cassiopeia:Malzahar:5",
+          "text": "Stay away from minions carrying Malefic Visions; when they die it jumps to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fcfad1633d5009f46d9ba543ff4106ab17975024e0f552cbe5e30e9bd1776e39",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Mel:0",
+          "text": "Hold Petrifying Gaze until Mel has used Rebuttal or Solar Snare, then turn and cast it so she cannot run out of the cone.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Mel", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Mel-W", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Mel-E", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Cassiopeia:Mel:1",
+          "text": "Wait for Mel to cast Rebuttal before you throw Noxious Blast or Twin Fang. Rebuttal destroys enemy projectiles and shields her.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 21, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 47,
+              "end": 60
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 64,
+              "end": 73
+            },
+            { "kind": "ability", "key": "Mel-W", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Cassiopeia:Mel:2",
+          "text": "Mel's Solar Snare roots you longer the farther it travels, so stay out of its long range. Sidestep it or stay behind minions.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Mel-E", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Cassiopeia:Mel:3",
+          "text": "Lay Miasma where Mel stands or retreats. It grounds and slows her, so she cannot use movement abilities to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Mel", "start": 17, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Cassiopeia:Mel:4",
+          "text": "Back off when you are low. Mel's Overwhelm stacks can execute you after a few hits, so stay away from her for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Cassiopeia:Mel:5",
+          "text": "After Noxious Blast lands, follow with Twin Fang on the poisoned Mel for heavy damage and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 39,
+              "end": 48
+            },
+            { "kind": "champion", "key": "Mel", "start": 65, "end": 68 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d0d94192c14351293ea0e8171e2e5d409b6ae01e3ad8111d702596bab537cc9c",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Naafiri:0",
+          "text": "Keep Miasma on the ground where Naafiri will land. It leaves her grounded, so she can't use Eviscerate to dash in, and it slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Cassiopeia:Naafiri:1",
+          "text": "Aim Petrifying Gaze at Naafiri while she is running at you. She will be facing you, so she gets stunned instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 103 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Cassiopeia:Naafiri:2",
+          "text": "Poke with Noxious Blast from long range. Hitting her also gives you bonus Move Speed to step back from her dash.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Cassiopeia:Naafiri:3",
+          "text": "Follow Noxious Blast with Twin Fang on her while she is poisoned. It hits harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Cassiopeia:Naafiri:4",
+          "text": "Don't spend Petrifying Gaze when she vanishes with The Call of the Pack. She can't be targeted at first, so wait until she reappears.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 12,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Naafiri-W", "start": 51, "end": 71 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9ffb41153c4937c4b08ffa36fc87df038daf6d78f0a1d100f5b2447703cc6c17",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Orianna:0",
+          "text": "Hit Orianna with Noxious Blast, then follow with Twin Fang; poisoned targets take much more damage and you heal.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 17,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Orianna:1",
+          "text": "Stay out of Orianna's Ball range. Her Command: Shockwave can drag you in, so keep distance from the Ball when she is level 6 or above.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Orianna-R", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Cassiopeia:Orianna:2",
+          "text": "Use Miasma to stop Orianna running from you; it slows her and she cannot use movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Orianna", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Cassiopeia:Orianna:3",
+          "text": "Orianna's Ball sits where she left it. Step away from it to dodge her pulse and avoid the pull.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "256ede0f2b8dcfc917381d91fe6f4cc6151bb4767f8c4ab19a4163b70e837613",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Qiyana:0",
+          "text": "Keep Miasma on Qiyana when she dashes in; she is grounded and cannot use Audacity or Terrashape while she stands in the clouds.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Qiyana", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 73, "end": 81 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 85, "end": 95 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Cassiopeia:Qiyana:1",
+          "text": "Hold Petrifying Gaze for when Qiyana dives at you; she is stunned if she is facing you, so cast it as she closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Qiyana", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Cassiopeia:Qiyana:2",
+          "text": "Poke with Noxious Blast and Twin Fang while Qiyana's abilities are on cooldown; a poisoned target takes much more from Twin Fang.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 28,
+              "end": 37
+            },
+            { "kind": "champion", "key": "Qiyana", "start": 44, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 119,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Cassiopeia:Qiyana:3",
+          "text": "Stay out of the river and brush edges when you fight; Supreme Display of Talent stuns you wherever it wraps around the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 54, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Cassiopeia:Qiyana:4",
+          "text": "Do not stand still near water when Qiyana holds the river element; Elemental Wrath can root you before she dives.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d676538f2f74d29b948f223fe24de9c41a97ee140358f502273fda67cb6303a7",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Ryze:0",
+          "text": "Keep Noxious Blast landing on Ryze; the poison turns on Twin Fang's bonus damage and healing. Then follow up with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ryze", "start": 30, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 56,
+              "end": 65
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 114,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Cassiopeia:Ryze:1",
+          "text": "Stay out of Rune Prison range when you can. If Ryze has marked you with Spell Flux first, you get rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Ryze", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Ryze-E", "start": 72, "end": 82 },
+            { "kind": "keyword", "key": "rooted", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Cassiopeia:Ryze:2",
+          "text": "Be careful when Ryze has marked you with Spell Flux. His Overload then hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ryze-E", "start": 41, "end": 51 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Cassiopeia:Ryze:3",
+          "text": "Cast Petrifying Gaze when Ryze is facing you, ideally after he commits to a spell. He gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Cassiopeia:Ryze:4",
+          "text": "Stun Ryze when he opens Realm Warp. A stun cancels the portal.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ryze-R", "start": 24, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2a49c9dc95c6d58dd96ea715f24f738ce877deb4a7aac835206252d67f9d7bc3",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Sylas:0",
+          "text": "Keep Miasma ready for when Sylas dashes in; it leaves him grounded, so he can't use Abscond to escape or close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Cassiopeia:Sylas:1",
+          "text": "Stay out of Sylas's line when he has Abscond ready. If Abduct hits you, you are stunned and knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Cassiopeia:Sylas:2",
+          "text": "Poke with Noxious Blast and follow with Twin Fang on the poisoned Sylas. Both are cheap to repeat while he waits on cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 40,
+              "end": 49
+            },
+            { "kind": "champion", "key": "Sylas", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Cassiopeia:Sylas:3",
+          "text": "Hold Petrifying Gaze for when Sylas dashes at you. If he faces you, he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Cassiopeia:Sylas:4",
+          "text": "Sylas heals with Kingslayer when he is low, so finish him fast with Twin Fang instead of letting him trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 68, "end": 77 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Cassiopeia:Sylas:5",
+          "text": "Once you reach level 6, expect Sylas to steal Petrifying Gaze. Don't stand facing him when he is close and it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5f8f4627402b2fd31dc49efb7b16f341e9f9852630f665292b4190454ed85294",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Syndra:0",
+          "text": "Stay out of Syndra's Scatter the Weak line when you can; if a Dark Sphere gets pushed into you, you are stunned and easy to burst.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Syndra-E", "start": 21, "end": 37 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 62, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 111 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Cassiopeia:Syndra:1",
+          "text": "Use Miasma where Syndra wants to step; it slows her and she cannot use dashes while she stands in it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Syndra", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Cassiopeia:Syndra:2",
+          "text": "Hit Syndra with Noxious Blast, then follow with Twin Fang while she is poisoned for a big damage trade and some healing.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Cassiopeia:Syndra:3",
+          "text": "Aim Petrifying Gaze when Syndra is walking toward you, since only enemies facing you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Syndra", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Cassiopeia:Syndra:4",
+          "text": "Move after casting Noxious Blast; the speed boost from hitting her helps you dodge Dark Sphere.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 19,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Syndra-Q", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bb9e15e31245154b7e801cd1d847b34f523517e5af376778b1a0fe1dac014523",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Taliyah:0",
+          "text": "Stay out of Taliyah's Unraveled Earth stones when you can; if she knocks you into them with Seismic Shove, you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 92, "end": 105 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Taliyah:1",
+          "text": "Poke with Noxious Blast, then use the Move Speed it gives you to step out of her Threaded Volley rocks.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Cassiopeia:Taliyah:2",
+          "text": "Follow Noxious Blast with Twin Fang while she is poisoned; it hits much harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Cassiopeia:Taliyah:3",
+          "text": "Cast Miasma on her escape path; it stops her from dashing, and she is slowed inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Taliyah:4",
+          "text": "Cast Petrifying Gaze while she faces you, as when she walks in to trade. If she turns away she is only slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "584d0593abd2a8ca57aedf0c59a5414846c986bd97a22df52d406d9be097e3ab",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Talon:0",
+          "text": "Cast Petrifying Gaze when Talon dives at you; he is stunned if he faces you, and slowed if he has turned away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Cassiopeia:Talon:1",
+          "text": "Put Miasma where Talon will land. He is slowed and grounded, so he cannot use movement abilities to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Talon", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Cassiopeia:Talon:2",
+          "text": "Poke him with Noxious Blast, then hit him with Twin Fang while he is poisoned. The heal and damage win the long trades.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Cassiopeia:Talon:3",
+          "text": "Stay away from walls. Talon vaults over them with Assassin's Path to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Talon-E", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Talon:4",
+          "text": "Keep Noxious Blast ready for when he vanishes with Shadow Assault and comes back. Its speed boost helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Talon-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "675b07fabbdccb6a4464dd79f85432050753e52f202fd694a7beeeed11c984e6",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:TwistedFate:0",
+          "text": "Aim Noxious Blast where Twisted Fate will walk, not where he stands. Hitting him gives you a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "TwistedFate", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Cassiopeia:TwistedFate:1",
+          "text": "Use Twin Fang on him while he is poisoned; it hits much harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Cassiopeia:TwistedFate:2",
+          "text": "Stay back when he is shuffling cards; a Gold Card attack stuns you and he follows up with Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 90,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Cassiopeia:TwistedFate:3",
+          "text": "Drop Miasma on him if he tries to teleport with Destiny or to dash in. It stops him from using movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 48,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Cassiopeia:TwistedFate:4",
+          "text": "When Twisted Fate uses Destiny, expect a gank or a teleport on you. Back off toward your team.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:TwistedFate:5",
+          "text": "Cast Petrifying Gaze when he is facing you, such as when he walks up for a card attack, to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0d3be2785e37ec40d34704796deff578483d8cc289f963ae7aaa048f43b19b91",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Veigar:0",
+          "text": "Don't fight inside Event Horizon's edge. Stay in the middle or outside so you can't be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Cassiopeia:Veigar:1",
+          "text": "Hit Veigar with Noxious Blast, then use Twin Fang on the poisoned target to trade hard and heal.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Cassiopeia:Veigar:2",
+          "text": "Keep moving while Veigar casts Dark Matter; it lands after a delay and can be walked out of.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Veigar-W", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Cassiopeia:Veigar:3",
+          "text": "Use Petrifying Gaze when Veigar faces you to stun him, and finish him since he is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Veigar", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2958cbad392b98270300a9f8a16ecc16af6430a3d3bca1e3ce668782ab4ec252",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Vex:0",
+          "text": "Miasma grounds Vex, so she can't use movement abilities inside the clouds. Drop it on her when she tries to dash in with Shadow Surge.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Vex", "start": 15, "end": 18 },
+            { "kind": "ability", "key": "Vex-R", "start": 121, "end": 133 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Cassiopeia:Vex:1",
+          "text": "Vex's Shadow Surge cannot be recast while she is grounded, so Miasma can stop her follow-up dash.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Vex-R", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Cassiopeia:Vex:2",
+          "text": "Stay out of Vex's Looming Darkness range when her Doom 'n Gloom is ready. Her empowered ability fears you and ruins your Twin Fang rhythm.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Vex-E", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Vex-passive", "start": 50, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 121,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Cassiopeia:Vex:3",
+          "text": "Poison Vex with Noxious Blast, then hit her with Twin Fang for the bonus damage and healing. Use it when she steps up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 7, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Cassiopeia:Vex:4",
+          "text": "Use Petrifying Gaze only when Vex is facing you, or she is just slowed. Then finish her with Twin Fang while she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vex", "start": 30, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 93,
+              "end": 102
+            },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 123 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d1724cbaf89173bfbff6aee776660bb86f3f836b45a5802ec0e8198cc424ecc9",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Viktor:0",
+          "text": "Hit Viktor with Noxious Blast, then follow with Twin Fang while he is poisoned for big damage and healing.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Viktor:1",
+          "text": "Stay out of Gravity Field. If you are caught, walk out quickly before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Cassiopeia:Viktor:2",
+          "text": "Sidestep Hextech Ray; it is a thin line, so move across it rather than away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Cassiopeia:Viktor:3",
+          "text": "Use Miasma on Viktor when he steps forward to trade; the clouds slow him and keep him from using movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Viktor", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Viktor:4",
+          "text": "At level 6, cast Petrifying Gaze only when Viktor faces you, so he is stunned. Then finish with Twin Fang.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 17,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Viktor", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 96,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5d331db571810b806223196bc65a578d66bc396f505cf3dd9b9f7fc0cbed5865",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Vladimir:0",
+          "text": "Hit Vladimir with Noxious Blast when he walks up to last-hit. It also gives you speed to back away.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Vladimir:1",
+          "text": "Aim Petrifying Gaze when Vladimir is facing you, since that stuns him. Don't cast it when he's walking away, since that only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vladimir", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 125, "end": 130 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Cassiopeia:Vladimir:2",
+          "text": "Don't waste Miasma or Petrifying Gaze while Sanguine Pool is active. He can't be targeted in it, so wait until he comes out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 12,
+              "end": 18
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 22,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Vladimir-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Cassiopeia:Vladimir:3",
+          "text": "Stay out of Sanguine Pool's range when he sinks. It slows and hurts you while you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Cassiopeia:Vladimir:4",
+          "text": "Kill Vladimir before Hemoplague bursts, because it heals him for each champion hit.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fa5b89f257e4cabd2a30573adb092ed995518a34cdc48c8364b12533f1d20139",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Xerath:0",
+          "text": "Walk up and use Noxious Blast on Xerath when he is charging Arcanopulse; he is slowed and moves poorly, so it is easy to hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 60, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Cassiopeia:Xerath:1",
+          "text": "Hit Xerath with Noxious Blast, then follow with Twin Fang; poisoned targets take much more damage and you heal.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Cassiopeia:Xerath:2",
+          "text": "Use Miasma where Xerath will step to dodge. It slows him and he cannot use movement abilities while in it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Xerath:3",
+          "text": "Stay out of a straight line with Xerath and keep moving sideways. Shocking Orb stops at the first enemy it hits, so stand behind a minion when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Cassiopeia:Xerath:4",
+          "text": "Save Petrifying Gaze for when Xerath is stunned or walking toward you. He is stunned only if he faces you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Xerath", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Cassiopeia:Xerath:5",
+          "text": "Step in close to Xerath and trade. His range is long, so you win by closing the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1244ae5f0bb14514a012f6dfc1782198d2b922679a879127ed29c3215da33e3b",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:XinZhao:0",
+          "text": "Keep Noxious Blast going on Xin Zhao as he approaches. Aim ahead of him as he walks toward you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Cassiopeia:XinZhao:1",
+          "text": "Drop Miasma on your own feet or at his path when he charges in. It slows him and grounds him so he can't dash.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Cassiopeia:XinZhao:2",
+          "text": "Back away when his Three Talon Strike is ready; the third hit knocks you up and sets up his whole fight.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Cassiopeia:XinZhao:3",
+          "text": "Use Petrifying Gaze when he dashes at you. He is facing you, so he gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Cassiopeia:XinZhao:4",
+          "text": "Stay away from him when his Crescent Guard is ready; it knocks you back and stuns you at close range.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Cassiopeia:XinZhao:5",
+          "text": "Use Twin Fang on a poisoned Xin Zhao for extra damage and healing while you keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "42758fbab94db97085bf7e7ccfa1f0e0b7a3cb7dc43a091215e6ec831fbb3c9d",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Yasuo:0",
+          "text": "Keep Miasma away from Yasuo's Wind Wall: it blocks the portion of Miasma it hits. Wait for the wall to drop, then cast.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Cassiopeia:Yasuo:1",
+          "text": "Bait Wind Wall with a Noxious Blast, then use Twin Fang, which a wall also blocks, once it fades.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 22,
+              "end": 35
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Cassiopeia:Yasuo:2",
+          "text": "Put Miasma down on Yasuo when he dashes in; it grounds him, and he can't use movement abilities like Sweeping Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 101, "end": 115 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Cassiopeia:Yasuo:3",
+          "text": "Use Petrifying Gaze when Yasuo is running at you; he gets stunned if he faces you, so you can follow up with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 109,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Yasuo:4",
+          "text": "Stay at long range and use Twin Fang on poisoned Yasuo; his whirlwind from Steel Tempest is a line, so sidestep it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 27,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 75, "end": 88 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e2bdeae381c912bed9b86110a9e7cc18f794ebd16ce8c6972197b8b42ffacf96",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Yone:0",
+          "text": "Poke with Noxious Blast when Yone walks up to last-hit; the speed boost it gives you on a champion hit helps you slip away.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Cassiopeia:Yone:1",
+          "text": "Cast Miasma where Yone will dash in. He is grounded and slowed inside it, so he can't close the gap with a movement ability.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Yone:2",
+          "text": "Use Twin Fang on Yone only while he is poisoned, since the extra damage and healing need the poison. It also reaches him at a safe distance.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 17, "end": 21 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Cassiopeia:Yone:3",
+          "text": "Face Yone and cast Petrifying Gaze while he is running at you, so he is stunned. If he turns away he is only slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 19,
+              "end": 34
+            },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Cassiopeia:Yone:4",
+          "text": "Stay back from Yone once he has two stacks of Mortal Steel, because the third cast dashes in and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Yone-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8e278d1e8ea0d06eaf507b1e6d5a412505cce4af0b3f430d4ad34c97930f3018",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Zed:0",
+          "text": "Keep Miasma ready for when Zed uses Death Mark; it grounds him so he can't use movement abilities, and it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Zed-R", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Cassiopeia:Zed:1",
+          "text": "Drop Miasma on his shadow's landing spot or where he wants to swap, so he can't swap away while grounded.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Cassiopeia:Zed:2",
+          "text": "Poke with Noxious Blast and then Twin Fang while he is poisoned; stay at range so his Shadow Slash can't reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 33,
+              "end": 42
+            },
+            { "kind": "ability", "key": "Zed-E", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Cassiopeia:Zed:3",
+          "text": "Face Zed when he dives in and cast Petrifying Gaze so he is stunned, then follow up with Twin Fang on the stunned, poisoned target.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 35,
+              "end": 50
+            },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 89,
+              "end": 98
+            },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Cassiopeia:Zed:4",
+          "text": "Walk away from his Razor Shuriken sideways; Noxious Blast's speed boost helps you dodge once it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9dd1b4e1be34a0b8602f06db8b3fc16b66281fbd2c7ca4c180e3389afa717628",
+      "tips": [
+        {
+          "id": "middle:Cassiopeia:Zoe:0",
+          "text": "Stay out of line with Sleepy Trouble Bubble. If she hits you, you fall asleep and take extra damage from the next hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 22, "end": 43 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Cassiopeia:Zoe:1",
+          "text": "Punish Zoe after she uses Portal Jump. She can't move while there, so hit her with Noxious Blast.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-R", "start": 26, "end": 37 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 83, "end": 96 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Cassiopeia:Zoe:2",
+          "text": "Lay Miasma in her path when she tries to close in. It slows her and stops her from using movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Cassiopeia:Zoe:3",
+          "text": "Use Twin Fang on her while Noxious Blast poisons her. It hurts more and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Cassiopeia:Zoe:4",
+          "text": "Zoe's Paddle Star hurts most from far away. Stay out of its line, or stand close to her so it deals less.",
+          "refs": [{ "kind": "champion", "key": "Zoe", "start": 0, "end": 3 }],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e82577f51f6b636c5a51908398d1c81cab9737f28a63d93286719ce5a74ba24b",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Ashe:0",
+          "text": "Hit Ashe with Noxious Blast to get a burst of Move Speed, then follow with Twin Fang while she is poisoned.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Cassiopeia:Ashe:1",
+          "text": "Stay out of Ashe's Volley lines and keep minions in front of you to absorb the arrows.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ashe-W", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Cassiopeia:Ashe:2",
+          "text": "Cast Miasma on Ashe when she backs away; it leaves her slowed and unable to dash.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Ashe", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Cassiopeia:Ashe:3",
+          "text": "Use Petrifying Gaze when Ashe is facing you for a stun, then lay on damage. She has few ways to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ashe", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Cassiopeia:Ashe:4",
+          "text": "Stay in sight of your team when Enchanted Crystal Arrow is ready; a stun from far away gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 32, "end": 55 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ac3846c3b15e4c95c4d2c47fc055c15b289d3bbcdf6eedecabbaaa9afb802ecd",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Caitlyn:0",
+          "text": "Stay out of Caitlyn's long range. Walk up only when you can land Noxious Blast, then leave before she answers.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 65, "end": 78 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Cassiopeia:Caitlyn:1",
+          "text": "Watch the ground before you step forward; Yordle Snap Trap roots you where you stand, and Caitlyn gets a bonus Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 42, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 },
+            { "kind": "champion", "key": "Caitlyn", "start": 90, "end": 97 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 111,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Cassiopeia:Caitlyn:2",
+          "text": "Hold Miasma for when Caitlyn fires her net to reposition. It slows her and stops her dashing.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Caitlyn", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Cassiopeia:Caitlyn:3",
+          "text": "Stay behind your minions when Caitlyn fires Piltover Peacemaker; it deals less damage to each target after the first.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 44, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Cassiopeia:Caitlyn:4",
+          "text": "Use Twin Fang on a poisoned Caitlyn for extra damage and healing, and use Petrifying Gaze when she faces you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Caitlyn", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "db8741e62a660c0742f93cfcb8c3a53c416f04908b290b13b3b6e64faae8f9e5",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Ezreal:0",
+          "text": "Cast Miasma on Ezreal's escape path; he is grounded inside it, so Arcane Shift cannot be used to blink away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Cassiopeia:Ezreal:1",
+          "text": "Aim Noxious Blast where Ezreal will walk, not where he stands; it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Cassiopeia:Ezreal:2",
+          "text": "Follow every Noxious Blast that hits with Twin Fang; poisoned targets take much more damage and you heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 13,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Cassiopeia:Ezreal:3",
+          "text": "Stay out of line with Ezreal and keep minions between you, so Mystic Shot hits a minion first.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Cassiopeia:Ezreal:4",
+          "text": "Use Petrifying Gaze when Ezreal is facing you. He is stunned, and then you can finish with Twin Fang.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 60 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 91,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8dc9689f9a1b8233eaff8dcf50c5f942638afacc5e4596451e3934204c019399",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Jhin:0",
+          "text": "Use Miasma on Jhin when he steps up to attack; it grounds and slows him, so he can't dash away and has trouble dodging Noxious Blast.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Jhin", "start": 14, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 119,
+              "end": 132
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Cassiopeia:Jhin:1",
+          "text": "Land Noxious Blast, then follow with Twin Fang. Poisoned targets take much more damage, and you heal from it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Cassiopeia:Jhin:2",
+          "text": "Stay out of a straight line from Jhin. When he is hitting you, Deadly Flourish can root you, so don't stand still in his sight.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jhin-W", "start": 63, "end": 78 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Cassiopeia:Jhin:3",
+          "text": "Hit Jhin with Petrifying Gaze while he faces you to stun him. Follow with Twin Fang for big damage on the stunned target.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 14,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 74,
+              "end": 83
+            },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Cassiopeia:Jhin:4",
+          "text": "Walk around bushes and chokepoints carefully; Jhin hides Captive Audience traps there. Walking into one slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Jhin-E", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Cassiopeia:Jhin:5",
+          "text": "Trade while Jhin is reloading his fourth shot; he can't attack then, so you can poke him freely.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0135bf69d2a33b9a385b41599bc7634885eb78ec5ef96e6faf604b512c14efd3",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Jinx:0",
+          "text": "Keep Miasma on Jinx when she steps up to attack; it slows her and stops her using movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Jinx", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Cassiopeia:Jinx:1",
+          "text": "Hit Jinx with Noxious Blast, then use Twin Fang on her while she is poisoned for big damage and healing.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Cassiopeia:Jinx:2",
+          "text": "Make Jinx face you before Petrifying Gaze, since she is only stunned when she faces you. Cast it when she walks toward you.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Cassiopeia:Jinx:3",
+          "text": "Walk out of the way of Flame Chompers and fight her after she has used them. Without them she has a hard time escaping.",
+          "refs": [],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5463c6a667ab64ae45eb03a1b942612865b55b7f29b2dd8f11feb8330edb5db4",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Kaisa:0",
+          "text": "Put Miasma on Kai'Sa when she wants to dive; while it grounds her she can't use the dash from Killer Instinct.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Kaisa", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 94, "end": 109 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Cassiopeia:Kaisa:1",
+          "text": "Cast Petrifying Gaze when Kai'Sa is walking toward you; she is stunned if she faces you and only slowed if she turns away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Cassiopeia:Kaisa:2",
+          "text": "Lead your Noxious Blast where Kai'Sa is walking. A hit speeds you up, so follow with Twin Fang while she is poisoned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Kaisa", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 85, "end": 94 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Cassiopeia:Kaisa:3",
+          "text": "Use Twin Fang on poisoned Kai'Sa to trade damage and heal back what she poked off you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0353b6134cc58cfd6c1fcf4a105f95f28283051c55e689e133647ca28aaa8b9f",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:MissFortune:0",
+          "text": "Use Noxious Blast on Miss Fortune, leading her path; hitting a champion gives you speed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "MissFortune", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Cassiopeia:MissFortune:1",
+          "text": "Hit Miss Fortune with Noxious Blast, then Twin Fang her for strong damage while she is poisoned.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 22,
+              "end": 35
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Cassiopeia:MissFortune:2",
+          "text": "Damage Miss Fortune to cancel her speed boost from Strut; poke her whenever she walks up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 7, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 51,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "poke", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Cassiopeia:MissFortune:3",
+          "text": "Drop Miasma on her when she dashes in or tries to run; she cannot use movement abilities and is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Cassiopeia:MissFortune:4",
+          "text": "Don't stand in front of Miss Fortune during Bullet Time; step out of the cone or use Petrifying Gaze while she faces you to stun her.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 24,
+              "end": 36
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 44,
+              "end": 55
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 85,
+              "end": 100
+            },
+            { "kind": "keyword", "key": "stunned", "start": 124, "end": 128 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b05c9c7151b3af530a34ccdd0afe57a8dac7ea9eb9f1012a39d929268def4222",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Sivir:0",
+          "text": "Wait for Spell Shield to be used before casting Petrifying Gaze. Sivir can block it and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 9, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 48,
+              "end": 63
+            },
+            { "kind": "champion", "key": "Sivir", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Cassiopeia:Sivir:1",
+          "text": "Fire Noxious Blast ahead of Sivir's path, then use Twin Fang on her while she is poisoned for big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sivir", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 51, "end": 60 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Cassiopeia:Sivir:2",
+          "text": "Drop Miasma where Sivir wants to walk. It slows her and stops her dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Sivir", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Cassiopeia:Sivir:3",
+          "text": "Stay out of Boomerang Blade's line, and watch for it coming back after it reaches full range.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "14f90f8e767ff3c2ca7fd6be35c35624dfb7c460dffb9505029185c40becc4c5",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Smolder:0",
+          "text": "Land Noxious Blast on Smolder early, while he is weak and has few stacks. Follow with Twin Fang, which hits harder on a poisoned target.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 86, "end": 95 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Cassiopeia:Smolder:1",
+          "text": "Lead your Noxious Blast toward where Smolder is walking, because it explodes after a short delay.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 10,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Smolder", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Cassiopeia:Smolder:2",
+          "text": "Drop Miasma where Smolder will stand; it leaves him slowed and grounded, so he can't dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Smolder", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Cassiopeia:Smolder:3",
+          "text": "Keep moving sideways to dodge his long-range Achooo!, which slows you if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Cassiopeia:Smolder:4",
+          "text": "Use Petrifying Gaze when Smolder is facing you, to stun him for a free kill. If he flees, it only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Smolder", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9ff77510fb63e13865007bbb6a5b620f30eb87e97daf1415591c234d2354dc30",
+      "tips": [
+        {
+          "id": "adc:Cassiopeia:Yunara:0",
+          "text": "Aim Noxious Blast where Yunara is walking, not where she stands; it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Cassiopeia:Yunara:1",
+          "text": "Use Twin Fang on Yunara right after Noxious Blast hits. A poisoned target takes much more damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yunara", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Cassiopeia:Yunara:2",
+          "text": "Throw Miasma on Yunara's escape path. She is slowed and grounded, so she can't use movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Yunara", "start": 16, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Cassiopeia:Yunara:3",
+          "text": "Save Petrifying Gaze for when Yunara faces you. She is stunned then, and only slowed if she turns away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yunara", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Cassiopeia:Yunara:4",
+          "text": "Play safe when Yunara uses Transcend One's Self. Her dash and extra attack speed make her much harder to catch and kill.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Yunara-R", "start": 27, "end": 47 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

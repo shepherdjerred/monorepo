@@ -1,0 +1,1813 @@
+{
+  "schemaVersion": 1,
+  "champion": "Volibear",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "4c7e13383a12768725f40ec2d79a3ec79ec0e5cdaf034a1285751a47668979d3",
+      "tips": [
+        {
+          "id": "top:Volibear:general:0",
+          "text": "Use Thundering Smash to close the gap, then attack to stun. Its move speed is higher when you run toward an enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Volibear:general:1",
+          "text": "Avoid walking into crowd control with Thundering Smash active. If an enemy immobilizes you before the stun lands, it ends early, though its cooldown refreshes.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Volibear:general:2",
+          "text": "Hit an enemy with Frenzied Maul twice in a row. The second hit hits harder and heals you, so use it when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Volibear:general:3",
+          "text": "Land Sky Splitter where you will be fighting and stand inside it. You get a shield and the enemies in it are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Volibear:general:4",
+          "text": "The bolt from Sky Splitter lands after a delay, so aim it where the enemy is walking. Enemies can't see where it will land at first.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Volibear:general:5",
+          "text": "Mix attacks and abilities to build The Relentless Storm. At full stacks your attacks chain lightning to nearby enemies, so fight near minions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Volibear-passive",
+              "start": 35,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Volibear:general:6",
+          "text": "Use Stormbringer to jump onto a tower fight. It disables nearby towers for a short time and slows enemies where you land, so you can dive safely.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3704bcb8b5fad02846c2a1599b60454fd14ee058f2dad9e8283a440d59931864",
+      "tips": [
+        {
+          "id": "jungle:Volibear:general:0",
+          "text": "Walk up and hit with Thundering Smash to stun your target. The movement speed is doubled when you run toward an enemy champion, so use it to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 21, "end": 37 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Volibear:general:1",
+          "text": "Hit the same target twice with Frenzied Maul. The second hit does more damage and heals you, so it works well in long fights and on camps.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Volibear:general:2",
+          "text": "Stand inside the blast zone when you cast Sky Splitter. You get a shield, and enemies hit are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 42, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Volibear:general:3",
+          "text": "Keep landing attacks and abilities to build The Relentless Storm. At full stacks your attacks chain lightning to nearby enemies, so fight near several targets.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Volibear-passive",
+              "start": 44,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Volibear:general:4",
+          "text": "Use Stormbringer to jump onto enemies, or to disable a tower during a dive. You also get extra health and range while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Volibear:general:5",
+          "text": "Don't use Thundering Smash when an enemy is about to root you. If you are immobilized before the stun lands, it ends early, though the cooldown refreshes.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Volibear:combo:0",
+          "name": "Sky Splitter cancel",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Volibear-Q" },
+            { "kind": "ability", "key": "Volibear-E" }
+          ],
+          "when": "When you want to cast Sky Splitter without showing the cast animation during the Thundering Smash speed boost.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 81, "end": 97 }
+          ],
+          "text": "Cast Sky Splitter while the movement speed from Thundering Smash is active. The wiki notes this stops the cast animation from playing, so you give less warning.",
+          "textRefs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 48, "end": 64 }
+          ]
+        },
+        {
+          "id": "jungle:Volibear:combo:1",
+          "name": "Bolt under yourself",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Volibear-E" }],
+          "when": "When you want the shield while fighting up close.",
+          "whenRefs": [],
+          "text": "Aim Sky Splitter so the blast zone covers you as well as your target. The bolt lands after a delay, so cast it where the fight will be.",
+          "textRefs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "b37d40d6c443da8610e1c7b2e280a3dd305ecd4d85dbe1e923fe53b3d61fdf26",
+      "tips": [
+        {
+          "id": "top:Volibear:Aatrox:0",
+          "text": "Walk at Aatrox with Thundering Smash active; the extra Move Speed toward him closes the gap and the stun stops his Darkin Blade follow-ups.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 20, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Volibear:Aatrox:1",
+          "text": "Fire Sky Splitter at him when he is slowed by nothing else and stand inside it for a shield; it also slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Volibear:Aatrox:2",
+          "text": "Hit Aatrox with Frenzied Maul twice in a row; the second bite hits harder and heals you, which wins the longer trade against his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Volibear-W", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Volibear:Aatrox:3",
+          "text": "Step sideways out of The Darkin Blade; the edge of each slash knocks you up and hurts most, so avoid standing at the far end.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 21, "end": 37 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Volibear:Aatrox:4",
+          "text": "Leap in with Stormbringer when you want a fight; the slow stops him from running and you can't be pulled around by his crowd control while leaping.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 13, "end": 25 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20e4986c88a8cdc12ef71dae680b1cfba605129b843b8772bffcd8c46f4a595b",
+      "tips": [
+        {
+          "id": "top:Volibear:Briar:0",
+          "text": "Hold Thundering Smash until Briar leaps at you or you can reach her. Its stun and extra speed let you catch her and trade first.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Volibear:Briar:1",
+          "text": "Use Frenzied Maul twice on Briar in a trade. The second hit does more damage and heals you, which counters her bleed healing.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Volibear:Briar:2",
+          "text": "Aim Sky Splitter where Briar will be when she charges at you. If you stand inside it, you also get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Volibear:Briar:3",
+          "text": "Land Sky Splitter on Briar to slow her. It hurts more the more health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "70527ca260c1f6140801458dfc6b8ab23d0d783c8282f8424161162b2b40bece",
+      "tips": [
+        {
+          "id": "top:Volibear:Darius:0",
+          "text": "Use Thundering Smash to close the gap when Darius walks up. Its stun lets you start the trade on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Volibear:Darius:1",
+          "text": "Hit Darius with Frenzied Maul twice in a trade. The second bite hurts more and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Volibear-W", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Volibear:Darius:2",
+          "text": "Aim Sky Splitter where Darius will stand, not where he is. It has a delay and leaves him slowed, so he can't chase you as easily.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Volibear:Darius:3",
+          "text": "Stand inside the bolt of Sky Splitter when you can, to gain a shield for the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Volibear:Darius:4",
+          "text": "Don't stay in Darius's range for a long fight. Trade briefly and step back, because he gets stronger the longer he keeps hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Volibear:Darius:5",
+          "text": "Use Stormbringer to fight when Darius dives you. The extra health helps, and it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbab684f669c78800afeb14829c6f549b5be7754594a959532de662bd9ca10b2",
+      "tips": [
+        {
+          "id": "top:Volibear:Fiora:0",
+          "text": "Stay away from Fiora when her Riposte is ready. If Thundering Smash gets you stunned or otherwise held in place, she can parry it and stun you back.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Fiora-W", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Volibear:Fiora:1",
+          "text": "Wait for Riposte to be used, then go in with Thundering Smash. The stun gives you a short window to hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Volibear:Fiora:2",
+          "text": "Use Frenzied Maul twice on Fiora in a trade. The second hit hits harder and heals you, which wins longer fights.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Fiora", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Volibear:Fiora:3",
+          "text": "Cast Sky Splitter on yourself and Fiora together when you fight. She is slowed, and you get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fiora", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Volibear:Fiora:4",
+          "text": "Look for a trade at level 6 with Stormbringer. The extra health and slow make it hard for Fiora to dive on you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 33, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 },
+            { "kind": "champion", "key": "Fiora", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1db1e38018194416e0ebe3f8bd0a4281d9c385d5b06a3308760880d4fc1ead08",
+      "tips": [
+        {
+          "id": "top:Volibear:Gangplank:0",
+          "text": "Use Thundering Smash to jump on Gangplank when he is away from his kegs; the stun stops him from placing more.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Gangplank", "start": 32, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Volibear:Gangplank:1",
+          "text": "Attack a Powder Keg yourself to defuse it before Gangplank can blow it up on you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 9, "end": 19 },
+            { "kind": "champion", "key": "Gangplank", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Volibear:Gangplank:2",
+          "text": "Save Thundering Smash until Gangplank has used Remove Scurvy, since it cleanses the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Volibear:Gangplank:3",
+          "text": "Use Frenzied Maul twice in a row on Gangplank; the second bite hits harder and heals you back after his pokes.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Volibear:Gangplank:4",
+          "text": "Watch for Gangplank's level 6; his Cannon Barrage can hit you from anywhere, so avoid fights at low health.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d45f2661484db4f15933471051ecd2dde420120524e4dc3a49b77f036f060d88",
+      "tips": [
+        {
+          "id": "top:Volibear:Garen:0",
+          "text": "Do not fight Garen when Decisive Strike is ready. His silence cuts your abilities off mid-trade.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Garen-Q", "start": 24, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Volibear:Garen:1",
+          "text": "Use Frenzied Maul twice on Garen in a trade; the second bite hits harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Garen", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Volibear:Garen:2",
+          "text": "Cast Sky Splitter so Garen is in the circle, and stand inside it yourself to get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Garen", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Volibear:Garen:3",
+          "text": "Do not hit Garen while he stands in a bush. You walk into full Judgment damage.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Garen-E", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Volibear:Garen:4",
+          "text": "Back away from Garen when your health is low. Demacian Justice deals more damage the less health you have.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dcab83b7b961e87dbd4b478beb42e44c7e75dd73e3be5def313caa43cb4d6b06",
+      "tips": [
+        {
+          "id": "top:Volibear:Jayce:0",
+          "text": "Use Thundering Smash to close the gap when Jayce is in Cannon Stance; the extra speed towards him lets you reach him and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Volibear:Jayce:1",
+          "text": "Do not rush into Jayce's Thundering Blow. If he roots or knocks you back during Thundering Smash, it ends early.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Volibear:Jayce:2",
+          "text": "Hit Jayce with Frenzied Maul twice in a row. The second hit deals more damage and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Volibear-W", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Volibear:Jayce:3",
+          "text": "Aim Sky Splitter where Jayce will stand while he pokes you. Stand inside it yourself to gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Volibear:Jayce:4",
+          "text": "Enemies cannot see Sky Splitter land for the first moment, so cast it onto Jayce when he is about to leap or fight in melee.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 19, "end": 31 },
+            { "kind": "champion", "key": "Jayce", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72b00144a394bbbf4b86c0a242cb157346b15be424d2079cfdfda5d8fe4fdb70",
+      "tips": [
+        {
+          "id": "top:Volibear:KSante:0",
+          "text": "Walk up with Thundering Smash active when you want to trade; it speeds you toward K'Sante and stuns on your next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "KSante", "start": 82, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Volibear:KSante:1",
+          "text": "Hit K'Sante with Frenzied Maul twice in a trade; the second bite hits harder and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Volibear-W", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Volibear:KSante:2",
+          "text": "Aim Sky Splitter where K'Sante will stand, and stand inside it yourself to get the shield. It also leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "KSante", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Volibear:KSante:3",
+          "text": "Do not start Thundering Smash while K'Sante can stun or pull you first. If you are immobilized before you land the stun, it ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "KSante", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Volibear:KSante:4",
+          "text": "Use Stormbringer to close the gap or to disable the tower when you dive; the extra health helps in the fight that follows.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cb035ffd68d58c1e6934f3474998941fbb146f1e9c92857138cb6466514250c4",
+      "tips": [
+        {
+          "id": "top:Volibear:Malphite:0",
+          "text": "Save Thundering Smash for when Malphite is in range. Close the gap with its extra speed toward champions, then stun him with your next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Malphite", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Volibear:Malphite:1",
+          "text": "Do not rely on long auto-attack trades into Ground Slam; it cuts your Attack Speed, so use Frenzied Maul to deal damage instead.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 44, "end": 55 },
+            { "kind": "ability", "key": "Volibear-W", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Volibear:Malphite:2",
+          "text": "Aim Sky Splitter where Malphite will stand and stand inside it yourself; you get a shield and he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Volibear:Malphite:3",
+          "text": "Hit Malphite twice with Frenzied Maul to bite him and heal; it works well when you are hurt after a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Volibear-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Volibear:Malphite:4",
+          "text": "Do not stand grouped when Malphite has Unstoppable Force ready; step away from him so it does not knock you up.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Malphite-R", "start": 39, "end": 56 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a53b5d0428270be532c22be3af47c27bf2d93e0f4a0370d5a51b2917178c5aa",
+      "tips": [
+        {
+          "id": "top:Volibear:Mordekaiser:0",
+          "text": "Do not fight Mordekaiser in a long trade when Darkness Rise is on. Back off and wait for it to fade.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 13,
+              "end": 24
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 46,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Volibear:Mordekaiser:1",
+          "text": "Save Thundering Smash for when Mordekaiser's Death's Grasp is on cooldown. If you are immobilized before you land the stun, it ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 31,
+              "end": 42
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 45,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Volibear:Mordekaiser:2",
+          "text": "Use Frenzied Maul twice on Mordekaiser. The second bite hits harder and heals you, which helps against his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Volibear:Mordekaiser:3",
+          "text": "Hit Mordekaiser with Sky Splitter when he is slowed or walking onto it. The bolt lands late, so aim ahead of him.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Volibear-E", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Volibear:Mordekaiser:4",
+          "text": "Trade into Indestructible's shield only when it is down; his shield grows the more you fight him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 11,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bdaf90f905d4cc8a541079e54b5b915d6a9d30d38794f249eb99b35adc1a1fd1",
+      "tips": [
+        {
+          "id": "top:Volibear:Rumble:0",
+          "text": "Close in with Thundering Smash to stun Rumble. Land the stun, then fight him before he can use his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 14, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Rumble", "start": 39, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Volibear:Rumble:1",
+          "text": "Wait until Rumble Overheats, then go in. He can't cast spells for a few seconds, so he can't slow you or shield himself.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Volibear:Rumble:2",
+          "text": "Step out of The Equalizer's burning trail quickly. Staying inside it costs you a lot of health and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Volibear:Rumble:3",
+          "text": "Use Frenzied Maul twice on Rumble to heal back the health that Flamespitter took. Do it when you are trading in close.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Volibear:Rumble:4",
+          "text": "Sky Splitter hits hard on a high-health target and slows him. Throw it where Rumble stands to trade, and stand inside it for a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Rumble", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a29cea71a9a7afab759f0667c8297df3ce0d74fe318afb71f2ed6ae35b7c90cc",
+      "tips": [
+        {
+          "id": "top:Volibear:Sion:0",
+          "text": "Run at Sion with Thundering Smash while he is not charging, and stun him. Stay out of his line while he charges Decimating Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 },
+            { "kind": "ability", "key": "Sion-Q", "start": 112, "end": 128 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Volibear:Sion:1",
+          "text": "Step out of the line of Roar of the Slayer. It slows you and is often used to set up a stunning Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 24, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Sion-Q", "start": 96, "end": 112 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Volibear:Sion:2",
+          "text": "Use Frenzied Maul twice in a row on Sion. The second bite hits harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Volibear:Sion:3",
+          "text": "Hold back Sky Splitter until Sion is slowed or committed. Standing in the bolt yourself gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Volibear:Sion:4",
+          "text": "Do not trade into Sion when his Soul Furnace shield is up; wait for it to fade or be broken.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Sion-W", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4418556efb98cf31706487d90f3c88e0c3eb9edc9735b0de798be22c5e061c9b",
+      "tips": [
+        {
+          "id": "top:Volibear:Teemo:0",
+          "text": "Walk toward Teemo with Thundering Smash ready; the stun lets you land attacks on him. Use it as your way to close in.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Volibear:Teemo:1",
+          "text": "Use Frenzied Maul even while blinded; it cannot miss, and your normal attacks will.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Volibear:Teemo:2",
+          "text": "Watch for bushes. Teemo hides in them unseen, so do not walk in blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Volibear:Teemo:3",
+          "text": "Cast Sky Splitter onto Teemo when he is standing still or farming, and stand inside it to gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Volibear:Teemo:4",
+          "text": "Mushrooms are hidden, so use the ground you can see to be careful. Avoid chasing through places he may have planted Noxious Trap.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 116, "end": 128 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Volibear:Teemo:5",
+          "text": "Use Stormbringer in a longer fight, once you are on top of him, for extra health and reach.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "01a9935ec042451a31e1d1e9c6e37a14a38dc0bc07b737f5ce20a6d6427aa8d7",
+      "tips": [
+        {
+          "id": "top:Volibear:Vayne:0",
+          "text": "Use Thundering Smash to close the gap on Vayne; it gives you speed toward her and a stun on your hit.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Volibear:Vayne:1",
+          "text": "Don't stand next to a wall when Vayne is in range; Condemn will pin you and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Vayne-E", "start": 51, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Volibear:Vayne:2",
+          "text": "Hit Vayne with Frenzied Maul twice in a row; the second bite hurts more and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Volibear-W", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Volibear:Vayne:3",
+          "text": "Cast Sky Splitter where Vayne will dodge to, such as her escape path; it slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Volibear:Vayne:4",
+          "text": "Fight Vayne early; she is weak before she has her items and Silver Bolts hurts less.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Vayne-W", "start": 60, "end": 72 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4997374a88298fcc958b9d4b9d111f96e2bb0200334ac5382f9091425929f605",
+      "tips": [
+        {
+          "id": "top:Volibear:Yone:0",
+          "text": "Use Thundering Smash to close the gap when Yone steps up. The stun gives you a free trade, and the Move Speed doubles when you run at him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 43, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Volibear:Yone:1",
+          "text": "Cast Sky Splitter where Yone will stand, not where he is now. It slows him and hits for a share of his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Volibear:Yone:2",
+          "text": "Hit Yone with Frenzied Maul twice in a trade. The second hit hurts more and heals you, so you win the longer fights.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Volibear-W", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Volibear:Yone:3",
+          "text": "Take a trade when Yone's Mortal Steel is on cooldown. Without it he can't easily poke you or build up his knock up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Yone-Q", "start": 25, "end": 37 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 },
+            { "kind": "keyword", "key": "knocked-up", "start": 106, "end": 114 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Volibear:Yone:4",
+          "text": "Use Stormbringer in a big fight. The extra Health helps you survive his burst, and the slow gives you a chance to catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "25817217d52f938dd6fdbff9bf998251d5841ab43a990ab0b35fb735c025f773",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Graves:0",
+          "text": "Use Thundering Smash to close in on Graves; the stun stops him from kiting you. Do not run at him with it already spent.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Graves", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Volibear:Graves:1",
+          "text": "Stand in your own Sky Splitter circle to get the shield, and use it on Graves when he stops to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 18, "end": 30 },
+            { "kind": "champion", "key": "Graves", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Volibear:Graves:2",
+          "text": "Chew on Graves with Frenzied Maul twice; the second bite hits harder and heals you, which helps against his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Volibear-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Volibear:Graves:3",
+          "text": "Stay out of Smoke Screen; leaving the cloud removes its slow at once.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Volibear:Graves:4",
+          "text": "Stormbringer makes you sturdier and gives you more attack range, so start the fight with it when Graves has used Quickdraw.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Graves", "start": 97, "end": 103 },
+            { "kind": "ability", "key": "Graves-E", "start": 113, "end": 122 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75861eafe2691e3049959c38b6314358484cbd8b95417b736f5886a7a6df8bae",
+      "tips": [
+        {
+          "id": "jungle:Volibear:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Volibear:JarvanIV:1",
+          "text": "If Jarvan knocks you up or otherwise immobilizes you, Thundering Smash ends early, but its cooldown comes back. Use it again once you are free.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Volibear:JarvanIV:2",
+          "text": "Fight with Frenzied Maul twice in a row. The second bite heals you and hits harder, which wins long trades against Jarvan.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Volibear:JarvanIV:3",
+          "text": "Cast Sky Splitter where Jarvan will stand inside his own Cataclysm arena; he cannot easily walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ef3f1b8ca74f75d0f6c1ab32b288cb41264909d624f083cee7e0a5c9946231f6",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Kayn:0",
+          "text": "Use Thundering Smash to chase Kayn; the faster run towards him closes the gap and the hit stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kayn", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Volibear:Kayn:1",
+          "text": "Aim Sky Splitter where Kayn will end up, not where he stands. It slows him and hits hard against his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Volibear:Kayn:2",
+          "text": "Hit Kayn twice with Frenzied Maul in a fight. The second hit does more damage and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Volibear-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Volibear:Kayn:3",
+          "text": "Land Stormbringer on Kayn when he commits; the extra Health helps you outlast his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Kayn", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Volibear:Kayn:4",
+          "text": "Do not spend Thundering Smash when Kayn can slow or stun you first. If he immobilizes you, it ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Kayn", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "29a157592135c1f489c3f58a446f0b04b5a48e6c291b5f56e22a680e14f45609",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Khazix:0",
+          "text": "Stay near allied minions or teammates so Kha'Zix cannot catch you isolated, because Taste Their Fear hits an isolated target far harder.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "isolated", "start": 66, "end": 74 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 84, "end": 100 },
+            { "kind": "keyword", "key": "isolated", "start": 109, "end": 117 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Volibear:Khazix:1",
+          "text": "Stun Kha'Zix with Thundering Smash when he leaps in, then follow with Frenzied Maul to win the short fight.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Khazix", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Volibear-W", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Volibear:Khazix:2",
+          "text": "Fight when Leap and Void Assault are on cooldown. Kha'Zix has no easy escape then, and Sky Splitter slows him as he runs.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Khazix-R", "start": 20, "end": 32 },
+            { "kind": "champion", "key": "Khazix", "start": 50, "end": 57 },
+            { "kind": "ability", "key": "Volibear-E", "start": 87, "end": 99 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Volibear:Khazix:3",
+          "text": "Use Stormbringer when you commit to a fight. The extra Health helps you outlast Kha'Zix's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d578191fc0808b62e3d7d288aaf056a87097b692d578649e28a9d9357353d716",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Kindred:0",
+          "text": "Chase Kindred with Thundering Smash; the extra speed toward enemy champions closes the gap and the stun stops her from vaulting away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Volibear:Kindred:1",
+          "text": "Kindred is fragile, so dive her when she is out of position. Sky Splitter slows her and deals extra damage because she has less max Health than a tank.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Volibear-E", "start": 61, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Volibear:Kindred:2",
+          "text": "Use Frenzied Maul twice on Kindred in a fight; the second hit hurts more and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kindred", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Volibear:Kindred:3",
+          "text": "Don't use Stormbringer on top of Lamb's Respite. Enemies inside it can't die, so wait for it to end before you finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 10, "end": 22 },
+            { "kind": "ability", "key": "Kindred-R", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d33459da9bd30085794aae4e98ca08a972d1a24aa60535e63538db127330927b",
+      "tips": [
+        {
+          "id": "jungle:Volibear:LeeSin:0",
+          "text": "Use Frenzied Maul twice on Lee Sin in a fight; the second bite hits harder and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "LeeSin", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Volibear:LeeSin:1",
+          "text": "Save Thundering Smash for when Lee Sin commits; if he stuns or roots you first, you lose it, so don't use it where he can interrupt you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "LeeSin", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Volibear:LeeSin:2",
+          "text": "Stand inside Sky Splitter when it lands to get a shield, and fight him there.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 13, "end": 25 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Volibear:LeeSin:3",
+          "text": "Lee Sin's Sonic Wave stops at the first enemy it hits, so keep a minion between you and him when you can.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Volibear:LeeSin:4",
+          "text": "Lee Sin is weak to magic damage; the lightning from The Relentless Storm helps you win a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Volibear-passive",
+              "start": 52,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "03a79b6461b8711d36cba82f9421645578e9e90346808f6308cc5649a5c01b72",
+      "tips": [
+        {
+          "id": "jungle:Volibear:MasterYi:0",
+          "text": "Hold Thundering Smash until Master Yi commits. A stun on him stops his attacks and wastes his Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Volibear:MasterYi:1",
+          "text": "Aim Sky Splitter where Master Yi will stand. It slows him, and Highlander cannot be used to remove it once it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "MasterYi", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Volibear:MasterYi:2",
+          "text": "Bite with Frenzied Maul twice in a trade. The second bite hits harder and heals you, which beats Meditate.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 10, "end": 23 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Volibear:MasterYi:3",
+          "text": "Use Stormbringer at level 6 to cover his Alpha Strike chase. You are immune to crowd control while you leap.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 41, "end": 53 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a6c93acb081452222f043b07c5ebb54037627d92c594e7ff148465baf7332bf2",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Naafiri:0",
+          "text": "Hold Thundering Smash for when Naafiri dashes in or tries to run; the move speed closes the gap and the stun lets you finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Naafiri", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Volibear:Naafiri:1",
+          "text": "Use Sky Splitter on her when she is hurt. It hits for a share of her max Health and leaves her slowed, so she cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Volibear:Naafiri:2",
+          "text": "Cast Sky Splitter over yourself when you expect a fight. You get a shield if you stand in the blast zone, which helps against her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Volibear:Naafiri:3",
+          "text": "Use Frenzied Maul twice on her in a fight. The second hit deals more damage and heals you, which wins long trades.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Volibear:Naafiri:4",
+          "text": "Save Stormbringer for when she dives or commits. The extra Health and the slow on nearby enemies make you hard to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0072d9a00f6b223d15fd4a7cc0edf07f9a546513d302183ba62401c8dedea3bb",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Nocturne:0",
+          "text": "Save Thundering Smash to chase Nocturne, then hit him to stun. Beware the shield from Shroud of Darkness, which blocks it.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Nocturne", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Volibear:Nocturne:1",
+          "text": "Bait out Shroud of Darkness with a cheap ability first, then use Frenzied Maul and Thundering Smash while it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "Volibear-W", "start": 65, "end": 78 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Volibear:Nocturne:2",
+          "text": "Stay near your team when Paranoia goes off; Nocturne dives one target and your allies can punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 25, "end": 33 },
+            { "kind": "champion", "key": "Nocturne", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Volibear:Nocturne:3",
+          "text": "Walk out of range when Unspeakable Horror is cast so the tether breaks and you avoid the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 23, "end": 41 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Volibear:Nocturne:4",
+          "text": "Use Stormbringer in a brawl for extra health and a slow on nearby enemies, which makes it hard for Nocturne to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 },
+            { "kind": "champion", "key": "Nocturne", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7a5a55b5034064f26614d7c530ba9c3972ca3110eea1896af807622e70f2318",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Shyvana:0",
+          "text": "Save Thundering Smash for when Shyvana is out of her shield; the stun lets you hit her freely.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Shyvana", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Volibear:Shyvana:1",
+          "text": "Use Frenzied Maul twice on Shyvana in a fight; the second bite hurts more and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shyvana", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Volibear:Shyvana:2",
+          "text": "Dodge Molten Burst by stepping sideways; once she is slowed you cannot catch her easily.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Volibear:Shyvana:3",
+          "text": "Fight when Shyvana is low on Fury, before she can use Dragon's Descent.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "524dae1de0c575597bec7d7473808d9700ed264429c7f9f9a1a60429c93a2598",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Skarner:0",
+          "text": "Don't let Skarner drag you into a wall with Ixtal's Impact; a stun or knock up from an ally stops his charge.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Skarner-E", "start": 44, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Volibear:Skarner:1",
+          "text": "Use Thundering Smash to close in on Skarner and stun him, but be careful: if he stuns you first, it ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Volibear:Skarner:2",
+          "text": "Use Frenzied Maul twice in a row on Skarner to deal more damage and heal in a long fight.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Volibear:Skarner:3",
+          "text": "Put Sky Splitter on Skarner when he starts to charge or fight; it slows him, and you get a shield if you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Volibear:Skarner:4",
+          "text": "Don't wait around in a drawn-out fight; Skarner's Quaking damage builds up if he keeps hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "91fab47b2340306e35cdd0c0117a005ecf429f32a1e4534f7a22288c8a674c52",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Sylas:0",
+          "text": "Hit Sylas with Sky Splitter when he commits to a fight; the bolt scales with his max Health and leaves him slowed so you can catch him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Volibear-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Volibear:Sylas:1",
+          "text": "Open with Thundering Smash to close the gap; the bonus speed is higher toward enemy champions, and the hit stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Volibear:Sylas:2",
+          "text": "Play around his Abduct. If it stuns you before you land Thundering Smash, that ability ends early.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Volibear:Sylas:3",
+          "text": "Use Frenzied Maul twice in a fight. The second hit hurts more and heals you, which helps against his Kingslayer healing.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Sylas-W", "start": 101, "end": 111 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Volibear:Sylas:4",
+          "text": "Land Stormbringer on him in a brawl; the extra Health and slow let you win the fight in close range.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "87c353288e9760582e30ef2757779d46bc9b4dbd462c92f31b7db92436073efb",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Talon:0",
+          "text": "Save Thundering Smash to stun Talon when he jumps in. He cannot burst you if he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Volibear:Talon:1",
+          "text": "Fight Talon in long trades. Use Frenzied Maul twice on him to heal and outlast his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Volibear-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Volibear:Talon:2",
+          "text": "Cast Sky Splitter where Talon will stand or flee. It slows him and shields you when you stand inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Volibear:Talon:3",
+          "text": "Chase Talon hard while Shadow Assault is down, since he has no easy escape then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-R", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Volibear:Talon:4",
+          "text": "Talon deals only physical damage, so extra health and toughness from Stormbringer helps you survive his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Volibear-R", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a0fd6dcd5128b0e0768fad5fe5d9dcbc132bd15a4acbb52551633de461aa62d0",
+      "tips": [
+        {
+          "id": "jungle:Volibear:Viego:0",
+          "text": "Use Thundering Smash to close on Viego; the faster chase speed toward enemy champions helps you reach him, and your next Attack stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 128, "end": 133 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Volibear:Viego:1",
+          "text": "Hit Viego with Frenzied Maul twice in a fight; the second bite hurts more and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Volibear-W", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Volibear:Viego:2",
+          "text": "Cast Sky Splitter where Viego will be standing or running to; it slows him, and you get a shield if you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Volibear:Viego:3",
+          "text": "Fight Viego away from fresh kills. A dead champion near him can turn into a wraith he eats to heal and copy them, so avoid trading into that.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Volibear:Viego:4",
+          "text": "Use Stormbringer to leap onto Viego in a brawl. The extra health helps you win the longer fight.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "68b38bedae19479f8576219563e22a10c47dc8678349ed565c91ebe20a28d16a",
+      "tips": [
+        {
+          "id": "jungle:Volibear:XinZhao:0",
+          "text": "Do not walk into Xin Zhao's Three Talon Strike. His third hit knocks you up, and your Thundering Smash fails if you are immobilized first.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 28, "end": 46 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 86, "end": 102 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Volibear:XinZhao:1",
+          "text": "Use Frenzied Maul twice on Xin Zhao: the second bite hits harder and heals you, which wins long trades.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Volibear:XinZhao:2",
+          "text": "Put Sky Splitter on Xin Zhao as he commits; it slows him. Stand inside the bolt to gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Volibear:XinZhao:3",
+          "text": "Stay out of a line from Xin Zhao, because Wind Becomes Lightning slows you and marks you as Challenged, which lets his charge reach farther.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 42, "end": 64 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Volibear:XinZhao:4",
+          "text": "Stormbringer gives you extra health and immunity to crowd control during the leap, so use it to start a fight when Xin Zhao's Crescent Guard is down.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "XinZhao", "start": 115, "end": 123 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 126, "end": 140 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

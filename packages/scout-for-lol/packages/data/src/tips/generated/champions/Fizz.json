@@ -1,0 +1,2463 @@
+{
+  "schemaVersion": 1,
+  "champion": "Fizz",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "6b24812834157ea453a4abd58994595f60acd33fe7d0708e697da22d8177be05",
+      "tips": [
+        {
+          "id": "middle:Fizz:general:0",
+          "text": "Walk through minions with Nimble Fighter and hit the enemy to start Seastone Trident's bleed, then follow up with the empowered attack a moment later.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Fizz-W", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Fizz:general:1",
+          "text": "Use Seastone Trident on a low-health enemy or minion; a kill refunds its mana and cuts its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Fizz:general:2",
+          "text": "Dash onto a target with Urchin Strike, and cast Seastone Trident during the dash so your first attack lands hard.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Fizz-W", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Fizz:general:3",
+          "text": "Save Playful / Trickster to dodge a key enemy spell, because Fizz cannot be targeted while balanced on his trident.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Fizz", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Fizz:general:4",
+          "text": "Use Playful / Trickster to slow enemies when you land, then trade or chase while they are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Fizz:general:5",
+          "text": "Throw Chum the Waters from far away at an enemy for a bigger shark. It can also be aimed at where they are heading.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Fizz:general:6",
+          "text": "Do not use Urchin Strike on an enemy who is untargetable, because it deals no damage to them.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Fizz:combo:0",
+          "name": "Q into E dodge",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Fizz-Q" },
+            { "kind": "ability", "key": "Fizz-E" }
+          ],
+          "when": "When you dash onto a target and want to dodge their burst or crowd control.",
+          "whenRefs": [],
+          "text": "Fizz can't cast Playful for a short moment after Urchin Strike, so wait a beat before pressing it. The untargetable hop then dodges their reaction.",
+          "textRefs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 49, "end": 62 }
+          ]
+        },
+        {
+          "id": "middle:Fizz:combo:1",
+          "name": "Double hop with Trickster",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Fizz-E" },
+            { "kind": "ability", "key": "Fizz-E" }
+          ],
+          "when": "When you need to dodge a spell, then close the gap or escape.",
+          "whenRefs": [],
+          "text": "Recast Playful while balanced on the trident to dash again. You can aim each dash separately, which makes your landing hard to predict.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Fizz:combo:2",
+          "name": "Chum the Waters long throw",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Fizz-R" }],
+          "when": "When you want the biggest shark from your ultimate.",
+          "whenRefs": [],
+          "text": "Aim the ultimate at long range so the lure flies far before it lands or attaches. A longer throw gives a bigger shark, more damage and a stronger slow.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "08737ee20864dfdeb60400c81a8266385894f12472aaffbaee163c96de6adbc4",
+      "tips": [
+        {
+          "id": "middle:Fizz:Ahri:0",
+          "text": "Walk through minions to stay out of Charm's line. It stops at the first enemy it hits, so minions in front of you absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Fizz:Ahri:1",
+          "text": "Save Playful to dodge Charm. Being untargetable lets you avoid her whole combo, so don't spend it early.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Fizz:Ahri:2",
+          "text": "Go in with Urchin Strike once Charm is on cooldown. Ahri has little to stop you then, so trade hard.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Ahri-E", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Ahri", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Fizz:Ahri:3",
+          "text": "Aim Chum the Waters at where Ahri is heading. Without Spirit Rush she can hardly escape the shark.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ahri", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ahri-R", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Fizz:Ahri:4",
+          "text": "Hit Ahri with Seastone Trident and keep fighting while it is active. The bonus damage lasts a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Fizz-W", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9005e68a72dcb7a9bb36078990b98be088a505fd2d53bb9fd53db6cf29889be3",
+      "tips": [
+        {
+          "id": "middle:Fizz:Akali:0",
+          "text": "Wait until Akali spends her energy on Five Point Strike, then dive in with Urchin Strike while she cannot answer.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Akali-Q", "start": 38, "end": 55 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 75, "end": 88 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Fizz:Akali:1",
+          "text": "Use Playful / Trickster as Akali jumps in with Perfect Execution; you cannot be targeted while balanced on the trident.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Akali-R", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Fizz:Akali:2",
+          "text": "Throw Chum the Waters at her smoke edge or where she will run; the shark's area still hits her inside Twilight Shroud.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Akali-W", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Fizz:Akali:3",
+          "text": "Walk through minions to apply Seastone Trident's bleed, then hit Akali with the empowered attack when she steps in.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 30, "end": 46 },
+            { "kind": "champion", "key": "Akali", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "57173d12088ce3335bd5379641b16a176edb5caaefed9e6eeed5af2a2307c835",
+      "tips": [
+        {
+          "id": "middle:Fizz:Akshan:0",
+          "text": "Use Playful to dodge Akshan's Avengerang or his stored Comeuppance shots; Fizz can't be targeted while balanced on the trident.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "Akshan-R", "start": 55, "end": 66 },
+            { "kind": "champion", "key": "Fizz", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Fizz:Akshan:1",
+          "text": "Walk through minions with Nimble Fighter to reach Akshan, and start the trade with Seastone Trident.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Akshan", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Fizz-W", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Fizz:Akshan:2",
+          "text": "Go in with Urchin Strike, then use Playful so Akshan is slowed and can't easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Akshan", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Fizz:Akshan:3",
+          "text": "Aim Chum the Waters at Akshan from long range when he swings away; a long throw slows him more and hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akshan", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "eeb86f55e4dafb1cd7424b656c9cb072275e4074f87a6faf705fa66ae5bb144b",
+      "tips": [
+        {
+          "id": "middle:Fizz:Anivia:0",
+          "text": "Dodge Flash Frost by sidestepping or by using Playful just as it reaches you. Getting stunned by it often means you die.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Fizz:Anivia:1",
+          "text": "Use Urchin Strike on Anivia as soon as her Flash Frost is spent, then stick to her and fight.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Fizz:Anivia:2",
+          "text": "Her Crystallize wall is blocking terrain that you can't cross, so go around it or hit her before she places it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Fizz:Anivia:3",
+          "text": "Don't stay in Glacial Storm. Use Playful to get out of it or to close on her.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Fizz:Anivia:4",
+          "text": "Kill her egg: after Rebirth she is helpless for a few seconds, so keep hitting it. Chum the Waters can help finish her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 20,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Fizz-R", "start": 83, "end": 98 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "86cdcedf6a58e3a8119e16643a9f6d42d7f2f8b6dcfaeb452e81513db9cb2b59",
+      "tips": [
+        {
+          "id": "middle:Fizz:Annie:0",
+          "text": "Stay out of Annie's range when her Pyromania stun is ready. A stun leaves you stuck while she bursts you down.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 12, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 35,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Fizz:Annie:1",
+          "text": "Save Playful / Trickster for dodging Annie's stun. While you are untargetable, her targeted spells can't hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Annie", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Fizz:Annie:2",
+          "text": "Dash in with Urchin Strike once Annie has spent her stun. Then trade with Seastone Trident while her spells are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Annie", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Fizz-W", "start": 74, "end": 90 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Fizz:Annie:3",
+          "text": "Throw Chum the Waters at long range when Annie is out of position. Her Tibbers is far less dangerous if you are not next to it.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Annie", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e5b590df5eeb4e2c7c9ae633e337a5925f0bd3bf35e046d80bbdf7c3893299f5",
+      "tips": [
+        {
+          "id": "middle:Fizz:AurelionSol:0",
+          "text": "Dodge Falling Star by hopping with Playful when you see the star marker; you are untargetable while balanced on the trident.",
+          "refs": [],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Fizz:AurelionSol:1",
+          "text": "Walk through minions to get close, since Nimble Fighter lets you pass through units, then jump on him with Urchin Strike.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 41,
+              "end": 55
+            },
+            { "kind": "ability", "key": "Fizz-Q", "start": 107, "end": 120 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Fizz:AurelionSol:2",
+          "text": "Go in once Singularity is on cooldown; avoid fighting in the black hole, where you get dragged toward the center.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 11,
+              "end": 22
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Fizz:AurelionSol:3",
+          "text": "Trade with Seastone Trident when he channels Breath of Light; the beam must stay aimed, so close in and hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 11, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 45,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Fizz:AurelionSol:4",
+          "text": "Land Chum the Waters from long range on him when he flies off with Astral Flight; he gets slowed and cannot easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 67,
+              "end": 80
+            },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "01f8b133ceaaefcddf3406c0a0781992adc60009bc8a4434530a23157cf18beb",
+      "tips": [
+        {
+          "id": "middle:Fizz:Aurora:0",
+          "text": "Save Playful for when Aurora uses The Weirding or Twofold Hex; you are untargetable for a moment, so her aimed spells miss.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aurora-E", "start": 34, "end": 46 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Fizz:Aurora:1",
+          "text": "Aurora turns invisible after Across the Veil. Do not chase blindly; wait for her to attack, since that breaks the invisibility.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Fizz:Aurora:2",
+          "text": "Stay out of her Between Worlds ring if you can. Enemies who touch its edge are slowed, and she can jump across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Fizz:Aurora:3",
+          "text": "Trade with Urchin Strike, then hit with Seastone Trident, and slip away with Playful once her short cooldowns are spent.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fizz-W", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "72529456c5031f92bb4585f87006f0b7bf9ff6967473c457525e42223b7723be",
+      "tips": [
+        {
+          "id": "middle:Fizz:Azir:0",
+          "text": "Use Playful to dodge Azir's big spells; you can't be targeted while balanced on the trident. Save it for when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Fizz:Azir:1",
+          "text": "Dash onto Azir with Urchin Strike when his Sand Soldiers are far away or used up, then trade fast.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Fizz:Azir:2",
+          "text": "Chum the Waters is a strong all-in at level 6. Throw it from long range for a bigger shark and a stronger slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Fizz:Azir:3",
+          "text": "Don't throw Chum the Waters into Azir's wall of soldiers; the lure won't pass through it.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Azir", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Fizz:Azir:4",
+          "text": "Walk through minions and Sand Soldiers freely. Use Nimble Fighter to close in without being blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-passive", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "99607045345add65a49eaf458997268e7b4495debfd106f3b2e12c2aada67487",
+      "tips": [
+        {
+          "id": "middle:Fizz:Brand:0",
+          "text": "Dodge Sear by hopping with Playful or sidestepping; without his first ability landing, Brand can't start his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Fizz:Brand:1",
+          "text": "Use Playful to avoid Pillar of Flame, since you are untargetable while balanced on the trident.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Fizz:Brand:2",
+          "text": "Close in with Urchin Strike once Brand has spent his abilities, then stay on him; he is weak up close.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 14, "end": 27 },
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Fizz:Brand:3",
+          "text": "Throw Chum the Waters from far away at Brand; a longer throw gives a bigger shark and a stronger slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Brand", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "914cd72b9f4c9f2395410bec48c63a63b98c27bc162a68f095927499ced49b72",
+      "tips": [
+        {
+          "id": "middle:Fizz:Briar:0",
+          "text": "Hop away with Playful just before Briar's Head Rush lands; Fizz is untargetable while balanced, so the stun misses.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Briar-Q", "start": 42, "end": 51 },
+            { "kind": "champion", "key": "Fizz", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Fizz:Briar:1",
+          "text": "Briar loses control while in Blood Frenzy and must chase the nearest enemy. Kite her with Playful, then slow her when she runs at you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Fizz:Briar:2",
+          "text": "Aim Chum the Waters at Briar from long range for the biggest shark, and she is slowed before it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Fizz:Briar:3",
+          "text": "Trade with Seastone Trident when Briar is low. Her bleed heals her, so short, sharp trades beat long brawls.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 11, "end": 27 },
+            { "kind": "champion", "key": "Briar", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Fizz:Briar:4",
+          "text": "Don't stand in the open when Briar's Chilling Scream is charging. Fully charged, it throws you into a wall and stuns, so fight away from walls.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-E", "start": 37, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "543f9c23ddc6d8f87e09b38fa578124f8ccd095e864c3222538677658032e005",
+      "tips": [
+        {
+          "id": "middle:Fizz:Cassiopeia:0",
+          "text": "Stay out of Noxious Blast and Miasma. Miasma grounds you, which stops Playful / Trickster from getting you out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 12,
+              "end": 25
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 30,
+              "end": 36
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 38,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Fizz-E", "start": 70, "end": 89 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Fizz:Cassiopeia:1",
+          "text": "Use Playful / Trickster to dodge Cassiopeia's big spells. You can't be targeted while balanced on the trident.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Fizz:Cassiopeia:2",
+          "text": "Don't face Cassiopeia when she casts Petrifying Gaze. Turn away and you are slowed, not stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 11, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 37,
+              "end": 52
+            },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Fizz:Cassiopeia:3",
+          "text": "Dash in with Urchin Strike, then hit with Seastone Trident, and trade fast. Cassiopeia is fragile up close.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Fizz-W", "start": 42, "end": 58 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Fizz:Cassiopeia:4",
+          "text": "Aim Chum the Waters from long range at Cassiopeia. A longer throw makes a bigger shark that slows her more.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "05f2605750879529d86bbd59e8827833d42b4fb76b2f7a798b26f9257df88613",
+      "tips": [
+        {
+          "id": "middle:Fizz:Diana:0",
+          "text": "Hop away with Playful when Diana commits Lunar Rush or Moonfall; you can't be targeted while balanced on the trident.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Diana-E", "start": 41, "end": 51 },
+            { "kind": "ability", "key": "Diana-R", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Fizz:Diana:1",
+          "text": "Hold Playful until Diana dashes in. Her Lunar Rush is blocked if she tries to reach you while you are untargetable, so she wastes her engage.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Diana-E", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Fizz:Diana:2",
+          "text": "Walk through minions to dodge Crescent Strike. Moving in a different direction from the arc's path makes it easier to miss.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Fizz:Diana:3",
+          "text": "Don't trade into Pale Cascade while the orbs are out; they hurt and shield her. Wait for them to fade, then use Urchin Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 112, "end": 125 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Fizz:Diana:4",
+          "text": "Aim Chum the Waters at Diana from far away if you can, since a longer throw makes a bigger shark that slows more.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Fizz:Diana:5",
+          "text": "Use Seastone Trident on her after Urchin Strike; it keeps hurting her while she tries to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a038713c49eec2b473f5cb2428d8863e0e4f09d9842265a907aef2efe0944de0",
+      "tips": [
+        {
+          "id": "middle:Fizz:Ekko:0",
+          "text": "Use Playful to dodge Ekko's Timewinder or the stun zone; you are untargetable while balanced on the trident.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 28, "end": 38 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Fizz:Ekko:1",
+          "text": "Watch for Ekko's Chronobreak trail. When it is down, he is much easier to trade with and kill.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Ekko-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Fizz:Ekko:2",
+          "text": "Walk through minions to put Seastone Trident's bleed on Ekko, then hit him with the empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 28, "end": 44 },
+            { "kind": "champion", "key": "Ekko", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Fizz:Ekko:3",
+          "text": "Do not stand in Ekko's Parallel Convergence circle; you get stunned if he steps into it.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ekko-W", "start": 23, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Fizz:Ekko:4",
+          "text": "Save Chum the Waters for when Ekko has used Chronobreak, so he cannot rewind out of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ekko", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Ekko-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3031afb86cf87327a9655b478ca6626bd1e0b38c8c2ec853735f65ce066ef8d4",
+      "tips": [
+        {
+          "id": "middle:Fizz:Ezreal:0",
+          "text": "Walk through minions to get close to Ezreal. Minions block his Mystic Shot, so use them as cover.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Fizz:Ezreal:1",
+          "text": "Jump in with Urchin Strike when Arcane Shift is on cooldown. Ezreal has no easy way to escape you then.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 32, "end": 44 },
+            { "kind": "champion", "key": "Ezreal", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Fizz:Ezreal:2",
+          "text": "Use Playful to dodge Ezreal's skill shots. You can't be targeted while you are balanced on the trident.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Fizz:Ezreal:3",
+          "text": "Ezreal is fragile, so hit him with Seastone Trident and then Urchin Strike. Fight him when his spells are down.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Fizz-W", "start": 35, "end": 51 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "05c7dd826ad4f0d2294f398847af60ac2030d98b0b472990c19931d449103b80",
+      "tips": [
+        {
+          "id": "middle:Fizz:Galio:0",
+          "text": "Don't dive onto Galio while his Shield of Durand is charging. His taunt pulls you in and he takes less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Galio-W", "start": 32, "end": 48 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Fizz:Galio:1",
+          "text": "Use Playful / Trickster to dodge Justice Punch, since you can't be targeted while balanced. Land on him after it misses.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 4, "end": 23 },
+            { "kind": "ability", "key": "Galio-E", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Fizz:Galio:2",
+          "text": "Walk through your minions to dodge Winds of War. Its tornado hurts more the more health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Fizz:Galio:3",
+          "text": "Aim Chum the Waters at Galio from long range for a bigger shark. Galio can't easily escape the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Galio", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Galio", "start": 65, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Fizz:Galio:4",
+          "text": "Watch for Hero's Entrance across the map and be ready to fight or avoid a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2cf7bf78d2c133e1527556d77a774b0caf22261ae28edad7fc68c72b36936a9e",
+      "tips": [
+        {
+          "id": "middle:Fizz:Hwei:0",
+          "text": "Rush Hwei right after he casts a Torment spell; he is open to being run down once it is out.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 5, "end": 9 }],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Fizz:Hwei:1",
+          "text": "Use Playful to dodge his slow lightning and his Crushing Maw, since you can't be targeted while balanced on the trident.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Fizz:Hwei:2",
+          "text": "Walk through minions with Nimble Fighter and hit Hwei with Seastone Trident, so he can't line up his spells in a straight line.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Hwei", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Fizz-W", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Fizz:Hwei:3",
+          "text": "Save Chum the Waters for when Hwei is rooted or feared; he can't dodge it, and a long throw makes it hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Hwei", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a3b7ae7d3e3f3b028a89f0a9efd32b0b7eacc3708d8c1a06e88867b134d0752",
+      "tips": [
+        {
+          "id": "middle:Fizz:Irelia:0",
+          "text": "Hop away with Playful when Irelia dashes at you; you can't be targeted, so her Bladesurge is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 79, "end": 89 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Fizz:Irelia:1",
+          "text": "Watch for Irelia stacking Ionian Fervor on minions; engage her when the stacks are gone.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 10, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 26,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Fizz:Irelia:2",
+          "text": "Don't spend Chum the Waters or Urchin Strike into Defiant Dance; she takes less damage while she charges.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 31, "end": 44 },
+            { "kind": "ability", "key": "Irelia-W", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Fizz:Irelia:3",
+          "text": "Stay out of Flawless Duet's line between her blades; being stunned in range of her Bladesurge is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 66 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 83, "end": 93 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "43a9758fd0745d0a058128036907728d0deece179347f15a27b735d3c0d734a8",
+      "tips": [
+        {
+          "id": "middle:Fizz:Kassadin:0",
+          "text": "Do not walk up to Kassadin with Urchin Strike when Null Sphere is ready; his shield cuts your damage and he can hit back.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Fizz:Kassadin:1",
+          "text": "Trade early, before Kassadin reaches level 6. He is weak then and Riftwalk is hard for him to use.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Fizz:Kassadin:2",
+          "text": "Play Playful to dodge Force Pulse's slow, and pick your moment when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Fizz:Kassadin:3",
+          "text": "Aim Chum the Waters at where Kassadin will land. Riftwalk makes him hard to catch and he is slowed if the lure hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kassadin", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 49, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "63666e8be9e8b71ca6c55191c0a64b7b7ebf80af3256b7485cb69019a3f7a069",
+      "tips": [
+        {
+          "id": "middle:Fizz:Katarina:0",
+          "text": "Use Playful to dodge Katarina's Death Lotus or Bouncing Blade, then land on her. Only the area hit by the Death Lotus matters.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Katarina-R", "start": 32, "end": 43 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 47, "end": 61 },
+            { "kind": "ability", "key": "Katarina-R", "start": 106, "end": 117 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Fizz:Katarina:1",
+          "text": "Hold Playful for when Katarina uses Shunpo on you, so she cannot easily chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Katarina-E", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Fizz:Katarina:2",
+          "text": "Aim Chum the Waters at Katarina after she uses Shunpo; the shark's knockup interrupts her Death Lotus.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Katarina", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Katarina-E", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Katarina-R", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Fizz:Katarina:3",
+          "text": "Trade with Urchin Strike and Seastone Trident when her Bouncing Blade is on cooldown. Stay close and move through minions to avoid her Daggers.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fizz-W", "start": 29, "end": 45 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d669acca4ab21b650c18227e07e873147d325d16c8974b3ce07e2660d24c50dc",
+      "tips": [
+        {
+          "id": "middle:Fizz:Leblanc:0",
+          "text": "Stay out of LeBlanc's range. When Sigil of Malice lands on you, avoid her follow-up spells, which detonate it.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Fizz:Leblanc:1",
+          "text": "Use Playful to dodge Ethereal Chains. You are untargetable while on your trident, so the chain can't hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Fizz:Leblanc:2",
+          "text": "Hit LeBlanc with Urchin Strike when she dashes in with Distortion, before she can recast back to safety.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Fizz:Leblanc:3",
+          "text": "Hit LeBlanc with Playful when she is out of Distortion. Its slow makes it hard for her to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 44, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Fizz:Leblanc:4",
+          "text": "Chum the Waters is best at long range against LeBlanc, which makes her slowed and knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Leblanc", "start": 46, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "keyword", "key": "knocked-up", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b9b53d82636b651f735e6477bab8407db5ff2eddebf393be96df926f70dc9d27",
+      "tips": [
+        {
+          "id": "middle:Fizz:Lissandra:0",
+          "text": "Save Playful for when Lissandra uses Frozen Tomb on you or Ring of Frost; being untargetable lets you dodge the ability's hit.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 37, "end": 48 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Fizz:Lissandra:1",
+          "text": "Walk through minions to stay out of the way of Ice Shard; it slows only the first enemy it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 47, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Fizz:Lissandra:2",
+          "text": "Go in right after Ring of Frost is used, while it is on its long cooldown. Then trade with Urchin Strike and Seastone Trident.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 91, "end": 104 },
+            { "kind": "ability", "key": "Fizz-W", "start": 109, "end": 125 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Fizz:Lissandra:3",
+          "text": "Aim Chum the Waters from long range at Lissandra when she is not near a wall; she cannot easily escape it without her ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lissandra", "start": 39, "end": 48 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Fizz:Lissandra:4",
+          "text": "Do not fight in her Frozen Tomb ice field; it slows you and leaves you easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-R", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f9135e4fbf70525171dd445cb6e0a714a2328746b72f78ce3cc5dd90f962387c",
+      "tips": [
+        {
+          "id": "middle:Fizz:Lux:0",
+          "text": "Dodge Light Binding by using Playful / Trickster, which makes you untargetable, or by staying out of line with Lux's minions.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Fizz-E", "start": 29, "end": 48 },
+            { "kind": "champion", "key": "Lux", "start": 111, "end": 114 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Fizz:Lux:1",
+          "text": "Wait until Lux has used Light Binding, then go in with Urchin Strike and kill her before it comes back.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Lux-Q", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Fizz:Lux:2",
+          "text": "Lucent Singularity slows you, so avoid standing in it. Leave the area or hop out with Playful / Trickster.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 0, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Fizz-E", "start": 86, "end": 105 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Fizz:Lux:3",
+          "text": "Throw Chum the Waters from far away at Lux; a longer throw makes a bigger shark that slows her more and hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 39, "end": 42 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Fizz:Lux:4",
+          "text": "Lux's shield from Prismatic Barrier is small, so use Seastone Trident to hit her hard once it runs out.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-W", "start": 18, "end": 35 },
+            { "kind": "ability", "key": "Fizz-W", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1487ca28733f0e0a5e1370dc4edd877f603fd5d0daf4207904d8a564b2b8b221",
+      "tips": [
+        {
+          "id": "middle:Fizz:Malzahar:0",
+          "text": "Hit Malzahar with Urchin Strike only after his Void Shift has been used up, or the damage is mostly wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 18, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Fizz:Malzahar:1",
+          "text": "Do not throw Chum the Waters at Malzahar while Void Shift is active; it will not stick.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Malzahar", "start": 32, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Fizz:Malzahar:2",
+          "text": "Stay out of Call of the Void's portals, or save Playful to dodge it. Being silenced leaves you without Trickster.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Fizz:Malzahar:3",
+          "text": "Keep Playful ready when Malzahar goes for Nether Grasp. Being untargetable stops him from locking you down.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "middle:Fizz:Malzahar:4",
+          "text": "Stay away from minions carrying Malefic Visions. They pass it to you when they die.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "befa5f9e515ef93d48ff4d3e1ab1c7eec1f5e2f260b54699be96a3206194e7e0",
+      "tips": [
+        {
+          "id": "middle:Fizz:Mel:0",
+          "text": "Mel's Rebuttal destroys projectiles, including the lure from Chum the Waters. Wait until she has used it, then throw your ultimate.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Mel-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Fizz-R", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Fizz:Mel:1",
+          "text": "Hop with Playful when Solar Snare is coming. Fizz can't be targeted while balanced on his trident, so the orb misses.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 22, "end": 33 },
+            { "kind": "champion", "key": "Fizz", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Fizz:Mel:2",
+          "text": "Wait for Mel to spend Solar Snare before you dive in. If it hits, you are rooted and easy to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-E", "start": 22, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Fizz:Mel:3",
+          "text": "Back off when you are low, because Mel's Overwhelm can execute you. Her stacks fade after a few seconds without hits.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 35, "end": 38 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Fizz:Mel:4",
+          "text": "Trade with Urchin Strike and a Seastone Trident hit, then leave with Playful. Mel's long-range poke is weaker if you don't stay in range.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fizz-W", "start": 31, "end": 47 },
+            { "kind": "champion", "key": "Mel", "start": 78, "end": 81 },
+            { "kind": "keyword", "key": "poke", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "eeced0c82a596a6805406d0d362e773c72cf84585f389a44df5398af6c56bd5a",
+      "tips": [
+        {
+          "id": "middle:Fizz:Naafiri:0",
+          "text": "Press Playful when Naafiri locks onto you with Hounds' Pursuit; you are untargetable and her dash lands on nothing.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Fizz:Naafiri:1",
+          "text": "Walk through her Packmates with Nimble Fighter to reach Naafiri instead of hitting them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 32,
+              "end": 46
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Fizz:Naafiri:2",
+          "text": "Land Chum the Waters from far away when she is out of position; a longer throw makes a bigger shark and a stronger slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Fizz:Naafiri:3",
+          "text": "Trade with Urchin Strike and Seastone Trident together when her Darkin Daggers are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fizz-W", "start": 29, "end": 45 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "58778ef1d3a0e4fb5c9aefa4293dc4f31e9d063ca93b0aa8fa94fdea793d8b75",
+      "tips": [
+        {
+          "id": "middle:Fizz:Orianna:0",
+          "text": "Walk through minions to stay out of Command: Attack, and keep Playful ready to dodge it. Orianna can only hit where her Ball is.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 36, "end": 51 },
+            { "kind": "champion", "key": "Orianna", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Fizz:Orianna:1",
+          "text": "Do not hop in with Playful when Command: Shockwave is ready. Landing near her Ball gets you pulled in and stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 32, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Fizz:Orianna:2",
+          "text": "Wait until Orianna has used her Ball's spells, then go in with Urchin Strike. She has little left to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Fizz:Orianna:3",
+          "text": "Aim Chum the Waters at Orianna from far away, or where she will go. A longer throw makes a bigger, stronger shark.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Orianna", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Fizz:Orianna:4",
+          "text": "Use Seastone Trident's empowered attack just after Urchin Strike so she takes the burst before she can react.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1f18164ce7d2db32f8b7670665aa883748b5fe5379ac9a3473b687ef829f3de8",
+      "tips": [
+        {
+          "id": "middle:Fizz:Qiyana:0",
+          "text": "Use Playful to become untargetable when Qiyana dashes in with Audacity; her damage can miss you while you hop.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 62, "end": 70 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Fizz:Qiyana:1",
+          "text": "Save Playful for when she commits a big ability, then land and slow her to start your own trade.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Fizz:Qiyana:2",
+          "text": "Aim Chum the Waters at her when she is near a wall or river; it is slow and hard to dodge once the fish sticks.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Fizz:Qiyana:3",
+          "text": "Walk through minions with Nimble Fighter and hit her with Seastone Trident so the bleed ticks before she can trade back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Fizz-W", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Fizz:Qiyana:4",
+          "text": "Respect her Supreme Display of Talent near walls; the stun can lock you in place, so keep Playful ready.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 12, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7ebe57c8f1e9f824ec868078fffeb2ae261439447471c1d4b8b3d53cd1d28852",
+      "tips": [
+        {
+          "id": "middle:Fizz:Ryze:0",
+          "text": "Don't walk into Ryze's range at low health. Spell Flux then Rune Prison roots you, so keep Playful ready to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ryze-E", "start": 44, "end": 54 },
+            { "kind": "ability", "key": "Ryze-W", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Fizz:Ryze:1",
+          "text": "Use Playful to dodge Ryze's key spells. You can't be targeted on the trident, so bait Rune Prison and punish him after.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Ryze-W", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Fizz:Ryze:2",
+          "text": "Dive onto Ryze with Urchin Strike, then use Seastone Trident on your next attack. Ryze has few ways to stop a close-range fight.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Fizz-W", "start": 44, "end": 60 },
+            { "kind": "champion", "key": "Ryze", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "middle:Fizz:Ryze:3",
+          "text": "Aim Chum the Waters at Ryze from far away for the biggest shark. Ryze can be hard to catch, so throw it when he is committed to a spell.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Ryze", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Fizz:Ryze:4",
+          "text": "Stay out of Ryze's Overload line when your minions are near. He gets strong once Flux is on you, so avoid being hit by Spell Flux.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Ryze-E", "start": 119, "end": 129 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d6d93bbf2c3fd78377253c2c63ca6b2a97b1e8925e3fe1d08d96869ab3e1ba58",
+      "tips": [
+        {
+          "id": "middle:Fizz:Sylas:0",
+          "text": "Save Playful for when Sylas commits Abduct; being untargetable lets you dodge the pull and punish him after.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Fizz:Sylas:1",
+          "text": "Trade with Urchin Strike and Seastone Trident when Kingslayer is on cooldown, so Sylas cannot lunge in and heal off you.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fizz-W", "start": 29, "end": 45 },
+            { "kind": "ability", "key": "Sylas-W", "start": 51, "end": 61 },
+            { "kind": "champion", "key": "Sylas", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Fizz:Sylas:2",
+          "text": "Walk through minions to dodge Chain Lash, since you can move through units.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Fizz:Sylas:3",
+          "text": "At level 6, aim Chum the Waters at Sylas from far away for a stronger hit and bigger slow, then fight while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 16, "end": 31 },
+            { "kind": "champion", "key": "Sylas", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bd664c4f557047fdc5fc78545d7438ebe386720365cd0f2aa13db0a0a5053435",
+      "tips": [
+        {
+          "id": "middle:Fizz:Syndra:0",
+          "text": "Dodge Syndra's Scatter the Weak with Playful; you are untargetable while balanced, then punish her with Urchin Strike while it recharges.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Syndra-E", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 104, "end": 117 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Fizz:Syndra:1",
+          "text": "Stay out of the Dark Spheres on the ground; a Scatter the Weak push into them leaves you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 46, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Fizz:Syndra:2",
+          "text": "Walk through minions with Nimble Fighter and hit Syndra with Seastone Trident to make her bleed, then follow with the empowered attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Syndra", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Fizz-W", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Fizz:Syndra:3",
+          "text": "Look for an all-in once Syndra has used Scatter the Weak; she has few ways to stop you while it recharges.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Syndra-E", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Fizz:Syndra:4",
+          "text": "Save Chum the Waters for when Syndra has used her escapes, and aim it at where she will step, not just where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Syndra", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "de68efd735a191c8c6bdc71e46c15eced32685359881f49c56c7b200b5c068dd",
+      "tips": [
+        {
+          "id": "middle:Fizz:Taliyah:0",
+          "text": "Stay out of Taliyah's Unraveled Earth stones. Dashing through them with Urchin Strike or Playful sets them off and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 72, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 120 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Fizz:Taliyah:1",
+          "text": "Taliyah's Seismic Shove can throw you into her stones. Walk out of the marked area as soon as you see it start.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Fizz:Taliyah:2",
+          "text": "Threaded Volley flies in a straight line. Step to the side, or hop away with Playful, to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Fizz:Taliyah:3",
+          "text": "Hit Taliyah with Urchin Strike when her Unraveled Earth is on cooldown. Then use Seastone Trident and fight, since she has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Fizz-W", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "middle:Fizz:Taliyah:4",
+          "text": "Aim Chum the Waters from far away at Taliyah so it hits hard. She cannot easily dodge it once the fish attaches.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Taliyah", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "20f0e41cb21c76c6ec0e061f9e84d0ff073ec3bc115fefe80a5c001d4c9783a1",
+      "tips": [
+        {
+          "id": "middle:Fizz:Talon:0",
+          "text": "Use Playful when Talon jumps in with Noxian Diplomacy; it makes you untargetable so his burst misses.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Talon-Q", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Fizz:Talon:1",
+          "text": "Step out of the way of Rake's blades. They come back and slow you, so avoid standing at its maximum range.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Fizz:Talon:2",
+          "text": "Hit Talon with Seastone Trident and Urchin Strike when he lands, then back off before his stacks of Blade's End build up.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Fizz-W", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 36, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 100,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Fizz:Talon:3",
+          "text": "When Talon's Shadow Assault is on cooldown, he is much easier to catch. Fight him then with Chum the Waters.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Fizz-R", "start": 92, "end": 107 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Fizz:Talon:4",
+          "text": "Watch for Talon roaming through walls with Assassin's Path, and push your lane first so you can follow him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-E", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bbaf2ca058e14425fbb7b80615cb927831810bfea274d98d54ed9bbd7c18e765",
+      "tips": [
+        {
+          "id": "middle:Fizz:TwistedFate:0",
+          "text": "Walk through minions with Nimble Fighter to dodge the cards of Wild Cards, since each card only hits once.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 63,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Fizz:TwistedFate:1",
+          "text": "Use Playful to dodge Twisted Fate's Gold Card attack, then land on him for damage and a slow.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 21,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Fizz:TwistedFate:2",
+          "text": "Twisted Fate can use Destiny to teleport away, so keep Urchin Strike ready to chase him down.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 0, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 21,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Fizz-Q", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Fizz:TwistedFate:3",
+          "text": "Aim Chum the Waters at where Twisted Fate will be channeling Destiny; it can hit him while he stands still.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 61,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a5f73571d83125eab57cd286b98ce5f52511c9a58f4da9cc5ec78501d6a47407",
+      "tips": [
+        {
+          "id": "middle:Fizz:Veigar:0",
+          "text": "Stay out of the edge of Event Horizon. Inside the cage you can still move, so wait for it to fade or walk around it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Fizz:Veigar:1",
+          "text": "Dive Veigar with Urchin Strike when Event Horizon is on cooldown. He is fragile and has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Veigar-E", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Fizz:Veigar:2",
+          "text": "Use Playful when Dark Matter lands, since you can't be targeted. Walk out of the circle as it falls.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Fizz:Veigar:3",
+          "text": "Don't linger at low health in range of Veigar. Primordial Burst hits harder the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Veigar-R", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a3e15ccd9393c2199cd3933013818a7fbe1ed7522523777104acdd6e9401680a",
+      "tips": [
+        {
+          "id": "middle:Fizz:Vex:0",
+          "text": "Hold Playful until Vex has used her empowered ability; her fear can't catch you while you are untargetable.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Fizz:Vex:1",
+          "text": "Look for the icon change on Vex's abilities showing her fear is ready, and stay out of her range until she spends it.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Fizz:Vex:2",
+          "text": "Dashing near Vex marks you with Gloom, so her next hit deals bonus damage. Use Urchin Strike only when you will trade, not just to move around.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 13, "end": 16 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Fizz:Vex:3",
+          "text": "Use Chum the Waters from long range when you can; the farther the fish flies, the bigger the shark and the stronger the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Fizz:Vex:4",
+          "text": "Walk through minions to apply Seastone Trident, then hit her with the empowered attack once you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-W", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e3090a54cac323599aab0708dd24863b3322befd3a95d8dd0072097ad09858a9",
+      "tips": [
+        {
+          "id": "middle:Fizz:Viktor:0",
+          "text": "Dodge Viktor's Gravity Field by using Playful, because Fizz can't be targeted while balanced on the trident. Don't just walk into the field.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Viktor-W", "start": 15, "end": 28 },
+            { "kind": "champion", "key": "Fizz", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Fizz:Viktor:1",
+          "text": "Hold Playful for when Viktor casts Hextech Ray at you. Fizz is untargetable on the trident, so the ray misses.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Viktor-E", "start": 35, "end": 46 },
+            { "kind": "champion", "key": "Fizz", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Fizz:Viktor:2",
+          "text": "Go in with Urchin Strike once Viktor has used Gravity Field or Hextech Ray, then trade with Seastone Trident while he waits on cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Viktor", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Viktor-W", "start": 46, "end": 59 },
+            { "kind": "ability", "key": "Viktor-E", "start": 63, "end": 74 },
+            { "kind": "ability", "key": "Fizz-W", "start": 92, "end": 108 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Fizz:Viktor:3",
+          "text": "Chum the Waters can be thrown at Viktor from long range. Do it when he stands still, and he is slowed until the shark lands.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Fizz:Viktor:4",
+          "text": "Step out of Arcane Storm early. It follows you, so use Playful to get clear of it instead of fighting inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cfd69d2798e9e51835b6725441d3498ef9ec6cf64e6c9d83ffc7f2c869f0da4a",
+      "tips": [
+        {
+          "id": "middle:Fizz:Vladimir:0",
+          "text": "Bait Sanguine Pool early, then go in. Vladimir can't be targeted while pooled, and it costs him health.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Vladimir", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Fizz:Vladimir:1",
+          "text": "Don't linger in Vladimir's Sanguine Pool. You are slowed and take damage inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Fizz:Vladimir:2",
+          "text": "Land Chum the Waters from long range so the shark hits harder. Aim it at Vladimir's path or at the champion himself.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Vladimir", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Fizz:Vladimir:3",
+          "text": "Kill Vladimir before Hemoplague bursts, because it heals him for each champion hit. Use Playful to get out of the area.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Fizz:Vladimir:4",
+          "text": "Tides of Blood bolts are blocked by minions. Stand behind them when Vladimir charges it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Vladimir", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6fad26503d532d57f9db34f9eef3c7a437dd7d442dd4af83e6cf9ab01d5b0179",
+      "tips": [
+        {
+          "id": "middle:Fizz:Xerath:0",
+          "text": "Save Playful / Trickster to dodge Shocking Orb. You can't be targeted while balanced, so use it as Xerath casts.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-E", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Xerath-E", "start": 34, "end": 46 },
+            { "kind": "champion", "key": "Xerath", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Fizz:Xerath:1",
+          "text": "Close the distance with Urchin Strike once Shocking Orb is on cooldown. Xerath is weak up close.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Xerath-E", "start": 43, "end": 55 },
+            { "kind": "champion", "key": "Xerath", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Fizz:Xerath:2",
+          "text": "Walk sideways while Xerath charges Arcanopulse; it is harder to hit you that way.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Fizz:Xerath:3",
+          "text": "When Xerath channels Rite of the Arcane, dodge the circles as they land. Each shot lands after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 21, "end": 39 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c3554098b9db32608d96e5def7e8420ac8c4b859eb73f06668148690e39bef29",
+      "tips": [
+        {
+          "id": "middle:Fizz:XinZhao:0",
+          "text": "Stay away while Xin Zhao has Three Talon Strike ready. Its third hit knocks you up, so use Playful to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Fizz:XinZhao:1",
+          "text": "Xin Zhao's Audacious Charge cannot hit you while you hop on your trident with Playful, so use it when he charges in.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 11, "end": 27 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Fizz:XinZhao:2",
+          "text": "Use Urchin Strike to dash through Xin Zhao, then hit him with Seastone Trident while he is waiting for his cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 34, "end": 42 },
+            { "kind": "ability", "key": "Fizz-W", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Fizz:XinZhao:3",
+          "text": "Don't walk next to Xin Zhao at level 6 if you are low. Crescent Guard's knockback stuns you and deals extra damage based on your current health.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 55, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Fizz:XinZhao:4",
+          "text": "Aim Chum the Waters from long range at Xin Zhao for the biggest shark. He can't escape easily if he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f17ec45c7fc472110f656302ee1fa3d4004600ac8a9e6c2df724a8c804fe1385",
+      "tips": [
+        {
+          "id": "middle:Fizz:Yasuo:0",
+          "text": "Walk through minions with Nimble Fighter and hit Yasuo to apply the bleed from Seastone Trident, then follow with the empowered attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Fizz-W", "start": 79, "end": 95 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Fizz:Yasuo:1",
+          "text": "Use Playful when Yasuo's Steel Tempest whirlwind is coming. You are untargetable for a moment, so it misses you.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Fizz:Yasuo:2",
+          "text": "Do not rely on Chum the Waters flying through Wind Wall. It blocks the lure early, so cast it after the wall is gone or from another angle.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Fizz:Yasuo:3",
+          "text": "Avoid being knocked up when Yasuo has a chance to follow with Last Breath. Playful makes you untargetable, so it can dodge the whirlwind.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Fizz:Yasuo:4",
+          "text": "Dash onto Yasuo with Urchin Strike when his Sweeping Blade is down on you and his minions are away; he has fewer ways to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "908b2b2b923ae9bc8fc1c8a279d7e5b4a5ddb653035297369d5c1052e5d9c066",
+      "tips": [
+        {
+          "id": "middle:Fizz:Yone:0",
+          "text": "Use Playful to dodge Yone's Fate Sealed; Fizz can't be targeted while balanced on the trident, so time it as the cast finishes.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Yone-R", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Fizz", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Fizz:Yone:1",
+          "text": "Keep Chum the Waters for when Yone is stuck in a fight; it knocks him up and slows him, and a long throw hits hardest.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Fizz:Yone:2",
+          "text": "Walk through minions with Nimble Fighter and hit Yone with Seastone Trident to make him bleed, then follow up with the empowered attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Yone", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Fizz-W", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Fizz:Yone:3",
+          "text": "Don't fight Yone while his Soul Unbound is ready; he can trade freely and then snap back to safety with extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Yone-E", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "03d7381ce288a69ce9db7783a582b860130793ddc4f3950fe9f67ff9cd8959e7",
+      "tips": [
+        {
+          "id": "middle:Fizz:Zed:0",
+          "text": "Save Playful for when Zed uses Death Mark on you; being untargetable can make you dodge the dash's follow-up and the shadow swap.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Zed-R", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Fizz:Zed:1",
+          "text": "Zed's shurikens are thrown in a line. Walk through minions with Nimble Fighter to dodge them and stay close to him.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Fizz-passive", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Fizz:Zed:2",
+          "text": "Trade with Urchin Strike and Seastone Trident right after Zed spends his Living Shadow. He has less slow and less mobility then.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fizz-W", "start": 29, "end": 45 },
+            { "kind": "champion", "key": "Zed", "start": 58, "end": 61 },
+            { "kind": "ability", "key": "Zed-W", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Fizz:Zed:3",
+          "text": "Aim Chum the Waters at Zed from long range for the biggest shark; if it attaches, he is slowed before it erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9422f5e92092e6e4f17bfdfa0db1f34b0a13e90d1f9077bef5e6bc2f95a7502d",
+      "tips": [
+        {
+          "id": "middle:Fizz:Zoe:0",
+          "text": "Walk up and hit Zoe with Urchin Strike once Sleepy Trouble Bubble is on cooldown; she has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 16, "end": 19 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 25, "end": 38 },
+            { "kind": "ability", "key": "Zoe-E", "start": 44, "end": 65 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Fizz:Zoe:1",
+          "text": "Dodge the bubble with Playful; Fizz can't be targeted while balanced on his trident, so it passes harmlessly.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Fizz:Zoe:2",
+          "text": "Stay out of a straight line with Zoe when Sleepy Trouble Bubble is ready, because falling asleep means a lot of extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Zoe-E", "start": 42, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Fizz:Zoe:3",
+          "text": "When Zoe uses Portal Jump she can't move for a moment. Dive her with Urchin Strike then.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zoe-R", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Fizz:Zoe:4",
+          "text": "Aim Chum the Waters from far away at Zoe; she is fragile and the knock up and slow make it hard for her to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zoe", "start": 37, "end": 40 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

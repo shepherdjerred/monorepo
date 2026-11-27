@@ -1,0 +1,11 @@
+{
+  "kind": "keyword",
+  "patch": "16.23.1",
+  "key": "poke",
+  "name": "Poke",
+  "description": "Hitting an enemy from a distance to wear down their health before a real fight starts.",
+  "facts": [],
+  "parts": [],
+  "icon": null,
+  "keyFact": null
+}

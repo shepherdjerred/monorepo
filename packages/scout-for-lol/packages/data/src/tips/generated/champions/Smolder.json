@@ -1,0 +1,1978 @@
+{
+  "schemaVersion": 1,
+  "champion": "Smolder",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "4c9cda09d37d0c55abe65b97ec0b8931102aadd93fe2df6642ce3184baeec580",
+      "tips": [
+        {
+          "id": "adc:Smolder:general:0",
+          "text": "Last-hit minions with Super Scorcher Breath early; each kill adds a Dragon Practice stack and refunds some Mana.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 22, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 68,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Smolder:general:1",
+          "text": "Smolder is weak early, so farm safely and stack Dragon Practice rather than taking risky fights.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 48,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Smolder:general:2",
+          "text": "Hit enemy champions with Achooo! from long range; it leaves them slowed and the explosion hurts anyone standing next to them.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Smolder:general:3",
+          "text": "Use Flap, Flap, Flap to escape or to reposition over walls. Casting another ability ends the flight, so don't cast anything else if you want to keep flying.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Smolder:general:4",
+          "text": "Hard crowd control stops Flap, Flap, Flap, so don't use it to escape while an enemy can stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 25, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Smolder:general:5",
+          "text": "Aim MMOOOMMMM! so the enemy is in the center of the blast. The center hits harder and leaves them slowed, and it heals you if it hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-R", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Smolder:general:6",
+          "text": "Stay close to your support and fight when enemies are bunched up. Smolder relies on allies to keep him safe.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "fcc965dc29ebe8ea197fdc5d7db835eb102a94e2169a57ef47fa86a87b90b2c9",
+      "tips": [
+        {
+          "id": "adc:Smolder:Aphelios:0",
+          "text": "Play safe early and farm with Super Scorcher Breath to build Dragon Practice stacks; you are weak until you have them.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 61,
+              "end": 76
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Smolder:Aphelios:1",
+          "text": "Aphelios has more range with Calibrum, so don't stand in his line of fire; hit him with Achooo! to make him slowed and cut his poke short.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Smolder-W", "start": 88, "end": 95 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 },
+            { "kind": "keyword", "key": "poke", "start": 127, "end": 131 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Smolder:Aphelios:2",
+          "text": "Watch for the purple Gravitum gun; once you are slowed by it, he can root you. Keep Flap, Flap, Flap ready to get away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 73 },
+            { "kind": "ability", "key": "Smolder-E", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Smolder:Aphelios:3",
+          "text": "Use MMOOOMMMM! when he and his support are close together; the center hits hardest and slows.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-R", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "55da8207bfc4b4a171a2978ab42530ce8ebb6664a4f32365504edac6cc779005",
+      "tips": [
+        {
+          "id": "adc:Smolder:Ashe:0",
+          "text": "Play safe early and last-hit with Super Scorcher Breath to build Dragon Practice stacks; you are weak until they come in.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 34, "end": 55 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 65,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Smolder:Ashe:1",
+          "text": "Ashe has few escapes, so land Achooo! to slow her and trade when she steps up.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Smolder-W", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Smolder:Ashe:2",
+          "text": "Stay away from where Ashe can hit you with Volley and Enchanted Crystal Arrow; if you are stunned and caught alone, you die.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Ashe-W", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Ashe-R", "start": 54, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Smolder:Ashe:3",
+          "text": "Keep Flap, Flap, Flap to escape or to chase; any stun or other hard crowd control on you ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Smolder:Ashe:4",
+          "text": "Ashe's Volley is blocked by minions, so stand behind your minions when she aims at you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ashe-W", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "69b493c325325b673227b659e041fc2f2de83b50f7443711cadf4dc14b5f39d8",
+      "tips": [
+        {
+          "id": "adc:Smolder:Brand:0",
+          "text": "Stay out of Brand's Sear line and keep minions between you; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Brand-Q", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Smolder:Brand:1",
+          "text": "Don't stand beside your support. Brand's Conflagration and Pyroclasm hit groups hardest.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-E", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Brand-R", "start": 59, "end": 68 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Smolder:Brand:2",
+          "text": "Walk sideways when Brand casts Pillar of Flame; it lands after a short delay and is easy to sidestep.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Brand-W", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Brand:3",
+          "text": "Poke Brand with Achooo! when he steps up; it reaches far and leaves him slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Smolder-W", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Smolder:Brand:4",
+          "text": "Play safe early and farm with Super Scorcher Breath to build stacks, since you are weak before then.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f1f1c97691e8ad93a7705dbc6fc5f9cc2d8c6bb908cc536c818319ccc74b82d5",
+      "tips": [
+        {
+          "id": "adc:Smolder:Caitlyn:0",
+          "text": "Focus on farming and staying alive early. Your Super Scorcher Breath kills on minions build Dragon Practice for later.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 47, "end": 68 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 92,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Smolder:Caitlyn:1",
+          "text": "Step over to the side of minions when Caitlyn fires Piltover Peacemaker. Standing behind them makes it hit you for less.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 52, "end": 71 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Smolder:Caitlyn:2",
+          "text": "Watch where you walk. Caitlyn's Yordle Snap Trap roots you, and then she hits hard with a Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 54 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 90,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Smolder:Caitlyn:3",
+          "text": "When Caitlyn backs off, slow her to keep her in range with Achooo!",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 5, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Smolder-W", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Smolder:Caitlyn:4",
+          "text": "Use Flap, Flap, Flap to cross walls and escape, or to hit her after a trade. It ends if you cast another ability or get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 127 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "14f90f8e767ff3c2ca7fd6be35c35624dfb7c460dffb9505029185c40becc4c5",
+      "tips": [
+        {
+          "id": "adc:Smolder:Cassiopeia:0",
+          "text": "Stay out of Cassiopeia's Noxious Blast range and sidestep it, since it lands after a short delay. Twin Fang hurts a lot when you are poisoned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 25,
+              "end": 38
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 98,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Smolder:Cassiopeia:1",
+          "text": "Poke her with Achooo! from long range, since it slows her and she can't easily answer from that far.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Smolder-W", "start": 14, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Smolder:Cassiopeia:2",
+          "text": "Don't use Flap, Flap, Flap to escape through her Miasma. It leaves you grounded and slowed, and flight can be interrupted by hard crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 10, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 49,
+              "end": 55
+            },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Smolder:Cassiopeia:3",
+          "text": "Face away from Cassiopeia when she casts Petrifying Gaze, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 41,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Cassiopeia:4",
+          "text": "Stack Dragon Practice safely with Super Scorcher Breath on minions and survive early. Later you out-range and outdamage her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 6,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Smolder-Q", "start": 34, "end": 55 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3c9ab810c1f010a9a86498a2329700f7132aa76a187dfacd812919c69a4b9246",
+      "tips": [
+        {
+          "id": "adc:Smolder:Corki:0",
+          "text": "Stay safe early and farm with Super Scorcher Breath; killing minions with it builds your Dragon Practice stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 89,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Corki:1",
+          "text": "Corki outranges you with Phosphorus Bomb, so keep out of its area and step away when it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Corki-Q", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Smolder:Corki:2",
+          "text": "Use Achooo! to hit Corki from long range; the slow gives you room to follow up or walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Corki", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Smolder:Corki:3",
+          "text": "Hide behind minions only for the first missile; Missile Barrage explodes and hurts you even behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Smolder:Corki:4",
+          "text": "Hit Corki when he lands after Valkyrie; he is easier to catch then.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Corki-W", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "92c713278bda13a42e8bf8627f30131dad6937e00046fb6d04e8a0b41934b43c",
+      "tips": [
+        {
+          "id": "adc:Smolder:Draven:0",
+          "text": "Play safe early and stack Dragon Practice by hitting champions with Achooo! from long range, not by trading with Draven.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "ability", "key": "Smolder-W", "start": 68, "end": 75 },
+            { "kind": "champion", "key": "Draven", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Smolder:Draven:1",
+          "text": "Aim Super Scorcher Breath and Achooo! at where Draven's Spinning Axe will land; making him miss it cuts his power.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 4, "end": 25 },
+            { "kind": "ability", "key": "Smolder-W", "start": 30, "end": 37 },
+            { "kind": "champion", "key": "Draven", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Draven-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Smolder:Draven:2",
+          "text": "Do not stand in a straight line with Draven when he has Stand Aside ready; the knockback and slow leave you open.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Draven-E", "start": 56, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Smolder:Draven:3",
+          "text": "Save Flap, Flap, Flap to escape or reposition. Draven's knockback or other hard crowd control can end it.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Draven", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6cd9551f50e09ff6dfdd285105fb7ff5faaf89f5b20654e2ff9c64bb0ba6c8d2",
+      "tips": [
+        {
+          "id": "adc:Smolder:Ezreal:0",
+          "text": "Aim Achooo! at Ezreal when he walks up to poke; it slows him and its explosion hurts when it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Smolder:Ezreal:1",
+          "text": "Stand behind minions so Ezreal's Mystic Shot hits them first; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Smolder:Ezreal:2",
+          "text": "Last-hit with Super Scorcher Breath to build Dragon Practice and refund mana. Stay safe early, since you are weak.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 14, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 45,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Smolder:Ezreal:3",
+          "text": "Ezreal is fragile. Once he spends Arcane Shift, go in with Flap, Flap, Flap to chase him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 34, "end": 46 },
+            { "kind": "ability", "key": "Smolder-E", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Smolder:Ezreal:4",
+          "text": "Ezreal's Essence Flux marks you for a bigger hit. Step out of its path, or he can pop it with an attack.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4eb4c59026900dc71a3b0c4defac5d0443d4c97d10a48acfec79c75e0c558332",
+      "tips": [
+        {
+          "id": "adc:Smolder:Hwei:0",
+          "text": "Stay out of the line of Hwei's spells early and farm with Super Scorcher Breath; you are weak before you have stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 58, "end": 79 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Smolder:Hwei:1",
+          "text": "Sneeze Achooo! from long range to slow Hwei and hit him with the explosion, then follow up if he has used his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 7, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Hwei", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Smolder:Hwei:2",
+          "text": "Rush Hwei once he has painted a Torment spell. He is easy to catch right after casting it.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 5, "end": 9 }],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Smolder:Hwei:3",
+          "text": "Keep moving when Hwei is lined up on you. Severing Bolt hits harder on an isolated target, so stay near your support.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "isolated", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Smolder:Hwei:4",
+          "text": "Use Flap, Flap, Flap to escape or to reposition. It ends if you are immobilized, so don't take it when you are already crowd controlled.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "15f82862c2bb9afeeb0fd6e8abbf206c46236df7363c21e4a5ffc8f16462874f",
+      "tips": [
+        {
+          "id": "adc:Smolder:Jhin:0",
+          "text": "Stay alive and farm early with Super Scorcher Breath on minions; every kill adds Dragon Practice stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 31, "end": 52 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 81,
+              "end": 96
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Smolder:Jhin:1",
+          "text": "Do not stand near allies or enemies when Jhin can hit you with Deadly Flourish; being damaged first means it roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Jhin-W", "start": 63, "end": 78 },
+            { "kind": "keyword", "key": "rooted", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Smolder:Jhin:2",
+          "text": "Walk carefully in bushes and river, since Jhin hides Captive Audience traps there. Stepping on one slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Jhin-E", "start": 53, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Smolder:Jhin:3",
+          "text": "Jump Jhin when he empties his fourth shot of Whisper and has to reload, and use Achooo! to slow him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 45,
+              "end": 52
+            },
+            { "kind": "ability", "key": "Smolder-W", "start": 80, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Smolder:Jhin:4",
+          "text": "Use Flap, Flap, Flap to escape or reposition. It ignores terrain, but any stun or root will stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8f3be1542818718865a673f682c16d44433a4a8e9e0ae4b96e5cbf3bea3db317",
+      "tips": [
+        {
+          "id": "adc:Smolder:Jinx:0",
+          "text": "Stack Dragon Practice by last-hitting with Super Scorcher Breath and landing Achooo! on Jinx; stay alive early.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 6,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Smolder-Q", "start": 43, "end": 64 },
+            { "kind": "ability", "key": "Smolder-W", "start": 77, "end": 84 },
+            { "kind": "champion", "key": "Jinx", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Smolder:Jinx:1",
+          "text": "Stay out of a straight line from Jinx, because Zap! leaves you slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jinx-W", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Smolder:Jinx:2",
+          "text": "Wait for Flame Chompers! to be used before you dive, since she struggles to escape without it.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Smolder:Jinx:3",
+          "text": "Don't fly into the chompers with Flap, Flap, Flap. Being rooted ends your flight.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 33, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Smolder:Jinx:4",
+          "text": "Rush Jinx while she pokes with rockets; her minigun takes time to ramp up.",
+          "refs": [{ "kind": "champion", "key": "Jinx", "start": 5, "end": 9 }],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "052c9cbdf4db0e025fddf66485fa25202ec07a75205777593292bbd1d9525035",
+      "tips": [
+        {
+          "id": "adc:Smolder:Kaisa:0",
+          "text": "Stay safe early and farm with Super Scorcher Breath. It refunds mana when it kills, and every stack you gain makes you stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Smolder:Kaisa:1",
+          "text": "Slow Kai'Sa to keep her off you, since the explosion adds extra damage when you hit her with Achooo!",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Smolder-W", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Smolder:Kaisa:2",
+          "text": "Do not stand in the open when Kai'Sa has Plasma on you. Killer Instinct lets her jump in and burst you.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Smolder:Kaisa:3",
+          "text": "Kai'Sa's Void Seeker has long range and shows where you are. Move around it and don't stand still.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Smolder:Kaisa:4",
+          "text": "Save the heal for when you are caught, and aim the center of the wave to slow her with MMOOOMMMM!",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 77 },
+            { "kind": "ability", "key": "Smolder-R", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "654987b2dd968ae3e8a90a417971df4b697a82e922562315a175b68b6f1ed5c0",
+      "tips": [
+        {
+          "id": "adc:Smolder:Kalista:0",
+          "text": "Stay safe early and last-hit with Super Scorcher Breath; each minion it kills adds a Dragon Practice stack.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 34, "end": 55 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 85,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Smolder:Kalista:1",
+          "text": "Kalista dashes a lot, so land Achooo! when she commits to an attack; it slows her and cuts her mobility.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-W", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Smolder:Kalista:2",
+          "text": "Kalista cannot cancel her attack windup. Hit her with Achooo! as she starts an attack.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-W", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Smolder:Kalista:3",
+          "text": "Her Rend slows you and deals more damage the more spears are stuck in you. Back off once you have taken several spears.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-E", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Kalista:4",
+          "text": "Her ally can use Fate's Call to come in and knock you up, so keep Flap, Flap, Flap ready to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-R", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Smolder-E", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "24df625e2ee3d7f852d38cebe01fe15ba903b86c9bb602b6e11ae6ae2eb9f903",
+      "tips": [
+        {
+          "id": "adc:Smolder:Karthus:0",
+          "text": "Stay out of Lay Waste range early and focus on farming safely so Dragon Practice stacks can build.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 12, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 65,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Smolder:Karthus:1",
+          "text": "Hit Karthus with Achooo! from long range; it slows him and he has no quick way to dodge.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Smolder-W", "start": 17, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Smolder:Karthus:2",
+          "text": "Avoid walking through Wall of Pain; it slows you and makes you take more magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 22, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Smolder:Karthus:3",
+          "text": "Do not fly into Defile with Flap, Flap, Flap unless you can kill; its damage ticks add up while you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Smolder-E", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Smolder:Karthus:4",
+          "text": "Stay clear of Karthus's body after he dies; he can still cast spells for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Smolder:Karthus:5",
+          "text": "Keep your health high late in the game; Requiem hits you from anywhere once its channel finishes.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "46af1ae9f342c71127b41ce37b690c6b78745d88c08c848f6fe558fa591f2a93",
+      "tips": [
+        {
+          "id": "adc:Smolder:KogMaw:0",
+          "text": "Stay out of the Void Ooze trail; it slows you and leaves you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 16, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Smolder:KogMaw:1",
+          "text": "Hit Kog'Maw with Achooo! when he comes forward to attack; he has no good escape.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Smolder-W", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Smolder:KogMaw:2",
+          "text": "Use Flap, Flap, Flap to dash in on Kog'Maw, or to get away from his Caustic Spittle.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "KogMaw", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Smolder:KogMaw:3",
+          "text": "Hit minions with Super Scorcher Breath to build Dragon Practice safely. Kog'Maw's range makes trading in lane risky.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 17, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 48,
+              "end": 63
+            },
+            { "kind": "champion", "key": "KogMaw", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a061d576a220e413e3119eb67a40fba90944b20bfca3a7967725a2b6925cc18f",
+      "tips": [
+        {
+          "id": "adc:Smolder:Lucian:0",
+          "text": "Stay safe early and farm with Super Scorcher Breath; last-hit kills refund mana and build your Dragon Practice stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 95,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Smolder:Lucian:1",
+          "text": "Land Achooo! on Lucian when he dashes in; the slow lets you back away from his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Lucian", "start": 16, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Smolder:Lucian:2",
+          "text": "Lucian has strong burst but little sustained damage, so back off after his dash and abilities are spent.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Lucian:3",
+          "text": "Step out of the line of The Culling; Lucian cannot change its angle once he starts it.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-R", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Lucian", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Lucian:4",
+          "text": "Do not use Flap, Flap, Flap to fight Lucian early; Lucian can stop it by being stunned or rooted, but it mostly works for escaping or finishing.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 11, "end": 27 },
+            { "kind": "champion", "key": "Lucian", "start": 37, "end": 43 },
+            { "kind": "champion", "key": "Lucian", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "09c2e682a18316b9083f5be491a76351a30044c86c19ebd1c0e34110c14475bd",
+      "tips": [
+        {
+          "id": "adc:Smolder:Lux:0",
+          "text": "Sidestep Light Binding, since it only hits the first two enemies in its path. If a minion is in front of you, it may take the hit for you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Smolder:Lux:1",
+          "text": "Stay out of Lucent Singularity. Being slowed in it makes you easy to hit with Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Lux-Q", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Smolder:Lux:2",
+          "text": "Hit Lux with Achooo! from long range, since it slows her and she has little health to spare.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Smolder-W", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Smolder:Lux:3",
+          "text": "Farm safely and build up Dragon Practice stacks. Hit Lux with your abilities to gain more stacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 25,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Lux", "start": 53, "end": 56 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Smolder:Lux:4",
+          "text": "When you see the red warning line of Final Spark, step to the side. Do not stand in a line with your teammates.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a4edfcd250dfb84df53a4cfcbf37cc2ba83035be47f0d883b0076f225a3c1a86",
+      "tips": [
+        {
+          "id": "adc:Smolder:MissFortune:0",
+          "text": "Play safe early and focus on building stacks with Super Scorcher Breath on minions; you are weak until Dragon Practice grows.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 50, "end": 71 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 103,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Smolder:MissFortune:1",
+          "text": "Land Achooo! on Miss Fortune; she is slowed and takes the explosion, and hitting a champion grows your stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 5, "end": 12 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Smolder:MissFortune:2",
+          "text": "Stay out of her Make It Rain area; it slows you and she can then walk onto you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Smolder:MissFortune:3",
+          "text": "Don't stand in a line with minions or allies for Double Up to bounce through, and don't stay in front of Bullet Time.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 49,
+              "end": 58
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 105,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f5247e0662a14246d6c3e4b41b3182377d5be83bd302e3c20031ea115677dfc4",
+      "tips": [
+        {
+          "id": "adc:Smolder:Nilah:0",
+          "text": "Stay safe early and farm with Super Scorcher Breath to build Dragon Practice; Nilah punishes you if you trade carelessly.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 61,
+              "end": 76
+            },
+            { "kind": "champion", "key": "Nilah", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Smolder:Nilah:1",
+          "text": "Hit Nilah with Achooo! at long range so she is slowed; do not let her get in close with Slipstream.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Smolder-W", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Nilah-E", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Smolder:Nilah:2",
+          "text": "Wait out Jubilant Veil before attacking; she dodges basic attacks while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Smolder:Nilah:3",
+          "text": "Do not fight Nilah once Apotheosis is up and your support is away; it pulls you in and heals her.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Nilah-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Smolder:Nilah:4",
+          "text": "Use Flap, Flap, Flap to escape over walls when Nilah dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Nilah", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e8d151941d9e9d83215d0bf7dc9ff4d9e5122062bd35adf2e4edccfec03c080e",
+      "tips": [
+        {
+          "id": "adc:Smolder:Samira:0",
+          "text": "Stay out of melee range early; Samira's Wild Rush and Flair hit hard when she gets close. Poke her with Super Scorcher Breath instead.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Samira-E", "start": 40, "end": 49 },
+            { "kind": "ability", "key": "Samira-Q", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 104, "end": 125 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Smolder:Samira:1",
+          "text": "Don't throw Achooo! while Samira has Blade Whirl ready; she can destroy the glob. Bait it out first.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 12, "end": 19 },
+            { "kind": "champion", "key": "Samira", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Samira-W", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Smolder:Samira:2",
+          "text": "Use Flap, Flap, Flap to escape when Samira dashes at you, but she can still chase, so stay near your support.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Samira", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Smolder:Samira:3",
+          "text": "Keep Smolder's Achooo! slow for when Samira commits; slowed, she is easier to hit and kite.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Smolder-W", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Samira", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "015cc204fb9ea408d617032e85817822aece910154213e851772cc35a3097bd9",
+      "tips": [
+        {
+          "id": "adc:Smolder:Senna:0",
+          "text": "Play safe early and farm with Super Scorcher Breath; every minion it kills adds a Dragon Practice stack.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 82,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Smolder:Senna:1",
+          "text": "Dodge Senna's Last Embrace; it roots you for a long time and she gets free damage on you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Senna-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Smolder:Senna:2",
+          "text": "Use Achooo! to slow Senna when she walks up to poke, then follow with Super Scorcher Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 19 },
+            { "kind": "champion", "key": "Senna", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 70, "end": 91 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Smolder:Senna:3",
+          "text": "Save Flap, Flap, Flap for escaping or finishing a fight; Senna's Last Embrace root cuts it short.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Senna", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Senna-W", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c09099df0ecf08600ae2a689b8edcf217e18e5c5d72679babbcc7bed66f70dd1",
+      "tips": [
+        {
+          "id": "adc:Smolder:Sivir:0",
+          "text": "Stay safe and farm early, since you are weak now; last-hit with Super Scorcher Breath to build Dragon Practice stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 64, "end": 85 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 95,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Smolder:Sivir:1",
+          "text": "Wait for Sivir to use Spell Shield on something cheap before you throw Achooo!, since one shield blocks it.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Sivir-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Smolder-W", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Smolder:Sivir:2",
+          "text": "Stay out of Boomerang Blade's path both ways; if it hits you going out, move off that line before it returns.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Smolder:Sivir:3",
+          "text": "Do not stand beside your minions when Sivir has Ricochet active; the bounces reach you from them.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Sivir-W", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Smolder:Sivir:4",
+          "text": "Use Flap, Flap, Flap to escape or to chase, but remember being stunned ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c6d395119a579738a57af012f167a2b5d37a7a2579a4936991ad86055f15ade9",
+      "tips": [
+        {
+          "id": "adc:Smolder:Tristana:0",
+          "text": "Play safe early and farm with Super Scorcher Breath; every minion it kills builds Dragon Practice stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 82,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Smolder:Tristana:1",
+          "text": "Hit Tristana with Achooo! when she steps up; the glob leaves her slowed and the explosion adds damage.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Smolder-W", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Smolder:Tristana:2",
+          "text": "Stay away from her Buster Shot range when you are low on health; it knocks you back and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Smolder:Tristana:3",
+          "text": "Back off when a bomb from Explosive Charge is on you; hits on you grow it, so avoid trading until it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Smolder:Tristana:4",
+          "text": "Use Flap, Flap, Flap to cross walls and escape her Rocket Jump engage, but not while she has Buster Shot ready.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Tristana-W", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Tristana-R", "start": 93, "end": 104 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "584de7a257144452b26d704363cd97fef969e159ec1b0491ad331e41429207c9",
+      "tips": [
+        {
+          "id": "adc:Smolder:Twitch:0",
+          "text": "Play safe early and farm with Super Scorcher Breath; every minion it kills adds to Dragon Practice.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 83,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Smolder:Twitch:1",
+          "text": "Aim Achooo! at Twitch when he steps up to attack; hitting him slows him and adds an explosion.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Twitch", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Smolder:Twitch:2",
+          "text": "Twitch is fragile, so burst him down with Super Scorcher Breath when he shows himself after camouflage.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 42, "end": 63 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Smolder:Twitch:3",
+          "text": "Do not stand in Venom Cask's cloud; it slows you and piles on Deadly Venom for Contaminate.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 62,
+              "end": 74
+            },
+            { "kind": "ability", "key": "Twitch-E", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Smolder:Twitch:4",
+          "text": "Flap, Flap, Flap can carry you over walls to escape Twitch, but it ends if you are stunned or cast another ability.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Twitch", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "fe5a814b0f6e7f59379ae3bef40df98226925f9364adde07c711626f9298ace3",
+      "tips": [
+        {
+          "id": "adc:Smolder:Varus:0",
+          "text": "Play safe early and last-hit with Super Scorcher Breath to gain stacks; you are weak until they build.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 34, "end": 55 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Smolder:Varus:1",
+          "text": "Dodge Piercing Arrow by watching Varus charge it, and step out of the line. He is slowed while he charges.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Varus", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Smolder:Varus:2",
+          "text": "Hit Varus with Achooo! when he charges an arrow; the slow and explosion make him pay for standing still.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Smolder-W", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Smolder:Varus:3",
+          "text": "Keep Flap, Flap, Flap ready to escape Chain of Corruption's range, but it won't free you once you are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Varus-R", "start": 38, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Smolder:Varus:4",
+          "text": "Leave the Hail of Arrows ground quickly; it slows you and cuts your healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "40fffaabfeea7f37dca7cff7e5a6be70ceadae196f5c0b49944e073680a8ad5e",
+      "tips": [
+        {
+          "id": "adc:Smolder:Vayne:0",
+          "text": "Stay alive and farm with Super Scorcher Breath to build Dragon Practice stacks; your early game is weak.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 25, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 56,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Smolder:Vayne:1",
+          "text": "Stay away from walls when Vayne has Condemn ready; a wall hit stuns you and deals heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Smolder:Vayne:2",
+          "text": "Land Achooo! when Vayne walks up to you; it slows her so she can't close in or escape easily.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Vayne", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Smolder:Vayne:3",
+          "text": "Don't trade when Vayne has Silver Bolts on her third hit; back off after two hits.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Vayne-W", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Smolder:Vayne:4",
+          "text": "Use Flap, Flap, Flap to escape over walls, not while Vayne has Condemn up; stuns end the flight.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Vayne-E", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3a6237ab7a063fa793c4521406144e6005b9dd854429877930c966943dad2155",
+      "tips": [
+        {
+          "id": "adc:Smolder:Veigar:0",
+          "text": "Stay out of Dark Matter's marked circle; it falls after a short delay, so keep moving when Veigar aims at you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Veigar", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Smolder:Veigar:1",
+          "text": "Don't walk through the edge of Event Horizon. If you stand inside it you can still move and attack, only the edge stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Smolder:Veigar:2",
+          "text": "Land Achooo! on Veigar to leave him slowed, then punish him since he is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Veigar", "start": 16, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Smolder:Veigar:3",
+          "text": "Stack Dragon Practice safely by hitting champions with abilities and last-hitting with Super Scorcher Breath; don't force early trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 6,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Smolder-Q", "start": 87, "end": 108 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Smolder:Veigar:4",
+          "text": "Keep minions between you and Veigar so Baleful Strike can't reach you cleanly; it only hits the first two enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "87797bce6e11b3f0e599cd1e0ae3ff48216c79fd30ec7e791a561a63ab7f75b0",
+      "tips": [
+        {
+          "id": "adc:Smolder:Xayah:0",
+          "text": "Play safe early and farm with Super Scorcher Breath; each minion it kills adds a stack of Dragon Practice.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 30, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 90,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Smolder:Xayah:1",
+          "text": "Hit Xayah with Achooo! to slow her, then follow up with a basic ability while she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Smolder-W", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Smolder:Xayah:2",
+          "text": "Step off the ground Feathers when Xayah is ready to cast Bladecaller; being hit by three or more roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Xayah-E", "start": 57, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Smolder:Xayah:3",
+          "text": "Do not cast MMOOOMMMM! at Xayah when she can use Featherstorm; she becomes untargetable and dodges it.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-R", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Xayah", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Xayah-R", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Smolder:Xayah:4",
+          "text": "Do not fly in with Flap, Flap, Flap while Bladecaller is ready; a root would stop you in the middle of her team.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Xayah-E", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ffc63a72ebe09f81f1edab03e651b611c2104a3d9b32aa895dd8d67be31e759b",
+      "tips": [
+        {
+          "id": "adc:Smolder:Yasuo:0",
+          "text": "Sneeze with Achooo! when Yasuo has used Wind Wall; it is the best time to slow him and explode on him.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 12, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 40, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Smolder:Yasuo:1",
+          "text": "Wait out Wind Wall before firing Super Scorcher Breath; the wall destroys the fireball.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 33, "end": 54 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Smolder:Yasuo:2",
+          "text": "Stay safe early and farm up Dragon Practice stacks; you are weak before they build.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 28,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Smolder:Yasuo:3",
+          "text": "Stay away from the Steel Tempest whirlwind; being knocked up lets Yasuo follow with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "knocked-up", "start": 50, "end": 60 },
+            { "kind": "champion", "key": "Yasuo", "start": 66, "end": 71 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 84, "end": 95 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Smolder:Yasuo:4",
+          "text": "Fly with Flap, Flap, Flap to escape a Yasuo dash, but stun or knock-up will end it early.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Yasuo", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bfcb235fedf77d731141b09b56065aa94fb3f9057f8a69e486d85c2686eeed2e",
+      "tips": [
+        {
+          "id": "adc:Smolder:Yunara:0",
+          "text": "Stay safe and farm with Super Scorcher Breath early; every kill adds a stack of Dragon Practice and returns mana.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 24, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 80,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Smolder:Yunara:1",
+          "text": "Land Achooo! from long range on Yunara; it slows her and the explosion adds damage when it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yunara", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Smolder:Yunara:2",
+          "text": "Back off when Yunara's Cultivation of Spirit is active; her attacks hit faster and spread to nearby enemies, you included.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Yunara-Q", "start": 23, "end": 44 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Smolder:Yunara:3",
+          "text": "Don't stand in a line with your support when Yunara fires her prayer bead; it can slow and hit you both.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Smolder:Yunara:4",
+          "text": "Save Flap, Flap, Flap to escape over walls after Yunara uses her ultimate. Her Arc of Ruin will slow you if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yunara", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f7dae39ef9d8ef43ff3a2c89c3d0f7e0fc1c6c81fb8047de931ed9cb2996138a",
+      "tips": [
+        {
+          "id": "adc:Smolder:Zeri:0",
+          "text": "Stay alive and farm with Super Scorcher Breath; last-hit kills give you stacks, so do not take risky trades early.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 25, "end": 46 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Smolder:Zeri:1",
+          "text": "Aim Achooo! at Zeri when she lines up with her support; it slows her and the explosion hurts anyone close.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Zeri", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Smolder:Zeri:2",
+          "text": "Zeri can dash over walls with Spark Surge, so keep Flap, Flap, Flap ready to escape or chase when she jumps in.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-E", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Smolder-E", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "adc:Smolder:Zeri:3",
+          "text": "Save MMOOOMMMM! for when Zeri is slowed or committed; the center hit slows and hurts the most.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zeri", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bc7d4442616339e9901917c43267066fb78b078ec8781305204e88e18de2af0a",
+      "tips": [
+        {
+          "id": "adc:Smolder:Ziggs:0",
+          "text": "Stay out of Hexplosive Minefield mines. Walking through them slows you and sets up Ziggs's other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 12, "end": 32 },
+            { "kind": "champion", "key": "Ziggs", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Smolder:Ziggs:1",
+          "text": "Trade right after Ziggs uses Bouncing Bomb or Satchel Charge, because both have long cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Smolder:Ziggs:2",
+          "text": "Use Achooo! from long range to slow Ziggs and keep him back from the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Ziggs", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Smolder:Ziggs:3",
+          "text": "Last-hit minions with Super Scorcher Breath early to build Dragon Practice stacks. Stay out of Ziggs's poke range while you do.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 22, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 59,
+              "end": 74
+            },
+            { "kind": "champion", "key": "Ziggs", "start": 95, "end": 100 },
+            { "kind": "keyword", "key": "poke", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Smolder:Ziggs:4",
+          "text": "Don't stand still when Ziggs is in range of Mega Inferno Bomb. Its blast is slow to land, so move out of the circle.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Ziggs-R", "start": 44, "end": 61 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

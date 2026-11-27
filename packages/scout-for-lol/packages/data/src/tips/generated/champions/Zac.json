@@ -1,0 +1,888 @@
+{
+  "schemaVersion": 1,
+  "champion": "Zac",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "5c5d9d85d2e82f6840bf46518bf610c16fcf7165f4d8a6034e7118213321ca17",
+      "tips": [
+        {
+          "id": "jungle:Zac:general:0",
+          "text": "Walk over the goo chunks that drop after each hit; picking them up heals you and keeps you in the fight.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Zac:general:1",
+          "text": "Charge Elastic Slingshot out of sight, such as from the fog of war, so the enemy has little time to react before they are knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "keyword", "key": "knocked-up", "start": 122, "end": 132 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Zac:general:2",
+          "text": "Hold the Elastic Slingshot charge a little longer when you can; a longer charge keeps enemies knocked up for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 9, "end": 26 },
+            { "kind": "keyword", "key": "knocked-up", "start": 94, "end": 104 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Zac:general:3",
+          "text": "Use Stretching Strikes on one enemy, then attack a different one to pull them together and hit everyone nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Zac:general:4",
+          "text": "Use Unstable Matter often in fights; every chunk you pick up shortens its cooldown, and it hurts high-health targets more.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Zac:general:5",
+          "text": "Cast Let's Bounce! to start a fight or finish one; you can still move and use Unstable Matter while bouncing, and you pick up chunks as you go.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-R", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Zac-W", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Zac:general:6",
+          "text": "When Cell Division is ready and you are about to die, fall where the enemy cannot easily reach your bloblets, since they must survive to revive you.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-passive", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Zac:general:7",
+          "text": "Do not charge Elastic Slingshot in front of enemies with a stun, silence or knock up; those interrupt the charge.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 14, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "silenced", "start": 65, "end": 72 },
+            { "kind": "keyword", "key": "knocked-up", "start": 76, "end": 84 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "df6fe5998f68e3a67962fd0d90b69c98cf94ff5ddbbf133c9a66f54cdabc43ee",
+      "tips": [
+        {
+          "id": "jungle:Zac:Graves:0",
+          "text": "Charge Elastic Slingshot out of sight, such as from a bush or the fog. Graves has little time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Graves", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zac:Graves:1",
+          "text": "Pick up your goo chunks after a fight to heal. Graves wants to step on them, so grab them first.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Zac:Graves:2",
+          "text": "Leave Graves' Smoke Screen quickly. Once you step out, the slow ends, so don't fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Zac:Graves:3",
+          "text": "Use Stretching Strikes to pull Graves in. It slows him, and the second hit can knock him up beside a target.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Graves", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Zac:Graves:4",
+          "text": "Graves deals mostly physical damage, so stack armor. When Cell Division triggers, die somewhere his bloblets are hard to reach.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zac-passive", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f40781579db74491ac36e83edc9efe9b408998aaf3d17310f847ca80bd3daa6",
+      "tips": [
+        {
+          "id": "jungle:Zac:JarvanIV:0",
+          "text": "Charge Elastic Slingshot out of sight, then land on Jarvan. If he stuns you first, the charge is interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Zac:JarvanIV:1",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard; Dragon Strike knocks up anyone in the way.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Zac:JarvanIV:2",
+          "text": "Collect your goo chunks after a fight to heal; Unstable Matter's cooldown also drops when you pick them up.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Zac:JarvanIV:3",
+          "text": "Jarvan's Cataclysm walls you in with him. Use Elastic Slingshot, since movement abilities can go through the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Zac-E", "start": 46, "end": 63 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "58cb134c95892a40ca585ebbda59d7d38cdcd8b53f26bd55c276352d4eb359d8",
+      "tips": [
+        {
+          "id": "jungle:Zac:Kayn:0",
+          "text": "Charge Elastic Slingshot out of sight, such as from a wall or bush, so Kayn has less time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Kayn", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Zac:Kayn:1",
+          "text": "Kayn can vanish into walls with Shadow Step; if you hit him while he is in it, it ends sooner. Stun or knock him up to end it at once.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-E", "start": 32, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Zac:Kayn:2",
+          "text": "Dodge Blade's Reach so Kayn cannot mark you and get a long-range Umbral Trespass on you.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Kayn-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Zac:Kayn:3",
+          "text": "Pick up your goo chunks after you hit with Unstable Matter; each one lowers its cooldown and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Zac:Kayn:4",
+          "text": "Die near allies and walls when Cell Division is ready, so Kayn cannot easily kill your bloblets.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-passive", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Kayn", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7a3ab052cbe960c0d611ccb1f927c25e5221b8a730cf971f2f0ff235a83e3c4",
+      "tips": [
+        {
+          "id": "jungle:Zac:Khazix:0",
+          "text": "Pick up your goo chunks after every ability; they heal you and Kha'Zix cannot easily use them.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Zac:Khazix:1",
+          "text": "Stay near allies, minions or a turret so Kha'Zix cannot use his strong isolated damage on you.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "isolated", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Zac:Khazix:2",
+          "text": "Charge Elastic Slingshot from the fog of war, then land on Kha'Zix to knock him up when he leaps away.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Khazix", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Zac:Khazix:3",
+          "text": "Use Unstable Matter when Kha'Zix jumps on you after he turns invisible; it hurts him and he can't easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Zac:Khazix:4",
+          "text": "Fight Kha'Zix when Leap and Void Assault are on cooldown; he has no easy way out.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Khazix-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8208058836ddb57f3043cdb07ed68a7d14ef11e83d80f830bfd6622cd195513c",
+      "tips": [
+        {
+          "id": "jungle:Zac:Kindred:0",
+          "text": "Charge Elastic Slingshot out of sight and release it onto Kindred; she is fragile, and the knock up and stun leave her little time to dance away.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Kindred", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Zac:Kindred:1",
+          "text": "Use Stretching Strikes on Kindred as she comes in; it slows her and tethers her so you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Kindred", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Zac:Kindred:2",
+          "text": "Pick up the goo your hits leave behind to heal, and fight where Kindred cannot easily step on it.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Zac:Kindred:3",
+          "text": "When Kindred casts Lamb's Respite, hold your big damage; nobody inside can die until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Kindred-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Zac:Kindred:4",
+          "text": "Contest the camps Wolf has marked for a hunt; denying them slows Kindred's growth.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1f22fb3a767382088cd6d2051c954f901d2133cf339b39af228176f3c2848d61",
+      "tips": [
+        {
+          "id": "jungle:Zac:LeeSin:0",
+          "text": "Charge Elastic Slingshot out of sight so Lee Sin has less time to react. If he is about to hit you, cancel and back off.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "LeeSin", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Zac:LeeSin:1",
+          "text": "Pick up your goo chunks after trading. They heal you, and Lee Sin will try to crush them.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Zac:LeeSin:2",
+          "text": "Use Unstable Matter when Lee Sin jumps onto you with Resonating Strike; it deals magic damage, which he handles poorly.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Zac:LeeSin:3",
+          "text": "Aim Stretching Strikes at Lee Sin and attack with the follow-up to slow him and break his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "LeeSin", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Zac:LeeSin:4",
+          "text": "Stay away from walls and teammates when Lee Sin has Dragon's Rage. Spreading out limits his kick.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a5df1b3d8320d5a6b39f183114ca08d14dfe449c32fde2563e8c3d707f55aaec",
+      "tips": [
+        {
+          "id": "jungle:Zac:MasterYi:0",
+          "text": "Hit Master Yi with Stretching Strikes when he's far from you; Highlander stops the slow, so use it early.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Zac-Q", "start": 19, "end": 37 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 62, "end": 72 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Zac:MasterYi:1",
+          "text": "Charge Elastic Slingshot and stun Master Yi when he commits; he can't act while he's stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "MasterYi", "start": 34, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Zac:MasterYi:2",
+          "text": "Wait for Alpha Strike to be spent before you jump in; Master Yi can't be targeted while he dashes.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "MasterYi", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Zac:MasterYi:3",
+          "text": "Hit Master Yi with Unstable Matter again and again; he is forced to spend mana on Meditate to heal.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Zac-W", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 82, "end": 90 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Zac:MasterYi:4",
+          "text": "Gather your goo chunks after each ability hit; they heal you and keep you alive through his fast attacks.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zac:MasterYi:5",
+          "text": "Keep Let's Bounce! for when he dives you; it knocks him back and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-R", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2479869ac188f10199d0f27686badc3da3b22f48ca2d17e4d3d46c6d2b85dd1d",
+      "tips": [
+        {
+          "id": "jungle:Zac:Naafiri:0",
+          "text": "Step on the goo that Naafiri's hits leave on the ground; it destroys the chunk. Pick up your own chunks to heal.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Zac:Naafiri:1",
+          "text": "Charge Elastic Slingshot out of sight and release it as she walks in; she is knocked up and stunned where you land.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Zac:Naafiri:2",
+          "text": "Hit Naafiri with Stretching Strikes to leave her slowed, so she can't easily dive out or chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Zac-Q", "start": 17, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Zac:Naafiri:3",
+          "text": "When Naafiri vanishes with The Call of the Pack, don't waste Unstable Matter on her. Wait until she reappears.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 27, "end": 47 },
+            { "kind": "ability", "key": "Zac-W", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Zac:Naafiri:4",
+          "text": "If Naafiri jumps you with Hounds' Pursuit, fight back with Unstable Matter. It hits her and her packmates together.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 3, "end": 10 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Zac-W", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "73068490dab94f4527412f0aa74df3951809f7e3747817fda23a79ddd5760677",
+      "tips": [
+        {
+          "id": "jungle:Zac:Nocturne:0",
+          "text": "Charge Elastic Slingshot out of sight. Nocturne can block it with Shroud of Darkness, so bait that shield with another ability first.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Nocturne", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 66, "end": 84 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Zac:Nocturne:1",
+          "text": "Pick up your goo chunks after each trade; they heal you and keep you alive against Nocturne's burst.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 83, "end": 91 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Zac:Nocturne:2",
+          "text": "Stay near your team when Nocturne casts Paranoia, since his dash can reach you from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Zac:Nocturne:3",
+          "text": "Break the Unspeakable Horror tether by walking out of range, or use a stun or knock up from Elastic Slingshot, before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Zac-E", "start": 92, "end": 109 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Zac:Nocturne:4",
+          "text": "Use Unstable Matter when Nocturne closes in; it hits hard on high health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "43048208d52f9daf2618a332c031837c79b1308a19a5036c76fb2b05d13f3ee3",
+      "tips": [
+        {
+          "id": "jungle:Zac:Shyvana:0",
+          "text": "Hit Shyvana with Stretching Strikes, then follow with your attack to pull her into a different enemy or ally.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Zac-Q", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Zac:Shyvana:1",
+          "text": "Charge Elastic Slingshot out of sight and land on Shyvana before she can use Inferno Aegis.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Shyvana", "start": 50, "end": 57 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 77, "end": 90 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Zac:Shyvana:2",
+          "text": "Collect your goo chunks after trading, since they heal you. Shyvana will try to crush them.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zac:Shyvana:3",
+          "text": "Keep out of Shyvana's reach while her Dragon Fury is low; she grows stronger from fighting you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Zac:Shyvana:4",
+          "text": "Use Cell Division to die somewhere hard for Shyvana to reach, because her Molten Burst hits several bloblets at once.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-passive", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shyvana", "start": 44, "end": 51 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "11042628ed316026864a6dcc6aa1f75c71cdbf19137d61bdc47eb688510a1eb4",
+      "tips": [
+        {
+          "id": "jungle:Zac:Skarner:0",
+          "text": "Stop Skarner's Ixtal's Impact with Stretching Strikes or Elastic Slingshot. Both can interrupt his charge, since the charge ends if he is knocked up or stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Skarner-E", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Zac-Q", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Zac-E", "start": 57, "end": 74 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Zac:Skarner:1",
+          "text": "Stay away from walls when Skarner charges at you. A wall slam stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Zac:Skarner:2",
+          "text": "Collect your goo chunks after each trade to heal. Skarner's long fights are easier when you stay healthy.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Zac:Skarner:3",
+          "text": "Keep Flash or a way out ready for Impale. Skarner has to aim it, so a sidestep or quick dash can dodge it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Skarner-R", "start": 34, "end": 40 },
+            { "kind": "champion", "key": "Skarner", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Zac:Skarner:4",
+          "text": "Do not ignore Skarner in a long fight. Quaking stacks from his attacks and deals real damage over time.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75455903c9332757282b78bff7074a9b35701dc4b01326b8ecb0121de4a36fbc",
+      "tips": [
+        {
+          "id": "jungle:Zac:Sylas:0",
+          "text": "Charge Elastic Slingshot out of sight and release it onto Sylas; he is knocked up and stunned, so he cannot answer for that moment.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Sylas", "start": 58, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Zac:Sylas:1",
+          "text": "Sylas can knock you up or stun you while you charge Elastic Slingshot. Release early or cancel when he has Abduct ready.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Zac-E", "start": 52, "end": 69 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Zac:Sylas:2",
+          "text": "Sylas heals with Kingslayer when he is low, so finish him fast with Unstable Matter and Stretching Strikes instead of letting him trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Zac-W", "start": 68, "end": 83 },
+            { "kind": "ability", "key": "Zac-Q", "start": 88, "end": 106 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Zac:Sylas:3",
+          "text": "Pick up your goo after each trade; it keeps you healthy against Sylas's magic damage. Stand on his goo to crush it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Zac:Sylas:4",
+          "text": "Sylas can steal Let's Bounce! with Hijack once he reaches level 6, so expect to face your own ultimate.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Zac-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Sylas-R", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b79c3d4c08c3ff40147ccd8d14dcdf8a54e1d76349e52619f0e661bddb65251b",
+      "tips": [
+        {
+          "id": "jungle:Zac:Talon:0",
+          "text": "Pick up your own goo after every ability; it heals you and keeps you ahead of Talon's burst.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Zac:Talon:1",
+          "text": "Land Stretching Strikes on Talon when he jumps in, so he is slowed and cannot run away easily.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Zac:Talon:2",
+          "text": "Charge Elastic Slingshot from out of sight and release it onto Talon; the knock up stops him from jumping away.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 63, "end": 68 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Zac:Talon:3",
+          "text": "Wait for Talon to use Shadow Assault, then commit; once it is down he is much easier to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Talon-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zac:Talon:4",
+          "text": "Use Unstable Matter when Talon is next to you; it hits for a share of his health and refreshes faster as you pick up goo.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "92282121bf4a769305565cf34b28f0ffa866f3a9f4a60e607e4726e2f922a965",
+      "tips": [
+        {
+          "id": "jungle:Zac:Viego:0",
+          "text": "Charge Elastic Slingshot out of sight, then jump on Viego to knock him up and stun him. Zac can then follow with Unstable Matter.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "Viego", "start": 52, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "champion", "key": "Zac", "start": 88, "end": 91 },
+            { "kind": "ability", "key": "Zac-W", "start": 113, "end": 128 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Zac:Viego:1",
+          "text": "Hit Viego with Stretching Strikes to slow him, then keep fighting close. He has to stay near you to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zac-Q", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Zac:Viego:2",
+          "text": "Walk over the goo chunks your abilities leave behind. Collecting them heals you, so you can win longer trades.",
+          "refs": [],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Zac:Viego:3",
+          "text": "Save Let's Bounce! for when Viego commits to a fight; you can move while bouncing and it collects nearby goo.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zac:Viego:4",
+          "text": "When Viego takes over a body after a kill, stay on him. He is vulnerable when he is not possessing anyone.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0dabf1b1046e5dc8c264f1128d04fb07c63bcfa7a4da1cf9d9860211500b438e",
+      "tips": [
+        {
+          "id": "jungle:Zac:XinZhao:0",
+          "text": "Pick up your goo after every ability; it heals you, and Unstable Matter comes back sooner each time.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-W", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Zac:XinZhao:1",
+          "text": "Charge Elastic Slingshot out of his sight and land on Xin Zhao; the knock up stops his Three Talon Strike combo.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-E", "start": 7, "end": 24 },
+            { "kind": "champion", "key": "XinZhao", "start": 54, "end": 62 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 87, "end": 105 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Zac:XinZhao:2",
+          "text": "Hit Xin Zhao with Stretching Strikes to slow him when he charges in, then fight back with Unstable Matter.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Zac-Q", "start": 18, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Zac-W", "start": 90, "end": 105 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Zac:XinZhao:3",
+          "text": "Do not fight him alone when he has Crescent Guard ready; it knocks you back and he takes no damage from outside its sweep.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Zac:XinZhao:4",
+          "text": "When Cell Division triggers, try to die where Xin Zhao cannot easily reach your bloblets.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-passive", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,3571 @@
+{
+  "schemaVersion": 1,
+  "champion": "Brand",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "6b4926a9280abaff616ecaff69de618d670308e95039e212e78aa61503dd5599",
+      "tips": [
+        {
+          "id": "jungle:Brand:general:0",
+          "text": "Land Sear on a target that is already burning to stun them. Hit them with Pillar of Flame or Conflagration first.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Brand-W", "start": 74, "end": 89 },
+            { "kind": "ability", "key": "Brand-E", "start": 93, "end": 106 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Brand:general:1",
+          "text": "Aim Pillar of Flame where the enemy is about to be, not where they stand. It lands after a short delay, so use it on targets that are stunned or cornered.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Brand:general:2",
+          "text": "Sear stops at the first enemy it hits, so a minion or monster in the way will block it. Line up a clear shot before you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Brand:general:3",
+          "text": "Use Conflagration on a burning target to spread the blast much further. It reaches enemies standing near them and clears camps faster.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Brand:general:4",
+          "text": "Three stacks of Blaze on a champion make them explode shortly after. Stack it fast, then force them to stay near their team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Brand-passive",
+              "start": 16,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Brand:general:5",
+          "text": "Cast Pyroclasm on a small group of enemies so it keeps bouncing between them. A lone target gets hit again only if the bounces have nobody else to go to.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Brand:general:6",
+          "text": "Hit an enemy already burning with Pyroclasm and they are slowed, so use it to finish a chase.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 34, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Brand:general:7",
+          "text": "Killing a burning enemy gives you mana back. Use your abilities on camps to keep your mana up.",
+          "refs": [],
+          "pWrong": 0.67
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Brand:combo:0",
+          "name": "W into Q stun",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Brand-W" },
+            { "kind": "ability", "key": "Brand-Q" }
+          ],
+          "when": "Use it when you want a reliable stun on an enemy who is dodging your Sear.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 69, "end": 73 }
+          ],
+          "text": "Pillar of Flame has a delay and sets the target ablaze, so Sear then stuns. Land the pillar first, since it is easier to hit, then follow with Sear.",
+          "textRefs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Brand-Q", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Brand-Q", "start": 143, "end": 147 }
+          ]
+        },
+        {
+          "id": "jungle:Brand:combo:1",
+          "name": "E into Q stun",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Brand-E" },
+            { "kind": "ability", "key": "Brand-Q" }
+          ],
+          "when": "Use it when the target is in range and you want a quick, certain stun.",
+          "whenRefs": [],
+          "text": "Conflagration is a targeted spell that always applies Ablaze. Sear then stuns the target with no aiming needed for the first spell.",
+          "textRefs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 62, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5f3cd3507fb6b959db7442624fe5da2a4577fe84c343aa171ca38b880ae7065e",
+      "tips": [
+        {
+          "id": "middle:Brand:general:0",
+          "text": "Hit an enemy with Conflagration or Pillar of Flame first, then follow with Sear to stun them. Sear only stuns a target that is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Brand-W", "start": 35, "end": 50 },
+            { "kind": "ability", "key": "Brand-Q", "start": 75, "end": 79 },
+            { "kind": "ability", "key": "Brand-Q", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Brand:general:1",
+          "text": "Aim Sear carefully, because it stops at the first enemy it hits. Minions in the path will block it before it reaches the champion.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Brand:general:2",
+          "text": "Cast Conflagration on a minion standing next to the enemy to spread fire onto them. It spreads farther when the target is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Brand:general:3",
+          "text": "Throw Pillar of Flame where the enemy is about to step, not where they stand. It lands after a short delay, so a moving target will walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Brand:general:4",
+          "text": "Pillar of Flame is best used on a stunned or ablaze enemy. It hits harder against targets that are already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Brand:general:5",
+          "text": "Land three stacks of Blaze on an enemy champion and stay near them. After a short delay they explode and hurt everyone close by.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Brand-passive",
+              "start": 21,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Brand:general:6",
+          "text": "Use Pyroclasm on a small group so it can hit the same target several times. Against a lone enemy it can bounce back to you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Brand:general:7",
+          "text": "Save Pyroclasm for a target that is already ablaze. It slows them, so they cannot easily escape the rest of your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Brand:general:8",
+          "text": "Poke with Conflagration when the enemy stands near their minions. Setting them ablaze there can push them away from the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Brand:combo:0",
+          "name": "W into Q stun",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Brand-W" },
+            { "kind": "ability", "key": "Brand-E" },
+            { "kind": "ability", "key": "Brand-Q" }
+          ],
+          "when": "Against a target that is slow, stuck or predictable, when you want the most damage.",
+          "whenRefs": [],
+          "text": "Pillar of Flame lands after a delay, so aim it where the enemy is going. Once it hits, Conflagration and Sear follow quickly, and Sear stuns the ablaze target.",
+          "textRefs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Brand-E", "start": 87, "end": 100 },
+            { "kind": "ability", "key": "Brand-Q", "start": 105, "end": 109 },
+            { "kind": "ability", "key": "Brand-Q", "start": 130, "end": 134 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5370a9029736339b196758ce2c6d69d0e903c205a9ddd1b7b53bd47d58c55e90",
+      "tips": [
+        {
+          "id": "adc:Brand:general:0",
+          "text": "Land Sear on a target that is already burning, because that stuns them. Start with Pillar of Flame or Conflagration to set them ablaze first.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Brand-W", "start": 83, "end": 98 },
+            { "kind": "ability", "key": "Brand-E", "start": 102, "end": 115 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Brand:general:1",
+          "text": "Aim Pillar of Flame where the enemy will walk, not where they stand. It lands after a short delay, so use it on enemies who are stunned or stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Brand:general:2",
+          "text": "Sear stops at the first enemy it hits, so a minion in the line eats it. Line up a clear shot before you throw it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Brand:general:3",
+          "text": "Cast Conflagration on a minion standing next to the enemy so the blast spreads onto them. It reaches even farther if the target is already burning.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Brand:general:4",
+          "text": "Use Conflagration to push enemies off their minions. Burning them with it makes them stay away from the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Brand:general:5",
+          "text": "Cast Pyroclasm on a small group of enemies so it bounces onto the same target more than once. It also slows burning targets.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Brand:general:6",
+          "text": "Three stacks of Blaze make the target explode after a short delay. Keep them in range, or stun them, so the explosion hits.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Brand-passive",
+              "start": 16,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8434d155890f9e97d75cd55177a03740e6ba0cc8bd7ff17d830b3e3ee94eb76a",
+      "tips": [
+        {
+          "id": "support:Brand:general:0",
+          "text": "Hit an enemy with Pillar of Flame or Conflagration first, then land Sear on them. Sear stuns only a target that is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Brand-E", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Brand-Q", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Brand-Q", "start": 82, "end": 86 },
+            { "kind": "keyword", "key": "ablaze", "start": 123, "end": 129 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Brand:general:1",
+          "text": "Cast Conflagration on an ablaze enemy standing near their minions. The blast spreads twice as far and also burns the minions around them.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "ablaze", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Brand:general:2",
+          "text": "Aim Sear carefully. It stops at the first enemy it hits, so a minion in the way will absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Brand:general:3",
+          "text": "Pillar of Flame lands after a short delay. Aim it where the enemy is moving, or on someone who is stunned or rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "rooted", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Brand:general:4",
+          "text": "Use Pyroclasm on a small group of enemies so it bounces onto the same target several times. Wait for level 6 to start using it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Brand:general:5",
+          "text": "Three stacks of Blaze make an enemy champion explode after a short delay. Keep your spells on them so the blast hits their nearby allies too.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Brand-passive",
+              "start": 16,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "bb13627da7dfd8721459f6a52bb8632c2cc07fb7d379ea44e2e583aa4697b14e",
+      "tips": [
+        {
+          "id": "jungle:Brand:Graves:0",
+          "text": "Open on Graves with Pillar of Flame or Conflagration to set him ablaze, then Sear him for the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Brand-W", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "Brand-E", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "ablaze", "start": 64, "end": 70 },
+            { "kind": "ability", "key": "Brand-Q", "start": 77, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Brand:Graves:1",
+          "text": "Aim Pillar of Flame where Graves will stand, not where he is. It has a short delay, so he can step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Brand:Graves:2",
+          "text": "Graves's Smoke Screen blocks your vision outside the cloud. Step out of it before you commit your combo.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Graves-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Brand:Graves:3",
+          "text": "Keep your distance from Graves. His shotgun hurts up close and Quickdraw closes the gap quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Graves-E", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Brand:Graves:4",
+          "text": "Save Pyroclasm for when Graves is ablaze and near others or low on health. It slows him and follows him even if he walks out of sight.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "41a9d08d8b7428352472ad27879fc0f6c1b6770416cc19cb16b0fdde5aadb5bb",
+      "tips": [
+        {
+          "id": "jungle:Brand:JarvanIV:0",
+          "text": "Hit Jarvan with Sear first, then follow with another spell. An ablaze Jarvan gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "ablaze", "start": 63, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Brand:JarvanIV:1",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you get knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Brand:JarvanIV:2",
+          "text": "Pillar of Flame has a delay, so cast it where Jarvan will be after he lands, not where he stands.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Brand:JarvanIV:3",
+          "text": "Use Pyroclasm on Jarvan when he is trapped in his own Cataclysm ring with you; he cannot easily walk out.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "537e578c2e48cbd10e65a745bd50146e9c859557626586a59c507e1181d76ab2",
+      "tips": [
+        {
+          "id": "jungle:Brand:Kayn:0",
+          "text": "Land Sear on Kayn only after another spell has set him ablaze; then he is stunned and cannot dash away with Reaping Slash.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Kayn", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 },
+            { "kind": "ability", "key": "Kayn-Q", "start": 108, "end": 121 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Brand:Kayn:1",
+          "text": "Save Pyroclasm for when Kayn is ablaze and close. It slows him, and he cannot pull away easily.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Kayn", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "ablaze", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Brand:Kayn:2",
+          "text": "Kayn's Umbral Trespass needs him to damage you first. Stay out of his reach and punish him with Pillar of Flame when he walks in.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-R", "start": 7, "end": 22 },
+            { "kind": "ability", "key": "Brand-W", "start": 96, "end": 111 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Brand:Kayn:3",
+          "text": "Hit Kayn with Conflagration while he is inside terrain after Shadow Step; damaging him there shortens it.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Brand-E", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Kayn-E", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "27e199d0ee9e54cf7d353d8df3fb4aeaceb42a2d0aa909856c7bb48a1f463225",
+      "tips": [
+        {
+          "id": "jungle:Brand:Khazix:0",
+          "text": "Stay near your minions, allies or a turret when Kha'Zix is around. He deals far less damage with Taste Their Fear when you are not isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 97, "end": 113 },
+            { "kind": "keyword", "key": "isolated", "start": 131, "end": 139 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Brand:Khazix:1",
+          "text": "Hit Kha'Zix with Sear after another spell has set him ablaze. He gets stunned, and you can finish with Pillar of Flame.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "ablaze", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 },
+            { "kind": "ability", "key": "Brand-W", "start": 103, "end": 118 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Brand:Khazix:2",
+          "text": "Use Conflagration on a target that is already ablaze to spread the blast much further. It is a safe way to set up several enemies at once.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Brand:Khazix:3",
+          "text": "Aim Sear carefully. It stops at the first unit it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Brand:Khazix:4",
+          "text": "Save Pyroclasm for when Kha'Zix has used Leap, because he is easy to catch afterward. Once he is ablaze it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Khazix-E", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "ablaze", "start": 97, "end": 103 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b8ebd215d612fa97d82d39ba6b9bcde4b8fb69d712f0cc25cc598f0d17807854",
+      "tips": [
+        {
+          "id": "jungle:Brand:Kindred:0",
+          "text": "Hit Kindred with Sear after another spell has set her ablaze; she is stunned and can't dash away with Dance of Arrows.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "ablaze", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Brand:Kindred:1",
+          "text": "Kindred is fragile, so open on her with Pillar of Flame while she stands still, then finish her with Conflagration.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Brand-W", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Brand-E", "start": 101, "end": 114 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Brand:Kindred:2",
+          "text": "Do not ultimate into Lamb's Respite; nobody inside can die, so wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Brand:Kindred:3",
+          "text": "Stay out of her fights when you are low; Mounting Dread slows you and her third attack makes Wolf pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9c16d707b443cdee38b96be67abf3fb9ab6c305ef72abb8f326cd4d9d9efd347",
+      "tips": [
+        {
+          "id": "jungle:Brand:LeeSin:0",
+          "text": "Aim Sear at Lee Sin only when he is already ablaze, so it stuns him. Open with Pillar of Flame or Conflagration to set him ablaze first.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "LeeSin", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "ablaze", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "Brand-W", "start": 79, "end": 94 },
+            { "kind": "ability", "key": "Brand-E", "start": 98, "end": 111 },
+            { "kind": "keyword", "key": "ablaze", "start": 123, "end": 129 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Brand:LeeSin:1",
+          "text": "Lee Sin is weak to magic damage, so build your fights around your spells rather than backing off from him.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Brand:LeeSin:2",
+          "text": "Keep your distance and hit Lee Sin from long range. Sear and Pillar of Flame reach far, while his gap closer needs a marked target.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Brand-Q", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Brand-W", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Brand:LeeSin:3",
+          "text": "Stay away from your teammates when you fight Lee Sin. His Dragon's Rage kicks one champion into others and hurts them all.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 45, "end": 52 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Brand:LeeSin:4",
+          "text": "Hold Pyroclasm for when Lee Sin is ablaze, so he is slowed and cannot easily run or chase.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5b271e70c0be3aa013b414155b86f692204e70b6b8f57a521703ded6434370b7",
+      "tips": [
+        {
+          "id": "jungle:Brand:MasterYi:0",
+          "text": "Hold Sear for when Master Yi is ablaze, since the stun is your best way to stop him from reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "MasterYi", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "ablaze", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Brand:MasterYi:1",
+          "text": "Don't rely on Pyroclasm's slow once Master Yi turns on Highlander; he is immune to slows then. Use your stun instead.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "MasterYi", "start": 36, "end": 45 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 55, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Brand:MasterYi:2",
+          "text": "Master Yi vanishes during Alpha Strike, so wait until it ends to throw Pillar of Flame where he lands.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Brand-W", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Brand:MasterYi:3",
+          "text": "Poke him early with Sear and Conflagration, so he has to spend mana on Meditate to heal.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Brand-Q", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Brand-E", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "430bc8624f25e28430c2063907834c77bfc1110fa31fbc811dc7dfacfa581485",
+      "tips": [
+        {
+          "id": "jungle:Brand:Naafiri:0",
+          "text": "Land Sear on Naafiri after another spell has set her ablaze, so she is stunned and cannot dive on you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Naafiri", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "ablaze", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Brand:Naafiri:1",
+          "text": "Aim Pillar of Flame where she will land, since it has a short delay. Cast it on an ablaze Naafiri for much more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "ablaze", "start": 83, "end": 89 },
+            { "kind": "champion", "key": "Naafiri", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Brand:Naafiri:2",
+          "text": "Use Conflagration on her packmates or her; it spreads to everything nearby and sets them all ablaze, so you hit her through her pack.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 93, "end": 99 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Brand:Naafiri:3",
+          "text": "Hold your damage while she is untargetable after The Call of the Pack; spells cast during it are wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 49, "end": 69 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Brand:Naafiri:4",
+          "text": "Keep Pyroclasm for when she commits to a fight. Its slow on ablaze targets makes it harder for her to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "ablaze", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a64775a057afabbf7cf264cea144c871b6ab70540985b1f86fa54330dc8bc289",
+      "tips": [
+        {
+          "id": "jungle:Brand:Nocturne:0",
+          "text": "Land Sear on Nocturne after he's ablaze to stun him. Without that stun, he can dash in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Nocturne", "start": 13, "end": 21 },
+            { "kind": "keyword", "key": "ablaze", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Brand:Nocturne:1",
+          "text": "Don't throw your first spell while Shroud of Darkness is up. It blocks one ability, so bait it out with a cheap Pillar of Flame.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Brand-W", "start": 112, "end": 127 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Brand:Nocturne:2",
+          "text": "Keep Pyroclasm ready when Paranoia darkens the map. It can slow him as he lands on you, and his dash can be blocked by a spell shield.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Brand:Nocturne:3",
+          "text": "Stay away from Nocturne's reach. Unspeakable Horror is broken when you get out of range, so walk away from him once it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 33, "end": 51 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Brand:Nocturne:4",
+          "text": "Stand near your team when Paranoia is cast. Nocturne's jump is hard to survive alone, so keep allies close.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 26, "end": 34 },
+            { "kind": "champion", "key": "Nocturne", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "isolated", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "411b8ee147a0aefc8aac5c6aabe3b4b046d320be0ead170a2f5825ca9dd51a66",
+      "tips": [
+        {
+          "id": "jungle:Brand:Shyvana:0",
+          "text": "Open with Pillar of Flame or Conflagration to set Shyvana ablaze, then land Sear for the stun. Sear alone will not stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Brand-E", "start": 29, "end": 42 },
+            { "kind": "champion", "key": "Shyvana", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "ablaze", "start": 58, "end": 64 },
+            { "kind": "ability", "key": "Brand-Q", "start": 76, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 },
+            { "kind": "ability", "key": "Brand-Q", "start": 95, "end": 99 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Brand:Shyvana:1",
+          "text": "Keep your distance and poke with Sear and Pillar of Flame. Shyvana wants to get close and fight.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Brand-Q", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Brand-W", "start": 42, "end": 57 },
+            { "kind": "champion", "key": "Shyvana", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Brand:Shyvana:2",
+          "text": "Aim Pillar of Flame where she is heading, not where she stands. It lands after a short delay, and her Inferno Aegis makes her faster.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 102, "end": 115 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Brand:Shyvana:3",
+          "text": "Save Pyroclasm until she is ablaze. It slows her and can finish her when she is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "ablaze", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Brand:Shyvana:4",
+          "text": "Hold Conflagration for when she steps near her allies or jungle minions. It spreads farther on an ablaze target.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "ablaze", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "beb0a32a48a007e20ccb276e21bcc5595241e2d574bd490900f9b29e419f4452",
+      "tips": [
+        {
+          "id": "jungle:Brand:Skarner:0",
+          "text": "Start your combo with Pillar of Flame or Conflagration, then follow with Sear so the stun lands on an already ablaze Skarner.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Brand-E", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Brand-Q", "start": 73, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 },
+            { "kind": "keyword", "key": "ablaze", "start": 110, "end": 116 },
+            { "kind": "champion", "key": "Skarner", "start": 117, "end": 124 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Brand:Skarner:1",
+          "text": "Stay at long range and keep Skarner from closing in. His Shattered Earth slows, and he wins a long fight once he sticks to you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Brand:Skarner:2",
+          "text": "Aim Sear carefully. It stops at the first enemy it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Brand:Skarner:3",
+          "text": "Watch for Ixtal's Impact. Save your stun from Sear for when he charges at you, because a stun ends his charge.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Brand-Q", "start": 46, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Brand:Skarner:4",
+          "text": "Fight away from walls when Skarner charges. If he drags you into one, you take damage and are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5d8679ba6426f90c97c8729a7b0954fa5392e2125f7be72547ab97fc8d507c5e",
+      "tips": [
+        {
+          "id": "jungle:Brand:Sylas:0",
+          "text": "Hit Sylas with Pillar of Flame or Conflagration first, then follow with Sear so he is stunned when the fireball lands.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Brand-E", "start": 34, "end": 47 },
+            { "kind": "ability", "key": "Brand-Q", "start": 72, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Brand:Sylas:1",
+          "text": "Stay back and aim Sear carefully. If Sylas dodges it, your combo has no way to start.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Brand:Sylas:2",
+          "text": "Finish Sylas with Pyroclasm when he is low. Kingslayer heals him, so do not let him get close and heal back up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Brand-R", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Sylas-W", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Brand:Sylas:3",
+          "text": "Stand where Sylas cannot reach you with Abduct. Once he has dashed in and pulled onto you, you are knocked up and in trouble.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "knocked-up", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Brand:Sylas:4",
+          "text": "Keep Pyroclasm in mind when Sylas has stolen it. His copy comes from his own stats and he can fire it back at you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c0a8f4b5c1a80a8cda890ffc4c766ad1afbeb06568271f37882f42bdb5e93bf2",
+      "tips": [
+        {
+          "id": "jungle:Brand:Talon:0",
+          "text": "Hit Talon with Sear only after another spell has set him ablaze; the stun gives you time to finish the combo before he jumps on you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Brand-Q", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "ablaze", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Brand:Talon:1",
+          "text": "Aim Sear carefully at Talon. It stops at the first enemy it hits, so a minion in the way takes the fireball instead.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Talon", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Brand:Talon:2",
+          "text": "Use Pyroclasm on Talon when he is ablaze; it slows him and bounces to him first, which makes his escape harder.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Talon", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "ablaze", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Brand:Talon:3",
+          "text": "Aim Pillar of Flame where Talon will stand, not where he is. It has a short delay, so wait until he commits to a jump.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Brand:Talon:4",
+          "text": "Keep Conflagration ready for when Talon turns invisible and runs. It targets a unit, so you need to see him to cast it; use it before he vanishes.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7ab8ec421316bfd6a5a1cf46d9f8cb6d7466d20813af3e09575240601606e00e",
+      "tips": [
+        {
+          "id": "jungle:Brand:Viego:0",
+          "text": "Land Sear on Viego first to set him ablaze, then follow with Pillar of Flame for the bonus damage and a stun you can plan around.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Viego", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "ablaze", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Brand-W", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Brand:Viego:1",
+          "text": "Sear stops at the first unit it hits, so line it up with no minions or monsters in front of Viego.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Viego", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Brand:Viego:2",
+          "text": "Aim Pillar of Flame where Viego will be, not where he stands. It has a delay, and his dashes can slip out.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Brand:Viego:3",
+          "text": "Hold Pyroclasm for when Viego is low. It bounces to him and slows him if he is ablaze, which helps you finish him before he can get his kill-heal.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Brand:Viego:4",
+          "text": "Kill Viego fast when a fight ends, because a dead champion becomes a wraith he can use. Do not leave a low ally near him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dd309eec3272f26fe344b060422697624214008c5f516a103f7b9a48fbd5e760",
+      "tips": [
+        {
+          "id": "jungle:Brand:XinZhao:0",
+          "text": "Hit Xin Zhao with Sear first to set him ablaze, then stun him with a second spell before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Brand-Q", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "ablaze", "start": 40, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Brand:XinZhao:1",
+          "text": "Keep your distance; Xin Zhao's Audacious Charge closes ground fast, so stay behind your minions or allies.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Brand:XinZhao:2",
+          "text": "Sidestep the Wind Becomes Lightning thrust; it is a thin line, and getting hit slows you and lets him charge farther.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 13, "end": 35 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Brand:XinZhao:3",
+          "text": "Use Pillar of Flame on Xin Zhao when he is ablaze; it hits harder. Aim where he is walking, since it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Brand:XinZhao:4",
+          "text": "Once Xin Zhao uses Three Talon Strike on you, move away; his third hit knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "917595fdc4ca74e6aeb5cfc4cca80b81a165b872b72cca2c8b9838e0b2dbab68",
+      "tips": [
+        {
+          "id": "middle:Brand:Ahri:0",
+          "text": "Land Conflagration or Pillar of Flame first to set Ahri ablaze, then follow with Sear for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 22, "end": 37 },
+            { "kind": "champion", "key": "Ahri", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "ablaze", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Brand-Q", "start": 81, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Brand:Ahri:1",
+          "text": "Stand behind minions when Ahri has Charm ready; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ahri-E", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Brand:Ahri:2",
+          "text": "Aim Pillar of Flame where Ahri will dodge to or recall to; its delay makes it easy to sidestep if she sees it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Brand:Ahri:3",
+          "text": "Poke her with Conflagration while she farms; it hits nearby minions too and keeps her ablaze.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Brand-E", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "ablaze", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Brand:Ahri:4",
+          "text": "Hold Pyroclasm until Ahri is ablaze and low; it slows her and bounces onto her more than once if she stands near few others.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Ahri", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Brand:Ahri:5",
+          "text": "Be careful after Ahri uses Spirit Rush to dash in; she can slip away or get close to you fast, so keep your spells ready.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Ahri-R", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3946754df6ce8642aef9ef347a30b2d3fe8ae3de562536666a6af00734e88e79",
+      "tips": [
+        {
+          "id": "middle:Brand:Akali:0",
+          "text": "Land Sear on Akali before she gets close; if she is ablaze from another spell, she is stunned and cannot jump on you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Akali", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "ablaze", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Brand:Akali:1",
+          "text": "Aim Pillar of Flame at the smoke where Akali vanishes. Area spells still hit her inside Twilight Shroud and briefly show her.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Akali-W", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Brand:Akali:2",
+          "text": "Hold Pyroclasm for when Akali is low and wants to dive. It slows her while she is ablaze and can bounce onto her several times.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Akali", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "ablaze", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Brand:Akali:3",
+          "text": "Poke with Conflagration from range early. It spreads to nearby minions, so you can set Akali ablaze while she stands by them.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Brand-E", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Akali", "start": 87, "end": 92 },
+            { "kind": "keyword", "key": "ablaze", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bc3138e91cae5f49783d9a74db97d65b50daf7cc49b4fbbd32dbfb33f2b52bd9",
+      "tips": [
+        {
+          "id": "middle:Brand:Anivia:0",
+          "text": "Aim Pillar of Flame where Anivia will step, since it lands after a short delay. Walls and slows make her predictable.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Brand:Anivia:1",
+          "text": "Land a spell first, then Sear. The stun needs ablaze, and a stunned Anivia can't escape your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "ablaze", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 },
+            { "kind": "champion", "key": "Anivia", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Brand:Anivia:2",
+          "text": "Dodge Flash Frost; if it hits, Frostbite's damage is doubled. Step out of its path early, since the ice keeps flying past targets.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Anivia-E", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Brand:Anivia:3",
+          "text": "Her egg comes back at full health, so don't spend Pyroclasm on her unless you can finish the kill.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Brand:Anivia:4",
+          "text": "Pick off the egg when it appears; she can't act while it is out.",
+          "refs": [],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1e5ddc560cef30e9f95a7ca52dfcfbafe598fa013c1d07f56ceedfcd83c30c23",
+      "tips": [
+        {
+          "id": "middle:Brand:Aurora:0",
+          "text": "Land Pillar of Flame or Conflagration first, then follow with Sear so it stuns the ablaze Aurora.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Brand-Q", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 },
+            { "kind": "keyword", "key": "ablaze", "start": 83, "end": 89 },
+            { "kind": "champion", "key": "Aurora", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Brand:Aurora:1",
+          "text": "Aim Pillar of Flame where Aurora will land after her hop, since it erupts after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Brand:Aurora:2",
+          "text": "Use Conflagration on a target, not on empty ground, so it can still hit Aurora while she is invisible or out of sight.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aurora", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Brand:Aurora:3",
+          "text": "Save Sear for when she walks up or lands near you; she can be hit on the first try only if nothing stands in front of her.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Brand:Aurora:4",
+          "text": "Hold Pyroclasm for when she is low and already ablaze; it slows her and finishes her before she can escape.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "08d5f9a8f15d9be5df7c92433068972ce361c733099a32c8419666cf21ac0af0",
+      "tips": [
+        {
+          "id": "middle:Brand:Cassiopeia:0",
+          "text": "Hit Cassiopeia with Pillar of Flame or Conflagration first, then follow with Sear; an ablaze target gets stunned by it.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Brand-W", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "Brand-E", "start": 39, "end": 52 },
+            { "kind": "ability", "key": "Brand-Q", "start": 77, "end": 81 },
+            { "kind": "keyword", "key": "ablaze", "start": 86, "end": 92 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Brand:Cassiopeia:1",
+          "text": "Aim Sear carefully; it stops at the first enemy it hits, so a minion in the way takes it instead of Cassiopeia.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            {
+              "kind": "champion",
+              "key": "Cassiopeia",
+              "start": 100,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Brand:Cassiopeia:2",
+          "text": "Stay out of her Noxious Blast range and don't stand still; she wants to poison you and follow with Twin Fang.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 16,
+              "end": 29
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 99,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Brand:Cassiopeia:3",
+          "text": "Use Conflagration on a minion near her; the blast spreads to her and lights her ablaze from a safe distance.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Brand:Cassiopeia:4",
+          "text": "Pillar of Flame has a delay, so cast it where she is walking. She is slowed in her own Miasma, which makes it easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "99607045345add65a49eaf458997268e7b4495debfd106f3b2e12c2aada67487",
+      "tips": [
+        {
+          "id": "middle:Brand:Fizz:0",
+          "text": "Land Sear on Fizz only after something has set him ablaze; Pillar of Flame or Conflagration first, then Sear stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Fizz", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Brand-W", "start": 59, "end": 74 },
+            { "kind": "ability", "key": "Brand-E", "start": 78, "end": 91 },
+            { "kind": "ability", "key": "Brand-Q", "start": 104, "end": 108 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Brand:Fizz:1",
+          "text": "Don't cast Pillar of Flame at Fizz while he can dodge it; its delay lets him dodge it with Playful. Cast it when he is slowed or committed.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Fizz", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 125 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Brand:Fizz:2",
+          "text": "Save Sear for when Fizz dashes at you. Fizz is a hard target to hit with it while his dash and Playful are ready.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Fizz", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Brand:Fizz:3",
+          "text": "Keep Conflagration ready to poke Fizz from range, since it can't be dodged by walking away once cast.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 28, "end": 32 },
+            { "kind": "champion", "key": "Fizz", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Brand:Fizz:4",
+          "text": "Stay away from walls and your own minions' blind spots when Fizz has Chum the Waters; step sideways to dodge the fish.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Fizz-R", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cbfdb42931a2889384097c5617e0f64b19e22744fdcc5e663e148576ba29a571",
+      "tips": [
+        {
+          "id": "middle:Brand:Malzahar:0",
+          "text": "Land Conflagration or Pillar of Flame first, then Sear; the fireball stuns once he is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Brand-Q", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 },
+            { "kind": "keyword", "key": "ablaze", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Brand:Malzahar:1",
+          "text": "Stay out of Call of the Void range and sidestep it; being silenced leaves you unable to cast your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 58, "end": 66 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Brand:Malzahar:2",
+          "text": "Don't waste a combo while Malzahar's Void Shift is up; wait until he has been hit or stunned out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 26, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 37,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Brand:Malzahar:3",
+          "text": "Use Pillar of Flame on his path when he walks up to farm; it has a delay, so aim where he is going.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Brand:Malzahar:4",
+          "text": "Avoid standing near minions carrying Malefic Visions; when they die, it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cf7c6fbd2fad0e685a8302823e1400a1b5d1166b54627c9576848cea1720a10e",
+      "tips": [
+        {
+          "id": "middle:Brand:Orianna:0",
+          "text": "Land Sear on Orianna after Conflagration or Pillar of Flame sets her ablaze, so she is stunned and you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Orianna", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 27, "end": 40 },
+            { "kind": "ability", "key": "Brand-W", "start": 44, "end": 59 },
+            { "kind": "keyword", "key": "ablaze", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Brand:Orianna:1",
+          "text": "Use Conflagration on a minion next to Orianna to set her ablaze from range. Its spread is wide.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Orianna", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "ablaze", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Brand:Orianna:2",
+          "text": "Watch where her Ball sits; Command: Shockwave only hits near it. Stay out of that area when she has level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 27, "end": 45 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Brand:Orianna:3",
+          "text": "Aim Pillar of Flame where she will walk, not where she stands. It lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Brand:Orianna:4",
+          "text": "Don't chase her through the slowing field of Command: Dissonance; you will be slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 45, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "002084ab2b0259fb19857cc08a2cfa5f24ec6818f36e09ebf18109f237368310",
+      "tips": [
+        {
+          "id": "middle:Brand:Ryze:0",
+          "text": "Poke with Pillar of Flame when Ryze walks up to last-hit; it hurts more if he is already ablaze.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Brand-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Ryze", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "ablaze", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Brand:Ryze:1",
+          "text": "Land Conflagration on Ryze or a nearby minion to set him ablaze, then follow with Sear to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "ablaze", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Brand-Q", "start": 82, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Brand:Ryze:2",
+          "text": "Stay out of Rune Prison range; if Ryze has Flux on you, it roots you instead of slowing.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Ryze", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Brand:Ryze:3",
+          "text": "Stun Ryze while he channels Realm Warp to cancel the portal.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ryze-R", "start": 28, "end": 38 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5c7d48db649f33594503a986c9133dd27ef8f93cf22ede6adb3d383141fc320b",
+      "tips": [
+        {
+          "id": "middle:Brand:Sylas:0",
+          "text": "Land Sear on Sylas only after another spell has set him ablaze, so he is stunned and can't dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "ablaze", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Brand:Sylas:1",
+          "text": "Stay back from Sylas when you have no spell ready. Abduct pulls him onto you, so keep your distance until Sear and Pillar of Flame are up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Brand-Q", "start": 106, "end": 110 },
+            { "kind": "ability", "key": "Brand-W", "start": 115, "end": 130 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Brand:Sylas:2",
+          "text": "Cast Conflagration on a minion next to Sylas. It spreads to him and sets him ablaze, then follow up with Pillar of Flame.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "ablaze", "start": 77, "end": 83 },
+            { "kind": "ability", "key": "Brand-W", "start": 105, "end": 120 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Brand:Sylas:3",
+          "text": "Hit Sylas with a combo before he can use Kingslayer to heal back. Do your trading while his health is high.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sylas-W", "start": 41, "end": 51 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Brand:Sylas:4",
+          "text": "Don't cast Pyroclasm at Sylas hoping to bounce, since he can steal it with Hijack. Wait until his Hijack is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Sylas-R", "start": 75, "end": 81 },
+            { "kind": "ability", "key": "Sylas-R", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "61d964456006037fda36a43391c287cbc03d33e024cbfadac207be2939513970",
+      "tips": [
+        {
+          "id": "middle:Brand:TwistedFate:0",
+          "text": "Aim Sear down the lane at Twisted Fate; it stops at the first enemy it hits, so minions in the way will block it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "TwistedFate", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Brand:TwistedFate:1",
+          "text": "Start with Conflagration or Pillar of Flame to set him ablaze, then follow with Sear to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Brand-W", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "ablaze", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Brand-Q", "start": 80, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Brand:TwistedFate:2",
+          "text": "Back off when Twisted Fate is shuffling Pick a Card; the Gold Card stuns you, and the Red Card slows you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 14,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 40,
+              "end": 51
+            },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Brand:TwistedFate:3",
+          "text": "Use Conflagration on a minion next to Twisted Fate; if it is ablaze, the blast spreads twice as far and hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 38,
+              "end": 50
+            },
+            { "kind": "keyword", "key": "ablaze", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Brand:TwistedFate:4",
+          "text": "When Destiny goes off, expect Twisted Fate or an ally to teleport in; leave the lane or stay close to your team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "936f9d984016a900eaf734e72a1501b32310cb008d0fc073b3c1737bf10329d4",
+      "tips": [
+        {
+          "id": "middle:Brand:Viktor:0",
+          "text": "Land Pillar of Flame or Conflagration first, then Sear; Sear stuns only a target that is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Brand-Q", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Brand-Q", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "keyword", "key": "ablaze", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Brand:Viktor:1",
+          "text": "Sear stops at the first enemy it hits, so aim it where minions will not block the path to Viktor.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Viktor", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Brand:Viktor:2",
+          "text": "Stay out of Gravity Field. Standing in it too long gets you stunned, which leaves you open to his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Brand:Viktor:3",
+          "text": "Use Conflagration on a target near Viktor's minions. It spreads to them and works as poke.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "poke", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Brand:Viktor:4",
+          "text": "Walk sideways out of the line of Hextech Ray, since it is a narrow beam.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Brand:Viktor:5",
+          "text": "Cast Pyroclasm when Viktor is already ablaze, so he is slowed and cannot easily walk out of the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Viktor", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "ablaze", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a13f061fec03d35f5b132e36016606a1c2a4cf0b5a6429ad4b03a716fcf73252",
+      "tips": [
+        {
+          "id": "middle:Brand:Yasuo:0",
+          "text": "Aim Sear at Yasuo only when a minion is not in the way; the fireball ends at the first unit it hits, so line it up with a clear path.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Yasuo", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Brand:Yasuo:1",
+          "text": "Do not cast Pillar of Flame at Yasuo's feet when he is looking at you. It lands after a short delay, so aim where he will dash.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Yasuo", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Brand:Yasuo:2",
+          "text": "Set Yasuo ablaze with Conflagration first, then follow with Sear to stun him. A stun gives you time to land Pillar of Flame.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "ablaze", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Brand-E", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Brand-Q", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 },
+            { "kind": "ability", "key": "Brand-W", "start": 108, "end": 123 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Brand:Yasuo:3",
+          "text": "Expect Yasuo to put up Wind Wall when you cast Pyroclasm or Sear. Wait for it to fade, or cast around it, before you fire.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "Brand-R", "start": 47, "end": 56 },
+            { "kind": "ability", "key": "Brand-Q", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Brand:Yasuo:4",
+          "text": "Conflagration is not a projectile Wind Wall can stop, according to the wiki. Use it to set Yasuo ablaze even when his wall is up.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 34, "end": 43 },
+            { "kind": "champion", "key": "Yasuo", "start": 91, "end": 96 },
+            { "kind": "keyword", "key": "ablaze", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Brand:Yasuo:5",
+          "text": "Keep your distance and poke with spells. Yasuo wants to dash onto minions to reach you, so stay back when he has minions near.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Yasuo", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Brand:Yasuo:6",
+          "text": "Yasuo's whirlwind from Steel Tempest knocks you up, so back away when he has hit two stabs in a row.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7fb11814ac25aeb0cd69efe6f206ef54086aad982ba7111703b7020badf584af",
+      "tips": [
+        {
+          "id": "middle:Brand:Yone:0",
+          "text": "Land Sear on Yone when he walks up to the wave; the fireball stops at the first unit, so aim where no minion stands in front.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Brand:Yone:1",
+          "text": "Set Yone ablaze with Conflagration or Pillar of Flame first, then Sear him so he is stunned and can't close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "ablaze", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Brand-E", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "Brand-W", "start": 38, "end": 53 },
+            { "kind": "ability", "key": "Brand-Q", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Brand:Yone:2",
+          "text": "Pillar of Flame has a delay, so cast it where Yone is heading, not where he stands. It is easy to dodge when he is dashing.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Brand:Yone:3",
+          "text": "Keep your distance and poke with Conflagration; it has long range and hits the enemy and nearby minions, so Yone has to fight through the burn to last-hit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Brand-E", "start": 33, "end": 46 },
+            { "kind": "champion", "key": "Yone", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Brand:Yone:4",
+          "text": "Save Sear for when Yone has two stacks of Mortal Steel and is about to dash in. Stunning him then wastes his engage.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Yone-Q", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Brand:Yone:5",
+          "text": "Use Pyroclasm on a Yone who is already ablaze; it slows him and the bounces can hit him several times when he is alone.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "ablaze", "start": 39, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Brand:Yone:6",
+          "text": "Do not stand right next to your wave when Yone has Fate Sealed ready. It can pull you in and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Yone-R", "start": 51, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ef0d04fb2773d323d15e20de49cbcf241e42971a91ea5ffc33ba2a3518a24d2f",
+      "tips": [
+        {
+          "id": "middle:Brand:Zed:0",
+          "text": "Aim Sear at Zed through minions only when none stand in the way; the fireball ends at the first unit it hits, and Zed can hide behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Zed", "start": 12, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 114, "end": 117 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Brand:Zed:1",
+          "text": "Set Zed ablaze with Conflagration or Pillar of Flame first, then Sear him to stun him. A stunned Zed can't dash in on you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "keyword", "key": "ablaze", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Brand-E", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Brand-W", "start": 37, "end": 52 },
+            { "kind": "ability", "key": "Brand-Q", "start": 65, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 },
+            { "kind": "champion", "key": "Zed", "start": 97, "end": 100 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Brand:Zed:2",
+          "text": "Zed has to get close to hurt you, so keep Pillar of Flame ready for where he lands. It has a short delay, so aim at where he is walking, not where he stands.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Brand-W", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Brand:Zed:3",
+          "text": "Stay at long range and poke with Conflagration and Sear while Zed's Energy is low. Zed has little to answer with when he can't reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Brand-E", "start": 33, "end": 46 },
+            { "kind": "ability", "key": "Brand-Q", "start": 51, "end": 55 },
+            { "kind": "champion", "key": "Zed", "start": 62, "end": 65 },
+            { "kind": "champion", "key": "Zed", "start": 83, "end": 86 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Brand:Zed:4",
+          "text": "Don't waste Pyroclasm on Zed alone just to bounce it. Use it on Zed when he has been set ablaze, so he is slowed and can't easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 },
+            { "kind": "champion", "key": "Zed", "start": 64, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "266e686f4cf37ef0afbf926725cb65981128e4c000b7fec3b82218af595cede8",
+      "tips": [
+        {
+          "id": "adc:Brand:Ashe:0",
+          "text": "Hit Ashe with Sear, then follow with Pillar of Flame. She has few ways to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Brand:Ashe:1",
+          "text": "Land Conflagration on a minion standing next to Ashe. It spreads to her and sets her ablaze, so you can set up Sear.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ashe", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "ablaze", "start": 85, "end": 91 },
+            { "kind": "ability", "key": "Brand-Q", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Brand:Ashe:2",
+          "text": "Be careful in the brush and when you walk up to her. Volley hits hard and slows you, and Ashe's slows make it hard to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 },
+            { "kind": "champion", "key": "Ashe", "start": 89, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Brand:Ashe:3",
+          "text": "Don't wander alone when Enchanted Crystal Arrow is ready. Stay near your team so you can't be stunned far from help.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 24, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7c3d3afd09e5ca9a2c09ef5120814bc710c4373fb921f2a7c3f77aed8986d5e6",
+      "tips": [
+        {
+          "id": "adc:Brand:Caitlyn:0",
+          "text": "Land Sear on Caitlyn, ideally through a minion fight where she has to dodge it. A hit starts your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Caitlyn", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Brand:Caitlyn:1",
+          "text": "Do not walk into Caitlyn's long range to poke her. Stay behind your minions, because Piltover Peacemaker hits less hard on later targets.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 17, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 85, "end": 104 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Brand:Caitlyn:2",
+          "text": "Watch for Yordle Snap Trap on the ground before you step forward. If you are rooted, Caitlyn gets a bonus Headshot on you.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 },
+            { "kind": "champion", "key": "Caitlyn", "start": 85, "end": 92 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 106,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Brand:Caitlyn:3",
+          "text": "Open with Pillar of Flame, or Conflagration on a minion, to set Caitlyn ablaze. Follow with Sear to stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Brand-E", "start": 30, "end": 43 },
+            { "kind": "champion", "key": "Caitlyn", "start": 64, "end": 71 },
+            { "kind": "keyword", "key": "ablaze", "start": 72, "end": 78 },
+            { "kind": "ability", "key": "Brand-Q", "start": 92, "end": 96 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Brand:Caitlyn:4",
+          "text": "Hit Caitlyn with Pyroclasm when she is near her minions or support. It bounces between enemies and slows ablaze targets.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Brand-R", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 },
+            { "kind": "keyword", "key": "ablaze", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4942046c0c968a04316843fb1acd3a30d9c1b65a54889a6543432e9e8c183390",
+      "tips": [
+        {
+          "id": "adc:Brand:Ezreal:0",
+          "text": "Start trades with Pillar of Flame or Conflagration to set Ezreal ablaze, then land Sear for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Brand-E", "start": 37, "end": 50 },
+            { "kind": "champion", "key": "Ezreal", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "ablaze", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Brand-Q", "start": 83, "end": 87 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Brand:Ezreal:1",
+          "text": "Aim Pillar of Flame where Ezreal will walk, not where he stands; it lands after a short delay, and he can easily step out.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Brand:Ezreal:2",
+          "text": "Stay out of line with Ezreal's Mystic Shot. Standing behind minions keeps Sear's fireball from being your only threat while you stay safe.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Brand-Q", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Brand:Ezreal:3",
+          "text": "Sear stops at the first enemy it hits, so line it up where no minion stands between you and Ezreal.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ezreal", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Brand:Ezreal:4",
+          "text": "Cast Conflagration on a minion next to Ezreal; it spreads to him, and spreads further if the minion is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ezreal", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Brand:Ezreal:5",
+          "text": "Ezreal can blink away with Arcane Shift, so save a spell to hit him as he lands, or use Pyroclasm to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Brand-R", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Brand:Ezreal:6",
+          "text": "Use Pyroclasm when only Ezreal and his support are close together, so it bounces onto him more.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "390893c5757b5c6f4a7a5a78f75337384de203451f92189c9944e477e17e3779",
+      "tips": [
+        {
+          "id": "adc:Brand:Jhin:0",
+          "text": "Land Pillar of Flame or Conflagration first to set Jhin ablaze, then follow with Sear so it stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "champion", "key": "Jhin", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "ablaze", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Brand-Q", "start": 81, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Brand:Jhin:1",
+          "text": "Wait until Jhin has fired his last shot and is reloading, then jump on him with your combo; he cannot attack during the reload.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Brand:Jhin:2",
+          "text": "Aim Pillar of Flame where Jhin will walk, since it lands after a short delay. It is best against him while he is reloading or stopped to hit minions.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jhin", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Brand:Jhin:3",
+          "text": "Cast Conflagration on a minion standing next to Jhin; the blast spreads to him and sets him ablaze, which discourages him from last-hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jhin", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "ablaze", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Brand:Jhin:4",
+          "text": "Watch for Jhin's invisible traps and stay out of Deadly Flourish range when your support has hit you; it roots you and leaves you open.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Jhin-W", "start": 49, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9b627b396fb13de849b5798667e1d886d3961041fea402737ad20ebcb42f3f18",
+      "tips": [
+        {
+          "id": "adc:Brand:Jinx:0",
+          "text": "Land Pillar of Flame or Conflagration first, then Sear; Sear only stuns Jinx if she is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Brand-Q", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Brand-Q", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 },
+            { "kind": "champion", "key": "Jinx", "start": 72, "end": 76 },
+            { "kind": "keyword", "key": "ablaze", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Brand:Jinx:1",
+          "text": "Cast Conflagration on a minion next to Jinx; it spreads to her and sets her ablaze, and the spread is wider if the minion is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "ablaze", "start": 76, "end": 82 },
+            { "kind": "keyword", "key": "ablaze", "start": 133, "end": 139 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Brand:Jinx:2",
+          "text": "Aim Pillar of Flame where Jinx will step, not where she is; it lands after a short delay and she can walk out.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jinx", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Brand:Jinx:3",
+          "text": "Stay out of Zap! range and keep minions in front of you; the shot stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Brand:Jinx:4",
+          "text": "Stand away from your own team when you use Pyroclasm so it can't bounce back and forth between you and a single target.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "eae1f736f8365aea15d12c137eeae7f9f248c7d55e5fe1c5f34e6caf1f621161",
+      "tips": [
+        {
+          "id": "adc:Brand:Kaisa:0",
+          "text": "Land Sear on Kai'Sa only after something has set her ablaze; then she is stunned and you can follow up freely.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Kaisa", "start": 13, "end": 19 },
+            { "kind": "keyword", "key": "ablaze", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Brand:Kaisa:1",
+          "text": "Hit Kai'Sa with Pillar of Flame when she is rooted in place or busy trading; it is slow to land, so do not throw it at a walking target.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Brand:Kaisa:2",
+          "text": "Cast Conflagration on a minion next to Kai'Sa to hit her too; it spreads further if the target is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kaisa", "start": 39, "end": 45 },
+            { "kind": "keyword", "key": "ablaze", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Brand:Kaisa:3",
+          "text": "Stay out of her reach after she shows Void Seeker; she outranges you and can poke you from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 38, "end": 49 },
+            { "kind": "keyword", "key": "poke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "adc:Brand:Kaisa:4",
+          "text": "Save Pyroclasm for when Kai'Sa is ablaze and close to your support; it bounces between them and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "ablaze", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Brand:Kaisa:5",
+          "text": "Expect Killer Instinct to jump her onto your support or you. Keep Sear ready to stun her when she lands.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 7, "end": 22 },
+            { "kind": "ability", "key": "Brand-Q", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a9f1df70ab92a3e0c09f496539f6ab12373b68c6e40bc216c51fca2d581194e7",
+      "tips": [
+        {
+          "id": "adc:Brand:MissFortune:0",
+          "text": "Hit the enemy with Sear first. If you can follow with Pillar of Flame, they take more damage while ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Brand-W", "start": 54, "end": 69 },
+            { "kind": "keyword", "key": "ablaze", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Brand:MissFortune:1",
+          "text": "Cast Conflagration on a minion next to Miss Fortune. It spreads further when the target is ablaze, so she gets hit too.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 39,
+              "end": 51
+            },
+            { "kind": "keyword", "key": "ablaze", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Brand:MissFortune:2",
+          "text": "Sear can be blocked, so line it up with no minion in front. She will dodge it if you cast it where she can see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Brand:MissFortune:3",
+          "text": "Cast Pillar of Flame where she will walk, not on her feet. Her Strut makes her fast when she is not taking damage.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 63,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Brand:MissFortune:4",
+          "text": "Stay out of Make It Rain's area. It slows you and hurts, which makes it hard to dodge the rest of her combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Brand:MissFortune:5",
+          "text": "Hold Pyroclasm for when she and her support stand close together. It bounces between them and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "69b493c325325b673227b659e041fc2f2de83b50f7443711cadf4dc14b5f39d8",
+      "tips": [
+        {
+          "id": "adc:Brand:Smolder:0",
+          "text": "Land Sear or Pillar of Flame first to set Smolder ablaze, then follow with Sear to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Brand-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Smolder", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Brand-Q", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Brand:Smolder:1",
+          "text": "Smolder is weak early, so trade aggressively and punish him before he stacks Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 77,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Brand:Smolder:2",
+          "text": "Aim Pillar of Flame where Smolder will step, since it has a delay. Use it when he is slowed or stopped.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Smolder", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Brand:Smolder:3",
+          "text": "Cast Conflagration on a minion next to Smolder and his support; the blast spreads to them and sets them ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Brand:Smolder:4",
+          "text": "Save Pyroclasm for when Smolder and his support stand close together, so it bounces between them.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Smolder", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "455a60b569b6373043009a68c4838307f853a186c00d6564f2e4416318107ba5",
+      "tips": [
+        {
+          "id": "adc:Brand:Yunara:0",
+          "text": "Start trades with Pillar of Flame or Conflagration, then follow with Sear so the Ablaze target is stunned and cannot walk out of the rest of your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Brand-E", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Brand-Q", "start": 69, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Brand:Yunara:1",
+          "text": "Aim Pillar of Flame where Yunara will be standing, since it lands after a short delay. Throw it when she is busy attacking minions or has used her escape.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yunara", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "adc:Brand:Yunara:2",
+          "text": "Yunara can slow you with her prayer bead from long range. Stay out of its line, or sidestep it, when you walk up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "slowed", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Brand:Yunara:3",
+          "text": "Hit Yunara with Conflagration while she stands near her minions. The blast spreads further on an Ablaze target, so it can burn the wave around her.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Brand-E", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "ablaze", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Brand:Yunara:4",
+          "text": "Yunara's Transcend One's Self gives her dashes and a stronger beam. Hold Sear for when she dashes in, and play safer while she is transcended.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Yunara-R", "start": 9, "end": 29 },
+            { "kind": "ability", "key": "Brand-Q", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ba050d18a32e296adde477818aacca839a1fc3db046b864c93215e57d184ab10",
+      "tips": [
+        {
+          "id": "support:Brand:Bard:0",
+          "text": "Land Sear on Bard only after something has set him ablaze; then he is stunned and cannot answer.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Bard", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Brand:Bard:1",
+          "text": "Use Conflagration on a minion next to Bard; the blast spreads and sets him ablaze, and it spreads further if the minion is already burning.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Bard", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "ablaze", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Brand:Bard:2",
+          "text": "Cast Pillar of Flame where Bard will walk, such as when he goes for a chime. It lands after a short delay, so aim ahead of him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Bard", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Brand:Bard:3",
+          "text": "Stay out of a straight line with your own minions and your ally. Cosmic Binding stuns when it hits a second target or a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 65, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Brand:Bard:4",
+          "text": "Hold Pyroclasm when Bard uses Tempered Fate on himself and his ally; it puts everything hit in stasis, so wait until it ends before you fire.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Bard", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Bard-R", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "23747a4bf975cfe56e95e0e7ef29bc1d1794459321ee183d664aff902e95525a",
+      "tips": [
+        {
+          "id": "support:Brand:Karma:0",
+          "text": "Aim Sear at Karma only once she is already burning; otherwise it just deals damage and no stun.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Brand:Karma:1",
+          "text": "Step out of Focused Resolve's range quickly so the tether breaks and you avoid the root.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Brand:Karma:2",
+          "text": "Use Pillar of Flame where Karma will stand while she is casting; she must stay still for it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Karma", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Brand:Karma:3",
+          "text": "Dodge Inner Flame by standing behind a minion in its path. It stops at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Brand:Karma:4",
+          "text": "Karma's shield from Inspire blunts your burst. Wait until it runs out before you commit Pyroclasm.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-E", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Brand-R", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "855588edca60ba0bf1685d2721c9b3012dd84119763f42fe250bec09a6793e87",
+      "tips": [
+        {
+          "id": "support:Brand:Leona:0",
+          "text": "Keep your distance from Leona and poke with Sear; the fireball stops at the first enemy it hits, so aim it where no minion stands in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Brand-Q", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Brand:Leona:1",
+          "text": "Stay out of Zenith Blade range. Its long reach plus a dash and a root means a careless step forward gets you caught.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Brand:Leona:2",
+          "text": "Land Pillar of Flame on her when she walks up, since it has a delay. Follow with Sear to stun her once she is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-Q", "start": 81, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 },
+            { "kind": "keyword", "key": "ablaze", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Brand:Leona:3",
+          "text": "Use Conflagration on a minion next to Leona and her ally. It spreads to hit both and sets them ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "ablaze", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Brand:Leona:4",
+          "text": "Save Sear for when Leona dashes in. Stunning her before her attack lands can stop her engage.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Leona", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "support:Brand:Leona:5",
+          "text": "Stand apart from your carry when Leona is near, so Pyroclasm and her Solar Flare do not catch you both together.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-R", "start": 51, "end": 60 },
+            { "kind": "ability", "key": "Leona-R", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "87dfea05fd579448c1dfdb59f7982c13cbc2346ca04702a976c5542b8ff58715",
+      "tips": [
+        {
+          "id": "support:Brand:Lulu:0",
+          "text": "Aim Sear carefully at range; it stops at the first enemy it hits, so a minion in the way eats it. Throw it when the lane is clear.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 4, "end": 8 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Brand:Lulu:1",
+          "text": "Open with Conflagration on a target near their minions or Lulu to set several enemies ablaze, then follow with Sear to stun an ablaze target.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Lulu", "start": 58, "end": 62 },
+            { "kind": "keyword", "key": "ablaze", "start": 86, "end": 92 },
+            { "kind": "ability", "key": "Brand-Q", "start": 111, "end": 115 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 123 },
+            { "kind": "keyword", "key": "ablaze", "start": 127, "end": 133 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Brand:Lulu:2",
+          "text": "Lulu can polymorph you with Whimsy during your combo. Stay out of her range and keep Pillar of Flame for when she steps up.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-W", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Brand-W", "start": 85, "end": 100 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Brand:Lulu:3",
+          "text": "Glitterlance slows you hard, so keep your distance and don't walk into a straight line from Lulu and Pix.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 0, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Brand:Lulu:4",
+          "text": "Use Pyroclasm on Lulu and her carry when they stand close together, so it bounces between them.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lulu", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "df2b969dfe0c6d5ab6ef8dd98e333ba40ea0e30212168d75a34bb0c3ae26d383",
+      "tips": [
+        {
+          "id": "support:Brand:Lux:0",
+          "text": "Land Pillar of Flame or Conflagration first to set Lux ablaze, then follow with Sear for a stun. Sear alone will not stun.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "champion", "key": "Lux", "start": 51, "end": 54 },
+            { "kind": "keyword", "key": "ablaze", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Brand-Q", "start": 80, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 },
+            { "kind": "ability", "key": "Brand-Q", "start": 97, "end": 101 },
+            { "kind": "keyword", "key": "stunned", "start": 117, "end": 121 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Brand:Lux:1",
+          "text": "Stay out of a straight line with your minions and your ally. Light Binding roots the first two enemies it hits, so do not line up behind a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 61, "end": 74 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Brand:Lux:2",
+          "text": "Use Conflagration on a minion next to Lux. It spreads to her and sets her ablaze without a skillshot.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 38, "end": 41 },
+            { "kind": "keyword", "key": "ablaze", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Brand:Lux:3",
+          "text": "Once Pillar of Flame and Sear have hit the fragile Lux, Pyroclasm adds a lot of burst. Save it for when she is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-Q", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Lux", "start": 51, "end": 54 },
+            { "kind": "ability", "key": "Brand-R", "start": 56, "end": 65 },
+            { "kind": "keyword", "key": "ablaze", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Brand:Lux:4",
+          "text": "Walk out of Lucent Singularity's zone instead of staying in it. Its slow makes Pillar of Flame easier for Lux to dodge and leaves you open to her Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "ability", "key": "Brand-W", "start": 79, "end": 94 },
+            { "kind": "champion", "key": "Lux", "start": 106, "end": 109 },
+            { "kind": "ability", "key": "Lux-Q", "start": 146, "end": 159 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e44c60d7f3f45735dfdcb437f43d216d7166ae338a178398484d9a3d02444ad3",
+      "tips": [
+        {
+          "id": "support:Brand:Milio:0",
+          "text": "Hit Milio with Pillar of Flame when he stands still to cast; the delay is short, but he often pauses to cast.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Brand:Milio:1",
+          "text": "Set an enemy ablaze first, then land Sear to get the stun. Sear stops at the first enemy it hits, so aim it past minions.",
+          "refs": [
+            { "kind": "keyword", "key": "ablaze", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Brand-Q", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Brand-Q", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Brand:Milio:2",
+          "text": "Use Conflagration on Milio or his carry when they stand close together; the blast spreads to everyone near the target.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Brand:Milio:3",
+          "text": "Hold Pyroclasm until Milio's Breath of Life is used or his team is bunched up; it bounces between nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Milio", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Milio-R", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Brand:Milio:4",
+          "text": "Step out of line from Ultra Mega Fire Kick; it is a straight shot and the first enemy it hits is knocked back.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 22, "end": 42 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "dfc0c0b238e6b22c93fa966bd85bf0fe861644d843763f59d053d3d3afd83112",
+      "tips": [
+        {
+          "id": "support:Brand:Nami:0",
+          "text": "Land Pillar of Flame or Conflagration first, then follow with Sear; an Ablaze Nami gets stunned by it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Brand-Q", "start": 62, "end": 66 },
+            { "kind": "champion", "key": "Nami", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Brand:Nami:1",
+          "text": "Pillar of Flame is slow to land, so cast it where Nami is walking to, not where she stands, especially when she is stuck on an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Nami", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Brand:Nami:2",
+          "text": "Stay out of Aqua Prison range and walk around the bubble's landing spot; it takes a moment to land, so sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Brand:Nami:3",
+          "text": "Once Nami has missed Aqua Prison, step up and trade, because her next bubble is a long way off.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Nami-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Brand:Nami:4",
+          "text": "Hit Nami and her partner together with Conflagration; it spreads further on an Ablaze target and punishes them for standing close.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Brand-E", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Brand:Nami:5",
+          "text": "Back off when an enemy is empowered by Tidecaller's Blessing; it wears off quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 39, "end": 60 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3c06a2679762857a96280aed4d0813aa7f5192fc1321882702a634be832f4a7c",
+      "tips": [
+        {
+          "id": "support:Brand:Nautilus:0",
+          "text": "Land Sear on a target already ablaze to stun them. Start with Pillar of Flame or Conflagration so the stun is guaranteed.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "ablaze", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Brand-W", "start": 62, "end": 77 },
+            { "kind": "ability", "key": "Brand-E", "start": 81, "end": 94 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Brand:Nautilus:1",
+          "text": "Stay outside Dredge Line range and keep poking with Conflagration and Pillar of Flame. Nautilus needs to land one hook to start his fight.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 13, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Brand-E", "start": 52, "end": 65 },
+            { "kind": "ability", "key": "Brand-W", "start": 70, "end": 85 },
+            { "kind": "champion", "key": "Nautilus", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Brand:Nautilus:2",
+          "text": "Stand behind a minion. Dredge Line stops at the first enemy it hits, so a minion in front of you will take the hook.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Brand:Nautilus:3",
+          "text": "Do not let Nautilus walk up and hit you. His first attack roots you, which sets up his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 11, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Brand:Nautilus:4",
+          "text": "Aim Pillar of Flame where Nautilus will be after a hook or a dash, since it lands after a short delay. It hits hard on a target who is already ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nautilus", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "ablaze", "start": 143, "end": 149 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Brand:Nautilus:5",
+          "text": "Save Pyroclasm for when Nautilus is ablaze and low. It slows him, and he is a big target to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Nautilus", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c3aae649b9c71438803018bdbcbfc4b618557b4f42af7ebcf99bb6e452d788f5",
+      "tips": [
+        {
+          "id": "support:Brand:Pantheon:0",
+          "text": "Open with Conflagration or Pillar of Flame to set Pantheon ablaze, then follow with Sear so it stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 10, "end": 23 },
+            { "kind": "ability", "key": "Brand-W", "start": 27, "end": 42 },
+            { "kind": "champion", "key": "Pantheon", "start": 50, "end": 58 },
+            { "kind": "keyword", "key": "ablaze", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Brand-Q", "start": 84, "end": 88 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Brand:Pantheon:1",
+          "text": "Stay at long range and poke with Sear and Pillar of Flame. Pantheon has to close the gap to hurt you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Brand-Q", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Brand-W", "start": 42, "end": 57 },
+            { "kind": "champion", "key": "Pantheon", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Brand:Pantheon:2",
+          "text": "Pillar of Flame has a delay, so cast it where Pantheon will be, such as where he lands after his leap.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Brand:Pantheon:3",
+          "text": "Hold Sear while Aegis Assault faces you; he takes no damage from that direction. Wait it out or hit him from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Brand:Pantheon:4",
+          "text": "Keep Sear ready for when Pantheon leaps with Shield Vault. A stun in return can stop his follow-up attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "934ad1775339d9226d3f68c8ca79fcfdef6c55c66a75722c690b999d71474e1d",
+      "tips": [
+        {
+          "id": "support:Brand:Pyke:0",
+          "text": "Land Sear on Pyke only after another spell has set him ablaze; then he is stunned and cannot hook anyone.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Pyke", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "ablaze", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Brand:Pyke:1",
+          "text": "Stay behind your minions, because Sear stops at the first unit it hits and Pyke's hook is just as easy to block.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Pyke", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "support:Brand:Pyke:2",
+          "text": "Poke Pyke with Conflagration from long range; it cannot be dodged by walking around, and it spreads to nearby enemies.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Pyke", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Brand-E", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Brand:Pyke:3",
+          "text": "Drop Pillar of Flame where Pyke will be, not where he is; it lands after a short delay, so cast it on his approach path.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Pyke", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Brand:Pyke:4",
+          "text": "When sharks circle under your feet, Pyke is hidden nearby. Step back toward your allies and ready Sear for his arrival.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Brand-Q", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Brand:Pyke:5",
+          "text": "Finish a low-health Pyke with Pyroclasm before he can hide and heal. Damaging him is pointless if he escapes unseen.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Brand-R", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a79666086a3a3ad22c49979a82a963ae335985c53611ce3f06959a4a286bbcff",
+      "tips": [
+        {
+          "id": "support:Brand:Senna:0",
+          "text": "Land Pillar of Flame or Conflagration first to set Senna ablaze, then follow with Sear so it stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "champion", "key": "Senna", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "ablaze", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Brand-Q", "start": 82, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Brand:Senna:1",
+          "text": "Sear stops at the first enemy it hits, so aim it when a minion is not standing in front of Senna.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Senna", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Brand:Senna:2",
+          "text": "Senna outranges you with her attacks, so hit her with Conflagration when she steps up to attack minions.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Brand-E", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Brand:Senna:3",
+          "text": "Pillar of Flame has a delay, so cast it where Senna is rooted or about to walk, not where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Senna", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Brand:Senna:4",
+          "text": "Stay away from your ally when Senna lines up Last Embrace; its root spreads to enemies near the target.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Senna-W", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d9963aafbe0a5e3f6ecedbcd1f3bc8e159e267d8960268639bcae54f5db82583",
+      "tips": [
+        {
+          "id": "support:Brand:Seraphine:0",
+          "text": "Land Sear first or Pillar of Flame first to set them ablaze, then follow with Sear; an ablaze target gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Brand-W", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Brand-Q", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Brand:Seraphine:1",
+          "text": "Aim Pillar of Flame at where Seraphine will stand, since it lands after a short delay. Her slow ability makes her easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Seraphine", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Brand:Seraphine:2",
+          "text": "Use Conflagration on a minion next to the enemies; it spreads farther if the target is ablaze, so it can set both lane opponents burning.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Brand:Seraphine:3",
+          "text": "Stay out of Beat Drop's line. It is a straight shot, so step sideways, because being slowed then rooted lets her team punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Brand:Seraphine:4",
+          "text": "Save Pyroclasm for when both enemies stand close together so it bounces onto them and burns them down.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9451f2237d160c66b64f748f6e576e2aaa4db12ff81b912e4e9f9a0c2866cdf3",
+      "tips": [
+        {
+          "id": "support:Brand:Sona:0",
+          "text": "Use Conflagration on a minion next to Sona and her ADC. The spread hits both of them, and it reaches further if the target is ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sona", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "ablaze", "start": 126, "end": 132 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Brand:Sona:1",
+          "text": "Sona has no escape besides Song of Celerity. Land Sear or Pillar of Flame, then follow up to burst her.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-E", "start": 27, "end": 43 },
+            { "kind": "ability", "key": "Brand-Q", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Brand-W", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Brand:Sona:2",
+          "text": "Stay out of Sona's range when she has three Power Chord stacks. Her empowered attack hits hard and can slow or weaken you.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 12, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Sona-passive",
+              "start": 44,
+              "end": 55
+            },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Brand:Sona:3",
+          "text": "Don't use Pyroclasm until you can catch Sona. Her Crescendo stun on you in the middle of a fight can decide it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Sona", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Sona-R", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "046b9612d9a35dcca1e263a96b390711b08a245c27f209c2f1d5ac9a72bfe651",
+      "tips": [
+        {
+          "id": "support:Brand:Thresh:0",
+          "text": "Land Pillar of Flame or Conflagration first to set the enemy ablaze, then follow with Sear so it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "ablaze", "start": 61, "end": 67 },
+            { "kind": "ability", "key": "Brand-Q", "start": 86, "end": 90 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Brand:Thresh:1",
+          "text": "Watch for Thresh starting Death Sentence; it has a long cast time, so step out of its line as it begins.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Brand:Thresh:2",
+          "text": "Stay behind your minions when Thresh looks ready to throw Death Sentence, because the scythe stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Brand:Thresh:3",
+          "text": "Keep your distance from Thresh. Flay only has short range, and it pulls or pushes you and leaves you slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Thresh-E", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Brand:Thresh:4",
+          "text": "Poke with Conflagration when Thresh stands near his minions or his partner; the blast spreads wider on an ablaze target.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Brand-E", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Thresh", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Brand:Thresh:5",
+          "text": "Use Pyroclasm when Thresh and his partner stand close together, so it bounces between them.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Thresh", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

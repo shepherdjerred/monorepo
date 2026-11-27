@@ -1,0 +1,993 @@
+{
+  "schemaVersion": 1,
+  "champion": "Singed",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "eb979780da841276d37233fa2ec567e0a228dbf0c5d40e13a564e69ac45f98aa",
+      "tips": [
+        {
+          "id": "top:Singed:general:0",
+          "text": "Toggle Poison Trail on when you walk through the minion wave. It farms and hurts the enemy, but turn it off when your mana runs low.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Singed:general:1",
+          "text": "Throw Mega Adhesive at your feet or onto the enemy first, then use Fling so they land in it and are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Singed-E", "start": 67, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Singed:general:2",
+          "text": "Fling enemies back toward your tower to add the tower's damage to yours.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Singed:general:3",
+          "text": "Aim Mega Adhesive at a chasing enemy; it slows them. The goo is a missile, so a Wind Wall-type block can stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Singed:general:4",
+          "text": "Drink Insanity Potion when you fight, so enemies chasing you run through your trail. The poison then cuts their healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Singed:general:5",
+          "text": "Run past enemy champions with Noxious Slipstream to gain speed. Use it to catch up to a target or to get away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Singed-passive",
+              "start": 30,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Singed:general:6",
+          "text": "Fling can't be answered once Singed starts the cast, because the target's Flash is already locked. Use it on enemies who rely on Flash to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Singed", "start": 29, "end": 35 },
+            { "kind": "summoner-spell", "key": "4", "start": 74, "end": 79 },
+            { "kind": "summoner-spell", "key": "4", "start": 129, "end": 134 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Singed:combo:0",
+          "name": "Fling over the wall",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Singed-E" }],
+          "when": "When an enemy is hugging a thin wall and you stand on the other side.",
+          "whenRefs": [],
+          "text": "Fling can throw enemies over thin walls. Use it to drag an enemy away from their escape route and into your team.",
+          "textRefs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "813bec82b41d3eb2e6bfc5d7c8dc7cacda2ac3da273d374540ec46000412e702",
+      "tips": [
+        {
+          "id": "top:Singed:Aatrox:0",
+          "text": "Leave Poison Trail on while you farm and walk through the enemy's path; Aatrox has to stand in it to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Singed:Aatrox:1",
+          "text": "Throw Mega Adhesive where Aatrox will land after a dash, then use Fling to put him in it so he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Singed-E", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Singed:Aatrox:2",
+          "text": "Fling hits for a share of his max Health, so use it to win a trade when you can follow it with Poison Trail.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Singed-Q", "start": 95, "end": 107 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Singed:Aatrox:3",
+          "text": "Drink Insanity Potion before he chases you. Poison Trail then cuts his healing, which hurts Aatrox's sustain.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Singed-Q", "start": 44, "end": 56 },
+            { "kind": "champion", "key": "Aatrox", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Singed:Aatrox:4",
+          "text": "Stay out of the long straight line of The Darkin Blade. Step sideways when you see it start.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1479ed61bca596b1a328b4a60017bfd91987e3ed423f05c2f6ff1540f2faa065",
+      "tips": [
+        {
+          "id": "top:Singed:Briar:0",
+          "text": "Throw Mega Adhesive where Briar will land after Blood Frenzy, then Fling her in to leave her rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Singed-E", "start": 67, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Singed:Briar:1",
+          "text": "Keep Poison Trail on when Briar charges at you; she is forced to chase you and stays in the poison.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Singed:Briar:2",
+          "text": "Her Head Rush stun is quick and lands on you whatever you do, so stay near your minions and tower to take the damage safely.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Singed:Briar:3",
+          "text": "Fling is locked in before she can flash, so use it the moment Briar is in reach to stop her escape or a charge.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Briar", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Singed:Briar:4",
+          "text": "Step out of the way of Chilling Scream when she charges it fully; a wall behind you makes it hurt a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Singed:Briar:5",
+          "text": "Drink Insanity Potion before a fight with Briar; its Grievous Wounds on Poison Trail cuts her healing from bleeds.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Singed-Q", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9347deb907483e5dbdf83aacfa08be36007303120ccda4298812ecf2656b95fe",
+      "tips": [
+        {
+          "id": "top:Singed:Darius:0",
+          "text": "Keep Poison Trail on while Darius walks up to trade; he has to stand in it to reach you, and it keeps hurting him.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Singed:Darius:1",
+          "text": "Throw Mega Adhesive at your feet when Darius runs in, so he is slowed and cannot catch you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Singed:Darius:2",
+          "text": "Fling Darius over you into Mega Adhesive to root him, then walk away or hit him while he is stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Singed-W", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Singed:Darius:3",
+          "text": "Stay out of Apprehend range when it is ready. Being pulled in lets him stack bleeds on you and fight on his terms.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Singed:Darius:4",
+          "text": "Drink Insanity Potion when Darius commits; it makes you tougher and your trail cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7d81fddc0abb718bad169d7d689f03c39943c96848905191cc3c821fed800c03",
+      "tips": [
+        {
+          "id": "top:Singed:Fiora:0",
+          "text": "Keep Poison Trail on while you farm and walk through the enemy; it adds damage over time, but turn it off if your mana runs low.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Singed:Fiora:1",
+          "text": "Do not throw Mega Adhesive or Fling while Fiora is parrying; Riposte blocks it and turns a stun or root back on you.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Singed-E", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Fiora", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Fiora-W", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "top:Singed:Fiora:2",
+          "text": "Wait out Riposte, then use Fling. Throw her into Mega Adhesive so she is rooted and cannot lunge away.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Singed-E", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Singed-W", "start": 49, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Singed:Fiora:3",
+          "text": "Fiora's Lunge is a dash that can be used to reach you. Put Mega Adhesive on the spot where she will land so she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Singed-W", "start": 59, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Singed:Fiora:4",
+          "text": "Drink Insanity Potion before a trade; the extra armor and magic resist help against her damage, and Poison Trail then cuts her healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Singed-Q", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3727413a716e7d32c1de7e6513fd593afcc577e34b8f21a946dd36d5321ff160",
+      "tips": [
+        {
+          "id": "top:Singed:Gangplank:0",
+          "text": "Throw Mega Adhesive first, then use Fling so Gangplank lands in it and is rooted. Aim the cask where he will land, not where he stands.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Singed-E", "start": 36, "end": 41 },
+            { "kind": "champion", "key": "Gangplank", "start": 45, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Singed:Gangplank:1",
+          "text": "Gangplank can cleanse the root with Remove Scurvy, so bait it out before you commit to a full trade or a kill attempt.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "rooted", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Singed:Gangplank:2",
+          "text": "Stand on Poison Trail while Gangplank's Parrrley is on cooldown. He has to step in close to last-hit or trade, and he takes damage while he does.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Singed:Gangplank:3",
+          "text": "Fling a Gangplank who is standing next to his Powder Keg, or into your tower. Fling does damage based on his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Gangplank", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Singed-E", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Singed:Gangplank:4",
+          "text": "Drink Insanity Potion at level 6 before you fight. It makes Poison Trail apply Grievous Wounds, which cuts his healing from Remove Scurvy.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Singed-Q", "start": 60, "end": 72 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-W",
+              "start": 124,
+              "end": 137
+            }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "de9e22c08cb32990a3463d3dc97b1a7d85aaad1a4f13327cc7e28b4acf40493b",
+      "tips": [
+        {
+          "id": "top:Singed:Garen:0",
+          "text": "Keep Poison Trail on while you stay near Garen. He has no ranged attack, so chasing you through it hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Garen", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Singed:Garen:1",
+          "text": "Throw Mega Adhesive at your feet, then use Fling on Garen. He lands in the goo and is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Singed-E", "start": 43, "end": 48 },
+            { "kind": "champion", "key": "Garen", "start": 52, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Singed:Garen:2",
+          "text": "Garen's Decisive Strike removes slows from him, so use Mega Adhesive after it is spent, not before.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Singed-W", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Singed:Garen:3",
+          "text": "Garen regenerates health when he is not being hit. Keep hitting him with Poison Trail so Perseverance stays off.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Singed-Q", "start": 73, "end": 85 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 89,
+              "end": 101
+            }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Singed:Garen:4",
+          "text": "Drink Insanity Potion before Garen's all-in. The extra resistances make Judgment and his attacks hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Garen", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Garen-E", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Singed:Garen:5",
+          "text": "Stay healthy at level 6. Demacian Justice hits harder the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ff8901f1e3f7a4f57e9e2cf69498702a232be52fe3bcd564ff5e08fdacea3f2",
+      "tips": [
+        {
+          "id": "top:Singed:Jayce:0",
+          "text": "Keep Poison Trail on while you farm and walk through the minions; it wears down Jayce's health when he steps near.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Singed:Jayce:1",
+          "text": "Throw Mega Adhesive at Jayce's landing spot, then use Fling to put him inside it so he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Singed-E", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Singed:Jayce:2",
+          "text": "Jayce has ranged pokes, so don't chase him early. Play near your minions and wait for him to come close.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Singed:Jayce:3",
+          "text": "Fling can't be flashed away once the cast begins, so use it when Jayce steps close to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Jayce", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Singed:Jayce:4",
+          "text": "Use Insanity Potion when Jayce commits, then run through him with Poison Trail on. It adds Grievous Wounds to his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Singed-Q", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "82a85b5d4468d6b2de469907984b99c2c2b0e26b7ac61947175a9462e9bf239c",
+      "tips": [
+        {
+          "id": "top:Singed:KSante:0",
+          "text": "Throw Mega Adhesive at K'Sante when he charges Path Maker; he can't be pushed around, but the field still slows him and grounds him afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "KSante-W", "start": 47, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Singed:KSante:1",
+          "text": "Use Fling on K'Sante when he stands in your Mega Adhesive; he gets rooted unless he is immune to slows.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "KSante", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Singed-W", "start": 44, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Singed:KSante:2",
+          "text": "Keep Poison Trail on while you farm and walk through him; it is steady damage he has to respect, and it hurts more when he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Singed:KSante:3",
+          "text": "Stay out of Ntofo Strikes range; two hits make the next one pull you in and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Singed:KSante:4",
+          "text": "When K'Sante goes All Out, run through your Poison Trail; he is much squishier then, so make him chase you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Singed-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "351496f345e326309e5d7d4d9626065f504ea0c21a2e065810d850d663cbcbb3",
+      "tips": [
+        {
+          "id": "top:Singed:Malphite:0",
+          "text": "Keep Poison Trail on while you farm, but switch it off when you are low on mana. It turns itself off when you run dry.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Singed:Malphite:1",
+          "text": "Do not walk into Malphite's range for a long trade. Seismic Shard slows you and speeds him up, so he can stay on you.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Singed:Malphite:2",
+          "text": "Throw Mega Adhesive at Malphite's feet when he goes for you, then use Fling to get him rooted. He cannot run away or reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Singed-E", "start": 70, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Singed:Malphite:3",
+          "text": "Fling hits harder against high-health targets, so use it on Malphite when you want a big chunk of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Malphite", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Singed:Malphite:4",
+          "text": "Stay out of the area where Unstoppable Force will land. It knocks you up and he cannot be stopped while dashing in.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 27, "end": 44 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Singed:Malphite:5",
+          "text": "Drink Insanity Potion before a trade with Malphite. It adds Magic Resist and Armor, and Poison Trail then cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Malphite", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Singed-Q", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "337203ed395fb71628b4fb5394facf56b44b6eb8f95b803f5a1b942d3e72bcfa",
+      "tips": [
+        {
+          "id": "top:Singed:Mordekaiser:0",
+          "text": "Keep Poison Trail on while Mordekaiser walks up to trade, and fight inside the cloud so he takes steady damage.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Singed:Mordekaiser:1",
+          "text": "Throw Mega Adhesive where Mordekaiser will land, then use Fling to put him in it and he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 26,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Singed-E", "start": 58, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Singed:Mordekaiser:2",
+          "text": "Mordekaiser's Death's Grasp is slow to land, so step out of its line as soon as you see the claw start.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 0, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 14,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Singed:Mordekaiser:3",
+          "text": "Do not stand next to Mordekaiser for a long fight; Darkness Rise burns you the longer you stay close.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 21,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 51,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Singed:Mordekaiser:4",
+          "text": "Drink Insanity Potion before a trade to get tougher and make your trail cut his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cfbfcb6fcc9d552ddd18d04f3f6f3a970bb744297b32d09c6bdfef3feb3844d2",
+      "tips": [
+        {
+          "id": "top:Singed:Rumble:0",
+          "text": "Keep Poison Trail on while you walk through Rumble's lane space; he has to stand in it or give up farm.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Singed:Rumble:1",
+          "text": "Throw Mega Adhesive at your feet, then use Fling to put Rumble into it. He is rooted and cannot run.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Singed-E", "start": 43, "end": 48 },
+            { "kind": "champion", "key": "Rumble", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Singed:Rumble:2",
+          "text": "Go in when Rumble is Overheating. He cannot cast spells then, so Fling and Poison Trail trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Singed-E", "start": 65, "end": 70 },
+            { "kind": "ability", "key": "Singed-Q", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Singed:Rumble:3",
+          "text": "Drink Insanity Potion before a fight at level 6. It gives you Magic Resist against Rumble's magic damage and makes your trail cut his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Rumble", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Singed:Rumble:4",
+          "text": "Fling Rumble toward your tower when he steps up to farm; it deals heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a565147a27becb85684942ccd7087837c6168f084eae3a23409946150440477",
+      "tips": [
+        {
+          "id": "top:Singed:Sion:0",
+          "text": "Keep Poison Trail on while you farm and trade. It deals constant damage, so Sion has to walk through it to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Singed:Sion:1",
+          "text": "Stay away from Sion's Decimating Smash when he starts charging. Step out of its line, because a full charge stuns.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Sion-Q", "start": 22, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Singed:Sion:2",
+          "text": "Throw Mega Adhesive where Sion will land, then Fling him into it to keep him rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Sion", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Singed-E", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Singed:Sion:3",
+          "text": "Don't fight Sion while his Soul Furnace shield is up. Wait for it to break or expire before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-W", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Singed:Sion:4",
+          "text": "Use Insanity Potion before a fight so Poison Trail cuts Sion's healing and you survive longer in the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Singed-Q", "start": 38, "end": 50 },
+            { "kind": "champion", "key": "Sion", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e8dc46a56eca8277bd03f0b0c31bdf6f34356cdef244d632210e88fca16d8cd",
+      "tips": [
+        {
+          "id": "top:Singed:Teemo:0",
+          "text": "Walk through Teemo's Blinding Dart range only when you can reach him. Closing the gap is your whole plan.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Singed:Teemo:1",
+          "text": "Throw Mega Adhesive at Teemo, then Fling him into it so he is rooted and cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Singed-E", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Singed:Teemo:2",
+          "text": "Watch for hidden mushrooms before running through brush or chasing. Noxious Trap slows you and shows where you are.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 68, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Singed:Teemo:3",
+          "text": "Leave Poison Trail on while you chase Teemo so he takes damage as he runs.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Singed:Teemo:4",
+          "text": "Expect Teemo to hide in brush and become invisible. Do not walk in blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 7, "end": 12 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "13b8c14ca9de5296a166947d2c902da84bd901ae1803a1f44fd73a70fa748abc",
+      "tips": [
+        {
+          "id": "top:Singed:Vayne:0",
+          "text": "Keep Poison Trail on while you chase Vayne; she is fragile and the poison punishes her for standing still or trading near you.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Singed:Vayne:1",
+          "text": "Throw Mega Adhesive at Vayne's feet before you step in, so she is slowed and cannot easily Tumble away.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Singed:Vayne:2",
+          "text": "Fling Vayne into your Mega Adhesive so she is rooted and cannot escape. The Fling cast cannot be dodged with Flash.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Vayne", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Singed-W", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Singed-E", "start": 76, "end": 81 },
+            { "kind": "summoner-spell", "key": "4", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Singed:Vayne:3",
+          "text": "Stay away from walls when Vayne's Condemn is ready, or she can pin you and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Singed:Vayne:4",
+          "text": "Take Insanity Potion when you commit to a fight; it makes your trail cut her healing and makes you sturdier.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a3d8a94fc533e918a5b91f9a909c3754c1e50531f4c660cfcd61c50424af7213",
+      "tips": [
+        {
+          "id": "top:Singed:Yone:0",
+          "text": "Throw Mega Adhesive at Yone's feet, then use Fling to put him into it; he is rooted and can't dash away from your Poison Trail.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Singed-E", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 },
+            { "kind": "ability", "key": "Singed-Q", "start": 114, "end": 126 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Singed:Yone:1",
+          "text": "Keep Poison Trail on while you farm and stand close to Yone; it wears down his health when he steps in to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Singed:Yone:2",
+          "text": "Drink Insanity Potion when Yone chases you; he takes more damage from Poison Trail and his healing is cut.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Singed-Q", "start": 70, "end": 82 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Singed:Yone:3",
+          "text": "Yone's Fate Sealed stuns you and pulls you to him, so stay away from his allies and cut his chase with Mega Adhesive.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-R", "start": 7, "end": 18 },
+            { "kind": "ability", "key": "Singed-W", "start": 103, "end": 116 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

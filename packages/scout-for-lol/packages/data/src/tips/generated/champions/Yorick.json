@@ -1,0 +1,955 @@
+{
+  "schemaVersion": 1,
+  "champion": "Yorick",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "d486ad23daa6c8fb856b8ae0372a4856bc0975adabc795fad0e9b51fdf1c36cc",
+      "tips": [
+        {
+          "id": "top:Yorick:general:0",
+          "text": "Use Last Rites on enemy champions and last-hit with it when you are hurt. It heals you more the lower your Health is, but less against minions.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Yorick:general:1",
+          "text": "Hit a champion with Last Rites to leave a grave. When three graves are nearby, Recast to raise Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 20, "end": 30 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Yorick:general:2",
+          "text": "Throw Mourning Mist at the enemy before you trade. It slows them and cuts their Armor, and your Mist Walkers leap at them.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Yorick:general:3",
+          "text": "Mourning Mist also raises Mist Walkers from nearby graves while the enemy stays marked, so use it to fill your army mid-fight.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Yorick:general:4",
+          "text": "Drop Dark Procession around the enemy to trap them, or behind them to cut off their escape. Enemies can break it by attacking it.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Yorick:general:5",
+          "text": "Use Dark Procession to block enemies chasing you. It blocks enemies but not your allies, so you can walk through it.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Yorick:general:6",
+          "text": "Summon the Maiden with Eulogy of the Isles at level 6 to fight beside you or push a tower. Pick your targets, because she attacks whoever she chooses.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-R", "start": 23, "end": 42 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Yorick:general:7",
+          "text": "Keep the Maiden alive. If you die, she quickly loses Health and dies, so stay safe while she is out.",
+          "refs": [],
+          "pWrong": 0.09
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Yorick:combo:0",
+          "name": "Attack-Q reset",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            { "kind": "ability", "key": "Yorick-Q" },
+            "attack"
+          ],
+          "when": "When trading with a champion in melee range during a lane fight.",
+          "whenRefs": [],
+          "text": "Last Rites resets Yorick's basic attack timer. Auto first, then Q, then auto again so the empowered hit follows straight after the first and adds extra damage.",
+          "textRefs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Yorick", "start": 18, "end": 24 }
+          ]
+        },
+        {
+          "id": "top:Yorick:combo:1",
+          "name": "Cage duel",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Yorick-W" },
+            { "kind": "ability", "key": "Yorick-E" },
+            { "kind": "ability", "key": "Yorick-Q" },
+            "attack"
+          ],
+          "when": "When you want to isolate one top laner away from their jungler or wave.",
+          "whenRefs": [],
+          "text": "Place Dark Procession over the enemy so the ring closes around you both and traps them in. Then mark them with Mourning Mist and fight inside the ring.",
+          "textRefs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Yorick-E", "start": 111, "end": 124 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "47ff2970db0c18831390b6bd7100ac2223ff8b11f245a08888843b6a6719a581",
+      "tips": [
+        {
+          "id": "top:Yorick:Aatrox:0",
+          "text": "Use Dark Procession to cut off Aatrox when he dashes in, or to trap him so he can't chase you. He can't walk through the wall.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Yorick:Aatrox:1",
+          "text": "Hit Aatrox with Mourning Mist before you trade. It slows him, cuts his Armor and sends your Mist Walkers after him.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Yorick-E", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Yorick:Aatrox:2",
+          "text": "Hit Aatrox with Last Rites in a trade. It heals you more the lower your health is, which offsets his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Yorick:Aatrox:3",
+          "text": "Walk sideways out of Infernal Chains, or toward Aatrox, so he can't pull you back into his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Aatrox", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6b8c2d029cac3abb2d5ce3d6f0859af0e4ed4ba310601bebdd9d87252aa3d466",
+      "tips": [
+        {
+          "id": "top:Yorick:Briar:0",
+          "text": "Put Dark Procession around Briar when she frenzies in; she is forced to attack the nearest enemy, so a wall can trap her away from you or your team.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Yorick:Briar:1",
+          "text": "Hit Briar with Mourning Mist before you trade; it slows her and cuts her Armor, and it raises Mist Walkers from your graves.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Yorick-E", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Yorick:Briar:2",
+          "text": "Hit Briar with Last Rites in trades; it heals you more when you are low, which offsets her bleed.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Yorick:Briar:3",
+          "text": "Use your Mist Walkers to fight her; Briar's Blood Frenzy makes her attack the nearest enemy, so they can soak her hits.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Yorick:Briar:4",
+          "text": "Stay away from walls when Briar charges Chilling Scream; if it is fully charged, it knocks you back and stuns you hard against terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7cc847324c681149456b54772c0c85a77266ed0d5f15bf2014a8924d55f6a8b0",
+      "tips": [
+        {
+          "id": "top:Yorick:Darius:0",
+          "text": "Put Dark Procession between you and Darius when he runs at you; it blocks his path, and he must break it down or walk around.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Yorick:Darius:1",
+          "text": "Stay out of Apprehend's cone, or he pulls you in. Use Mourning Mist to keep him slowed when he is close.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Yorick-E", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Yorick:Darius:2",
+          "text": "Poke him with Last Rites on his minions' approach, then back off before he can hit you with Decimate.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Darius-Q", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Yorick:Darius:3",
+          "text": "Don't trade for long once Darius has stacked Hemorrhage; he grows much stronger the longer a fight goes on.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 45,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Yorick:Darius:4",
+          "text": "Use Last Rites on him in a fight to heal, and keep fighting near your graves so Mist Walkers can join in.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d32f78896cdd9b5be1c41b4e5d9d105f6b863671e3da773ba422f1a131f17fd2",
+      "tips": [
+        {
+          "id": "top:Yorick:Fiora:0",
+          "text": "Do not cast Mourning Mist or aim crowd control at Fiora while Riposte is up; she turns it into a stun on you. Wait for her to use it first.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Fiora", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Fiora-W", "start": 62, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Yorick:Fiora:1",
+          "text": "Use Dark Procession to wall Fiora in or cut off her Lunge approach, but expect her to chop it down with attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 52, "end": 57 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Yorick:Fiora:2",
+          "text": "Trade with Last Rites on Fiora to heal back damage and leave a grave for Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Fiora", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Yorick:Fiora:3",
+          "text": "Mourning Mist cuts her Armor and slows her, so hit her with it right before you commit to a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Yorick:Fiora:4",
+          "text": "Fiora wins short, even trades, so fight beside your Mist Walkers and the Maiden of the Mist rather than alone.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "077ed186eff9d7401887dd13599d5e9261034e2897eeb106a6ffdf73857a1b5f",
+      "tips": [
+        {
+          "id": "top:Yorick:Gangplank:0",
+          "text": "Hit Gangplank with Mourning Mist when he places a keg. The slow and Armor cut let you close in and fight.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Yorick-E", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Yorick:Gangplank:1",
+          "text": "Use Last Rites on Gangplank in trades; it heals you and leaves a grave to raise Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Gangplank", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Yorick:Gangplank:2",
+          "text": "Put Dark Procession around Gangplank when you want to trade. It blocks his escape, though he can shoot it to break it.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gangplank", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Yorick:Gangplank:3",
+          "text": "Stay out of keg range and don't stand beside a keg, because its explosion slows you and hurts a lot.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Yorick:Gangplank:4",
+          "text": "Gangplank's Remove Scurvy clears your slow when he uses it, so save Mourning Mist until it has been used.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Yorick-E", "start": 68, "end": 81 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b0c8e91e8aebf0c95b7ff1090307c5c757d9285fc055166b3e701a3fcae261ef",
+      "tips": [
+        {
+          "id": "top:Yorick:Garen:0",
+          "text": "Throw Mourning Mist at Garen before you trade; it slows him and cuts his Armor, and the mark makes your Mist Walkers leap onto him.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Garen", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Yorick:Garen:1",
+          "text": "Use Last Rites on Garen in a trade to heal and leave a grave. Three graves let you raise Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Garen", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Yorick:Garen:2",
+          "text": "Garen's Decisive Strike silences you and removes slows. Don't count on slowing him with Mourning Mist while he has it up.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Yorick-E", "start": 88, "end": 101 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Yorick:Garen:3",
+          "text": "Trap Garen inside Dark Procession to fight him in a small space, or put it between you to stop him chasing. He can break the wall by attacking it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Yorick-W", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Yorick:Garen:4",
+          "text": "Fight beside your Mist Walkers. Judgment hits the nearest enemy hardest, so having them close can spare you.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Yorick:Garen:5",
+          "text": "Keep Garen's health low and stay away when he is hurt; Demacian Justice finishes you faster the more health you have lost.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Garen-R", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Yorick:Garen:6",
+          "text": "Hit Garen whenever you can; he only regenerates with Perseverance after a few seconds without damage.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 53,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e4eea930ded9461121285faa7b74f3d21bf6c7f7317a6a3ad547671ffc8d0a37",
+      "tips": [
+        {
+          "id": "top:Yorick:Jayce:0",
+          "text": "Put Dark Procession around Jayce when he leaps in with To the Skies!, so he can't walk out of the ring easily and you get to trade your way.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Yorick:Jayce:1",
+          "text": "Hit Jayce with Mourning Mist before you walk up. It slows him, cuts his Armor and makes your Mist Walkers chase him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Yorick-E", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Yorick:Jayce:2",
+          "text": "Land Last Rites on Jayce to heal and leave a grave; with enough graves, raise Mist Walkers to fight for you.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Yorick:Jayce:3",
+          "text": "Jayce's cannon pokes you from far away, so close the gap with Mourning Mist and fight him up close, not in a long chase.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yorick-E", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Yorick:Jayce:4",
+          "text": "Jayce's Thundering Blow knocks you back, so stay near your Mist Walkers and don't fight alone out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ef46df2d838c21934546a028ab31bc38e0078f342ef2eb798e2d36a78b2a925c",
+      "tips": [
+        {
+          "id": "top:Yorick:KSante:0",
+          "text": "Put Dark Procession around K'Sante when he charges Path Maker; his dash cannot pass through the wall, so it stops his engage.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "KSante-W", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Yorick:KSante:1",
+          "text": "Hit K'Sante with Mourning Mist before you trade; it slows him and cuts his Armor, so Last Rites hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Yorick-E", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 85, "end": 95 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Yorick:KSante:2",
+          "text": "Hit K'Sante with Last Rites to leave a grave. Then use Mourning Mist to raise Mist Walkers that chase him.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Yorick-E", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Yorick:KSante:3",
+          "text": "Stay out of Ntofo Strikes range when he has two stacks; the second hit pulls you in and leaves you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Yorick:KSante:4",
+          "text": "Respect K'Sante once he goes All Out; he hits much harder but is far squishier. Wall him off or run until it ends, and punish him if he's caught.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "KSante-R", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ed94ea31e31aaf9cdc1ce9884a200ce99e03602fc5bc7fea0ed32139cedebfa9",
+      "tips": [
+        {
+          "id": "top:Yorick:Malphite:0",
+          "text": "Back off when Malphite's Granite Shield is up; Thunderclap makes him very tough to hit for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 14, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 25,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Yorick:Malphite:1",
+          "text": "Hit Malphite with Last Rites to heal when you trade, but step back after Ground Slam cuts your Attack Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Malphite-E", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Yorick:Malphite:2",
+          "text": "Throw Mourning Mist at Malphite to mark him; it cuts his Armor and sends your Mist Walkers after him.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Yorick:Malphite:3",
+          "text": "Stay away from where Malphite can land Unstoppable Force on you at level 6. Use Dark Procession to wall him off if he charges.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Malphite-R", "start": 39, "end": 56 },
+            { "kind": "ability", "key": "Yorick-W", "start": 80, "end": 95 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d842be9633f774a925b8d32528bdcbd5a2d56c3df3ab9f6cb47361aa6287425f",
+      "tips": [
+        {
+          "id": "top:Yorick:Mordekaiser:0",
+          "text": "Put Dark Procession around Mordekaiser when you want to fight. Enemies hit by it are pulled in or pushed away, and the wall blocks them for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Yorick:Mordekaiser:1",
+          "text": "Hit Mordekaiser with Mourning Mist. It slows him and lowers his Armor, and it raises Mist Walkers from nearby graves.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Yorick-E", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Yorick:Mordekaiser:2",
+          "text": "Stay at range when his Darkness Rise aura is on. Fight with your Mist Walkers instead of standing next to him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 23,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Yorick:Mordekaiser:3",
+          "text": "Keep Mist Walkers close to you. When they are next to you, his Obliterate hits more than one target and loses its extra damage against a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 63,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Yorick:Mordekaiser:4",
+          "text": "Use Last Rites to heal while you trade. It also leaves graves for more Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1aa5664d992bc61e9ab1d183fe1408c3d13e21792d7e3127488890fb6b864868",
+      "tips": [
+        {
+          "id": "top:Yorick:Rumble:0",
+          "text": "Cast Dark Procession on Rumble when he is close to trap him with you; he can only break the wall by attacking it.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Rumble", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Yorick:Rumble:1",
+          "text": "Watch Rumble's Heat. When he Overheats he can't cast spells, so walk up and hit him with Last Rites.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Yorick:Rumble:2",
+          "text": "Avoid standing in the fire of The Equalizer; walk out of it, or build up Mist Walkers outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Yorick:Rumble:3",
+          "text": "Hit Rumble with Mourning Mist to cut his Armor and send your Mist Walkers at him.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Yorick-E", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Yorick:Rumble:4",
+          "text": "Last Rites heals you based on missing Health when it hits Rumble, so use it to win trades.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Rumble", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "84aa5dca40a90addf475edbbd2747104277b0f75f47a9d0d0ac08fd275cb01b9",
+      "tips": [
+        {
+          "id": "top:Yorick:Sion:0",
+          "text": "Stay out of Decimating Smash's line when Sion starts charging. Step aside, since a long charge means a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Yorick:Sion:1",
+          "text": "Use Mourning Mist on Sion before you fight; it cuts his Armor and slows him, and it raises Mist Walkers from nearby graves.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Yorick:Sion:2",
+          "text": "Hit Sion with Last Rites to leave a grave and heal back some of the trade, then raise Mist Walkers when three graves are nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Yorick:Sion:3",
+          "text": "Do not finish Sion carelessly. Glory in Death brings him back with fast, hard attacks, so back off and let it run out.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Sion-passive", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Yorick:Sion:4",
+          "text": "Drop Dark Procession on Sion when you need to block his way. He can shoot Roar of the Slayer over it, though.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sion-E", "start": 74, "end": 92 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8e6688ea6e76216c62398403891fafa5af68e43a60414ae469378cb58d158d47",
+      "tips": [
+        {
+          "id": "top:Yorick:Teemo:0",
+          "text": "Fight Teemo when his Blinding Dart is on cooldown; blind makes your Last Rites attacks miss.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Yorick:Teemo:1",
+          "text": "Use Mourning Mist to slow Teemo and close in; it also lowers his Armor so your attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Yorick:Teemo:2",
+          "text": "Cast Dark Procession on Teemo to trap him in with you; he can't easily run away.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Teemo", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Yorick:Teemo:3",
+          "text": "Look for mushrooms in brush and on your path before you walk up; Noxious Trap slows and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Yorick:Teemo:4",
+          "text": "Do not trade and back out; his Toxic Shot poison keeps hurting you, so commit fully or stay away.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "15faf6472912b4ee73244697d5570bf9040f695f0f88617d3407badc99ef7ed1",
+      "tips": [
+        {
+          "id": "top:Yorick:Vayne:0",
+          "text": "Stay away from walls when Vayne has Condemn ready. A wall hit stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Yorick:Vayne:1",
+          "text": "Hit Vayne with Mourning Mist to slow her and lower her Armor. Your Mist Walkers then leap onto her.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Yorick-E", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Yorick:Vayne:2",
+          "text": "Drop Dark Procession around Vayne to cut off her Tumble escape and trap her in with you.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Yorick:Vayne:3",
+          "text": "Vayne is fragile, so lean on her with Last Rites and keep pressure up. She has to play cautiously.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Yorick:Vayne:4",
+          "text": "Don't fight her three-hit Silver Bolts in long, even trades. Hit her, then step out.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ec927f48fe4b49e3ad279d47cd3a9327cee7079abe530e45f722652c90f0e6e4",
+      "tips": [
+        {
+          "id": "top:Yorick:Yone:0",
+          "text": "Place Dark Procession around Yone to trap him for a trade. His Mortal Steel dash can cross terrain, so he may escape.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Yone-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Yorick:Yone:1",
+          "text": "Hit Yone with Mourning Mist before you trade. He is slowed, and his Armor drops so your Mist Walkers and attacks hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Yorick-E", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Yorick:Yone:2",
+          "text": "Use Last Rites on Yone in a trade to heal and leave a grave. Your heal is stronger the lower your Health is.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Yorick:Yone:3",
+          "text": "Hit Yone with Last Rites to leave a grave, then use Mourning Mist to turn graves into Mist Walkers that chase him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Yorick-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Yorick:Yone:4",
+          "text": "Fight beside the Maiden of the Mist from Eulogy of the Isles. Yone has to deal with her and your Mist Walkers as well as you.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-R", "start": 41, "end": 60 },
+            { "kind": "champion", "key": "Yone", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

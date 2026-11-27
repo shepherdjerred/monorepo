@@ -1,0 +1,2061 @@
+{
+  "schemaVersion": 1,
+  "champion": "Xerath",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "959eb9f99bcb65abc81903397aabbece00a51786ea8753f68f3631e6c44b8152",
+      "tips": [
+        {
+          "id": "middle:Xerath:general:0",
+          "text": "Charge Arcanopulse longer for more range, but you move slower while charging, so start it out of enemy reach.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Xerath:general:1",
+          "text": "Land Eye of Destruction first, then fire Arcanopulse at the slowed target. The slow makes the beam much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 41, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Xerath:general:2",
+          "text": "Aim Eye of Destruction so the enemy stands in the center. The center hits harder and slows more.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Xerath:general:3",
+          "text": "Fire Shocking Orb from long range, because it stuns longer the farther it travels.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Xerath:general:4",
+          "text": "After Shocking Orb stuns, follow with Eye of Destruction. The stunned enemy can't step out of the center.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Xerath-W", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Xerath:general:5",
+          "text": "Use basic attacks on enemy champions when Mana Surge is ready, because they restore double mana. Last-hitting minions also brings it back sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Xerath-passive",
+              "start": 42,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Xerath:general:6",
+          "text": "Stay away from enemies who can reach you. Xerath is strongest when he pokes from range and is weak once they close in.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Xerath:general:7",
+          "text": "Use Rite of the Arcane to finish low-health enemies or to start a fight. Every missile has a delay, so aim at where enemies will be, not where they are.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Xerath:general:8",
+          "text": "Cast Rite of the Arcane from a safe spot. You can't move for the first part of the channel, and the enemy can see your range circle.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 5, "end": 23 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Xerath:combo:0",
+          "name": "Slow into Arcanopulse",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Xerath-W" },
+            { "kind": "ability", "key": "Xerath-Q" }
+          ],
+          "when": "Poking in lane when you want a reliable Arcanopulse hit on a target who is walking around.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 40, "end": 51 }
+          ],
+          "text": "Eye of Destruction slows the target, so the slow Arcanopulse beam is much easier to land. Cast the W first and release the Q as it lands.",
+          "textRefs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 49, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "b7f362bf7a5946fe8496ed7d959229b39a423d8edee7aff0c3f1cb3c9d951ff4",
+      "tips": [
+        {
+          "id": "support:Xerath:general:0",
+          "text": "Hit an enemy with Eye of Destruction first, then fire Arcanopulse; the slowed target is much easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 18, "end": 36 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 54, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Xerath:general:1",
+          "text": "Aim Shocking Orb from far away when you can; the longer it travels, the longer the stun lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Xerath:general:2",
+          "text": "After Shocking Orb stuns someone, drop Eye of Destruction on them. They can't step out of the center.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Xerath-W", "start": 39, "end": 57 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Xerath:general:3",
+          "text": "Start charging Arcanopulse before the enemy walks into range, but keep moving; charging slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Xerath:general:4",
+          "text": "Shocking Orb stops at the first enemy it hits, so a minion in front of your target will soak it. Line up a clear path.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Xerath:general:5",
+          "text": "Auto an enemy champion when Mana Surge is ready; it gives back extra Mana against champions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Xerath-passive",
+              "start": 28,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Xerath:general:6",
+          "text": "Use Rite of the Arcane from a safe spot to finish fleeing enemies or punish a trapped team. Each missile has a delay, so aim ahead of them.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Xerath:general:7",
+          "text": "Enemies see Rite of the Arcane's range circle, and you reveal yourself when firing near them. Pick a spot that diving enemies can't reach.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 12, "end": 30 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Xerath:general:8",
+          "text": "Fire Arcanopulse at enemies walking toward or away from you; side-to-side movement is harder to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Xerath:combo:0",
+          "name": "Slow into Arcanopulse",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Xerath-W" },
+            { "kind": "ability", "key": "Xerath-Q" }
+          ],
+          "when": "Poking or catching an enemy who is hard to hit with a straight beam.",
+          "whenRefs": [],
+          "text": "Eye of Destruction slows the target, which makes the long Arcanopulse beam much easier to land.",
+          "textRefs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 58, "end": 69 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "a86b07e7fa29c622e2ea15616e19186645af048edd259ab8f3f88f4aafb013bc",
+      "tips": [
+        {
+          "id": "middle:Xerath:Ahri:0",
+          "text": "Keep your distance and use Shocking Orb on Ahri when she walks up to Charm you; a long-range orb stuns her longest.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 27, "end": 39 },
+            { "kind": "champion", "key": "Ahri", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Ahri-E", "start": 69, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Xerath:Ahri:1",
+          "text": "Stand behind minions when Ahri has Charm ready; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ahri-E", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Xerath:Ahri:2",
+          "text": "After Shocking Orb stuns Ahri, land Eye of Destruction on her; the center hit slows her heavily and hurts the most.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Xerath-W", "start": 36, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Xerath:Ahri:3",
+          "text": "Poke Ahri with Arcanopulse from long range while she lacks space to reach you. Charge it fully for the extra reach.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Xerath:Ahri:4",
+          "text": "Be careful when charging Arcanopulse, since it slows you. Ahri's Charm is easy to land on a slowed Xerath.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 25, "end": 36 },
+            { "kind": "champion", "key": "Ahri", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Ahri-E", "start": 65, "end": 70 },
+            { "kind": "champion", "key": "Xerath", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Xerath:Ahri:5",
+          "text": "Ahri is much weaker while Spirit Rush is on cooldown. Play more aggressively then, and stay back when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "09c2b25835096af4f8acfcc646b68e4a4c612f442d8571262951d48262eeffbc",
+      "tips": [
+        {
+          "id": "middle:Xerath:Akali:0",
+          "text": "Keep Shocking Orb for when Akali dashes in. A stun at long range holds her for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Xerath:Akali:1",
+          "text": "Poke her with Arcanopulse while she is low on energy. Charge it out of her reach, then release.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Xerath:Akali:2",
+          "text": "Aim Eye of Destruction at her smoke. Area spells still hit her in Twilight Shroud and briefly show where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "ability", "key": "Akali-W", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Xerath:Akali:3",
+          "text": "Do not charge Arcanopulse when she can reach you with Shuriken Flip. You are slowed while charging and cannot move away.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Akali-E", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Xerath:Akali:4",
+          "text": "Play safe at level 6 when she has Perfect Execution ready. Stay back from her when your health is low.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 34, "end": 51 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4a6856a1fbefa881500e0108bba7ef02b278d00c1cd7c97dcac3cdc2826427f5",
+      "tips": [
+        {
+          "id": "middle:Xerath:Anivia:0",
+          "text": "Aim Shocking Orb at Anivia's path, not at the wall. Crystallize blocks the orb, so wait for it to melt or hit her from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Anivia-W", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Xerath:Anivia:1",
+          "text": "Do not stand still after Flash Frost lands; Anivia's Frostbite hits much harder on a chilled target.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 25, "end": 36 },
+            { "kind": "champion", "key": "Anivia", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Anivia-E", "start": 53, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Xerath:Anivia:2",
+          "text": "Do not charge Arcanopulse while Anivia has Flash Frost ready; you are slowed and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Anivia", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Xerath:Anivia:3",
+          "text": "Use Eye of Destruction to slow Anivia, then follow with Arcanopulse; fight her while Glacial Storm is down.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Anivia", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 56, "end": 67 },
+            { "kind": "ability", "key": "Anivia-R", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Xerath:Anivia:4",
+          "text": "Killing Anivia the first time does not finish her; wait for the egg, then hit it. Save Rite of the Arcane for after she is reborn.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Xerath-R", "start": 87, "end": 105 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f585864b34e281008f9e34172c92c2c9501f2af2dd465b00d0fe54c464787580",
+      "tips": [
+        {
+          "id": "middle:Xerath:Aurora:0",
+          "text": "Aim Shocking Orb at Aurora when she is lined up with you; the further it travels, the longer the stun. Follow up with Eye of Destruction.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Aurora", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 },
+            { "kind": "ability", "key": "Xerath-W", "start": 118, "end": 136 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Xerath:Aurora:1",
+          "text": "Land Eye of Destruction first, then Arcanopulse; the slow makes the beam much easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 36, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Xerath:Aurora:2",
+          "text": "Keep your distance and poke her; she has to close the gap, and The Weirding only slows briefly.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Aurora-E", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Xerath:Aurora:3",
+          "text": "Hold Shocking Orb for when she hops in with Across the Veil; she can't act while she hops, and you can stun her as she appears.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Aurora-W", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Xerath:Aurora:4",
+          "text": "Her Twofold Hex is a line shot, so step sideways to dodge it, and don't stand still while charging Arcanopulse.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 99, "end": 110 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fa5b89f257e4cabd2a30573adb092ed995518a34cdc48c8364b12533f1d20139",
+      "tips": [
+        {
+          "id": "middle:Xerath:Cassiopeia:0",
+          "text": "Aim Shocking Orb at Cassiopeia from long range, because it stuns longer the farther it flies. Her walking in a line makes it easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 20, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Xerath:Cassiopeia:1",
+          "text": "Do not charge Arcanopulse right in front of Cassiopeia; it slows you, so you are easy to hit with her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 44, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Xerath:Cassiopeia:2",
+          "text": "Do not face Cassiopeia when she casts Petrifying Gaze. Turn away to be slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 38,
+              "end": 53
+            },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Xerath:Cassiopeia:3",
+          "text": "Once Cassiopeia is poisoned, stay clear of Twin Fang. It hurts a lot and heals her.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Xerath:Cassiopeia:4",
+          "text": "Use Eye of Destruction on Cassiopeia as she walks up to cast. It slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 26, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6fad26503d532d57f9db34f9eef3c7a437dd7d442dd4af83e6cf9ab01d5b0179",
+      "tips": [
+        {
+          "id": "middle:Xerath:Fizz:0",
+          "text": "Keep Shocking Orb for when Fizz commits. If he is untargetable during Playful, wait for him to land, then stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Xerath:Fizz:1",
+          "text": "Poke Fizz from long range with Arcanopulse and Eye of Destruction. He wants to close the gap, so stay back and don't let him reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Xerath-W", "start": 47, "end": 65 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Xerath:Fizz:2",
+          "text": "If Fizz dashes onto you, stun him with Shocking Orb at close range. It stuns for less time up close, so follow up fast.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 3, "end": 7 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Xerath-E", "start": 39, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Xerath:Fizz:3",
+          "text": "Fizz can't be hit while he balances on his trident, so don't waste Arcanopulse on him then.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Xerath:Fizz:4",
+          "text": "Keep your distance when Fizz throws Chum the Waters. Watch where the lure lands and walk out of the shark's area.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Fizz-R", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b2472b443ae64d8afa87e8103da5011c14759698d45bfe23102e16861124ffbf",
+      "tips": [
+        {
+          "id": "middle:Xerath:Malzahar:0",
+          "text": "Keep Malzahar away from you. Use Eye of Destruction and Arcanopulse from long range, and don't let him walk up on you.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Xerath-W", "start": 33, "end": 51 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Xerath:Malzahar:1",
+          "text": "Hit Malzahar with Shocking Orb when his Void Shift is down. While it is up, his crowd control immunity and damage reduction will waste your spell.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Xerath-E", "start": 18, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 40,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Xerath:Malzahar:2",
+          "text": "Poke him with a spell to break Void Shift first, then follow up with your big damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 31,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Xerath:Malzahar:3",
+          "text": "Stay away from minions that Malefic Visions is on. When they die, it spreads to the nearest enemy, which could be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Xerath:Malzahar:4",
+          "text": "Move out of the way of Call of the Void. If you are silenced, you can't cast anything in the trade that follows.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Xerath:Malzahar:5",
+          "text": "Don't channel Rite of the Arcane within Malzahar's reach. Nether Grasp suppresses you and stops the whole channel.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 14, "end": 32 },
+            { "kind": "champion", "key": "Malzahar", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "33911181c040f22dbcbf6f4c1e5a7f7dfb432447225c338ac90261bed09cf7b6",
+      "tips": [
+        {
+          "id": "middle:Xerath:Orianna:0",
+          "text": "Keep your distance from Orianna and poke with Arcanopulse; you are weaker once she reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Xerath:Orianna:1",
+          "text": "Aim Shocking Orb from far away for a longer stun, then follow up with Eye of Destruction on the center.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Xerath-W", "start": 70, "end": 88 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Xerath:Orianna:2",
+          "text": "Use Eye of Destruction first to slow Orianna, then fire Arcanopulse where she walks.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Orianna", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Xerath:Orianna:3",
+          "text": "Stay away from the Ball when Orianna is at level 6. Command: Shockwave pulls you in and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Orianna-R", "start": 52, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Xerath:Orianna:4",
+          "text": "Orianna only hits where the Ball is, so keep out of its reach and watch where it lands after Command: Attack.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 93, "end": 108 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "424440e1c2186c4aa148f2fcbcbb7e5811177ffa7728ae33ef2cbc7a1d6111bc",
+      "tips": [
+        {
+          "id": "middle:Xerath:Ryze:0",
+          "text": "Keep Ryze at range with Arcanopulse and Eye of Destruction; he wants to close in and chain his spells, so don't let him walk up for free.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Xerath-W", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Xerath:Ryze:1",
+          "text": "Save Shocking Orb for when Ryze steps in to trade; a long-range orb stuns him and his combo is ruined.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Xerath:Ryze:2",
+          "text": "Be careful when Ryze has Flux on you; his Overload and Rune Prison then hit harder and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Ryze-W", "start": 55, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Xerath:Ryze:3",
+          "text": "Land Eye of Destruction on Ryze's path first, then follow with Arcanopulse; the slow makes the beam easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Ryze", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 63, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Xerath:Ryze:4",
+          "text": "Do not charge Arcanopulse right next to Ryze; it slows you while charging and he can use Rune Prison on you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Ryze", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Ryze-W", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1845c94dca3094083ba3bcc45567ec3078fc039ccfe2280387d6961da506563f",
+      "tips": [
+        {
+          "id": "middle:Xerath:Sylas:0",
+          "text": "Keep your distance and use Arcanopulse from long range; Sylas wants to be close to you, so do not let him walk up freely.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 27, "end": 38 },
+            { "kind": "champion", "key": "Sylas", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Xerath:Sylas:1",
+          "text": "Save Shocking Orb for when Sylas dashes at you; it stuns him, and the longer it travels, the longer the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Xerath:Sylas:2",
+          "text": "After a stun, drop Eye of Destruction on him so the center hit lands and he is slowed heavily.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 19, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Xerath:Sylas:3",
+          "text": "Shocking Orb does not stop at the first minion, so fire it through the wave only when Sylas is the first enemy in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Xerath:Sylas:4",
+          "text": "Do not use Rite of the Arcane with Sylas nearby, because he can steal it with Hijack and fire it back at you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 11, "end": 29 },
+            { "kind": "champion", "key": "Sylas", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Sylas-R", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1f99defe969f99d44da69fa3aba71127a5caaedae09fff663d367fbdf2f1a4bf",
+      "tips": [
+        {
+          "id": "middle:Xerath:TwistedFate:0",
+          "text": "Keep your distance from Twisted Fate. Poke him with Arcanopulse and Eye of Destruction, and don't let him walk up to you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 24,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "poke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 52, "end": 63 },
+            { "kind": "ability", "key": "Xerath-W", "start": 68, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Xerath:TwistedFate:1",
+          "text": "Land Shocking Orb on Twisted Fate when he comes in for a Gold Card. The stun stops him from trading.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 21,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Xerath:TwistedFate:2",
+          "text": "Follow a Shocking Orb stun with Eye of Destruction. The target can't move, so the center hit lands.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 9, "end": 21 },
+            { "kind": "ability", "key": "Xerath-W", "start": 32, "end": 50 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Xerath:TwistedFate:3",
+          "text": "Think twice before you start Rite of the Arcane once Twisted Fate has Destiny. He can teleport next to you while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 29, "end": 47 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 53,
+              "end": 65
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 70,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4b14416fa253f886d8816c356ea607e33c7fb996050b19d2e4f5fad1264ba8b3",
+      "tips": [
+        {
+          "id": "middle:Xerath:Viktor:0",
+          "text": "Stay at long range and poke Viktor with Arcanopulse. He has to walk up to you, so charge it and release it as he steps forward.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Viktor", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Xerath:Viktor:1",
+          "text": "Stun Viktor with Shocking Orb when he walks up to trade. A long flight means a longer stun, so fire it from far away.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Viktor", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-E", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Xerath:Viktor:2",
+          "text": "After Shocking Orb lands, drop Eye of Destruction on him. He can't move, so the center hit is guaranteed.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Xerath-W", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Xerath:Viktor:3",
+          "text": "Don't stand still inside Viktor's Gravity Field. Step out before it activates, or you will be slowed and then stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Viktor-W", "start": 34, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Xerath:Viktor:4",
+          "text": "Don't charge Arcanopulse while Viktor is in range of Hextech Ray. You are slowed while charging and can't dodge well.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Viktor", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Viktor-E", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Xerath:Viktor:5",
+          "text": "Use Rite of the Arcane to finish Viktor when he is low or stuck. The delay on each shot is short, so aim at where he is walking.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Viktor", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6a5ece260c80dadbacbfc7dfb17b35459b7ca2c45d4e232d9b826950e904d010",
+      "tips": [
+        {
+          "id": "middle:Xerath:Yasuo:0",
+          "text": "Aim Shocking Orb at Yasuo from long range; the longer it flies, the longer he is stunned. Fire it when he dashes toward you or walks up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Xerath:Yasuo:1",
+          "text": "Once Yasuo is stunned by Shocking Orb, drop Eye of Destruction on him. He can't leave the center, so it hits hard and slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "stunned", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Xerath-E", "start": 25, "end": 37 },
+            { "kind": "ability", "key": "Xerath-W", "start": 44, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Xerath:Yasuo:2",
+          "text": "Don't fire Shocking Orb into Yasuo's Wind Wall, it blocks the orb. Arcanopulse is not blocked, so use it while the wall is up.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Xerath:Yasuo:3",
+          "text": "Stay far from Yasuo and poke him with Arcanopulse. Charge it for range, and cast it while he walks toward or away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Xerath:Yasuo:4",
+          "text": "Don't stand still charging Arcanopulse when Yasuo is close, because you are slowed while charging and he can dash onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 27, "end": 38 },
+            { "kind": "champion", "key": "Yasuo", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Xerath:Yasuo:5",
+          "text": "Use Rite of the Arcane to finish Yasuo when he is low or stuck after a stun. The shots land after a delay, so aim where he is going.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e45902b5578b265e45169c6f284a8cf43b80be19d746797936270edc61c6920d",
+      "tips": [
+        {
+          "id": "middle:Xerath:Yone:0",
+          "text": "Hold Shocking Orb until Yone walks up to you. A long-range orb stuns him longer, so fire it from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Xerath:Yone:1",
+          "text": "Once Yone is stunned, land the center of Eye of Destruction on him. It hits hard and slows him so he can't close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Xerath-W", "start": 41, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Xerath:Yone:2",
+          "text": "Yone's Mortal Steel has short range, so stay far back and poke him with Arcanopulse. Don't let him get close.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-Q", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Xerath:Yone:3",
+          "text": "Save Shocking Orb when Yone has two stacks on Mortal Steel. His next one dashes at you and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Yone-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Xerath:Yone:4",
+          "text": "Eye of Destruction slows Yone, which makes Arcanopulse easier to land. Cast it first, then fire the beam.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Xerath:Yone:5",
+          "text": "Yone's Soul Unbound lets him run at you fast and then snap back. Aim Shocking Orb at his spirit form, not at his body.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 },
+            { "kind": "ability", "key": "Xerath-E", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Xerath:Yone:6",
+          "text": "Stay behind your minions to blunt Yone's Fate Sealed. Don't stand in a line with other enemies at level 6, because he blinks behind the last champion it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Yone-R", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "323fcbe4b9de353673c87045b244ef94d7dc2a59e5a22f3887d327a94f20e051",
+      "tips": [
+        {
+          "id": "middle:Xerath:Zed:0",
+          "text": "Hold Shocking Orb for when Zed jumps on you; a stun from it stops him before his combo, and a longer-range hit stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Xerath:Zed:1",
+          "text": "Poke Zed from far away with Arcanopulse, and charge it for extra range so he cannot reach you easily.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Xerath:Zed:2",
+          "text": "Use Eye of Destruction on Zed when he closes in; it leaves him slowed and easier to hit with Arcanopulse.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Zed", "start": 26, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 93, "end": 104 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Xerath:Zed:3",
+          "text": "Zed is at his weakest right after he uses Living Shadow, so look to hit him then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Xerath:Zed:4",
+          "text": "Move away from where you stood when Zed marks you with Death Mark; he returns to hit you in a few seconds, so do not stand still.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Zed-R", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d406f775ab3eb3dc496c7e8d9bc7c6de875f7173a748ddaa6ae03fabde7040c1",
+      "tips": [
+        {
+          "id": "support:Xerath:Bard:0",
+          "text": "Use Shocking Orb from long range on Bard; the longer it travels, the longer the stun. Follow up right away with Eye of Destruction.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Bard", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Xerath-W", "start": 112, "end": 130 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Xerath:Bard:1",
+          "text": "Stay out of a straight line with Bard and his lane partner. Cosmic Binding stuns if it hits a second enemy or a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Bard-Q", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Xerath:Bard:2",
+          "text": "Do not stand next to a wall while Bard can fire Cosmic Binding at you, because hitting terrain also stuns.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Bard-Q", "start": 48, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Xerath:Bard:3",
+          "text": "Walk over Bard's shrines to destroy them before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Xerath:Bard:4",
+          "text": "Do not hold Arcanopulse charged while Bard is in range. You are slowed while charging and he can bind you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Bard", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Xerath:Bard:5",
+          "text": "Watch for Bard's Magical Journey. He and his ally can appear from the side to catch you, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-E", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Xerath:Bard:6",
+          "text": "Stay away from Bard's Tempered Fate area. It freezes everything inside, so your Rite of the Arcane shots may be wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Bard-R", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Xerath-R", "start": 80, "end": 98 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7d33df1b1007de1fc0c3d764f924f15552485347cf842bb91241fddf8c154c12",
+      "tips": [
+        {
+          "id": "support:Xerath:Braum:0",
+          "text": "Aim Shocking Orb at Braum from a distance; a long flight makes the stun last longer. Don't throw it when Unbreakable is raised toward you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Braum", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Braum-E", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Xerath:Braum:1",
+          "text": "Wait for Unbreakable to drop, then throw your spells. Braum's shield blocks missiles, so baiting it out makes your next orb safe.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-E", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Braum", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Xerath:Braum:2",
+          "text": "Stay out of Braum's reach. Winter's Bite and basic attacks start his stun, so don't let him land the first mark.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Braum-Q", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Xerath:Braum:3",
+          "text": "Use Eye of Destruction on Braum when he walks up, then charge Arcanopulse; the slowed target is easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Braum", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 62, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Xerath:Braum:4",
+          "text": "When Braum starts Glacial Fissure, step aside during its long cast time, and don't stand on the ice it leaves behind.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Braum-R", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c3fd386606f9835a7523c401a4e9c6fc7f48e66602b341191b54bba4036d254a",
+      "tips": [
+        {
+          "id": "support:Xerath:Karma:0",
+          "text": "Stay far from Karma and hit her with Arcanopulse while she walks up; she wants to get close.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Xerath:Karma:1",
+          "text": "Aim Shocking Orb at Karma from long range for a longer stun, so she cannot reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Karma", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Xerath:Karma:2",
+          "text": "Step away from Focused Resolve's tether before it ends; being rooted next to Karma is dangerous.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 },
+            { "kind": "champion", "key": "Karma", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Xerath:Karma:3",
+          "text": "Move out of the flame circle that Mantra leaves with Inner Flame; it slows you and then bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Karma-Q", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Xerath:Karma:4",
+          "text": "Use Eye of Destruction on Karma when she steps up; the slow makes Arcanopulse easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Karma", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a1bb9bac8e34bfdf3564222d8c8e24ab61d182191decfa032f755d926c52188e",
+      "tips": [
+        {
+          "id": "support:Xerath:Leona:0",
+          "text": "Keep Shocking Orb for when Leona walks at you. Stunned, she cannot start her combo, and the longer it flew, the longer the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Xerath:Leona:1",
+          "text": "Stay far back from Leona. Her Zenith Blade dashes her onto you from a long way off, so keep minions between you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Leona-E", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Xerath:Leona:2",
+          "text": "Do not hold the charge of Arcanopulse while Leona is near; you move slowly while charging. Fire it early or wait.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 26, "end": 37 },
+            { "kind": "champion", "key": "Leona", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Xerath:Leona:3",
+          "text": "When Leona uses Eclipse, step away for a few seconds. Its blast only hurts if you are close.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Xerath:Leona:4",
+          "text": "Use Eye of Destruction on Leona as she closes in to slow her. Aim at the center for the strongest slow.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Leona", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Xerath:Leona:5",
+          "text": "Leave the center of Solar Flare quickly. Only those in the middle get stunned, so move out when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "45fd5044a3042aba768afa5d2e389c775e1d1c6145b158c8f649eb4cbc87c98a",
+      "tips": [
+        {
+          "id": "support:Xerath:Lulu:0",
+          "text": "Aim Shocking Orb from long range when you can; the farther it travels, the longer Lulu is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 82, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Xerath:Lulu:1",
+          "text": "Keep Shocking Orb for when Lulu is about to cast Whimsy or walks up. Once she is stunned, follow with Eye of Destruction in the center.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Lulu-W", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 },
+            { "kind": "ability", "key": "Xerath-W", "start": 102, "end": 120 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Xerath:Lulu:2",
+          "text": "Stay behind your minions and outside her Glitterlance range, then poke her with Arcanopulse from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 41, "end": 53 },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Xerath:Lulu:3",
+          "text": "Stay out of Lulu's reach. If she Polymorphs you, you cannot attack, so don't stand next to her while you charge Arcanopulse.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 112, "end": 123 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0936e6cfa2e69e067d8fc72d0a99249da52b460723d9be95a0a3bfa8d67c87ce",
+      "tips": [
+        {
+          "id": "support:Xerath:Lux:0",
+          "text": "Aim Shocking Orb from long range for a longer stun, and fire it when Lux steps toward your lane partner.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 },
+            { "kind": "champion", "key": "Lux", "start": 69, "end": 72 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Xerath:Lux:1",
+          "text": "Charge Arcanopulse behind minions or out of sight; Lux's Light Binding punishes you while you stand slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Lux", "start": 51, "end": 54 },
+            { "kind": "ability", "key": "Lux-Q", "start": 57, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Xerath:Lux:2",
+          "text": "Stay out of a line with Lux and her Light Binding; it roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Lux-Q", "start": 36, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Xerath:Lux:3",
+          "text": "Use Eye of Destruction to poke Lux when she is trapped by her own cooldowns; put the center on her to slow her hard.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Lux", "start": 31, "end": 34 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Xerath:Lux:4",
+          "text": "Dodge to the side when Final Spark's red warning beam shows.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "920734805b1db37fef4c7a2bdf9fe19c8435c5512ee8a62037629ec4549197e1",
+      "tips": [
+        {
+          "id": "support:Xerath:Milio:0",
+          "text": "Aim Shocking Orb at Milio from far away; the longer it flies, the longer he is stunned, and it hits the first enemy in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Xerath:Milio:1",
+          "text": "After Shocking Orb stuns Milio, land Eye of Destruction on him, since he cannot step out of the center.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Xerath-W", "start": 37, "end": 55 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Xerath:Milio:2",
+          "text": "Stay outside the range of Ultra Mega Fire Kick, and do not charge Arcanopulse in its path, since you are slowed while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 26, "end": 46 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 66, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Xerath:Milio:3",
+          "text": "Look for Milio when he is alone and poke him, because he has less mobility without allies nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "keyword", "key": "isolated", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Xerath:Milio:4",
+          "text": "Wait for Breath of Life to be used before you go all in on a fight; it removes most stuns from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9260047af3d83f83ccce9963ff917c521e0539d90fd0c27648a047cc77a1936c",
+      "tips": [
+        {
+          "id": "support:Xerath:Nami:0",
+          "text": "Land Shocking Orb from long range for a longer stun, then follow with Eye of Destruction on the center for a guaranteed hit.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Xerath-W", "start": 70, "end": 88 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Xerath:Nami:1",
+          "text": "Stay out of Aqua Prison range and step in only when it is on cooldown. Once Nami misses it, you can poke freely.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 76, "end": 80 },
+            { "kind": "keyword", "key": "poke", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Xerath:Nami:2",
+          "text": "Aqua Prison lands after a delay, so keep moving while you charge Arcanopulse. Walking straight at or away from Nami makes your beam easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 65, "end": 76 },
+            { "kind": "champion", "key": "Nami", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Xerath:Nami:3",
+          "text": "Aim Shocking Orb at Nami before her ally. The orb stops at the first enemy it hits, so keep other targets out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Xerath:Nami:4",
+          "text": "When Tidecaller's Blessing is on the enemy carry, back off. Poke them again once it has been used up or has run out.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 5, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Xerath:Nami:5",
+          "text": "Sidestep Tidal Wave when you see it coming. It travels slowly, so you have time to walk out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "59d7e4b88a46c54001561ae09bbd463f935ac67df50db1c85f1b1dc43ead930b",
+      "tips": [
+        {
+          "id": "support:Xerath:Nautilus:0",
+          "text": "Stay far back and keep your distance; Nautilus has to reach you to do anything, so poke him with Arcanopulse from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 38, "end": 46 },
+            { "kind": "keyword", "key": "poke", "start": 83, "end": 87 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Xerath:Nautilus:1",
+          "text": "Aim Shocking Orb at Nautilus when he walks up. Fire it from far away so the stun lasts longer, then back off.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nautilus", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Xerath:Nautilus:2",
+          "text": "Keep Shocking Orb ready for when Nautilus closes in. It is a stun that can stop his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nautilus", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Xerath:Nautilus:3",
+          "text": "Use Eye of Destruction on Nautilus when he closes in; it slows him and helps you walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Nautilus", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Xerath:Nautilus:4",
+          "text": "Do not stand in a line with a wall or minion behind you when Nautilus is near; his Dredge Line can pull him to terrain, so keep your spacing wide.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0621e66789ab224a7b2dedbefc2e0f349437ef38cec8f9f0c3095caf0588cd5e",
+      "tips": [
+        {
+          "id": "support:Xerath:Pantheon:0",
+          "text": "Keep Shocking Orb for when Pantheon jumps in; stunning him from a distance gives a long stun and lets your team punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Xerath:Pantheon:1",
+          "text": "Hit Pantheon with Eye of Destruction as he closes in; the slow gives you time to line up Arcanopulse.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Xerath-W", "start": 18, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Xerath:Pantheon:2",
+          "text": "Do not fire spells at Pantheon while he braces with Aegis Assault facing you; he takes no damage from the front. Wait it out or step to the side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Xerath:Pantheon:3",
+          "text": "Stay healthy; Comet Spear deals much more damage to low health targets and Shield Vault stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 75, "end": 87 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Xerath:Pantheon:4",
+          "text": "Do not begin Rite of the Arcane when Pantheon is near; Grand Starfall can reach you from far away, and you cannot move.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 13, "end": 31 },
+            { "kind": "champion", "key": "Pantheon", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ea346b554666359703be098183b07b12cebd015fd5b4d2b94ca9b300fe2e7210",
+      "tips": [
+        {
+          "id": "support:Xerath:Pyke:0",
+          "text": "Hit Pyke with Shocking Orb from far away; the longer it flies, the longer he is stunned. Then follow up with Eye of Destruction.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Xerath-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 },
+            { "kind": "ability", "key": "Xerath-W", "start": 109, "end": 127 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Xerath:Pyke:1",
+          "text": "Keep Shocking Orb ready for when Pyke dashes or hooks in. It is your best answer to him closing the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Xerath:Pyke:2",
+          "text": "Stay behind your minions and allies. Bone Skewer stops at the first enemy it hits, so a unit in front of you can block the hook.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Xerath:Pyke:3",
+          "text": "Do not stand still while charging Arcanopulse when Pyke is close. You are slowed and cannot attack, and he can hook you.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 34, "end": 45 },
+            { "kind": "champion", "key": "Pyke", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Xerath:Pyke:4",
+          "text": "Do not chase Pyke after he is hurt and out of sight. Gift of the Drowned Ones heals him back while he is hidden.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 53, "end": 77 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Xerath:Pyke:5",
+          "text": "Move away from low-health allies when Pyke is nearby. Death From Below can execute them, and you may be next.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b64022f07767ae3008d96d38dd414adcf7fc3c8399f9aa17e75f41b7e6e23598",
+      "tips": [
+        {
+          "id": "support:Xerath:Senna:0",
+          "text": "Land Shocking Orb from long range for a longer stun, then follow with the center of Eye of Destruction.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Xerath-W", "start": 84, "end": 102 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Xerath:Senna:1",
+          "text": "Stay out of Senna's reach. Her attacks have long range, and Last Embrace roots you if it sticks, so don't stand in a straight line with her.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 60, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Xerath:Senna:2",
+          "text": "Use Eye of Destruction on Senna when she walks up to attack. It slows her, which makes Arcanopulse easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Senna", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 87, "end": 98 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Xerath:Senna:3",
+          "text": "Watch for Senna turning into mist with Curse of the Black Mist. She can't be selected while in it, so hold your spells until she shows up again.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Senna-E", "start": 39, "end": 62 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Xerath:Senna:4",
+          "text": "Shocking Orb keeps flying after it hits, but it stuns only the first enemy. Aim it so Senna is that first target, not a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Senna", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1986783343ab9e4a11e8198d60ef691b1bb45ad5913d61565594d3d6184ab47a",
+      "tips": [
+        {
+          "id": "support:Xerath:Seraphine:0",
+          "text": "Land Shocking Orb from long range for the longest stun, then follow with the center of Eye of Destruction.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Xerath-W", "start": 87, "end": 105 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Xerath:Seraphine:1",
+          "text": "Stay out of the line of Beat Drop. If you are already slowed by her, it roots you, so don't walk into her range.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Xerath:Seraphine:2",
+          "text": "Don't charge Arcanopulse while she is in range. You are slowed while charging and can't dodge Beat Drop.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 13, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 94, "end": 103 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Xerath:Seraphine:3",
+          "text": "Shocking Orb is blocked by the first enemy it hits, so aim it down a lane free of minions.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "support:Xerath:Seraphine:4",
+          "text": "Her Encore charm can start a deadly engage. Stay far back at level 6 and watch for her cast.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b97992092c389485a00226a6a6886edd29e0063044942a4b43c4e5bb3ff92bf3",
+      "tips": [
+        {
+          "id": "support:Xerath:Sona:0",
+          "text": "Hit Sona with Shocking Orb from long range. The farther it travels, the longer the stun, and she is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Xerath-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Xerath:Sona:1",
+          "text": "Use Arcanopulse from max range when Sona walks up to poke you. She must come close to use Hymn of Valor.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sona", "start": 36, "end": 40 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Sona-Q", "start": 90, "end": 103 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Xerath:Sona:2",
+          "text": "Land Eye of Destruction on Sona when she moves in. The slow lets you follow with Arcanopulse.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Sona", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Xerath:Sona:3",
+          "text": "Stay away from your own allies' line when Sona is near, and avoid walking into Crescendo's range. Its stun leaves you open to her team.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Sona-R", "start": 79, "end": 88 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "974f0a020db039b557391d375cd4b7780094415c5a65dffe5875615f1a7eeecd",
+      "tips": [
+        {
+          "id": "support:Xerath:Thresh:0",
+          "text": "Stay behind your minions and keep your distance from Thresh. Death Sentence stops at the first enemy it hits, so a minion in front of you absorbs it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 53, "end": 59 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Xerath:Thresh:1",
+          "text": "Aim Shocking Orb at Thresh from far away for a long stun, then land Eye of Destruction on the center while he can't move.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Xerath-W", "start": 68, "end": 86 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Xerath:Thresh:2",
+          "text": "When Thresh starts his Death Sentence cast, step sideways. The cast is slow, so you can see it coming.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Xerath:Thresh:3",
+          "text": "Hold Shocking Orb for when Thresh or his partner dashes in. Flay and Death Sentence both need him close, so stun him first.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Thresh", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Thresh-E", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 69, "end": 83 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Xerath:Thresh:4",
+          "text": "Poke Thresh with Arcanopulse when he walks up to collect souls or to hit minions. He is exposed then.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Xerath:Thresh:5",
+          "text": "Don't use Rite of the Arcane while Thresh is close. The Box slows you hard and Death Sentence can pull you out of your channel.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 10, "end": 28 },
+            { "kind": "champion", "key": "Thresh", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Thresh-R", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

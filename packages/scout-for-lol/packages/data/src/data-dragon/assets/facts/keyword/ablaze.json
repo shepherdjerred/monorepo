@@ -1,0 +1,11 @@
+{
+  "kind": "keyword",
+  "patch": "16.23.1",
+  "key": "ablaze",
+  "name": "Ablaze",
+  "description": "Burning from a recent hit, taking damage over time. Some follow-up attacks become stronger against a burning target.",
+  "facts": [],
+  "parts": [],
+  "icon": null,
+  "keyFact": null
+}

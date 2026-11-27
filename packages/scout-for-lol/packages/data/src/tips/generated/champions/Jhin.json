@@ -1,0 +1,2041 @@
+{
+  "schemaVersion": 1,
+  "champion": "Jhin",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "b7c15985ea1f047c8579c4b8a36c76a92c31a436de9633b6c0aa28e7db729fa2",
+      "tips": [
+        {
+          "id": "adc:Jhin:general:0",
+          "text": "Look for enemies your ally has just hit, then fire Deadly Flourish from far away to root them. Follow up with your own attacks while they are stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 51, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jhin:general:1",
+          "text": "Count your four shots. Whisper's last shot always crits and hurts more on low-health targets, so save it to finish a fleeing enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-passive", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jhin:general:2",
+          "text": "Cast your abilities while you reload. Dancing Grenade is a good way to fill that gap.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jhin:general:3",
+          "text": "Throw Dancing Grenade at a minion next to the enemy so it bounces on to them. It also hits harder when a target dies after being hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jhin:general:4",
+          "text": "Put Captive Audience in bushes or on the paths enemies walk, since the trap is invisible. It slows and reveals whoever steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Jhin:general:5",
+          "text": "Use Curtain Call on weakened or slowed enemies. It hurts most against low health, and the cone stays fixed in front of you, so aim before you start.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jhin:general:6",
+          "text": "Don't use Flash while channeling Curtain Call. You can't move or use abilities during it, so start it only when you're safe.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Jhin-R", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Jhin:combo:0",
+          "name": "Trap into Flourish root",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Jhin-E" },
+            { "kind": "ability", "key": "Jhin-W" }
+          ],
+          "when": "When an enemy is in lane or a fight and you want a guaranteed root from range.",
+          "whenRefs": [],
+          "text": "A trap that blooms on an enemy marks them, so a following Deadly Flourish roots them. Place the trap where they will walk, then fire the long shot.",
+          "textRefs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 58, "end": 73 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "bdd218e462dd9975bc227c30382248b28b4a87959c5a2241cccf50e82a1c9ab9",
+      "tips": [
+        {
+          "id": "adc:Jhin:Aphelios:0",
+          "text": "Hit Aphelios with Deadly Flourish right after your support or you land a hit on him; it roots him, so follow up with your next shots.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Jhin-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jhin:Aphelios:1",
+          "text": "Aphelios has more range with Calibrum in hand. Stay out of his poke and use Dancing Grenade to trade back when his shot is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "poke", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 76, "end": 91 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Jhin:Aphelios:2",
+          "text": "Place a Captive Audience trap on the path he walks to trade; it slows him and reveals him.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 8, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Jhin:Aphelios:3",
+          "text": "Finish a weakened Aphelios with Curtain Call as he retreats; it hurts more the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Jhin-R", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3c8c8ae2c3ad8dac9780588cc4cfca4f7e62bda9e8117f83b070f1112186a726",
+      "tips": [
+        {
+          "id": "adc:Jhin:Ashe:0",
+          "text": "Poke Ashe with Dancing Grenade when she goes for minions; it can bounce to her and extra hits get stronger after a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Jhin:Ashe:1",
+          "text": "Land Deadly Flourish on Ashe right after your support hits her, so she is rooted and cannot slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ashe", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Jhin:Ashe:2",
+          "text": "Keep your fourth Whisper shot for when Ashe is hurt; it hits harder the less health she has.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 17,
+              "end": 24
+            },
+            { "kind": "champion", "key": "Ashe", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jhin:Ashe:3",
+          "text": "Place Captive Audience where Ashe will step when she moves up, then trade as she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Ashe", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jhin:Ashe:4",
+          "text": "Ashe has few escapes, so finish her with Curtain Call once she is low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-R", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jhin:Ashe:5",
+          "text": "Stay out of Ashe's Volley, and watch for Enchanted Crystal Arrow whenever you walk alone.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ashe-W", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Ashe-R", "start": 41, "end": 64 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "390893c5757b5c6f4a7a5a78f75337384de203451f92189c9944e477e17e3779",
+      "tips": [
+        {
+          "id": "adc:Jhin:Brand:0",
+          "text": "Stay out of Brand's line and dodge Sear; without a first hit his combo can't start, and a stun is deadly.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Brand-Q", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Jhin:Brand:1",
+          "text": "Do not stand beside your support or minions; Conflagration spreads further onto ablaze targets and Pyroclasm bounces between nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 45, "end": 58 },
+            { "kind": "keyword", "key": "ablaze", "start": 80, "end": 86 },
+            { "kind": "ability", "key": "Brand-R", "start": 99, "end": 108 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:Jhin:Brand:2",
+          "text": "Use Deadly Flourish from long range when Brand has been hit by your support; it roots him so you can hit him freely.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Jhin:Brand:3",
+          "text": "Place Captive Audience in the bush or on Brand's path as he steps up to cast; it slows him and punishes his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Brand", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jhin:Brand:4",
+          "text": "Move away from allies as soon as you see Pyroclasm start; its first missile is slow, so you have time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7a86e841e1443b1a7bad3ad7d7dc8e1e660aac27d20316e8e022e323c14accc6",
+      "tips": [
+        {
+          "id": "adc:Jhin:Caitlyn:0",
+          "text": "Hit Caitlyn with Deadly Flourish after you or your support damage her; it roots her so you can finish her.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Jhin-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jhin:Caitlyn:1",
+          "text": "Caitlyn outranges you, so don't stand in front of her minions waiting to last-hit. Use Dancing Grenade on minions to fight back safely.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 87, "end": 102 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Jhin:Caitlyn:2",
+          "text": "Watch the ground for Yordle Snap Trap before you walk forward. Stepping on one roots you and sets up a heavy Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 84 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 109,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jhin:Caitlyn:3",
+          "text": "Put Captive Audience where Caitlyn must stand to trade, or on top of her traps. It slows her and then explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Caitlyn", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Jhin:Caitlyn:4",
+          "text": "Stay behind your minions when Caitlyn fires Piltover Peacemaker; it deals less damage to each target after the first.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 44, "end": 63 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8dc9689f9a1b8233eaff8dcf50c5f942638afacc5e4596451e3934204c019399",
+      "tips": [
+        {
+          "id": "adc:Jhin:Cassiopeia:0",
+          "text": "Avoid standing in Miasma; it grounds you so you can't dash away. Step out of the clouds quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jhin:Cassiopeia:1",
+          "text": "Walk sideways to dodge Noxious Blast, since it lands after a short delay. Cassiopeia can't safely stay close if you do.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 23,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Cassiopeia", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Jhin:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia as Petrifying Gaze goes off so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jhin:Cassiopeia:3",
+          "text": "Use Deadly Flourish from long range when Cassiopeia has just been hit by your ally or your basic attack, to root her for a free follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jhin:Cassiopeia:4",
+          "text": "Place Captive Audience where Cassiopeia will walk to trade; its slow makes her an easy target.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 29, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Jhin:Cassiopeia:5",
+          "text": "Hit Cassiopeia with Dancing Grenade when she steps up to last-hit; it bounces on to nearby minions and enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5a9e3ad0227505d1721926d26516f6d8cfe24712f0f065f4626d94b23913c184",
+      "tips": [
+        {
+          "id": "adc:Jhin:Corki:0",
+          "text": "Look for Corki's Phosphorus Bomb when you reload. You cannot attack then, so step out of its area and use Dancing Grenade on minions.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Corki-Q", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 106, "end": 121 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Jhin:Corki:1",
+          "text": "Hit Corki with Deadly Flourish for a root after he or your ally has damaged you both. Corki is easy to catch once rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Jhin-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 41 },
+            { "kind": "champion", "key": "Corki", "start": 86, "end": 91 },
+            { "kind": "keyword", "key": "rooted", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "adc:Jhin:Corki:2",
+          "text": "Place Captive Audience where Corki lands after Valkyrie. He is weak after it, so trap the spot he escapes to.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Corki", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Corki-W", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Jhin:Corki:3",
+          "text": "Hold your distance from Corki's Gatling Gun, because it cuts your resistances when close. Hide behind minions only if you can avoid the Missile Barrage splash.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Corki-E", "start": 32, "end": 43 },
+            { "kind": "ability", "key": "Corki-R", "start": 136, "end": 151 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Jhin:Corki:4",
+          "text": "Use Curtain Call on Corki when he is hurt after a trade; it hits harder against low-health enemies and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Corki", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c0667ee26e7c107a5a2a38ca7c27b5705d3d122059fd8f9e862a22395502bfa0",
+      "tips": [
+        {
+          "id": "adc:Jhin:Draven:0",
+          "text": "Stay patient and poke with Dancing Grenade on minions to hit Draven. Do not walk up while his axes are in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 27, "end": 42 },
+            { "kind": "champion", "key": "Draven", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Jhin:Draven:1",
+          "text": "Put Deadly Flourish on Draven after your support or you have hit him. It roots him and cuts off his Spinning Axe catching.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Draven", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 78 },
+            { "kind": "ability", "key": "Draven-Q", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Jhin:Draven:2",
+          "text": "Aim Dancing Grenade or traps at where Draven's axe will land. He loses power when he drops them, so zone him off those spots.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Draven", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Jhin:Draven:3",
+          "text": "Put a Captive Audience trap where Draven must stand to catch an axe, or in the lane behind you for when he dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Draven", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Jhin:Draven:4",
+          "text": "Stay out of Stand Aside's line, since it knocks you back and slows you. Keep minions between you and Draven.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 },
+            { "kind": "champion", "key": "Draven", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jhin:Draven:5",
+          "text": "Finish Draven with Curtain Call when he is low, for example as he flees. Be careful once he has many Adoration stacks, since Whirling Death can execute you.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Jhin-R", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Draven-R", "start": 125, "end": 139 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5fad64fefa495f6c5a4415eeba48a17a04288679df5fe816fe3d16548ed034ec",
+      "tips": [
+        {
+          "id": "adc:Jhin:Ezreal:0",
+          "text": "Hit Ezreal with Deadly Flourish after a trap, grenade or ally hit; the root makes him easy to finish.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jhin-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Jhin:Ezreal:1",
+          "text": "Place Captive Audience where Ezreal blinks or stands to farm, so he is slowed when he steps in.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Jhin:Ezreal:2",
+          "text": "Ezreal is fragile, so take the fight when his Arcane Shift is on cooldown and punish him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jhin:Ezreal:3",
+          "text": "Stay behind minions; Mystic Shot stops at the first enemy it hits, so minions block it.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jhin:Ezreal:4",
+          "text": "Do not spend all four Whisper shots carelessly; use your abilities while reloading to avoid being poked with nothing to fire back.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-passive", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Jhin:Ezreal:5",
+          "text": "Finish a low-health Ezreal with Curtain Call; it deals more the less health he has.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Jhin-R", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8bca06122e822312e73ea70bfd5f3189479fe0d8303418eaffdcc1cc8598afb3",
+      "tips": [
+        {
+          "id": "adc:Jhin:Hwei:0",
+          "text": "Hit Hwei with Deadly Flourish right after your support or a trap damages him; he is rooted and cannot dodge the next shots.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Jhin-W", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Jhin:Hwei:1",
+          "text": "Place Captive Audience where Hwei will stand to cast. His spells have a long cast time, so he often stays put, and he is slowed when he steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Hwei", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 127 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Jhin:Hwei:2",
+          "text": "Hwei is open to attack right after he casts a Torment spell, so rush him with your four shots.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 0, "end": 4 }],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jhin:Hwei:3",
+          "text": "Use Dancing Grenade on Hwei and the minions near him when you want to poke from range.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Hwei", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jhin:Hwei:4",
+          "text": "Keep moving after the trade. His Severing Bolt is slow, so sidestep it, and do not stand still when you are rooted or alone.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 114 },
+            { "kind": "keyword", "key": "isolated", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Jhin:Hwei:5",
+          "text": "Finish a low-health Hwei with Curtain Call when he runs away; it slows him and hurts more the less health he has.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Jhin-R", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7f3036e22c0293de7d1aaf104283b9dd826a57a424dc02859d6f5222f815fd72",
+      "tips": [
+        {
+          "id": "adc:Jhin:Jinx:0",
+          "text": "Hit Jinx with Deadly Flourish right after your minions or ally damage her. She gets rooted and can't kite away.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Jhin-W", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Jhin:Jinx:1",
+          "text": "Watch for Jinx's Flame Chompers when you walk forward. Step around them, or trigger her to waste them before you go in.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jhin:Jinx:2",
+          "text": "Fight Jinx while she holds the rocket launcher. Her minigun needs time to ramp up, so jump on her before she switches.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Jhin:Jinx:3",
+          "text": "Drop a Captive Audience trap where Jinx will stand or walk. It slows her and reveals her, which sets up your Deadly Flourish.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Jinx", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Jhin-W", "start": 109, "end": 124 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Jhin:Jinx:4",
+          "text": "Use Dancing Grenade on Jinx when she is hurt. A kill makes the next bounce hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jinx", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "58d66a4058104637a6589e97cd5ae27981c52ebc48f6bd5d11ecac92504d2921",
+      "tips": [
+        {
+          "id": "adc:Jhin:Kaisa:0",
+          "text": "Fire Deadly Flourish at Kai'Sa right after your support or you damages her; she is rooted if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jhin:Kaisa:1",
+          "text": "Put Captive Audience traps in bushes and on her path to your lane; she is slowed and revealed when she steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jhin:Kaisa:2",
+          "text": "Out-range Kai'Sa and poke her with your shots. She is strongest when she gets close, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 10, "end": 16 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Jhin:Kaisa:3",
+          "text": "Watch Kai'Sa's Plasma stacks; with five on you, Killer Instinct brings her next to you. Stay near your support when she has them.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Jhin:Kaisa:4",
+          "text": "Don't spend all four shots before she dives in with Supercharge; you can't attack during the reload.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "86d00f1450b14a3611623e8c4a57ce0e302a51f999471cdd7b5ba708d1bca4d1",
+      "tips": [
+        {
+          "id": "adc:Jhin:Kalista:0",
+          "text": "Hit Kalista with Deadly Flourish right after your support or you damage her; she gets rooted and can't dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Jhin-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Jhin:Kalista:1",
+          "text": "Drop a Captive Audience where Kalista likes to stand or dash to; the trap is invisible and slows her when she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Kalista", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Jhin:Kalista:2",
+          "text": "Kalista can't cancel her attack windup. Fire Deadly Flourish or Dancing Grenade when she starts an attack, since she is committed.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Jhin-W", "start": 45, "end": 60 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 64, "end": 79 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Jhin:Kalista:3",
+          "text": "Use Dancing Grenade on minions to poke Kalista as it bounces; kills on the way make later hits hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Kalista", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jhin:Kalista:4",
+          "text": "Step behind minions or into brush to break line of sight; her attacks miss you when she can't see you.",
+          "refs": [],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8ae8c3b7ec1c564733044af8e8ff2b574cc75d3377b7aee50a7fc5d5335888c7",
+      "tips": [
+        {
+          "id": "adc:Jhin:Karthus:0",
+          "text": "Stay out of Lay Waste range, and stand beside a minion so the blast hits two targets and deals less.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:Jhin:Karthus:1",
+          "text": "Hit Karthus with Deadly Flourish from long range after your ally or a trap damages him; the root sets up a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Jhin-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jhin:Karthus:2",
+          "text": "Use Dancing Grenade to poke Karthus while he last-hits, since he has little to dodge it with.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Karthus", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Jhin:Karthus:3",
+          "text": "Do not walk through Wall of Pain; it slows you and leaves you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jhin:Karthus:4",
+          "text": "Back off and heal before Karthus reaches level 6; Requiem hits you wherever you are, so keep your health up.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Karthus-R", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Jhin:Karthus:5",
+          "text": "Move away from Karthus's corpse once he dies; he can still cast for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "090bd9472aa767d821f397cac921304dba7c38d1e7897bc1e8cf782a076d74f9",
+      "tips": [
+        {
+          "id": "adc:Jhin:KogMaw:0",
+          "text": "Wait until your ally has hurt Kog'Maw, then land Deadly Flourish. The root leaves him unable to escape.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Jhin-W", "start": 49, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Jhin:KogMaw:1",
+          "text": "Kog'Maw has no escape, so look for ganks and dive him when his Void Ooze and Caustic Spittle are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 63, "end": 72 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 77, "end": 92 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Jhin:KogMaw:2",
+          "text": "Place Captive Audience where Kog'Maw must stand to farm or fight, so he is slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "KogMaw", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jhin:KogMaw:3",
+          "text": "Do not fight in the ooze left by Void Ooze; stay out of it so you are not slowed.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 33, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jhin:KogMaw:4",
+          "text": "Run away from Kog'Maw after he dies; his Icathian Surprise explodes shortly after for true damage.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 14, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "KogMaw-passive",
+              "start": 41,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c6147ef1d90ecdd1f89f3648877dc3a2ad8992bc7de09f19e3619121f0e2abc0",
+      "tips": [
+        {
+          "id": "adc:Jhin:Lucian:0",
+          "text": "Lucian wins short, fast trades, so stay back and fire Deadly Flourish from long range when a teammate has just hit him; it roots him in place.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Jhin-W", "start": 54, "end": 69 },
+            { "kind": "keyword", "key": "rooted", "start": 123, "end": 128 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Jhin:Lucian:1",
+          "text": "Place a Lotus Trap with Captive Audience where Lucian dashes in or walks up; it slows him and shows where he is.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "Lucian", "start": 47, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Jhin:Lucian:2",
+          "text": "Lucian has strong burst but little sustained damage, so keep your distance and don't stand in front of him after he uses his dash.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jhin:Lucian:3",
+          "text": "Watch your ammo. While Whisper reloads you can't attack, so Lucian will jump on you then; keep Deadly Flourish or a trap ready for that moment.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 23,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Lucian", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Jhin-W", "start": 95, "end": 110 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Jhin:Lucian:4",
+          "text": "When Lucian fires a torrent of bullets with The Culling, step out of the line; he can't change its aim once he starts.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Lucian-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "760d6d77e14bf139272a948ad67ea1f720e3f0c99901b93343a14ac1b7ccce15",
+      "tips": [
+        {
+          "id": "adc:Jhin:Lux:0",
+          "text": "Stay out of line with Light Binding. It roots the first two enemies it hits, so keep a minion from standing close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jhin:Lux:1",
+          "text": "Walk out of Lucent Singularity right away. It slows you inside, and it deals damage when it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Jhin:Lux:2",
+          "text": "Use Deadly Flourish on Lux after your support or you have hit her. Lux has low health, so the root usually sets up a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lux", "start": 23, "end": 26 },
+            { "kind": "champion", "key": "Lux", "start": 67, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Jhin:Lux:3",
+          "text": "Place Captive Audience traps where Lux will step when she goes for Light Binding or tries to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Lux", "start": 35, "end": 38 },
+            { "kind": "ability", "key": "Lux-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jhin:Lux:4",
+          "text": "At low health, move sideways when Lux's red Final Spark beam shows. Its range is huge, so it can hit you from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Lux-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Jhin:Lux:5",
+          "text": "Don't waste your last shot while Lux is shielded by Prismatic Barrier. Wait until the shield fades, then hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Lux-W", "start": 52, "end": 69 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a96c9d67bddd0d1a0d8052bed08b7325bc51d248b45ea60edc63d98b5c362c86",
+      "tips": [
+        {
+          "id": "adc:Jhin:MissFortune:0",
+          "text": "Keep the grenade for when Miss Fortune steps up to last-hit. Dancing Grenade can bounce between minions and her.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 26,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Jhin-Q", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jhin:MissFortune:1",
+          "text": "Hit Miss Fortune with something when she has Strut ready, since any damage cancels her speed bonus.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 45,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Jhin:MissFortune:2",
+          "text": "Place Captive Audience in the bushes or where Miss Fortune walks up to trade. It slows her, and she cannot see it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 46,
+              "end": 58
+            },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jhin:MissFortune:3",
+          "text": "Do not stand in Make It Rain, which slows you and cannot be cleansed. Step out of the area at once.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jhin:MissFortune:4",
+          "text": "Move out of the way of Bullet Time when you hear her start it. Her cone is narrow, so a sidestep helps.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 23,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "20f545a9bbd25fcdcfe35842aaa820e41488ac606625387085d7fb92f6a326b3",
+      "tips": [
+        {
+          "id": "adc:Jhin:Nilah:0",
+          "text": "Keep your distance and poke with Whisper; Nilah has to dash in to reach you, so hit her as she closes.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 33,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Nilah", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jhin:Nilah:1",
+          "text": "Place a Captive Audience trap where Nilah will dash or stand; it slows her and reveals her when she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Nilah", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Jhin:Nilah:2",
+          "text": "Hit Nilah with Deadly Flourish once she is damaged by you or your support; she is rooted and cannot dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Jhin-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jhin:Nilah:3",
+          "text": "Don't spend Whisper's last shot on minions when Nilah is near; save the crit for her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 12,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Nilah", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jhin:Nilah:4",
+          "text": "Do not rely on basic attacks while Nilah has Jubilant Veil up, because she dodges them. Use your abilities or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Nilah-W", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jhin:Nilah:5",
+          "text": "Stay out of Apotheosis range at level 6; it pulls you toward her.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 12, "end": 22 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "43bd45c65c57b2007d81de943a0fcc6c5a81964c19e536daf825aec4d86d895b",
+      "tips": [
+        {
+          "id": "adc:Jhin:Samira:0",
+          "text": "Keep Samira at long range and shoot her with Whisper. She wants to be close, so make her walk into your fire.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Jhin-passive", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jhin:Samira:1",
+          "text": "Place a Captive Audience trap where Samira will dash in or step. It slows her and reveals her.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Samira", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Jhin:Samira:2",
+          "text": "Don't expect Deadly Flourish to land when Samira is close to you. She can spin Blade Whirl, which destroys enemy missiles that enter it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Samira", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Samira-W", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Jhin:Samira:3",
+          "text": "Wait for Samira to use Blade Whirl, then fire Dancing Grenade or Deadly Flourish while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Samira-W", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 46, "end": 61 },
+            { "kind": "ability", "key": "Jhin-W", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Jhin:Samira:4",
+          "text": "Use Deadly Flourish on Samira to root her when she is rooted-ready, after your support or you has hit her. It stops her from diving.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Samira", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Jhin:Samira:5",
+          "text": "Watch her Style. Once she reaches full rank, back away from her before she can use Inferno Trigger.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-R", "start": 83, "end": 98 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a098762651d2f51b0cee4296d6d91523b786a6c0652582623ff50a2e7f5972e2",
+      "tips": [
+        {
+          "id": "adc:Jhin:Senna:0",
+          "text": "Fire Deadly Flourish right after your support or minions' champion damage lands on Senna; she is rooted and can't dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Senna", "start": 83, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Jhin:Senna:1",
+          "text": "Senna out-ranges you once she collects Mist, so don't stand still trading shots with her. Use Dancing Grenade to hit her first and step back.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 94, "end": 109 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Jhin:Senna:2",
+          "text": "Drop a Captive Audience trap in the bush or on the path she walks to reach you; she is slowed and revealed when she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jhin:Senna:3",
+          "text": "Senna's Last Embrace is blockable by minions. Stay behind them to dodge it, and keep Whisper's last shot for when she is damaged.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 8, "end": 20 },
+            { "kind": "ability", "key": "Jhin-passive", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Jhin:Senna:4",
+          "text": "Use Curtain Call to finish Senna or her support when they are low and running away; it hurts more the less health they have.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8aaac39ffd8a3fbd154dd6e9555f86e4290457f7ad575e8a413a3668b15c9479",
+      "tips": [
+        {
+          "id": "adc:Jhin:Sivir:0",
+          "text": "Wait until Spell Shield is used or on cooldown before you cast Deadly Flourish. Otherwise it is blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Jhin-W", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Jhin:Sivir:1",
+          "text": "Sivir pushes fast with Ricochet. Use Dancing Grenade on the wave and go back to clear it before your tower takes damage.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sivir-W", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jhin:Sivir:2",
+          "text": "Step out of Boomerang Blade's path on its way back if it hit you going out.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jhin:Sivir:3",
+          "text": "Place Captive Audience where Sivir chases you. It slows her if she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Sivir", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "15f82862c2bb9afeeb0fd6e8abbf206c46236df7363c21e4a5ffc8f16462874f",
+      "tips": [
+        {
+          "id": "adc:Jhin:Smolder:0",
+          "text": "Hit Smolder with Deadly Flourish right after your support or a minion-free poke damages him; it roots him in place for an easy follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Jhin-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Jhin:Smolder:1",
+          "text": "Smolder is weak early, so push your lane advantage and trade with Whisper while he is still stacking Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 66,
+              "end": 73
+            },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 101,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Jhin:Smolder:2",
+          "text": "Place Captive Audience on the bushes and paths he uses to approach; it slows him and shows where he is.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Jhin:Smolder:3",
+          "text": "Use Dancing Grenade on Smolder when he steps up to last-hit; it bounces onto nearby minions and champions that have not been hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Jhin:Smolder:4",
+          "text": "Step sideways when you see Achooo! start, since it flies far and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jhin:Smolder:5",
+          "text": "Save Curtain Call to finish Smolder when he is already hurt, since its damage grows as his health falls.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Smolder", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "694b6ca315250caacde676f5a96cbca94b9886caede03b1044497e6c835d6b61",
+      "tips": [
+        {
+          "id": "adc:Jhin:Tristana:0",
+          "text": "Hit Tristana with Deadly Flourish after your support has damaged her. It roots her for a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Jhin-W", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jhin:Tristana:1",
+          "text": "Keep your distance from Tristana and hold back. Your fourth shot hits hard when it lands, but she can jump on you while you reload.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Jhin:Tristana:2",
+          "text": "Place a Lotus Trap where Tristana will jump in or stand, such as near your wave. It slows her.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jhin:Tristana:3",
+          "text": "Stay away from Tristana when Buster Shot is up. It stuns you for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Tristana-R", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Jhin:Tristana:4",
+          "text": "Break the Explosive Charge by stepping away from your minions and allies. Its blast hits everyone around you.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Jhin:Tristana:5",
+          "text": "When Tristana has Rapid Fire on, back off until it ends instead of trading.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Tristana-Q", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3a3bfd438b40b8d30e7f165fbe3b8f0340c73c9d43bb87fdf93f72a843b96505",
+      "tips": [
+        {
+          "id": "adc:Jhin:Twitch:0",
+          "text": "Keep Deadly Flourish for when Twitch is hit by you or your support; then it roots him, and he is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Twitch", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Jhin:Twitch:1",
+          "text": "Place Captive Audience traps in bushes and at lane edges to punish Twitch when he sneaks in.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Twitch", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jhin:Twitch:2",
+          "text": "Stay out of Venom Cask clouds; they slow you and stack Deadly Venom.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 55,
+              "end": 67
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jhin:Twitch:3",
+          "text": "When Twitch uses Ambush and vanishes, play back and watch the lane; he can surprise you with extra speed.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Twitch-Q", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Jhin:Twitch:4",
+          "text": "Hit Twitch with Dancing Grenade when he walks up to poke; he has little health.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d73377054c6d89ba6ff7601926e73d6a0fc43c03b9048c4fc8d2dfbc0272f0d9",
+      "tips": [
+        {
+          "id": "adc:Jhin:Varus:0",
+          "text": "Keep Dancing Grenade for when Varus is close to minions or in range; it is a short-cooldown poke.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Varus", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Jhin:Varus:1",
+          "text": "Use Deadly Flourish on Varus right after your support or a minion wave hurts him; it roots him in place.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Varus", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Jhin:Varus:2",
+          "text": "Sidestep when Varus charges Piercing Arrow; it is a straight line shot you can dodge, and he is slowed while charging.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Varus-Q", "start": 28, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jhin:Varus:3",
+          "text": "Drop a Captive Audience trap in the bush or where you retreat; Varus chasing you will slow himself on it.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Varus", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:Jhin:Varus:4",
+          "text": "Don't stand inside Hail of Arrows. It slows you and cuts your healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 19, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Jhin:Varus:5",
+          "text": "Stay spread out from your support at level 6. Chain of Corruption jumps between nearby champions.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 46, "end": 65 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8ed21138ece7faaa1ebd6831c94eee285cd1008e0c77cb9b43b08d1bb016335f",
+      "tips": [
+        {
+          "id": "adc:Jhin:Vayne:0",
+          "text": "Aim Deadly Flourish at Vayne after you or your support have hit her; the root stops her from tumbling away.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Jhin:Vayne:1",
+          "text": "Do not stand with a wall behind you near Vayne; Condemn into terrain stuns you and deals heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Vayne-E", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jhin:Vayne:2",
+          "text": "Place Captive Audience traps in bushes and on the paths where Vayne walks up to trade, so she gets slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Vayne", "start": 62, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jhin:Vayne:3",
+          "text": "Keep your distance when Vayne is close to a third hit; Silver Bolts deals extra damage based on your max health.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Vayne-W", "start": 55, "end": 67 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Jhin:Vayne:4",
+          "text": "Use Dancing Grenade to poke her from range while she is fragile, and back off before she closes in with Tumble.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5b58be8ac3054e00e794e24237a9f6e4efa5f3dead45b251f0677fe00d2610ae",
+      "tips": [
+        {
+          "id": "adc:Jhin:Veigar:0",
+          "text": "Walk around Veigar's Dark Matter once you see its marker and hear it; it lands after a delay.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Veigar-W", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jhin:Veigar:1",
+          "text": "Do not walk through the edge of Event Horizon. Stay inside or step back, since only the edge stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 32, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jhin:Veigar:2",
+          "text": "Hit Veigar with Deadly Flourish when he is damaged by your ally or trap; the root leaves him an easy target.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jhin-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jhin:Veigar:3",
+          "text": "Veigar is fragile and has long range; use Dancing Grenade on him when he is close to minions so it bounces onward.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Jhin:Veigar:4",
+          "text": "Place Captive Audience where Veigar must walk to farm or cast; the slow makes his spells easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Veigar", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Jhin:Veigar:5",
+          "text": "Keep your health high late in the lane; Primordial Burst deals more damage the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ba6fd90c40f0fd1ababe8059206c5a5129705b2947b0587a924145af0a879ab5",
+      "tips": [
+        {
+          "id": "adc:Jhin:Xayah:0",
+          "text": "Wait until Xayah or her support has been hit, then fire Deadly Flourish to root her. Hit from long range, then follow up with your shots.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 56, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Jhin:Xayah:1",
+          "text": "Don't spend Curtain Call on Xayah at full health, and don't fire it while she is untargetable. Save it for when she is hurt or running.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Xayah", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Jhin:Xayah:2",
+          "text": "Plant a Captive Audience trap where Xayah stands to farm or where she walks. It slows her and shows her position.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Xayah", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Jhin:Xayah:3",
+          "text": "Use Dancing Grenade on the minion wave to reach Xayah, or to finish a weak enemy. A kill makes the next hit stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Xayah", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Jhin:Xayah:4",
+          "text": "Trade while Xayah's Bladecaller is on cooldown. After that she cannot root you for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Xayah-E", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0f6f3038040ed3ccab740d8e5e855fa3b1356cb69b752fcea2e494a3087573a0",
+      "tips": [
+        {
+          "id": "adc:Jhin:Yasuo:0",
+          "text": "Do not rely on Deadly Flourish when Yasuo has Wind Wall ready; he can wipe it out. Bait the wall first, then use your other shots.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Yasuo", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Jhin:Yasuo:1",
+          "text": "Place Captive Audience traps where Yasuo dashes through minions; they slow him and punish his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jhin:Yasuo:2",
+          "text": "Keep your distance while reloading; Yasuo can close with Sweeping Blade when you cannot shoot back.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Jhin:Yasuo:3",
+          "text": "Take care when you are knocked up by a Yasuo whirlwind; Last Breath can follow, so stay out of his Steel Tempest line.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Yasuo", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 56, "end": 67 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 99, "end": 112 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c5801abc0147376c738170277581eab6d5b3a627495a97860803f52e4c88510f",
+      "tips": [
+        {
+          "id": "adc:Jhin:Yunara:0",
+          "text": "Poke with Dancing Grenade when Yunara steps up to last-hit. It has a short cooldown and you can cast it while Whisper reloads.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Yunara", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 110,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Jhin:Yunara:1",
+          "text": "Hit Yunara with Deadly Flourish right after she or your support has damaged her. She is rooted and can't use her speed boost or dash.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jhin-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Jhin:Yunara:2",
+          "text": "Drop a Captive Audience trap in the bush or on her path when she walks forward. She is slowed and can't easily step away.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Jhin:Yunara:3",
+          "text": "Respect her when she turns on Transcend One's Self. Stay back, because her dash and extra attack speed make her fights hard to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Yunara-R", "start": 30, "end": 50 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Jhin:Yunara:4",
+          "text": "Use Curtain Call on Yunara when she is low and running away. It hits harder the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yunara", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jhin:Yunara:5",
+          "text": "Stay out of the way of her prayer bead. Being slowed by it makes you easy to hit.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "08ed302cf38c15d4005a500cc958169ffd2d46ed2caf1bd3d2158fcba1846241",
+      "tips": [
+        {
+          "id": "adc:Jhin:Zeri:0",
+          "text": "Hit Zeri with Deadly Flourish right after your minions or support damage her; she gets rooted and cannot dash away or kite you.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Jhin-W", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Jhin:Zeri:1",
+          "text": "Place Captive Audience where Zeri lands from her dash or walks in lane. It slows her and punishes her for sitting in your range.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Zeri", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Jhin:Zeri:2",
+          "text": "Zeri is fragile, so use Dancing Grenade to poke her when she steps up for minions. Use it on her only when it will hit.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 24, "end": 39 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Jhin:Zeri:3",
+          "text": "Save Curtain Call for when Zeri is already hurt or slowed. Her dashes can get her out of the cone, and the shots hit harder on low health.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zeri", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Jhin:Zeri:4",
+          "text": "Trade with your four Whisper shots in order, and hold the last one to hit Zeri. It deals extra damage based on her missing health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jhin-passive",
+              "start": 21,
+              "end": 28
+            },
+            { "kind": "champion", "key": "Zeri", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a3c1f99c45ad69b7ca7b64649cd86118fcd226f77dc088de63d614242fff4d71",
+      "tips": [
+        {
+          "id": "adc:Jhin:Ziggs:0",
+          "text": "Hit Ziggs with Deadly Flourish after your ally damages him. The root keeps him from dodging.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Jhin-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Jhin:Ziggs:1",
+          "text": "Do not walk through Ziggs' mines. Hexplosive Minefield slows you and sets up his other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 34, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jhin:Ziggs:2",
+          "text": "Trade right after Ziggs uses Bouncing Bomb or Satchel Charge. His long cooldowns leave him open.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Jhin:Ziggs:3",
+          "text": "Place Captive Audience where Ziggs stands to farm or where he will retreat. He is slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Ziggs", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Jhin:Ziggs:4",
+          "text": "Move around once Ziggs has Mega Inferno Bomb. You can see where it will land, and the center hurts most.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Ziggs-R", "start": 27, "end": 44 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,3346 @@
+{
+  "schemaVersion": 1,
+  "champion": "Aurora",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "f9c93b09d1df1624c7d8e1fea5b04ea4b616f4411b12f4fea48aca41c85e2ddd",
+      "tips": [
+        {
+          "id": "top:Aurora:general:0",
+          "text": "Fire Twofold Hex at the enemy, then recast it as the bolt returns to hit them a second time. The return hits harder on low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Aurora:general:1",
+          "text": "Hit the enemy with an attack or spell three times to pop Spirit Abjuration for bonus damage and a heal. Trade often so the stacks don't run out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Aurora-passive",
+              "start": 57,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Aurora:general:2",
+          "text": "Use The Weirding when the enemy runs at you. It leaves them slowed and hops you backward, out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Aurora:general:3",
+          "text": "Escape with Across the Veil to turn invisible and speed up. Aim it over a wall to get extra distance.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aurora:general:4",
+          "text": "Kill an enemy champion soon after damaging them to reset Across the Veil. Use it to chase the next target or get out.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Aurora:general:5",
+          "text": "At level 6, use Between Worlds in a fight. Enemies who touch the edge of the rift are slowed, and you can jump across it to the other side.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Aurora:general:6",
+          "text": "Don't cast Between Worlds or The Weirding while rooted. You won't dash, and Between Worlds can't be cast at all.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 11, "end": 25 },
+            { "kind": "ability", "key": "Aurora-E", "start": 29, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Aurora-R", "start": 76, "end": 90 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Aurora:combo:0",
+          "name": "Ult rift hop",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Aurora-R" }],
+          "when": "When you want to escape or reposition after her ultimate rift forms, or chase an enemy who is leaving the area.",
+          "whenRefs": [],
+          "text": "Walk into the edge of the rift and Aurora dashes to the opposite side, untargetable during the dash. It works for dodging abilities and for escaping past walls.",
+          "textRefs": [
+            { "kind": "champion", "key": "Aurora", "start": 35, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5dd061453cd7131475068b48b2ebb0e8e8d0f6844c25cd51ad60ce1812387bd9",
+      "tips": [
+        {
+          "id": "middle:Aurora:general:0",
+          "text": "Fire Twofold Hex at the enemy, then recast it to pull the bolt back through them. The return hits harder on low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Aurora:general:1",
+          "text": "Use The Weirding to leave a fight. The enemy is slowed, and Aurora hops backward after casting.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "champion", "key": "Aurora", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Aurora:general:2",
+          "text": "Don't cast The Weirding while rooted. You can still cast it, but Aurora won't hop backward.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 11, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 30, "end": 36 },
+            { "kind": "champion", "key": "Aurora", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Aurora:general:3",
+          "text": "Use Across the Veil to hop away and turn invisible, or to close in on a target. Don't attack during the invisibility, because attacking breaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Aurora:general:4",
+          "text": "Look for a kill with low-health enemies. A champion takedown resets Across the Veil if you damaged them recently, so you can escape right after.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Aurora:general:5",
+          "text": "Mix attacks and spells on the same enemy. Three hits trigger Spirit Abjuration's bonus damage, and killing a champion with it makes her heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Aurora-passive",
+              "start": 61,
+              "end": 78
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Aurora:general:6",
+          "text": "Use Between Worlds to trap the enemy in the rift. Enemies who touch its edge are slowed, while Aurora can cross it quickly by touching the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 },
+            { "kind": "champion", "key": "Aurora", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Aurora:general:7",
+          "text": "Stay inside the rift in Between Worlds. If Aurora leaves the area, the rift closes immediately.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 24, "end": 38 },
+            { "kind": "champion", "key": "Aurora", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Aurora:combo:0",
+          "name": "Ult rift dash",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Aurora-R" }],
+          "when": "When you want to disengage or reposition inside the rift, or chase an enemy who is trapped in it.",
+          "whenRefs": [],
+          "text": "After R, walk into the edge of the rift. Aurora dashes to the opposite side and can't be targeted while she does, so you can dodge spells.",
+          "textRefs": [
+            { "kind": "champion", "key": "Aurora", "start": 41, "end": 47 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "ae01f22659d10cbaefe43fff5cf81547acf2f4782dde4f04a04d3b5cec2b9a38",
+      "tips": [
+        {
+          "id": "top:Aurora:Aatrox:0",
+          "text": "Use The Weirding to slow Aatrox when he dashes in. The hop back also puts distance between you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Aatrox", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Aurora:Aatrox:1",
+          "text": "Dodge The Darkin Blade by moving sideways; its hit zones are telegraphed. The third swing is a circle, so step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Aurora:Aatrox:2",
+          "text": "If Infernal Chains lands on you, walk to the sides or toward Aatrox to leave the zone before the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 3, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aurora:Aatrox:3",
+          "text": "Poke with Twofold Hex, then recall it to hit Aatrox again as the bolts return. Keep out of his range so he cannot heal off you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Aurora:Aatrox:4",
+          "text": "Use Across the Veil to escape when Aatrox gets close. Its hop and invisibility break his aim.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Aurora:Aatrox:5",
+          "text": "When Aatrox uses World Ender, keep your distance so he cannot get a kill and extend it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1c4455d3d89065e882b530864e028d08de4d155d95a321559ec2ebd7850b1fec",
+      "tips": [
+        {
+          "id": "top:Aurora:Briar:0",
+          "text": "Save The Weirding for when Briar jumps in; it slows her and you hop back out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Aurora:Briar:1",
+          "text": "Keep poking Briar with Twofold Hex from long range, and recast it so the bolts hit her again on the way back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Aurora:Briar:2",
+          "text": "Stay away from walls when Briar charges Chilling Scream; a full charge knocks you into them for heavy damage and a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Aurora:Briar:3",
+          "text": "Do not count on Across the Veil to lose Briar; Blood Frenzy keeps her chasing you even when you are invisible. Use it to get to safety instead.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 16, "end": 31 },
+            { "kind": "champion", "key": "Briar", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Aurora:Briar:4",
+          "text": "Use Between Worlds when Briar commits to you. The rift slows her at its edge, and you can hop across it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f39bde00875fe8d1980e831ce075d05a9b16398d230aebd55a8440627b6b5fc5",
+      "tips": [
+        {
+          "id": "top:Aurora:Darius:0",
+          "text": "Poke Darius with Twofold Hex from long range, and recast it so the bolts hit him on the way back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Aurora:Darius:1",
+          "text": "Stay out of Apprehend's reach; once he has used it, he is open to your poke.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Aurora:Darius:2",
+          "text": "Use The Weirding when Darius charges in; it slows him and hops you backward.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Aurora:Darius:3",
+          "text": "Use Across the Veil to escape when he gets close. Darius has no easy way to chase you down.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Aurora:Darius:4",
+          "text": "Do not trade long with Darius; his Hemorrhage stacks build and his hits grow stronger. Back off when he has stacked you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 35,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8a23f258604f2952ebc9218c1c49f2f89bf099b406a64679a6dec9b4b9e29619",
+      "tips": [
+        {
+          "id": "top:Aurora:Fiora:0",
+          "text": "Watch Fiora's Riposte before you cast Twofold Hex or The Weirding; if she parries it, it does nothing and she slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Fiora-W", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 38, "end": 49 },
+            { "kind": "ability", "key": "Aurora-E", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Aurora:Fiora:1",
+          "text": "Poke Fiora from long range with Twofold Hex and keep her out of melee range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Aurora:Fiora:2",
+          "text": "When Fiora dashes in with Lunge, use The Weirding to slow her and hop backward.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Aurora-E", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Aurora:Fiora:3",
+          "text": "Escape with Across the Veil once Fiora commits her Lunge. Do not hop early, since she can Lunge through the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Fiora", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Aurora:Fiora:4",
+          "text": "Keep Between Worlds for a fight at level 6; it slows Fiora and her escape, and lets you dash across the rift's edge.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "232c34ba0c2b5feb9cad998ce475f6ab250d733078d2f878777b3ddbfbd832b4",
+      "tips": [
+        {
+          "id": "top:Aurora:Gangplank:0",
+          "text": "Stay out of keg range; The Weirding lets you poke him from afar and hop back from a Parrrley.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 23, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Aurora:Gangplank:1",
+          "text": "Slow Gangplank with The Weirding when he reaches for kegs, then hit him with Twofold Hex.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gangplank", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Aurora-E", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Aurora:Gangplank:2",
+          "text": "Wait for Remove Scurvy before you commit; it cleans out your slows and heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Aurora:Gangplank:3",
+          "text": "Use Across the Veil to slip out of a keg fight, or reset it by taking down a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aurora:Gangplank:4",
+          "text": "Watch the map once he reaches level 6; Cannon Barrage can land anywhere, so don't sit low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2be6fe01e3c072c3ed2d6f2ab395770c3331ddf3009210e580cb573f637f9bee",
+      "tips": [
+        {
+          "id": "top:Aurora:Garen:0",
+          "text": "Keep Garen at range with Twofold Hex and The Weirding. His threat comes once he is next to you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Aurora-E", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Aurora:Garen:1",
+          "text": "Use The Weirding when Garen runs at you; it slows him and knocks you back out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aurora:Garen:2",
+          "text": "Garen's Decisive Strike silences you on his next hit, so don't hold your key spells while he's in range. Keep Across the Veil ready to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Aurora-W", "start": 110, "end": 125 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Aurora:Garen:3",
+          "text": "Use Across the Veil to hop away and turn invisible when Garen is low on dash tools. He can't use Judgment well on a target he can't see.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Garen", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Garen-E", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Aurora:Garen:4",
+          "text": "Leave Garen's reach as your health gets low, since Demacian Justice deals more damage the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Garen-R", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Aurora:Garen:5",
+          "text": "Recast Twofold Hex when Garen is hurt; it deals more damage the lower his health is.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8e12a3bbb9d1d5d721aa3a51dfac3390f97a9ecd2121c6e5ccd369e0d2ee02c7",
+      "tips": [
+        {
+          "id": "top:Aurora:Jayce:0",
+          "text": "Aim Twofold Hex at Jayce and recast it to pull the damage back through him; it hurts more when he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Aurora:Jayce:1",
+          "text": "Slow Jayce with The Weirding when he leaps in with To the Skies!, then hop back out of his hammer range.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Aurora:Jayce:2",
+          "text": "Use Across the Veil to dodge out when Jayce commits, and get a fresh cooldown if you score a takedown.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Aurora:Jayce:3",
+          "text": "Stay out of long range when Jayce is in Cannon Stance, and trade hard when he is in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Aurora:Jayce:4",
+          "text": "Slip away from Thundering Blow by keeping your distance; it needs him in close range.",
+          "refs": [],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a0c2c7588cb698968d70aa796fd70941a0b17acb873642a34eeafd2b0d5cee1",
+      "tips": [
+        {
+          "id": "top:Aurora:KSante:0",
+          "text": "Poke with Twofold Hex from long range, then recast it to hit him again on the way back. Keep your distance so he can't reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Aurora:KSante:1",
+          "text": "Use The Weirding when he charges at you. It slows him and hops you backward out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Aurora:KSante:2",
+          "text": "Hop away with Across the Veil when his Ntofo Strikes is ready for its second hit. That hit pulls you in and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "KSante-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Aurora:KSante:3",
+          "text": "Aurora can't use Across the Veil while rooted, and K'Sante's All Out roots you first. Stay out of his range at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 39, "end": 45 },
+            { "kind": "champion", "key": "KSante", "start": 51, "end": 58 },
+            { "kind": "ability", "key": "KSante-R", "start": 61, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Aurora:KSante:4",
+          "text": "When he goes All Out, he becomes much squishier. Burst him with Twofold Hex and The Weirding then.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 64, "end": 75 },
+            { "kind": "ability", "key": "Aurora-E", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "52aaac6fe7d249d63ef72aaad40472c07e20ce68a78ac6349e2d94a8addf8d26",
+      "tips": [
+        {
+          "id": "top:Aurora:Malphite:0",
+          "text": "Poke Malphite with Twofold Hex and recast it so the bolt hits him twice on its way back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Aurora:Malphite:1",
+          "text": "Keep your distance; his Seismic Shard slows you and has no way to be dodged once it is aimed at you, so avoid standing in its range.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Aurora:Malphite:2",
+          "text": "Use The Weirding to slow him and hop back when he tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Aurora:Malphite:3",
+          "text": "Keep Across the Veil ready at level 6 to escape his Unstoppable Force; the hop gets you away before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Malphite-R", "start": 52, "end": 69 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Aurora:Malphite:4",
+          "text": "Wait for his Granite Shield to break before committing; his Armor is far lower without it, and magic damage ignores most of it anyway.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 13,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "22f0985ff1183f49f03fea3e6a2e97466cd72c1a66811dad25f4b641ad94147a",
+      "tips": [
+        {
+          "id": "top:Aurora:Mordekaiser:0",
+          "text": "Poke with Twofold Hex from long range, then recast it to hit her again as the bolt returns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Aurora:Mordekaiser:1",
+          "text": "Use The Weirding to slow Mordekaiser when he walks up; its hop backward also takes you out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Aurora:Mordekaiser:2",
+          "text": "Do not stand in line with Mordekaiser's Death's Grasp. Keep Across the Veil ready to hop away.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 26,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 40,
+              "end": 53
+            },
+            { "kind": "ability", "key": "Aurora-W", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Aurora:Mordekaiser:3",
+          "text": "Keep away from Mordekaiser once he has Darkness Rise; its aura hurts anyone near him.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 15,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 39,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Aurora:Mordekaiser:4",
+          "text": "Do not use Between Worlds until he has spent Realm of Death, or you may have no escape once you are in it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 11, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 45,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07ee271d67c8f3ecff1c70778263974c5436e4f2ccf22ea1bcadc08d4ed6dece",
+      "tips": [
+        {
+          "id": "top:Aurora:Rumble:0",
+          "text": "Wait for Rumble to overheat, then go in; he cannot cast abilities for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 9, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Aurora:Rumble:1",
+          "text": "Stay out of Flamespitter range. Its damage is based on your max Health, so do not stand in the cone.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Aurora:Rumble:2",
+          "text": "Use The Weirding to slow Rumble when he commits, and the hop back takes you out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Aurora:Rumble:3",
+          "text": "Twofold Hex is a long-range poke; hit him from outside his range, then recast it for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Aurora:Rumble:4",
+          "text": "Move out of The Equalizer fire quickly. Between Worlds can get you out if you are trapped.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Aurora-R", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Aurora:Rumble:5",
+          "text": "Do not walk in a straight line after Electro Harpoon hits you; stacked harpoons slow you more and lower your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "56a0bf8b728049b161e1d1bedc19c3502818ac79e6e0e4f3778b26c78e0cd968",
+      "tips": [
+        {
+          "id": "top:Aurora:Sion:0",
+          "text": "Stay out of Decimating Smash range and watch for Sion's charge. Hop away with Across the Veil if he has you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Aurora-W", "start": 78, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Aurora:Sion:1",
+          "text": "Poke with Twofold Hex and recast it for extra damage. Sion's Soul Furnace shield soaks some of it, so keep poking.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Sion", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Sion-W", "start": 61, "end": 73 },
+            { "kind": "keyword", "key": "poke", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Aurora:Sion:2",
+          "text": "Use The Weirding to slow Sion when he walks up. It also hops you backward, out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Sion", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Aurora:Sion:3",
+          "text": "Do not fight Sion in a long chase after he has used Unstoppable Onslaught. Step aside from his straight path.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-R", "start": 52, "end": 73 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "60b85db2c1a7a603114482c8e401bdbb5a854692f671c5771753c7cd27a45c39",
+      "tips": [
+        {
+          "id": "top:Aurora:Teemo:0",
+          "text": "Close in with Across the Veil to get around Teemo's darts, then fight with your spells. His basic attacks are weak while you are invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Teemo", "start": 44, "end": 49 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Aurora:Teemo:1",
+          "text": "Hit Teemo with The Weirding to slow him, then follow up. The hop back also gets you out of his range.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aurora-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Aurora:Teemo:2",
+          "text": "Look for mushrooms in brush and on your path before you hop in. Walking onto a trap slows you and reveals you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Aurora:Teemo:3",
+          "text": "Use Twofold Hex from long range and recast it to get extra damage from Teemo's missing health. Do it while he stays back.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Teemo", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "85284a29bfcf7e34c30ffd0037f3759119cd91f0d65842fc94b21d6314673b22",
+      "tips": [
+        {
+          "id": "top:Aurora:Vayne:0",
+          "text": "Don't stand next to a wall when Vayne is near. Condemn knocks you into it and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Vayne-E", "start": 47, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Aurora:Vayne:1",
+          "text": "Hit Vayne with Twofold Hex from long range, then recast it. She is fragile, so keep the pressure on her.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aurora:Vayne:2",
+          "text": "Use The Weirding to slow Vayne when she dashes in. Its hop backward gets you out of her attack range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Aurora:Vayne:3",
+          "text": "Stop auto-attacking Vayne after two hits in a row, or trade by switching between spells and attacks. Her third hit with Silver Bolts hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Vayne-W", "start": 120, "end": 132 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Aurora:Vayne:4",
+          "text": "Use Across the Veil to escape when Vayne has Condemn ready. A takedown on her resets it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Vayne-E", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Aurora:Vayne:5",
+          "text": "Cast Between Worlds to trap Vayne when she is low. Entering or leaving the ring slows her, so she has trouble escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ceec2f52385479e7118cb543a8f04f2708f71bf4692931b827d953c9ef559072",
+      "tips": [
+        {
+          "id": "top:Aurora:Yone:0",
+          "text": "Poke Yone with Twofold Hex from long range, then recall it so the bolt hits him again on the way back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aurora:Yone:1",
+          "text": "Use The Weirding when Yone walks in; it slows him and hops you backward out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Aurora:Yone:2",
+          "text": "Stay out of Mortal Steel range. Two hits make the next one dash and knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Aurora:Yone:3",
+          "text": "Hop away with Across the Veil once Yone has Fate Sealed ready; it only reaches so far, so stay at a distance.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Yone-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Aurora:Yone:4",
+          "text": "Trade harder while Yone's Soul Unbound is on cooldown; he cannot dash out and back for free damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Yone-E", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4a16420252cd748b0dbc9b4c49d3b9af036d1bd8988c7fcbfc031f6392943af3",
+      "tips": [
+        {
+          "id": "middle:Aurora:Ahri:0",
+          "text": "Use The Weirding when Ahri walks up; she is slowed and you hop back out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ahri", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Aurora:Ahri:1",
+          "text": "Stay behind minions so Charm hits them first and not you.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Aurora:Ahri:2",
+          "text": "Use Across the Veil to hop away from danger, but do not stay close; Ahri's Charm will catch you once you reappear.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ahri", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Ahri-E", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Aurora:Ahri:3",
+          "text": "Recast Twofold Hex when the enemy is hurt, since it hits harder the lower their health is.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Aurora:Ahri:4",
+          "text": "Look for a fight while Spirit Rush is on cooldown; Ahri has a hard time escaping then.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Ahri", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "83249ec5aef33bf925822e808ec4a77b5a105d923e0d3c3ad9cc0b71c52db7f3",
+      "tips": [
+        {
+          "id": "middle:Aurora:Akali:0",
+          "text": "Don't chase Akali into Twilight Shroud; you can't see her inside it. Hit the smoke with The Weirding to reveal her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Akali-W", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Aurora-E", "start": 88, "end": 100 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Aurora:Akali:1",
+          "text": "Slow Akali with The Weirding when she dashes in; it also hops you backwards out of reach.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Aurora:Akali:2",
+          "text": "Use Across the Veil to escape when Akali has her ultimate ready and your health is low.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Aurora:Akali:3",
+          "text": "Poke with Twofold Hex when Akali's energy is low; she can't trade back well then.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e9a8710aba039f32da4667cc1758ed5d412953ed3b9ea183c94b7491ba85a4da",
+      "tips": [
+        {
+          "id": "middle:Aurora:Akshan:0",
+          "text": "Aim The Weirding at Akshan when he walks up to trade; it slows him and the hop backwards keeps you safe.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Akshan", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Aurora:Akshan:1",
+          "text": "Use Twofold Hex from long range and recast it when he is hurt. It deals more damage to low Health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Aurora:Akshan:2",
+          "text": "Use Across the Veil to hop away when Akshan commits to Comeuppance or Heroic Swing. Stay out of sight until he gives up.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akshan", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Akshan-R", "start": 55, "end": 66 },
+            { "kind": "ability", "key": "Akshan-E", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Aurora:Akshan:3",
+          "text": "Fight inside Between Worlds. Enemies that touch its edge are slowed, and you can jump across to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 13, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a5e836e561ac6b9d057424ebe7c7dd21021fe511b24974f34168a40ef23ba181",
+      "tips": [
+        {
+          "id": "middle:Aurora:Anivia:0",
+          "text": "Stay out of the line of Flash Frost; being stunned by its detonation lets Anivia follow up with a heavy hit.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 50 },
+            { "kind": "champion", "key": "Anivia", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Aurora:Anivia:1",
+          "text": "Use The Weirding to slow Anivia and hop back out of her Frostbite range after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Anivia-E", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Aurora:Anivia:2",
+          "text": "Across the Veil gets you out of Flash Frost's path; hop sideways as it comes.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Aurora:Anivia:3",
+          "text": "Once Anivia's egg appears, do not chase it carelessly; Rebirth makes her tough to finish early on.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 55,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Aurora:Anivia:4",
+          "text": "Use Twofold Hex to hit Anivia and recast it for extra damage when she is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "279e4280ec0235d0267d7716562a0f13628bc818420e4dd7b2ecc92e9f78b769",
+      "tips": [
+        {
+          "id": "middle:Aurora:Annie:0",
+          "text": "Annie's stun is ready when the swirling power shows. Don't walk into range then; trade only after she has spent it.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Annie:1",
+          "text": "Use Across the Veil to hop out of Annie's range after a trade; you turn invisible and gain move speed.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Annie", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Annie:2",
+          "text": "Poke with Twofold Hex from long range. Annie has to walk up to you, and the recast hits harder on low-health targets.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Annie", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Aurora:Annie:3",
+          "text": "Slow Annie with The Weirding when she walks up, then hop back; the blast also moves you away from her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Annie", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Aurora:Annie:4",
+          "text": "Stay away from Tibbers after Annie summons him; his burn hurts anyone nearby. Slow him down with Between Worlds and leave.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Aurora-R", "start": 97, "end": 111 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5197e6f3ed781d52eb3544376054545b676dca0c5e2a28d802e12e963957478f",
+      "tips": [
+        {
+          "id": "middle:Aurora:AurelionSol:0",
+          "text": "Stay out of the center of Singularity, because it drags you in and kills you outright at low health. Cast The Weirding to hop backward out of it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 26,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Aurora-E", "start": 106, "end": 118 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Aurora:AurelionSol:1",
+          "text": "Keep Across the Veil ready to get away when Falling Star lands. It takes a moment to arrive, so step out of the area before it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Aurora:AurelionSol:2",
+          "text": "Land Twofold Hex on Aurelion Sol before he starts Breath of Light. Then recast it to pull the bolts back through him.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 20,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 50,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Aurora:AurelionSol:3",
+          "text": "Slow him with The Weirding when he flies in with Astral Flight, and keep your distance. His takedowns refresh the flight.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-E", "start": 14, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 49,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2c9e921f23d023bd9d17072bafce79ab457caa57ec6096166c725da84d321fb8",
+      "tips": [
+        {
+          "id": "middle:Aurora:Azir:0",
+          "text": "Azir's damage comes from his soldiers, so step out of their reach and look for moments when they are not standing near you.",
+          "refs": [{ "kind": "champion", "key": "Azir", "start": 0, "end": 4 }],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Aurora:Azir:1",
+          "text": "Hit Azir with Twofold Hex, then recall it to hit him again. It does more damage the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Aurora:Azir:2",
+          "text": "Use The Weirding to slow Azir when he comes close, then hop away with its recoil so his soldiers cannot stab you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Azir", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Aurora:Azir:3",
+          "text": "Azir lacks burst, so go in on him fast with your abilities and finish him before his soldiers wear you down.",
+          "refs": [{ "kind": "champion", "key": "Azir", "start": 0, "end": 4 }],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Aurora:Azir:4",
+          "text": "Do not stay in the wall from Emperor's Divide when you fight Azir. Wait until it is gone or hop over it with Across the Veil.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 29, "end": 45 },
+            { "kind": "champion", "key": "Azir", "start": 61, "end": 65 },
+            { "kind": "ability", "key": "Aurora-W", "start": 109, "end": 124 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1e5ddc560cef30e9f95a7ca52dfcfbafe598fa013c1d07f56ceedfcd83c30c23",
+      "tips": [
+        {
+          "id": "middle:Aurora:Brand:0",
+          "text": "Dodge Brand's Sear and Pillar of Flame; without an ablaze target he can't start his stun combo.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 },
+            { "kind": "keyword", "key": "ablaze", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Aurora:Brand:1",
+          "text": "Use Across the Veil to hop out of Pillar of Flame's area before it erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Brand-W", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Aurora:Brand:2",
+          "text": "Slow Brand with The Weirding when he steps up, then trade with Twofold Hex while he walks back.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-E", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Aurora:Brand:3",
+          "text": "Stay away from your minions and allies when Brand is ablaze-spreading; Conflagration reaches farther on ablaze targets.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "ablaze", "start": 53, "end": 59 },
+            { "kind": "ability", "key": "Brand-E", "start": 71, "end": 84 },
+            { "kind": "keyword", "key": "ablaze", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Aurora:Brand:4",
+          "text": "Step away from allies when Pyroclasm is cast; the first missile is slow, so you have time to move.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ff016cb9d590b7a873caab27b14e887154b88c72c4cdd6bd34e0f6f368d615ca",
+      "tips": [
+        {
+          "id": "middle:Aurora:Briar:0",
+          "text": "Keep Twofold Hex pointed at Briar as she closes in. It deals damage early and the recast hurts her more when she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Aurora:Briar:1",
+          "text": "Slow Briar with The Weirding as she leaps in, then hop back. You gain distance and she loses her trade.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aurora-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Aurora:Briar:2",
+          "text": "Stay out of Head Rush range, because the stun lets Briar start a trade on her terms. Use Across the Veil to escape if she lands it.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Briar", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Aurora-W", "start": 89, "end": 104 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Aurora:Briar:3",
+          "text": "Use Between Worlds in a fight with Briar. Its border slows enemies who touch it, and you can hop across it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "be05d662d1daee31ac733fa90f455a568aaf82dfd83ede5bc2a1ff0d0a1cd13b",
+      "tips": [
+        {
+          "id": "middle:Aurora:Cassiopeia:0",
+          "text": "Use The Weirding to slow Cassiopeia when she walks up, then hop back out of her range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Aurora:Cassiopeia:1",
+          "text": "Do not fight inside Miasma; you cannot use Across the Veil to escape while grounded, so step out of the clouds first.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 20,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Aurora-W", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Cassiopeia:2",
+          "text": "Turn and walk away when Cassiopeia starts Petrifying Gaze; you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 42,
+              "end": 57
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Aurora:Cassiopeia:3",
+          "text": "Fire Twofold Hex down the lane and recast it to deal extra damage as she backs off; her Twin Fang pressure drops when she must dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fdb3aef22452b76693aa9e90e5495e5eafbca7ff440336bd7b28581ea5cc57a6",
+      "tips": [
+        {
+          "id": "middle:Aurora:Diana:0",
+          "text": "Use The Weirding when Diana dashes in. It slows her and hops you backward, away from her.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Diana:1",
+          "text": "Dodge Crescent Strike. If Moonlight lands on you, walk away, because Lunar Rush then refreshes its cooldown and she can dash on you again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Diana-E", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Aurora:Diana:2",
+          "text": "Wait until Pale Cascade's shield runs out before you trade with Diana, then hit her with Twofold Hex.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Diana", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Aurora:Diana:3",
+          "text": "Keep your distance from Diana around level 6. Moonfall pulls you in, so don't stand close to her.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Diana-R", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b823f764032dd2f149a592334e66abe49974cc75eae16b9274782c5b5ee711b4",
+      "tips": [
+        {
+          "id": "middle:Aurora:Ekko:0",
+          "text": "Hit Ekko with Twofold Hex, then recast it to pull the curse back for extra damage. It hits harder the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Aurora:Ekko:1",
+          "text": "Slow Ekko with The Weirding when he dives in. Its hop backwards also gets you out of his reach.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ekko", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Aurora-E", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Aurora:Ekko:2",
+          "text": "Do not stand where Parallel Convergence is landing; it takes time to arm, so walk out of the zone or use Across the Veil to leave it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 19, "end": 39 },
+            { "kind": "ability", "key": "Aurora-W", "start": 105, "end": 120 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Ekko:3",
+          "text": "Ekko is much weaker with Chronobreak on cooldown, so trade hardest then. Do not chase him if it is ready, because he can rewind away.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ekko-R", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dcbb5543743a5c050e9f000076ae67d5d1792dfc27cc3e5264bc50a903ec0a15",
+      "tips": [
+        {
+          "id": "middle:Aurora:Ezreal:0",
+          "text": "Fire Twofold Hex at Ezreal when minions are not in the way. It hits all enemies in its line, then recast to pull it back for more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Aurora:Ezreal:1",
+          "text": "Use The Weirding to slow Ezreal, then close in. You hop back after casting, so aim it before he can fire back.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Ezreal", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Aurora:Ezreal:2",
+          "text": "Hop in with Across the Veil to get close unseen, then trade fast. A kill on Ezreal resets its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Ezreal", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Aurora:Ezreal:3",
+          "text": "Ezreal is fragile, so take the fight to him. Be ready for Arcane Shift, which lets him blink away and hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Aurora:Ezreal:4",
+          "text": "Use Between Worlds at level 6 to trap Ezreal inside the ring. Its edge slows him, so he cannot kite away easily.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ezreal", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Aurora:Ezreal:5",
+          "text": "Keep minions between you and Ezreal so Mystic Shot hits them instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "01f8b133ceaaefcddf3406c0a0781992adc60009bc8a4434530a23157cf18beb",
+      "tips": [
+        {
+          "id": "middle:Aurora:Fizz:0",
+          "text": "Aim The Weirding at Fizz when he dives in; it slows him, and the hop back helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Aurora:Fizz:1",
+          "text": "Do not throw Twofold Hex while Fizz is hopping on his trident. He is untargetable then, so wait until he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Fizz", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Aurora:Fizz:2",
+          "text": "Fizz's Chum the Waters can be dodged by moving away, and a slow from it ends with a knock up. Keep your distance at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Fizz-R", "start": 7, "end": 22 },
+            { "kind": "keyword", "key": "knocked-up", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Aurora:Fizz:3",
+          "text": "Use Across the Veil to hop out when Fizz commits, since his Urchin Strike needs a visible target.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fizz", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e527163fbd7f6c80cb1ef8983c4b090946c0a72310af8a83413386734778bae5",
+      "tips": [
+        {
+          "id": "middle:Aurora:Galio:0",
+          "text": "Stay out of Justice Punch's line. Galio steps back first, then dashes, and he stops at the first champion he hits.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Galio", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Galio:1",
+          "text": "Hop away with Across the Veil when Galio charges up Shield of Durand. His taunt pulls you toward him, so leave its range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Galio", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Galio-W", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Aurora:Galio:2",
+          "text": "Poke with Twofold Hex while Galio is charging Shield of Durand. He moves slower then and can't easily get to you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Galio", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Galio-W", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Aurora:Galio:3",
+          "text": "Use The Weirding to slow Galio when he closes in, then hop back out of range. Don't stand and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Galio", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Aurora:Galio:4",
+          "text": "Hit Galio with magic damage in short bursts. His shield blocks magic damage, so wait until it breaks before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "12302ec294db3b2b619b36fefb27d255dadae7e6be1709108c2d1092644c0650",
+      "tips": [
+        {
+          "id": "middle:Aurora:Hwei:0",
+          "text": "Hwei's Grim Visage and Gaze of the Abyss take time to cast, so hop away with Across the Veil when you see him paint a Torment spell, then rush him.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-W", "start": 77, "end": 92 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Aurora:Hwei:1",
+          "text": "Hit Hwei with The Weirding, then Twofold Hex, while he is walking up. Both can be fired from range, so he has to dodge two shots.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aurora-E", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Aurora:Hwei:2",
+          "text": "Recast Twofold Hex when Hwei is low on health. The returning bolt hurts him more the less health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Hwei", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Aurora:Hwei:3",
+          "text": "Hwei's Severing Bolt lands after a delay and hurts more when you are alone or can't move. Keep walking and don't stand still against it.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "isolated", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Aurora:Hwei:4",
+          "text": "Use Between Worlds at level 6 to trap Hwei. He is slowed when he touches the edge, and you can hop across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Hwei", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2816bfb6ab21ba8d679ba2e02a331f64c6f1a26e37e8be80d90ceb12c09c5b1d",
+      "tips": [
+        {
+          "id": "middle:Aurora:Irelia:0",
+          "text": "Hit Irelia with The Weirding as she dashes in; it slows her and you hop backward out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aurora-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Aurora:Irelia:1",
+          "text": "Stand away from minions. Irelia uses them to dash to you, so keep your distance and poke her with Twofold Hex.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 98, "end": 109 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Irelia:2",
+          "text": "Don't spend Twofold Hex or The Weirding on Defiant Dance; it cuts damage. Wait for her to finish and then hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Aurora-E", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Irelia-W", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Aurora:Irelia:3",
+          "text": "Watch for Flawless Duet; leave the line between its blades or you will be stunned. Use Across the Veil to hop out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 },
+            { "kind": "ability", "key": "Aurora-W", "start": 87, "end": 102 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Aurora:Irelia:4",
+          "text": "Use Between Worlds when she commits; her Bladesurge can't reach you easily through its edge and you can jump across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 41, "end": 51 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "420ac2dc6180851e04f5033d1553e3651cbd4d2f1962b097ab69e7e51820c280",
+      "tips": [
+        {
+          "id": "middle:Aurora:Kassadin:0",
+          "text": "Kassadin takes less magic damage, so lean on Spirit Abjuration by mixing attacks with spells for the bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Aurora-passive",
+              "start": 45,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Aurora:Kassadin:1",
+          "text": "Hit him with The Weirding when he comes in with Riftwalk; the slow stops him from chasing you down.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 48, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Aurora:Kassadin:2",
+          "text": "Use Across the Veil to hop out of range after he spends his abilities, then come back when he is low on mana.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Aurora:Kassadin:3",
+          "text": "Save Between Worlds for a fight at level 6; walls of the rift slow him when he steps in, and you can hop across.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cd7eaa6f38a30275002d75604f449666ca5542b60219d9fd59a2c6022dbd9f51",
+      "tips": [
+        {
+          "id": "middle:Aurora:Katarina:0",
+          "text": "Aim The Weirding at Katarina as she jumps in. It slows her and the hop back gets you out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Katarina", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Aurora:Katarina:1",
+          "text": "Keep Across the Veil ready for when Katarina starts Death Lotus. Hopping away makes you invisible and breaks her channel's hold on you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Katarina", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Katarina-R", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Aurora:Katarina:2",
+          "text": "Open the lane with Twofold Hex from long range. Katarina has to close the gap with Shunpo first.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 19, "end": 30 },
+            { "kind": "champion", "key": "Katarina", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Katarina-E", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Aurora:Katarina:3",
+          "text": "Fight away from loose daggers. Each dagger Katarina picks up hurts you and lets her use Shunpo again sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Katarina-E", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Aurora:Katarina:4",
+          "text": "Between Worlds is strongest when Katarina is on top of you. Its rift slows her, and you can hop to the far side of it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Katarina", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "871f595ce1cc9f9698e3890cbe7a4a87533425922a82f346a6225d1912a4e398",
+      "tips": [
+        {
+          "id": "middle:Aurora:Leblanc:0",
+          "text": "Dodge Ethereal Chains by sidestepping or hopping away with Across the Veil. Being held means you get rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Aurora-W", "start": 59, "end": 74 },
+            { "kind": "keyword", "key": "rooted", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Aurora:Leblanc:1",
+          "text": "Slow LeBlanc with The Weirding when she dashes in, then hit her with Twofold Hex as she retreats.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Leblanc", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Aurora-E", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Aurora:Leblanc:2",
+          "text": "Hit LeBlanc first when she uses Distortion, since she must come back to her pad. Fight her while she is away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Aurora:Leblanc:3",
+          "text": "Use Between Worlds when she dives you. Its edge slows her and lets you hop across it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Aurora:Leblanc:4",
+          "text": "Do not chase a fake LeBlanc from her Mirror Image. Look for the real one before spending abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 20, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Leblanc-passive",
+              "start": 37,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dd1b3cb0088d609fb396943e525fde3ee1d016753640d838a015ca4a1bd2837e",
+      "tips": [
+        {
+          "id": "middle:Aurora:Lissandra:0",
+          "text": "Hit Lissandra with Twofold Hex, then recast it to pull the curse back through her for more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Aurora:Lissandra:1",
+          "text": "Stay out of Ring of Frost range when it is ready; being rooted next to her is how you get killed.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Aurora:Lissandra:2",
+          "text": "Trade while Ring of Frost is on cooldown, since it is long at early ranks.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Aurora:Lissandra:3",
+          "text": "Use The Weirding to slow Lissandra when she comes at you; the hop back also gets you away.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Lissandra", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Aurora:Lissandra:4",
+          "text": "Do not fight in Lissandra's Frozen Tomb once she is level 6; wait out the stun and slow field before engaging.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 28, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d139e13f21ad085039a9e2f5448a12c2f172b9e2fcaa3bab3c3c531394000d45",
+      "tips": [
+        {
+          "id": "middle:Aurora:Lux:0",
+          "text": "Hop with Across the Veil to dodge Light Binding, and don't walk in a straight line toward Lux.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 9, "end": 24 },
+            { "kind": "ability", "key": "Lux-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Lux", "start": 90, "end": 93 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Aurora:Lux:1",
+          "text": "Stand behind minions so Light Binding hits them first. It stops after two enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Aurora:Lux:2",
+          "text": "Aurora gets stronger when she hits enemies three times, so poke Lux with Twofold Hex and The Weirding, then hit her once more with an attack.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 },
+            { "kind": "champion", "key": "Lux", "start": 64, "end": 67 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 73, "end": 84 },
+            { "kind": "ability", "key": "Aurora-E", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Aurora:Lux:3",
+          "text": "Recast Twofold Hex once Lux is hurt; it hits harder the lower her health is.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Lux", "start": 24, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Aurora:Lux:4",
+          "text": "Step out of Lucent Singularity before it detonates. Staying inside leaves you slowed and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Aurora:Lux:5",
+          "text": "When you see Final Spark's red warning beam, sidestep it or hop away with Across the Veil.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Aurora-W", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc9c2f2b436a20df60adbfb1ef5206e22b48f245230fee099050105bf481e736",
+      "tips": [
+        {
+          "id": "middle:Aurora:Malzahar:0",
+          "text": "Don't fight Malzahar while Void Shift is up, since it cuts the damage you deal. Poke him once to drop it, then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 12, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 27,
+              "end": 37
+            },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Aurora:Malzahar:1",
+          "text": "Stay out of Call of the Void's range when it is ready; the silence stops Across the Veil and The Weirding. Sidestep the portals.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 59, "end": 66 },
+            { "kind": "ability", "key": "Aurora-W", "start": 73, "end": 88 },
+            { "kind": "ability", "key": "Aurora-E", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "middle:Aurora:Malzahar:2",
+          "text": "Keep Across the Veil ready for when Malzahar reaches level 6. Use it to dodge Nether Grasp, because it can't be cast once you're suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Malzahar", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 78, "end": 90 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Aurora:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions. When they die, it spreads to you and he can refresh it.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Aurora:Malzahar:4",
+          "text": "Use Twofold Hex on Malzahar and recast it to hit him again. It hurts more the lower his Health is.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malzahar", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9d9179c1f1d2159126d73da32630e8af846318fb000d5b7a0f746286c68ea70a",
+      "tips": [
+        {
+          "id": "middle:Aurora:Mel:0",
+          "text": "Wait for Mel to spend Rebuttal before you throw Twofold Hex or The Weirding; she can destroy them.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 48, "end": 59 },
+            { "kind": "ability", "key": "Aurora-E", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Aurora:Mel:1",
+          "text": "Stay out of Solar Snare's long range; a far orb roots you for longer. Use Across the Veil to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Aurora-W", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Aurora:Mel:2",
+          "text": "Back off when your health gets low; Mel's Overwhelm can kill you with her next hit, so let the stacks fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 36, "end": 39 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Aurora:Mel:3",
+          "text": "Use The Weirding to hop back out of Mel's Radiant Barrage zone while slowing her if she steps forward.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Mel", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Mel-Q", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7659bb5a43873800d7f0a4c8b8656c2e40133f582840361a33464753e499c17b",
+      "tips": [
+        {
+          "id": "middle:Aurora:Naafiri:0",
+          "text": "Hit Naafiri with The Weirding when she dives in; it slows her and you hop backward out of her reach.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Aurora-E", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Aurora:Naafiri:1",
+          "text": "Poke with Twofold Hex, then recall it so the bolt pulls back through her for extra damage, especially once she is low.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Aurora:Naafiri:2",
+          "text": "Naafiri is hard to hit while Hounds' Pursuit winds up, so use Across the Veil to hop away and vanish before she arrives.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Aurora-W", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Aurora:Naafiri:3",
+          "text": "Keep Between Worlds for a level 6 fight; the rift slows her when she tries to walk in, and you can hop across its edge to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Aurora:Naafiri:4",
+          "text": "Her packmates add damage when she fights you, so trade with spells from range and do not stand next to her.",
+          "refs": [],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ec1105c5dc0310f852c68810cc62fcf05c35816c3ff192476b2b992e25297ffe",
+      "tips": [
+        {
+          "id": "middle:Aurora:Orianna:0",
+          "text": "Stay out of the area around Orianna's Ball. Her spells only reach where the Ball is, so watch where it sits.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Aurora:Orianna:1",
+          "text": "Use The Weirding to slow Orianna when she walks up. Its hop backward gets you out of her Command: Shockwave range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Orianna", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Orianna-R", "start": 89, "end": 107 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Aurora:Orianna:2",
+          "text": "Fire Twofold Hex at Orianna and recast it to deal more damage while she is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Orianna", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Aurora:Orianna:3",
+          "text": "Use Across the Veil to dodge Command: Attack or to escape after a trade. A kill resets its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "568c9081468f073538be374a2bddea9a1e2f32edbb1345d981dd247878d60458",
+      "tips": [
+        {
+          "id": "middle:Aurora:Qiyana:0",
+          "text": "Hit Qiyana with Twofold Hex when she walks up to trade, then recast it so she takes more damage as her health drops.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Qiyana:1",
+          "text": "Save The Weirding for when Qiyana dashes in with Audacity; it slows her and hops you away.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Qiyana", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 49, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Aurora:Qiyana:2",
+          "text": "Stay away from walls and river when Qiyana has Supreme Display of Talent, since it stuns you at the terrain edge.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 47, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Aurora:Qiyana:3",
+          "text": "Use Across the Veil to hop away when Qiyana holds an element and is ready to dash onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Qiyana", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "59e3a0b042a1f0d31b4f3c841b8ada9ac7d60ad77eeeeefc1656a94d22764142",
+      "tips": [
+        {
+          "id": "middle:Aurora:Ryze:0",
+          "text": "Dodge Overload and Spell Flux when you can. Ryze deals far more damage to enemies marked with Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Ryze-E", "start": 19, "end": 29 },
+            { "kind": "champion", "key": "Ryze", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Aurora:Ryze:1",
+          "text": "Use Across the Veil to escape once Ryze has marked you. It stops Rune Prison from rooting you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ryze-W", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "middle:Aurora:Ryze:2",
+          "text": "Use The Weirding to slow Ryze when he steps up. Its hop back then puts you out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Ryze", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Aurora:Ryze:3",
+          "text": "Stun or slow Ryze while Realm Warp is charging. Crowd control cancels the portal.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 8, "end": 12 },
+            { "kind": "champion", "key": "Ryze", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Ryze-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Aurora:Ryze:4",
+          "text": "Land Twofold Hex, then recast it to hit again once Ryze is hurt. It does more damage to low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0c3302b5053ff31ca22d4cf92835d157225a7ca85ff827121170eb93863f70a2",
+      "tips": [
+        {
+          "id": "middle:Aurora:Sylas:0",
+          "text": "Stay out of Abduct's line behind minions when you can; it stops at the first enemy it hits, so a minion can block it.",
+          "refs": [],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Aurora:Sylas:1",
+          "text": "Hit Sylas with The Weirding when he dashes in; the slow lets you back away from his Kingslayer.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aurora-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Sylas-W", "start": 84, "end": 94 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Aurora:Sylas:2",
+          "text": "Poke with Twofold Hex and recast it to hit him again on the way back; you win the trade at range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Aurora:Sylas:3",
+          "text": "Hold Between Worlds until Sylas has used his Hijack, or he can steal it and use it on you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Sylas-R", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a34e1eadce1357fbfee31d0e6ae3fee2bf891af1deb693f6b2070f10302adbed",
+      "tips": [
+        {
+          "id": "middle:Aurora:Syndra:0",
+          "text": "Dodge Syndra's Dark Sphere and Force of Will. Getting hit by Force of Will makes the follow-up sphere much easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Syndra-W", "start": 31, "end": 44 },
+            { "kind": "ability", "key": "Syndra-W", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Aurora:Syndra:1",
+          "text": "Stay away from lingering Dark Spheres. Scatter the Weak can push them into you and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 39, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Aurora:Syndra:2",
+          "text": "Use The Weirding on Syndra when she walks up to trade. It slows her, and you hop back out of her range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Syndra", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Aurora:Syndra:3",
+          "text": "Attack Syndra after she spends Scatter the Weak, since its cooldown is long. Go in with Twofold Hex.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Syndra-E", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Aurora:Syndra:4",
+          "text": "Syndra's Unleashed Power hurts more with many spheres out. Use Across the Veil to escape when she has several and is at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Syndra-R", "start": 9, "end": 24 },
+            { "kind": "ability", "key": "Aurora-W", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ee446fffce5eb72518a84f26e1a12d51999fead766a3d22ae9cb7e36caf3f9d0",
+      "tips": [
+        {
+          "id": "middle:Aurora:Taliyah:0",
+          "text": "Stay away from Taliyah's Unraveled Earth stones, and never dash through them with Across the Veil or The Weirding.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 25, "end": 40 },
+            { "kind": "ability", "key": "Aurora-W", "start": 82, "end": 97 },
+            { "kind": "ability", "key": "Aurora-E", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Aurora:Taliyah:1",
+          "text": "When Taliyah places Unraveled Earth, expect Seismic Shove next; step out of the marked ground before the ledge rises.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Aurora:Taliyah:2",
+          "text": "Dodge Threaded Volley by moving sideways, because it flies in a fixed direction.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Aurora:Taliyah:3",
+          "text": "Use The Weirding to slow Taliyah when she steps up, then trade with Twofold Hex.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Taliyah", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 68, "end": 79 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4adefa1e19ad105c0e5b8104f65608f53b687db894183855bc6b78558ebe4377",
+      "tips": [
+        {
+          "id": "middle:Aurora:Talon:0",
+          "text": "Hit Talon with The Weirding when he jumps in. It slows him and you hop back out of his reach.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aurora-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Aurora:Talon:1",
+          "text": "Talon's burst is all physical damage, so fight him when his Noxian Diplomacy is on cooldown. After he spends it, trade with Twofold Hex.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-Q", "start": 60, "end": 76 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 124, "end": 135 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Aurora:Talon:2",
+          "text": "Use Across the Veil to hop away from his combo. Do it after he spends his dash so he can't follow.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Aurora:Talon:3",
+          "text": "Drop Between Worlds on Talon when he commits. He is slowed at the ring's edge, and you can hop across it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Aurora:Talon:4",
+          "text": "When Talon's Shadow Assault is down he can't escape. Fight him then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "084b9b660541d972aa7509e1cced5390027fbceca296a9a148ec887cc7b4e605",
+      "tips": [
+        {
+          "id": "middle:Aurora:TwistedFate:0",
+          "text": "Aim Twofold Hex at Twisted Fate and recast it to hit him again as he stands in lane. Wait for the recast when he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "TwistedFate", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Aurora:TwistedFate:1",
+          "text": "Stay out of range when Twisted Fate is shuffling for the Gold Card; the stun sets up a lot of damage on you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 23,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Aurora:TwistedFate:2",
+          "text": "Use The Weirding to slow him when he tries to fight. Its backward hop also pulls you out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Aurora:TwistedFate:3",
+          "text": "When Twisted Fate uses Destiny, expect a gank and don't stay low in lane. Across the Veil is a good way out.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Aurora-W", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2724ebf4cabb10893c94c91db2ce58084f8aef325aed1e1b6ecefebcf0e1b168",
+      "tips": [
+        {
+          "id": "middle:Aurora:Veigar:0",
+          "text": "Walk around Event Horizon's edge instead of through it; standing inside is safe, but touching the edge stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Aurora:Veigar:1",
+          "text": "Dodge Dark Matter by moving as soon as you see the indicator. Veigar is fragile, so punish him after he casts it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Veigar", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Aurora:Veigar:2",
+          "text": "Use The Weirding on Veigar to slow him, then follow with Twofold Hex; his short range makes him easy to catch out.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Veigar", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Aurora:Veigar:3",
+          "text": "Keep Across the Veil ready to escape if Veigar lands a stun. Land a kill and it resets.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Veigar", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "69f789553966608fb401733d358e3e1f7150594ffb4c4f2d7258d81802e17b1b",
+      "tips": [
+        {
+          "id": "middle:Aurora:Vex:0",
+          "text": "Hold Across the Veil until you need to escape; hopping near Vex marks you for extra damage, so avoid dashing when she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Vex", "start": 60, "end": 63 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Aurora:Vex:1",
+          "text": "Stay out of Vex's fear range when her empowered state is ready. Her next basic ability then knocks you down and scares you.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 12, "end": 15 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Aurora:Vex:2",
+          "text": "Use The Weirding to slow Vex when she gets close, and the backward hop gets you out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Vex", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Aurora:Vex:3",
+          "text": "Twofold Hex lets you poke Vex from far away. Recast it for extra damage once she is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Vex", "start": 26, "end": 29 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "728242fe3d7c4d18767b037182aae3cede0c72ad80d7145f4c41a1f2887772a3",
+      "tips": [
+        {
+          "id": "middle:Aurora:Viktor:0",
+          "text": "Hop away with Across the Veil when Viktor stuns or slows you; it gets you out of his Gravity Field.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Viktor", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Viktor-W", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Aurora:Viktor:1",
+          "text": "Do not stand still inside Gravity Field; walk out before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 26, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Viktor:2",
+          "text": "Hit Viktor with Twofold Hex and recall it through him for a second hit; it also draws extra damage when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Aurora:Viktor:3",
+          "text": "Sidestep Hextech Ray; it is a narrow line, and The Weirding gives you a hop back to get out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Aurora-E", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Aurora:Viktor:4",
+          "text": "Use Between Worlds to trap Viktor; he is slowed at its edge, and you can hop across to burst him.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d89874308ad244b6a9ab856700f7bfbabe110e5742fb4b79053d86caaf74e1ff",
+      "tips": [
+        {
+          "id": "middle:Aurora:Vladimir:0",
+          "text": "Poke Vladimir with Twofold Hex from long range and recast it to hit him again on the way back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Aurora:Vladimir:1",
+          "text": "Bait Sanguine Pool early. Vladimir pays a health cost and cannot attack or cast while pooled, so then you can trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Vladimir", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Aurora:Vladimir:2",
+          "text": "Use The Weirding to slow Vladimir and hop back when he walks up. It also helps you escape his charged Tides of Blood.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Vladimir", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 102, "end": 116 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Aurora:Vladimir:3",
+          "text": "Kill Vladimir before Hemoplague bursts, because it heals him. Use Across the Veil to slip out if he catches you.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Aurora-W", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f585864b34e281008f9e34172c92c2c9501f2af2dd465b00d0fe54c464787580",
+      "tips": [
+        {
+          "id": "middle:Aurora:Xerath:0",
+          "text": "Close the distance on Xerath; he is weak up close, so use The Weirding to slow him and Twofold Hex to chip him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aurora-E", "start": 58, "end": 70 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 87, "end": 98 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Aurora:Xerath:1",
+          "text": "Walk sideways, not straight at or away from Xerath, so Arcanopulse misses.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Aurora:Xerath:2",
+          "text": "Stay out of a straight line with Xerath when Shocking Orb is ready; it stuns longer the further it flies.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Aurora:Xerath:3",
+          "text": "Use Between Worlds at level 6 to jump on Xerath, since its rift slows him if he tries to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Xerath", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Aurora:Xerath:4",
+          "text": "When Xerath starts Rite of the Arcane, dodge its target circles and walk out of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9c1781511a0fb651ac3357e4a6a3c3339aefbbeb6a598ac9993f76fc498bfaaf",
+      "tips": [
+        {
+          "id": "middle:Aurora:XinZhao:0",
+          "text": "Keep Aurora's distance with Twofold Hex and The Weirding. Xin Zhao has to walk up to you.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Aurora-E", "start": 44, "end": 56 },
+            { "kind": "champion", "key": "XinZhao", "start": 58, "end": 66 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Aurora:XinZhao:1",
+          "text": "Use The Weirding on Xin Zhao as he charges in. It slows him and hops you backward.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Aurora:XinZhao:2",
+          "text": "Back away when his Three Talon Strike is active. Its third hit knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Aurora:XinZhao:3",
+          "text": "Do not stay beside him when he has Crescent Guard. Its sweep hits hard and knocks you back.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Aurora:XinZhao:4",
+          "text": "Use Across the Veil to escape after a trade, since it makes you invisible. His Wind Becomes Lightning can reveal you if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 79, "end": 101 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4d0f8eb0052de92a349368c498267be690b1df88aae8562dc2f87fa6e41fec2c",
+      "tips": [
+        {
+          "id": "middle:Aurora:Yasuo:0",
+          "text": "Aim Twofold Hex carefully; Yasuo's Wind Wall destroys it. Wait for the wall to drop, then fire.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 35, "end": 44 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Aurora:Yasuo:1",
+          "text": "Use The Weirding when Yasuo dashes in; Wind Wall can't stop it, and it leaves him slowed while you hop back.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 39, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Aurora:Yasuo:2",
+          "text": "Keep poking with Twofold Hex and its recast while Yasuo has no minions to dash through.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Yasuo", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Aurora:Yasuo:3",
+          "text": "Hop away with Across the Veil when Yasuo's whirlwind is ready. Stay out of range of his knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Yasuo", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "knocked-up", "start": 88, "end": 96 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "81cfd5fa70f731bc4086c966f31ec05a21a8539074a2bb9b124d41db21593dee",
+      "tips": [
+        {
+          "id": "middle:Aurora:Yone:0",
+          "text": "Slow Yone with The Weirding when he dashes in with Mortal Steel, then hop away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Aurora-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Yone-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Aurora:Yone:1",
+          "text": "Poke Yone with Twofold Hex from long range. He has no ranged attack, so he has to walk into your range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Aurora:Yone:2",
+          "text": "Watch for his third Mortal Steel. Use Across the Veil to hop out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "Aurora-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Aurora:Yone:3",
+          "text": "Keep Between Worlds ready at level 6 for when Yone uses Fate Sealed. Its jump can get you out.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Yone-R", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Aurora:Yone:4",
+          "text": "Don't fight while Yone is in Soul Unbound. Spirit form makes him faster, and he repeats some of his damage on you when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Yone-E", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "92f8d16150d39ffd7c4d7a9e8db9e3363730ff52273e5127be59062ba237be14",
+      "tips": [
+        {
+          "id": "middle:Aurora:Zed:0",
+          "text": "Hit Zed with The Weirding when he dashes in; the slow ruins his follow-up and you hop away from him.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Aurora-E", "start": 13, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Aurora:Zed:1",
+          "text": "Zed is most exposed right after he uses Living Shadow. Fire Twofold Hex then, since his shadow is placed and his mobility is committed.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 40, "end": 53 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Aurora:Zed:2",
+          "text": "Keep Across the Veil ready for when Zed uses Death Mark. Breaking away from him afterwards helps you survive the mark's damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Zed-R", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Aurora:Zed:3",
+          "text": "Use Between Worlds to fight on your terms; Zed is slowed at the rift edge and you can hop across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 43, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "363bf470b0603b75fdf7f88f8841084ca365f77568b83143acb2bb04988249f4",
+      "tips": [
+        {
+          "id": "middle:Aurora:Zoe:0",
+          "text": "Stay out of a straight line with Zoe; Sleepy Trouble Bubble stops at the first enemy it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Zoe-E", "start": 38, "end": 59 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Aurora:Zoe:1",
+          "text": "Use The Weirding to slow Zoe when she comes close, then trade before she can poke you back.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Zoe", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Aurora:Zoe:2",
+          "text": "Punish Zoe after Portal Jump; she cannot move while she is away and must return to her starting spot.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Aurora:Zoe:3",
+          "text": "Hit Zoe with Twofold Hex, then recast it to deal extra damage when she is low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 13, "end": 24 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Aurora:Zoe:4",
+          "text": "Watch for Paddle Star! being redirected; stay out of its path once it stops at long range.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 10, "end": 22 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,1221 @@
+{
+  "schemaVersion": 1,
+  "champion": "Sivir",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "017ea0929c74e292a092b601ea9b9d181a05a55c364de318cbafe00e1e8f27b7",
+      "tips": [
+        {
+          "id": "adc:Sivir:general:0",
+          "text": "Throw Boomerang Blade through a minion wave so it also hits the enemy champion. It returns at max range, so you can hit them again on its way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Sivir:general:1",
+          "text": "Step to a new position before Boomerang Blade returns, so the way back catches enemies who dodged the first pass.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Sivir:general:2",
+          "text": "Hold Spell Shield for an enemy stun or root rather than any random ability. It also heals you and gives a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Sivir:general:3",
+          "text": "Press Ricochet right after a basic attack to get the most from it. It bounces to nearby enemies, so it's best used on a wave or a grouped fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Sivir:general:4",
+          "text": "Use Ricochet to clear minion waves fast and push the lane. Then you can recall or roam while the wave hits their turret.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Sivir:general:5",
+          "text": "Keep attacking enemy champions in a trade. Each hit gives you a burst of speed from Fleet of Foot, so you can walk away from the fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Sivir-passive",
+              "start": 84,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Sivir:general:6",
+          "text": "Use On The Hunt to chase or to run away, and to speed up your whole team. Attacking champions with it active shortens your other cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Sivir:general:7",
+          "text": "Don't spam Boomerang Blade when your mana is low. It costs a lot, so a miss leaves you short for the rest of the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 11, "end": 26 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Sivir:combo:0",
+          "name": "Ricochet attack reset",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            { "kind": "ability", "key": "Sivir-W" },
+            "attack"
+          ],
+          "when": "Use it in a trade or a fight when you have just landed an auto attack on an enemy.",
+          "whenRefs": [],
+          "text": "Casting Ricochet right after an auto resets your attack timer. You get the next auto sooner, and it bounces and comes with extra attack speed.",
+          "textRefs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 8, "end": 16 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "a5900c9ac116e189e60a27ae404b705ccc59085617463e5f167228f086e55dc4",
+      "tips": [
+        {
+          "id": "adc:Sivir:Ashe:0",
+          "text": "Hold Spell Shield for Enchanted Crystal Arrow; blocking it saves you from a long stun and from the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Ashe-R", "start": 22, "end": 45 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Sivir:Ashe:1",
+          "text": "Use Spell Shield on a Volley too. It blocks the whole ability, and you heal and get a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Ashe-W", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Sivir:Ashe:2",
+          "text": "Throw Boomerang Blade through the enemy when minions are not in the way. It deals less damage after hitting minions.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Sivir:Ashe:3",
+          "text": "Ashe has few ways to escape, so chase her with On The Hunt once you reach level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sivir-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Sivir:Ashe:4",
+          "text": "Turn on Ricochet when minions and Ashe stand together, so your attacks bounce to hit her too.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 8, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d990700bf50ae2df8791af7982189376f9af34fda1c767de0bf7cad25596b590",
+      "tips": [
+        {
+          "id": "adc:Sivir:Caitlyn:0",
+          "text": "Keep Spell Shield ready when Caitlyn is in range; it blocks Piltover Peacemaker, her net and Yordle Snap Trap, and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Caitlyn", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 60, "end": 79 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Sivir:Caitlyn:1",
+          "text": "Fake an advance, then back off so Caitlyn wastes her Piltover Peacemaker, then step in and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 53, "end": 72 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Sivir:Caitlyn:2",
+          "text": "Caitlyn outranges you, so use Boomerang Blade to hit her when she stands behind minions or leans in to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Sivir:Caitlyn:3",
+          "text": "Walk around likely trap spots instead of straight lines, since a rooted Sivir is an easy Headshot target.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 },
+            { "kind": "champion", "key": "Sivir", "start": 72, "end": 77 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 89,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Sivir:Caitlyn:4",
+          "text": "Push the wave with Ricochet; it bounces across minions and clears waves fast, so you can roam or take tower plates.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b05c9c7151b3af530a34ccdd0afe57a8dac7ea9eb9f1012a39d929268def4222",
+      "tips": [
+        {
+          "id": "adc:Sivir:Cassiopeia:0",
+          "text": "Keep Spell Shield ready for Petrifying Gaze when Cassiopeia is close; it blocks the stun and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 28,
+              "end": 43
+            },
+            { "kind": "champion", "key": "Cassiopeia", "start": 49, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Sivir:Cassiopeia:1",
+          "text": "Block Noxious Blast with Spell Shield if she aims it at you. She loses her speed boost and her poison.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Sivir-E", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Sivir:Cassiopeia:2",
+          "text": "Fake a step toward Cassiopeia, then back off, so she wastes her spell on the bait.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Sivir:Cassiopeia:3",
+          "text": "Walk sideways out of Noxious Blast; it lands after a short delay. Boomerang Blade can punish her when she stands still.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 21,
+              "end": 34
+            },
+            { "kind": "ability", "key": "Sivir-Q", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Sivir:Cassiopeia:4",
+          "text": "Use Ricochet when minions and Cassiopeia stand together. Its bounces hit her and the minions near her.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f85c4a5103f0b686eea1d44f2130ec619d80e3cd8ff8d1ce1bfabb1836d8f54e",
+      "tips": [
+        {
+          "id": "adc:Sivir:Ezreal:0",
+          "text": "Press Spell Shield just as Ezreal is about to fire Mystic Shot or Essence Flux; blocking it heals you and gives you a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Ezreal", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Sivir:Ezreal:1",
+          "text": "Ezreal is fragile, so trade with Boomerang Blade when he steps up to hit a minion, then walk into him with your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Sivir:Ezreal:2",
+          "text": "Keep minions between you and Ezreal's shots. Mystic Shot stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Sivir:Ezreal:3",
+          "text": "Fake an advance, then back off. Ezreal may waste his skill shots, or you can bait his Arcane Shift and punish him afterward.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Sivir:Ezreal:4",
+          "text": "Turn on Ricochet when you trade next to a minion wave. The bounces hit the enemy as well as the minions around him.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 8, "end": 16 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "938b595d32351b77e594f0b9ac92fe6ab0a52efa64faca753b3c2e8a4f5f8e73",
+      "tips": [
+        {
+          "id": "adc:Sivir:Hwei:0",
+          "text": "Keep Spell Shield ready for Hwei's Torment spells; it blocks Grim Visage, Gaze of the Abyss or Crushing Maw and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Hwei", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Sivir:Hwei:1",
+          "text": "Hwei needs time to paint his spells, so fake an advance and back off. He wastes a spell and you can trade back.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 0, "end": 4 }],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Sivir:Hwei:2",
+          "text": "Stay out of a line with Hwei's minions when he enters his Torment mood. Rush him once his spell is gone and he is exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Sivir:Hwei:3",
+          "text": "Throw Boomerang Blade at Hwei when he walks up to cast, and step so it returns through him.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Hwei", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Sivir:Hwei:4",
+          "text": "Sidestep Severing Bolt because it is slow; it hurts more if you are alone or rooted.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 68, "end": 73 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Sivir:Hwei:5",
+          "text": "Use Ricochet to push the wave fast, then trade while Hwei has to answer it.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Hwei", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8aaac39ffd8a3fbd154dd6e9555f86e4290457f7ad575e8a413a3668b15c9479",
+      "tips": [
+        {
+          "id": "adc:Sivir:Jhin:0",
+          "text": "Hold Spell Shield for Deadly Flourish. Blocking it stops the root and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Jhin-W", "start": 22, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Sivir:Jhin:1",
+          "text": "Jhin's Captive Audience trap is also blocked by Spell Shield. Use it when you must walk over a place where a trap may be.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Sivir-E", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Sivir:Jhin:2",
+          "text": "Aim Boomerang Blade so it hits Jhin both going out and coming back. Trade when he is reloading.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jhin", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Sivir:Jhin:3",
+          "text": "Fake a step toward Jhin and back off so he wastes Deadly Flourish, then push the wave with Ricochet.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Jhin-W", "start": 50, "end": 65 },
+            { "kind": "ability", "key": "Sivir-W", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5aca153175f0cc27634d44910063ded6a0592518236320d55dac8e834288d8e5",
+      "tips": [
+        {
+          "id": "adc:Sivir:Jinx:0",
+          "text": "Hold Spell Shield for Zap!, which keeps your movement and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Jinx-W", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Sivir:Jinx:1",
+          "text": "Don't count on Spell Shield to stop the Flame Chompers! explosion if they are already placed; the wiki says the explosion still happens.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Jinx-E", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Sivir:Jinx:2",
+          "text": "Spell Shield can't stop Jinx's Super Mega Death Rocket! explosion; stay out of her long lines when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Jinx", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Jinx-R", "start": 31, "end": 55 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Sivir:Jinx:3",
+          "text": "Throw Boomerang Blade through minions to hit Jinx, and aim to catch her on the way back too.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Jinx", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Sivir:Jinx:4",
+          "text": "Fake an advance, then back off so Jinx wastes her Flame Chompers! or Zap!.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Jinx-E", "start": 50, "end": 65 },
+            { "kind": "ability", "key": "Jinx-W", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Sivir:Jinx:5",
+          "text": "Push the wave with Ricochet; it bounces between minions and hits Jinx if she stands near them.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Jinx", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8abacc2a445839258e6295d9d49848c224dfadc5c43ffd182b014c42e5bc5220",
+      "tips": [
+        {
+          "id": "adc:Sivir:Kaisa:0",
+          "text": "Keep Spell Shield ready for Void Seeker; blocking it also stops the Plasma it would apply, and you heal and get a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Sivir:Kaisa:1",
+          "text": "Aim Boomerang Blade down the lane to hit Kai'Sa on both passes; you outrange her basic attacks and she has to walk up to you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kaisa", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Sivir:Kaisa:2",
+          "text": "Fake an advance, then back off so Kai'Sa wastes Void Seeker or tries to engage into your Spell Shield.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 48, "end": 59 },
+            { "kind": "ability", "key": "Sivir-E", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Sivir:Kaisa:3",
+          "text": "Hit minions and Kai'Sa together with Ricochet so the bounces add damage when she stands near her wave.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Sivir-W", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Sivir:Kaisa:4",
+          "text": "Stay near your support. Kai'Sa wants Plasma from your ally's immobilizing effects too, so don't let her catch you alone.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bc61e86b8ed67ac81887f429491276249df221b423aad2135654c7d33966b52a",
+      "tips": [
+        {
+          "id": "adc:Sivir:Kalista:0",
+          "text": "Hold Spell Shield for Kalista's Pierce when she lines up a poke; blocking it heals you and gives you a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Kalista", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Sivir:Kalista:1",
+          "text": "Fake an advance, then back off so Kalista wastes her ability on a Spell Shield that is already running out.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Sivir-E", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Sivir:Kalista:2",
+          "text": "Throw Boomerang Blade when Kalista steps up to hit a minion; the blade also hits her on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Kalista", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Sivir:Kalista:3",
+          "text": "Use Ricochet to push the wave quickly, since it bounces between minions, then trade when Kalista is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Kalista", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Sivir:Kalista:4",
+          "text": "Dodge sideways while Kalista winds up an attack; she cannot cancel the wind-up, so she can't dodge your Boomerang Blade at that moment.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 104, "end": 119 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2357a81bd5d556cc1b45f06db3dde362bfc3ce66fbfbc5db236e7dee27b4690f",
+      "tips": [
+        {
+          "id": "adc:Sivir:Karthus:0",
+          "text": "Keep Spell Shield ready for Wall of Pain or Requiem. Time it when Karthus is about to cast, and fake an advance first to throw off his timing.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Karthus-W", "start": 28, "end": 40 },
+            { "kind": "ability", "key": "Karthus-R", "start": 44, "end": 51 },
+            { "kind": "champion", "key": "Karthus", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Sivir:Karthus:1",
+          "text": "Do not stand next to your minions when Karthus casts Lay Waste; it hurts a lot more when it hits only one target. Stay out of line with where he is aiming.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 53, "end": 62 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Sivir:Karthus:2",
+          "text": "Use Boomerang Blade to push the wave and hit Karthus on the way out and back. He has to stay in range of it to farm.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Karthus", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Sivir:Karthus:3",
+          "text": "Use Ricochet when Karthus is close to his minions, so the bounces hit him and the wave together.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Karthus", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Sivir:Karthus:4",
+          "text": "Walk out of the Wall of Pain if you can; touching it leaves you slowed and easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Sivir:Karthus:5",
+          "text": "Kill Karthus, then move away from his corpse, because he can keep casting after he dies.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e1e37e67cdbbca07f84ecf07c5fcbc2445f318872492803ba792d95d0aab6dee",
+      "tips": [
+        {
+          "id": "adc:Sivir:Lux:0",
+          "text": "Save Spell Shield for Light Binding; blocking it keeps you from being rooted and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Lux-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Sivir:Lux:1",
+          "text": "Lux can fake a Light Binding to bait your Spell Shield. Wait for the ability to actually come at you before you use it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-Q", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Sivir-E", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Sivir:Lux:2",
+          "text": "Spell Shield also blocks Lucent Singularity when it goes off, so you can use it against that too.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Lux-E", "start": 25, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Sivir:Lux:3",
+          "text": "Do not rely on Spell Shield against Final Spark when she has Illumination on you. Step out of the beam instead, since the red warning shows where it goes.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Lux-R", "start": 36, "end": 47 },
+            { "kind": "ability", "key": "Lux-passive", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "adc:Sivir:Lux:4",
+          "text": "Throw Boomerang Blade through the minion wave into Lux. It goes through units, and its return trip hits her again.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 51, "end": 54 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Sivir:Lux:5",
+          "text": "Turn on Ricochet when you trade near the wave. Its bounces hit Lux and the minions around her.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 8, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 63, "end": 66 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Sivir:Lux:6",
+          "text": "Push the wave fast with Ricochet so Lux has to answer it. She is easy to catch out of position once she walks up to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 24, "end": 32 },
+            { "kind": "champion", "key": "Lux", "start": 36, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6a69cfc0e531e0681ead9ed594c9ad94d816e94d51fa962a1800c5da0ac147d9",
+      "tips": [
+        {
+          "id": "adc:Sivir:MissFortune:0",
+          "text": "Hold Spell Shield for Make It Rain; blocking it heals you and keeps you from being slowed in the zone. Miss Fortune's Bullet Time is not blocked by it.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 22,
+              "end": 34
+            },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 103,
+              "end": 115
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 118,
+              "end": 129
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Sivir:MissFortune:1",
+          "text": "Fire Boomerang Blade through the minions at Miss Fortune; it keeps going after each hit and hits her again on the way back if she stays.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "MissFortune", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Sivir:MissFortune:2",
+          "text": "Trade by pressing Ricochet right after an auto attack; the bounces hit Miss Fortune and her minions together.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 18, "end": 26 },
+            { "kind": "champion", "key": "MissFortune", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Sivir:MissFortune:3",
+          "text": "Fake a step forward and back to bait Double Up or Make It Rain, then use Spell Shield timing to punish her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 37,
+              "end": 46
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 50,
+              "end": 62
+            },
+            { "kind": "ability", "key": "Sivir-E", "start": 73, "end": 85 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Sivir:MissFortune:4",
+          "text": "Push the wave with Ricochet and clear it fast, then punish her when she has to stand in range to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "335127ecd49c25622ebda44405022ed03a6444e299e6f8236a66e6969cfb0402",
+      "tips": [
+        {
+          "id": "adc:Sivir:Nilah:0",
+          "text": "Hold Spell Shield for Nilah's Slipstream; it is blocked, so she wastes her dash and you heal and speed up.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nilah", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Nilah-E", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Sivir:Nilah:1",
+          "text": "Do not rely on Spell Shield against her Formless Blade empowered attacks; those are not blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Sivir:Nilah:2",
+          "text": "Throw Boomerang Blade at her when she steps up to last-hit, then use Fleet of Foot to walk back out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Sivir-passive",
+              "start": 69,
+              "end": 82
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Sivir:Nilah:3",
+          "text": "Do not use Ricochet attacks on Nilah while Jubilant Veil is up; she dodges basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Nilah", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Nilah-W", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Sivir:Nilah:4",
+          "text": "Stay away when she has Apotheosis; it pulls you in and heals her. Hold Spell Shield for its burst.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Sivir-E", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c09099df0ecf08600ae2a689b8edcf217e18e5c5d72679babbcc7bed66f70dd1",
+      "tips": [
+        {
+          "id": "adc:Sivir:Smolder:0",
+          "text": "Keep Spell Shield up for Achooo! when Smolder lines it up; blocking it saves you the slow and the explosion, and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Smolder-W", "start": 25, "end": 32 },
+            { "kind": "champion", "key": "Smolder", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "adc:Sivir:Smolder:1",
+          "text": "Push and trade early while Smolder is weak; he has few Dragon Practice stacks and little damage in the first levels.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 27, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 55,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Sivir:Smolder:2",
+          "text": "Throw Boomerang Blade through Smolder and the minions in front of him, then step so it hits him again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Smolder", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Sivir:Smolder:3",
+          "text": "Turn on Ricochet when you and Smolder stand near minions; the bounces hit him and the minions around him.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 8, "end": 16 },
+            { "kind": "champion", "key": "Smolder", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Sivir:Smolder:4",
+          "text": "Fake a step in before Smolder uses a spell, then back off, so he wastes Achooo! and you can punish the cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Smolder-W", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d0ae3a261952ef4ae38cfb1266e1cba82d3e2c6d68439ed3116eb75739d7bae0",
+      "tips": [
+        {
+          "id": "adc:Sivir:Veigar:0",
+          "text": "Hold Spell Shield for Event Horizon or Primordial Burst; blocking it saves you from a stun or a big hit and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Veigar-E", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Veigar-R", "start": 39, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Sivir:Veigar:1",
+          "text": "Spell Shield also blocks Dark Matter, so turn it on when you see the landing circle appear on you and you cannot step out.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Veigar-W", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Sivir:Veigar:2",
+          "text": "Walk out of the Dark Matter circle instead of using a spell; it lands after a delay, so keep moving while you hit minions.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Sivir:Veigar:3",
+          "text": "Stay inside Event Horizon's ring or well away from it. Only enemies who touch the edge are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Sivir:Veigar:4",
+          "text": "Fake an advance, then back off to make Veigar waste Event Horizon or Baleful Strike before you step in to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Veigar-E", "start": 52, "end": 65 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 69, "end": 83 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Sivir:Veigar:5",
+          "text": "Stand away from minions when Veigar aims Baleful Strike; it hits only the first two enemies, so keep the line clear of your minions.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Sivir:Veigar:6",
+          "text": "Use Boomerang Blade and Ricochet to push the wave and trade with him. Veigar is fragile and cannot take much damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Sivir-W", "start": 24, "end": 32 },
+            { "kind": "champion", "key": "Veigar", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "26824faf925ceff7948d6351a1ef9b32facc2171f27e21a9187df7801cc2821b",
+      "tips": [
+        {
+          "id": "adc:Sivir:Yasuo:0",
+          "text": "Hold Spell Shield for Yasuo's Steel Tempest whirlwind or his Sweeping Blade dash. Blocking one heals you and gives you a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 30, "end": 43 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "adc:Sivir:Yasuo:1",
+          "text": "Yasuo's Last Breath still goes off through Spell Shield, so do not rely on it to stop his ultimate. Stay away from any ally who is knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Sivir-E", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "adc:Sivir:Yasuo:2",
+          "text": "Fake an advance, then back off. Yasuo will often waste his Sweeping Blade or Steel Tempest into your shield.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 59, "end": 73 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 77, "end": 90 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Sivir:Yasuo:3",
+          "text": "Throw Boomerang Blade on its way out and again as it returns. Yasuo has to dodge it twice, and it is a long-range poke.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 62, "end": 67 },
+            { "kind": "keyword", "key": "poke", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Sivir:Yasuo:4",
+          "text": "Yasuo's Wind Wall destroys your Boomerang Blade. Wait until it is gone before you throw it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Sivir:Yasuo:5",
+          "text": "Use Ricochet on the wave to push hard, then trade with Yasuo while he cannot reach you without minions. Pushing leaves him fewer minions to dash through.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yasuo", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a6be80bd9a5f2cf7f40c821f8a0a21fc1a06d971ffbff0545ee2ce228674624b",
+      "tips": [
+        {
+          "id": "adc:Sivir:Yunara:0",
+          "text": "Keep Spell Shield ready for Yunara's prayer bead throw; blocking it heals you and gives you a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Sivir:Yunara:1",
+          "text": "Fake an advance, then back off, so Yunara wastes her ability before you raise Spell Shield.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Sivir-E", "start": 78, "end": 90 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Sivir:Yunara:2",
+          "text": "Throw Boomerang Blade down the lane when Yunara steps up to last-hit. It hits her on the way out and again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yunara", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Sivir:Yunara:3",
+          "text": "Be careful when Yunara powers up with Transcend One's Self. Her beam is long range and leaves you slowed, so stay out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Yunara-R", "start": 38, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Sivir:Yunara:4",
+          "text": "Use Ricochet when the enemy is near minions, so your attacks bounce between them and the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Sivir:Yunara:5",
+          "text": "Push the wave with Ricochet and Boomerang Blade, then use the free time to roam or take objectives.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8c33bb1592e237cecc0feb2cd4a203bcc923040af42f5774b4c841ad4e8529c2",
+      "tips": [
+        {
+          "id": "adc:Sivir:Ziggs:0",
+          "text": "Keep Spell Shield ready for Ziggs' Bouncing Bomb or Satchel Charge; blocking one heals you and gives a burst of speed.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Sivir:Ziggs:1",
+          "text": "Fake an advance, then back off so Ziggs wastes his ability into your Spell Shield.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Sivir-E", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Sivir:Ziggs:2",
+          "text": "Walk around the mines from Hexplosive Minefield instead of through them; being slowed makes his other spells easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 27, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Sivir:Ziggs:3",
+          "text": "Push the wave with Ricochet and Boomerang Blade so Ziggs must answer the wave instead of poking you.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 32, "end": 47 },
+            { "kind": "champion", "key": "Ziggs", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Sivir:Ziggs:4",
+          "text": "Trade when Ziggs has just used his abilities; many have long cooldowns, so he is weak then.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 11, "end": 16 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Sivir:Ziggs:5",
+          "text": "Throw Boomerang Blade at Ziggs when he stands behind minions; it passes through units and hits him on the way out and back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Ziggs", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

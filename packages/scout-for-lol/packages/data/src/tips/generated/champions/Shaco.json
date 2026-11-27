@@ -1,0 +1,945 @@
+{
+  "schemaVersion": 1,
+  "champion": "Shaco",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "05b7f4d9bec062db437fe9762a26705ad6e67ca369c2e4ad6a93854eb5576531",
+      "tips": [
+        {
+          "id": "jungle:Shaco:general:0",
+          "text": "Hit enemies from behind with basic attacks and Deceive; Backstab adds bonus damage, and Deceive then critically strikes.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 47, "end": 54 },
+            {
+              "kind": "ability",
+              "key": "Shaco-passive",
+              "start": 56,
+              "end": 64
+            },
+            { "kind": "ability", "key": "Shaco-Q", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Shaco:general:1",
+          "text": "Use Deceive to blink over terrain when you need to escape. It also lets you get behind a target before you attack.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Shaco:general:2",
+          "text": "Place Jack In The Box in chokepoints and bushes on your escape route. Enemies who step on it are feared and rooted, and the trap keeps shooting them.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Shaco:general:3",
+          "text": "Jack In The Box hits monsters harder, so drop it on a camp and attack alongside it to clear faster.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Shaco:general:4",
+          "text": "Throw Two-Shiv Poison at a low-health enemy to finish them; it hits harder then. Attacking while it is ready also leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 126, "end": 132 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shaco:general:5",
+          "text": "Casting Two-Shiv Poison breaks your invisibility from Deceive, so attack first and throw it afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-E", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Shaco:general:6",
+          "text": "Cast Jack In The Box while invisible. It does not break Deceive, so you can set a trap and still strike.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Shaco:general:7",
+          "text": "Send the Hallucinate clone at the enemy while you stay back. When it dies it explodes and drops mini boxes that fear nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Shaco:general:8",
+          "text": "Deceive has a long cooldown, so don't spend it on a fight you can't win. Keep it to escape if the fight goes badly.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Shaco:combo:0",
+          "name": "Stealth box drop",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Shaco-Q" },
+            { "kind": "ability", "key": "Shaco-W" }
+          ],
+          "when": "Setting a trap while you are invisible during a chase or escape.",
+          "whenRefs": [],
+          "text": "Jack in the Box doesn't break Deceive's invisibility. Drop a box at the enemy's feet or behind you without revealing yourself.",
+          "textRefs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 30, "end": 37 }
+          ]
+        },
+        {
+          "id": "jungle:Shaco:combo:1",
+          "name": "Deceive-Hallucinate flip",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Shaco-Q" },
+            { "kind": "ability", "key": "Shaco-R" }
+          ],
+          "when": "Starting a fight or baiting enemies when you want to control where the clone appears.",
+          "whenRefs": [],
+          "text": "Cast Hallucinate right after Deceive and the clone spawns toward your cursor instead of behind you. This helps send it at the enemy.",
+          "textRefs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 29, "end": 36 }
+          ]
+        },
+        {
+          "id": "jungle:Shaco:combo:2",
+          "name": "Deceive over a wall",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Shaco-Q" }],
+          "when": "Escaping a failed fight or chase near a thin wall.",
+          "whenRefs": [],
+          "text": "Deceive over a thin jungle wall to break line of sight and get away invisible.",
+          "textRefs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 0, "end": 7 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "66b3b24b8e036530d240a0b2ac488a85f5879f4f7c21ab59483d770532752ace",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Graves:0",
+          "text": "Hit Graves from behind with Deceive; the empowered attack crits when it lands on his back, so aim to blink behind him.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Shaco:Graves:1",
+          "text": "Drop Jack In The Box on the path Graves is likely to walk, such as near your camps or in a bush, so he gets feared and rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Graves", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Shaco:Graves:2",
+          "text": "Graves is sturdy up close, so finish him with Two-Shiv Poison when he is low; the shiv hits harder on low health.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Shaco-E", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shaco:Graves:3",
+          "text": "Keep your Two-Shiv Poison ready for the chase. It keeps Graves slowed so he cannot easily dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-E", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Graves", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Shaco:Graves:4",
+          "text": "Do not fight inside Graves' Smoke Screen; you cannot see out of it and it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bda8a8dfd10f3fc1b1dedff33ca6d8cac4f7624a99da6ef2953d8ad35f885391",
+      "tips": [
+        {
+          "id": "jungle:Shaco:JarvanIV:0",
+          "text": "Place Jack In The Box on the path to a camp or in a bush. It is invisible once armed, and enemies who walk into it are feared.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Shaco:JarvanIV:1",
+          "text": "Hit Jarvan from behind with Deceive and an attack. Backstab makes that hit a critical strike.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 28, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Shaco-passive",
+              "start": 51,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shaco:JarvanIV:2",
+          "text": "Throw Two-Shiv Poison when Jarvan is low on health. It hits harder then, and it slows him so he can't easily run away.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Shaco:JarvanIV:3",
+          "text": "Keep Deceive ready when Jarvan lands Cataclysm on you. Escaping the terrain ring is hard without a blink.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Shaco:JarvanIV:4",
+          "text": "Don't stand between Jarvan and his Demacian Standard. Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 35, "end": 52 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5c942660090a6c659fd56f05b572e7ccd0bb4ecd436dc94f65ba5a7c2d3ba39d",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Kayn:0",
+          "text": "Drop Jack In The Box on the wall paths and camp entrances Kayn likes to use; he gets feared and rooted if he walks over it.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kayn", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Shaco:Kayn:1",
+          "text": "Use Deceive to step in from behind, hit with your next attack, then chase with Two-Shiv Poison so Kayn stays slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Shaco-E", "start": 79, "end": 94 },
+            { "kind": "champion", "key": "Kayn", "start": 98, "end": 102 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Shaco:Kayn:2",
+          "text": "Save Deceive for escaping when Kayn lands Blade's Reach on you; going invisible lets you slip away from his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Kayn-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Shaco:Kayn:3",
+          "text": "Finish Kayn with Two-Shiv Poison when he is low; it hits much harder on weakened targets.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Shaco-E", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5c4fd1f06b0f3abe6fb0b298d37c3522226cc05c8a1f610eebc5fd25a62cb9e5",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Khazix:0",
+          "text": "Drop Jack In The Box on the brush and paths Kha'Zix uses; if he walks into it he is feared and rooted, and you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Khazix", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Shaco:Khazix:1",
+          "text": "Open on him with Deceive and hit him from behind; the attack crits, so he loses a lot of health quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Shaco:Khazix:2",
+          "text": "Keep Two-Shiv Poison ready to chase; it slows him so he cannot easily leap or run away.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-E", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Shaco:Khazix:3",
+          "text": "Finish him with Two-Shiv Poison once he is low on health; it hits much harder then.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-E", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Shaco:Khazix:4",
+          "text": "Stay near your minions or allies when he hunts you; his big damage needs you isolated.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4375419cfeec17f047e66c0bcf37444db07159778257bfd8723077ade2e3c55d",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Kindred:0",
+          "text": "Kindred is fragile, so use Deceive to get behind her and hit her from behind. Your Backstab attack can burst her down before she reacts.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 27, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Shaco-passive",
+              "start": 83,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Shaco:Kindred:1",
+          "text": "Finish Kindred with Two-Shiv Poison once she is low on Health; it hits much harder then and leaves her slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Shaco-E", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Shaco:Kindred:2",
+          "text": "Drop Jack In The Box on the paths she uses to reach a fight. Enemy champions that touch it are feared and rooted, which can stop her dashing away.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Shaco:Kindred:3",
+          "text": "Don't chase her into Lamb's Respite. Nobody inside can die, so wait for it to end before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bc09a998ef146a4a1d3a2fb9fce3de5626d14cc0af0c652de7abc9c1add2e9a3",
+      "tips": [
+        {
+          "id": "jungle:Shaco:LeeSin:0",
+          "text": "Place Jack In The Box on the paths Lee Sin uses to chase you; he is feared and rooted if he steps on it, and that stops Resonating Strike follow-ups.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Shaco:LeeSin:1",
+          "text": "Lee Sin's Sonic Wave stops at the first enemy it hits, so disappear with Deceive before he throws it, or fight with the clone in front.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Shaco:LeeSin:2",
+          "text": "Hit Lee Sin from behind after Deceive for a critical hit, then use Two-Shiv Poison to slow him so he cannot easily run or chase.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Shaco-E", "start": 67, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Shaco:LeeSin:3",
+          "text": "Lee Sin's magic damage defenses are weak, so favor Two-Shiv Poison and Hallucinate over basic attacks when he builds Armor or heals with Iron Will.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Shaco-E", "start": 51, "end": 66 },
+            { "kind": "ability", "key": "Shaco-R", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Shaco:LeeSin:4",
+          "text": "Spread your boxes around your own camps; Lee Sin often invades and gets feared when he walks into one.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Shaco:LeeSin:5",
+          "text": "Keep Deceive ready to escape; once Lee Sin kicks or dashes at you, it is hard to get away without it.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "17345b29bc189853eba30d65577f273c7f9f51c0a09d0568def0eaee8c1de29d",
+      "tips": [
+        {
+          "id": "jungle:Shaco:MasterYi:0",
+          "text": "Hide Jack In The Box on the paths Master Yi takes. If he steps on it, he is feared and rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "MasterYi", "start": 34, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shaco:MasterYi:1",
+          "text": "Wait for Master Yi to use Alpha Strike before you commit. While it's on cooldown, he has a hard time escaping.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Shaco:MasterYi:2",
+          "text": "Don't count on slowing Master Yi once Highlander is active. It clears slows and he becomes immune to them, so rely on your boxes and fear instead.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 38, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Shaco:MasterYi:3",
+          "text": "Hit Master Yi with Two-Shiv Poison before he turns on Highlander. It slows him and cuts his chase short.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Shaco-E", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 54, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Shaco:MasterYi:4",
+          "text": "Use Hallucinate in a fight against Master Yi. When the clone dies it drops boxes that fear him.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "MasterYi", "start": 35, "end": 44 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9f4fe0e5619ead7dad83e14b605e58bee1d818a2ec29e9eb5d50ad2d51b14d40",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Naafiri:0",
+          "text": "Place Jack In The Box on the paths into your camps; Naafiri can be feared and rooted when she walks into it.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Naafiri", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Shaco:Naafiri:1",
+          "text": "Use Deceive to get behind Naafiri, then attack her for a guaranteed critical strike from behind.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Naafiri", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Shaco:Naafiri:2",
+          "text": "Hit Naafiri with Two-Shiv Poison once she is low; it hurts more then and leaves her slowed so she can't easily dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Shaco-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Shaco:Naafiri:3",
+          "text": "Her packmates fight beside her, so Hallucinate gives you a decoy that fears them when it dies.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "427901a3a5ff51cd295c29672480027c86d6a8cef3205587b87ce3661b8ad923",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Nocturne:0",
+          "text": "Nocturne's Shroud of Darkness blocks the next enemy ability. Bait it with a cheap Jack In The Box or Two-Shiv Poison before committing Hallucinate.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 11, "end": 29 },
+            { "kind": "ability", "key": "Shaco-W", "start": 82, "end": 97 },
+            { "kind": "ability", "key": "Shaco-E", "start": 101, "end": 116 },
+            { "kind": "ability", "key": "Shaco-R", "start": 135, "end": 146 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Shaco:Nocturne:1",
+          "text": "Hide Jack In The Box on the path Nocturne takes to your camps. If he walks into it, he is feared and rooted, so you can punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nocturne", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Shaco:Nocturne:2",
+          "text": "Fight Nocturne from behind with Deceive. The empowered hit crits from behind, so aim to land on his back.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Shaco:Nocturne:3",
+          "text": "When Nocturne throws Unspeakable Horror at you, break the tether by getting out of range. Deceive away works well.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 21, "end": 39 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Shaco:Nocturne:4",
+          "text": "Stay near boxes and teammates when Nocturne uses Paranoia. His dash is strong against you when you are alone, but a hidden box can punish him.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5f7b177d7a353f9fa2fa46ef84fd2aa7af7df5a380a883bb859157545cf000a8",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Shyvana:0",
+          "text": "Plant Jack In The Box in your own jungle paths and camps; Shyvana's Molten Burst and Emberstrike cannot hit what she cannot see.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Shyvana", "start": 58, "end": 65 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 68, "end": 80 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Shaco:Shyvana:1",
+          "text": "Fight Shyvana before she has Dragon Fury for Dragon's Descent; she is much weaker in human form.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Shaco:Shyvana:2",
+          "text": "Open with Deceive and hit her from behind for a critical strike, then use Two-Shiv Poison to slow her so she cannot catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Shaco-E", "start": 74, "end": 89 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Shaco:Shyvana:3",
+          "text": "Do not clump with allies against dragon-form Shyvana; keep your clone and boxes spread out so her fire does not hit everything.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Shaco:Shyvana:4",
+          "text": "Use Deceive to slip away when Shyvana lands in dragon form, then drop Jack In The Box behind you as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Shyvana", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Shaco-W", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d657ce818c5d0eff433a50b486754fd5b8a5c5b27825eebc080c3a8df3039a42",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Skarner:0",
+          "text": "Place Jack In The Box in the brush or on the path Skarner takes to your camps. It fears and roots him, and slows him after, so you get a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Skarner", "start": 50, "end": 57 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Shaco:Skarner:1",
+          "text": "Use Deceive to get behind Skarner for a Backstab critical hit, then finish with Two-Shiv Poison when he is low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Shaco-passive",
+              "start": 40,
+              "end": 48
+            },
+            { "kind": "ability", "key": "Shaco-E", "start": 80, "end": 95 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Shaco:Skarner:2",
+          "text": "Skarner's Ixtal's Impact is a strong gank threat. Keep Deceive up so you can slip away if he grabs for you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-E", "start": 10, "end": 24 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Shaco:Skarner:3",
+          "text": "Don't fight Skarner for long in a drawn-out brawl. His attacks stack Quaking, which deals heavy damage over time.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9a2b717283a10849b1339874c50d276e712560178be0ba1f5a0ee0fbc68bcd77",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Sylas:0",
+          "text": "Place Jack In The Box in bushes and on Sylas's usual paths; Sylas has no way to spot it, and it fears and roots him if he walks close.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Sylas", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Sylas", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Shaco:Sylas:1",
+          "text": "Use Deceive to get behind Sylas, then attack. The hit from behind critically strikes and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Shaco:Sylas:2",
+          "text": "Finish Sylas with Two-Shiv Poison once he is low; it hits harder on weak targets and leaves him slowed so he can't run.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Shaco-E", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Shaco:Sylas:3",
+          "text": "Do not burst Sylas and then stop; his Kingslayer heals him when he is low. Finish him before he lunges at you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Shaco:Sylas:4",
+          "text": "Do not leave Hallucinate within Sylas's reach, because he can steal it with Hijack. Use it when his ultimate is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Sylas", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Sylas-R", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f9331f402e9eab8dad238ca23f902d15ed8ef29d0e9e222d3f42d410908c17a",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Talon:0",
+          "text": "Place Jack In The Box on paths Talon likes to roam through; a feared and rooted Talon is easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Talon", "start": 31, "end": 36 },
+            { "kind": "champion", "key": "Talon", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Shaco:Talon:1",
+          "text": "Hit Talon with Two-Shiv Poison when he jumps in, so he stays slowed while you fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shaco-E", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Shaco:Talon:2",
+          "text": "Use Deceive to get behind Talon and strike him from behind, since that attack critically strikes.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Shaco:Talon:3",
+          "text": "Hold Hallucinate until Talon commits to a fight. Its clone explosion and mini boxes punish him for diving in.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b2a80b57c7fe767dab24fb0a0016daae2910e2939909df3fa814e21cfff0ce64",
+      "tips": [
+        {
+          "id": "jungle:Shaco:Viego:0",
+          "text": "Place Jack In The Box on the camp paths and near your own camps. Viego is fed and slowed by it, and the fear gives you time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Viego", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Shaco:Viego:1",
+          "text": "Open on Viego with Deceive and hit him from behind for a critical strike, then slow him with Two-Shiv Poison so he cannot easily chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Shaco-E", "start": 93, "end": 108 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Shaco:Viego:2",
+          "text": "Kill Viego before he scores a takedown. A takedown lets him heal and borrow your abilities, so do not feed him with careless trades.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Shaco:Viego:3",
+          "text": "Finish a low-health Viego with Two-Shiv Poison, which hits much harder under a low health threshold.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Shaco-E", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "840032f75b8c117497cbadb4a1d6d376910263858e2afc2142b78a2235b4e46d",
+      "tips": [
+        {
+          "id": "jungle:Shaco:XinZhao:0",
+          "text": "Place Jack In The Box on the paths Xin Zhao uses to reach you. A feared Xin Zhao is easy to hit and slow.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "XinZhao", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "XinZhao", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Shaco:XinZhao:1",
+          "text": "Use Deceive to leave when Xin Zhao closes in; Audacious Charge needs a target, so he can't follow you while you are invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Shaco:XinZhao:2",
+          "text": "Stay out of Xin Zhao's Wind Becomes Lightning line; being hit slows and reveals you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 23, "end": 45 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Shaco:XinZhao:3",
+          "text": "Don't trade in the open against him once he has Three Talon Strike up; the knock up on its third hit lets him win a long fight.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 48, "end": 66 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Shaco:XinZhao:4",
+          "text": "Ambush him from behind with Deceive and Two-Shiv Poison; Backstab adds damage and he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Shaco-E", "start": 40, "end": 55 },
+            {
+              "kind": "ability",
+              "key": "Shaco-passive",
+              "start": 57,
+              "end": 65
+            },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,735 @@
+{
+  "schemaVersion": 1,
+  "champion": "Twitch",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "cc0786c451b08505c71dd4f8a54e065c02908d7bfe921bdcd7143468d60280fe",
+      "tips": [
+        {
+          "id": "adc:Twitch:general:0",
+          "text": "Throw Venom Cask onto enemies standing together, then keep attacking. Everyone in the cloud is slowed and builds more Deadly Venom.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 118,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Twitch:general:1",
+          "text": "Build up several stacks of Deadly Venom before pressing Contaminate. It hits harder for every stack on the target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 27,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Twitch-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Twitch:general:2",
+          "text": "Use Contaminate to finish a fleeing enemy. It reaches far and still hits a target you can't see.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Twitch:general:3",
+          "text": "Use Ambush to sneak into a fight or to reposition. Attacking or casting Venom Cask or Contaminate ends it, so pick your moment.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Twitch-W", "start": 72, "end": 82 },
+            { "kind": "ability", "key": "Twitch-E", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Twitch:general:4",
+          "text": "Leave Ambush and attack right away. You get bonus Attack Speed for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Twitch:general:5",
+          "text": "Save Spray and Pray for team fights. Line up enemies so the bolts pass through several of them.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Twitch:general:6",
+          "text": "Use Spray and Pray's long range to hit turrets without being shot back.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Twitch:general:7",
+          "text": "Stay behind your tank. Twitch is fragile, and he is easy to kill once he is caught out of camouflage.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Twitch:combo:0",
+          "name": "Ambush attack-speed reset",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Twitch-Q" }, "attack"],
+          "when": "When you want to ambush an enemy and open a fight from stealth with a burst of attack speed.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 17, "end": 23 }
+          ],
+          "text": "Sneak up while camouflaged, then start attacking. Leaving stealth gives bonus attack speed, so your first autos hit very fast.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "f81222eedcaccbae9f49d1d5ec98b259f07e8df27ecd16ec98f511587afc8892",
+      "tips": [
+        {
+          "id": "adc:Twitch:Ashe:0",
+          "text": "Stay out of sight with Ambush and wait for Ashe to spend Enchanted Crystal Arrow before you roam or push up.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Ashe", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Ashe-R", "start": 57, "end": 80 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Twitch:Ashe:1",
+          "text": "Ashe has few escapes, so build venom stacks with Venom Cask and finish with Contaminate for a big hit.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Twitch-W", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "Twitch-E", "start": 76, "end": 87 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Twitch:Ashe:2",
+          "text": "Step out of the line of Volley; it is a cone, so sidestep it instead of walking straight at her.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Twitch:Ashe:3",
+          "text": "Use Spray and Pray to outrange Ashe and trade when she has no minions in front of her.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ashe", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2e0efe02d7a97bf981af67c843da44f398911558e85a449fc42c42570039177e",
+      "tips": [
+        {
+          "id": "adc:Twitch:Caitlyn:0",
+          "text": "Stay out of Caitlyn's range early; her rifle outreaches you, so don't stand in the open waiting to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Twitch:Caitlyn:1",
+          "text": "Walk around Yordle Snap Trap instead of over it; being rooted next to her is how you die.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Twitch:Caitlyn:2",
+          "text": "Keep minions between you and Caitlyn so Piltover Peacemaker loses damage after hitting the first target.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 40, "end": 59 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Twitch:Caitlyn:3",
+          "text": "Use Venom Cask to slow Caitlyn and stack venom when she steps up to trade, then back off.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Caitlyn", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Twitch:Caitlyn:4",
+          "text": "Don't use Ambush in lane just to dodge her; attacking or casting Venom Cask ends it, and traps still reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Twitch-W", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Twitch:Caitlyn:5",
+          "text": "Spray and Pray gives you the range to fight her at level 6; use it to hit her and the minions in front of her.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Twitch:Caitlyn:6",
+          "text": "Once she is stacked with venom, finish her with Contaminate from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-E", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a0891670f9f619cf0a339fba46cf8db647321cc3349ce34718e9de6f12ad0512",
+      "tips": [
+        {
+          "id": "adc:Twitch:Ezreal:0",
+          "text": "Throw Venom Cask where Ezreal will walk or stand; he is slowed inside the cloud and it adds Deadly Venom each second.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 92,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Twitch:Ezreal:1",
+          "text": "Stack Deadly Venom with attacks and Venom Cask first, then use Contaminate from long range for a big hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Twitch-W", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Twitch-E", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Twitch:Ezreal:2",
+          "text": "Stand behind minions so Ezreal's Mystic Shot hits them first and stops there.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Twitch:Ezreal:3",
+          "text": "Go into Ambush in the bushes and wait; Ezreal cannot easily aim at you while you are camouflaged.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 8, "end": 14 },
+            { "kind": "champion", "key": "Ezreal", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Twitch:Ezreal:4",
+          "text": "Hit Ezreal with Spray and Pray at level 6 when he pokes; the extra range lets you hit him from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Twitch-R", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Twitch:Ezreal:5",
+          "text": "Watch for Arcane Shift as Ezreal's escape; once it is spent, he is easy to catch and kill.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Ezreal", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3a3bfd438b40b8d30e7f165fbe3b8f0340c73c9d43bb87fdf93f72a843b96505",
+      "tips": [
+        {
+          "id": "adc:Twitch:Jhin:0",
+          "text": "Throw Venom Cask onto Jhin when he steps up to last-hit; he is slowed and builds stacks of Deadly Venom while he stands in it.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Jhin", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 91,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Twitch:Jhin:1",
+          "text": "Stack Deadly Venom with attacks and Venom Cask first, then use Contaminate from long range for the big hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Twitch-W", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Twitch-E", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Twitch:Jhin:2",
+          "text": "Stay out of sight in bushes. If you fight near the enemy support, Jhin's Deadly Flourish can root you, so trade when your own support is close.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Jhin-W", "start": 73, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Twitch:Jhin:3",
+          "text": "Walk through unseen ground carefully, because Jhin's Captive Audience traps are invisible and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Jhin-E", "start": 53, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Twitch:Jhin:4",
+          "text": "Jump Jhin while he reloads after his fourth shot; he cannot attack then.",
+          "refs": [{ "kind": "champion", "key": "Jhin", "start": 5, "end": 9 }],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Twitch:Jhin:5",
+          "text": "At level 6, use Spray and Pray to hit Jhin and his support together from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 16, "end": 30 },
+            { "kind": "champion", "key": "Jhin", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6cee9186280acff7f846d10c7a2a36c7aa9bb14025679c79a6bda2ba55d1a9c9",
+      "tips": [
+        {
+          "id": "adc:Twitch:Jinx:0",
+          "text": "Throw Venom Cask onto Jinx when she steps up to hit minions; it slows her and stacks Deadly Venom, so Contaminate then hits much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Jinx", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 85,
+              "end": 97
+            },
+            { "kind": "ability", "key": "Twitch-E", "start": 102, "end": 113 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Twitch:Jinx:1",
+          "text": "Do not trade in the open against Switcheroo! rockets; wait until she comes close.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Twitch:Jinx:2",
+          "text": "Stay out of Flame Chompers! range when you walk up, or you get rooted next to her.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Twitch:Jinx:3",
+          "text": "Use Ambush to close in, then attack for the bonus Attack Speed; Zap! reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jinx-W", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Twitch:Jinx:4",
+          "text": "Zap! stops at the first enemy it hits, so stay behind minions when you walk forward.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 0, "end": 4 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Twitch:Jinx:5",
+          "text": "Use Spray and Pray at level 6 to hit Jinx and her support in one line. The extra range lets you fight her from further away.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2d8d86e3f0c013374fd29a781d7577eb57f7f220f31950f56d18436dd27783a5",
+      "tips": [
+        {
+          "id": "adc:Twitch:Kaisa:0",
+          "text": "Throw Venom Cask at Kai'Sa when she steps up to trade; she is slowed while she stands in the cloud and takes more Deadly Venom each second.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Kaisa", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 114,
+              "end": 126
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Twitch:Kaisa:1",
+          "text": "Stack Deadly Venom with attacks and Venom Cask first, then use Contaminate for the burst. It reaches far, so you can finish her from a distance.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Twitch-W", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Twitch-E", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Twitch:Kaisa:2",
+          "text": "Use Ambush to sneak up on Kai'Sa and her support in the bush, then attack. You get bonus Attack Speed when the camouflage ends.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Twitch:Kaisa:3",
+          "text": "After level 6, use Spray and Pray to outrange Kai'Sa; the bolts also hit her support or minions standing in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 19, "end": 33 },
+            { "kind": "champion", "key": "Kaisa", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Twitch:Kaisa:4",
+          "text": "Kai'Sa can jump on you with Killer Instinct once she has Plasma on you. Stay near your support so you are not alone.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "isolated", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1e0c089d4b27add7c03be3f12efdf81266ca3afc39f35cf35bb1476b68a82bd3",
+      "tips": [
+        {
+          "id": "adc:Twitch:MissFortune:0",
+          "text": "Throw Venom Cask at Miss Fortune when she steps up to trade; it slows her and stacks Deadly Venom for a Contaminate.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 20,
+              "end": 32
+            },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 85,
+              "end": 97
+            },
+            { "kind": "ability", "key": "Twitch-E", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Twitch:MissFortune:1",
+          "text": "Stay out of Miss Fortune's Make It Rain and Bullet Time. Twitch is fragile and they punish him hard.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 12,
+              "end": 24
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 27,
+              "end": 39
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 44,
+              "end": 55
+            },
+            { "kind": "champion", "key": "Twitch", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Twitch:MissFortune:2",
+          "text": "Hit her with anything to cancel her Strut speed. She then cannot run from you or close in fast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 36,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "adc:Twitch:MissFortune:3",
+          "text": "Use Ambush to wait out of sight for a fight, then attack her when she stands near her minions.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "584de7a257144452b26d704363cd97fef969e159ec1b0491ad331e41429207c9",
+      "tips": [
+        {
+          "id": "adc:Twitch:Smolder:0",
+          "text": "Hit Smolder early with Venom Cask while he is weak, so he is slowed and cannot easily farm or trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Twitch-W", "start": 23, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Twitch:Smolder:1",
+          "text": "Stack Deadly Venom with attacks and Venom Cask, then use Contaminate for a burst that reaches him from far away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Twitch-W", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Twitch-E", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Twitch:Smolder:2",
+          "text": "Smolder is weakest early, so push for kills before his Dragon Practice stacks grow and his abilities start to hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 55,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Twitch:Smolder:3",
+          "text": "Use Ambush to slip into a bush and reposition, then jump his lane with the attack speed you gain when you leave camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Twitch:Smolder:4",
+          "text": "Stay out of a straight line from Smolder; Achooo! flies far and slows you if it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Twitch:Smolder:5",
+          "text": "Fight from range with Spray and Pray, which can hit Smolder and his support in a line together.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 22, "end": 36 },
+            { "kind": "champion", "key": "Smolder", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c7186ef44c305205660c5a698d8eb684ea4d6e2159c33611964d8921f5b82f79",
+      "tips": [
+        {
+          "id": "adc:Twitch:Yunara:0",
+          "text": "Throw Venom Cask onto Yunara when she steps up to trade; the cloud slows her and stacks Deadly Venom while she stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Yunara", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 88,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Twitch:Yunara:1",
+          "text": "Build up Deadly Venom stacks with attacks and Venom Cask, then use Contaminate to finish a trade for burst damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 9,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Twitch-W", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Twitch-E", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Twitch:Yunara:2",
+          "text": "Stay out of a straight line from Yunara's prayer bead. Being hit slows you heavily and leaves you open to her follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Twitch:Yunara:3",
+          "text": "Back off when Yunara casts Transcend One's Self; her Arc of Ruin and dash make her much more dangerous for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Yunara-R", "start": 27, "end": 47 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Twitch:Yunara:4",
+          "text": "Use Spray and Pray when you fight near the enemy minions; the bolts pierce, and the extra range lets you hit Yunara from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yunara", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Twitch:Yunara:5",
+          "text": "Use Ambush to reposition and surprise Yunara, but you must break it to attack, so strike first from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Yunara", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

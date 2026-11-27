@@ -1,0 +1,824 @@
+{
+  "schemaVersion": 1,
+  "champion": "Nidalee",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "74cdd5b90da76cdf0fe1f9a7937bd70264672e6833db978cf2f880347edcf44a",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:general:0",
+          "text": "Land Javelin Toss from long range; it hits much harder the farther it flies. It stops at the first enemy it hits, so aim past minions.",
+          "refs": [],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Nidalee:general:1",
+          "text": "After a Javelin Toss hits, switch with Aspect Of The Cougar and jump in. The hit marks the target as Hunted and refreshes the switch cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Nidalee-R", "start": 39, "end": 59 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Nidalee:general:2",
+          "text": "Use Pounce on a Hunted enemy to jump from farther away. It also cuts Pounce's cooldown.",
+          "refs": [],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Nidalee:general:3",
+          "text": "Follow Pounce with Takedown on a Hunted enemy who is low on Health. It deals more damage the lower their Health is.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Nidalee:general:4",
+          "text": "Place Bushwhack in brush and on paths you expect enemies to walk. A trap that hits also marks the enemy as Hunted.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Nidalee:general:5",
+          "text": "Move through brush to speed up, especially when you are walking toward an enemy champion you can see.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Nidalee:general:6",
+          "text": "Heal yourself or an ally with Primal Surge when Health is low; it heals more the lower the Health. It also gives bonus Attack Speed.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "7", "start": 0, "end": 4 },
+            { "kind": "summoner-spell", "key": "716", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Nidalee:combo:0",
+          "name": "Javelin into Takedown",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Nidalee-Q" },
+            { "kind": "ability", "key": "Nidalee-R" },
+            { "kind": "ability", "key": "Nidalee-W" },
+            "attack"
+          ],
+          "when": "You hit a long-range Javelin Toss and want to dive onto the marked target.",
+          "whenRefs": [],
+          "text": "A Javelin hit marks the target and resets the form swap, so you can turn cougar at once. Pounce in, then use the empowered Takedown attack.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Nidalee:combo:1",
+          "name": "Hunted Pounce",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Nidalee-Q" },
+            { "kind": "ability", "key": "Nidalee-R" },
+            { "kind": "ability", "key": "Nidalee-W" }
+          ],
+          "when": "You hit a Javelin on a target that is outside normal Pounce range.",
+          "whenRefs": [],
+          "text": "Pounce has extra range against a Hunted target. Cast it toward them to close a large gap, and it cuts the cooldown.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Nidalee:combo:2",
+          "name": "Pounce-Takedown cancel",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Nidalee-W" },
+            { "kind": "ability", "key": "Nidalee-R" },
+            "attack"
+          ],
+          "when": "You are chasing a Hunted target and want to burst fast.",
+          "whenRefs": [],
+          "text": "Takedown can be cast while Pounce is still in the air. Cast it mid-dash so the empowered attack lands as soon as you arrive.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "ac8e18d6446e69fda7462670c5831ec85b73ab2205472c00978536f2c5a6c37e",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Graves:0",
+          "text": "Land Javelin Toss from long range on Graves; it hits much harder the farther it flies, and it marks him as Hunted for your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nidalee:Graves:1",
+          "text": "Once he is Hunted, switch to Cougar Form and use Pounce to close in, then hit him with Takedown.",
+          "refs": [],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Nidalee:Graves:2",
+          "text": "Place Bushwhack in brush and on paths he likes to walk. It is invisible, and he can only destroy it with basic attacks.",
+          "refs": [],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Nidalee:Graves:3",
+          "text": "Don't chase into Smoke Screen. He is slowed there and you can't see outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Nidalee:Graves:4",
+          "text": "Fight him when Quickdraw is on cooldown. Without that dash he has a harder time getting away from your Pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5fe1ed676b4346e55786e3ddfca47a750ac01b0a14297f4d9137c9552017f22e",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:JarvanIV:0",
+          "text": "Keep Javelin Toss for long range; it hits much harder from far away. Landing it also marks your target as Hunted.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nidalee:JarvanIV:1",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard; Dragon Strike knocks you up along that path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Nidalee:JarvanIV:2",
+          "text": "Do not fight Jarvan inside the Cataclysm arena. Leave with Bushwhack / Pounce, which can cross the terrain, or stay out of range of his ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 31, "end": 40 },
+            { "kind": "ability", "key": "Nidalee-W", "start": 59, "end": 77 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Nidalee:JarvanIV:3",
+          "text": "Poke Jarvan with Javelin Toss from range and do not trade up close, where he hits hard.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8a8e51100faec8d7cea574776d17194e0608fb99072d38867c9a9d0abe72ff9b",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Kayn:0",
+          "text": "Land Javelin Toss from long range; it hits much harder the farther it flies, and Kayn has no way to block it.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nidalee:Kayn:1",
+          "text": "Hit Kayn with Javelin Toss to mark him as Hunted, then switch to cougar form and chase him down.",
+          "refs": [{ "kind": "champion", "key": "Kayn", "start": 4, "end": 8 }],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Nidalee:Kayn:2",
+          "text": "Place Bushwhack in brush and on paths you expect Kayn to walk, so he takes damage over time and you can see where he is.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Nidalee:Kayn:3",
+          "text": "Stay out of Kayn's Blade's Reach range; if he hits you, he can follow up with Umbral Trespass from farther away.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Kayn-W", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Kayn-R", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Nidalee:Kayn:4",
+          "text": "Kayn can walk through walls with Shadow Step. Watch for the warning on the terrain edge and keep your javelins ready for when he comes out.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-E", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3ba1069c1613186616a796fe457a1861102c3ee0da7bd74946b063e51e22b25",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Khazix:0",
+          "text": "Stay near your minions, allies or a turret when Kha'Zix is around; alone, you take far more damage from Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "keyword", "key": "isolated", "start": 67, "end": 72 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 104, "end": 120 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nidalee:Khazix:1",
+          "text": "Hit Kha'Zix with Javelin Toss from long range; it hurts most when it flies far, and it marks him as Hunted.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nidalee:Khazix:2",
+          "text": "After a Javelin Toss lands, switch to cougar form and jump on him with Pounce, which reaches farther against a Hunted target.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Nidalee:Khazix:3",
+          "text": "Place Bushwhack on the paths he uses to reach you, since he approaches from brush and stealth.",
+          "refs": [],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Nidalee:Khazix:4",
+          "text": "Press your advantage when his Leap and Void Assault are on cooldown; he has little way to escape or close in.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Khazix-R", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b06c00ccf5fdd2f7122ac941fdf4aa3c96d31f15bf6082d5d8174a6e2b5d77b",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Kindred:0",
+          "text": "Land Javelin Toss from long range on Kindred; it hits harder the farther it flies, and Kindred is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 37, "end": 44 },
+            { "kind": "champion", "key": "Kindred", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Nidalee:Kindred:1",
+          "text": "After a Javelin Toss hits, switch to Cougar Form and jump on Kindred while she is Hunted; the follow-up deals big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Nidalee:Kindred:2",
+          "text": "Don't chase Kindred while Lamb's Respite is active; nobody inside can die, so wait until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Kindred-R", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nidalee:Kindred:3",
+          "text": "Hit Kindred with Javelin Toss before she can vault away with Dance of Arrows; she has little else to escape with.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Nidalee:Kindred:4",
+          "text": "Drop Bushwhack traps in jungle paths and near camps to track Kindred and punish her when she walks into them.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c699c5823a97e931edbe8c6119a34d4d51b6f1a4a12b9383430c7a932e8e5750",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:LeeSin:0",
+          "text": "Keep your distance and throw Javelin Toss from long range at Lee Sin; it hits hardest when it flies far.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Nidalee:LeeSin:1",
+          "text": "Save Pounce for when Lee Sin uses Sonic Wave or Dragon's Rage on you; jumping away breaks his follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 48, "end": 61 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Nidalee:LeeSin:2",
+          "text": "Lee Sin is weak to magic damage, so poke him with Javelin Toss and avoid trading with basic attacks up close.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Nidalee:LeeSin:3",
+          "text": "Put Bushwhack traps in brush and on paths he takes. Hitting him with one marks him Hunted so you can pounce on him.",
+          "refs": [],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Nidalee:LeeSin:4",
+          "text": "Stay away from teammates standing close together in a fight. Dragon's Rage knocks Lee Sin's target into them and knocks them up.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 61, "end": 74 },
+            { "kind": "champion", "key": "LeeSin", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b74c7e110fef37ea6621e2869e25a673d1523ea381814ed3c828bfdee2e718a7",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:MasterYi:0",
+          "text": "Aim Javelin Toss from long range at Master Yi; it hits hardest far away and marks him as Hunted.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nidalee:MasterYi:1",
+          "text": "Do not count on slowing Master Yi once Highlander is active; Bushwhack won't slow him.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nidalee:MasterYi:2",
+          "text": "Stay away from him once he has Wuju Style and Double Strike ready, because his basic attacks deal heavy true damage.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 31, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "MasterYi-passive",
+              "start": 46,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Nidalee:MasterYi:3",
+          "text": "Place Bushwhack traps in brush and on paths he takes to your objectives, so you see him coming.",
+          "refs": [],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Nidalee:MasterYi:4",
+          "text": "Keep hitting him with Javelin Toss so Meditate costs him mana and time.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b7ebfafb4a4842414c00c681d7ee762517ba0eb735598e3f8b0411f197c6d346",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Naafiri:0",
+          "text": "Throw Javelin Toss from long range at Naafiri; it hits harder the farther it flies, and she has to dodge it to avoid the Hunt.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Nidalee:Naafiri:1",
+          "text": "Land Javelin Toss first, then Pounce in on the Hunted Naafiri and finish with Takedown for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Nidalee:Naafiri:2",
+          "text": "Javelin Toss stops at the first enemy it hits, so a Packmate in front of Naafiri can soak it. Aim for a clear line.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Nidalee:Naafiri:3",
+          "text": "Place Bushwhack traps on paths she will use to flank you. She has no way to see them coming.",
+          "refs": [],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Nidalee:Naafiri:4",
+          "text": "Do not fight her once she has used Hounds' Pursuit and killed someone. She can recast it and get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3b4222c8fc9c3843f7dd6bbdae8258cbc310617318103a9a625d402aafc92db7",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Nocturne:0",
+          "text": "Hit Javelin Toss from long range; it deals much more damage the farther it flies. A hit also marks Nocturne as Hunted.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nidalee:Nocturne:1",
+          "text": "Don't spend Javelin Toss when Nocturne has Shroud of Darkness ready; it blocks the javelin. Bait it out first with something cheap.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 43, "end": 61 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nidalee:Nocturne:2",
+          "text": "Keep your distance from Nocturne when Unspeakable Horror is ready. Break the tether by moving out of range before the fear lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Nidalee:Nocturne:3",
+          "text": "Stay near your allies when Paranoia goes off; Nocturne can dash to you, and being alone makes it much worse.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Nocturne", "start": 46, "end": 54 },
+            { "kind": "keyword", "key": "isolated", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Nidalee:Nocturne:4",
+          "text": "Place Bushwhack in the brush or on paths he uses to reach you, so he takes damage when he walks in.",
+          "refs": [],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7985ccd27ed8f648566bd64b5064a5875f1526a7a8b2c22f6d419e993fb84ace",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Shyvana:0",
+          "text": "Poke Shyvana with Javelin Toss from long range; it hits hardest far away, and she has no way to close the gap before her ultimate.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Nidalee:Shyvana:1",
+          "text": "Do not stand and trade in melee. Shyvana grows stronger by attacking, so keep your distance and make her chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Nidalee:Shyvana:2",
+          "text": "When Shyvana turns into a dragon, step away from her fireball and trail, and avoid fighting in a cluster.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Nidalee:Shyvana:3",
+          "text": "Place Bushwhack in the brush and on paths she walks through; it deals damage over time and marks her as Hunted.",
+          "refs": [],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Nidalee:Shyvana:4",
+          "text": "Once Javelin Toss hits her, she is Hunted, so switch to cougar form and use Pounce and Takedown to finish her.",
+          "refs": [],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c8c50da13fc2da7d1b9a0cf71338143d70d8f91d5f1d8c1989bf74ba1506df5a",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Skarner:0",
+          "text": "Keep your distance from Skarner and throw Javelin Toss from far away, where it hits hardest.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nidalee:Skarner:1",
+          "text": "Stay away from walls when Skarner is charging at you; Ixtal's Impact stuns you if he drags you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Skarner-E", "start": 54, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Nidalee:Skarner:2",
+          "text": "Move out of Impale's reach when he is close; he can only hit what is in front of him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Nidalee:Skarner:3",
+          "text": "Do not trade blows with Skarner in cougar form for long; his Quaking damage adds up if you stay near him.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Nidalee:Skarner:4",
+          "text": "Place Bushwhack traps in the brush or paths where Skarner walks to scout and damage him.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "536654195e512057e5a9c6d0ce1c1dd6611d6410f4771a1373073fa93fe6c35a",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Sylas:0",
+          "text": "Throw Javelin Toss from long range; it hits much harder the farther it flies, and Sylas has few ways to close the gap quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Nidalee:Sylas:1",
+          "text": "Once a javelin lands and Sylas is Hunted, switch to cougar form and use Pounce to jump onto him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Nidalee:Sylas:2",
+          "text": "Stay out of Abduct range, and watch for his Abscond dash. If his chains hit you, you are stunned and he pulls himself onto you.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Nidalee:Sylas:3",
+          "text": "Do not trade when he is low on health; Kingslayer heals him most then. Finish him fast or back off.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Nidalee:Sylas:4",
+          "text": "Place Bushwhack in brush and on paths he walks. Sylas can be hurt by a trap he does not see.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "764b08ca75cd55ebab6bf29a0adb91d7dab4a1643b4236d6c675fbd9fc0513f8",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Talon:0",
+          "text": "Land Javelin Toss from long range on Talon; it hurts most at a distance, and he has little to answer it with when you stay far back.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Nidalee:Talon:1",
+          "text": "Drop Bushwhack on the paths Talon uses to roam or flee, so he takes damage over time and you can see where he goes.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Nidalee:Talon:2",
+          "text": "Once a javelin has hit Talon and made him Hunted, switch to cougar form and use Pounce to close in, then finish with Takedown.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Nidalee:Talon:3",
+          "text": "Stay in human form and keep your distance when Talon is near. He bursts down anyone he can leap onto, and cougar form leaves you close to him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Nidalee:Talon:4",
+          "text": "Use Primal Surge on yourself after a trade to heal back up, especially when you are low on health.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "716", "start": 11, "end": 16 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aac11d3f9808b3f239363708f1abf76c073281f50dc6fb687271397bd168a0f5",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:Viego:0",
+          "text": "Land Javelin Toss from long range on Viego; it hits much harder the farther it flies. Close up it does far less.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nidalee:Viego:1",
+          "text": "After a Javelin Toss hits, switch to Cougar Form and Pounce onto the Hunted Viego to close in fast.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Nidalee:Viego:2",
+          "text": "Set Bushwhack traps in brush and on the paths Viego uses to reach you. He takes damage over time and is revealed as Hunted.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Nidalee:Viego:3",
+          "text": "Don't fight next to a fresh kill. If Viego scores a takedown, he can possess the dead champion and come back at you stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Nidalee:Viego:4",
+          "text": "Keep your distance when Viego charges Spectral Maw; if it hits you, you are stunned. Dodge it, then punish with Javelin Toss.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Viego-W", "start": 38, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "15e3e2b511e2845ab4facbcce94b1db6274f37f1fabbd841a6481b815a562c44",
+      "tips": [
+        {
+          "id": "jungle:Nidalee:XinZhao:0",
+          "text": "Keep Javelin Toss at long range; it hits hardest from far away, so poke Xin Zhao before he closes in.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 },
+            { "kind": "champion", "key": "XinZhao", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Nidalee:XinZhao:1",
+          "text": "Place Bushwhack traps on the paths Xin Zhao uses to reach you; they slow nothing, but they deal damage and mark him as Hunted.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Nidalee:XinZhao:2",
+          "text": "Stay away when Xin Zhao has Audacious Charge ready; its range grows on marked targets, so do not let him land Wind Becomes Lightning.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 110, "end": 132 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Nidalee:XinZhao:3",
+          "text": "Do not fight beside Xin Zhao at close range once he has Crescent Guard; it knocks you back and he takes no damage from your allies standing far away.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

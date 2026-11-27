@@ -1,0 +1,1816 @@
+{
+  "schemaVersion": 1,
+  "champion": "Qiyana",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "016f2a5369540b7f8eb969833671bcac7b3812ec81378d3857afc350003cbfa9",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:general:0",
+          "text": "Cast Terrashape at a wall, brush or river before you fight. It refreshes Edge of Ixtal and upgrades it into Elemental Wrath.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Qiyana:general:1",
+          "text": "Pick the element to match the job. River roots then slows, wall terrain hits hurt low-health enemies, and brush makes you invisible.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Qiyana:general:2",
+          "text": "Throw Elemental Wrath from range. The blade stops at the first enemy it hits, so a minion in the way blocks it.",
+          "refs": [],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Qiyana:general:3",
+          "text": "Use Audacity to close on a target or to escape. You can cast other abilities in mid-dash.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Qiyana:general:4",
+          "text": "Land your first hit or ability on each enemy to trigger Royal Privilege's bonus damage. Gathering a new element with Terrashape lets you trigger it again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Qiyana-passive",
+              "start": 56,
+              "end": 71
+            },
+            { "kind": "ability", "key": "Qiyana-W", "start": 117, "end": 127 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Qiyana:general:5",
+          "text": "Aim Supreme Display of Talent so it hits a wall near the enemies. The wall blast stuns, and a shorter travel distance means a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Qiyana:general:6",
+          "text": "Fight beside brush or rivers when you can. Supreme Display of Talent also explodes along any brush or river it passes through.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 43, "end": 68 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Qiyana:general:7",
+          "text": "Use Terrashape to dash over thin walls when you need to flee. You can cast abilities during the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Qiyana:combo:0",
+          "name": "Terrashape Q reset",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Qiyana-W" },
+            { "kind": "ability", "key": "Qiyana-Q" }
+          ],
+          "when": "When your Q is on cooldown and you are next to a wall, river or brush.",
+          "whenRefs": [],
+          "text": "Terrashape refreshes the Q cooldown and gives it an element. You can use Q twice in quick succession and get the element's effect.",
+          "textRefs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 0, "end": 10 }
+          ]
+        },
+        {
+          "id": "jungle:Qiyana:combo:1",
+          "name": "Dash into Q",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Qiyana-E" },
+            { "kind": "ability", "key": "Qiyana-Q" }
+          ],
+          "when": "When you dash onto an enemy champion and want the slash to hit without aiming.",
+          "whenRefs": [],
+          "text": "Cast Q during the dash. If the target ends within close range, the slash aims at them on its own.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Qiyana:combo:2",
+          "name": "Terrashape dash cast",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Qiyana-W" },
+            { "kind": "ability", "key": "Qiyana-E" }
+          ],
+          "when": "When you want to gather an element and engage in one motion.",
+          "whenRefs": [],
+          "text": "Qiyana can cast other abilities while dashing with Terrashape. Cast E during the dash to engage and gather an element together.",
+          "textRefs": [
+            { "kind": "champion", "key": "Qiyana", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 51, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c86fccf6534d99cecd6758b5d7671ecf2ad2bdff83ceb9f35c96b9e4f769d9f9",
+      "tips": [
+        {
+          "id": "middle:Qiyana:general:0",
+          "text": "Cast Terrashape at nearby brush, river or terrain before you trade. It refreshes Edge of Ixtal and upgrades it into Elemental Wrath with a bonus effect.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Qiyana:general:1",
+          "text": "Gather river with Terrashape, then hit with Elemental Wrath to leave the enemy rooted, then slowed. Follow up with Audacity while they cannot move away.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 18, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 85 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 115, "end": 123 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Qiyana:general:2",
+          "text": "Take the brush element, then use Elemental Wrath to turn invisible and gain Move Speed. Attacking breaks the invisibility.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Qiyana:general:3",
+          "text": "Use the terrain element when the enemy is low on Health. Elemental Wrath deals extra damage to enemies below half Health, so it's a good finisher.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Qiyana:general:4",
+          "text": "Use Audacity to chase a target or to escape. It dashes a fixed distance, and you can cast other abilities in the middle of the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Qiyana:general:5",
+          "text": "Fight near walls with Supreme Display of Talent. The shockwave stuns enemies along the terrain edge, so aim it at a wall just behind the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 22, "end": 47 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Qiyana:general:6",
+          "text": "Keep Elemental Wrath aimed at the first enemy in its path. The thrown blade stops at the first unit it hits, so minions in the way can absorb it.",
+          "refs": [],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "middle:Qiyana:general:7",
+          "text": "Open a trade with Royal Privilege's bonus damage. Gathering a new element with Terrashape resets it on enemies hit by a different element.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Qiyana-passive",
+              "start": 18,
+              "end": 33
+            },
+            { "kind": "ability", "key": "Qiyana-W", "start": 79, "end": 89 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Qiyana:combo:0",
+          "name": "Terrashape Q reset",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Qiyana-W" },
+            { "kind": "ability", "key": "Qiyana-Q" }
+          ],
+          "when": "When your Q is on cooldown and you want another Q with an element's effect.",
+          "whenRefs": [],
+          "text": "Gathering an element with Terrashape refreshes Q's cooldown and turns it into Elemental Wrath. You get a second Q with the element's bonus.",
+          "textRefs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 26, "end": 36 }
+          ]
+        },
+        {
+          "id": "middle:Qiyana:combo:1",
+          "name": "Dash into Q",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Qiyana-E" },
+            { "kind": "ability", "key": "Qiyana-Q" }
+          ],
+          "when": "When you dash onto an enemy champion and want your Q to land.",
+          "whenRefs": [],
+          "text": "Cast Q during the dash. If the target is close at the end of the dash, the Q aims at it on its own.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Qiyana:combo:2",
+          "name": "Dash Terrashape",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Qiyana-W" },
+            { "kind": "ability", "key": "Qiyana-E" },
+            { "kind": "ability", "key": "Qiyana-Q" }
+          ],
+          "when": "When you want to close on a target while gathering an element and keeping your Q.",
+          "whenRefs": [],
+          "text": "Qiyana can cast any ability while dashing. So you can cast E or Q during the Terrashape dash, which saves time.",
+          "textRefs": [
+            { "kind": "champion", "key": "Qiyana", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 77, "end": 87 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "f8a97e6ec480f8f6990b83458d19533332420f2ca20bc62fce76b9ff3a4d3426",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Graves:0",
+          "text": "Fight Graves near a wall or river. Supreme Display of Talent stuns him when the shockwave reaches the terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 35, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Qiyana:Graves:1",
+          "text": "Grab river with Terrashape before you trade, so Elemental Wrath / Edge of Ixtal roots him and you can finish the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 16, "end": 26 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 48, "end": 79 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Qiyana:Graves:2",
+          "text": "Use Audacity to dash through him and close in fast. Graves has to use Quickdraw first if he wants to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Graves", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Graves-E", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Qiyana:Graves:3",
+          "text": "Leave Smoke Screen quickly. The slow ends once you step out, and you should not stand in it while chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e08b52740f626a63f481504e312d583cf44c9ac2b90ea13cf45769ba79f0d423",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike knocks you up there.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Qiyana:JarvanIV:1",
+          "text": "Hold Audacity until Jarvan uses Cataclysm. Dashes can pass through the terrain it creates.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Qiyana:JarvanIV:2",
+          "text": "Fight near walls or brush so Supreme Display of Talent can stun Jarvan. Do it when he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 29, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Qiyana:JarvanIV:3",
+          "text": "Use Terrashape to dash away from Jarvan's combo. It also resets Elemental Wrath / Edge of Ixtal.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 64, "end": 95 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ce12b1decd91e35d38fbe6388c051ab381f9692262a0932ab7f8e83a2cbd69b2",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Kayn:0",
+          "text": "Dodge Blade's Reach when you can; it slows you and lets Kayn use Umbral Trespass from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Kayn-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Qiyana:Kayn:1",
+          "text": "Use Audacity to close in and trade, then gather an element with Terrashape to refresh your Q and hit again.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Qiyana:Kayn:2",
+          "text": "Hold the river element and use Elemental Wrath / Edge of Ixtal to root Kayn when he dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-Q", "start": 31, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 },
+            { "kind": "champion", "key": "Kayn", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Qiyana:Kayn:3",
+          "text": "Stun or damage Kayn while he is in the wall to cut Shadow Step short; Supreme Display of Talent stuns and ends it.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Kayn-E", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 70, "end": 95 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "323e17f09b7d82b3626e5ace981f54fe39584786aaf7876cb84e5ddde767dedf",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Khazix:0",
+          "text": "Fight Kha'Zix near your minions or allies; Taste Their Fear does much less damage when you are not isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "isolated", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Qiyana:Khazix:1",
+          "text": "Use Elemental Wrath from a river to root Kha'Zix when he jumps in, then follow up with Audacity.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Khazix", "start": 41, "end": 48 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Qiyana:Khazix:2",
+          "text": "Fight when Kha'Zix has used Leap and Void Assault; he is weak without them.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Khazix-E", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Khazix-R", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Qiyana:Khazix:3",
+          "text": "Use Supreme Display of Talent against walls to stun Kha'Zix when he is next to terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "champion", "key": "Khazix", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e58f459b8dab90536fd2b904539a9ace54b4f740652f5d3096de6b5426bddedf",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Kindred:0",
+          "text": "Fight Kindred only when Mounting Dread is on cooldown. Without the slow, she is much easier to chase and kill.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Kindred-E", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Qiyana:Kindred:1",
+          "text": "Use Edge of Ixtal after you grab the river with Terrashape to root her. Then dash in with Audacity.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 48, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Qiyana:Kindred:2",
+          "text": "Do not use Supreme Display of Talent when Lamb's Respite is up. Kindred's zone stops your target from dying, so wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 11, "end": 36 },
+            { "kind": "ability", "key": "Kindred-R", "start": 42, "end": 56 },
+            { "kind": "champion", "key": "Kindred", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Qiyana:Kindred:3",
+          "text": "Kindred is fragile. Dive her with Audacity before her Dance of Arrows is ready, because that is her escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 34, "end": 42 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "89c6f5775f7403222efcbcbb13b38dd34b1066d3d641c23c64b7c94494afa0c5",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:LeeSin:0",
+          "text": "Dash through Lee Sin with Audacity to escape or reach him. Don't use it if his Dragon's Rage is ready.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Qiyana:LeeSin:1",
+          "text": "Gather an element with Terrashape before you fight, so your next Elemental Wrath has a bonus effect.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Qiyana:LeeSin:2",
+          "text": "Hit Lee Sin with Supreme Display of Talent near a wall so he is stunned and can't chain his abilities.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 17, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Qiyana:LeeSin:3",
+          "text": "Lee Sin is vulnerable to magic damage. Use Terrashape's bonus magic damage on your attacks while you trade.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a5f87494b1ab5f55d3931dc56ce1ab6600df1ffcf29b629c5d6e78d7fd5bf9e0",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:MasterYi:0",
+          "text": "Fight Master Yi at a river, then use Elemental Wrath / Edge of Ixtal to root him before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 37, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Qiyana:MasterYi:1",
+          "text": "Save Supreme Display of Talent for when he jumps in with Highlander; it stuns him even though he can't be slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 5, "end": 30 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 57, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Qiyana:MasterYi:2",
+          "text": "Don't spend your burst while he is jumping with Alpha Strike; he is untargetable. Hit him when he reappears.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Qiyana:MasterYi:3",
+          "text": "Use Audacity to get away when he starts a chase, and try to be near terrain so you can use Terrashape.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5d574e201d3bd9e62d78f20da734cb5811f38fa8b892c84dd8ed85afe3745de9",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Naafiri:0",
+          "text": "Keep Audacity for chasing or escaping. Naafiri turns untargetable with The Call of the Pack, so wait until it ends before you dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 71, "end": 91 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Qiyana:Naafiri:1",
+          "text": "Fight Naafiri near a wall and use Supreme Display of Talent. The knockback and the stun leave her little room to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 34, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Qiyana:Naafiri:2",
+          "text": "Grab the river with Terrashape before a fight, then hit with Elemental Wrath to root her. She can't dash away from a rooted fight.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 20, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 84 },
+            { "kind": "keyword", "key": "rooted", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Qiyana:Naafiri:3",
+          "text": "Aim your Elemental Wrath at Naafiri, not at her packmates. The blade stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fa46e13d9cc0e903935745479e71b48243df5d8f2a876e5ae6955f4373e57905",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Nocturne:0",
+          "text": "Keep Audacity for escaping when Nocturne ties you with Unspeakable Horror. Break the tether by moving out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Nocturne", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 55, "end": 73 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Qiyana:Nocturne:1",
+          "text": "Stay near your allies when Paranoia is cast. Nocturne's dash will pick someone, so do not stand alone.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Nocturne", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Qiyana:Nocturne:2",
+          "text": "Do not throw your key ability into Shroud of Darkness while it is up. Wait for it to fade first.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Qiyana:Nocturne:3",
+          "text": "Use Terrashape's river or brush Enchantment with Elemental Wrath / Edge of Ixtal to root or hide, and pull away from Nocturne.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 49, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 88 },
+            { "kind": "champion", "key": "Nocturne", "start": 117, "end": 125 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "86b9401d87d82c03558d948d81cb27747d512527ca695cdff9c50bf8dc9938c2",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Shyvana:0",
+          "text": "Open on Shyvana with Audacity or Elemental Wrath and leave, so you don't get stuck in a long fight against her sturdy Dragon Form.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Qiyana:Shyvana:1",
+          "text": "Keep your distance from Shyvana. She gets stronger by hitting you, so poke her and make her chase.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Qiyana:Shyvana:2",
+          "text": "Grab the river element with Terrashape and use Elemental Wrath to root Shyvana when she charges at you.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 28, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 },
+            { "kind": "champion", "key": "Shyvana", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Qiyana:Shyvana:3",
+          "text": "Aim Supreme Display of Talent at nearby walls to stun Shyvana. The stun is longer the closer she is to you.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Shyvana", "start": 54, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8d8d7738bbd23d79b0f751fd82cc856db896f89afb8e8834e9ee9177f740b268",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Skarner:0",
+          "text": "Do not fight Skarner when he is close to a wall. Ixtal's Impact can carry you into it and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Skarner-E", "start": 49, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Qiyana:Skarner:1",
+          "text": "Keep Audacity ready to get away from Skarner's Impale. Stay out of its short range.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Skarner", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Skarner-R", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Qiyana:Skarner:2",
+          "text": "Use the river Elemental Wrath to root Skarner as he charges in. That gives you time to back away.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Skarner", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Qiyana:Skarner:3",
+          "text": "Do not trade with Skarner for long. His attacks stack Quaking, which damages you over time.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e8086186cfd65293bfe114263d42b9b6a5f956ad6a8954dc3b49dfacd0a32ff",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Sylas:0",
+          "text": "Keep Audacity ready for when Sylas dashes in with Abduct; dash through him to get away from his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Qiyana:Sylas:1",
+          "text": "Hold Supreme Display of Talent for a fight near a wall; it stuns anyone caught in the blast, so he cannot easily chain his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 5, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Qiyana:Sylas:2",
+          "text": "Sidestep Chain Lash; it slows and explodes where the chains cross, so move out of that spot.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 9, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Qiyana:Sylas:3",
+          "text": "Look at his health before you duel him. Kingslayer heals him more when he is low, so finish him fast rather than trading slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Qiyana:Sylas:4",
+          "text": "Gather an Element with Terrashape before you start a fight so Elemental Wrath is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c83362973911e42cd11a1178835e2b501fb7a2907072d6938cf8b9f69315d5a4",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Talon:0",
+          "text": "Aim Supreme Display of Talent so it hits Talon against a wall, and fight near terrain to get the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "champion", "key": "Talon", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Qiyana:Talon:1",
+          "text": "When Talon goes invisible with Shadow Assault, stay back and wait for his blades to return. He is easier to hit when he reappears.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Qiyana:Talon:2",
+          "text": "Use Elemental Wrath from the river to root Talon when he jumps in, so you can answer his burst.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "Talon", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Qiyana:Talon:3",
+          "text": "Do not let Talon land his full combo. Rake and Noxian Diplomacy set up his bleed, so trade back or step away before he gets a third Wound.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Talon-W", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Talon-Q", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f4a915cb33b1569e39dccc65dfafedd2b60e3162efddd89d23ce45efc62b10f",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:Viego:0",
+          "text": "Fight Viego near terrain or river so Terrashape gives you an Element; Elemental Wrath can then hold him in place.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Qiyana:Viego:1",
+          "text": "Stay out of Viego's Spectral Maw line, or keep a minion in front of you, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Viego-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Qiyana:Viego:2",
+          "text": "Do not assume the area is empty when Viego vanishes; Harrowed Path hides him in Mist. Check the brush and stay with your team.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Viego-E", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Qiyana:Viego:3",
+          "text": "Do not dash in with Audacity near a fight where Viego might kill someone; he can possess a dead enemy and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "Viego", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Qiyana:Viego:4",
+          "text": "Use Supreme Display of Talent to stun Viego against a wall when he dives you.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Viego", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "449ee9bc1c9560390bd2e4662816d0138652685617b1b30513217c139d673085",
+      "tips": [
+        {
+          "id": "jungle:Qiyana:XinZhao:0",
+          "text": "Do not dash into Xin Zhao with Audacity; his Crescent Guard or Three Talon Strike knock-up can punish you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 45, "end": 59 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 63, "end": 81 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Qiyana:XinZhao:1",
+          "text": "Use Terrashape to reach a river element and Root Xin Zhao with Elemental Wrath / Edge of Ixtal when he charges in.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "XinZhao", "start": 49, "end": 57 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 63, "end": 94 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Qiyana:XinZhao:2",
+          "text": "Save Audacity to escape after Xin Zhao uses Audacious Charge, since it is his main way to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Qiyana:XinZhao:3",
+          "text": "Aim Supreme Display of Talent so Xin Zhao is pinned against a wall; he is a tank, so the stun lets your team burst him.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "581371de4f68aad2620ff7b9a9a8c5fdcea403971588c66d338c2c1f0bfa7e55",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Ahri:0",
+          "text": "Stay behind minions so Charm hits them first. It ends at the first enemy it touches, which cuts Ahri's damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Qiyana:Ahri:1",
+          "text": "Fight Ahri while Spirit Rush is on cooldown. She has little escape and you can dive her with Audacity.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Ahri-R", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 93, "end": 101 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Qiyana:Ahri:2",
+          "text": "Use the river Element for Elemental Wrath to root Ahri in place, then follow with Audacity before she can dash away.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Ahri", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Qiyana:Ahri:3",
+          "text": "Sidestep Orb of Deception, which is thin and slow to return. Its damage on the way back is true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Qiyana:Ahri:4",
+          "text": "Trap Ahri against a wall with Supreme Display of Talent. The blast knocks her back and the terrain shockwave then stuns her.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 30, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "92db8c4c5cae8d35be7c56bf86b6480c104d714fdcb475eed39e4319248de7b7",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Akali:0",
+          "text": "Use Audacity to dash onto Akali when her Twilight Shroud is down. She has little way out.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Akali-W", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Qiyana:Akali:1",
+          "text": "Grab an element with Terrashape before you trade. Elemental Wrath then roots Akali if you hold the river element.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 21, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 76 },
+            { "kind": "champion", "key": "Akali", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Qiyana:Akali:2",
+          "text": "Do not stand at the edge of Five Point Strike range; you get slowed and she can chain more damage onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 28, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Qiyana:Akali:3",
+          "text": "Hit Akali's smoke with Supreme Display of Talent. The blast stuns her if she is inside.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 23, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ff2f34f574e1f7ef4fe820d7524ea286791a2e463490ca05c96e52eb9b273ef3",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Anivia:0",
+          "text": "Dodge Flash Frost by sidestepping, and never stand at the end of its range, where it detonates and stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Qiyana:Anivia:1",
+          "text": "Close in with Audacity once Anivia has used Flash Frost. She has little to stop you for a while.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 14, "end": 22 },
+            { "kind": "champion", "key": "Anivia", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Qiyana:Anivia:2",
+          "text": "Gather an element with Terrashape before you dash in. It refreshes Elemental Wrath / Edge of Ixtal, so you get a quick extra hit.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 67, "end": 98 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Qiyana:Anivia:3",
+          "text": "Kill Anivia, then back off or finish her egg. Rebirth brings her back with full health if the egg survives.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 46,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Qiyana:Anivia:4",
+          "text": "Use Supreme Display of Talent near walls. The terrain explosion stuns Anivia, and she is easier to kill if she is stuck in a Glacial Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 },
+            { "kind": "champion", "key": "Anivia", "start": 70, "end": 76 },
+            { "kind": "ability", "key": "Anivia-R", "start": 125, "end": 138 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "568c9081468f073538be374a2bddea9a1e2f32edbb1345d981dd247878d60458",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Aurora:0",
+          "text": "Dash onto Aurora with Audacity once she has spent The Weirding; she cannot easily slow you or hop away from the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Aurora-E", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Qiyana:Aurora:1",
+          "text": "Grab river with Terrashape, then hit Aurora with Elemental Wrath so she is rooted and cannot dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 16, "end": 26 },
+            { "kind": "champion", "key": "Aurora", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Qiyana:Aurora:2",
+          "text": "Step out of the line of Twofold Hex, as it stops at the first enemy it hits. Walk behind minions so it hits them instead.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "middle:Qiyana:Aurora:3",
+          "text": "Do not fight inside her Between Worlds circle; enemies who touch its edge are slowed, and she can jump across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 24, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Qiyana:Aurora:4",
+          "text": "Use Supreme Display of Talent near a wall when Aurora is beside it; the stun gives you time to finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "champion", "key": "Aurora", "start": 47, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "256ede0f2b8dcfc917381d91fe6f4cc6151bb4767f8c4ab19a4163b70e837613",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Cassiopeia:0",
+          "text": "Dash in with Audacity only after Cassiopeia has used Petrifying Gaze or Miasma; otherwise she can stun you or ground you.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 53,
+              "end": 68
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 72,
+              "end": 78
+            },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Qiyana:Cassiopeia:1",
+          "text": "Face away from Cassiopeia when she casts Petrifying Gaze so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 41,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Qiyana:Cassiopeia:2",
+          "text": "Fight near river or brush walls. Supreme Display of Talent stuns for longer when the wall is close, and the damage scales with the target's health.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 33, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Qiyana:Cassiopeia:3",
+          "text": "Sidestep Noxious Blast; it lands after a brief delay. Walk out of Miasma rather than fighting inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Qiyana:Cassiopeia:4",
+          "text": "Grab an element with Terrashape to reset Elemental Wrath, then use the river root to catch Cassiopeia as you dive.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 21, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1f18164ce7d2db32f8b7670665aa883748b5fe5379ac9a3473b687ef829f3de8",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Fizz:0",
+          "text": "Hit Fizz with Elemental Wrath from range when his Playful is on cooldown; he has no easy escape then.",
+          "refs": [{ "kind": "champion", "key": "Fizz", "start": 4, "end": 8 }],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Qiyana:Fizz:1",
+          "text": "Do not dash in with Audacity while Fizz's Playful is ready; you may land on nothing while he is untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "Fizz", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Qiyana:Fizz:2",
+          "text": "Gather a river element with Terrashape, then root Fizz with Elemental Wrath so he cannot jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 28, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Fizz", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Qiyana:Fizz:3",
+          "text": "Step away when Chum the Waters sticks to you; the shark lands after a delay, so move out of its area or dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "16d149d73f8c4c3efe90d0fe42239988c1ee45706a3bbdaa280830430a34c9de",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Malzahar:0",
+          "text": "Wait until Malzahar has used Call of the Void before you dive; without the silence you can use all your abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "silenced", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Qiyana:Malzahar:1",
+          "text": "Hit Malzahar to break Void Shift before you commit to your combo; while it is active he takes very little damage.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Qiyana:Malzahar:2",
+          "text": "Use Supreme Display of Talent near walls or brush to stun Malzahar. Bursting him right after is your best kill chance.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 },
+            { "kind": "champion", "key": "Malzahar", "start": 58, "end": 66 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Qiyana:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions; if they die, it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Qiyana:Malzahar:4",
+          "text": "Do not walk into Nether Grasp range carelessly; it suppresses you and your dash cannot save you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3b7a3b954bd4f0c8addc9568e6a41a2afd76f9be33d88c742bacca3735dde3af",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Orianna:0",
+          "text": "Do not dash at Orianna with Audacity when the Ball is near her. Command: Shockwave will stun you and pull you in.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Orianna-R", "start": 64, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Qiyana:Orianna:1",
+          "text": "Orianna can only affect the area around her Ball. Fight where the Ball is not, and watch where it was left.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Qiyana:Orianna:2",
+          "text": "Use Terrashape to dodge Orianna's spells; you can dash with it and your Q at the same time.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Qiyana:Orianna:3",
+          "text": "Stay out of the energy field from Command: Dissonance, as it slows you and lets her catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 34, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Qiyana:Orianna:4",
+          "text": "Use the river element with Elemental Wrath to root her, then dash in with Audacity for the kill.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "094287c9098482453da09bdb221a2056abe03dec43a4077f3641c0000d09d0bf",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Ryze:0",
+          "text": "Take Terrashape to a nearby wall or river before you trade. Your enchanted Elemental Wrath gets extra range and an extra effect.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Qiyana:Ryze:1",
+          "text": "Ryze wants Flux on you before Rune Prison. Stay out of Spell Flux range, because getting hit leaves you rooted, not just slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-W", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Ryze-E", "start": 55, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 110 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 127 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Qiyana:Ryze:2",
+          "text": "Dash in with Audacity when Ryze's Rune Prison is on cooldown. He has little to stop you from reaching him then.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Ryze", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Ryze-W", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Qiyana:Ryze:3",
+          "text": "Look for Supreme Display of Talent when Ryze is near walls or brush. The stun lets your burst finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 9, "end": 34 },
+            { "kind": "champion", "key": "Ryze", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Qiyana:Ryze:4",
+          "text": "Hit Ryze with a Terrain-enchanted Elemental Wrath once he is below half health. It deals extra damage then.",
+          "refs": [{ "kind": "champion", "key": "Ryze", "start": 4, "end": 8 }],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "70ad901f89a7033a16d6b953ea7bd9eafec0509695c49fbae84c70b4a6ce87c5",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Sylas:0",
+          "text": "Dodge Abduct by stepping sideways; it is a thin line that stops at the first enemy it hits. If it misses, Sylas is left open to Audacity.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 106, "end": 111 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 128, "end": 136 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Qiyana:Sylas:1",
+          "text": "Do not fight Sylas when he is low on health. Kingslayer heals him back up, so go in when he has used it or when your Terrashape and Elemental Wrath are ready.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 45, "end": 55 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 117, "end": 127 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Qiyana:Sylas:2",
+          "text": "Take a river Enchantment with Terrashape before trading. Elemental Wrath then roots Sylas, so he cannot walk away or step out of your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 30, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 83 },
+            { "kind": "champion", "key": "Sylas", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Qiyana:Sylas:3",
+          "text": "Save Supreme Display of Talent for when Sylas is near a wall. Its stun lets you finish him before Kingslayer heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 5, "end": 30 },
+            { "kind": "champion", "key": "Sylas", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Sylas-W", "start": 98, "end": 108 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Qiyana:Sylas:4",
+          "text": "Once you have your ultimate, expect Sylas to steal it with Hijack. Fight near walls only if you can win before he copies it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Sylas-R", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "76df0a4acd3fe3df8e2940ed971ce6e10e289cdbb4201e84ca62cb20e97b744f",
+      "tips": [
+        {
+          "id": "middle:Qiyana:TwistedFate:0",
+          "text": "Dodge Wild Cards early; Twisted Fate will poke you down if you stand in the lane.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 24,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Qiyana:TwistedFate:1",
+          "text": "When Twisted Fate starts shuffling Pick a Card, don't dash into him with Audacity; the Gold Card will stun you mid-fight.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 35,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Qiyana-E", "start": 73, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Qiyana:TwistedFate:2",
+          "text": "Go all in when Twisted Fate has used Pick a Card and Wild Cards; he has little left to stop you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 37,
+              "end": 48
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 53,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Qiyana:TwistedFate:3",
+          "text": "Watch for Destiny; it shows you on the map, so do not rely on hiding in brush to escape his team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Qiyana:TwistedFate:4",
+          "text": "Use Supreme Display of Talent near walls to stun Twisted Fate, who has few ways to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "TwistedFate", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cc79ce56e256ff4d05838169bebfc4ee9e3db743ba2f5f0c4d688a8ab4008c10",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Viktor:0",
+          "text": "Dash with Audacity only when Viktor's Gravity Field is down; staying inside it gets you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Viktor-W", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Qiyana:Viktor:1",
+          "text": "Use Terrashape to grab a river element, then Elemental Wrath roots Viktor so you can reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 },
+            { "kind": "champion", "key": "Viktor", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Qiyana:Viktor:2",
+          "text": "Sidestep Hextech Ray; it is a narrow line and he must aim it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Qiyana:Viktor:3",
+          "text": "Fight when Siphon Power is on cooldown, since its shield blunts your burst.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9fcc75bdd5ef32b71c751536a472d716392ca074b3fecc630db2c061e4cd96fc",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Yasuo:0",
+          "text": "Throw Elemental Wrath only when Wind Wall is on cooldown; he will block it otherwise.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Qiyana:Yasuo:1",
+          "text": "Use Audacity to jump in when he walls; it is a dash, so Wind Wall cannot stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Qiyana:Yasuo:2",
+          "text": "Fight near walls and river so Supreme Display of Talent stuns him. His Last Breath can follow your knock back, so do not leave him enemies knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 30, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Qiyana:Yasuo:3",
+          "text": "Watch for his whirlwind: two Steel Tempest hits make the next one knock you up. Step sideways, because it is narrow.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Qiyana:Yasuo:4",
+          "text": "Use Terrashape to gather the river and have Elemental Wrath root him, then follow up with Audacity.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2206a1273924730b50d7b5bc8f223ef4625b959900d6eaecd67f9fbbc032f7e8",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Yone:0",
+          "text": "Trade with Audacity then Edge of Ixtal when Yone's Mortal Steel is on cooldown; he has no cost on his abilities, so wait for your openings.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 11, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Yone-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Qiyana:Yone:1",
+          "text": "Grab the river with Terrashape, then hit Yone with Elemental Wrath to root him, so you can land your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 20, "end": 30 },
+            { "kind": "champion", "key": "Yone", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Qiyana:Yone:2",
+          "text": "Aim Supreme Display of Talent so it hits terrain beside Yone; the shockwave stuns him and deals damage based on his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "champion", "key": "Yone", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Qiyana:Yone:3",
+          "text": "Stay out of Fate Sealed's line when you are low; it stuns you, pulls you in and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-R", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Qiyana:Yone:4",
+          "text": "Keep your distance from Yone's third Mortal Steel; its dash knocks you up. Use Audacity or Terrashape to get out.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Yone-Q", "start": 37, "end": 49 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 79, "end": 87 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cf0e0eee99271c5b728ff5766b5fc416e08445b7bbc3d19c25187037cea597b4",
+      "tips": [
+        {
+          "id": "middle:Qiyana:Zed:0",
+          "text": "Zed is weakest right after he uses Living Shadow. Hit him with Audacity and Elemental Wrath / Edge of Ixtal then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 63, "end": 71 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 76, "end": 107 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Qiyana:Zed:1",
+          "text": "Take the river element with Terrashape before he comes in; the root from Elemental Wrath / Edge of Ixtal can stop his dive.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 28, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 73, "end": 104 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Qiyana:Zed:2",
+          "text": "Armor makes Zed much weaker, so build it early if he gets ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 12, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Qiyana:Zed:3",
+          "text": "Fight Zed near walls or river with Supreme Display of Talent; he can swap away with Living Shadow, so stun him once his Shadow is gone.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 35, "end": 60 },
+            { "kind": "ability", "key": "Zed-W", "start": 84, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

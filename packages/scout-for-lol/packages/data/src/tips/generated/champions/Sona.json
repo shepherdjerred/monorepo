@@ -1,0 +1,2221 @@
+{
+  "schemaVersion": 1,
+  "champion": "Sona",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "a852a029937f01372cdb183dc189138616d581e76d30b71989e28d42bbe7558b",
+      "tips": [
+        {
+          "id": "support:Sona:general:0",
+          "text": "Use Hymn of Valor when it will hit an enemy champion; each champion it damages gives a permanent stack that shortens your ability cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Sona:general:1",
+          "text": "Cast Aria of Perseverance when an ally is hurt; it heals you both and the shield protects the team. Casting it on a hurt ally also builds your stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Sona:general:2",
+          "text": "Stay close to your ally when you cast an ability, because the aura only helps allied champions near you. Your next attack also gets stronger.",
+          "refs": [],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Sona:general:3",
+          "text": "Weave basic abilities between attacks. Every third basic ability makes your next attack stronger, with an effect that depends on the last ability you used.",
+          "refs": [],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Sona:general:4",
+          "text": "End your Power Chord combo with Song of Celerity to get a slow on an enemy trying to escape or to close in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-passive", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Sona-E", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Sona:general:5",
+          "text": "Finish a Power Chord combo with Aria of Perseverance on a hard-hitting enemy; it cuts the damage they deal for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-passive", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Sona-W", "start": 32, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Sona:general:6",
+          "text": "Aim Crescendo so it catches several enemies in a line. It stuns them all, so save it for a fight that decides the game.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Sona:general:7",
+          "text": "Use Song of Celerity to run in or away with your team. The speed lasts longer if you don't take damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "28e3314b7c3c8b29463ce002c5511ec438b5e9cd9b16ea22ee5b51039241c960",
+      "tips": [
+        {
+          "id": "support:Sona:Alistar:0",
+          "text": "Stay far from Alistar. Headbutt has long range, so keep your distance and don't stand in front of him.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Alistar-W", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Sona:Alistar:1",
+          "text": "Poke with Hymn of Valor while Alistar is on cooldown. Back off when Headbutt and Pulverize are ready.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-Q", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Alistar", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Alistar-W", "start": 68, "end": 76 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Sona:Alistar:2",
+          "text": "Use Song of Celerity to move out of reach when he starts to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Sona:Alistar:3",
+          "text": "Alistar is tough, so do not spend Crescendo on him alone. Save it for a fight where it catches several enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Sona-R", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Sona:Alistar:4",
+          "text": "If he uses Unbreakable Will, Crescendo won't stun him through it. Wait until it ends before you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 11, "end": 27 },
+            { "kind": "ability", "key": "Sona-R", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1a3e4dfe0bef142b0e79b87a5c3538bb2475dcbf2bb1501c29a910138b00185c",
+      "tips": [
+        {
+          "id": "support:Sona:Anivia:0",
+          "text": "Stay out of a straight line with Anivia so Flash Frost misses. Its stun will wreck your lane.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Sona:Anivia:1",
+          "text": "Land Hymn of Valor on Anivia when she steps up to cast; it hits champions first and builds your Accelerando.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Sona:Anivia:2",
+          "text": "Use Aria of Perseverance when Frostbite or Flash Frost is coming; the shield and heal soak her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Anivia-E", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "poke", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Sona:Anivia:3",
+          "text": "Save Crescendo for when Anivia is committed to Glacial Storm or caught out; her egg means you may need to kill her twice.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Anivia", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Anivia-R", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d7b9d54693fc10c0bb55c53cf08ef0b9b4fb855eecadba790029a319aaea5083",
+      "tips": [
+        {
+          "id": "support:Sona:Bard:0",
+          "text": "Cast Hymn of Valor whenever the enemy walks into range; it hits the nearest two enemies and builds your Accelerando, so poke often.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Sona:Bard:1",
+          "text": "Stay out of a straight line with your lane partner and the enemy minions. Cosmic Binding stuns when it hits a second target or a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Sona:Bard:2",
+          "text": "Don't stand next to a wall when Bard is lined up. Cosmic Binding stuns the first target if it hits terrain behind them.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Bard-Q", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Sona:Bard:3",
+          "text": "Crescendo can stun Bard and his partner together when they stand close. Save it for when they commit to a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Sona:Bard:4",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally takes the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Sona:Bard:5",
+          "text": "Hold Song of Celerity for escaping or chasing. Its speed boost lasts longer if you aren't hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b76fa784acfc67a7702f9a28f875db54845a6d6a18f919d6723fa2900380d9d8",
+      "tips": [
+        {
+          "id": "support:Sona:Blitzcrank:0",
+          "text": "Stay behind minions when Blitzcrank is near; Rocket Grab stops at the first enemy it hits, so a minion in the way takes the hook instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 25, "end": 35 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Sona:Blitzcrank:1",
+          "text": "Hit Blitzcrank with Hymn of Valor when he walks up to the minions. It has long range and also builds your Accelerando.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Sona-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Sona:Blitzcrank:2",
+          "text": "Once Rocket Grab is on cooldown, step forward and trade, because he has no other way to reach you from range.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Sona:Blitzcrank:3",
+          "text": "Save Song of Celerity for escaping after a grab, or for repositioning once his hook is down.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Sona:Blitzcrank:4",
+          "text": "Use Crescendo on Blitzcrank and his partner when they commit. It stuns everyone it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9451f2237d160c66b64f748f6e576e2aaa4db12ff81b912e4e9f9a0c2866cdf3",
+      "tips": [
+        {
+          "id": "support:Sona:Brand:0",
+          "text": "Stay spread out from your carry. Brand's Conflagration and Pyroclasm hit whoever is clustered together, so don't stand on top of your ADC.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-E", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Brand-R", "start": 59, "end": 68 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Sona:Brand:1",
+          "text": "Cast Hymn of Valor on Brand when he steps up. It hits the two nearest enemies, so it can poke him and the minion beside him.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Sona:Brand:2",
+          "text": "Sear stops at the first enemy it hits. Stay behind a minion in lane so it hits the minion instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 0, "end": 4 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Sona:Brand:3",
+          "text": "If Brand has set you ablaze, expect Sear to stun you. Keep moving, and don't stand still where Pillar of Flame will land.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 3, "end": 8 },
+            { "kind": "keyword", "key": "ablaze", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Brand-Q", "start": 36, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Brand-W", "start": 95, "end": 110 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Sona:Brand:4",
+          "text": "Use Aria of Perseverance to heal off Brand's burn damage. Its shield also absorbs some of his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Brand", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Sona:Brand:5",
+          "text": "Save Crescendo for when Brand is close and has used Sear. Stunning him leaves him open to your whole team.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Brand", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Brand-Q", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d4c5ae2f7434e2e4591c97bbcf2178849fc3b89f5ead9454b9d54a6d97336df0",
+      "tips": [
+        {
+          "id": "support:Sona:Braum:0",
+          "text": "Stay out of Winter's Bite range; it travels in a line and stops at the first unit it hits, so keep a minion between you and Braum.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Braum", "start": 124, "end": 129 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Sona:Braum:1",
+          "text": "Stay away from Braum's allies' attacks once he marks you; four hits means a stun, so back off after the first stack.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Sona:Braum:2",
+          "text": "Aim Hymn of Valor when Braum's shield is not facing you; it hits the two nearest enemies and favors champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Braum", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Sona:Braum:3",
+          "text": "Wait for Unbreakable to run out before you try to hit him with Hymn of Valor.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-E", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Sona-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Sona:Braum:4",
+          "text": "Cast Crescendo from range to stun Braum and his partner together, but wait until Unbreakable is down.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Braum", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Braum-E", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Sona:Braum:5",
+          "text": "Use Aria of Perseverance to heal and shield your carry after trades.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Sona:Braum:6",
+          "text": "Use Song of Celerity to move out of Glacial Fissure's path; its cast time is long enough to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Braum-R", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5d2115d4df266dea611fa325a48bed37c4cd9bc8f6ef4b07ebd3fbd71c9c9741",
+      "tips": [
+        {
+          "id": "support:Sona:Camille:0",
+          "text": "Poke Camille with Hymn of Valor from range, then step back before she can dive onto you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Camille", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Sona-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Sona:Camille:1",
+          "text": "Hold Crescendo for when Camille dives in with Hookshot; stunning her mid-fight turns the fight your way.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Camille", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Camille-E", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Sona:Camille:2",
+          "text": "Camille's Tactical Sweep slows you when the outer edge hits. Stay out of its reach, and use Song of Celerity to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-W", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Sona-E", "start": 92, "end": 108 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Sona:Camille:3",
+          "text": "Use Aria of Perseverance to heal and shield your carry when Camille trades, since she can hit them hard in a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Camille", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Sona:Camille:4",
+          "text": "Camille's ultimate locks one target in a zone. Stay close to your ally so you can stun her with Crescendo.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Sona-R", "start": 96, "end": 105 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d919cdc10ede023be65fd662b6b736855bf77059bb2a8f213b7efb97aa6498ef",
+      "tips": [
+        {
+          "id": "support:Sona:Janna:0",
+          "text": "Stay out of Zephyr range when you can; Janna's slow and poke hurt a lot when you stand still in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-W", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Janna", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Sona:Janna:1",
+          "text": "Hold Crescendo until Janna has used Monsoon or her Howling Gale, then stun the team while their escape is down.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Janna", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Janna-R", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Janna-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Sona:Janna:2",
+          "text": "Use Hymn of Valor when Janna steps up to the minions; it hits the nearest two enemies and favors champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Janna", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Sona:Janna:3",
+          "text": "Use Aria of Perseverance to heal back damage after a trade. Its shield helps your carry in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Sona:Janna:4",
+          "text": "Janna's Howling Gale knocks you up. Use Song of Celerity to move out of its path once you hear it charging.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Janna-Q", "start": 8, "end": 20 },
+            { "kind": "ability", "key": "Sona-E", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "78f80058b529cc95ae0834fa05cb90cba5d9875a1243e5ff5823ab7bd7f48bee",
+      "tips": [
+        {
+          "id": "support:Sona:Karma:0",
+          "text": "Stay out of Inner Flame's path; it stops at the first unit it hits, so keep a minion between you and Karma when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Karma", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Sona:Karma:1",
+          "text": "Move away when Karma tethers you with Focused Resolve. Getting far enough away breaks it and you avoid the root.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Karma-W", "start": 38, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Sona:Karma:2",
+          "text": "Use Hymn of Valor to poke Karma when she steps up; it hits the two nearest enemies and fuels your Accelerando.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Karma", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Sona:Karma:3",
+          "text": "Hold Crescendo until Karma and her partner are bunched together, so the stun catches both of them.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Karma", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Sona:Karma:4",
+          "text": "Take cover from a bigger Soulflare circle by leaving the fire right away, then heal back up with Aria of Perseverance.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 97, "end": 117 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "fbc60decd10fe5e648176dc2b6dcf25510ee59a49db53f0a72c5df570d87e826",
+      "tips": [
+        {
+          "id": "support:Sona:Leona:0",
+          "text": "Stay out of Zenith Blade range. If Leona lands it, she dashes onto you and roots you, and then she stuns you with Shield of Daybreak.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 104 },
+            { "kind": "ability", "key": "Leona-Q", "start": 114, "end": 132 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Sona:Leona:1",
+          "text": "Poke with Hymn of Valor while Leona waits for her cooldowns. Be careful, because it only hits the nearest two enemies.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-Q", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Leona", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Sona:Leona:2",
+          "text": "Hold Aria of Perseverance until Leona commits. Cast it as she dashes in, so its shield soaks up her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Leona", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Sona:Leona:3",
+          "text": "Use Song of Celerity to step out of reach when Leona's Zenith Blade is on cooldown, or to run after she lands on you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Leona", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Leona-E", "start": 55, "end": 67 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Sona:Leona:4",
+          "text": "When Leona raises Eclipse, back away. Her blast only hurts enemies close by, so don't stand next to her.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Sona:Leona:5",
+          "text": "Use Crescendo to stun Leona and her partner when they dive. Aim it so it hits everyone you can.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Leona", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "daffad07ea1fabb02a24aacb0226d22d67a4f5d8ac3c0dbdc279b71c08cb8857",
+      "tips": [
+        {
+          "id": "support:Sona:Lulu:0",
+          "text": "Stay out of Lulu's Glitterlance line and don't stand where she can slow you; Sona is easy to catch once slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "champion", "key": "Sona", "start": 77, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Sona:Lulu:1",
+          "text": "Keep Hymn of Valor going on Lulu and her partner whenever they step up to last-hit; it hits the two nearest enemies and builds Accelerando.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Sona:Lulu:2",
+          "text": "Lulu can polymorph you with Whimsy, so stay out of her range unless you are ready to be caught. Don't walk up to her without a reason.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-W", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Sona:Lulu:3",
+          "text": "Hold Crescendo for when Lulu or her carry is out of position. Her ally can be shielded, but the stun still lands on anyone it reaches.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Lulu", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Sona:Lulu:4",
+          "text": "Use Aria of Perseverance after trades to heal both you and your carry; it also builds Accelerando.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7a743ae9d9929bba7d22caab19abcfff6cfbcb9e452684d6a1a6ce67f02347b2",
+      "tips": [
+        {
+          "id": "support:Sona:Lux:0",
+          "text": "Use Hymn of Valor to poke Lux when she steps up to cast; it hits the nearest two enemies and prefers champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 26, "end": 29 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Sona:Lux:1",
+          "text": "Stay out of Light Binding's line, and keep minions or allies from lining up in front of you. It roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Sona:Lux:2",
+          "text": "Once Lux has used Light Binding, step forward and trade with Hymn of Valor, because her next one is a while away.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-Q", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Sona-Q", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Sona:Lux:3",
+          "text": "Land your empowered attack with Song of Celerity as the last ability. It slows Lux, so she has trouble escaping your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 },
+            { "kind": "champion", "key": "Lux", "start": 79, "end": 82 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Sona:Lux:4",
+          "text": "Do not stand in Lucent Singularity. It slows you, and the burst when it detonates slows you more.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 16, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Sona:Lux:5",
+          "text": "Use Crescendo on Lux and her carry together when they commit. The stun makes them easy targets for your team.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lux", "start": 17, "end": 20 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Sona:Lux:6",
+          "text": "Move to the side when you see Final Spark's red warning beam. Its range is very long, so do not rely on distance to stay safe.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b7b2072e0ba4d20753d4aa3e9fdadf62d797bd8eddd28b35ed9fb41175ac6cc2",
+      "tips": [
+        {
+          "id": "support:Sona:Maokai:0",
+          "text": "Stay out of Twisted Advance range; if Maokai reaches you, you are rooted and your squishy body dies fast. Keep an ally between you and him.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Maokai", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Sona:Maokai:1",
+          "text": "Hit Maokai with Hymn of Valor only when you need the damage; every spell that hits him speeds up his Sap Magic healing.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Sona-Q", "start": 16, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 101,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Sona:Maokai:2",
+          "text": "Do not stand next to brush where Maokai could have tossed a sapling; Sapling Toss there hurts much more and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Maokai-E", "start": 69, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Sona:Maokai:3",
+          "text": "Use Song of Celerity to run out of a sapling's reach, or to catch up when Maokai has used his abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Maokai", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Sona:Maokai:4",
+          "text": "Crescendo stuns everything in its line. Use it when Maokai commits, but not while Twisted Advance has him untargetable during the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 10, "end": 15 },
+            { "kind": "champion", "key": "Maokai", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Maokai-W", "start": 82, "end": 97 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "30c26c26c50767ac999c7fdd6b95d5e5a6a9fa309464384471d2440e7ba8c9cc",
+      "tips": [
+        {
+          "id": "support:Sona:Mel:0",
+          "text": "Hold Crescendo until Mel has used Rebuttal or you are sure it is off cooldown; she can destroy it as it travels.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Mel", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Mel-W", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Sona:Mel:1",
+          "text": "Stay out of the long reach of Solar Snare; when she is rooted you are in trouble, so keep minions or allies between you and her.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 30, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Sona:Mel:2",
+          "text": "Poke Mel with Hymn of Valor when she steps up; it hits the two nearest enemies and favors champions.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Mel", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Sona-Q", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Sona:Mel:3",
+          "text": "Back off when you take several hits from Mel; her stacked damage can finish you if you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 41, "end": 44 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "bcff04186c96e0afeab562de1b906014402037fa02a5999477a5bb6647d26e76",
+      "tips": [
+        {
+          "id": "support:Sona:Milio:0",
+          "text": "Poke with Hymn of Valor whenever Milio steps up to help a minion; it hits the nearest two enemies and prefers champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Milio", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Sona:Milio:1",
+          "text": "Stay out of a straight line with Milio. Ultra Mega Fire Kick knocks back the first enemy it hits, so keep a minion or ally in front of you.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 40, "end": 60 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Sona:Milio:2",
+          "text": "Crescendo stuns everything in a line, so use it when Milio and his carry are lined up. His Breath of Life cleanses it only if he casts it quickly enough.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Milio", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Milio-R", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Sona:Milio:3",
+          "text": "Cast Aria of Perseverance in trades to heal and shield both you and your carry. Healing a hurt ally also builds your Accelerando.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4c49f53585fce7e834ef713c8239b38e4c083a18cb01adda0ab86b50d8f97962",
+      "tips": [
+        {
+          "id": "support:Sona:Morgana:0",
+          "text": "Stay behind minions so Dark Binding hits them first. Walk wide of the lane's middle if Morgana's Dark Binding is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "Morgana", "start": 87, "end": 94 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 97, "end": 109 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Sona:Morgana:1",
+          "text": "Poke Morgana with Hymn of Valor while Dark Binding is on cooldown, then back off.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Morgana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Sona-Q", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Sona:Morgana:2",
+          "text": "Wait for Morgana to spend Black Shield before you cast Crescendo; the shield will stop the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Morgana-E", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Sona-R", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Sona:Morgana:3",
+          "text": "Use Aria of Perseverance to heal through Tormented Shadow, and step out of the fire instead of standing in it.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Morgana-W", "start": 41, "end": 57 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a160f6278afde206376d44395f23b10646d669ee92d047b2c088cbc8b9dba675",
+      "tips": [
+        {
+          "id": "support:Sona:Nami:0",
+          "text": "Poke the enemy with Hymn of Valor whenever Nami steps up to help her carry; it hits the nearest two enemies and makes your next attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 20, "end": 33 },
+            { "kind": "champion", "key": "Nami", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Sona:Nami:1",
+          "text": "Stay out of range of Aqua Prison's bubble; it lands after a short delay, so keep moving and step out of the circle.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Sona:Nami:2",
+          "text": "Once Nami has used Aqua Prison, push forward and trade, because it has a long cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Nami-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Sona:Nami:3",
+          "text": "Back off from a champion with Tidecaller's Blessing on them. It wears off fast and makes them slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 30, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Sona:Nami:4",
+          "text": "Use Aria of Perseverance to heal and shield through Nami's pokes. Save Song of Celerity to escape or to chase after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Nami", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Sona-E", "start": 71, "end": 87 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Sona:Nami:5",
+          "text": "Sidestep Tidal Wave, which travels slowly. Crescendo from you can stun the enemy team back when they are bunched up.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 9, "end": 19 },
+            { "kind": "ability", "key": "Sona-R", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "63b18daf723882f76efeb62d58bd2ab593d34266d7d0be19572fd4064270ebd7",
+      "tips": [
+        {
+          "id": "support:Sona:Nautilus:0",
+          "text": "Stay behind your minions and keep away from Nautilus's Dredge Line; it stops on the first enemy it hits, so a minion in the way blocks it.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 44, "end": 52 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Sona:Nautilus:1",
+          "text": "Poke with Hymn of Valor when the enemy steps up for minions, since it hits the two nearest enemies and prefers champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Sona:Nautilus:2",
+          "text": "Keep Crescendo ready for when Nautilus commits with Dredge Line; stunning him and his team lets your side win the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Sona:Nautilus:3",
+          "text": "Fight at range. Nautilus's Riptide only reaches a short distance, so stay outside it.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Sona:Nautilus:4",
+          "text": "Use Song of Celerity for speed to get out of Riptide, and use the empowered attack to leave him slowed when he chases you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Sona:Nautilus:5",
+          "text": "Cast Aria of Perseverance as the shield and heal land on your lane partner before Nautilus's burst arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Nautilus", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9445d41886c432a328a8a6e5ccdecd636ae74e006585979cd4d83f3c70ade20e",
+      "tips": [
+        {
+          "id": "support:Sona:Neeko:0",
+          "text": "Stay out of a straight line from Neeko; Tangle-Barbs roots you for longer once it has hit something, and Sona has no escape besides Song of Celerity.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Neeko-E", "start": 40, "end": 52 },
+            { "kind": "champion", "key": "Sona", "start": 105, "end": 109 },
+            { "kind": "ability", "key": "Sona-E", "start": 132, "end": 148 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Sona:Neeko:1",
+          "text": "Stand away from minions when Neeko has Tangle-Barbs ready, because a tangle that hits a minion first grows stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Neeko-E", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Sona:Neeko:2",
+          "text": "Poke with Hymn of Valor when Neeko walks up to last-hit; it hits the two nearest enemies and prefers champions.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-Q", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Neeko", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Sona:Neeko:3",
+          "text": "Save Crescendo for when Neeko or her team commits, and aim it so it catches more than one enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Neeko", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Sona:Neeko:4",
+          "text": "Use Aria of Perseverance to shield your carry just before Neeko's burst lands, and keep it for when she commits.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Neeko", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Sona:Neeko:5",
+          "text": "Be wary of ally-looking champions or odd minions and wards near you; Neeko can disguise herself with Inherent Glamour and Pop Blossom can be readied in secret.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 69, "end": 74 },
+            {
+              "kind": "ability",
+              "key": "Neeko-passive",
+              "start": 101,
+              "end": 117
+            },
+            { "kind": "ability", "key": "Neeko-R", "start": 122, "end": 133 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "061753263e3adf3a4e5737b5c2a1d75d435e04a355ef4a34fed699e6e860fdb9",
+      "tips": [
+        {
+          "id": "support:Sona:Pantheon:0",
+          "text": "Keep your distance from Pantheon. Shield Vault stuns you the moment he lands, so stay out of its range and don't stand alone in front of your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Sona:Pantheon:1",
+          "text": "Use Hymn of Valor to poke him whenever he walks up to trade. It hits his two nearest enemies at long range and costs you little.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Sona:Pantheon:2",
+          "text": "Don't fight in front of him while Aegis Assault is up. He takes no damage from that direction, so wait for it to end or hit him from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Sona:Pantheon:3",
+          "text": "Hold Crescendo for when he commits to a dive. If it stuns him, your team gets free damage on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Sona:Pantheon:4",
+          "text": "When Pantheon is about to land Grand Starfall, you get several seconds of warning. Move out of the area and don't stay clumped with your team.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Sona:Pantheon:5",
+          "text": "Cast Aria of Perseverance on your carry when Pantheon jumps in. Its shield and heal soak up his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Pantheon", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0b703794e6b39cb28cfc9d594f5220c73570cc44496b5f84f9afd49ea08b760e",
+      "tips": [
+        {
+          "id": "support:Sona:Poppy:0",
+          "text": "Stay well back from Poppy. Heroic Charge carries you into a wall and stuns you, so keep terrain away from your back.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Poppy-E", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Sona:Poppy:1",
+          "text": "Poke with Hymn of Valor from long range while Poppy has to walk up to you. Staying far away makes her much weaker.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-Q", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Poppy", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Sona:Poppy:2",
+          "text": "Hold Crescendo until Poppy commits to a dive. Aim it so the stun also catches her allies.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Poppy", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Sona:Poppy:3",
+          "text": "Use Song of Celerity to move faster and keep your distance. Her Hammer Shock slows you, so stay out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Poppy-Q", "start": 64, "end": 76 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Sona:Poppy:4",
+          "text": "Cast Aria of Perseverance to shield your ally as Poppy swings in, so her burst is absorbed.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Poppy", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0dc797f0e0f603c3abd1c0be653df393a91541ebf7658c9a4531cd6760301613",
+      "tips": [
+        {
+          "id": "support:Sona:Pyke:0",
+          "text": "Stay behind your minions and away from bushes. If Pyke hits you with Bone Skewer, you are pulled in and he can kill you quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Sona:Pyke:1",
+          "text": "Pyke stuns with Phantom Undertow, so keep your distance. Use Song of Celerity to get away if he closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "stunned", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pyke-E", "start": 16, "end": 32 },
+            { "kind": "ability", "key": "Sona-E", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Sona:Pyke:2",
+          "text": "Hit Pyke with Hymn of Valor whenever he is in range. It is a safe poke that also builds your Accelerando.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Sona-Q", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Sona:Pyke:3",
+          "text": "Chase Pyke off with Hymn of Valor before he can heal. He only regains health when you can't see him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Sona-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Sona:Pyke:4",
+          "text": "Watch for sharks under your feet. They mean Pyke is hidden nearby in Ghostwater Dive, so stay back and be ready to use Aria of Perseverance.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Pyke-W", "start": 69, "end": 84 },
+            { "kind": "ability", "key": "Sona-W", "start": 119, "end": 139 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Sona:Pyke:5",
+          "text": "Hold Crescendo until Pyke commits to a pull or dash. It stuns him and anyone near him.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Pyke", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7582a429133bcb5f5b1b169256efda0d3652a18f7817a721ebcd9e58b30a8b9f",
+      "tips": [
+        {
+          "id": "support:Sona:Rakan:0",
+          "text": "Keep your distance and use Hymn of Valor to poke Rakan whenever he walks up; it hits the nearest two enemies and favors champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "Rakan", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Sona:Rakan:1",
+          "text": "Stay behind your ADC. Rakan's Grand Entrance dash lets him reach you fast and knock you up, and you have no escape.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Rakan-W", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Sona:Rakan:2",
+          "text": "Save Crescendo for when Rakan and his ally commit; it stuns everyone it hits in a line and stops The Quickness follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Rakan", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Rakan-R", "start": 97, "end": 110 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Sona:Rakan:3",
+          "text": "Cast Aria of Perseverance before Rakan's burst lands so the shield is up; it also heals you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Rakan", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Sona:Rakan:4",
+          "text": "Use Song of Celerity to run away or reposition when Rakan engages; the speed lasts longer if you aren't hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Rakan", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "caa6f8ad04b97a24ee489739afea6d1f49dc064138801621c31335ef7a2117b2",
+      "tips": [
+        {
+          "id": "support:Sona:Rell:0",
+          "text": "Stay behind your carry and keep out of Rell's reach. Shattering Strike and Ferromancy: Crash Down both stun, and Sona has no escape once caught.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Rell-Q", "start": 53, "end": 70 },
+            { "kind": "ability", "key": "Rell-W", "start": 75, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 107 },
+            { "kind": "champion", "key": "Sona", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Sona:Rell:1",
+          "text": "Poke Rell with Hymn of Valor while she is mounted and far away. It has long range and hits the nearest two enemies, champions first.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rell", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sona-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Sona:Rell:2",
+          "text": "Keep Song of Celerity ready for when Rell mounts up and charges at you. The extra Move Speed helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Rell", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Sona:Rell:3",
+          "text": "Use Crescendo on Rell and her team when they dive in. The stun stops her combo, and it only works if you stay out of reach until then.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Rell", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Sona:Rell:4",
+          "text": "Aria of Perseverance shield pops when Shattering Strike hits, since it destroys shields. Heal with it first and save the shield for other damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 0, "end": 20 },
+            { "kind": "ability", "key": "Rell-Q", "start": 38, "end": 55 },
+            { "kind": "summoner-spell", "key": "7", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2e645edf9c405f82fcaa32034a55d6d780aaddffec10d76c95f034a51eb8b69d",
+      "tips": [
+        {
+          "id": "support:Sona:Senna:0",
+          "text": "Stay out of Last Embrace range; it travels far and roots you after a short delay. Keep minions between you and Senna's aim line.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 56 },
+            { "kind": "champion", "key": "Senna", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Sona:Senna:1",
+          "text": "Hit Senna with Hymn of Valor whenever she walks up to attack. It reaches far and also builds your Accelerando.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sona-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Sona:Senna:2",
+          "text": "Save Crescendo for when Senna or her partner is out of position. It stuns everyone it hits, so line up the enemy carry too.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Senna", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Sona:Senna:3",
+          "text": "Cast Aria of Perseverance when Senna pokes you. The heal and shield blunt her trades, and her long range makes trades frequent.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Senna", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Sona:Senna:4",
+          "text": "Use Song of Celerity to step out of a Last Embrace throw. It also helps you close in when Senna is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Senna-W", "start": 38, "end": 50 },
+            { "kind": "champion", "key": "Senna", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e656f23327d6ac119ac5c4b307db45c12092daaeaaa60376e261502ec2517783",
+      "tips": [
+        {
+          "id": "support:Sona:Seraphine:0",
+          "text": "Use Hymn of Valor to poke when Seraphine steps up to last-hit; it hits the two nearest enemies and favors champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Sona:Seraphine:1",
+          "text": "Stay out of Beat Drop's line. If you are slowed, it roots you, so keep moving and don't wander in a straight line toward her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Sona:Seraphine:2",
+          "text": "Save Crescendo for when Seraphine and her carry are bunched together; it stuns everyone in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Seraphine", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Sona:Seraphine:3",
+          "text": "Use Song of Celerity to close the gap or escape, and keep your Power Chord attack ready for the slow it gives.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Sona-passive", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Sona:Seraphine:4",
+          "text": "Use Aria of Perseverance after Seraphine's poke lands; it heals you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Seraphine", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "995b520b8b0dbc390d449197c1cb660f996525ba98afdb62bb6ebbd9ab33e261",
+      "tips": [
+        {
+          "id": "support:Sona:Shen:0",
+          "text": "Poke Shen with Hymn of Valor from range while he has no ally to protect; it hits the two nearest enemies, champions first.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sona-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Sona:Shen:1",
+          "text": "Stay out of Shadow Dash range. If he taunts you, you can't walk away, so keep your own Aria of Perseverance ready for the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Sona-W", "start": 87, "end": 107 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Sona:Shen:2",
+          "text": "Use Crescendo on Shen and the enemy carry together when they commit, so they are stunned and can't follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Shen", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Sona:Shen:3",
+          "text": "Cast Song of Celerity before you auto him to get Power Chord's slow; it helps you step away from his dash.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 5, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Sona-passive",
+              "start": 49,
+              "end": 60
+            },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a40d7fa7c9c234ba84e35e34710dfd0ddc8522318170cb386e58ccd434b0586a",
+      "tips": [
+        {
+          "id": "support:Sona:Soraka:0",
+          "text": "Hit Soraka with Hymn of Valor whenever she steps up to heal. It also builds your Accelerando.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Sona-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Sona:Soraka:1",
+          "text": "Stay out of Equinox. It silences you, so you can't cast, then roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Sona:Soraka:2",
+          "text": "Land Crescendo on Soraka and your team when she is out of position. A long cooldown on Equinox means she can't easily zone you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Soraka", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Soraka-E", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Sona:Soraka:3",
+          "text": "Use Song of Celerity to slip away from Starcall, or a Power Chord hit built from it to slow Soraka.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 39, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Sona-passive",
+              "start": 54,
+              "end": 65
+            },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 91 },
+            { "kind": "champion", "key": "Soraka", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a486d6c52c074e47c33652459cf50613a66ebbec4812818f4b2cc6109fd14e05",
+      "tips": [
+        {
+          "id": "support:Sona:Swain:0",
+          "text": "Use Hymn of Valor to poke Swain whenever he steps up for a minion; it hits the two nearest enemies and prefers champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Swain", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Sona:Swain:1",
+          "text": "Stay out of Nevermove's path and keep minions between you and him; if you get rooted, Swain can pull you in.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 },
+            { "kind": "champion", "key": "Swain", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Sona:Swain:2",
+          "text": "Use Song of Celerity to move out of Death's Hand range, since it hurts most up close.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Swain-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Sona:Swain:3",
+          "text": "Use Aria of Perseverance after you take Swain's poke to heal and shield your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Swain", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Sona:Swain:4",
+          "text": "At level 6, Crescendo can stun Swain when he transforms, so he can't drain you. Aim it before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Swain", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ef4ee82de25ca1375d7f8f7eb2f07ab7acef50c582aeafef39d46413294207f2",
+      "tips": [
+        {
+          "id": "support:Sona:TahmKench:0",
+          "text": "Stay out of Tongue Lash's line; it hits the first enemy in its path and leaves you slowed. Stand behind your own minions or your ally.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Sona:TahmKench:1",
+          "text": "Use Hymn of Valor to poke him when he walks up, but stop once he has built stacks, because three stacks let him swallow you with Devour.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 129,
+              "end": 135
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Sona:TahmKench:2",
+          "text": "Keep Crescendo for when he commits with Abyssal Dive or Devour. The stun lets your team punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 40, "end": 52 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Sona:TahmKench:3",
+          "text": "Watch for the Abyssal Dive channel; he lands after a short wait. Step away from the marked spot or Flash out to avoid being knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 14, "end": 26 },
+            { "kind": "summoner-spell", "key": "4", "start": 99, "end": 104 },
+            { "kind": "keyword", "key": "knocked-up", "start": 124, "end": 134 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Sona:TahmKench:4",
+          "text": "Use Song of Celerity to get away or to line up your empowered attack. It will also slow him when your Power Chord is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 },
+            {
+              "kind": "ability",
+              "key": "Sona-passive",
+              "start": 102,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8aa71f70e0c48c44cfa89ee155c523c5a217133872bed23195c45412b4ef0257",
+      "tips": [
+        {
+          "id": "support:Sona:Taric:0",
+          "text": "Poke Taric with Hymn of Valor whenever he steps up to the minions; he has no way to close the gap quickly except Dazzle.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Sona-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Taric-E", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Sona:Taric:1",
+          "text": "Stay out of Dazzle's line and keep moving after Taric starts casting it; it bursts after a delay, so you can sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Taric", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Sona:Taric:2",
+          "text": "Taric gets stunned by Crescendo for a long time; save it for when he commits to a fight so his team cannot follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "stunned", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Sona-R", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Sona:Taric:3",
+          "text": "Use Aria of Perseverance to heal your carry after Taric trades, and use its shield when you expect his stun to land on you.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Taric", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Sona:Taric:4",
+          "text": "Use Song of Celerity to run away from Taric when he winds up an attack combo, then punish him once his empowered hits are gone.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Taric", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0630a854982c6e1df145bdf5517becfe03e06f9744b15dec567d63d22c38a20c",
+      "tips": [
+        {
+          "id": "support:Sona:Thresh:0",
+          "text": "Stay out of Death Sentence range and behind minions; the scythe stops at the first unit it hits, so a minion in the line protects you.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Sona:Thresh:1",
+          "text": "Watch Thresh's cast start and move sideways; Death Sentence has a long cast time, so a quick step can dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 45, "end": 59 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Sona:Thresh:2",
+          "text": "Poke him with Hymn of Valor whenever he walks up to hit a minion; it hits the two nearest enemies and favors champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Sona:Thresh:3",
+          "text": "Keep Song of Celerity ready to run away after he spends Death Sentence; the speed helps you get out of Flay range.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 56, "end": 70 },
+            { "kind": "ability", "key": "Thresh-E", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Sona:Thresh:4",
+          "text": "Use Crescendo on Thresh and his carry together when they commit; it stuns everything in a wide line.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Thresh", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Sona:Thresh:5",
+          "text": "Land your empowered attack with Aria of Perseverance on Thresh when he comes in to trade, so his damage drops.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 32, "end": 52 },
+            { "kind": "champion", "key": "Thresh", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9a33311a4bdda4196351dc2a8dacffb1c11087218efdda06bd654f09dcf502c7",
+      "tips": [
+        {
+          "id": "support:Sona:Velkoz:0",
+          "text": "Stay out of range of Vel'Koz's Tectonic Disruption and Plasma Fission; if you get stunned in lane, you will be hit by the rest of his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 31, "end": 50 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 55, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Sona:Velkoz:1",
+          "text": "Use Hymn of Valor to poke him whenever he steps up to hit minions; it hits the nearest two enemies and favors champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Sona:Velkoz:2",
+          "text": "Save Crescendo for when Vel'Koz is out of position. Stunning him also interrupts his Life Form Disintegration Ray.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Velkoz", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 85, "end": 113 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Sona:Velkoz:3",
+          "text": "Cast Aria of Perseverance when his Void Rift is about to land. The shield and heal cover your partner's lane damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 35, "end": 44 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Sona:Velkoz:4",
+          "text": "Walk sideways out of his Void Rift and keep moving; Song of Celerity gives you the speed to dodge his slow bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Sona-E", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b97992092c389485a00226a6a6886edd29e0063044942a4b43c4e5bb3ff92bf3",
+      "tips": [
+        {
+          "id": "support:Sona:Xerath:0",
+          "text": "Stay out of Shocking Orb's line. Keep a minion between you and Xerath, because the orb stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Xerath", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "support:Sona:Xerath:1",
+          "text": "Use Hymn of Valor to poke Xerath whenever he is in range. It hits the nearest two enemies and goes for champions first.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Xerath", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Sona:Xerath:2",
+          "text": "Cast Aria of Perseverance as Eye of Destruction or Arcanopulse is about to land. It heals you and an ally, and the shield absorbs some damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "ability", "key": "Xerath-W", "start": 29, "end": 47 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Sona:Xerath:3",
+          "text": "Charge in with Song of Celerity when Xerath is charging Arcanopulse. He moves slowly then, so you can close the distance.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Xerath", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Sona:Xerath:4",
+          "text": "Use Crescendo to stun Xerath when he is out of position, so your team can kill him. He has no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6bf531271b3fbb3a220c64797dbb67608165dda184a62e6ab631f782988e5a0f",
+      "tips": [
+        {
+          "id": "support:Sona:Yuumi:0",
+          "text": "Hit the enemy with Hymn of Valor whenever she is in range; each champion it damages builds your haste, and it picks champions over minions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Sona:Yuumi:1",
+          "text": "Use Crescendo when Yuumi is stuck on her carry and you can catch both of them, so they are stunned together.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yuumi", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Sona:Yuumi:2",
+          "text": "Slow Yuumi's carry with an empowered attack from Song of Celerity, then follow up so your lane partner can trade.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yuumi", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Sona-E", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Sona:Yuumi:3",
+          "text": "Stay out of a long Prowling Projectile line. Step sideways, since it ends at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 19, "end": 38 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Sona:Yuumi:4",
+          "text": "Cast Aria of Perseverance before a trade so your shield and heal cancel out her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d052a34ac93302e31b46f9b2b5163e48d31a1e0857e46e054cbe624921e5e898",
+      "tips": [
+        {
+          "id": "support:Sona:Zilean:0",
+          "text": "Stay out of Time Bomb's range, and walk away from a bomb stuck to you. Two bombs on one target make the first one stun.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Sona:Zilean:1",
+          "text": "Use Hymn of Valor on Zilean when he walks up. It hits the nearest two enemies and prefers champions.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zilean", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Sona:Zilean:2",
+          "text": "Zilean is hard to kill when alone but fragile if your team focuses him. Commit with your lane partner and use Crescendo to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Sona-R", "start": 110, "end": 119 },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Sona:Zilean:3",
+          "text": "Wait for his Chronoshift to end before you finish a target he protected.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-R", "start": 13, "end": 24 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b74ff4e5e02d88f79f6f25034b07eaad28c8b7db976ac6858355426886d3d522",
+      "tips": [
+        {
+          "id": "support:Sona:Zyra:0",
+          "text": "Hit Zyra and her plants with Hymn of Valor to poke; it hits the two nearest enemies, and it grows your Accelerando when it hits champions.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Sona-Q", "start": 29, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Sona:Zyra:1",
+          "text": "Stay out of Grasping Roots range, because Sona has little to escape once she is rooted. Walk wide of lane brush where Zyra may have seeds.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Sona", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 86 },
+            { "kind": "champion", "key": "Zyra", "start": 118, "end": 122 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Sona:Zyra:2",
+          "text": "Use Song of Celerity to close the gap or to step out of the line of Grasping Roots.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-E", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Zyra-E", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Sona:Zyra:3",
+          "text": "Save Crescendo for when Zyra is rooted-in-place by nothing else: cast it when she commits forward, so she and her allies are stunned together.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Zyra", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 125, "end": 132 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Sona:Zyra:4",
+          "text": "Cast Aria of Perseverance as her spells land to shield and heal, then keep your Power Chord ready for a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-W", "start": 5, "end": 25 },
+            { "kind": "ability", "key": "Sona-passive", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

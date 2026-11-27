@@ -1,0 +1,2731 @@
+{
+  "schemaVersion": 1,
+  "champion": "JarvanIV",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "16a53bbbd21772cccb550c2f3655a6e70ff07fe8ce612307be84cd0934af1904",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:general:0",
+          "text": "Throw Demacian Standard first, then Dragon Strike through it. You are pulled to the flag and enemies in your path are knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 36, "end": 49 },
+            { "kind": "keyword", "key": "knocked-up", "start": 118, "end": 128 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:general:1",
+          "text": "Place Demacian Standard to scout a bush or objective when you fear incoming enemies. It also shows the area around it.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:general:2",
+          "text": "Start a fight by attacking different champions once each. Martial Cadence then deals its bonus damage to several targets.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "JarvanIV-passive",
+              "start": 58,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:JarvanIV:general:3",
+          "text": "Use Golden Aegis when you walk into a group. The more enemy champions it hits, the bigger your shield, and they are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:JarvanIV:general:4",
+          "text": "Use Cataclysm on a champion you want to trap. Enemies inside the terrain cannot walk out, but dashes can pass through it.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:JarvanIV:general:5",
+          "text": "Leave your own Cataclysm arena by casting Demacian Standard outside it and then Dragon Strike. You can cast during the dash.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 15, "end": 24 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 42, "end": 59 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:JarvanIV:general:6",
+          "text": "Hit with Dragon Strike before your allies commit to attack. It cuts the target's Armor, so follow-up attacks hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:JarvanIV:general:7",
+          "text": "Fight near your Demacian Standard flag. You and nearby allies get extra Attack Speed while it stands.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:JarvanIV:combo:0",
+          "name": "Flash into the flag pull",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "JarvanIV-E" },
+            { "kind": "ability", "key": "JarvanIV-Q" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "Use it to change where the EQ lands, or to surprise an enemy who expects the dash from your position.",
+          "whenRefs": [],
+          "text": "Cast Flash just before the dash begins, and you are pulled to the flag from the new spot. Flash during the dash and the knock-up lands where you end up.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 5, "end": 10 },
+            { "kind": "summoner-spell", "key": "4", "start": 90, "end": 95 }
+          ]
+        },
+        {
+          "id": "jungle:JarvanIV:combo:1",
+          "name": "EQ out of your own Cataclysm",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "JarvanIV-R" },
+            { "kind": "ability", "key": "JarvanIV-E" },
+            { "kind": "ability", "key": "JarvanIV-Q" }
+          ],
+          "when": "Use it after landing Cataclysm when you need to leave the arena, or to chase a target who escapes the ring.",
+          "whenRefs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 21, "end": 30 }
+          ],
+          "text": "Jarvan can't walk through his own walls, but the Dragon Strike dash passes through them. Place the standard outside the ring and Q to it.",
+          "textRefs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 49, "end": 62 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "755286ede5a48e843081c88153a2c89903084236a31124f8a26c86feb8b95e94",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Aatrox:0",
+          "text": "Plant Demacian Standard, then hit it with Dragon Strike to pull yourself in and knock Aatrox up, ideally when he is already close.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 42, "end": 55 },
+            { "kind": "champion", "key": "Aatrox", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:Aatrox:1",
+          "text": "Cast Golden Aegis when Aatrox commits to a fight; it slows him and gives you a shield, and it grows if more enemy champions are hit.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Aatrox:2",
+          "text": "Use Cataclysm on Aatrox to trap him in the arena. His Umbral Dash is a movement ability, so he can dash out through the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Aatrox", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:JarvanIV:Aatrox:3",
+          "text": "Hit Aatrox with Dragon Strike before you trade; it cuts his Armor, so your follow-up attacks hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:Aatrox:4",
+          "text": "Fight Aatrox when you have allies near. Demacian Standard gives them Attack Speed, and his healing matters less if he is burst down fast.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 40, "end": 57 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4d56008535e29768a975a589a5e8614b18a603db4c0b3fbaf57ff9dbcb1b314b",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Ambessa:0",
+          "text": "Plant Demacian Standard, then hit it with Dragon Strike to knock Ambessa up when she is close, and follow up before she can dash away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 42, "end": 55 },
+            { "kind": "champion", "key": "Ambessa", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:JarvanIV:Ambessa:1",
+          "text": "Use Golden Aegis when Ambessa jumps in. It slows her and gives you a shield, and the shield grows if it hits more champions.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ambessa", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:JarvanIV:Ambessa:2",
+          "text": "Land Cataclysm on Ambessa to trap her in the arena. It is a strong way to start a fight with her.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Ambessa", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Ambessa:3",
+          "text": "Ambessa's Public Execution can blink her past the terrain, so do not count on the arena walls alone to stop her.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "191e9402148224d4d681c9a52b9d447eda637eeb05c7485fe3c10397b982a719",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Amumu:0",
+          "text": "Don't stand between Jarvan's Demacian Standard and your Dragon Strike path; you can pull in and knock up Amumu's allies, so aim the lance at the flag with care.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 29, "end": 46 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 56, "end": 69 },
+            { "kind": "keyword", "key": "knocked-up", "start": 96, "end": 104 },
+            { "kind": "champion", "key": "Amumu", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:JarvanIV:Amumu:1",
+          "text": "Walk behind minions or move erratically so Amumu's Bandage Toss hits a minion first or misses.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:Amumu:2",
+          "text": "Stay spread out from your team when Amumu's Curse of the Sad Mummy is ready, so one cast cannot stun everyone.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Amumu-R", "start": 44, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:JarvanIV:Amumu:3",
+          "text": "Use Golden Aegis when Amumu closes in; it slows him and gives you a shield against Despair.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Amumu", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Amumu-W", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:JarvanIV:Amumu:4",
+          "text": "Amumu's Tantrum reduces physical damage, so don't trade long auto-attack fights with him; use Dragon Strike and burst instead.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Amumu-E", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 94, "end": 107 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aac9ecf3394275bc450caed3c56e034e815755110289b4a63dde1822623bc617",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Belveth:0",
+          "text": "Land Dragon Strike through Demacian Standard to knock Bel'Veth up, then stay on her; she has no easy way to dash out of your reach.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 27, "end": 44 },
+            { "kind": "champion", "key": "Belveth", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:JarvanIV:Belveth:1",
+          "text": "Cast Cataclysm on Bel'Veth to trap her in the arena. Her Void Surge is a dash, so she cannot easily leave the ring.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Belveth", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:JarvanIV:Belveth:2",
+          "text": "Press Golden Aegis when she dives in. It slows her and gives you a shield, which blunts her fast attacks.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Belveth:3",
+          "text": "Fight her before she has built up kills and Void Coral stacks. Her attack speed grows with each takedown, so early skirmishes favor you.",
+          "refs": [],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "41a9d08d8b7428352472ad27879fc0f6c1b6770416cc19cb16b0fdde5aadb5bb",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Brand:0",
+          "text": "Dodge Sear when you can; without it landing first, Brand has a hard time getting his combo started.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:JarvanIV:Brand:1",
+          "text": "Jump on Brand with Cataclysm when he is alone; the terrain keeps his team out and he has no easy escape.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:JarvanIV:Brand:2",
+          "text": "Stay spread from your allies in fights, because Pyroclasm and Conflagration punish clumped teams.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 48, "end": 57 },
+            { "kind": "ability", "key": "Brand-E", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:JarvanIV:Brand:3",
+          "text": "Use Demacian Standard and then Dragon Strike to close the gap fast and knock Brand up before he can aim Pillar of Flame.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Brand", "start": 77, "end": 82 },
+            { "kind": "ability", "key": "Brand-W", "start": 104, "end": 119 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "67022dfbe61d7e8ae5797cbf523262f8718b23f10927bdc8fcf1d7d776f724c0",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Briar:0",
+          "text": "Hit Briar with Dragon Strike when she leaps in; it cuts her Armor so your follow-up attacks hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:JarvanIV:Briar:1",
+          "text": "Use Golden Aegis the moment Briar jumps on you; it slows her and gives you a shield for the fight.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:JarvanIV:Briar:2",
+          "text": "Land Demacian Standard, then Dragon Strike through it, to knock Briar up when she is charging her scream or a fight starts.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 29, "end": 42 },
+            { "kind": "champion", "key": "Briar", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:JarvanIV:Briar:3",
+          "text": "Fight Briar away from walls, or be ready for a long stun; her fully charged scream knocks you back into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:JarvanIV:Briar:4",
+          "text": "Use Cataclysm on Briar when she is committed to a trade. The terrain traps her, and enemies who want to help her struggle to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b9b7309e1493edc90e9824cac9bab7fda6ac53f6d01f65adfe1299129bb54fe3",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Darius:0",
+          "text": "Throw Demacian Standard and then Dragon Strike through it to knock Darius up before he reaches you. Darius cannot easily walk away from that.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 33, "end": 46 },
+            { "kind": "champion", "key": "Darius", "start": 67, "end": 73 },
+            { "kind": "champion", "key": "Darius", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:JarvanIV:Darius:1",
+          "text": "Use Golden Aegis when Darius closes in. It slows him and gives you a shield, so his early trade costs him more.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:JarvanIV:Darius:2",
+          "text": "Save Cataclysm for when Darius is weakened. Apprehend can still pull you back inside the terrain, so avoid casting it on a healthy Darius.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Darius", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Darius-E", "start": 44, "end": 53 },
+            { "kind": "champion", "key": "Darius", "start": 131, "end": 137 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:JarvanIV:Darius:3",
+          "text": "Fight Darius at the edge of Dragon Strike range. He wants to stack Hemorrhage up close, so do not stay in a long melee fight with him.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 28, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 67,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:JarvanIV:Darius:4",
+          "text": "Play around Apprehend. When it is on cooldown, step in and trade; when it is ready, stay out of its short cone.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbcd50548f50c1a81fd5287a77890250f93d06990c432984b6a53efdde0704c8",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Diana:0",
+          "text": "Throw Demacian Standard, then hit it with Dragon Strike to pull yourself in. Anyone in your path is knocked up, which keeps Diana from dashing away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 42, "end": 55 },
+            {
+              "kind": "keyword",
+              "key": "knocked-up",
+              "start": 100,
+              "end": 110
+            },
+            { "kind": "champion", "key": "Diana", "start": 124, "end": 129 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:JarvanIV:Diana:1",
+          "text": "Use Golden Aegis when Diana jumps on you. It slows her and gives you a shield, which is bigger if it hits more champions.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:JarvanIV:Diana:2",
+          "text": "Cataclysm on Diana walls her in with you. She can still dash through the terrain with Lunar Rush, so be ready for that.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Diana", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Diana-E", "start": 86, "end": 96 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:JarvanIV:Diana:3",
+          "text": "Stay away from Pale Cascade while its orbs are out. Fight her once the shield is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7bfe44941b75cb9163333b9b8e0a64d2d27a17b3533d5eb2618d9c16be1baeb",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:DrMundo:0",
+          "text": "Dodge Infected Bonesaw by walking out of its straight line. It slows you and heals Mundo when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:JarvanIV:DrMundo:1",
+          "text": "Don't open on Mundo with Dragon Strike, because Goes Where He Pleases blocks the knock up. Wait until it is used, or just damage him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 25, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 48,
+              "end": 69
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:JarvanIV:DrMundo:2",
+          "text": "Walk over Mundo's dropped canister to destroy it. That denies his healing and keeps his passive on cooldown.",
+          "refs": [],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:JarvanIV:DrMundo:3",
+          "text": "Use Golden Aegis to slow Mundo when he charges Heart Zapper. Don't stay in his range, and trade with Demacian Standard instead.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 47, "end": 59 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 101, "end": 118 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:JarvanIV:DrMundo:4",
+          "text": "Mundo heals through slow damage. Burst him right after Maximum Dosage or skip the fight.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3e90f2dad136d00413c268cd01b3af572db96a9b9e0fea14871119fd44a63d49",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Ekko:0",
+          "text": "Throw Demacian Standard first, then Dragon Strike through it. Ekko is knocked up if he is in your path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 36, "end": 49 },
+            { "kind": "champion", "key": "Ekko", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "knocked-up", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:Ekko:1",
+          "text": "Use Cataclysm on Ekko to trap him in the arena. His Chronobreak is the way out, so look for the fight when it is down.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ekko", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Ekko-R", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:JarvanIV:Ekko:2",
+          "text": "Hit Ekko with Golden Aegis when he dives in. It slows him and shields you.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "JarvanIV-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:Ekko:3",
+          "text": "Step out of Parallel Convergence before it arms. Ekko can only stun you if you are inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 12, "end": 32 },
+            { "kind": "champion", "key": "Ekko", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49459bb2d92122e58a1ad2f1406f92ec7a84cb74307dc6910abf519dfcd695d8",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Evelynn:0",
+          "text": "Buy vision and scout with Demacian Standard; it grants sight around it, which helps you spot Evelynn before she ambushes.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 26, "end": 43 },
+            { "kind": "champion", "key": "Evelynn", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:Evelynn:1",
+          "text": "Stay near allies when Allure marks you, so Evelynn cannot reach you alone once the charm is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 22, "end": 28 },
+            { "kind": "champion", "key": "Evelynn", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:JarvanIV:Evelynn:2",
+          "text": "Use Golden Aegis when Evelynn jumps on you; it slows her and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Evelynn", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:Evelynn:3",
+          "text": "Cataclysm on Evelynn traps her with you, but she can escape with Last Caress, so do not count on the kill.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Evelynn", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:JarvanIV:Evelynn:4",
+          "text": "Evelynn hates being hit early; stay healthy, because she finishes low-health targets with Last Caress.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "87dab4a2aeb5ff91fe19854a008cfa35dda876cc8eaeb420316071504a0a9732",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Fiddlesticks:0",
+          "text": "Put a Demacian Standard down to see if Fiddlesticks is hiding in the brush before you walk in.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 39,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Fiddlesticks:1",
+          "text": "Fiddlesticks can fear you only when unseen or standing as a scarecrow, so watch for a lone scarecrow near objectives and ping it.",
+          "refs": [
+            { "kind": "champion", "key": "Fiddlesticks", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:JarvanIV:Fiddlesticks:2",
+          "text": "Dive Fiddlesticks with Dragon Strike and Cataclysm; he is fragile and the arena stops him from running.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 5,
+              "end": 17
+            },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 23, "end": 36 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "jungle:JarvanIV:Fiddlesticks:3",
+          "text": "Use Golden Aegis when you walk into his Bountiful Harvest range; it slows him and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 40,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4a113aab2bb7070f603657e5a86f153a18b80f00894cf7e0b828f3a893ae498e",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Graves:0",
+          "text": "Plant Demacian Standard, then use Dragon Strike through it to pull yourself in and knock Graves up before he can dash away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Graves", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:JarvanIV:Graves:1",
+          "text": "Use Cataclysm on Graves in a fight. The walls keep him from backing off, and his Collateral Damage recoil is a poor way to escape.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Graves", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Graves-R", "start": 81, "end": 98 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:JarvanIV:Graves:2",
+          "text": "Cast Golden Aegis when you reach Graves. The shield helps you survive his shotgun and the slow keeps him close.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:JarvanIV:Graves:3",
+          "text": "Don't chase Graves into his Smoke Screen. You can't see out of it and you'll be slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Graves-W", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:JarvanIV:Graves:4",
+          "text": "Fight Graves early. His Quickdraw armor builds up as the fight goes on, so burst him quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Graves-E", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a5580b8651e52e39d7cb1d1feed22d10383ab22c2126edf0d40297deb39a11bc",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Gwen:0",
+          "text": "Hit Gwen with Dragon Strike through your Demacian Standard to pull in and knock her up. Place the flag so she is in your path.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:JarvanIV:Gwen:1",
+          "text": "Do not waste Cataclysm while Gwen's Hallowed Mist is up; she cannot be targeted from outside it. Wait until the mist ends or she steps out.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Gwen", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Gwen-W", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:JarvanIV:Gwen:2",
+          "text": "Use Golden Aegis when Gwen dashes in to fight. It leaves her slowed and gives you a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gwen", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:JarvanIV:Gwen:3",
+          "text": "Gwen heals from hitting you, so a long fight favors her. Burst her fast with Cataclysm and Dragon Strike, then leave.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 77, "end": 86 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "42c37b9f8073b513107175728d77cb7d4e590f356d0d09febbee24d3dae8c2bb",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Hecarim:0",
+          "text": "Stay out of Hecarim's Devastating Charge range once he has built up speed; it knocks you back and hits hard from a long run-up.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 22, "end": 40 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:JarvanIV:Hecarim:1",
+          "text": "Use Golden Aegis when Hecarim runs at you; the slow and shield blunt his dive.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Hecarim", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:JarvanIV:Hecarim:2",
+          "text": "Land Demacian Standard, then Dragon Strike through the flag to knock Hecarim up before he can get his Rampage stacks going.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 29, "end": 42 },
+            { "kind": "champion", "key": "Hecarim", "start": 69, "end": 76 },
+            { "kind": "ability", "key": "Hecarim-Q", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:JarvanIV:Hecarim:3",
+          "text": "Cataclysm traps Hecarim, but his Onslaught of Shadows dash goes through the terrain, so don't count on the arena to hold him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Hecarim", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 33, "end": 53 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:JarvanIV:Hecarim:4",
+          "text": "Don't stay near Hecarim when Spirit of Dread is on; he heals from the damage you and your team deal nearby. Back off or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0f796d11c50b7b43329400b40da97da6db81b70ebd0a5864475c36f777df38be",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Ivern:0",
+          "text": "Dragon Strike pulls you to Demacian Standard and knocks up enemies in your path. Throw the standard first, then lance through it onto Ivern.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 27, "end": 44 },
+            { "kind": "keyword", "key": "knocked-up", "start": 49, "end": 58 },
+            { "kind": "champion", "key": "Ivern", "start": 134, "end": 139 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:JarvanIV:Ivern:1",
+          "text": "Jump on Ivern with Cataclysm when he is away from Daisy. The terrain keeps him from slipping away.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 19, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:Ivern:2",
+          "text": "Hit Ivern while he is out of brush. Brushmaker makes his attacks hurt more when he fights from brush.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ivern-W", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:JarvanIV:Ivern:3",
+          "text": "Kill Daisy or fight away from her. Fighting Ivern when she is gone is much easier.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ce314ed5aed8dfd6851719c329c31451ab5b253c13e119823a4429a7a7eaa9b0",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Jax:0",
+          "text": "Don't attack Jax while Counter Strike is up; wait for it to end, then fight. He dodges your attacks and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 13, "end": 16 },
+            { "kind": "ability", "key": "Jax-E", "start": 23, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:Jax:1",
+          "text": "Fight Jax in short bursts. His damage depends on attacking again and again, so use Dragon Strike and back off.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 83, "end": 96 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:JarvanIV:Jax:2",
+          "text": "Use Golden Aegis when Jax jumps on you; the shield helps and he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jax", "start": 22, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Jax:3",
+          "text": "Plant Demacian Standard, then Dragon Strike to it to knock Jax up. It also gets you out of your own Cataclysm ring.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 30, "end": 43 },
+            { "kind": "champion", "key": "Jax", "start": 59, "end": 62 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 100, "end": 109 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a0e34396004f5529227d983c285e35ea8fe3d779def680e6608e2fdc0c8bb645",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Jayce:0",
+          "text": "Throw Demacian Standard, then use Dragon Strike through it to pull yourself in and knock Jayce up. Do it when he is close enough that he cannot easily step out.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Jayce", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:JarvanIV:Jayce:1",
+          "text": "Use Cataclysm on Jayce to trap him in the arena. Jayce's leap and Acceleration Gate cannot save him from a fight he did not choose.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Jayce", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:JarvanIV:Jayce:2",
+          "text": "Use Golden Aegis when Jayce jumps in or you trade. The shield grows when you hit him and he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:JarvanIV:Jayce:3",
+          "text": "Fight Jayce early, before he has levels. Jayce is strongest in the early game, so stay safe if he gets ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Jayce", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fac2613ea51ca4bd5be8b4ef7bb44f1faff9d3d27a33bb5ea413f88fd6c844b5",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Karthus:0",
+          "text": "Use Demacian Standard with Dragon Strike to knock Karthus up. Throw the flag at him first, then lance through it.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 27, "end": 40 },
+            { "kind": "champion", "key": "Karthus", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:Karthus:1",
+          "text": "Move away from Karthus's corpse after you kill him. He can still cast spells for a short time and you can't hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:JarvanIV:Karthus:2",
+          "text": "Karthus is slow to escape, so dive him with Cataclysm. The terrain keeps his friends from helping.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:JarvanIV:Karthus:3",
+          "text": "Keep your health high late in the game. Requiem hits you wherever you are, so recall to heal rather than risk it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:JarvanIV:Karthus:4",
+          "text": "Don't walk through Wall of Pain if you can avoid it. You get slowed and your Magic Resist drops.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "56a8d8e33c3da70befbce696adc0c5f6a9d4cdc0f1193d296b731505655cddcb",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Kayn:0",
+          "text": "Throw Demacian Standard, then use Dragon Strike through it to knock Kayn up when he is close. Do it before he can dash away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Kayn", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:JarvanIV:Kayn:1",
+          "text": "Use Cataclysm on Kayn when he is low. Its terrain walls him in, but Kayn can go through terrain with Shadow Step, so don't count on the walls to hold him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kayn", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Kayn-E", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:JarvanIV:Kayn:2",
+          "text": "Press Golden Aegis when Kayn dives in. It slows him and shields you, which blunts his burst.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:JarvanIV:Kayn:3",
+          "text": "Watch for the warning on the terrain edge when Kayn is inside a wall near you. Stay close to your team so he can't pick you off.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "554d1b2c207272982d7de892eb4be98285fe3b18c4028afd1cb0ebbc2a369958",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Khazix:0",
+          "text": "Stay near your laner or allied minions when Kha'Zix is around. Taste Their Fear hits much harder on an Isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 44, "end": 51 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 63, "end": 79 },
+            { "kind": "keyword", "key": "isolated", "start": 103, "end": 111 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Khazix:1",
+          "text": "Use Golden Aegis when Kha'Zix jumps on you. It slows him and gives you a shield, so his burst does less.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Khazix:2",
+          "text": "Hold Cataclysm for when Kha'Zix commits. The terrain traps him in with you, so he can't easily walk out, though movement abilities can pass through.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:JarvanIV:Khazix:3",
+          "text": "Hit Kha'Zix with Dragon Strike through your Demacian Standard to knock him up, then follow with attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:JarvanIV:Khazix:4",
+          "text": "Throw Demacian Standard into brush to check for Kha'Zix before you walk in. It gives vision around it.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7d580fad8273807b2d7550508286c4a6a095e812d3119a1c554790480e6bb6e8",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Kindred:0",
+          "text": "Dive Kindred with Cataclysm; she is fragile, and the terrain walls her in so she can't easily kite away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:JarvanIV:Kindred:1",
+          "text": "Throw Demacian Standard onto her, then use Dragon Strike to pull yourself in. She is knocked up and you close the gap fast.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 43, "end": 56 },
+            { "kind": "keyword", "key": "knocked-up", "start": 85, "end": 95 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:JarvanIV:Kindred:2",
+          "text": "Use Golden Aegis when you jump on her. It slows her so she can't dash away, and it gives you a shield against her damage.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:JarvanIV:Kindred:3",
+          "text": "Contest her jungle camps and kills. Her power grows with each completed Hunt, so deny them early.",
+          "refs": [],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "03f2d653eb3b5928c98ef9e61556fa38185b6e4c0603b0ad2e0448e00e72f854",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:LeeSin:0",
+          "text": "Throw Demacian Standard first, then use Dragon Strike through it to pull yourself in and knock Lee Sin up if he is near the line.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 40, "end": 53 },
+            { "kind": "champion", "key": "LeeSin", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:LeeSin:1",
+          "text": "Use Golden Aegis when Lee Sin dashes in; it slows him and gives you a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:JarvanIV:LeeSin:2",
+          "text": "Lee Sin is weak to magic damage, so land Demacian Standard on him when he commits to a fight.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:JarvanIV:LeeSin:3",
+          "text": "Cataclysm traps Lee Sin in the arena, but his dashes can still get him out, so hit him first and stay close.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "LeeSin", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1b4c167bc7e7ec280f13b8020e960d90a85276629f7600e1e7a2d451060fad5c",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Lillia:0",
+          "text": "Hold Cataclysm until Lillia has Dream Dust on you ends or she has used Lilting Lullaby; the terrain keeps her from kiting away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Lillia", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Lillia-R", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:JarvanIV:Lillia:1",
+          "text": "Lillia is fast and hard to pin down, so use Dragon Strike into Demacian Standard to knock her up when she tries to run.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 44, "end": 57 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 63, "end": 80 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:JarvanIV:Lillia:2",
+          "text": "Cast Golden Aegis when Lillia closes in; it slows her and gives you a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lillia", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Lillia:3",
+          "text": "Step sideways out of Swirlseed's rolling path, then fight; if it hits you, you are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6de4a146949b7726f294b481a57d1c163885c8fb715ae82870bb4aed08a427ee",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:MasterYi:0",
+          "text": "Throw Demacian Standard first, then hit Dragon Strike through it to knock Master Yi up and stop him from running.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 40, "end": 53 },
+            { "kind": "champion", "key": "MasterYi", "start": 74, "end": 83 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:JarvanIV:MasterYi:1",
+          "text": "Do not count on Golden Aegis to chase Master Yi during Highlander; he ignores slows.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "MasterYi", "start": 38, "end": 47 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:MasterYi:2",
+          "text": "Save Cataclysm for when Master Yi dives you; its walls lock him in for a fight.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "MasterYi", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:JarvanIV:MasterYi:3",
+          "text": "Keep hitting him so he has to spend mana on Meditate, and fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "48c925fa427deb4264eebaa3210b20f770de5fa2010ea938b1dee34748af74fc",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:MonkeyKing:0",
+          "text": "Wukong often vanishes with Warrior Trickster and leaves a clone. Hold your Dragon Strike until you can tell which one is the real Wukong.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 27,
+              "end": 44
+            },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 75, "end": 88 },
+            {
+              "kind": "champion",
+              "key": "MonkeyKing",
+              "start": 130,
+              "end": 136
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:JarvanIV:MonkeyKing:1",
+          "text": "Land Cataclysm on Wukong in a fight to trap him with your team. Cyclone is a spin that stays in place, so it will not carry him out of the walls.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:JarvanIV:MonkeyKing:2",
+          "text": "Throw Demacian Standard, then use Dragon Strike through it to knock Wukong up. Do it when he is walking toward you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:MonkeyKing:3",
+          "text": "Wukong gets tougher the longer a fight lasts. Burst him quickly, or fight him when he is isolated from his own fighting stacks.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "isolated", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:JarvanIV:MonkeyKing:4",
+          "text": "Use Golden Aegis when Wukong jumps in with Nimbus Strike. It slows him and gives you a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 43,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3e3dcfd5e12fa0d6fc83ab710f9b70de06152c9e69f5095d69edf25968f6f1c",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Naafiri:0",
+          "text": "Use Golden Aegis when Naafiri dives onto you; it slows her and her packmates and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:JarvanIV:Naafiri:1",
+          "text": "Throw Demacian Standard, then Dragon Strike through it to knock her up when she is in your path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:JarvanIV:Naafiri:2",
+          "text": "Cataclysm traps her in the arena, but her Eviscerate dash can go through the terrain. Don't count on the walls to hold her.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:JarvanIV:Naafiri:3",
+          "text": "Wait out her Call of the Pack untargetable window before you use Cataclysm or Dragon Strike.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 65, "end": 74 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5fe1ed676b4346e55786e3ddfca47a750ac01b0a14297f4d9137c9552017f22e",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Nidalee:0",
+          "text": "Throw Demacian Standard where you want to fight, then use Dragon Strike through it to pull yourself in and knock Nidalee up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 58, "end": 71 },
+            { "kind": "champion", "key": "Nidalee", "start": 113, "end": 120 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Nidalee:1",
+          "text": "Use Cataclysm on Nidalee to trap her in the arena. Her Pounce can still get her out, so stay close and keep hitting her.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Nidalee", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:JarvanIV:Nidalee:2",
+          "text": "Use Golden Aegis when Nidalee jumps on you. It slows her and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nidalee", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Nidalee:3",
+          "text": "Look for her when you walk through brush. A trap there hurts and shows where you are, so check the brush and avoid walking blindly into it.",
+          "refs": [],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8611d69e8cd7fa4664cefef5fdf297e14210142443ff0d3a5349af3db503bac6",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Nocturne:0",
+          "text": "Cast Dragon Strike through your Demacian Standard to dash and knock the enemy up. Aim it so Nocturne is on that line.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 32, "end": 49 },
+            { "kind": "champion", "key": "Nocturne", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:Nocturne:1",
+          "text": "Bait Shroud of Darkness with a cheap ability before you commit Cataclysm. A blocked ability gives Nocturne more Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 63, "end": 72 },
+            { "kind": "champion", "key": "Nocturne", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Nocturne:2",
+          "text": "Stay with your team when Paranoia goes off. Nocturne can dash to you from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 25, "end": 33 },
+            { "kind": "champion", "key": "Nocturne", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:JarvanIV:Nocturne:3",
+          "text": "Use Golden Aegis when Nocturne dashes in. It slows him and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:Nocturne:4",
+          "text": "Walk out of range of Unspeakable Horror's tether to break it before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 21, "end": 39 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8412d203b221d7364dc29c0300c77f36387ba29f35f87cf0c5d21d58be1116f5",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Nunu:0",
+          "text": "Throw Demacian Standard first, then Dragon Strike through it to pull yourself in and knock up anyone along the path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 36, "end": 49 },
+            { "kind": "keyword", "key": "knocked-up", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:JarvanIV:Nunu:1",
+          "text": "Use Cataclysm on Nunu to trap him in the arena before he can finish Absolute Zero or roll away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Nunu-R", "start": 68, "end": 81 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:JarvanIV:Nunu:2",
+          "text": "Step out of the way of Biggest Snowball Ever! with sharp turns; running straight lets it catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 23, "end": 45 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:JarvanIV:Nunu:3",
+          "text": "Use Golden Aegis when Nunu rushes in; it slows him and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:JarvanIV:Nunu:4",
+          "text": "Move away from Nunu after Snowball Barrage hits you, so you are not close when the root goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 26, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1cb94beb5b29b501fca7e005872be3c6bf73dc18ed2f5a3b831dfdbac98d87f2",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Pantheon:0",
+          "text": "Walk away or fight from the side when Pantheon braces with Aegis Assault; he takes no damage from the front while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:JarvanIV:Pantheon:1",
+          "text": "Use Demacian Standard and then Dragon Strike to knock Pantheon up before he can vault onto you or hit you with a spear.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Pantheon", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:JarvanIV:Pantheon:2",
+          "text": "Cataclysm traps Pantheon in its arena, but his Shield Vault can still hit you in there. Save it for a fight you can win.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Pantheon", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:JarvanIV:Pantheon:3",
+          "text": "Hit Pantheon with Golden Aegis when he vaults in. The shield softens his burst and he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:JarvanIV:Pantheon:4",
+          "text": "Move away when you see Grand Starfall's warning, and gank another lane while he is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e08b52740f626a63f481504e312d583cf44c9ac2b90ea13cf45769ba79f0d423",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Qiyana:0",
+          "text": "Throw Demacian Standard, then use Dragon Strike through it to knock Qiyana up when she is close. Cast Dragon Strike first if she dashes away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Qiyana", "start": 68, "end": 74 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 102, "end": 115 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:JarvanIV:Qiyana:1",
+          "text": "Use Cataclysm on Qiyana to trap her inside the arena. Her dashes and her Supreme Display of Talent knockback cannot cross the terrain easily.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Qiyana", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 73, "end": 98 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:JarvanIV:Qiyana:2",
+          "text": "Cast Golden Aegis when Qiyana dives in. It slows her and gives you a shield, which makes her burst weaker.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Qiyana", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:JarvanIV:Qiyana:3",
+          "text": "Hit Qiyana with your first basic attack to trigger Martial Cadence. Do it when you start the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "JarvanIV-passive",
+              "start": 51,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b44c9afdc3bb20fa6b36d5cf5ebc042840ba537443495e26b31507ee34bf68ad",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Rammus:0",
+          "text": "Do not hit Rammus while Defensive Ball Curl is up; it hurts you for each basic attack. Wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Rammus-W", "start": 24, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:JarvanIV:Rammus:1",
+          "text": "Rammus has weak defenses without his stance, so trade with Dragon Strike and magic damage from Demacian Standard when it is down.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 59, "end": 72 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 95, "end": 112 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:JarvanIV:Rammus:2",
+          "text": "Watch for Frenzying Taunt before you commit. Wait for it to be used, then jump in with Cataclysm.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 87, "end": 96 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:JarvanIV:Rammus:3",
+          "text": "Golden Aegis slows Rammus when he rolls at you and gives you a shield. Use it as he arrives.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 0, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Rammus", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d5efc1e196a8156069afc1ac3b3089f9292136d11a8a9ce088be54443ab512b7",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:RekSai:0",
+          "text": "Use Dragon Strike through Demacian Standard to knock Rek'Sai up when she tunnels or burrows next to you, then fight while she is stuck in the air.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 26, "end": 43 },
+            { "kind": "champion", "key": "RekSai", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:JarvanIV:RekSai:1",
+          "text": "Hold Cataclysm for when Rek'Sai is committed to a fight. The terrain traps her, and she cannot dodge the leap with Void Rush.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "RekSai", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "RekSai-R", "start": 115, "end": 124 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:JarvanIV:RekSai:2",
+          "text": "Use Golden Aegis when she jumps in to fight you. It slows her and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:JarvanIV:RekSai:3",
+          "text": "Move carefully near her while she is burrowed. She sees you whenever you move, so scouting with Demacian Standard is safer than walking in.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 96, "end": 113 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c5013a5923293d471cc0423faa02a547151b1a4989ba6df46c44a78ef04f4b4a",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Rengar:0",
+          "text": "Keep Golden Aegis ready for when Rengar leaps in; it slows him and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Rengar", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:JarvanIV:Rengar:1",
+          "text": "Use Cataclysm on Rengar to trap him inside the arena where he can't easily slip away.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Rengar", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:JarvanIV:Rengar:2",
+          "text": "Fight Rengar away from brush; his leap out of it is how he starts a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Rengar:3",
+          "text": "Throw Demacian Standard and follow with Dragon Strike to knock him up when he is close.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e6aa5629a4f7986a8e7f813696df70c8eb6346cf7609e3d90cf09236a4ec9ada",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Sejuani:0",
+          "text": "Fight Sejuani when she has no Frost Armor; it makes her sturdier and stops you from slowing her, so Golden Aegis will not slow her while it is up.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "JarvanIV-W",
+              "start": 100,
+              "end": 112
+            },
+            { "kind": "keyword", "key": "slowed", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:JarvanIV:Sejuani:1",
+          "text": "Stay out of a long straight line from Sejuani; Glacial Prison stops at the first champion it hits and stuns longer if it travels far.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 47, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:JarvanIV:Sejuani:2",
+          "text": "Do not auto-attack alongside her in a fight with her melee allies; Permafrost stacks fast and lets her stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-E", "start": 67, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:JarvanIV:Sejuani:3",
+          "text": "Use Cataclysm on Sejuani to trap her away from her team, but expect her to be tougher than most targets.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sejuani", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:JarvanIV:Sejuani:4",
+          "text": "Aim Dragon Strike through your Demacian Standard to knock her up when she closes in; she will lose her Arctic Assault chance.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 31, "end": 48 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 103, "end": 117 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bda8a8dfd10f3fc1b1dedff33ca6d8cac4f7624a99da6ef2953d8ad35f885391",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Shaco:0",
+          "text": "Stay out of the line between you and your Demacian Standard when Shaco is near. Shaco can punish a Dragon Strike dash.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 42, "end": 59 },
+            { "kind": "champion", "key": "Shaco", "start": 65, "end": 70 },
+            { "kind": "champion", "key": "Shaco", "start": 80, "end": 85 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 99, "end": 112 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:JarvanIV:Shaco:1",
+          "text": "Use Golden Aegis when Shaco jumps in. It slows him and shields you from his burst.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shaco", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:JarvanIV:Shaco:2",
+          "text": "Be careful walking into bushes and camp entrances. Shaco's Jack In The Box is hidden once armed and will fear you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Shaco-W", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:JarvanIV:Shaco:3",
+          "text": "Land Cataclysm on Shaco to trap him with you. Once he has used Deceive, he has no quick way out.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Shaco", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:JarvanIV:Shaco:4",
+          "text": "Hit Shaco with Dragon Strike as he stabs you. His health is low, so a short fight favors you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb12a5d49ff3feb3d14b10aae4bfae676c0c3468a35068160937aadeb17799ba",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Shyvana:0",
+          "text": "Land Dragon Strike through Demacian Standard to pull yourself in and knock Shyvana up. Do it before she can reach you in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 27, "end": 44 },
+            { "kind": "champion", "key": "Shyvana", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:JarvanIV:Shyvana:1",
+          "text": "Use Golden Aegis when Shyvana runs at you. It slows her and gives you a shield that grows with each enemy champion hit.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:JarvanIV:Shyvana:2",
+          "text": "Use Cataclysm on Shyvana to trap her in the arena while you fight, especially when you have the numbers. Shyvana's Dragon's Descent flight can cross the walls.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Shyvana", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Shyvana", "start": 105, "end": 112 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 115, "end": 131 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:JarvanIV:Shyvana:3",
+          "text": "Fight her before she transforms. Hit her with Dragon Strike while she is low on Fury and cannot use Dragon's Descent.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 46, "end": 59 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 100, "end": 116 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "672ec28840d9389f714a1e4bf658862f8fd6a3e281e3a97658b219c253195804",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Skarner:0",
+          "text": "Use Golden Aegis when Skarner closes in; it slows him and gives you a shield. His Ixtal's Impact makes him fast, so slow him before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Skarner-E", "start": 82, "end": 96 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:JarvanIV:Skarner:1",
+          "text": "Skarner's Impale can be dodged, so wait for it to be used before you go in. Then jump on him with Dragon Strike.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-R", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 98, "end": 111 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:JarvanIV:Skarner:2",
+          "text": "If Skarner grabs you with Ixtal's Impact, a Dragon Strike through your Demacian Standard knocks him up and can end his charge.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 3, "end": 10 },
+            { "kind": "ability", "key": "Skarner-E", "start": 26, "end": 40 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 44, "end": 57 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 71, "end": 88 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:JarvanIV:Skarner:3",
+          "text": "Skarner's hits stack up and hurt more over time, so don't drag out long fights with him. Burst him with Cataclysm and finish the fight quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 104, "end": 113 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ed571b7b66c93567a6610b94f2b8251423a0d2d40e75145690245cff5e868052",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Sylas:0",
+          "text": "Cast Demacian Standard, then Dragon Strike through it to pull yourself in and knock Sylas up. Do it when he is close, since he can't dodge once you launch.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 29, "end": 42 },
+            { "kind": "champion", "key": "Sylas", "start": 84, "end": 89 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:JarvanIV:Sylas:1",
+          "text": "Use Cataclysm on Sylas to trap him in the arena. He can't easily run, but he can still fight, so only go in when you can win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:JarvanIV:Sylas:2",
+          "text": "Sylas heals with Kingslayer when he is low, so finish him fast. Save your stronger abilities until he commits to it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:JarvanIV:Sylas:3",
+          "text": "Sylas can steal Cataclysm with Hijack and use it against you. Expect it in a fight after he has an ultimate to take, and don't clump with your team.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Sylas-R", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:JarvanIV:Sylas:4",
+          "text": "Use Golden Aegis when Sylas dives in. It slows him and gives you a shield to survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "64cdeadf12920183b9ec8d30ad33b1f9870fd8899e03f532d95fd0c6508b91f8",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Talon:0",
+          "text": "Throw Demacian Standard, then use Dragon Strike through it to knock Talon up when he jumps in. It also lets you close the gap on him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Talon", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:JarvanIV:Talon:1",
+          "text": "Use Golden Aegis when Talon dives you. It slows him and gives you a shield, and the shield grows if it hits more champions.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:JarvanIV:Talon:2",
+          "text": "Cataclysm traps Talon inside the arena, but he can still vault out with Assassin's Path. Use it to stop him escaping on foot.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Talon", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Talon-E", "start": 72, "end": 87 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:JarvanIV:Talon:3",
+          "text": "Fight Talon when Shadow Assault is on cooldown. He has little escape left and you can chase him down.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e52bc32f484ccbb28e6e6d494c394b816f5e88942f56991f099014fc24761b64",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Trundle:0",
+          "text": "Don't fight Trundle inside his Frozen Domain; he is much faster and hits harder there. Pull the fight outside it.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Trundle-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:JarvanIV:Trundle:1",
+          "text": "Use Golden Aegis when Trundle runs at you; it slows him and gives you a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Trundle", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Trundle:2",
+          "text": "Leave Trundle's Pillar of Ice quickly; it slows you, and enemies who die near him heal him.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Trundle-E", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:JarvanIV:Trundle:3",
+          "text": "Don't use Cataclysm on Trundle when he has Subjugate ready; he steals your resistances and heals back.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Trundle", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Trundle-R", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7088d8fd1da5e965b080afb7db89c862fa84c66619540e5085e2ffaa4831d519",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Udyr:0",
+          "text": "Throw Demacian Standard and then use Dragon Strike through it to knock Udyr up when he runs at you. Aim so the lance reaches the flag.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 37, "end": 50 },
+            { "kind": "champion", "key": "Udyr", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:JarvanIV:Udyr:1",
+          "text": "Use Golden Aegis when Udyr closes in; it slows him and gives you a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Udyr", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:JarvanIV:Udyr:2",
+          "text": "Land Cataclysm on Udyr to wall him in for a fight, and do not count on his Blazing Stampede stun to be avoidable once he is on you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Udyr", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Udyr-E", "start": 75, "end": 91 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:JarvanIV:Udyr:3",
+          "text": "Hit Udyr from range with Dragon Strike first; he has few ranged options, so you get free damage before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3cd5874072d76d21a492f204e65d8aabe5445fdcbad5c4f67d2ba4b7f8c18983",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Vi:0",
+          "text": "Use Golden Aegis when Vi charges at you; it slows her and gives you a shield for the brawl.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:JarvanIV:Vi:1",
+          "text": "Do not pick a long fight with Vi. Her third hit on you shreds your Armor and speeds her up.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:JarvanIV:Vi:2",
+          "text": "Land Dragon Strike on Vi to cut her Armor before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:JarvanIV:Vi:3",
+          "text": "Plant Demacian Standard and then Dragon Strike through it to knock Vi up. Do it when she cannot easily step out of your path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:JarvanIV:Vi:4",
+          "text": "Hold Cataclysm for when Vi commits to a fight. Its terrain keeps her from running away or her team from joining.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aac06157b0f00e6804f946d2683f374d6562f558092d5f84a699d3678850d06f",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Viego:0",
+          "text": "Hit Viego with Dragon Strike through a placed Demacian Standard to pull yourself in and knock him up. Use it when he walks toward you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 46, "end": 63 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:JarvanIV:Viego:1",
+          "text": "Save Cataclysm for when Viego is committed to a fight. The terrain traps him, but Heartbreaker can still teleport to him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Viego-R", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:JarvanIV:Viego:2",
+          "text": "Use Golden Aegis when Viego dashes in. The shield softens his burst and the slow makes it harder for him to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:JarvanIV:Viego:3",
+          "text": "Look for Viego's Spectral Maw. It stops at the first enemy it hits, so stay behind your minions when you fight near him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Viego-W", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75861eafe2691e3049959c38b6314358484cbd8b95417b736f5886a7a6df8bae",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Volibear:0",
+          "text": "Keep Dragon Strike for when Volibear commits with Thundering Smash; hitting him slows his chase and lowers his Armor before the fight.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Volibear", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:JarvanIV:Volibear:1",
+          "text": "Land Demacian Standard and then Dragon Strike through it to knock Volibear up before he can stun you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Volibear", "start": 66, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:JarvanIV:Volibear:2",
+          "text": "Use Golden Aegis when Volibear jumps on you; the shield soaks his burst and he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:JarvanIV:Volibear:3",
+          "text": "Do not waste crowd control on the Stormbringer leap, it cannot be stopped. Fight once it lands, or use Cataclysm to trap him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-R", "start": 34, "end": 46 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 103, "end": 112 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fc531f3091c4637709e3ebac12526a7f52431256fd68d4dbbb7133a0ac37f7d",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Warwick:0",
+          "text": "Keep Warwick off you with Golden Aegis; it slows him and gives you a shield.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-W", "start": 26, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:Warwick:1",
+          "text": "Stay healthy. Below half health, Warwick senses you and his attacks heal him.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:JarvanIV:Warwick:2",
+          "text": "Plant Demacian Standard, then use Dragon Strike through it to knock Warwick up and escape.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Warwick", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:JarvanIV:Warwick:3",
+          "text": "Cataclysm on Warwick traps you both in the arena, so use it when he is low and cannot easily escape his Primal Howl fear.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Warwick-E", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bb2dde25aa8e585bba309fe9ff74b02b060194f9909c533501f5b64eef68c8ae",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:XinZhao:0",
+          "text": "Use Dragon Strike through your Demacian Standard to pull yourself in and knock Xin Zhao up before he can finish his combo.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 31, "end": 48 },
+            { "kind": "champion", "key": "XinZhao", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:JarvanIV:XinZhao:1",
+          "text": "Cast Golden Aegis when Xin Zhao charges in. The slow and the shield take the sting out of his trade.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:JarvanIV:XinZhao:2",
+          "text": "Stop Xin Zhao from landing the full Three Talon Strike combo. The third hit knocks you up, and each hit speeds up his other cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 36, "end": 54 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:XinZhao:3",
+          "text": "Stay out of Xin Zhao's Crescent Guard range once he reaches level 6. It knocks you back, so spread out from your team until he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f40781579db74491ac36e83edc9efe9b408998aaf3d17310f847ca80bd3daa6",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Zac:0",
+          "text": "Cast Dragon Strike through the Demacian Standard to pull yourself in and knock up Zac or his team, but only when you can follow up with a full fight.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 31, "end": 48 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 81 },
+            { "kind": "champion", "key": "Zac", "start": 82, "end": 85 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Zac:1",
+          "text": "Use Golden Aegis when Zac jumps on you; it slows him and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zac", "start": 22, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:Zac:2",
+          "text": "Zac's Stretching Strikes slows you. Stay out of line with it so he cannot pull you together with a teammate.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zac-Q", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:JarvanIV:Zac:3",
+          "text": "Do not use Cataclysm on Zac when he is about to revive; the arena helps you kill his bloblets, so save it for that moment.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Zac", "start": 24, "end": 27 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:JarvanIV:Zac:4",
+          "text": "Step on Zac's goo chunks to destroy them so he cannot heal from them.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 8, "end": 11 }],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c17c98725004243bf7191ceb8cbfcea09f89faa222e93de9216677036d869e08",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Zed:0",
+          "text": "Hold Golden Aegis for when Zed dives in; it slows him and gives you a shield right as he commits.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:JarvanIV:Zed:1",
+          "text": "Zed turns untargetable during Death Mark's start, so do not waste Dragon Strike on him then. Fight back after he reappears.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:JarvanIV:Zed:2",
+          "text": "Plant Demacian Standard and use Dragon Strike through it to knock Zed up when he steps close to you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Zed", "start": 66, "end": 69 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:JarvanIV:Zed:3",
+          "text": "Zed's Shadow Slash is only a slow when his shadow hits you, so stay away from the shadow and fight him, not his clone.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-E", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:JarvanIV:Zed:4",
+          "text": "Use Cataclysm on Zed when he is ready to fight; the walls stop his shadows from joining and make him hard to leave.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Zed", "start": 17, "end": 20 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9144295efcacff6b808a28af72e14dcc7d32e12d58b8ceb70a366c98c9a6892a",
+      "tips": [
+        {
+          "id": "jungle:JarvanIV:Zyra:0",
+          "text": "Throw Demacian Standard, then use Dragon Strike through it to dash onto Zyra and knock her up. Do this when she is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 6, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Zyra", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:JarvanIV:Zyra:1",
+          "text": "Jump on Zyra with Cataclysm. Her allies can't easily save her, and her plants are cut off from the fight while the terrain stands.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:JarvanIV:Zyra:2",
+          "text": "Walk over her seeds to destroy them before she can grow plants, especially in brush on your path.",
+          "refs": [],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:JarvanIV:Zyra:3",
+          "text": "Dodge Grasping Roots by moving sideways; it flies in a straight line. If you are rooted, use Golden Aegis to get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 87 },
+            { "kind": "ability", "key": "JarvanIV-W", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:JarvanIV:Zyra:4",
+          "text": "Leave the thicket from Stranglethorns before it snaps up, or you will be knocked up and her plants will hit you harder.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 23, "end": 37 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 83 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

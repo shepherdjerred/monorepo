@@ -1,0 +1,1025 @@
+{
+  "schemaVersion": 1,
+  "champion": "Katarina",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "2712b56e1d600555fbd9303218569042257cd4f7c64e7747c84ec7a977def3ff",
+      "tips": [
+        {
+          "id": "middle:Katarina:general:0",
+          "text": "Pick up Daggers after Bouncing Blade lands; each pickup slashes nearby enemies and cuts Shunpo's cooldown a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 22, "end": 36 },
+            { "kind": "ability", "key": "Katarina-E", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Katarina:general:1",
+          "text": "Use Preparation to drop a Dagger where you want to Shunpo next. Grab it fast, because Daggers vanish after a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-W", "start": 4, "end": 15 },
+            { "kind": "item", "key": "1042", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Katarina-E", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Katarina:general:2",
+          "text": "Throw Bouncing Blade at an enemy standing near other enemies or minions; it hits up to two more targets.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Katarina:general:3",
+          "text": "Shunpo onto a minion, ally or Dagger to escape when a fight turns bad.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 0, "end": 6 },
+            { "kind": "item", "key": "1042", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Katarina:general:4",
+          "text": "Wait until the enemy team is busy fighting your team, then Shunpo in and use Death Lotus.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Katarina-R", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Katarina:general:5",
+          "text": "Stay still inside Death Lotus and avoid cancelling it; moving or attacking mid-channel interrupts it. A stun or knock up on you ends it too.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 18, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 112, "end": 120 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Katarina:general:6",
+          "text": "Try to damage a champion before a teammate or you finish them. Voracity then slashes your cooldowns, so you can chain abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Katarina-passive",
+              "start": 63,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Katarina:combo:0",
+          "name": "Shunpo over the wall",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Katarina-E" }],
+          "when": "When escaping or chasing near a thin wall.",
+          "whenRefs": [],
+          "text": "Shunpo to a target, ally, or Dagger close to a wall and aim behind it. Katarina can blink over thin walls this way.",
+          "textRefs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 0, "end": 6 },
+            { "kind": "item", "key": "1042", "start": 29, "end": 35 },
+            { "kind": "champion", "key": "Katarina", "start": 71, "end": 79 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "b13a53312c06d162f3a566a5e6119da7c8ea69f2abcb0d922d88b1655bb8d927",
+      "tips": [
+        {
+          "id": "middle:Katarina:Ahri:0",
+          "text": "Stay behind your minions so Charm hits them first. Charm stops at the first unit it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Katarina:Ahri:1",
+          "text": "Hold Shunpo until Ahri has used Charm, then jump in. Without Charm she has a hard time stopping you.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Ahri", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Ahri-E", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Ahri-E", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Katarina:Ahri:2",
+          "text": "Kill Ahri while Spirit Rush is on cooldown. She has little way to escape then.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-R", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Katarina:Ahri:3",
+          "text": "Use Death Lotus once you have committed. Ahri's Fox-Fire and Orb of Deception won't stop the channel, but a Charm will.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Ahri-W", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 61, "end": 77 },
+            { "kind": "ability", "key": "Ahri-E", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Katarina:Ahri:4",
+          "text": "Pick up your Daggers to trade often. Each one resets Shunpo, so you can poke and jump out again.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9edf134501a923025e76e53e45d237b2ac0c56037201d6d154df5e8046a71400",
+      "tips": [
+        {
+          "id": "middle:Katarina:Akali:0",
+          "text": "Save Shunpo for when Akali commits. Use it to jump onto a Dagger or a minion and get away after she dives you.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Akali", "start": 21, "end": 26 },
+            { "kind": "item", "key": "1042", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Katarina:Akali:1",
+          "text": "Hold Death Lotus until Akali is within range and her dashes are used up. She can't easily escape the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Katarina:Akali:2",
+          "text": "Use Bouncing Blade on Akali when she steps up to hit minions, then pick up the Dagger it leaves for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Akali", "start": 22, "end": 27 },
+            { "kind": "item", "key": "1042", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Katarina:Akali:3",
+          "text": "Death Lotus puts Grievous Wounds on Akali, which cuts her healing. Use it when she tries to trade through damage.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Akali", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Katarina:Akali:4",
+          "text": "Akali can hide in Twilight Shroud. Shunpo to a Dagger to reposition and keep the fight on your terms.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-W", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Katarina-E", "start": 35, "end": 41 },
+            { "kind": "item", "key": "1042", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f7517ee3aa09f736057aa83e4a0432d34c3f8b5138397f2153b849ecdbb416cb",
+      "tips": [
+        {
+          "id": "middle:Katarina:Anivia:0",
+          "text": "Dodge Flash Frost by staying out of its line. Its stun comes at the end of its range or when Anivia detonates it, so watch where it stops.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "Anivia", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Katarina:Anivia:1",
+          "text": "Save Shunpo for after Anivia uses Flash Frost, then jump in while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Katarina:Anivia:2",
+          "text": "Jump to a Dagger or a minion with Shunpo to get around Crystallize, and don't walk into the wall.",
+          "refs": [
+            { "kind": "item", "key": "1042", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Katarina-E", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Anivia-W", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Katarina:Anivia:3",
+          "text": "Use Death Lotus when Anivia is low. If she is reborn, wait for her egg and finish it before she hatches.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Katarina:Anivia:4",
+          "text": "Pick up Daggers from Bouncing Blade to cut your Shunpo cooldown and get your next jump faster.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "Katarina-E", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cd7eaa6f38a30275002d75604f449666ca5542b60219d9fd59a2c6022dbd9f51",
+      "tips": [
+        {
+          "id": "middle:Katarina:Aurora:0",
+          "text": "Walk up and use Shunpo on a dagger or minion first, then jump to Aurora so you land close and can hit her at once.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 16, "end": 22 },
+            { "kind": "champion", "key": "Aurora", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Katarina:Aurora:1",
+          "text": "Hold Death Lotus until Aurora has used Between Worlds or Across the Veil, then channel on her. Her escapes are what let her live.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Aurora", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Aurora-R", "start": 39, "end": 53 },
+            { "kind": "ability", "key": "Aurora-W", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Katarina:Aurora:2",
+          "text": "Walk around the edge of Between Worlds. Enemies who touch it get slowed, so don't dive in without a plan to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 24, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Katarina:Aurora:3",
+          "text": "Stay out of the line of The Weirding. It slows you hard, and she hops back after casting it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 24, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Katarina:Aurora:4",
+          "text": "Pick up daggers to cut Shunpo's cooldown. Use Bouncing Blade on minions near Aurora to leave daggers on the ground where you want to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 46, "end": 60 },
+            { "kind": "champion", "key": "Aurora", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "718dd2211fac533ff48f5ed201c432c22132b46234df4cc7e9ac7b305d55935c",
+      "tips": [
+        {
+          "id": "middle:Katarina:Cassiopeia:0",
+          "text": "Miasma grounds you, and Shunpo is disabled while you are grounded. Stay out of the clouds, or wait until they fade before you dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Katarina-E", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Katarina:Cassiopeia:1",
+          "text": "Dodge Noxious Blast by moving sideways. It lands after a short delay, so keep walking and don't stand still.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Katarina:Cassiopeia:2",
+          "text": "Wait for Cassiopeia to spend Petrifying Gaze, then go in with Death Lotus. Her stun is her best answer to you.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 9, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Katarina-R", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Katarina:Cassiopeia:3",
+          "text": "Shunpo in from the side or from behind her. Petrifying Gaze only stuns enemies who face her, and you can shunpo past her to avoid that.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 44,
+              "end": 59
+            },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 },
+            { "kind": "ability", "key": "Katarina-E", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Katarina:Cassiopeia:4",
+          "text": "Use Preparation to speed away from her poke. Throwing a Dagger also gives you something to pick up with Shunpo.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "item", "key": "1042", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Katarina-E", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "63666e8be9e8b71ca6c55191c0a64b7b7ebf80af3256b7485cb69019a3f7a069",
+      "tips": [
+        {
+          "id": "middle:Katarina:Fizz:0",
+          "text": "Save Shunpo for when Fizz uses Playful or Urchin Strike; without it ready, you are easy to trap and burst.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Fizz", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Katarina:Fizz:1",
+          "text": "Stay away from the shark in Chum the Waters. Walk out of the circle once the fish lands, and Shunpo away if it sticks to you.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 28, "end": 43 },
+            { "kind": "ability", "key": "Katarina-E", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Katarina:Fizz:2",
+          "text": "Fizz is untargetable during Playful, so do not waste Bouncing Blade or Shunpo on him then. Hit him when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 53, "end": 67 },
+            { "kind": "ability", "key": "Katarina-E", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Katarina:Fizz:3",
+          "text": "Use Bouncing Blade to poke Fizz and pick up the landed Dagger for a free slash and a faster Shunpo.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 },
+            { "kind": "item", "key": "1042", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Katarina-E", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Katarina:Fizz:4",
+          "text": "Fizz's hits shrug off small damage, so go in with big hits, then use Death Lotus once he has spent his escape.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Katarina-R", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "623e19b463fefcd60a67ecea8d52c150ddc57424bfe37dba12b2f811454ed283",
+      "tips": [
+        {
+          "id": "middle:Katarina:Malzahar:0",
+          "text": "Hold Shunpo until Malzahar has used Call of the Void, then go in; he can't cast abilities while silenced, though Void Shift can still protect him.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Malzahar", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 36, "end": 52 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 113,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Katarina:Malzahar:1",
+          "text": "Poke or trade while Malzahar is hurt or recently hit; Void Shift only comes back after he has gone without damage for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 20, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 54,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Katarina:Malzahar:2",
+          "text": "Don't open on Malzahar with Death Lotus while Void Shift is up, because it cuts nearly all damage from non-minions. Hit him with something small first.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Katarina-R", "start": 28, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 46,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Katarina:Malzahar:3",
+          "text": "Move sideways as you walk up. Call of the Void is a line between two portals and goes off after a short delay, so don't stand still in it.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Katarina:Malzahar:4",
+          "text": "Don't stand in the middle of Malzahar's minion wave. Malefic Visions can spread from a dying minion to you.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Katarina:Malzahar:5",
+          "text": "Use Preparation's speed boost to leave when Malzahar casts Nether Grasp at someone else. Shunpo away if he has it ready on you.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malzahar", "start": 44, "end": 52 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 59, "end": 71 },
+            { "kind": "ability", "key": "Katarina-E", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2dd8f1a399ef9b2865785aa4450d3bb01b2b22cad8ebe4af34787c9c6e3013fd",
+      "tips": [
+        {
+          "id": "middle:Katarina:Orianna:0",
+          "text": "Keep Death Lotus until Orianna has used Command: Shockwave or is far from her Ball. Her Shockwave can stop your channel, so don't start it while it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Orianna", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Orianna-R", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "middle:Katarina:Orianna:1",
+          "text": "Look at where her Ball sits before you jump in. Her Command: Dissonance and Command: Shockwave only hit enemies close to the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 52, "end": 71 },
+            { "kind": "ability", "key": "Orianna-R", "start": 76, "end": 94 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Katarina:Orianna:2",
+          "text": "Use Preparation to gain speed and walk out of her Command: Attack range, then pick up the Dagger with Shunpo to trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 50, "end": 65 },
+            { "kind": "item", "key": "1042", "start": 90, "end": 96 },
+            { "kind": "ability", "key": "Katarina-E", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Katarina:Orianna:3",
+          "text": "Do not stay in the field left by Command: Dissonance, because you will be slowed. Go in with Shunpo after it fades.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 33, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 },
+            { "kind": "ability", "key": "Katarina-E", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Katarina:Orianna:4",
+          "text": "Bouncing Blade hits up to three enemies. Throw it at a minion next to Orianna so it bounces onto her, then Shunpo to the landed Dagger.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Orianna", "start": 70, "end": 77 },
+            {
+              "kind": "ability",
+              "key": "Katarina-E",
+              "start": 107,
+              "end": 113
+            },
+            { "kind": "item", "key": "1042", "start": 128, "end": 134 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5e986b32bc245bb187fadfc7ae108af62f64cecdd626d254698a26f1fab6a4a7",
+      "tips": [
+        {
+          "id": "middle:Katarina:Ryze:0",
+          "text": "Stay out of Ryze's range, then dash in with Shunpo only when Rune Prison and Spell Flux are used up.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Katarina-E", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Ryze-W", "start": 61, "end": 72 },
+            { "kind": "ability", "key": "Ryze-E", "start": 77, "end": 87 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Katarina:Ryze:1",
+          "text": "Ryze roots you if Flux is on you when Rune Prison lands. Do not walk into his range after he has hit you with Spell Flux.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "rooted", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ryze-W", "start": 38, "end": 49 },
+            { "kind": "ability", "key": "Ryze-E", "start": 110, "end": 120 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Katarina:Ryze:2",
+          "text": "Use Bouncing Blade to hit Ryze and minions together. The Dagger it leaves behind gives you a free Shunpo target.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 },
+            { "kind": "item", "key": "1042", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Katarina-E", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Katarina:Ryze:3",
+          "text": "Use Preparation to dodge his Overload by speeding away, and to toss a Dagger you can pick up.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 29, "end": 37 },
+            { "kind": "item", "key": "1042", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Katarina:Ryze:4",
+          "text": "Start Death Lotus once Ryze has used his root and slow. If he is rooted by nothing, he can still hit you hard.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cb05d7051739cce6352c395cec81ec71338ab0dab99e1364ca970bdfe4a0b164",
+      "tips": [
+        {
+          "id": "middle:Katarina:Sylas:0",
+          "text": "Use Shunpo to jump in only when Sylas has used Abscond or Chain Lash; his lunge and knock up are what punish you, so wait for them to be on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 58, "end": 68 },
+            { "kind": "keyword", "key": "knocked-up", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Katarina:Sylas:1",
+          "text": "Save Death Lotus until Sylas has used Kingslayer. It is a long channel, and he can heal back a lot if he is low when he lunges.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Sylas-W", "start": 38, "end": 48 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Katarina:Sylas:2",
+          "text": "Death Lotus applies Grievous Wounds, so use it when Sylas is trying to heal with Kingslayer to cut the healing.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Sylas", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Sylas-W", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Katarina:Sylas:3",
+          "text": "Sylas can steal Death Lotus with Hijack, so expect it back at you. Move away or burst him before he can use it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Katarina-R", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Sylas-R", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Katarina:Sylas:4",
+          "text": "Stay out of a straight line with Sylas. Use Preparation to speed away from Abduct, since a dodged chain leaves him out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Katarina-W", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ea1d525bf4469dca938f01b3d5cc5f7ceef5a3b1ea9f791120349d5c3c349b14",
+      "tips": [
+        {
+          "id": "middle:Katarina:TwistedFate:0",
+          "text": "Pick up your Daggers; each one slashes enemies nearby and cuts the cooldown of Shunpo.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Katarina:TwistedFate:1",
+          "text": "Watch for the Gold Card. Don't jump in with Shunpo while Twisted Fate has it ready, or you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 44, "end": 50 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 57,
+              "end": 69
+            },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Katarina:TwistedFate:2",
+          "text": "Dodge Wild Cards early; they hurt a lot when you can't afford the health.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Katarina:TwistedFate:3",
+          "text": "Don't start Death Lotus while Twisted Fate has a Gold Card ready; a stun would end it early.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 12, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 30,
+              "end": 42
+            },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Katarina:TwistedFate:4",
+          "text": "When Twisted Fate uses Destiny, expect a gank on you and back off.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "818fa7d66e05c4a114e077c421887659793bc1660a1d34a4804e20ec722406ad",
+      "tips": [
+        {
+          "id": "middle:Katarina:Viktor:0",
+          "text": "Stay out of Gravity Field; it slows you and then stuns you if you linger. Shunpo out through a Dagger or minion before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Katarina-E", "start": 74, "end": 80 },
+            { "kind": "item", "key": "1042", "start": 95, "end": 101 },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Katarina:Viktor:1",
+          "text": "Walk around Hextech Ray rather than through it; it is a thin line, so sidestep it and go in on Viktor after it passes.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Katarina:Viktor:2",
+          "text": "Wait for Viktor to spend Gravity Field before you go in with Shunpo; without it he has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Viktor-W", "start": 25, "end": 38 },
+            { "kind": "ability", "key": "Katarina-E", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Katarina:Viktor:3",
+          "text": "Throw Bouncing Blade, then pick up the Dagger with Shunpo to cut its cooldown and hit Viktor again.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 6, "end": 20 },
+            { "kind": "item", "key": "1042", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Katarina-E", "start": 51, "end": 57 },
+            { "kind": "champion", "key": "Viktor", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Katarina:Viktor:4",
+          "text": "Use Death Lotus once Viktor has used his stun. Stay close, since it needs an enemy champion nearby, and Arcane Storm's first hit can disrupt you.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Viktor-R", "start": 104, "end": 116 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Katarina:Viktor:5",
+          "text": "Kill Viktor and the cooldown reset from Voracity lets you chain your abilities into a second target.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Katarina-passive",
+              "start": 40,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dbbe8d724976266f7b2111cf76679fc8e7df0420cec298a04641f74e49958269",
+      "tips": [
+        {
+          "id": "middle:Katarina:Yasuo:0",
+          "text": "Don't throw Bouncing Blade into Wind Wall; it blocks projectiles. Wait for it to fade, or throw from a spot the wall isn't covering.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 12, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Katarina:Yasuo:1",
+          "text": "Yasuo can use Sweeping Blade on minions to reach you. Pick up Daggers with Shunpo to get away when he closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 14, "end": 28 },
+            { "kind": "ability", "key": "Katarina-E", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Katarina:Yasuo:2",
+          "text": "Save Death Lotus until Yasuo's Wind Wall is on cooldown, because it can block the daggers. Then go all in.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Katarina:Yasuo:3",
+          "text": "Stay away from Yasuo when he has two stacks of Steel Tempest. The whirlwind knocks you up and lets him follow with Last Breath.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 47, "end": 60 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 115, "end": 126 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d3f5810fffff7a2b0584c715ab9c8e04cab213e4806257a23d9807289a141a23",
+      "tips": [
+        {
+          "id": "middle:Katarina:Yone:0",
+          "text": "Keep Bouncing Blade for when Yone steps up to last-hit; it is a ranged hit he can't answer without walking into you.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Katarina:Yone:1",
+          "text": "Pick up the Dagger from Bouncing Blade to hit nearby enemies and bring Shunpo back sooner, so trade around where it lands.",
+          "refs": [
+            { "kind": "item", "key": "1042", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 24, "end": 38 },
+            { "kind": "ability", "key": "Katarina-E", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Katarina:Yone:2",
+          "text": "Hold Shunpo as your escape. When Yone's wind wave is coming at you, blink away to a Dagger or minion.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 33, "end": 37 },
+            { "kind": "item", "key": "1042", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Katarina:Yone:3",
+          "text": "Don't cast Death Lotus when Yone has Fate Sealed ready, because he can stun you and break your channel.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Yone-R", "start": 37, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Katarina:Yone:4",
+          "text": "Yone's Soul Unbound can make him slippery for a while. Wait until it ends before you commit to a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "07ff646ee8b9cb62bd396f3218851d0392d44697440e14a4fe2ce5e8635725bf",
+      "tips": [
+        {
+          "id": "middle:Katarina:Zed:0",
+          "text": "Save Death Lotus for when Zed has no crowd control to cut it short; it is interrupted by stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 26, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Katarina:Zed:1",
+          "text": "Zed's Shadow Slash slows you only if a Shadow hits you. Shunpo away from his Shadow to get out of the slow.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-E", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Katarina-E", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Katarina:Zed:2",
+          "text": "Zed becomes untargetable when he uses Death Mark, so don't waste Bouncing Blade on him then. Move away and burst him when he reappears.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 38, "end": 48 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Katarina:Zed:3",
+          "text": "Zed relies on his Shadow for damage, slow and escape. Trade with Bouncing Blade right after he uses Living Shadow, while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 65, "end": 79 },
+            { "kind": "ability", "key": "Zed-W", "start": 100, "end": 113 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Katarina:Zed:4",
+          "text": "Zed's Death Mark detonates after a short delay. Use Preparation's speed boost to run from his Shadow, and keep Shunpo ready to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Katarina-W", "start": 52, "end": 63 },
+            { "kind": "ability", "key": "Katarina-E", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

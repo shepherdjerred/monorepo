@@ -1,0 +1,2168 @@
+{
+  "schemaVersion": 1,
+  "champion": "Bard",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "8b736902cb3fe3cc0b6d2011206aa8c463c4f79a6973ae6c46c6c3e32247b0a3",
+      "tips": [
+        {
+          "id": "support:Bard:general:0",
+          "text": "Line up Cosmic Binding so it passes through one enemy and hits a second enemy or a wall behind them. That stuns both.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:general:1",
+          "text": "Even a single hit from Cosmic Binding leaves the first enemy slowed, which is enough to set up your lane partner's follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 23, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:general:2",
+          "text": "Fire Cosmic Binding at an enemy standing close to a wall. The bolt stuns them when it hits the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:general:3",
+          "text": "Place Caretaker's Shrine where your team will walk and let it charge before using it. It heals more the longer it sits.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:general:4",
+          "text": "Enemies destroy your shrines by walking over them. Put them out of the enemy's path, or cast one straight onto an ally to heal them at once.",
+          "refs": [],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Bard:general:5",
+          "text": "Open Magical Journey to bring your lane partner into a fight or to roam fast. Enemies can use the portal too, so check before you leave it open.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Bard:general:6",
+          "text": "Collect chimes whenever the lane is safe. They make your meeps stronger, but don't leave your partner alone to do it.",
+          "refs": [],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:general:7",
+          "text": "Throw Tempered Fate over an ally who is about to die. It also freezes enemies and turrets inside it, so aim it carefully.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Bard:general:8",
+          "text": "Aim Tempered Fate ahead of time, because it lands after a short delay. Hold it for a fight where it will hit several enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Bard:combo:0",
+          "name": "Wall bind",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Bard-Q" }],
+          "when": "When an enemy is standing with a wall close behind them, such as near a lane wall or jungle entrance.",
+          "whenRefs": [],
+          "text": "Aim the bolt through the enemy so it carries on into the wall behind them. Hitting terrain stuns the first target, so you don't need a second enemy.",
+          "textRefs": []
+        },
+        {
+          "id": "support:Bard:combo:1",
+          "name": "Portal engage",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Bard-E" },
+            { "kind": "ability", "key": "Bard-Q" }
+          ],
+          "when": "When you and an ally want a surprise engage or flank through a wall near the enemy.",
+          "whenRefs": [],
+          "text": "Open the portal through the wall and take it with your ally, since allies move faster through it. Then bind the enemy as you come out the other side.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "514fcffcc23846148075b82f8448b941d877724210940238e771b7140484f2e2",
+      "tips": [
+        {
+          "id": "support:Bard:Alistar:0",
+          "text": "Keep your distance from Alistar, because Headbutt into Pulverize chains a lot of crowd control. Stay behind minions or walls where you can.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Alistar-W", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Bard:Alistar:1",
+          "text": "Hit Alistar with Cosmic Binding when he walks up to Headbutt. Line him up with a wall behind him for a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Bard-Q", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Alistar-W", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Bard:Alistar:2",
+          "text": "Place Caretaker's Shrine out of Alistar's reach. He can destroy shrines by walking on them, and Trample gives him a faster way in.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Alistar", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Alistar-E", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Bard:Alistar:3",
+          "text": "Skip Tempered Fate on Alistar while Unbreakable Will is up; he cleanses and takes less damage. Save it for your allies when they are caught.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Alistar", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Alistar-R", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Bard:Alistar:4",
+          "text": "Open a Magical Journey portal only when Alistar is far away. He can use it too, and he can Headbutt you as you come out.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 7, "end": 22 },
+            { "kind": "champion", "key": "Alistar", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Alistar-W", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b9e08f38775ba01bf180c6c0b0b54796212339393387b0fb77f528fcf39684b0",
+      "tips": [
+        {
+          "id": "support:Bard:Anivia:0",
+          "text": "Line up Cosmic Binding so it hits the enemy and then a minion, a wall or another enemy, to stun Anivia.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Anivia", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Anivia:1",
+          "text": "Dodge Flash Frost by staying wide of its line. Once it lands, Anivia's Frostbite hurts much more, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "Anivia-E", "start": 71, "end": 80 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Bard:Anivia:2",
+          "text": "Walk over her Crystallize wall's spot only after it melts. Do not chase through it, because it blocks movement.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Bard:Anivia:3",
+          "text": "Collect chimes between fights so your Meeps slow enemies and hit harder in a trade.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Bard:Anivia:4",
+          "text": "Tempered Fate can save you or your ally from burst. It also freezes enemies caught inside.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Bard:Anivia:5",
+          "text": "Kill Anivia when her egg is weak: after Rebirth she can't act for a short time, so hit the egg to finish her.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 40,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ce0299c93fb8d3f746babaaf9177a2738c527aa6fe898dd7274b4e16b3e3a251",
+      "tips": [
+        {
+          "id": "support:Bard:Blitzcrank:0",
+          "text": "Stay behind minions when you move up. Rocket Grab only pulls the first enemy it hits, so a minion in front of you takes the hook.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:Blitzcrank:1",
+          "text": "Don't stand in a straight line with Blitzcrank while he can hook you. When Rocket Grab is on cooldown, step up and use Cosmic Binding.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 36, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-Q",
+              "start": 75,
+              "end": 86
+            },
+            { "kind": "ability", "key": "Bard-Q", "start": 119, "end": 133 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Bard:Blitzcrank:2",
+          "text": "Aim Cosmic Binding so it hits Blitzcrank and then a wall or a second enemy, which stuns them. Use it when he steps up.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 30, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Bard:Blitzcrank:3",
+          "text": "Use Tempered Fate on yourself or an ally when Blitzcrank's combo is about to land. Stasis stops the damage and the knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 46, "end": 56 },
+            { "kind": "keyword", "key": "knocked-up", "start": 115, "end": 123 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Bard:Blitzcrank:4",
+          "text": "Open Magical Journey to leave quickly after a trade, and keep it away from where Blitzcrank can use it too.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ba050d18a32e296adde477818aacca839a1fc3db046b864c93215e57d184ab10",
+      "tips": [
+        {
+          "id": "support:Bard:Brand:0",
+          "text": "Stand away from walls and minions when Brand is near. Cosmic Binding into a wall stuns him, which sets up your ally's attack.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Bard-Q", "start": 54, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Bard:Brand:1",
+          "text": "Dodge Brand's Sear. It stops at the first unit it hits, so keep a minion between you and him.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Bard:Brand:2",
+          "text": "Keep moving when Pillar of Flame lands near you. It has a delay, so a step sideways avoids it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:Brand:3",
+          "text": "Stay apart from your ally and minions. Conflagration and Pyroclasm hit everything close to the target.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 39, "end": 52 },
+            { "kind": "ability", "key": "Brand-R", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Bard:Brand:4",
+          "text": "Use Cosmic Binding to hit Brand at long range, since it travels far. Brand has to burn you before his stun works.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Brand", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9446cccb5f61b7f43553bdb4224540d3a1b622f1565cf4ba219985199fba67c8",
+      "tips": [
+        {
+          "id": "support:Bard:Braum:0",
+          "text": "Aim Cosmic Binding so it passes through Braum to a second target or a wall. The Unbreakable shield destroys the bolt, so wait until it drops.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Braum", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Braum-E", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Bard:Braum:1",
+          "text": "Don't let Braum land Winter's Bite and get free auto stacks on you. If you are marked, step out of range before the stun lands.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Braum-Q", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Bard:Braum:2",
+          "text": "Place Caretaker's Shrine where Braum can't easily walk over it, and let it charge up so it heals more.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Braum", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Bard:Braum:3",
+          "text": "Step out of the way of Glacial Fissure during its long cast, and avoid walking over the ice it leaves behind.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Braum:4",
+          "text": "Use Magical Journey to surprise Braum from another side, where his Unbreakable is not facing. Allies move through it faster than enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Braum", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Braum-E", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Bard:Braum:5",
+          "text": "Use Tempered Fate on your own ally when Braum's Glacial Fissure is coming, so they are safe for the duration.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Braum", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Braum-R", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a5939d2147a178bbe20df1cea80e26868cd8e212c0bc301fe90baddcc17e16a9",
+      "tips": [
+        {
+          "id": "support:Bard:Camille:0",
+          "text": "Aim Cosmic Binding so it passes through Camille and hits a wall behind her. That stuns her, so go in for the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Camille", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Bard:Camille:1",
+          "text": "Camille's Hookshot needs a wall, so she is easier to hit when she is in the open. Poke her with Cosmic Binding then.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-E", "start": 10, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 82, "end": 86 },
+            { "kind": "ability", "key": "Bard-Q", "start": 96, "end": 110 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Bard:Camille:2",
+          "text": "Keep your distance from Camille when The Hextech Ultimatum is ready. Tempered Fate can save your carry if they are trapped.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Camille-R", "start": 37, "end": 58 },
+            { "kind": "ability", "key": "Bard-R", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Bard:Camille:3",
+          "text": "Place Caretaker's Shrine where Camille cannot walk over it. She will destroy any shrine she steps on.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Camille", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Camille:4",
+          "text": "Use Magical Journey to escape from Camille. She can follow you through it, so do not rely on it alone.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Camille", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "960752b40be6531ce26467a44433d5f036bac831b9a6644a109b53d38a299729",
+      "tips": [
+        {
+          "id": "support:Bard:Janna:0",
+          "text": "Line up Cosmic Binding so it hits Janna and then her ADC, or Janna and then a wall. The stun is a big threat in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Janna", "start": 34, "end": 39 },
+            { "kind": "champion", "key": "Janna", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Bard:Janna:1",
+          "text": "Do not use Tempered Fate on yourself when Janna uses Monsoon. Wait for her to commit, then trap her ADC.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Janna", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Janna-R", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Bard:Janna:2",
+          "text": "Walk in with Magical Journey only when Howling Gale is on cooldown. It knocks you up in the middle of your entrance.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Janna-Q", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Bard:Janna:3",
+          "text": "Keep collecting chimes in lane. Your meeps will slow Janna and her ADC when you trade.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 },
+            { "kind": "champion", "key": "Janna", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "505bf761cb9380213d450e51931bb35e7e7258e89638dd1b2ae9fd1f1e55af10",
+      "tips": [
+        {
+          "id": "support:Bard:Karma:0",
+          "text": "Let Caretaker's Shrine charge before your ally steps on it; it heals more. Enemies who walk over it destroy it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Karma:1",
+          "text": "Aim Cosmic Binding so it passes through Karma and hits a wall behind her; that stuns her for a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Karma", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Bard:Karma:2",
+          "text": "Stay out of Karma's tether range; if Focused Resolve lands, walk out of its range quickly so you aren't rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Karma-W", "start": 37, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Bard:Karma:3",
+          "text": "Step away from the circle Mantra leaves behind with Inner Flame; it slows and then bursts for heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Karma-Q", "start": 52, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Bard:Karma:4",
+          "text": "Don't let Karma get free hits on you; each one lowers her Mantra cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Karma-R", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9e6d5209d280be6e31412a368ed5dc6cf3482437ba63c241b2afe2445a55df81",
+      "tips": [
+        {
+          "id": "support:Bard:Leona:0",
+          "text": "Hit Leona with Cosmic Binding when she walks up. If it passes through her into a wall or another enemy, she is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Bard-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Bard:Leona:1",
+          "text": "Stay behind your minions and keep your distance from Leona. Zenith Blade pulls her to you and roots you, and then a stun follows.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Leona-E", "start": 60, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 99 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Bard:Leona:2",
+          "text": "Leave the lane when Leona raises Eclipse. She takes less damage for a few seconds and the detonation hits anyone close.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Leona-W", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Bard:Leona:3",
+          "text": "Hold Tempered Fate for when you or your partner are caught by her stun combo. It puts you out of reach of her damage.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Bard:Leona:4",
+          "text": "Open Magical Journey to escape when Leona commits to a dash. Enemies can follow you through it, so keep an eye on her.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Leona", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d9996d54bfdcb2f3a3f91917fffb53e5fecf0ca8df7bbafe1523600c058aabad",
+      "tips": [
+        {
+          "id": "support:Bard:Lulu:0",
+          "text": "Aim Cosmic Binding so it passes through an enemy and ends on a second target or a wall. Lulu is easy to pin against terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Bard:Lulu:1",
+          "text": "Step on shrines early, and don't leave them where Lulu can walk over them; an enemy champion destroys a shrine.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Bard:Lulu:2",
+          "text": "Stay behind your minions so Pix's bolts hit them instead of you.",
+          "refs": [],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Bard:Lulu:3",
+          "text": "Keep your distance from Lulu when Whimsy is ready; it stops your attacks and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Lulu-W", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Bard:Lulu:4",
+          "text": "Use Tempered Fate on your own ally to dodge Wild Growth's knock up, or to catch Lulu's team in stasis before they commit.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Lulu-R", "start": 44, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 58, "end": 66 },
+            { "kind": "champion", "key": "Lulu", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "27f7c4c263e2101cf97147c043a7b81666df2e6c612e80c015b7d56fdef9a780",
+      "tips": [
+        {
+          "id": "support:Bard:Lux:0",
+          "text": "Line up Cosmic Binding so it passes through Lux and hits a minion or wall behind her; the stun lets your team commit.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Lux", "start": 44, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Lux:1",
+          "text": "Keep out of Lux's Light Binding line, behind minions where possible, since it stops after two enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Lux-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Bard:Lux:2",
+          "text": "Make Lux waste Light Binding first, then go in with Cosmic Binding while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-Q", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Bard-Q", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Bard:Lux:3",
+          "text": "Step out of the red beam before Final Spark fires; it is slow to aim and easy to sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Bard:Lux:4",
+          "text": "Use Magical Journey to flank Lux from an unexpected side; she can't easily zone a spot she didn't expect.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "da2c0b9037a3fd92097877dde34c76bb698d4f20bed52c3fe45047e9bb9cc991",
+      "tips": [
+        {
+          "id": "support:Bard:Maokai:0",
+          "text": "Stay out of Twisted Advance range when you can; being rooted next to Maokai means his Bramble Smash lands easily.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "champion", "key": "Maokai", "start": 69, "end": 75 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 86, "end": 99 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Bard:Maokai:1",
+          "text": "Don't waste Cosmic Binding while Maokai dashes with Twisted Advance; he can't be targeted then.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Maokai", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Maokai-W", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Bard:Maokai:2",
+          "text": "Hit Maokai sparingly with spells; each hit shortens the wait for Sap Magic's heal.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 65,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Bard:Maokai:3",
+          "text": "Line up Cosmic Binding so it passes Maokai and hits a wall or another enemy, for a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Maokai", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Maokai:4",
+          "text": "Stay away from brush near Maokai; saplings there hurt much more and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Bard:Maokai:5",
+          "text": "Use Tempered Fate on yourself or your partner when Nature's Grasp is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Maokai-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "359fe790931893e362e9b9e81a6ca7d896ff65f37a2a5dd910324bd1e72e68a8",
+      "tips": [
+        {
+          "id": "support:Bard:Mel:0",
+          "text": "Aim Cosmic Binding so it passes through Mel and hits a second enemy or a wall; that stuns instead of only slowing. Line her up against terrain behind her.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Mel", "start": 40, "end": 43 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Bard:Mel:1",
+          "text": "Wait for Mel to spend Rebuttal before you throw Cosmic Binding; her nova destroys projectiles that hit it.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Bard-Q", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Bard:Mel:2",
+          "text": "Stay out of Solar Snare range, or step aside from it. If you are rooted, Bard cannot easily escape her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 },
+            { "kind": "champion", "key": "Bard", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Bard:Mel:3",
+          "text": "Do not trade into her when your health is low; her hits stack Overwhelm and can execute you. Back off and let the stacks fall away.",
+          "refs": [],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Bard:Mel:4",
+          "text": "Walk over Mel's side of the lane to chase her only after she has used Solar Snare. Magical Journey lets you and your ally close the gap fast through a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 10, "end": 13 },
+            { "kind": "ability", "key": "Mel-E", "start": 70, "end": 81 },
+            { "kind": "ability", "key": "Bard-E", "start": 83, "end": 98 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Bard:Mel:5",
+          "text": "Tempered Fate can freeze you and your ally out of danger when Mel dives in. It also stops her burst, but it hits enemies too, so watch who is in the circle.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Mel", "start": 62, "end": 65 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "36d4e45a87dd28a7cf938b85129095e74c62419d88875cd7dc4d0003fa36f36c",
+      "tips": [
+        {
+          "id": "support:Bard:Milio:0",
+          "text": "Aim Cosmic Binding so it passes through Milio and hits a second enemy or a wall; both are stunned. A lone hit only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Bard:Milio:1",
+          "text": "Milio's Ultra Mega Fire Kick can be dodged by moving out of its line. Step aside, then trade back with your own bolt.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Milio-Q", "start": 8, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Bard:Milio:2",
+          "text": "Place Caretaker's Shrine where only your ally will walk; an enemy who steps on it destroys it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Milio:3",
+          "text": "Do not put Tempered Fate on a fight where Milio's Breath of Life is ready; it can cleanse and heal his team. Fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Milio", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Milio-R", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "support:Bard:Milio:4",
+          "text": "Use your meeps to poke Milio when you have chimes; the slow makes it hard for him to walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "be9dc0e4bc8c362660cd0b203e96218aeaf64749ae045342adcaad790bfdf74c",
+      "tips": [
+        {
+          "id": "support:Bard:Morgana:0",
+          "text": "Aim Cosmic Binding so it hits an enemy and then a second enemy or a wall. That gets you the stun, not just the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:Morgana:1",
+          "text": "Keep your minions between you and Morgana. Dark Binding stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Morgana:2",
+          "text": "Bait out Black Shield before you go for Cosmic Binding. It blocks the stun, so wait for it to be used or broken.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 9, "end": 21 },
+            { "kind": "ability", "key": "Bard-Q", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Bard:Morgana:3",
+          "text": "Step out of Tormented Shadow quickly when you are hurt, since it hits harder the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:Morgana:4",
+          "text": "Use Tempered Fate on your ally to dodge Soul Shackles' stun. Don't use it on yourself while both of you are inside her chains.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Morgana-R", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c5f3244c86425226627f3bdca38f305bea2c05de72da522fe678c7c2e284bcef",
+      "tips": [
+        {
+          "id": "support:Bard:Nami:0",
+          "text": "Dodge Aqua Prison by moving once Nami casts it; the bubble lands after a short delay. Trade hard when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Nami", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Bard:Nami:1",
+          "text": "Line up Cosmic Binding so it passes through Nami and her partner, or pins one against a wall. A hit on two enemies stuns both.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Nami", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Bard:Nami:2",
+          "text": "Step out of the way of Tidal Wave when you see it coming; it travels slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:Nami:3",
+          "text": "Avoid fighting an ally of Nami who has Tidecaller's Blessing; it fades quickly, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Nami-E", "start": 39, "end": 60 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Nami:4",
+          "text": "Let Caretaker's Shrine charge before your ally steps on it, and place it where Nami cannot easily walk over it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Nami", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "47b341326b8b374ccfd3d44c1d36d477349d09ca873f37d978c55335fd4d0c69",
+      "tips": [
+        {
+          "id": "support:Bard:Nautilus:0",
+          "text": "Aim Cosmic Binding so the bolt can hit Nautilus and then a wall or another enemy behind him. That stuns them both.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Bard:Nautilus:1",
+          "text": "Stay out of Dredge Line range and keep minions between you and Nautilus. Walking near walls makes you easier to hook.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Bard:Nautilus:2",
+          "text": "Use Tempered Fate on your ally if Depth Charge is chasing them; stasis keeps them safe from it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Nautilus-R", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Bard:Nautilus:3",
+          "text": "Do not fight Nautilus while his shield is up; his attacks then hit you and nearby allies with extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 13, "end": 21 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Bard:Nautilus:4",
+          "text": "Hold still when Riptide goes off next to you until the waves finish. Running early takes more hits and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8248a1942c2516ff24346b78d8733add63e7ea48a5e8407379f745c0e989ed49",
+      "tips": [
+        {
+          "id": "support:Bard:Neeko:0",
+          "text": "Aim Cosmic Binding so it passes through Neeko and hits a second enemy or a wall; either one stuns. Stunned, she can't get away from your lane partner.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Neeko", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Bard:Neeko:1",
+          "text": "Stay out of Tangle-Barbs range and don't stand behind minions. Once it hits something it grows and roots for much longer.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Bard:Neeko:2",
+          "text": "Open Magical Journey to escape or to flank. Neeko can follow you through it, so watch for her coming out behind you.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Neeko", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Neeko:3",
+          "text": "Save Tempered Fate for her Pop Blossom. It puts you and your ally into stasis, so you can't be hurt by it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Neeko-R", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Bard:Neeko:4",
+          "text": "Treat a lone ally minion or ward as possibly Neeko. Poke it with Cosmic Binding or a Meep attack to check.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Bard-Q", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5ff5139b6952c17affab8566774615d239a92b46e28f55b27a06f41115765bd5",
+      "tips": [
+        {
+          "id": "support:Bard:Pantheon:0",
+          "text": "Aim Cosmic Binding so it can hit Pantheon and then a wall or a minion behind him. A second hit stuns both targets.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Bard:Pantheon:1",
+          "text": "Pantheon is safe from the front while Aegis Assault is active. Walk around behind him or wait it out before you use your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Pantheon:2",
+          "text": "Keep Cosmic Binding ready for when Pantheon jumps in with Shield Vault. Slow him as he commits, then back away.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Bard:Pantheon:3",
+          "text": "Once Pantheon is low on health, stay out of Comet Spear range. A thrown spear hits low-health targets much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Bard:Pantheon:4",
+          "text": "When Pantheon starts Grand Starfall, you have time to move away from the target area. Don't cast Magical Journey while you're being targeted.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "Bard-E", "start": 97, "end": 112 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Bard:Pantheon:5",
+          "text": "Place Caretaker's Shrines where Pantheon can't walk over them easily. He can destroy them just by stepping on them.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "edbe4e397350f45fc20a8a7e419b00f79eb3bff79e4a6fa32b20bc1424fb1db7",
+      "tips": [
+        {
+          "id": "support:Bard:Poppy:0",
+          "text": "Do not rely on Magical Journey to escape when Poppy has Steadfast Presence ready; she can stop the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Poppy", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Poppy-W", "start": 56, "end": 74 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Bard:Poppy:1",
+          "text": "Hit Poppy with Cosmic Binding when she is near a wall or another enemy so the bolt stuns her.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Bard-Q", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Bard:Poppy:2",
+          "text": "Stay away from walls when Poppy is near; Heroic Charge stuns you if she carries you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-E", "start": 41, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Poppy:3",
+          "text": "Step on Poppy's dropped buckler from Iron Ambassador to destroy it and deny her shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 37,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Bard:Poppy:4",
+          "text": "When Poppy starts to spin her hammer, she is charging Keeper's Verdict; move out of its line or use Tempered Fate on your ally.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 54, "end": 70 },
+            { "kind": "ability", "key": "Bard-R", "start": 100, "end": 113 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "42d6e652f046d9f3e27f01e3a57930ec773ade548915525f911b41aecd75b0f0",
+      "tips": [
+        {
+          "id": "support:Bard:Pyke:0",
+          "text": "Aim Cosmic Binding so it passes through a minion or Pyke and ends on a wall or a second enemy; that stuns them.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Pyke", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Bard:Pyke:1",
+          "text": "Use Tempered Fate on an ally Pyke is about to execute, or on Pyke himself when he dives in; everyone inside is frozen in stasis.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Pyke", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Bard:Pyke:2",
+          "text": "Stay away from low-health allies when Pyke is hidden, because Death From Below can finish them and he can chain onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Bard:Pyke:3",
+          "text": "Enemies hit by Bone Skewer are slowed, but Pyke is hard to hit while hidden. Do not chase him into the fog; he heals back damage when unseen.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 37 },
+            { "kind": "champion", "key": "Pyke", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Bard:Pyke:4",
+          "text": "Do not stand in a straight line with your ADC when Pyke has Bone Skewer ready; a pull away from the lane can leave your carry alone.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8cb7841b060e1ff0557724dcfedad7d8d0fab2a0b2aee34a2226fd698442b842",
+      "tips": [
+        {
+          "id": "support:Bard:Rakan:0",
+          "text": "Aim Cosmic Binding so it passes through Rakan and hits a second enemy or a wall behind him; both are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rakan", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:Rakan:1",
+          "text": "Rakan is easy to catch when his partner is far away, so slow him with Cosmic Binding and follow up with a meep attack.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Bard-Q", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Bard:Rakan:2",
+          "text": "Rakan's Grand Entrance shows where he will land. Step out of the landing area instead of standing in it.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Rakan-W", "start": 8, "end": 22 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Bard:Rakan:3",
+          "text": "Use Tempered Fate on yourself or an ally when The Quickness charm is about to land; stasis stops you taking the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Rakan-R", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Bard:Rakan:4",
+          "text": "Place Caretaker's Shrine out of Rakan's reach, because he destroys it by stepping on it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Rakan", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "203e0165af8e7d96a9e749a85f77164b1b4524dd7c89b6e7cf9edfe2081f55e2",
+      "tips": [
+        {
+          "id": "support:Bard:Rell:0",
+          "text": "Aim Cosmic Binding so it passes through one enemy and hits a second or a wall. Then both are stunned and Rell cannot engage on you.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rell", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Bard:Rell:1",
+          "text": "Rell wants to dive on you. Hold Tempered Fate for when she and her ally commit, because the stasis cannot be cancelled and it stops her follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Bard-R", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Bard:Rell:2",
+          "text": "Stay out of Shattering Strike range when she is mounted. Her Ferromancy: Crash Down leap and Magnet Storm both pull you into a fight you cannot escape.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 12, "end": 29 },
+            { "kind": "ability", "key": "Rell-W", "start": 61, "end": 83 },
+            { "kind": "ability", "key": "Rell-R", "start": 93, "end": 105 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Bard:Rell:3",
+          "text": "Use Magical Journey to escape through a wall once she has used her stun. She can follow you through it, so do not run to a dead end.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ffb014da7f42c72b9749382b4a2a3e81fe4725ece4e1dc82e28fa7509aa1acf8",
+      "tips": [
+        {
+          "id": "support:Bard:Senna:0",
+          "text": "Aim Cosmic Binding so it passes through Senna and hits the wall behind her or her partner; the stun is a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Bard:Senna:1",
+          "text": "Keep your distance from Senna; her long range and Piercing Darkness will out-poke you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Senna-Q", "start": 50, "end": 67 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Bard:Senna:2",
+          "text": "Watch for Last Embrace and step aside, because it roots you after a short delay. Do not walk forward into it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Bard:Senna:3",
+          "text": "Use Tempered Fate on your allies as well as the enemy to dodge Dawning Shadow, since stasis keeps them safe.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Senna-R", "start": 63, "end": 77 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "74f03374a54f639b13f92cd2ea19d416d9d5a2922e781ced9b718006f2053613",
+      "tips": [
+        {
+          "id": "support:Bard:Seraphine:0",
+          "text": "Walk over enemy shrines or fight them for it. Seraphine's partner will try to use your Caretaker's Shrine, so keep it under control.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 46, "end": 55 },
+            { "kind": "ability", "key": "Bard-W", "start": 87, "end": 105 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Bard:Seraphine:1",
+          "text": "Slow Seraphine with Cosmic Binding when her partner is behind her, or line her up with a wall so the stun lands.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Bard-Q", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Bard:Seraphine:2",
+          "text": "Avoid getting slowed by your own lane's effects. Once Bard is slowed, Beat Drop roots him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 20 },
+            { "kind": "champion", "key": "Bard", "start": 54, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Bard:Seraphine:3",
+          "text": "Keep your health up against High Note; it hurts much more when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 28, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Bard:Seraphine:4",
+          "text": "Use Tempered Fate on your own ally if Encore charms them. Stasis is a safe place to be, but it also protects the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "89e87900e0f129eb9a6de3ed8bc3730eb56c14aa37c08d3bb194540da3082364",
+      "tips": [
+        {
+          "id": "support:Bard:Shen:0",
+          "text": "Aim Cosmic Binding so it passes through Shen or a minion to a second target or a wall for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shen", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Bard:Shen:1",
+          "text": "Shen's Shadow Dash taunts you. Stay out of its line and punish him when he misses.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-E", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Shen:2",
+          "text": "Shen's Spirit's Refuge blocks basic attacks, so don't auto your meeps into it. Use Cosmic Binding or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-W", "start": 7, "end": 22 },
+            { "kind": "ability", "key": "Bard-Q", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:Shen:3",
+          "text": "Watch for Shen's level 6. Stand United can bring him to a fight from across the map, so keep track of where his ally is.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-R", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:Shen:4",
+          "text": "Keep Caretaker's Shrine out of Shen's reach, since an enemy walking over it destroys it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Shen", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d7b9d54693fc10c0bb55c53cf08ef0b9b4fb855eecadba790029a319aaea5083",
+      "tips": [
+        {
+          "id": "support:Bard:Sona:0",
+          "text": "Aim Cosmic Binding so the bolt can pass through Sona and hit her partner, or hit a wall behind her. Two hits or terrain gives the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sona", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Bard:Sona:1",
+          "text": "Sona is fragile. Stun her with Cosmic Binding and kill her first, since she heals her team if left alone.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Bard-Q", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Bard:Sona:2",
+          "text": "Spread out from your partner so Crescendo can't stun you both. Stay out of its long line.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Bard:Sona:3",
+          "text": "Sona's Hymn of Valor hits the nearest two enemies. Stand behind minions so she hits them instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-Q", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Bard:Sona:4",
+          "text": "Tempered Fate can save an ally from Crescendo or stop a fight when you cast it onto your team.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Sona-R", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f1a94f45c6027846b657b280e29150bdbf03e14a4fe0a031ce23c35250cd4641",
+      "tips": [
+        {
+          "id": "support:Bard:Soraka:0",
+          "text": "Aim Cosmic Binding so it goes through Soraka into a wall or the enemy partner; the stun makes her easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Soraka", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Bard:Soraka:1",
+          "text": "Do not stand in Equinox. Once Soraka uses it, back off, because it silences and then roots.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 16, "end": 23 },
+            { "kind": "champion", "key": "Soraka", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Soraka:2",
+          "text": "Soraka's heals cost her health, so keep the pressure on her. Starcall lets her heal for free, so dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Bard:Soraka:3",
+          "text": "Put Caretaker's Shrine where Soraka's Starcall can't easily reach, and let it charge before your ally takes it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Soraka", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "884256ea4b5b4f663c7dbac40b436724677e69b801f7326d69325115d549033b",
+      "tips": [
+        {
+          "id": "support:Bard:Swain:0",
+          "text": "Aim Cosmic Binding so it hits Swain and then a minion, an ally or a wall. That stuns him, and it is your best way to start a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Swain", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Bard:Swain:1",
+          "text": "Stay away from Swain when Nevermove is ready. Once it is rooted on you, he can recast and pull you in.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Swain-E", "start": 26, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Bard:Swain:2",
+          "text": "Keep moving when Vision of Empire shows up. It takes a while to land, so walk out of it and it does nothing.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Bard:Swain:3",
+          "text": "Let Caretaker's Shrines grow before your ally takes them. Place them where Swain will not step on them.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Bard:Swain:4",
+          "text": "Use Tempered Fate on your ally when Swain's Demonic Ascension is about to kill them. Swain is stunned in it too, but so is your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Swain", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Swain-R", "start": 44, "end": 61 },
+            { "kind": "champion", "key": "Swain", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "161abdb33506793e1691ab0af148da54a49ed0960df5f41cce4bb9f4ae0538ca",
+      "tips": [
+        {
+          "id": "support:Bard:TahmKench:0",
+          "text": "Keep your distance from Tahm Kench. Three stacks of An Acquired Taste let him stun or Devour you.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 52,
+              "end": 69
+            },
+            { "kind": "ability", "key": "TahmKench-R", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Bard:TahmKench:1",
+          "text": "Aim Cosmic Binding so it hits Tahm Kench and then a wall or the enemy behind him. The stun is worth much more than the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "TahmKench", "start": 30, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 123 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Bard:TahmKench:2",
+          "text": "Poke Tahm Kench with your Meeps while he is alone. His Thick Skin stores damage and heals it back if he stays out of fights.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Bard:TahmKench:3",
+          "text": "Move away from his Abyssal Dive when you see the landing spot. It knocks up everyone in the area.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "knocked-up", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:TahmKench:4",
+          "text": "Stun Tahm Kench with Cosmic Binding while he channels Abyssal Dive. It cancels the dive.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Bard-Q", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "14491714577524640b60e37095a3cd5107c2587b9bf128d74dc6adb3813c03b8",
+      "tips": [
+        {
+          "id": "support:Bard:Taric:0",
+          "text": "Line up Cosmic Binding so it passes through Taric and hits a second enemy or a wall for a stun. Then punish Taric while he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Taric", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 },
+            { "kind": "champion", "key": "Taric", "start": 108, "end": 113 },
+            { "kind": "keyword", "key": "stunned", "start": 126, "end": 133 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Bard:Taric:1",
+          "text": "Do not walk straight at Taric. Bravado makes his next attacks quicker after any spell, so keep your distance and poke him.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 24, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 31,
+              "end": 38
+            },
+            { "kind": "keyword", "key": "poke", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Bard:Taric:2",
+          "text": "Step out of the beam when you see Dazzle winding up. It bursts after a short delay, so sidestepping works.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Bard:Taric:3",
+          "text": "When Taric casts Cosmic Radiance, back off or burst someone down before it lands. It has a long delay.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Taric-R", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Taric:4",
+          "text": "Leave your Caretaker's Shrine to charge before using it; it heals more when it has had time to grow.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 11, "end": 29 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cbc684e0e011e9376eeea8602d26645572a3f5dc59389f2a843bf8699b0ac2cb",
+      "tips": [
+        {
+          "id": "support:Bard:Thresh:0",
+          "text": "Hold Cosmic Binding until Thresh is lined up with the wall or a second enemy, so both are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Thresh", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:Thresh:1",
+          "text": "Do not stand in a straight line with your ally in range of Thresh; Death Sentence pulls whoever it hits, and the first target is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 67, "end": 81 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Bard:Thresh:2",
+          "text": "Thresh's Death Sentence is slow to cast, so watch for it to begin and step out of its path.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Bard:Thresh:3",
+          "text": "Do not let Thresh stand next to you; Flay knocks you back and leaves you slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Thresh-E", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Bard:Thresh:4",
+          "text": "Let your Caretaker's Shrines charge up before using them; they heal for more.",
+          "refs": [],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Bard:Thresh:5",
+          "text": "Trade when Thresh goes to pick up souls, because he is out of position then.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d040f81f44cc553a236159f98b651c682d6b0033bf037ec5c98ab15372fa8f09",
+      "tips": [
+        {
+          "id": "support:Bard:Velkoz:0",
+          "text": "Hit Vel'Koz with Cosmic Binding against a wall or behind a minion. The stun is long enough to kill him because he has little mobility.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Bard-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Bard:Velkoz:1",
+          "text": "Walk over his Void Rift and Plasma Fission only when you must. Stay out of the straight line behind your minions, since Plasma Fission splits when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 14, "end": 23 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 28, "end": 42 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 120, "end": 134 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Bard:Velkoz:2",
+          "text": "Look for ganks with Magical Journey. Vel'Koz has little escape, so a portal behind him can trap him.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 20, "end": 35 },
+            { "kind": "champion", "key": "Velkoz", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Bard:Velkoz:3",
+          "text": "Stun or knock him up when he starts Life Form Disintegration Ray; the channel is interrupted. Stay out of its beam until then.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 36, "end": 64 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Bard:Velkoz:4",
+          "text": "Stay out of Tectonic Disruption's range when it is ready. If you are knocked up, you are an easy target for the rest of his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 12, "end": 31 },
+            { "kind": "keyword", "key": "knocked-up", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d406f775ab3eb3dc496c7e8d9bc7c6de875f7173a748ddaa6ae03fabde7040c1",
+      "tips": [
+        {
+          "id": "support:Bard:Xerath:0",
+          "text": "Walk at Xerath to close the gap, since he is weak up close. Stay out of his line so Shocking Orb misses.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Xerath-E", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Bard:Xerath:1",
+          "text": "Aim Cosmic Binding at Xerath when he is near a wall or another enemy, because the stun lands on both.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Bard:Xerath:2",
+          "text": "Punish Xerath while he charges Arcanopulse; he is slowed and easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Bard:Xerath:3",
+          "text": "Move sideways to dodge Eye of Destruction. It lands after a short delay and the slow is stronger at the center.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 23, "end": 41 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Bard:Xerath:4",
+          "text": "Use Magical Journey to bring your partner in from an unexpected angle and reach Xerath fast.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Xerath", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Bard:Xerath:5",
+          "text": "When Xerath starts Rite of the Arcane, dodge the marked circles. Tempered Fate can freeze your team out of its shots.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 19, "end": 37 },
+            { "kind": "ability", "key": "Bard-R", "start": 65, "end": 78 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "581b1855ae0f2f88373c8bc0851d92f80840aa8da0a9c0338885905964e43a69",
+      "tips": [
+        {
+          "id": "support:Bard:Yuumi:0",
+          "text": "Yuumi is untargetable while attached, so aim Cosmic Binding at her partner. Hit them against a wall or a second enemy to stun.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Bard-Q", "start": 45, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Bard:Yuumi:1",
+          "text": "Hit Yuumi when she is detached and dashing between allies; she is weak then. Stun or slow her so she can't reattach.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Bard:Yuumi:2",
+          "text": "Her Prowling Projectile is a slow skillshot. Step out of its path or let a minion block it.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Bard:Yuumi:3",
+          "text": "Tempered Fate on your own carry blocks her Final Chapter damage, but it freezes you both, so use it when the fight is decided.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Yuumi-R", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Bard:Yuumi:4",
+          "text": "Place Caretaker's Shrine behind your team and let it charge before using it. Yuumi's partner can crush it if they reach it first.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Yuumi", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f88551ab7586293ebd08706faaa191bd74c1d13f28fc29aa49c6cd04e6941c01",
+      "tips": [
+        {
+          "id": "support:Bard:Zilean:0",
+          "text": "Aim Cosmic Binding so it passes through one enemy and hits another, or hits a wall behind them, to stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Bard:Zilean:1",
+          "text": "Zilean is hard to kill but fragile. Hit him with Cosmic Binding, then focus him with your lane partner.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Bard-Q", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Bard:Zilean:2",
+          "text": "Don't stand still with a Time Bomb on you. Walk away from your lane partner so the blast and stun miss them.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Bard:Zilean:3",
+          "text": "Place Caretaker's Shrine where Zilean can't easily walk over it, because he can destroy it by stepping on it.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Zilean", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Bard:Zilean:4",
+          "text": "If Zilean puts Chronoshift on his carry, hold Tempered Fate until after it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Zilean-R", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Bard-R", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e52e7bb7280899abf3aab15f6bb72a125f70374739ffb4043b55e6148a180324",
+      "tips": [
+        {
+          "id": "support:Bard:Zyra:0",
+          "text": "Land Cosmic Binding on Zyra when she steps up to plant seeds. Try to catch a wall behind her for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zyra", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Bard:Zyra:1",
+          "text": "Walk over Zyra's seeds to destroy them before she can grow plants. Do it before she casts, because her plants only grow from seeds that are still there.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Bard:Zyra:2",
+          "text": "Stay out of Grasping Roots range when it is ready. A root leaves you stuck while her plants hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Bard:Zyra:3",
+          "text": "Move the fight away from her seeds. Few seeds nearby means few plants.",
+          "refs": [],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Bard:Zyra:4",
+          "text": "Save Tempered Fate for her Stranglethorns. Anyone in the stasis cannot be hit by the knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Zyra-R", "start": 27, "end": 41 },
+            { "kind": "keyword", "key": "knocked-up", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

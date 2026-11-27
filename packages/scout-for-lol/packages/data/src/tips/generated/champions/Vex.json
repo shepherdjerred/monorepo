@@ -1,0 +1,952 @@
+{
+  "schemaVersion": 1,
+  "champion": "Vex",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "0952d34692dee6945d22c39f972a30598d1239a0b0bcac4f6adbc1b1b8692a94",
+      "tips": [
+        {
+          "id": "middle:Vex:general:0",
+          "text": "Hold Personal Space for when an enemy dashes or jumps at you; the shield and shockwave punish them and the shockwave reaches a bit further against dashers.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Vex:general:1",
+          "text": "Poke with Mistral Bolt from long range. It is a wave, so you can hit several enemies, and it gets faster and narrower after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 10, "end": 22 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Vex:general:2",
+          "text": "Use Looming Darkness to leave enemies slowed before you trade. It cannot detonate Gloom, so follow it with another ability or a basic attack.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Vex:general:3",
+          "text": "When an enemy dashes or blinks near you, hit them with a basic ability or attack to pop their Gloom for extra damage and a shorter Doom cooldown.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Vex:general:4",
+          "text": "Cast an ability when Doom is ready. It fears enemies and stops their dashes, which is a strong way to peel for yourself or start a fight.",
+          "refs": [],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "middle:Vex:general:5",
+          "text": "Fire Shadow Surge at a champion you can kill, then recast to dash to them. You cannot recast while rooted, so use it before you get caught.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Vex:general:6",
+          "text": "If your target dies after Shadow Surge marks them, cast it again right away to chain onto the next champion in a teamfight.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Vex:combo:0",
+          "name": "Doom E fear",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Vex-E" }],
+          "when": "When Doom is ready and you want the fear to land on enemies you can't reach with your other spells.",
+          "whenRefs": [],
+          "text": "Looming Darkness can carry the empowered fear. Enemies flee from the blast's center instead of from Vex, so you can fear them away from your position.",
+          "textRefs": [
+            { "kind": "ability", "key": "Vex-E", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Vex", "start": 100, "end": 103 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "308b1f8a1fe07cc1d6b5d6ef55239be2274707c1b66cfbd3049dda63ebcd82ef",
+      "tips": [
+        {
+          "id": "middle:Vex:Ahri:0",
+          "text": "Dashing makes Vex's Gloom mark Ahri. Use Mistral Bolt or Personal Space afterward for bonus damage and a faster Doom 'n Gloom.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 14, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Vex-Q", "start": 41, "end": 53 },
+            { "kind": "ability", "key": "Vex-W", "start": 57, "end": 71 },
+            {
+              "kind": "ability",
+              "key": "Vex-passive",
+              "start": 112,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Vex:Ahri:1",
+          "text": "Keep minions between you and Ahri so Charm hits them first and never reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Vex:Ahri:2",
+          "text": "Save your empowered Doom 'n Gloom ability for when Ahri dashes in with Spirit Rush. It fears her and interrupts the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-passive", "start": 20, "end": 33 },
+            { "kind": "champion", "key": "Ahri", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Ahri-R", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Vex:Ahri:3",
+          "text": "Cast Looming Darkness on Ahri when she backs off. It slows her, so you can follow up with Mistral Bolt.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Vex-Q", "start": 90, "end": 102 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3d9dadbe2b0ef9f315afdf51086d727473f19d64878d6aeb4123d827a05f66a7",
+      "tips": [
+        {
+          "id": "middle:Vex:Akali:0",
+          "text": "Cast Personal Space when Akali dashes at you; it deals damage and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Vex:Akali:1",
+          "text": "Hold your empowered ability for Akali's dash in. The fear interrupts her dash and she is left exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Vex:Akali:2",
+          "text": "Akali's dashes mark her with Gloom, so follow up with a basic attack or basic ability for bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Vex:Akali:3",
+          "text": "Aim Mistral Bolt at long range to poke Akali when she is low on energy.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Akali", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Vex:Akali:4",
+          "text": "Throw Looming Darkness into Akali's Twilight Shroud when she hides; the area damage reveals her.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Akali-W", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d778110ddf5ea6829d13724cb4eeb744f96d52576c08ade5c1dc1f805b2becfd",
+      "tips": [
+        {
+          "id": "middle:Vex:Anivia:0",
+          "text": "Dodge Flash Frost by sidestepping. It stuns only when it detonates at max range or is recast, so stay out of that area.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Vex:Anivia:1",
+          "text": "Do not walk into her Glacial Storm. It slows you and hurts more once fully formed.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Vex:Anivia:2",
+          "text": "Use Mistral Bolt from long range while she is busy with the wall; the bolt gets faster after a short distance.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Vex:Anivia:3",
+          "text": "Her Crystallize wall lasts a short time. Wait it out, or step around it, before you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Vex:Anivia:4",
+          "text": "Kill her egg fast with Looming Darkness and other poke; if it survives, she returns at full health.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "69f789553966608fb401733d358e3e1f7150594ffb4c4f2d7258d81802e17b1b",
+      "tips": [
+        {
+          "id": "middle:Vex:Aurora:0",
+          "text": "Aurora dashes a lot, so keep Doom 'n Gloom ready. Her hops mark her, and your next basic ability or attack then deals bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Vex-passive", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Vex:Aurora:1",
+          "text": "Use Personal Space when Aurora dashes onto you; the shield absorbs her burst and the shockwave hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Vex:Aurora:2",
+          "text": "Aim Mistral Bolt down the lane at long range to poke her. It is blocked by the first minion it hits, so fire when the path is clear.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Vex:Aurora:3",
+          "text": "Aurora turns invisible after Across the Veil. Do not chase blindly; wait for her to reappear and hit her with Looming Darkness.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Vex-E", "start": 110, "end": 126 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2958cbad392b98270300a9f8a16ecc16af6430a3d3bca1e3ce668782ab4ec252",
+      "tips": [
+        {
+          "id": "middle:Vex:Cassiopeia:0",
+          "text": "Cassiopeia's Miasma grounds you, so don't dash or flash into it. Keep Shadow Surge for after the clouds fade.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 0, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 13,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Vex-R", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Vex:Cassiopeia:1",
+          "text": "Use Personal Space when Cassiopeia's Noxious Blast or Twin Fang is about to hit you. The shield cuts her trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 37,
+              "end": 50
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Vex:Cassiopeia:2",
+          "text": "Cassiopeia's Petrifying Gaze stuns you if you face her. Turn away as it goes off to be slowed instead.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 0, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 13,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Vex:Cassiopeia:3",
+          "text": "Fire Mistral Bolt from long range, since Cassiopeia has to walk close to you for Twin Fang. Save the empowered one to fear her.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 41, "end": 51 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a3e15ccd9393c2199cd3933013818a7fbe1ed7522523777104acdd6e9401680a",
+      "tips": [
+        {
+          "id": "middle:Vex:Fizz:0",
+          "text": "Save your empowered ability for when Fizz dashes in; Doom fear interrupts his dashes, and Personal Space is an easy way to use it.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Vex-W", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Vex:Fizz:1",
+          "text": "Fizz dashes a lot, so his Urchin Strike and Playful give you Gloom bonus damage. Follow up with a basic attack or ability.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Vex:Fizz:2",
+          "text": "Fizz is untargetable during Playful. Wait for him to land before you spend Mistral Bolt or Shadow Surge.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vex-Q", "start": 75, "end": 87 },
+            { "kind": "ability", "key": "Vex-R", "start": 91, "end": 103 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Vex:Fizz:3",
+          "text": "Poke Fizz with Looming Darkness from far away; it slows him and keeps him from walking up easily.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Vex-E", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "156d793ce03e3f018a49975932d62df1ef870ec003103e07ef14b1b8edd02efa",
+      "tips": [
+        {
+          "id": "middle:Vex:Malzahar:0",
+          "text": "Hit Malzahar with Mistral Bolt from long range. Void Shift blocks most damage when he has not been hurt lately, so poke him first to break it.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Vex-Q", "start": 18, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 48,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Vex:Malzahar:1",
+          "text": "Do not rely on Doom's fear on Malzahar while Void Shift is up. It makes him immune to crowd control, so hit him with a normal ability first.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 30, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 45,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Vex:Malzahar:2",
+          "text": "Stay out of Call of the Void's line when it opens. A silence stops your Personal Space and Looming Darkness.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 53, "end": 60 },
+            { "kind": "ability", "key": "Vex-W", "start": 72, "end": 86 },
+            { "kind": "ability", "key": "Vex-E", "start": 91, "end": 107 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Vex:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions. When they die, it spreads to the nearest enemy, which may be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Vex:Malzahar:4",
+          "text": "Once Malzahar reaches level 6, keep your distance. Nether Grasp suppresses you, and Personal Space cannot be cast while you are suppressed.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 51, "end": 63 },
+            { "kind": "ability", "key": "Vex-W", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "231cee2f9a3bd5aae02f29f58901602df3fc2ecc2185d0ebf20a3074d44a56f4",
+      "tips": [
+        {
+          "id": "middle:Vex:Orianna:0",
+          "text": "Use Personal Space when Orianna's Command: Shockwave or a dash from her team gets close. It shields you and hits everyone around.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Orianna-R", "start": 34, "end": 52 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Vex:Orianna:1",
+          "text": "Look for where Orianna's Ball is sitting. Her spells only affect the area around it, so stay out of that zone.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Vex:Orianna:2",
+          "text": "Poke her with Mistral Bolt from long range; the wave speeds up after a short distance, so aim a bit ahead.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vex-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Vex:Orianna:3",
+          "text": "Look for Orianna's Ball when you commit. Looming Darkness slows her, so follow with your other spells while she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Vex-E", "start": 41, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Vex:Orianna:4",
+          "text": "Save Shadow Surge for when Orianna is hurt, since it lets you dash onto her. Don't use it right before her Command: Shockwave is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Orianna", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Orianna-R", "start": 107, "end": 125 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc4a9f54cb5bd93424131ce3c96507f7d0750590397f065a7934bcd48aa967d1",
+      "tips": [
+        {
+          "id": "middle:Vex:Ryze:0",
+          "text": "Don't let Ryze stack Flux on you; he gets rooted combos and big Overload damage. Dodge Spell Flux or trade back right away.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 10, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 64, "end": 72 },
+            { "kind": "ability", "key": "Ryze-E", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Vex:Ryze:1",
+          "text": "Hold Personal Space for when Ryze walks up to cast Rune Prison; the shield absorbs his burst and the scream hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ryze-W", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Vex:Ryze:2",
+          "text": "Land Looming Darkness on Ryze to slow him; it also puts Gloom on him for later.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ryze", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Vex:Ryze:3",
+          "text": "Use Mistral Bolt from long range; it reaches farther than most of his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Vex:Ryze:4",
+          "text": "Hit him with your empowered ability to fear him off a combo, then finish with Shadow Surge.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 78, "end": 90 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Vex:Ryze:5",
+          "text": "If Ryze starts Realm Warp, stun or otherwise crowd control him; it cancels the portal.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Ryze-R", "start": 15, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f71082534b7a6d6b2fd5d199b30dcddb47e62f4660cea0a2960095e897254693",
+      "tips": [
+        {
+          "id": "middle:Vex:Sylas:0",
+          "text": "Keep Doom 'n Gloom ready for when Sylas dashes at you. Your empowered ability fears him and cancels his dash.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-passive", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Vex:Sylas:1",
+          "text": "Use Personal Space the moment Sylas commits to Abscond or Abduct; it hits him and shields you.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Vex:Sylas:2",
+          "text": "Poke with Mistral Bolt from long range; Sylas has to close the gap and has few ways to do it safely.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vex-Q", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Vex:Sylas:3",
+          "text": "Hold Shadow Surge when you can; if Sylas steals it, he can use it against you.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Vex:Sylas:4",
+          "text": "Stay wary when Sylas is low on health. His Kingslayer heals him back up, so finish him quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Sylas-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "94c31feb67263bf8ae07f670f71eb1c80d4524fa74cd8869d8219036bade09d9",
+      "tips": [
+        {
+          "id": "middle:Vex:TwistedFate:0",
+          "text": "Hold Personal Space's shield for when Twisted Fate walks up for a Gold Card attack. It also hits him back.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "TwistedFate", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Vex:TwistedFate:1",
+          "text": "When Twisted Fate uses Destiny to teleport, his Gate dash marks him with Gloom. Hit him with a basic attack or ability for bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Vex:TwistedFate:2",
+          "text": "Use Looming Darkness to slow Twisted Fate when he goes for a card, so he can't close in or retreat easily.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "TwistedFate", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Vex:TwistedFate:3",
+          "text": "Dodge Wild Cards by stepping out of the cone and not standing in line with your minions.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Vex:TwistedFate:4",
+          "text": "Use Shadow Surge when Twisted Fate is low. It reveals him and your dash can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "TwistedFate", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1c143356db7b6c87eb8c3fcd9d3c7dd26cff116ec154adc4add604277342335",
+      "tips": [
+        {
+          "id": "middle:Vex:Viktor:0",
+          "text": "Don't stand still in Gravity Field. Walk out before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Vex:Viktor:1",
+          "text": "Use Mistral Bolt from long range to poke Viktor. He has to walk up to you to use Siphon Power.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Viktor", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Vex:Viktor:2",
+          "text": "Use Personal Space when Viktor gets close. You get a shield and damage him in the same cast.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Vex:Viktor:3",
+          "text": "Save your Doom for when Viktor comes in to trade. It feeds your next ability and can fear him away.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Vex:Viktor:4",
+          "text": "Looming Darkness slows Viktor and tags him with Gloom. Use it to pin him down after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 0, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Viktor", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Vex:Viktor:5",
+          "text": "After Arcane Storm lands on you, the storm follows you. Move away from your own team's fight.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9642496a285f01defff236d36ca8e09bf65ea98fdd3e7dd03e5f1b72affd90a2",
+      "tips": [
+        {
+          "id": "middle:Vex:Yasuo:0",
+          "text": "Save your empowered ability for when Yasuo dashes with Sweeping Blade. It fears him and interrupts the dash.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Vex:Yasuo:1",
+          "text": "Yasuo's dashes mark him with Gloom, so follow with a basic ability for bonus damage and a faster Doom.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Vex:Yasuo:2",
+          "text": "Don't throw Mistral Bolt or Looming Darkness into Wind Wall; it destroys them. Wait for the wall to end or aim around it.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Vex-E", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Vex:Yasuo:3",
+          "text": "Use Personal Space when Yasuo walks in. It shields you, hits him through Wind Wall, and gets a wider reach against dashers.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Vex:Yasuo:4",
+          "text": "Hit Yasuo with Looming Darkness to leave him slowed, so he can't close in easily.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vex-E", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Vex:Yasuo:5",
+          "text": "Stay out of Steel Tempest range when Yasuo has two stacks. The whirlwind knocks you up, and he can follow with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Yasuo", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 111, "end": 122 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fa0f6afd00643fc9ba4d3413a96e33ac207d02c9f35d1d8d1b9da07112453d72",
+      "tips": [
+        {
+          "id": "middle:Vex:Yone:0",
+          "text": "Yone dashes a lot, so his Mortal Steel and Soul Unbound dashes mark him for Gloom; follow with a basic attack or ability to pop the bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Yone-E", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Vex:Yone:1",
+          "text": "When Doom is ready, hold your next basic ability for when Yone dashes in; it interrupts the dash and sends him running.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "middle:Vex:Yone:2",
+          "text": "Use Personal Space when Yone dashes at you with Mortal Steel; the shield and damage ruin his trade, and the scream reaches farther against dashers.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Yone-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Vex:Yone:3",
+          "text": "Poke with Mistral Bolt from long range while he walks up; he has no ranged poke of his own.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vex-Q", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Vex:Yone:4",
+          "text": "Looming Darkness leaves him slowed, so use it when he commits and you want to back away.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 0, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Vex:Yone:5",
+          "text": "Mind his Fate Sealed at level 6; it stuns and pulls you in. Keep Personal Space ready to answer after he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-R", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Vex-W", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "86fe30f9e85d52c076fc0df2a3bd1d667065e1b69de31b54367adb8c49e1469b",
+      "tips": [
+        {
+          "id": "middle:Vex:Zed:0",
+          "text": "Hold Personal Space for when Zed dashes in. Its shockwave reaches further against dashing enemies, and the shield soaks his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Vex:Zed:1",
+          "text": "Keep Doom 'n Gloom ready for when Zed dashes in with Living Shadow or Death Mark; your next basic ability fears him and interrupts the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-passive", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Zed-W", "start": 53, "end": 66 },
+            { "kind": "ability", "key": "Zed-R", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Vex:Zed:2",
+          "text": "Zed is weakest right after he uses Living Shadow. Hit him with Mistral Bolt or Looming Darkness then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Vex-Q", "start": 63, "end": 75 },
+            { "kind": "ability", "key": "Vex-E", "start": 79, "end": 95 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Vex:Zed:3",
+          "text": "Use Personal Space when Death Mark lands on you. The shield absorbs some of the damage that the mark repeats back at you.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Zed-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Vex:Zed:4",
+          "text": "Cast Looming Darkness to slow Zed when he comes close, so his shadows have a harder time surrounding you.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

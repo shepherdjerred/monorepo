@@ -1,0 +1,976 @@
+{
+  "schemaVersion": 1,
+  "champion": "Azir",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "e985865e5244bce6d61f5fcc92e587fc2e2d1cd6783df25b3e6eda1e27f27052",
+      "tips": [
+        {
+          "id": "middle:Azir:general:0",
+          "text": "Put Sand Soldiers between the enemy minions and the enemy champion to last-hit and threaten at once, using Arise!",
+          "refs": [
+            { "kind": "ability", "key": "Azir-W", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Azir:general:1",
+          "text": "Keep one stored Sand Soldier for an escape with Shifting Sands or fast damage. Don't place both with Arise!",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 48, "end": 62 },
+            { "kind": "ability", "key": "Azir-W", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Azir:general:2",
+          "text": "Attack the enemy champion when they are near your soldiers. Your attack makes the soldiers stab for you, so you can hit from farther away.",
+          "refs": [],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Azir:general:3",
+          "text": "Send your soldiers with Conquering Sands to slow the enemy when they step back or try to engage. Enemies hit by later soldiers take no extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Azir:general:4",
+          "text": "Shifting Sands needs a Sand Soldier to dash to. Have one down before you cast it, and it shields you as you go.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Azir:general:5",
+          "text": "Use Emperor's Divide defensively when enemies dive you or your team. Your allies can walk through the wall, but enemies can't.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Azir:general:6",
+          "text": "Fight near your own soldiers and away from enemy turrets. Soldiers expire faster under an enemy turret.",
+          "refs": [],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Azir:general:7",
+          "text": "After a turret falls, use its ruins to build a Disc of the Sun with Shurima's Legacy. It acts as a turret for you.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-passive", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Azir:combo:0",
+          "name": "Shurima Shuffle",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Azir-E" },
+            { "kind": "ability", "key": "Azir-Q" }
+          ],
+          "when": "When you need a longer dash to chase, engage or escape, with a soldier out and both spells ready.",
+          "whenRefs": [],
+          "text": "Cast the dash to a soldier, then right away send the soldiers out with the Q. Azir follows the moving soldier, so the dash carries much further than normal.",
+          "textRefs": [
+            { "kind": "champion", "key": "Azir", "start": 78, "end": 82 }
+          ]
+        },
+        {
+          "id": "middle:Azir:combo:1",
+          "name": "Shuffle into wall",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Azir-E" },
+            { "kind": "ability", "key": "Azir-Q" },
+            { "kind": "ability", "key": "Azir-R" }
+          ],
+          "when": "When you want to engage on a squishy target or force a fight, and your team can follow up.",
+          "whenRefs": [],
+          "text": "Start the shuffle, then cast the ultimate during the dash. Azir can cast during the dash, so the wall lands on the enemies as he arrives.",
+          "textRefs": [
+            { "kind": "champion", "key": "Azir", "start": 59, "end": 63 }
+          ]
+        },
+        {
+          "id": "middle:Azir:combo:2",
+          "name": "Soldier wall hop",
+          "category": "terrain",
+          "sequence": [
+            { "kind": "ability", "key": "Azir-W" },
+            { "kind": "ability", "key": "Azir-E" }
+          ],
+          "when": "When escaping or repositioning over a thin wall, such as in the jungle or the river.",
+          "whenRefs": [],
+          "text": "Drop a soldier on the far side of the wall, then dash to it. Keep a soldier in reserve so you always have this escape.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "a6bb7a3ee3096d55af6268bde6033f4793023713d594820f3421a6462a23ab6f",
+      "tips": [
+        {
+          "id": "middle:Azir:Ahri:0",
+          "text": "Keep minions between you and Ahri so her Charm hits them instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Azir:Ahri:1",
+          "text": "Place your Sand Soldiers between her and her minions. They give you last-hits and threaten her when she steps up.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Azir:Ahri:2",
+          "text": "Keep one soldier stored with Arise! so Shifting Sands can get you away when Ahri is close.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-W", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Azir-E", "start": 39, "end": 53 },
+            { "kind": "champion", "key": "Ahri", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Azir:Ahri:3",
+          "text": "Use Emperor's Divide when Ahri dashes in to knock her back, and use it to cut off her Spirit Rush.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ahri-R", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Azir:Ahri:4",
+          "text": "Her survivability drops when Spirit Rush is on cooldown. Push the fight then.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fcbff7d1154c1b81566ab44339d8d4ee99d09317cf1ab6360abe3183fd0bf600",
+      "tips": [
+        {
+          "id": "middle:Azir:Akali:0",
+          "text": "Keep your soldiers between the enemy and their minions. It threatens Akali and lets you last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Azir:Akali:1",
+          "text": "Keep one soldier stored. Akali jumps in fast, and you need Shifting Sands ready to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Azir-E", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Azir:Akali:2",
+          "text": "Use Emperor's Divide when Akali jumps on you. It knocks her back and the wall blocks her from chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Azir:Akali:3",
+          "text": "Hit her with Conquering Sands when she walks in. It slows her, which makes her harder to land on you.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Azir:Akali:4",
+          "text": "Stay away from the smoke of Twilight Shroud. Akali is invisible inside it, but area spells still hit her and show where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 28, "end": 43 },
+            { "kind": "champion", "key": "Akali", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c580e56f251ffb28a278605ec1b9487f591e13451ef63625c8df9bbc2e1650eb",
+      "tips": [
+        {
+          "id": "middle:Azir:Anivia:0",
+          "text": "Stay out of line with Flash Frost. It travels far, and if it reaches the end of its range it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 22, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Azir:Anivia:1",
+          "text": "Use Shifting Sands to dodge Flash Frost or Frostbite and get close. It also gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Anivia-E", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Azir:Anivia:2",
+          "text": "Use Emperor's Divide when Anivia comes close. It knocks her back, and she can't walk through its wall.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Azir:Anivia:3",
+          "text": "Keep your soldiers placed between Anivia and the minions. Stab her with attacks while she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Azir:Anivia:4",
+          "text": "Stay out of Glacial Storm. It drains Anivia's mana, so fight her when she is low.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Anivia", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2c9e921f23d023bd9d17072bafce79ab457caa57ec6096166c725da84d321fb8",
+      "tips": [
+        {
+          "id": "middle:Azir:Aurora:0",
+          "text": "Place your Sand Soldiers between Aurora and the minions, then poke her with Arise! whenever she steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Azir-W", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Azir:Aurora:1",
+          "text": "Hold back one Sand Soldier charge so you can still use Shifting Sands to dash away when Aurora jumps on you.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 55, "end": 69 },
+            { "kind": "champion", "key": "Aurora", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Azir:Aurora:2",
+          "text": "Aurora turns invisible after Across the Veil, so do not chase blindly. Keep your soldiers out and let them stab if she shows up near them.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Azir:Aurora:3",
+          "text": "Save Emperor's Divide for when Aurora dives you. It knocks her back and the wall behind it blocks her path.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Aurora", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Azir:Aurora:4",
+          "text": "Aurora's Between Worlds ring slows you whenever you walk through its edge, so stay outside it, or fight from range if you are caught in it.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-R", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "81bbbbc5d1e94be2fbf0a8e5e7aff62dd7caa6e388a5ca588e44cd00d886ad57",
+      "tips": [
+        {
+          "id": "middle:Azir:Cassiopeia:0",
+          "text": "Keep your Sand Soldiers between you and Cassiopeia's minions to poke her. She has to stay close to farm.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 40, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Azir:Cassiopeia:1",
+          "text": "Save Shifting Sands for escaping or dodging. Cassiopeia's Miasma grounds you, which stops it, so stay out of the clouds.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 45, "end": 55 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Azir:Cassiopeia:2",
+          "text": "Face away from Cassiopeia when she casts Petrifying Gaze, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 41,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Azir:Cassiopeia:3",
+          "text": "Use Emperor's Divide to knock her back when she steps in to fight. The wall of soldiers then blocks her from chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Azir:Cassiopeia:4",
+          "text": "Sidestep Noxious Blast. Once you are poisoned, Twin Fang hits hard, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "72529456c5031f92bb4585f87006f0b7bf9ff6967473c457525e42223b7723be",
+      "tips": [
+        {
+          "id": "middle:Azir:Fizz:0",
+          "text": "Keep Shifting Sands ready for when Fizz dives in. The dash and shield get you out, and it stops if you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Fizz", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Azir:Fizz:1",
+          "text": "Hold Emperor's Divide for when Fizz jumps on you. It knocks him back and the wall blocks him from following.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Azir:Fizz:2",
+          "text": "Keep Sand Soldiers between you and Fizz and poke him with them while he is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Azir:Fizz:3",
+          "text": "Don't spend your spells while Fizz is balanced on his trident, because he can't be targeted. Wait for him to land.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Azir:Fizz:4",
+          "text": "Slow Fizz with Conquering Sands when he engages, so he can't stick to you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Azir-Q", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "823842b9b5b644050f7c0d03bb5f6ac0c2c3f59e13f1a0b3628128dbcae04c99",
+      "tips": [
+        {
+          "id": "middle:Azir:Malzahar:0",
+          "text": "Keep your distance from Malzahar. His Call of the Void silences you, and you can't cast Shifting Sands while silenced.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 38, "end": 54 },
+            { "kind": "keyword", "key": "silenced", "start": 55, "end": 63 },
+            { "kind": "ability", "key": "Azir-E", "start": 88, "end": 102 },
+            { "kind": "keyword", "key": "silenced", "start": 109, "end": 117 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Azir:Malzahar:1",
+          "text": "Sidestep Call of the Void by walking out from between its two portals as it opens.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Azir:Malzahar:2",
+          "text": "Be careful when you get close. Malzahar can use Nether Grasp on you, and the suppression stops you fighting back.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Azir:Malzahar:3",
+          "text": "Void Shift makes Malzahar very tanky when he is undamaged. Poke him first, then trade with your soldiers once it is gone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Azir:Malzahar:4",
+          "text": "Stay clear of minions marked by Malefic Visions. When they die it spreads to the next nearest enemy, which can be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Azir:Malzahar:5",
+          "text": "Use Emperor's Divide when Malzahar steps up to engage. It knocks him back and blocks his path.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Malzahar", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0b47ef7fa892a0efb616bdf8da3cbcb7f07841867cfd9a5f8c4d562f9107536",
+      "tips": [
+        {
+          "id": "middle:Azir:Orianna:0",
+          "text": "Put your Sand Soldiers between the enemy minions and Orianna. Attack through them to deal damage and make her stay back.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Azir:Orianna:1",
+          "text": "Keep a Sand Soldier in reserve. Shifting Sands needs one to dash to, and it gets you away from Orianna's Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 32, "end": 46 },
+            { "kind": "champion", "key": "Orianna", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Azir:Orianna:2",
+          "text": "Stay out of the area around Orianna's Ball when she has Command: Shockwave. She can pull you in and stun you there.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Orianna-R", "start": 56, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Azir:Orianna:3",
+          "text": "Use Conquering Sands to slow her when she walks up to hit a minion. Follow with Sand Soldier attacks while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Azir:Orianna:4",
+          "text": "Use Emperor's Divide to knock her away if she dives you. Your team can walk through the wall.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "51b982835d71b990c27fb43ac5a07c3c3fdd738a31423b9c8427b6f15aaef100",
+      "tips": [
+        {
+          "id": "middle:Azir:Ryze:0",
+          "text": "Put your soldiers between Ryze and his minions so your stabs hit him, and make him step back from last-hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Azir:Ryze:1",
+          "text": "Ryze's Rune Prison and Spell Flux are targeted, so you can't dodge them. Trade when his Spell Flux is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-W", "start": 7, "end": 18 },
+            { "kind": "ability", "key": "Ryze-E", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Ryze-E", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Azir:Ryze:2",
+          "text": "Use Conquering Sands to slow Ryze when he walks up, then stab him with your soldiers.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Ryze", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Azir:Ryze:3",
+          "text": "Keep a soldier in reserve so Shifting Sands can get you out when Ryze has Flux on you and is ready to root you.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 29, "end": 43 },
+            { "kind": "champion", "key": "Ryze", "start": 65, "end": 69 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Azir:Ryze:4",
+          "text": "If Ryze starts channeling Realm Warp, stun or knock him back to cancel the portal. Emperor's Divide knocks him away.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Ryze-R", "start": 26, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Azir-R", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0947abe85b71ef5f9432f8f8a57ad9dc0bfd669e48d031980da3853623ac4485",
+      "tips": [
+        {
+          "id": "middle:Azir:Sylas:0",
+          "text": "Keep your distance from Sylas and poke with Sand Soldier stabs from Arise!; he wants to close in and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Azir-W", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Azir:Sylas:1",
+          "text": "Use Shifting Sands to dodge Abduct, or to get away once Sylas lands on you. Do it before his chains connect.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Azir:Sylas:2",
+          "text": "Use Emperor's Divide to knock Sylas back when he dashes in on you. Its wall then keeps him from chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Azir:Sylas:3",
+          "text": "Use Conquering Sands to leave Sylas slowed when he steps in, then back away.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Azir:Sylas:4",
+          "text": "Do not fight Sylas when he is low on health. Kingslayer heals him, so burst him instead of trading slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c896cd9216407408030808825789195d15d73778ad3c3ea80397da42cc2408fc",
+      "tips": [
+        {
+          "id": "middle:Azir:TwistedFate:0",
+          "text": "Keep your soldiers between Twisted Fate and his minions. Then he can't get close to the wave without being stabbed.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Azir:TwistedFate:1",
+          "text": "Stay out of range when his Pick a Card is shuffling. A Gold Card stun in the middle of your soldiers can get you killed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 27,
+              "end": 38
+            },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Azir:TwistedFate:2",
+          "text": "Hold one soldier back for Shifting Sands. It shields you and dashes you away from a Twisted Fate trade.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 26, "end": 40 },
+            { "kind": "champion", "key": "TwistedFate", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Azir:TwistedFate:3",
+          "text": "Use Emperor's Divide when Twisted Fate uses Destiny to jump on you or your allies. It knocks him back and walls him off.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 26,
+              "end": 38
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 44,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Azir:TwistedFate:4",
+          "text": "Use Conquering Sands to slow him after he throws Wild Cards. It also pulls your soldiers away from the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 49,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "40a295ad110ad4d1103cb5f6ad4079b635c2ab21de196d6ec2cb686ea40ecb35",
+      "tips": [
+        {
+          "id": "middle:Azir:Viktor:0",
+          "text": "Keep your soldiers between Viktor and you. Don't walk into Gravity Field; if you're inside it for a moment you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Viktor-W", "start": 59, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Azir:Viktor:1",
+          "text": "Keep a soldier in reserve so Shifting Sands can get you out of Gravity Field or away from Hextech Ray.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 29, "end": 43 },
+            { "kind": "ability", "key": "Viktor-W", "start": 63, "end": 76 },
+            { "kind": "ability", "key": "Viktor-E", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Azir:Viktor:2",
+          "text": "Trade with Arise! soldiers while Viktor's Siphon Power is on cooldown, since it gives him a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-W", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Azir:Viktor:3",
+          "text": "Use Emperor's Divide to knock Viktor back when he walks up to you, and keep him out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Viktor", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Azir:Viktor:4",
+          "text": "Stay out of Arcane Storm; it follows you once it hits. Walk out of it quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "10093f8f2015cdd56c7c992cd358695c4c1dad516bb7bf75b67576d400134ca5",
+      "tips": [
+        {
+          "id": "middle:Azir:Yasuo:0",
+          "text": "Keep Sand Soldiers between Yasuo and you. His Steel Tempest is a narrow thrust, so make him work to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Azir:Yasuo:1",
+          "text": "Save Emperor's Divide for when Yasuo dashes in. It knocks him back, and the wall stops him from chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Azir:Yasuo:2",
+          "text": "Do not rely on Conquering Sands to hit Yasuo from range; Wind Wall stops the soldiers' dash.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Yasuo", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Azir:Yasuo:3",
+          "text": "Watch for Yasuo's second Steel Tempest, which fires a whirlwind that knocks you up. Step sideways to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Azir:Yasuo:4",
+          "text": "Use Shifting Sands to escape when Yasuo dives; it gives you a shield as you dash to a soldier. Keep a soldier in reserve.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "56b46464a4dbad44ad86830deb829d752a686ac21fb2cda70a979e9367cf77c0",
+      "tips": [
+        {
+          "id": "middle:Azir:Yone:0",
+          "text": "Place your Sand Soldier between Yone and the minions, then poke him with a basic attack so the soldier stabs from range.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Azir:Yone:1",
+          "text": "Save Emperor's Divide for when Yone dashes in. It knocks him back and the wall blocks his path.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Azir:Yone:2",
+          "text": "Use Conquering Sands to get Yone slowed when he walks up to trade. It also pushes him off your soldiers' range.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Azir:Yone:3",
+          "text": "Keep a Sand Soldier in reserve. Shifting Sands needs one to dash away from Yone's knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 32, "end": 46 },
+            { "kind": "champion", "key": "Yone", "start": 75, "end": 79 },
+            { "kind": "keyword", "key": "knocked-up", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Azir:Yone:4",
+          "text": "Yone is fragile and has no ranged attack, so burst him down before his shield and spirit form let him turn the trade.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 0, "end": 4 }],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9e54597a112c79b5bf519b874b3e278a9fce992d133fe29912fcd98bab2636e5",
+      "tips": [
+        {
+          "id": "middle:Azir:Zed:0",
+          "text": "Keep your Sand Soldiers between you and Zed. His Shadow Slash only slows you when a Shadow hits you, so stay away from his Shadow.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 40, "end": 43 },
+            { "kind": "ability", "key": "Zed-E", "start": 49, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Azir:Zed:1",
+          "text": "Save Shifting Sands to escape when Zed commits with Living Shadow; the shield and dash get you out of his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 35, "end": 38 },
+            { "kind": "ability", "key": "Zed-W", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Azir:Zed:2",
+          "text": "When Zed jumps in on you, use Emperor's Divide to knock him back and wall him off.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Azir-R", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Azir:Zed:3",
+          "text": "Zed is weakest right after he uses Living Shadow, since his slow and mobility depend on it. Hit him with Conquering Sands then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Azir-Q", "start": 105, "end": 121 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Azir:Zed:4",
+          "text": "Keep one Sand Soldier stored from Arise! so you can still escape or hit back when Zed dives.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-W", "start": 34, "end": 40 },
+            { "kind": "champion", "key": "Zed", "start": 82, "end": 85 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

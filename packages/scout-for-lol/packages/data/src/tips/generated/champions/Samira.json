@@ -1,0 +1,677 @@
+{
+  "schemaVersion": 1,
+  "champion": "Samira",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "83b03253c982d966695eb4c0c9d3941f025137c4b634415b6bf6a96def6ab119",
+      "tips": [
+        {
+          "id": "adc:Samira:general:0",
+          "text": "Use Blade Whirl to wipe out enemy missiles aimed at you or an ally standing close. Time it for the shot, not before.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Samira:general:1",
+          "text": "Mix your hits. Alternate attacks with Flair, Wild Rush and Blade Whirl, because repeating the same hit builds no Style.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Samira-E", "start": 45, "end": 54 },
+            { "kind": "ability", "key": "Samira-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Samira:general:2",
+          "text": "Cast Flair in the middle of a Wild Rush dash to leave explosives behind you that damage enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Samira-E", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Samira:general:3",
+          "text": "Dash through a weakened enemy champion with Wild Rush to finish them. A kill resets its cooldown, so you can chain into the next target.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-E", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Samira:general:4",
+          "text": "Attack enemies who are stunned or rooted. Samira dashes to them and fires a burst of shots.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 34, "end": 40 },
+            { "kind": "champion", "key": "Samira", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Samira:general:5",
+          "text": "Hold Inferno Trigger until you reach top Style rank and enemies are close to you. You cannot attack while it runs, and crowd control ends it early.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Samira:general:6",
+          "text": "Fight enemies up close with Flair. Aimed at a nearby enemy it becomes a sword slash, and your melee-range hits deal extra magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Samira:general:7",
+          "text": "Poke with Flair at long range when you have a clear line. It stops at the first enemy it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Samira:combo:0",
+          "name": "Wild Rush into Flair",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Samira-E" },
+            { "kind": "ability", "key": "Samira-Q" }
+          ],
+          "when": "When you want to dash through an enemy and deal extra damage on the way.",
+          "whenRefs": [],
+          "text": "Cast Flair while you are dashing and Samira leaves explosives in her wake. They go off when the dash ends and hit enemies near her path.",
+          "textRefs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Samira", "start": 37, "end": 43 }
+          ]
+        },
+        {
+          "id": "adc:Samira:combo:1",
+          "name": "Dash, Flair, Inferno Trigger",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Samira-E" },
+            { "kind": "ability", "key": "Samira-Q" },
+            { "kind": "ability", "key": "Samira-R" }
+          ],
+          "when": "When you have max Style and want to start your ultimate right as you dash in.",
+          "whenRefs": [],
+          "text": "Cast Flair during Wild Rush. Inferno Trigger is buffered and fires as soon as the dash ends, so there is no gap.",
+          "textRefs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Samira-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Samira-R", "start": 29, "end": 44 }
+          ]
+        },
+        {
+          "id": "adc:Samira:combo:2",
+          "name": "Flash Wild Rush explosives",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Samira-E" },
+            { "kind": "ability", "key": "Samira-Q" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When you want a surprise burst or need to change where the dash ends.",
+          "whenRefs": [],
+          "text": "Flashing during Wild Rush interrupts the dash. It still damages enemies at that spot and sets down the Flair explosives there.",
+          "textRefs": [
+            { "kind": "ability", "key": "Samira-E", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Samira-Q", "start": 103, "end": 108 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "1de8cdadf5f0af70630d50b65ccc3e1b80da3d79071ba7065ffedb3356c4990d",
+      "tips": [
+        {
+          "id": "adc:Samira:Ashe:0",
+          "text": "Ashe has few escapes, so Wild Rush onto a minion and fight her up close.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Samira-E", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Samira:Ashe:1",
+          "text": "Use Blade Whirl when Volley or Enchanted Crystal Arrow comes at you; it destroys missiles.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Ashe-W", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Ashe-R", "start": 31, "end": 54 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Samira:Ashe:2",
+          "text": "Her Frost Shot slows you, so avoid trading at range; close in with Wild Rush or wait until she has used her skills.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-passive", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Samira-E", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Samira:Ashe:3",
+          "text": "Stay near minions or allies to be harder to Volley, since her arrows hit the first enemy they meet.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Samira:Ashe:4",
+          "text": "Build Style by switching between attacks and abilities so Inferno Trigger is ready for a fight when you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-R", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Samira:Ashe:5",
+          "text": "Watch for Ashe's Enchanted Crystal Arrow cooldown before you walk up alone or move around the map.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Ashe-R", "start": 17, "end": 40 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6dad80e381d2c875ebec77e0b6c56849f0b56362681295f13a64b023acf4ee17",
+      "tips": [
+        {
+          "id": "adc:Samira:Caitlyn:0",
+          "text": "Cast Blade Whirl when Caitlyn fires Piltover Peacemaker or her net at you; it destroys the missiles.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Caitlyn", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 36, "end": 55 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Samira:Caitlyn:1",
+          "text": "Stay behind minions when Caitlyn pokes with Piltover Peacemaker, as it hits less hard after the first target.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 44, "end": 63 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Samira:Caitlyn:2",
+          "text": "Watch for Yordle Snap Trap on the ground when you dash in with Wild Rush; being rooted gets you shot with a big Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 10, "end": 26 },
+            { "kind": "ability", "key": "Samira-E", "start": 63, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 86 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 112,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Samira:Caitlyn:3",
+          "text": "Dash onto Caitlyn when she is rooted or slowed by her own mistakes, or after she fires her net; Wild Rush closes the gap fast.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Samira-E", "start": 96, "end": 105 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Samira:Caitlyn:4",
+          "text": "Stand in the line of Ace in the Hole to intercept it when she aims at an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b8d7ad1bae25b43fc2f3f385e399556c06eae9e3c4b0b3aa9f8bcd691477a904",
+      "tips": [
+        {
+          "id": "adc:Samira:Ezreal:0",
+          "text": "Use Blade Whirl to destroy Ezreal's Mystic Shot and Essence Flux when they come at you. Time it for when he fires.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ezreal", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 36, "end": 47 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Samira:Ezreal:1",
+          "text": "Ezreal is fragile, so close the gap with Wild Rush and hit him hard. Dash through a minion or enemy to reach him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Samira-E", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Samira:Ezreal:2",
+          "text": "Stay behind minions while you walk up, because Mystic Shot stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Samira:Ezreal:3",
+          "text": "Expect Ezreal to escape with Arcane Shift. Use Flair to hit him at range as he blinks away.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 29, "end": 41 },
+            { "kind": "ability", "key": "Samira-Q", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "43bd45c65c57b2007d81de943a0fcc6c5a81964c19e536daf825aec4d86d895b",
+      "tips": [
+        {
+          "id": "adc:Samira:Jhin:0",
+          "text": "Dash in with Wild Rush when Jhin has just used his four shots and is reloading.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-E", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Jhin", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Samira:Jhin:1",
+          "text": "Use Blade Whirl to destroy Jhin's Deadly Flourish and Dancing Grenade as they come at you.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jhin", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Jhin-W", "start": 34, "end": 49 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Samira:Jhin:2",
+          "text": "Watch for Jhin's invisible Captive Audience traps. Avoid stepping on one before you dash in.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Jhin-E", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Samira:Jhin:3",
+          "text": "Attack Jhin when he is rooted or otherwise stuck so Daredevil Impulse dashes you onto him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 7, "end": 11 },
+            { "kind": "keyword", "key": "rooted", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Samira-passive",
+              "start": 52,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Samira:Jhin:4",
+          "text": "Chain attacks and abilities to build Style. At the top rank, use Inferno Trigger when Jhin is next to you.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-R", "start": 65, "end": 80 },
+            { "kind": "champion", "key": "Jhin", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9f8dc318c801170e8ecbb3a1e5b2bbf036dcd3055c71474581f2a2c697dfe576",
+      "tips": [
+        {
+          "id": "adc:Samira:Jinx:0",
+          "text": "Use Blade Whirl when Jinx fires Zap! at you, since it destroys enemy missiles that enter the area.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jinx", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Jinx-W", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Samira:Jinx:1",
+          "text": "Dive once Flame Chompers! is on cooldown, because Daredevil Impulse lets you dash in on a rooted Jinx and fire at her.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 10, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Samira-passive",
+              "start": 50,
+              "end": 67
+            },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 96 },
+            { "kind": "champion", "key": "Jinx", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "adc:Samira:Jinx:2",
+          "text": "Dive on Jinx while she pokes with rockets. She is weak before her minigun ramps up, so use Wild Rush to close in.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Samira-E", "start": 91, "end": 100 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Samira:Jinx:3",
+          "text": "Stay close to Jinx when she fires Super Mega Death Rocket!, since it does much less damage at short range.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Jinx-R", "start": 34, "end": 58 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ff29a5da989a0516adbd85cad26eacbd0546b69cf8dca3c9d88b62ae9bec12de",
+      "tips": [
+        {
+          "id": "adc:Samira:Kaisa:0",
+          "text": "Kai'Sa wants to poke you from range. Dash in with Wild Rush when her Void Seeker is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Samira-E", "start": 50, "end": 59 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Samira:Kaisa:1",
+          "text": "Use Blade Whirl to destroy Kai'Sa's Void Seeker when it flies toward you.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Samira:Kaisa:2",
+          "text": "Flair stops at the first enemy it hits, so aim it at Kai'Sa and not through minions.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-Q", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Kaisa", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Samira:Kaisa:3",
+          "text": "Watch for Killer Instinct after Kai'Sa has put stacks on you; she lands next to you with a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Kaisa", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Samira:Kaisa:4",
+          "text": "Swap between attacks and abilities to build your style rank, then use Inferno Trigger once it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-R", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "60ba49588e8ac433dce128bb82430d74ce63bcac7647dcf29b15d2879cc90d65",
+      "tips": [
+        {
+          "id": "adc:Samira:MissFortune:0",
+          "text": "Use Blade Whirl to destroy Miss Fortune's Double Up shot and Bullet Time bullets when you are close enough.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 4, "end": 15 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 27,
+              "end": 39
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 42,
+              "end": 51
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 61,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Samira:MissFortune:1",
+          "text": "Wild Rush through a minion or enemy to close the gap on Miss Fortune, then trade hard before she can get away.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "MissFortune", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Samira:MissFortune:2",
+          "text": "Step out of Make It Rain. It slows you and cannot be cleansed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Samira:MissFortune:3",
+          "text": "Hit Miss Fortune to cancel her Strut speed boost. Flair is a long-range way to do it.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 31,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Samira-Q", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Samira:MissFortune:4",
+          "text": "Avoid standing in a line behind your minions. Double Up will bounce onto you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 46,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e8d151941d9e9d83215d0bf7dc9ff4d9e5122062bd35adf2e4edccfec03c080e",
+      "tips": [
+        {
+          "id": "adc:Samira:Smolder:0",
+          "text": "Press Blade Whirl when Smolder fires Achooo! or Super Scorcher Breath at you; it destroys enemy missiles that enter its area.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Smolder-W", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 48, "end": 69 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Samira:Smolder:1",
+          "text": "Smolder is weak early, so push the fight with Flair and Wild Rush before he has stacked up Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Samira-Q", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Samira-E", "start": 56, "end": 65 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 91,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Samira:Smolder:2",
+          "text": "Hit Smolder with Flair, then dash in with Wild Rush; a kill within a few seconds resets Wild Rush so you can chain onto his support.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Samira-Q", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Samira-E", "start": 42, "end": 51 },
+            { "kind": "ability", "key": "Samira-E", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Samira:Smolder:3",
+          "text": "Smolder's mom heals him, and enemies in the center are slowed. Don't stand still in her fire once you see the cast.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Samira:Smolder:4",
+          "text": "When Smolder flies with Flap, Flap, Flap, hard crowd control from your support ends it, so save your all-in for then.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Smolder-E", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "88791ce96ea53c5a906426da7c01e1f27cd80ad06afd6511ba768d1426ebc787",
+      "tips": [
+        {
+          "id": "adc:Samira:Yunara:0",
+          "text": "Hold Blade Whirl for Yunara's prayer bead; it destroys the bead when it enters the area, so time it as the bead reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yunara", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Samira:Yunara:1",
+          "text": "When Yunara is slowed by nothing and stands close, dash in with Wild Rush and follow with Flair for a quick trade.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Samira-E", "start": 64, "end": 73 },
+            { "kind": "ability", "key": "Samira-Q", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Samira:Yunara:2",
+          "text": "Wild Rush through a minion to close distance, then hit Yunara. A kill with it resets its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Yunara", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Samira:Yunara:3",
+          "text": "Yunara's prayer bead leaves you slowed, which does not stop you from attacking. Fight back when slowed instead of backing away.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Samira:Yunara:4",
+          "text": "Respect Transcend One's Self when it starts; her Arc of Ruin and dash make trading risky. Wait until it ends before going in.",
+          "refs": [
+            { "kind": "ability", "key": "Yunara-R", "start": 8, "end": 28 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

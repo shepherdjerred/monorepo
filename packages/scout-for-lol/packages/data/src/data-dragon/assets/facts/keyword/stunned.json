@@ -1,0 +1,11 @@
+{
+  "kind": "keyword",
+  "patch": "16.23.1",
+  "key": "stunned",
+  "name": "Stunned",
+  "description": "Unable to move, attack or cast for a short time.",
+  "facts": [],
+  "parts": [],
+  "icon": null,
+  "keyFact": null
+}

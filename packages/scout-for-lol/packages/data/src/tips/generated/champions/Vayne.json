@@ -1,0 +1,3902 @@
+{
+  "schemaVersion": 1,
+  "champion": "Vayne",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "739809b0fd893b1ab5f4b32b9c6018d8ff980e4c307964063f303f67edf1726e",
+      "tips": [
+        {
+          "id": "top:Vayne:general:0",
+          "text": "Use Condemn when the enemy stands near a wall; hitting terrain stuns them and adds big damage. Check your angle before you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Vayne:general:1",
+          "text": "Use Condemn to knock back an enemy who is chasing you, even when no wall is near.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vayne:general:2",
+          "text": "Weave Tumble between attacks; it resets your attack timer and your next hit deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vayne:general:3",
+          "text": "Tumble cannot cross walls, so check the terrain before you rely on it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Vayne:general:4",
+          "text": "Hit the same enemy three times in a row with Silver Bolts to deal extra true damage. Do not swap targets mid-trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Vayne:general:5",
+          "text": "Walk toward the enemy while you trade; Night Hunter gives you extra Move Speed when you move at them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 39,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Vayne:general:6",
+          "text": "Start your all-in with Final Hour for extra damage. Kills extend it, so keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Vayne:general:7",
+          "text": "Use Tumble during Final Hour to turn invisible and reposition. Attacking breaks the invisibility.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-R", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Vayne:general:8",
+          "text": "Vayne is fragile, so play safely in the early levels and avoid trading into enemies who can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Vayne:combo:0",
+          "name": "Flash Condemn",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Vayne-E" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When an enemy is near a wall but your Condemn would push them along it instead of into it.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 38, "end": 45 }
+          ],
+          "text": "Condemn's push direction is set at the end of its cast time. Press Flash during the cast to get a better angle and pin them to the wall.",
+          "textRefs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "4", "start": 67, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "abf8acae980f1051ef40787840cc63997e5f18aebc9c37080021ccdbcd79780d",
+      "tips": [
+        {
+          "id": "adc:Vayne:general:0",
+          "text": "Use Tumble between attacks; it resets your attack timer, and your next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Vayne:general:1",
+          "text": "Hit the same enemy three times in a row so Silver Bolts deals its bonus true damage. Switching targets wastes it.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Vayne:general:2",
+          "text": "Use Condemn when an enemy stands near a wall. Knocking them into terrain stuns them and deals bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Vayne:general:3",
+          "text": "Keep Condemn ready as an escape when an enemy dives you. It pushes them away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Vayne:general:4",
+          "text": "Tumble cannot cross walls, so check the terrain before you dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Vayne:general:5",
+          "text": "Walk toward enemies to use Night Hunter's speed boost when you chase or close in for a trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 27,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Vayne:general:6",
+          "text": "Start fights with Final Hour at level 6. Kills extend it, so keep fighting while enemies die.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Vayne:general:7",
+          "text": "Use Tumble during Final Hour to turn invisible for a moment and reposition. Attacking or casting ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-R", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Vayne:general:8",
+          "text": "Let your team start big fights, then join from behind. Vayne is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Vayne:combo:0",
+          "name": "Flash Condemn",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Vayne-E" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When an enemy is near a wall but your Condemn would not push them into it from where you stand.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 38, "end": 45 }
+          ],
+          "text": "Condemn's push direction is set at the end of its cast time. Start the cast, then Flash to a better angle so the knockback sends them into the wall.",
+          "textRefs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "4", "start": 82, "end": 87 }
+          ]
+        },
+        {
+          "id": "adc:Vayne:combo:1",
+          "name": "Tumble attack reset",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            { "kind": "ability", "key": "Vayne-Q" },
+            "attack"
+          ],
+          "when": "When trading with an enemy in lane and you want more damage out of your auto attacks.",
+          "whenRefs": [],
+          "text": "Tumble resets your attack timer. Auto, Tumble right after the hit lands, then auto again with the empowered attack to speed up your damage.",
+          "textRefs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 39, "end": 45 }
+          ]
+        },
+        {
+          "id": "adc:Vayne:combo:2",
+          "name": "Invisible Tumble reposition",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Vayne-R" },
+            { "kind": "ability", "key": "Vayne-Q" },
+            "attack"
+          ],
+          "when": "In a fight or chase when you want to reposition and open on a target without being seen.",
+          "whenRefs": [],
+          "text": "Final Hour makes Tumble give brief invisibility. Tumble to a new angle, then attack the target with the empowered auto.",
+          "textRefs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 49, "end": 55 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "5e87cc6b8bc19a0b60907a95ead15a1ec3f7897136a534723adf41131a328b07",
+      "tips": [
+        {
+          "id": "top:Vayne:Aatrox:0",
+          "text": "Tumble away from The Darkin Blade as soon as you see the telegraph; its hit zones show where it lands, so step out sideways.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Vayne:Aatrox:1",
+          "text": "Aatrox wants to pull you back with Infernal Chains, so walk out of the circle before it ends or Tumble out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 35, "end": 50 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Vayne:Aatrox:2",
+          "text": "Use Condemn when Aatrox is next to a wall. He is stunned if he hits terrain, which gives you a free window to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Vayne:Aatrox:3",
+          "text": "Condemn knocks Aatrox back when he dashes in on you, so you can use it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Aatrox", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Aatrox:4",
+          "text": "Hit him three times in a row to trigger Silver Bolts. It deals true damage based on his max Health, which works well against his large Health pool.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Vayne:Aatrox:5",
+          "text": "Do not trade long in melee; he heals from damage he deals. Hit and Tumble back out, and keep the fights short.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Vayne:Aatrox:6",
+          "text": "When Aatrox uses World Ender, back away. Use Final Hour only if you can win the fight, and kite him.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Vayne-R", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bf3d8d848d9a3ddbb2710bd373ee4282013d98f91dd9c262859654ef19001a97",
+      "tips": [
+        {
+          "id": "top:Vayne:Akali:0",
+          "text": "Save Condemn for when Akali dashes in; knocking her back breaks up her burst and can stun her if a wall is behind.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Akali", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Vayne:Akali:1",
+          "text": "Akali can still be hit while invisible in Twilight Shroud, so fight at the edge of the smoke, not inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-W", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Vayne:Akali:2",
+          "text": "Use Tumble to step out of Akali's Five Point Strike range, then Tumble back in for a strong attack.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Akali-Q", "start": 34, "end": 51 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Vayne:Akali:3",
+          "text": "Keep Final Hour ready for when Akali jumps on you at level 6; the extra damage and quick Tumble let you fight back or get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Akali", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vayne:Akali:4",
+          "text": "Stay away from walls and keep your distance, since Akali's Shuriken Flip lets her close the gap fast.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Akali-E", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20021f021dce68f0d171d2e560832fd597a8380c7441c381195693c2ded77a9f",
+      "tips": [
+        {
+          "id": "top:Vayne:Ambessa:0",
+          "text": "Keep Condemn ready for when Ambessa dives in. Knock her back into a wall for a stun, or use it to push her away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Ambessa", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Vayne:Ambessa:1",
+          "text": "Stay away from walls when Ambessa is near. Public Execution blinks her to you from a long way off, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Vayne:Ambessa:2",
+          "text": "Use Tumble to step out of the line of Cunning Sweep. Her Sundering Slam hits harder on the first enemy, so don't stand in front.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Vayne:Ambessa:3",
+          "text": "Hit Ambessa three times in a row to trigger Silver Bolts. It deals extra damage based on her max health, so it works well against her large health pool.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Vayne-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Vayne:Ambessa:4",
+          "text": "Do not trade while Lacerate has you slowed. Tumble away first and fight again once she has used her abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "91194d8bfa6088a829640dc04c5e519f6228d0cdd728cfabfd8444ac39d331ab",
+      "tips": [
+        {
+          "id": "top:Vayne:Anivia:0",
+          "text": "Condemn Anivia into a wall for a stun and extra damage, then finish her before she can react.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Anivia", "start": 8, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Vayne:Anivia:1",
+          "text": "Dodge Flash Frost by sidestepping or using Tumble. Getting hit lets Frostbite deal double damage.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Anivia-E", "start": 68, "end": 77 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Vayne:Anivia:2",
+          "text": "Stay out of long range so Flash Frost is easy to dodge. Close the gap with Night Hunter only when her Flash Frost is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 26, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 75,
+              "end": 87
+            },
+            { "kind": "ability", "key": "Anivia-Q", "start": 102, "end": 113 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Vayne:Anivia:3",
+          "text": "Anivia's Crystallize wall can block your path. Don't chase through it; Condemn can interact with it.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Anivia-W", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Vayne-E", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "85284a29bfcf7e34c30ffd0037f3759119cd91f0d65842fc94b21d6314673b22",
+      "tips": [
+        {
+          "id": "top:Vayne:Aurora:0",
+          "text": "Stay out of a straight line with Aurora's Twofold Hex; sidestep it, and walk away once she has marked you rather than waiting for the recast to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Vayne:Aurora:1",
+          "text": "Look for a wall behind Aurora, then use Condemn to knock her into it. She is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Vayne-E", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Vayne:Aurora:2",
+          "text": "Hold Condemn for when Aurora jumps in or lands close. Her Across the Veil makes her invisible only briefly, so punish her once she reappears.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Aurora", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aurora-W", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Vayne:Aurora:3",
+          "text": "Attack Aurora three times in a row to trigger Silver Bolts. Tumble between attacks to keep the pattern going while you dodge her spells.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Vayne-W", "start": 46, "end": 58 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Vayne:Aurora:4",
+          "text": "Don't chase Aurora while she is slowed by The Weirding. It also hops her backward, so she gets away easily.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Aurora-E", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Vayne:Aurora:5",
+          "text": "Stay out of the Between Worlds ring when you can. Entering or leaving it slows you, and Aurora can jump across it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 },
+            { "kind": "champion", "key": "Aurora", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d2296916c03a82b3e7185a833f89d8237845c1fafae4f6fde8588e0c220216f2",
+      "tips": [
+        {
+          "id": "top:Vayne:Briar:0",
+          "text": "Keep Condemn ready for when Briar leaps at you; knocking her back breaks up her chase and can pin her to a wall for a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 118, "end": 122 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Briar:1",
+          "text": "Stay near a wall at the edge of lane so Condemn can stun Briar if she dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 },
+            { "kind": "champion", "key": "Briar", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Briar:2",
+          "text": "Do not fight Briar in a long trade up close. She heals from bleeding, so poke her and step back instead.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Vayne:Briar:3",
+          "text": "Kite with Tumble after each attack. It resets your attack timer and keeps you out of her reach once Briar is in Blood Frenzy.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 10, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Vayne:Briar:4",
+          "text": "When Briar uses Certain Death, expect her to chase one target. Use Final Hour and Tumble to get away and stay hidden.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Briar-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Vayne-R", "start": 67, "end": 77 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Vayne:Briar:5",
+          "text": "Use Condemn against Briar's Chilling Scream charge. She cannot move while charging, so she is easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Briar-E", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c42bef110e8056f2278195db7fa9fda6f4902453fac0011d0cf8f933aeed50f0",
+      "tips": [
+        {
+          "id": "top:Vayne:Camille:0",
+          "text": "Stay away from walls when Camille is near; Hookshot lets her dive onto you and stun you, so keep open space behind you.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Camille-E", "start": 43, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Vayne:Camille:1",
+          "text": "Use Condemn when Camille is next to a wall. It knocks her back, and if she hits terrain she is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Camille", "start": 17, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Vayne:Camille:2",
+          "text": "Use Condemn to push Camille away when she dives on you, then back off. It also knocks her out of her trading range.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Camille", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Vayne:Camille:3",
+          "text": "Keep your distance and use Tumble to dodge sideways out of Tactical Sweep's outer half, which slows you and heals her.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Camille-W", "start": 59, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Vayne:Camille:4",
+          "text": "Camille's Hextech Ultimatum traps you in a zone you cannot leave. Do not fight her in the zone alone; save Condemn to keep her off you before she lands.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Vayne-E", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Vayne:Camille:5",
+          "text": "Fight Camille from long range and use Silver Bolts on the third hit. She is strongest when she gets close, so keep her at the edge of your attack range.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Vayne-W", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3d2737d2de975a5471128eff68dd7d2c66e1e6d2b33b795432c6e73f08ed4d2e",
+      "tips": [
+        {
+          "id": "top:Vayne:Chogath:0",
+          "text": "Watch for the smoke from Rupture on the ground and step out before it lands; getting knocked up lets Cho'Gath combo you.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "knocked-up", "start": 85, "end": 95 },
+            { "kind": "champion", "key": "Chogath", "start": 101, "end": 109 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vayne:Chogath:1",
+          "text": "Condemn Cho'Gath into a wall for the stun and damage, but don't stand in range of his Feral Scream afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Chogath", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Chogath-W", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Vayne:Chogath:2",
+          "text": "Keep distance and poke with Silver Bolts attacks; Cho'Gath has to close in for most of his damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Vayne-W", "start": 28, "end": 40 },
+            { "kind": "champion", "key": "Chogath", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vayne:Chogath:3",
+          "text": "Don't let Cho'Gath eat many minions for free. Kill him early, before Feast makes him big and hard to burst.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Chogath-R", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Vayne:Chogath:4",
+          "text": "Use Tumble to dodge sideways out of Rupture. It can't cross walls, so check your path first.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Chogath-Q", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0b7c47d955407045fb25560890599ee3018f9e7894281dc92c5023d690021b5a",
+      "tips": [
+        {
+          "id": "top:Vayne:Darius:0",
+          "text": "Stay at long range and poke him with attacks; Darius wants to close in, so never let him walk up for free.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Darius", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Vayne:Darius:1",
+          "text": "Watch for Apprehend; when he swings, step out of the cone or use Condemn to knock him away once he is on top of you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Vayne-E", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Vayne:Darius:2",
+          "text": "Look for a wall behind Darius before using Condemn; hitting terrain stuns him and deals big bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Vayne-E", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Vayne:Darius:3",
+          "text": "Use Tumble to step out of Decimate's swing; he is stuck in place while he winds it up, so move away before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-Q", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Vayne:Darius:4",
+          "text": "Trade while Apprehend is on cooldown; he cannot catch you then and is open to harassment.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Vayne:Darius:5",
+          "text": "Keep Condemn ready when he commits at low health or with a full stack of bleeds; knocking him back stops his all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Vayne:Darius:6",
+          "text": "Do not stand slowed in front of him after Crippling Strike; fight at range so his next attack cannot land.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Darius-W", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4e85a85585208a0c47586ec51ab2b57ddd2028df4c44df4d2a2e2185060c0d61",
+      "tips": [
+        {
+          "id": "top:Vayne:DrMundo:0",
+          "text": "Aim Condemn so Mundo is pushed into a wall, but wait until his passive has been used up, since he resists the first stun.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Vayne:DrMundo:1",
+          "text": "Stay at long range and use Tumble to sidestep Infected Bonesaw. It is a straight line and the first enemy it hits stops it.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Vayne:DrMundo:2",
+          "text": "Do not fight Mundo up close; Heart Zapper hurts you and heals him by storing the damage he takes.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Vayne:DrMundo:3",
+          "text": "Stand on the canister he drops to break it. That denies him the heal and the shorter cooldown.",
+          "refs": [],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Vayne:DrMundo:4",
+          "text": "Hit him three times in a row to trigger Silver Bolts. It does damage based on his max health, which is a lot against a big-health champion.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "96a45e5e65e04c3d1becda0d6dcd94ea8d22a12ecb4ca3236249fb015b4b79f4",
+      "tips": [
+        {
+          "id": "top:Vayne:Fiora:0",
+          "text": "Don't Condemn Fiora while Riposte is ready; she can block the knockback and stun. Wait until she uses it, then Condemn her.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Fiora", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Fiora-W", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Vayne-E", "start": 111, "end": 118 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Vayne:Fiora:1",
+          "text": "Keep Condemn for when Fiora lunges in near a wall; the stun and extra damage can win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Vayne:Fiora:2",
+          "text": "Use Tumble to step away from Lunge, and fight from range. Fiora wants quick close trades.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 29, "end": 34 },
+            { "kind": "champion", "key": "Fiora", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Vayne:Fiora:3",
+          "text": "Hold your Silver Bolts attacks on Fiora; the third hit deals extra damage, so keep hitting her without switching to minions.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Fiora", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Fiora:4",
+          "text": "Hold Final Hour for when Fiora commits to Grand Challenge on you; the stealth from Tumble helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Fiora", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Fiora-R", "start": 42, "end": 57 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f2a74c874b4f0344bf260d0d476a0cfa8cecab93b18f73cfcb0f2445870c8fde",
+      "tips": [
+        {
+          "id": "top:Vayne:Gangplank:0",
+          "text": "Look for a wall behind Gangplank and use Condemn to stun him; it also deals big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "Vayne-E", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Gangplank:1",
+          "text": "Do not stand near a Powder Keg when Gangplank can reach it; the explosion slows you and hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 20, "end": 30 },
+            { "kind": "champion", "key": "Gangplank", "start": 36, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Vayne:Gangplank:2",
+          "text": "Attack a Powder Keg yourself to defuse it before Gangplank can set it off.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 9, "end": 19 },
+            { "kind": "champion", "key": "Gangplank", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Vayne:Gangplank:3",
+          "text": "Do not waste Condemn when Gangplank can clear the stun with Remove Scurvy; bait it out first.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 13, "end": 20 },
+            { "kind": "champion", "key": "Gangplank", "start": 26, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Vayne:Gangplank:4",
+          "text": "Use Tumble to step out of range after each trade, and keep your Silver Bolts up by hitting him three times.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-W", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Vayne:Gangplank:5",
+          "text": "After level 6, expect Cannon Barrage on you when you are low or running away; stay near safe paths.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b07ce42b4e8768a8b69095ec109c5cacf236c8688604f6fbd64ae799748154b9",
+      "tips": [
+        {
+          "id": "top:Vayne:Garen:0",
+          "text": "Keep Garen at range and use Tumble to slide away when he closes in. He has no gap closer except a short burst of speed.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Vayne:Garen:1",
+          "text": "Save Condemn for when Garen is next to a wall; it stuns him and deals extra damage. Otherwise it only pushes him away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Vayne:Garen:2",
+          "text": "Use Condemn to knock Garen back when he runs at you after Decisive Strike. It gives you room to Tumble away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Garen", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Garen-Q", "start": 58, "end": 73 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Garen:3",
+          "text": "Garen's Decisive Strike silences you, so you can't Tumble or Condemn for a moment. Stay out of his reach while it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Vayne-E", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Vayne:Garen:4",
+          "text": "Attack Garen three times in a row to trigger Silver Bolts. It deals true damage that ignores his armor.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Vayne-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Vayne:Garen:5",
+          "text": "Hit Garen when his Perseverance has stopped healing him. Keep poking him so he can't heal back.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 19,
+              "end": 31
+            },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Vayne:Garen:6",
+          "text": "Move away when Garen starts Judgment. Don't stand near him while he spins.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-E", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Garen:7",
+          "text": "Stay healthy at low health, because Demacian Justice deals more damage the lower you are. Keep your distance from him once you are hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "db4796e8b6a5906ae45c494ff99b7af32e052ae24ce6c79b5ce54cdacbb51ba7",
+      "tips": [
+        {
+          "id": "top:Vayne:Gnar:0",
+          "text": "Keep Condemn ready for when Gnar jumps in; it knocks him back, and if he hits a wall he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Gnar:1",
+          "text": "Stand away from walls behind you when Gnar is big, because GNAR! stuns you if it throws you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Gnar-R", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Vayne:Gnar:2",
+          "text": "Use Tumble to sidestep Boomerang Throw, then attack with the bonus damage while he is committed.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Vayne:Gnar:3",
+          "text": "Gnar outranges you as small Gnar, so trade right after he throws his boomerang and misses.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Vayne:Gnar:4",
+          "text": "When Gnar turns big and tired, he is slow; use that window to hit him three times for Silver Bolts and kite away.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Vayne-W", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d90fa9e30f8846f6726ff5bcd6904096b2831ec1ff0607016f56350ae30e10cc",
+      "tips": [
+        {
+          "id": "top:Vayne:Gragas:0",
+          "text": "Stay away from walls when Gragas is near. Condemn works on him too, so use it to pin him against terrain for a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Vayne-E", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Vayne:Gragas:1",
+          "text": "Keep Tumble for dodging Body Slam's charge. Move out of his line before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Gragas-E", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Vayne:Gragas:2",
+          "text": "Step out of the cask when you see Barrel Roll land, because it leaves you slowed. Stay out of it until it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 34, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Vayne:Gragas:3",
+          "text": "Trade with Silver Bolts on the third hit while Gragas is on cooldown. He has few ways to punish you from range.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Gragas", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Vayne:Gragas:4",
+          "text": "Do not fight when Gragas has Drunken Rage up. It cuts the damage you deal and his next attack hits hard.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Gragas-W", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Vayne:Gragas:5",
+          "text": "Stand away from your own tower and walls in a fight, so Explosive Cask cannot push you somewhere bad.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fb9d970087c65d6947ffa1764c410cca64fa75e09b5bc04e2747316d7d727a26",
+      "tips": [
+        {
+          "id": "top:Vayne:Gwen:0",
+          "text": "Keep Gwen at range and attack her from a distance; Gwen wants to fight up close, and her Snip Snip! gets stronger with every attack she lands.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Gwen", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Vayne:Gwen:1",
+          "text": "Save Condemn for when Gwen is next to a wall. The wall hit stuns her and adds damage, and it also works as an escape if she dashes on you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Gwen", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Vayne:Gwen:2",
+          "text": "Don't waste attacks while Gwen stands in Hallowed Mist. She can't be targeted from outside it, so wait for the mist to end.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gwen-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Vayne:Gwen:3",
+          "text": "Walk out of the mist's edge and let it fade. Gwen's mist follows her only once, so when she leaves it the second time, hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Vayne:Gwen:4",
+          "text": "Use Tumble to step out of the way of Needlework's needles. Gwen has to hit something to recast it, so dodging cuts her damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Gwen-R", "start": 37, "end": 47 },
+            { "kind": "champion", "key": "Gwen", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Vayne:Gwen:5",
+          "text": "Stay out of Gwen's Skip 'n Slash reach. After she dashes, her attacks gain range and speed, so use Tumble to step back.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Gwen-E", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72c48c78b6d5e2e7d7a5717b501fc3126c920e2cbf7902c39875624e3fbf6691",
+      "tips": [
+        {
+          "id": "top:Vayne:Heimerdinger:0",
+          "text": "Stay out of range of his grenade; if it lands on you, you are slowed, and stunned if you are in the middle. Walk sideways to dodge it.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Vayne:Heimerdinger:1",
+          "text": "Kill his turrets with the minion wave helping you, not one at a time on your own. Use Tumble between shots to keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Vayne:Heimerdinger:2",
+          "text": "Use Condemn to push him into a wall for a stun. It also works as an escape if he gets close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Heimerdinger:3",
+          "text": "Once he has used UPGRADE!!!, go in on him. Until then, stay careful, because he can turn a bad spot around.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-R",
+              "start": 17,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Heimerdinger:4",
+          "text": "Hold Final Hour for when you trade with him at level 6. The extra Attack Damage and Tumble invisibility help you hit him and get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e74e5c03b999dd9c5b9dc67bfc3c1e7a1d2cfdfdf9971b88f25ea73b8062ed99",
+      "tips": [
+        {
+          "id": "top:Vayne:Illaoi:0",
+          "text": "Stay out of Illaoi's reach and poke her with Tumble-empowered attacks; she wants to trade up close with her Tentacles.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Vayne:Illaoi:1",
+          "text": "Use Condemn to knock Illaoi back when she leaps in with Harsh Lesson, or to shove her away from you and your lane.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Illaoi", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Vayne:Illaoi:2",
+          "text": "Fight away from Illaoi's Tentacles; they hurt a lot and heal her when they hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Vayne:Illaoi:3",
+          "text": "If Illaoi hits you with Test of Spirit, hit back at her while your spirit is out, then back away so Tentacles cannot reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Vayne:Illaoi:4",
+          "text": "Use Tumble to dodge Tentacle Smash; she needs time to wind up, so sidestep when you see it begin.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Vayne:Illaoi:5",
+          "text": "Pin Illaoi against a wall with Condemn to stun her, then hit her three times for Silver Bolts.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-E", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Vayne-W", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9e81d680a42a043819c4fd147b0582cd6ef00df58aeabd3719c9b82e42489fd1",
+      "tips": [
+        {
+          "id": "top:Vayne:Irelia:0",
+          "text": "Condemn Irelia into a wall right after she dashes in. The stun and bonus damage can win you the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Irelia", "start": 8, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Vayne:Irelia:1",
+          "text": "Hold Condemn for Irelia's engage. She dashes in with Bladesurge, so you can push her away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Irelia", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Irelia:2",
+          "text": "Don't spend Condemn while Irelia charges Defiant Dance, because she takes much less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 12, "end": 19 },
+            { "kind": "champion", "key": "Irelia", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Irelia-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Vayne:Irelia:3",
+          "text": "Fight Irelia away from minion waves. They give her dash targets, and without them she struggles to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Vayne:Irelia:4",
+          "text": "Attack Irelia when her Ionian Fervor stacks have dropped. She hits much weaker then.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 7, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 23,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c66143aa7b3d6e2929df38e62891ac62d815226601482784624592489862f45",
+      "tips": [
+        {
+          "id": "top:Vayne:Jax:0",
+          "text": "Keep Condemn ready and fight near walls. If Jax jumps in beside one, knock him into it for a stun and big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Jax", "start": 44, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Vayne:Jax:1",
+          "text": "Wait out Counter Strike before you attack him. His dodge ends in a stun, so hold your attacks until it is over.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Vayne:Jax:2",
+          "text": "Use Tumble to stay out of his reach, and fight in short bursts. Jax's damage falls when he can't attack in a row.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Jax", "start": 64, "end": 67 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Vayne:Jax:3",
+          "text": "Don't let Jax stack Relentless Assault on you. Back away when he leaps in, because long trades favor him.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 10, "end": 13 },
+            { "kind": "ability", "key": "Jax-passive", "start": 20, "end": 38 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9d81b3fbb7aed87c386eb8434b2fe3e3decd52bb09a79d1151a24b27b03682e6",
+      "tips": [
+        {
+          "id": "top:Vayne:Jayce:0",
+          "text": "Use Condemn when Jayce is near a wall; he gets stunned if he hits terrain, and you can finish him while he can't move.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Jayce", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Jayce:1",
+          "text": "Save Condemn for when Jayce leaps in with To the Skies!, so you knock him away before he can trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Vayne:Jayce:2",
+          "text": "Sidestep Shock Blast in Cannon Stance by rolling with Tumble. It is aimed in a line and stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "top:Vayne:Jayce:3",
+          "text": "Keep attacking Jayce in a row so Silver Bolts lands on the third hit. It hurts most against his health bar.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Vayne-W", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Vayne:Jayce:4",
+          "text": "Stay out of Jayce's melee range when he is in Hammer Stance. Thundering Blow roots you before it knocks you back.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "93bd725b01842d31e24310aef23794842fe763987e98a4cc1532ce20b4fe3bc8",
+      "tips": [
+        {
+          "id": "top:Vayne:KSante:0",
+          "text": "Stay out of K'Sante's reach early. Once Ntofo Strikes lands twice, he pulls you in and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "KSante-Q", "start": 40, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Vayne:KSante:1",
+          "text": "Use Tumble to step out of his Ntofo Strikes line, then hit him with the empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "KSante-Q", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Vayne:KSante:2",
+          "text": "Save Condemn for when he charges at you with Path Maker, or to pin him against a wall for a stun and extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-W", "start": 45, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Vayne:KSante:3",
+          "text": "Keep Tumble for dodging when he charges with Path Maker. He cannot be knocked back while charging, so do not waste Condemn then.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "KSante-W", "start": 45, "end": 55 },
+            { "kind": "ability", "key": "Vayne-E", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Vayne:KSante:4",
+          "text": "Fight him with Silver Bolts when he is All Out. He loses health and armor then, so he is much easier to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "KSante-R", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Vayne:KSante:5",
+          "text": "Do not stand near walls behind you when K'Sante has All Out ready; he can pull you over terrain and hit you again.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "KSante-R", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d9c12ec76b97d4e156556b232f334f4dd22f0fe14587e223c77ff37388f3974a",
+      "tips": [
+        {
+          "id": "top:Vayne:Kayle:0",
+          "text": "Punish Kayle before level 6, when she is melee only. Use Tumble to trade and step out of her reach.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Vayne:Kayle:1",
+          "text": "Look for a wall behind Kayle, then use Condemn. The stun gives you free hits on a fragile target.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Vayne-E", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Vayne:Kayle:2",
+          "text": "Dodge Radiant Blast by staying out of its line. It stops on the first enemy it hits, so keep a minion between you and Kayle.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayle", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Vayne:Kayle:3",
+          "text": "Hold your attacks when Kayle casts Divine Judgment on herself. Back away until the invulnerability ends, then hit her again.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Kayle-R", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "19ad0b0d15a236b85ad1e07462dd878f606d5792f0d935286f3b106896eba490",
+      "tips": [
+        {
+          "id": "top:Vayne:Kennen:0",
+          "text": "Keep your distance from Kennen; he is fragile, so punish him with Tumble and quick attacks whenever he steps up to throw a shuriken.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Vayne:Kennen:1",
+          "text": "Watch your Mark of the Storm count; three hits from his abilities will leave you stunned, so dodge his Thundering Shuriken.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 11,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 103, "end": 122 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vayne:Kennen:2",
+          "text": "Use Condemn on Kennen when he is near a wall; the knockback into terrain stuns him and deals big bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kennen", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Kennen:3",
+          "text": "Attack Kennen when he runs in with Lightning Rush; he cannot attack while it is active, so he is open once it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Kennen-E", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Vayne:Kennen:4",
+          "text": "Keep hitting the same enemy so Silver Bolts triggers on the third hit; it deals extra true damage that wins short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "21dc2b77603a89334b569a4c0dc681cbd08757bcc80091f76bd5a416df1a6a37",
+      "tips": [
+        {
+          "id": "top:Vayne:Kled:0",
+          "text": "Use Condemn when Kled is near a wall; the knockback pins him and stuns him. Aim it so he is pushed into terrain, not open lane.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kled", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Vayne:Kled:1",
+          "text": "Stay back when Kled has Violent Tendencies ready; his four fast hits hurt. Trade after he spends it.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Kled-W", "start": 24, "end": 42 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Vayne:Kled:2",
+          "text": "Keep your distance so Bear Trap on a Rope has to travel far. If you are hooked, walk away before the trap is pulled.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 22, "end": 41 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Vayne:Kled:3",
+          "text": "Hit him with three attacks in a row to trigger Silver Bolts. Tumble between attacks to keep your damage up while backing away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 47, "end": 59 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Vayne:Kled:4",
+          "text": "When Kled loses his mount, he is easier to kill and dangerous only briefly. Pressure him and deny his courage.",
+          "refs": [{ "kind": "champion", "key": "Kled", "start": 5, "end": 9 }],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c13684cfcf5d3f651739f508e323534d5dcc2a36256fcd363c93c26902aa6227",
+      "tips": [
+        {
+          "id": "top:Vayne:Malphite:0",
+          "text": "Don't walk into Malphite's Seismic Shard range for free; being slowed lets him chase you down.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Vayne:Malphite:1",
+          "text": "Condemn Malphite into a wall when you can; the stun gives you free Silver Bolts hits.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Malphite", "start": 8, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Vayne-W", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Vayne:Malphite:2",
+          "text": "Respect Malphite at level 6; Unstoppable Force knocks you up, so keep Tumble ready and stay far from him.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Malphite-R", "start": 29, "end": 46 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Vayne:Malphite:3",
+          "text": "Trade from range and back off when Ground Slam is ready; it cuts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "552939d5802965fc45a21da4665daa38e2639c9a3ac23578d1a3603a301e145e",
+      "tips": [
+        {
+          "id": "top:Vayne:Mordekaiser:0",
+          "text": "Keep your distance from Mordekaiser once he has Darkness Rise; his aura hurts anyone standing next to him. Tumble away and keep attacking from range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 48,
+              "end": 61
+            },
+            { "kind": "ability", "key": "Vayne-Q", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Vayne:Mordekaiser:1",
+          "text": "Aim Condemn at Mordekaiser when a wall is behind him. The stun gives you free hits and time to walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 15,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Vayne:Mordekaiser:2",
+          "text": "Step out of the line of Death's Grasp. If you get pulled in, use Tumble to get out of his range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 24,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Vayne-Q", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Vayne:Mordekaiser:3",
+          "text": "Be ready for Realm of Death at level 6. You will be alone with him, so do not stand near him when it comes off cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 13,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Vayne:Mordekaiser:4",
+          "text": "Do not trade long while his Indestructible shield is up. Wait for it to fade before you hit him again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 28,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1a2af827800dd1d0f8f075faa3b6deb06598ee01d8fcce1da6cf0668ce7296d8",
+      "tips": [
+        {
+          "id": "top:Vayne:Naafiri:0",
+          "text": "Keep Condemn ready for when Naafiri dashes in; knocking her back, or into a wall for a stun, ends her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Vayne:Naafiri:1",
+          "text": "Fight near a wall: Condemn into terrain deals big bonus damage and stuns Naafiri, so she can't hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 },
+            { "kind": "champion", "key": "Naafiri", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Vayne:Naafiri:2",
+          "text": "Use Tumble to step out of Darkin Daggers. Her dagger flies in a straight line, so move sideways.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Vayne:Naafiri:3",
+          "text": "Her packmates attack whatever she targets. Hit her with Silver Bolts and Tumble in short trades, then back away before the pack piles on.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 56, "end": 68 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Vayne:Naafiri:4",
+          "text": "Save Final Hour for when she dives in at level 6; the extra damage and faster Tumble let you win the fight or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "176133fd476e93a4057ae58800ae050bd5628195d3c9df215a38d711711f0f2a",
+      "tips": [
+        {
+          "id": "top:Vayne:Nasus:0",
+          "text": "Kite Nasus with Tumble and keep your distance; he has to walk up to you, and you are far better at fighting from range.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Vayne:Nasus:1",
+          "text": "Don't let Nasus catch you alone with Wither; it slows you and cuts your Attack Speed, which ruins your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Nasus-W", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Vayne:Nasus:2",
+          "text": "Use Condemn when Nasus stands near a wall; it stuns him and deals big bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Nasus", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Vayne:Nasus:3",
+          "text": "Condemn him away when he runs at you, so he has to close the gap again.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Vayne:Nasus:4",
+          "text": "Hit Nasus three times in a row so Silver Bolts deals extra true damage, which is useful because he stacks Armor.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vayne-W", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Vayne:Nasus:5",
+          "text": "Trade hard early, before Nasus has built up Siphoning Strike damage from last hits. Don't fight him when his Fury of the Sands is up.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 44, "end": 60 },
+            { "kind": "ability", "key": "Nasus-R", "start": 109, "end": 126 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "afc46ace02d9f262509dd07b5899024824a66320207917ed21d8845af7458745",
+      "tips": [
+        {
+          "id": "top:Vayne:Olaf:0",
+          "text": "Keep Condemn ready for when Olaf closes in; with a wall behind him it stuns him and wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Olaf", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vayne:Olaf:1",
+          "text": "Dodge Undertow by sidestepping or using Tumble; being slowed lets Olaf catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 40, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "champion", "key": "Olaf", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Vayne:Olaf:2",
+          "text": "Stand where Olaf cannot easily reach his axe; that limits how often he can throw Undertow at you.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Vayne:Olaf:3",
+          "text": "Do not use Condemn on Olaf during Ragnarok; he is immune to its stun.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 11, "end": 18 },
+            { "kind": "champion", "key": "Olaf", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Olaf-R", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Vayne:Olaf:4",
+          "text": "Do not fight Olaf when he is low on health; he hits harder and heals more, so keep your distance and keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07154e746b5e0ab42c3d1f76639971f9c281b2613b7ffa4f58158c36c498d9a1",
+      "tips": [
+        {
+          "id": "top:Vayne:Ornn:0",
+          "text": "Stay away from walls when Ornn is near; Condemn is yours, but his Searing Charge into a wall knocks you up and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Vayne-E", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Ornn-E", "start": 66, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Vayne:Ornn:1",
+          "text": "Use Condemn to knock Ornn into a wall for a stun and big damage, then keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Ornn", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Vayne:Ornn:2",
+          "text": "Sidestep Volcanic Rupture; it stops at the first champion it hits and leaves a pillar, so do not stand near that end point.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Vayne:Ornn:3",
+          "text": "Trade from range and use Tumble to step out of his Bellows Breath; he cannot act while he marches.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Ornn-W", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Vayne:Ornn:4",
+          "text": "Do not fight when Brittle is on you; his crowd control lasts longer and hits harder.",
+          "refs": [],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "65ea62a2261774a569cfe2a67f5ebd1ef1babd7c8f90f11f3ba005399e86fdf6",
+      "tips": [
+        {
+          "id": "top:Vayne:Pantheon:0",
+          "text": "Keep Condemn ready for when Pantheon jumps on you; it knocks him back, and if he hits a wall he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Vayne:Pantheon:1",
+          "text": "Fight Pantheon near a wall. Condemn pins him there for a stun and a lot of bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Vayne-E", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Vayne:Pantheon:2",
+          "text": "Stay away from him when Mortal Will is lit. His next Shield Vault then follows up with a triple strike.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "ability", "key": "Pantheon-W", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Vayne:Pantheon:3",
+          "text": "Do not attack into Pantheon while he braces with Aegis Assault from the front. Tumble to the side or behind him, or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 49, "end": 62 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Vayne:Pantheon:4",
+          "text": "Stay healthy. A thrown Comet Spear does much more damage to low health targets, so back off before you get low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Vayne:Pantheon:5",
+          "text": "When Grand Starfall is announced, walk out of the target area. It gives a long warning before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "82dcbf4a7383912730b24519fa087a49f0569d3bcbb37aae618b6fec97e6f85c",
+      "tips": [
+        {
+          "id": "top:Vayne:Quinn:0",
+          "text": "Save Condemn for when Quinn is near a wall; she gets stunned if she hits terrain. Quinn's Vault gap-closer is short, so Condemn her as she lands.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Quinn", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 60 },
+            { "kind": "champion", "key": "Quinn", "start": 82, "end": 87 },
+            { "kind": "ability", "key": "Quinn-E", "start": 90, "end": 95 },
+            { "kind": "ability", "key": "Vayne-E", "start": 120, "end": 127 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Vayne:Quinn:1",
+          "text": "Stay out of a straight line from Quinn so Blinding Assault misses; it stops on the first enemy it hits, so keep a minion out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Vayne:Quinn:2",
+          "text": "Use Tumble to roll away after Quinn vaults onto you; the slow makes it harder to escape, so don't stand and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Quinn", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Vayne:Quinn:3",
+          "text": "Hit Quinn three times in a row with Silver Bolts to deal extra true damage. Short, steady trades work better than one big all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vayne-W", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Vayne:Quinn:4",
+          "text": "Quinn is fragile when she uses Behind Enemy Lines to roam. Expect her to return unseen, so keep your guard up when she disappears from lane.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-R", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5ed789249d51300b1ecfcfea643a65c296826885c0eb9dcf06153766fdda461b",
+      "tips": [
+        {
+          "id": "top:Vayne:Renekton:0",
+          "text": "Keep Condemn ready for when Renekton dashes in; knocking him away breaks his trade, especially near a wall for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Renekton", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Renekton:1",
+          "text": "Watch his Fury. When it is high, his Ruthless Predator stuns for much longer, so stay back from him.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 37, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vayne:Renekton:2",
+          "text": "Use Tumble to step out of his Slice and Dice, and don't trade while his Fury is high.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Renekton-E", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Vayne:Renekton:3",
+          "text": "Avoid taking free hits from him early; pressure builds his Fury and makes his Cull the Meek heal more.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Vayne:Renekton:4",
+          "text": "Hit him with three attacks in a row for Silver Bolts when he is tanky; it deals damage based on his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "aff74a84487123ccb7f4a3a6635a71649675c797a29987d129842f0631644720",
+      "tips": [
+        {
+          "id": "top:Vayne:Riven:0",
+          "text": "Save Condemn for when Riven dashes in; it knocks her back, and if she hits a wall she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Riven", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Riven:1",
+          "text": "Stay away from walls when Riven is near, because Ki Burst stuns and she can then burst you down.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Riven-W", "start": 49, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Vayne:Riven:2",
+          "text": "Use Tumble to step out of her dash range, then attack her with the bonus damage as she closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Vayne:Riven:3",
+          "text": "Do not walk forward when Riven has Valor ready; she can dash in, shield herself and trade well.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Riven-E", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Vayne:Riven:4",
+          "text": "Keep attacking Riven so Silver Bolts reaches its third hit; it deals true damage that her shield cannot reduce much.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Vayne-W", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "62f3f89df46c9da9d066b9f9cfa453cc12eaa26d98c6b0d9bfe8d06dffe06d27",
+      "tips": [
+        {
+          "id": "top:Vayne:Rumble:0",
+          "text": "Walk up and hit Rumble when he is overheating; he cannot cast spells then, so trade freely and use Condemn if he is near a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Vayne-E", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Vayne:Rumble:1",
+          "text": "Pin Rumble to terrain with Condemn for a stun and big damage, then finish him with your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-E", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Vayne:Rumble:2",
+          "text": "Use Tumble to step out of the Flamespitter cone. Keep your distance, since the cone only hits in front of him.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Vayne:Rumble:3",
+          "text": "Avoid walking through The Equalizer fire; it slows you and burns hard. Wait for it to fade before you re-engage.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Vayne:Rumble:4",
+          "text": "Hit him three times in a row with Silver Bolts for extra true damage. He has a lot of health, so it works well on him.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Rumble:5",
+          "text": "Stay out of Electro Harpoon range when you can. Two hits slow you hard and you cannot kite.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "da6161dea824b405fe909289abb711f392daaea92841bf25880861decb63afa4",
+      "tips": [
+        {
+          "id": "top:Vayne:Sett:0",
+          "text": "Keep Tumble ready for when Sett closes in; his Knuckle Down speeds him toward you and his Facebreaker drags you in, so stay out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Sett", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sett-Q", "start": 47, "end": 59 },
+            { "kind": "ability", "key": "Sett-E", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Vayne:Sett:1",
+          "text": "Use Condemn on Sett when a wall is behind him. The stun gives you time to hit him freely and get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Sett", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Vayne:Sett:2",
+          "text": "Save Condemn for when Sett dashes at you. It pushes him back and breaks up his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sett", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Vayne:Sett:3",
+          "text": "Hit Sett three times in a row for Silver Bolts. It deals extra damage based on his max Health, which suits his big health pool.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Vayne-W", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Vayne:Sett:4",
+          "text": "Stay away from Sett's Haymaker. If he has taken a lot of damage, it hits harder and shields him, so back off.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Sett-W", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Vayne:Sett:5",
+          "text": "Stand away from his minions and walls at level 6. The Show Stopper grabs you and slams you down, so keep your distance from Sett.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 50, "end": 66 },
+            { "kind": "champion", "key": "Sett", "start": 124, "end": 128 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ea21e62e7cbee5caa083e31ad8b86d30090a36b5ce767fc3ade4cbf39280ab68",
+      "tips": [
+        {
+          "id": "top:Vayne:Shen:0",
+          "text": "Keep your distance from Shen when Shadow Dash is ready; if it hits you, you are forced to attack him and can't walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Shen-E", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Vayne:Shen:1",
+          "text": "Use Condemn on Shen when he is near a wall. If he hits terrain, he is stunned and takes big bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Shen", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Shen:2",
+          "text": "Use Tumble to step out of Twilight Assault range. Dodge his taunt first, then trade back while he waits on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Shen-Q", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vayne:Shen:3",
+          "text": "Trade with Silver Bolts when you can land three hits in a row. Shen's health is high, so the true damage adds up.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Shen", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Vayne:Shen:4",
+          "text": "Be careful when Shen goes missing at level 6. Stand United can bring him to a fight and shield his ally, so don't chase a kill too far.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Shen-R", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vayne:Shen:5",
+          "text": "Don't rely on auto attacks when Spirit's Refuge is up; it blocks them. Wait for it to end before you attack.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "13b8c14ca9de5296a166947d2c902da84bd901ae1803a1f44fd73a70fa748abc",
+      "tips": [
+        {
+          "id": "top:Vayne:Singed:0",
+          "text": "Stand with no wall behind you and use Condemn on Singed when he runs at you; it knocks him back.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 38, "end": 45 },
+            { "kind": "champion", "key": "Singed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Vayne:Singed:1",
+          "text": "Tumble away from Singed's Poison Trail, and fight him from range instead of walking through it.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Singed", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Singed-Q", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Singed:2",
+          "text": "Stay out of Fling range; if he flings you into Mega Adhesive you are rooted and he wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Singed-W", "start": 47, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Vayne:Singed:3",
+          "text": "Hit Singed three times in a row with Silver Bolts; the true damage works well against his high health and defenses.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-W", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "78facd86cc80e25334b936e074f4556cb404c1792911ba7f38bcdce49780eb48",
+      "tips": [
+        {
+          "id": "top:Vayne:Sion:0",
+          "text": "Never stand near a wall when Sion is close. Hold Tumble so you can dodge a charged Decimating Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Sion-Q", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Vayne:Sion:1",
+          "text": "Condemn Sion into a wall for a stun and big damage. Check the terrain behind him before you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Sion", "start": 8, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Sion:2",
+          "text": "Keep your distance and attack him from range. He is a tank, and Silver Bolts' damage based on max Health helps you against him.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Sion:3",
+          "text": "Step out of the way when Sion starts charging Unstoppable Onslaught. He only turns slightly, so sidestep with Tumble.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Sion-R", "start": 46, "end": 67 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Vayne:Sion:4",
+          "text": "Back off when Sion dies; his revived form hits fast and heals. Run and wait until it fades.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f60162f83591857e17652c7ac06f4d075fb33c46832642127df48edd06f4476d",
+      "tips": [
+        {
+          "id": "top:Vayne:TahmKench:0",
+          "text": "Stay out of Tongue Lash's line. It slows you, and a third hit on you stuns, which sets up Devour.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Vayne:TahmKench:1",
+          "text": "Use Condemn when Tahm Kench stands near a wall. The stun and bonus damage make for a strong trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "TahmKench", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Vayne:TahmKench:2",
+          "text": "Use Tumble to sidestep his attacks and keep your distance. Hit and move away instead of trading toe to toe.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Vayne:TahmKench:3",
+          "text": "Watch for Abyssal Dive's long wind-up. Walk or Tumble away from the marked area before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 10, "end": 22 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Vayne:TahmKench:4",
+          "text": "Hit him three times in a row with Silver Bolts. His health is large, so the true damage adds up.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "da20ac27467b159f2e3d3b711ef6300a55280015cbad8fe36e8e1ad4ee8df286",
+      "tips": [
+        {
+          "id": "top:Vayne:Teemo:0",
+          "text": "Aim Condemn so Teemo is pushed into a wall; the stun gives you free hits and big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Teemo", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Vayne:Teemo:1",
+          "text": "Stay out of Blinding Dart range when you want to attack; being blinded wastes your attacks and your Silver Bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Vayne-W", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Vayne:Teemo:2",
+          "text": "Watch the brush for Teemo; he can hide there and move unseen, so don't walk in blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Vayne:Teemo:3",
+          "text": "Avoid walking onto unseen spots in lane; Noxious Trap slows you and shows where you are.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 41, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Teemo:4",
+          "text": "Use Tumble to dodge sideways while closing in; it also gives you a strong next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7d9af9ff756a8c24a06437f195709b8097d46ac717c292eff2637d2e38f52005",
+      "tips": [
+        {
+          "id": "top:Vayne:Tryndamere:0",
+          "text": "Pin Tryndamere against a wall with Condemn; the stun gives you free hits.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Vayne-E", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Vayne:Tryndamere:1",
+          "text": "Keep your distance with Tumble. Tryndamere is strong once he has Fury, so don't let him hit you for long.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 24, "end": 30 },
+            { "kind": "champion", "key": "Tryndamere", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Vayne:Tryndamere:2",
+          "text": "Don't turn your back on Tryndamere after Mocking Shout; you are slowed while facing away.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 41,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Vayne:Tryndamere:3",
+          "text": "Harass early so he can't kill minions for Fury and heal with Bloodlust.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Vayne:Tryndamere:4",
+          "text": "Don't waste burst when Undying Rage is up; he can't die for a few seconds. Back off until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72317890850b62c973b0bfe4629b2b9cd3687f1ce29a0c90a739ce94b6009892",
+      "tips": [
+        {
+          "id": "top:Vayne:Urgot:0",
+          "text": "Aim Condemn at Urgot when a wall is behind him. The stun and the bonus damage stop his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Urgot", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Vayne:Urgot:1",
+          "text": "Stay out of Disdain range. Its stun and throw leave you stuck next to Urgot.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Urgot", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Vayne:Urgot:2",
+          "text": "Use Tumble to dodge Corrosive Charge, which lands after a short delay. Keep your distance so Urgot can't easily hit you with his chain gun.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Urgot-Q", "start": 20, "end": 36 },
+            { "kind": "champion", "key": "Urgot", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Vayne:Urgot:3",
+          "text": "Keep your health up once Urgot reaches level 6. If Fear Beyond Death hits you, avoid dropping below the execute line until it wears off.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Urgot-R", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Urgot:4",
+          "text": "Use Silver Bolts on Urgot by attacking three times in a row, ideally while Tumble keeps you out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Urgot", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4e1ba3a37d217a305c88faafc1e88d9f76959923c08baa499c1ee12785262c50",
+      "tips": [
+        {
+          "id": "top:Vayne:Varus:0",
+          "text": "Use Tumble before your third attack so the bonus damage lands with Silver Bolts, then step out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-W", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Vayne:Varus:1",
+          "text": "Fight Varus near a wall. Condemn knocks him back, and if he hits terrain he is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Vayne-E", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Vayne:Varus:2",
+          "text": "Sidestep Piercing Arrow while he charges it. He is slowed and has to stand still to aim, so Tumble out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Vayne:Varus:3",
+          "text": "Stay away from his Chain of Corruption at level 6. Being rooted next to him is deadly, so keep Tumble ready to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 19, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Vayne:Varus:4",
+          "text": "Use Final Hour to trade or chase when he is low. The extra Move Speed from Night Hunter makes it hard for him to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 4, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 75,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a177136616e85269c25ba86dc60a4f6e6e7d992b6cc3d0684133b58a0189c4f",
+      "tips": [
+        {
+          "id": "top:Vayne:Vladimir:0",
+          "text": "Stay out of Transfusion range and trade only when you can punish Vladimir; his lane is built on that heal.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Vladimir", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Vayne:Vladimir:1",
+          "text": "Look for a Condemn into a wall when Vladimir has used Sanguine Pool. The wall stun is your best way to kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 11, "end": 18 },
+            { "kind": "champion", "key": "Vladimir", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Vayne:Vladimir:2",
+          "text": "Leave the Sanguine Pool area quickly, because it slows you and damages you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Vayne:Vladimir:3",
+          "text": "Use Tumble to step out of Tides of Blood's range after it starts charging. Hit Vladimir with Silver Bolts when he is not ready to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 26, "end": 40 },
+            { "kind": "champion", "key": "Vladimir", "start": 79, "end": 87 },
+            { "kind": "ability", "key": "Vayne-W", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Vayne:Vladimir:4",
+          "text": "Kill Vladimir before Hemoplague ends, or step away from it. The heal only comes from champions it infects.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "01a9935ec042451a31e1d1e9c6e37a14a38dc0bc07b737f5ce20a6d6427aa8d7",
+      "tips": [
+        {
+          "id": "top:Vayne:Volibear:0",
+          "text": "Keep your distance from Volibear early; if Thundering Smash lands, you are stunned and he wins the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Vayne:Volibear:1",
+          "text": "Use Condemn on Volibear when he is next to a wall; the stun gives you free hits and he can't reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Volibear", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Vayne:Volibear:2",
+          "text": "Tumble away when he runs at you, then hit him with the empowered attack as he follows.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Vayne:Volibear:3",
+          "text": "Step out of the Sky Splitter circle; it lands after a delay and leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Vayne:Volibear:4",
+          "text": "Stay away from his Frenzied Maul combo; the second hit heals him, so don't let him trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0716f9bbbd18fd9e899d454793528a68bd00d3c9bb972e304343fd914dc85ffd",
+      "tips": [
+        {
+          "id": "top:Vayne:XinZhao:0",
+          "text": "Keep Condemn for when Xin Zhao dashes in; push him into a wall for a stun, or knock him away to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "XinZhao", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Vayne:XinZhao:1",
+          "text": "Do not let Xin Zhao land the third Three Talon Strike; Tumble away and keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Vayne:XinZhao:2",
+          "text": "Fight from range early and back off when his Audacious Charge is ready, since it closes distance fast.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-E", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Vayne:XinZhao:3",
+          "text": "Be careful of his Wind Becomes Lightning; it slows you and marks you, making his Audacious Charge reach farther.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 18, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0728d568ae7b09e4c3ab671d756b1879d96c92c06f14aaea3b9cba6be13a1ab2",
+      "tips": [
+        {
+          "id": "top:Vayne:Yasuo:0",
+          "text": "Keep Condemn ready for when Yasuo dashes at you; knocking him back into a wall stuns him and sets up your Silver Bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 },
+            { "kind": "ability", "key": "Vayne-W", "start": 106, "end": 118 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Vayne:Yasuo:1",
+          "text": "Stay out of a straight line with Yasuo's Steel Tempest and step sideways when he stacks it twice, since the whirlwind knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Vayne:Yasuo:2",
+          "text": "Use Tumble to step off his lines, then hit him with the empowered attack once his Steel Tempest is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Vayne:Yasuo:3",
+          "text": "Don't spend Condemn on his shield; wait until he's pinned against terrain, because Yasuo's shield only blocks damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 12, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Vayne:Yasuo:4",
+          "text": "Trade when Yasuo's Way of the Wanderer shield is used up; hit him with three attacks in a row for Silver Bolts.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Yasuo-passive",
+              "start": 19,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Vayne-W", "start": 98, "end": 110 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "83b31bb3f1be0fadca170895f0acba9c0aec7971120b8b55fb63fb936a772e4b",
+      "tips": [
+        {
+          "id": "top:Vayne:Yone:0",
+          "text": "Keep Condemn for when Yone has a wall behind him; the knockback into terrain stuns him and deals big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vayne:Yone:1",
+          "text": "Use Condemn when Yone dashes in with his wind-wave Mortal Steel; he is easy to knock back toward a wall then.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Yone-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Vayne:Yone:2",
+          "text": "Keep your distance and trade with Tumble and attacks; Yone has to walk onto you, and you hit hardest when he cannot reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 34, "end": 40 },
+            { "kind": "champion", "key": "Yone", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Vayne:Yone:3",
+          "text": "Hold Tumble for when Fate Sealed comes; stay out of the long line, since it stuns and pulls you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Yone-R", "start": 21, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Vayne:Yone:4",
+          "text": "Do not chase Yone while he is in spirit form with Soul Unbound; he snaps back and deals extra damage to you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Yone-E", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "15faf6472912b4ee73244697d5570bf9040f695f0f88617d3407badc99ef7ed1",
+      "tips": [
+        {
+          "id": "top:Vayne:Yorick:0",
+          "text": "Pin Yorick to a wall with Condemn for a stun and big damage. Aim it so the knockback ends in terrain, not open lane.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-E", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Vayne:Yorick:1",
+          "text": "Use Tumble to step away from Yorick after he commits, then hit him from range. Stay out of his reach when he is slowed or marked.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Yorick", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Vayne:Yorick:2",
+          "text": "Break Dark Procession by attacking it, or walk away from it. It only blocks enemies, so it can trap you inside the ring.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Vayne:Yorick:3",
+          "text": "Clear Mist Walkers with a single auto or Tumble before you trade with Yorick. They die quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 41, "end": 47 },
+            { "kind": "champion", "key": "Yorick", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Vayne:Yorick:4",
+          "text": "Keep your distance when Yorick has Last Rites ready, because it heals him. Trade when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "670708e05f099b969ada020ade16fcf0e5d23f971fa32c529db0251708da6c92",
+      "tips": [
+        {
+          "id": "top:Vayne:Zaahen:0",
+          "text": "Keep Zaahen at range and attack him from afar. His Dreaded Return pull is his main way to catch you, so stay out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Vayne:Zaahen:1",
+          "text": "Use Condemn on Zaahen when he is near a wall. A wall hit stuns him and adds a lot of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Zaahen", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Vayne:Zaahen:2",
+          "text": "Condemn him away when he dashes in with Aureate Rush, to cut his trade short.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Vayne:Zaahen:3",
+          "text": "Use Tumble to step out of his Dreaded Return line, then hit him with the empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vayne:Zaahen:4",
+          "text": "Don't let a long fight build up Cultivation of War. Attack in short bursts and back off, because Zaahen hits much harder once it is full.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 32,
+              "end": 50
+            },
+            { "kind": "champion", "key": "Zaahen", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Vayne:Zaahen:5",
+          "text": "Don't count on a kill when he is low with a full Cultivation of War bar. He can revive, so keep your Condemn and Tumble ready for his return.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 49,
+              "end": 67
+            },
+            { "kind": "ability", "key": "Vayne-E", "start": 101, "end": 108 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "037de3f51fde24b3553b6a65dd44648bd4e11c364239d44c45c003ea5e1a1dac",
+      "tips": [
+        {
+          "id": "adc:Vayne:Ashe:0",
+          "text": "Look for Condemn when Ashe stands near a wall; the stun and extra damage can win the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 9, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Vayne:Ashe:1",
+          "text": "Dodge Volley by sidestepping or using Tumble; arrows fly in a cone, so move out of its edge.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Vayne:Ashe:2",
+          "text": "Stay out of Ashe's line when Enchanted Crystal Arrow is ready; stand behind minions or other champions to catch it.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ashe-R", "start": 29, "end": 52 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Vayne:Ashe:3",
+          "text": "Attack Ashe three times in a row to trigger Silver Bolts; Tumble between attacks keeps your damage coming.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Vayne-W", "start": 44, "end": 56 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Vayne:Ashe:4",
+          "text": "Ashe has few escapes, so walk at her with Night Hunter and pressure her hard when she is slowed or out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 42,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "12f6d5f9ae0a5fdcd27073cb91684e2204bd13ba8bb2c5c681c8014d3cb90a70",
+      "tips": [
+        {
+          "id": "adc:Vayne:Caitlyn:0",
+          "text": "Stay out of Caitlyn's range and don't trade into her Piltover Peacemaker. Close the gap only when you can hit back.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 53, "end": 72 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Vayne:Caitlyn:1",
+          "text": "Watch the ground when you approach. Walking over Yordle Snap Trap roots you, so Tumble around likely trap spots.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 49, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 71 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Vayne:Caitlyn:2",
+          "text": "Use Condemn to pin Caitlyn against a wall. A stun means a kill on her, since she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Caitlyn", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Vayne:Caitlyn:3",
+          "text": "Keep minions between you and Caitlyn so Piltover Peacemaker deals less damage to you.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 40, "end": 59 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Vayne:Caitlyn:4",
+          "text": "Use Final Hour when you commit to an all-in. Its extra Move Speed and short Tumble cooldown help you reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "36fa2a7196765b0a4334e9396a369b663b4b958e0ca4d022401d3392ce8868af",
+      "tips": [
+        {
+          "id": "adc:Vayne:Ezreal:0",
+          "text": "Use Condemn when Ezreal stands near a wall; the knockback into terrain stuns him and deals big bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Vayne:Ezreal:1",
+          "text": "Walk toward Ezreal to gain speed from Night Hunter, then close in and hit him three times in a row for Silver Bolts.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 12, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 38,
+              "end": 50
+            },
+            { "kind": "ability", "key": "Vayne-W", "start": 103, "end": 115 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Vayne:Ezreal:2",
+          "text": "Ezreal is fragile, so press him when his Mystic Shot is on cooldown; he has few ways to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Vayne:Ezreal:3",
+          "text": "Tumble sideways out of Mystic Shot's line, and keep minions between you and him.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Vayne:Ezreal:4",
+          "text": "Save Condemn for when Ezreal uses Arcane Shift; he has lost his escape and you can knock him back.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8ed21138ece7faaa1ebd6831c94eee285cd1008e0c77cb9b43b08d1bb016335f",
+      "tips": [
+        {
+          "id": "adc:Vayne:Jhin:0",
+          "text": "Stay out of Jhin's line when he has a teammate nearby; Deadly Flourish roots anyone he or an ally has just hit, and you cannot Tumble out of a root.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 55, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 76 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 127, "end": 133 },
+            { "kind": "keyword", "key": "rooted", "start": 143, "end": 147 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Vayne:Jhin:1",
+          "text": "Trade right after Jhin fires his fourth shot; he must reload and cannot attack, so walk up and hit him with Tumble.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Vayne:Jhin:2",
+          "text": "Watch the ground for Captive Audience traps; stepping on one slows you and reveals you before it explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Vayne:Jhin:3",
+          "text": "Use Condemn on Jhin when a wall is behind him; the stun gives you a free chance to land your third Silver Bolts hit.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Jhin", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Vayne-W", "start": 99, "end": 111 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Vayne:Jhin:4",
+          "text": "Jhin's Curtain Call hurts more the lower your health is, so do not stay in its cone while hurt after he starts channeling.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-R", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "754c31eb07207ffc6e08c88dd4988d7098af54bb403de7e6a816808deeccdf8c",
+      "tips": [
+        {
+          "id": "adc:Vayne:Jinx:0",
+          "text": "Walk up and trade when Jinx is on her minigun; her rockets give her the range edge, so close the gap fast with Night Hunter.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 111,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "adc:Vayne:Jinx:1",
+          "text": "Stay out of a straight line from Jinx so Zap! can't hit you; it slows, so a hit leaves you easy to chase.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jinx-W", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "adc:Vayne:Jinx:2",
+          "text": "Use Condemn on Jinx when she stands near a wall; the stun gives you free hits. Condemn her away if she gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Jinx", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Vayne-E", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Vayne:Jinx:3",
+          "text": "Do not walk over Flame Chompers!; they root you. Tumble sideways around them and make Jinx spend them early.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 49, "end": 55 },
+            { "kind": "champion", "key": "Jinx", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Vayne:Jinx:4",
+          "text": "Hit Jinx three times in a row to trigger Silver Bolts. Switching targets resets it.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Vayne-W", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Vayne:Jinx:5",
+          "text": "Jinx is fragile. Use Final Hour to trade or finish her when she has used Flame Chompers!.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vayne-R", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Jinx-E", "start": 73, "end": 88 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e46de7a6d38d9c5415b3d1ade0abec08b99f8b5fcb7f5cfbe55dd5f669516ebe",
+      "tips": [
+        {
+          "id": "adc:Vayne:Kaisa:0",
+          "text": "Walk toward Kai'Sa to get Night Hunter's extra Move Speed, then trade when her Icathian Rain is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 12, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Vayne-passive",
+              "start": 26,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Vayne:Kaisa:1",
+          "text": "Aim Condemn so Kai'Sa is knocked back into a wall. She is stunned and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kaisa", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Vayne:Kaisa:2",
+          "text": "Use Condemn on Kai'Sa when she dashes in with Killer Instinct. It pushes her away and can pin her to a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kaisa", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Vayne:Kaisa:3",
+          "text": "Hit Kai'Sa three times in a row so Silver Bolts deals its extra true damage. Switching targets resets it.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-W", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Vayne:Kaisa:4",
+          "text": "Use Tumble to dodge in and out of range as you attack. Keep your distance from Kai'Sa's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Kaisa", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Vayne:Kaisa:5",
+          "text": "Save Final Hour for a kill or to escape. Its invisible Tumble can help you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "85b3428d3b5878183278978e9682a78f1fce797cc0136b48fbd5ceef772f5e44",
+      "tips": [
+        {
+          "id": "adc:Vayne:MissFortune:0",
+          "text": "Stand where Miss Fortune cannot line up Double Up. If a minion is in front of you, expect the shot to bounce onto you, so stay out of her range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 12,
+              "end": 24
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 40,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Vayne:MissFortune:1",
+          "text": "Look for a wall behind Miss Fortune. Condemn into terrain stuns her and adds heavy damage, so line up the shot before you fire.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 23,
+              "end": 35
+            },
+            { "kind": "ability", "key": "Vayne-E", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Vayne:MissFortune:2",
+          "text": "Step out of Make It Rain right away. Being slowed there lets her follow up with Bullet Time.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 80,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Vayne:MissFortune:3",
+          "text": "Use Tumble between attacks to dodge her shots, and keep attacking her for Silver Bolts on the third hit.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vayne-W", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Vayne:MissFortune:4",
+          "text": "Hit Miss Fortune to cancel her Strut speed boost. Without it she is easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 31,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "adc:Vayne:MissFortune:5",
+          "text": "Do not stand in a line in front of Bullet Time. Walk out of its cone sideways, and use Tumble to get out of it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 35,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Vayne-Q", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "40fffaabfeea7f37dca7cff7e5a6be70ceadae196f5c0b49944e073680a8ad5e",
+      "tips": [
+        {
+          "id": "adc:Vayne:Smolder:0",
+          "text": "Fight Smolder early, while he has few stacks of Dragon Practice; his early game is weak, so push your lead before he scales.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 48,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Vayne:Smolder:1",
+          "text": "Use Condemn when Smolder stands near a wall; the stun and extra damage can kill a fragile marksman.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Smolder", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Vayne:Smolder:2",
+          "text": "Dodge the Achooo! glob by stepping sideways with Tumble; it slows you and the explosion hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Vayne:Smolder:3",
+          "text": "Hit Smolder three times in a row to trigger Silver Bolts; his health is low, so the true damage hurts him.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Vayne-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Vayne:Smolder:4",
+          "text": "Save Condemn for when Smolder takes flight with Flap, Flap, Flap; he flies over terrain and can escape, so stop him before he leaves.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Smolder-E", "start": 48, "end": 64 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f35646adbbea8a54dbe55662da9ab452cdda384b92a99ae9424b23c179571ff1",
+      "tips": [
+        {
+          "id": "adc:Vayne:Yunara:0",
+          "text": "Sidestep Yunara's prayer bead instead of walking into it; getting slowed makes you easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 9, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Vayne:Yunara:1",
+          "text": "Use Condemn on Yunara when she stands near a wall. A wall hit stuns her and deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Yunara", "start": 15, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Vayne:Yunara:2",
+          "text": "Trade with Tumble and your Silver Bolts on the third hit. Attack Yunara, not minions, so the stacks keep building on her.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Vayne-W", "start": 27, "end": 39 },
+            { "kind": "champion", "key": "Yunara", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Vayne:Yunara:3",
+          "text": "Once Yunara uses Transcend One's Self, back off. Her attacks hit harder and faster, and she can dash and fire a strong beam.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Yunara-R", "start": 17, "end": 37 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Vayne:Yunara:4",
+          "text": "Save Final Hour for when Yunara has used her big spells, then chase her down. You move much faster while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Yunara", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

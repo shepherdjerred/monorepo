@@ -1,0 +1,1373 @@
+{
+  "schemaVersion": 1,
+  "champion": "Hwei",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "58cd30aed96eece40a898ecb52bbaa62829e51e0cb2bcdb512c6f46d82e89efd",
+      "tips": [
+        {
+          "id": "middle:Hwei:general:0",
+          "text": "Land Devastating Fire from long range; the fireball is fast and explodes on the first enemy it hits, so it works well against champions standing behind minions.",
+          "refs": [],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Hwei:general:1",
+          "text": "Use Severing Bolt on enemies who are alone or stuck in place; it hurts far more the lower their health is.",
+          "refs": [],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Hwei:general:2",
+          "text": "Follow Gaze of the Abyss or Crushing Maw with Severing Bolt; a rooted or dragged enemy can't dodge the delayed lightning.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Hwei:general:3",
+          "text": "Hit an enemy with two different damaging spells to leave a signature under them, then expect it to blow up after a short delay.",
+          "refs": [],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Hwei:general:4",
+          "text": "Use Grim Visage on anyone who dives you; it knocks them down and slows them, so you can walk away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Hwei:general:5",
+          "text": "Cast Stirring Lights before a trade; your next few attacks or spells deal extra damage and give mana back.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Hwei:general:6",
+          "text": "Hold Spiraling Despair for a fight where the enemy can't escape; it slows them while it grows, then shatters for big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Hwei-R", "start": 5, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Hwei:general:7",
+          "text": "Hwei is open to being rushed down after he casts a Torment spell, so use them from a safe spot.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 0, "end": 4 }],
+          "pWrong": 0.08
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Hwei:combo:0",
+          "name": "Wash Brush mood cancel",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Hwei-Q" },
+            { "kind": "ability", "key": "Hwei-R" }
+          ],
+          "when": "You opened a mood and want to change plans without paying any cooldown or mana.",
+          "whenRefs": [],
+          "text": "Press R while in a mood to exit it for free. Use it when the enemy dodges your plan or a different spell is needed.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1c0159b26ff73c9541d33bb0904204819469836d5dc0ca5f0709c2f0347304ee",
+      "tips": [
+        {
+          "id": "adc:Hwei:general:0",
+          "text": "Cast Devastating Fire at long range down the lane; it flies fast and stops at the first enemy it hits, so aim past your own minions' path.",
+          "refs": [],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "adc:Hwei:general:1",
+          "text": "Hit an enemy with a second different ability to set off your signature. The blast has a delay, so cast it when they can't easily step away.",
+          "refs": [],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Hwei:general:2",
+          "text": "Use Severing Bolt on an enemy who is rooted or stuck alone. It hits much harder on a target who can't move, but it lands late.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Hwei:general:3",
+          "text": "Open with Gaze of the Abyss to root the first enemy it hits. Follow with Severing Bolt or Devastating Fire for a heavy hit.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Hwei:general:4",
+          "text": "Use Crushing Maw on enemies bunched up or fighting your support. It drags them to the center and slows them.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Hwei:general:5",
+          "text": "Cast Stirring Lights before a trade; your next few attacks or spells deal extra damage and give back mana.",
+          "refs": [],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Hwei:general:6",
+          "text": "Use Pool of Reflection to shield you and your support while they stand in it, or Fleeting Current to speed up a chase or escape.",
+          "refs": [],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Hwei:general:7",
+          "text": "Stay behind your minions after casting a Torment spell. Hwei is open to being rushed down while he recovers.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Hwei:general:8",
+          "text": "Use Wash Brush to leave a mood you picked by mistake. It costs no mana and starts no cooldown.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Hwei:general:9",
+          "text": "Save Spiraling Despair for a target you can finish or catch. It slows them more the longer it stays stuck, then bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Hwei-R", "start": 5, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "c6fc73051af684f196dbdca9092827f41a39bc25ae671e3d0ea43764e1e8adca",
+      "tips": [
+        {
+          "id": "middle:Hwei:Ahri:0",
+          "text": "Aim Grim Visage or Gaze of the Abyss at Ahri when she walks up, because Charm is her only way to start a trade. Fear or root stops her from winning it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Ahri-E", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "middle:Hwei:Ahri:1",
+          "text": "Don't stand in a line with minions in front of you; Ahri's Charm stops at the first enemy it hits, so put a minion between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Ahri-E", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Hwei:Ahri:2",
+          "text": "Use Severing Bolt when Ahri is rooted or alone; it hits much harder then, but it is slow, so aim where she will be.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "isolated", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Hwei:Ahri:3",
+          "text": "Be careful with your Torment spells at close range. After one, Ahri can rush you with Spirit Rush, so keep space.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Ahri-R", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Hwei:Ahri:4",
+          "text": "Poke Ahri with Molten Fissure to keep her slowed and away from the minions. She lives off the healing she gets from last-hitting.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "295394017a2e9121b3a1f2781922f59b591eaa053f07859119b17d25d6d15871",
+      "tips": [
+        {
+          "id": "middle:Hwei:Akali:0",
+          "text": "Aim Severing Bolt at Akali when she is rooted, or when she dashes in alone; it deals extra damage the lower her health is.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Hwei:Akali:1",
+          "text": "Hit Akali with Grim Visage when she dives in. It knocks her down and she cannot reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Hwei:Akali:2",
+          "text": "Throw spells at her smoke from Twilight Shroud; area spells hit her inside it and reveal her briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Hwei:Akali:3",
+          "text": "Back off when your health is low and Akali has Perfect Execution ready.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Akali-R", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e6b963afe5c4bd4209a79ee1f85956fa9a12f4dccd7a795942ad439c08ecfb2d",
+      "tips": [
+        {
+          "id": "middle:Hwei:Anivia:0",
+          "text": "Stay out of Anivia's line when Flash Frost comes; if it hits and ends in a stun, you are stunned and take Frostbite at double damage.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 },
+            { "kind": "ability", "key": "Anivia-E", "start": 106, "end": 115 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Hwei:Anivia:1",
+          "text": "Use Severing Bolt on Anivia when she is rooted or alone; it hits harder on those targets, and it is slow, so aim ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "isolated", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Hwei:Anivia:2",
+          "text": "Punish Anivia when she is out of position with a long-range Molten Fissure; its lava slows her.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 7, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "12302ec294db3b2b619b36fefb27d255dadae7e6be1709108c2d1092644c0650",
+      "tips": [
+        {
+          "id": "middle:Hwei:Aurora:0",
+          "text": "Aurora can go invisible with Across the Veil and escape. Save a slow or root for when she hops in, and don't spend it early.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Hwei:Aurora:1",
+          "text": "Use Crushing Maw or Gaze of the Abyss when Aurora commits to a fight. Her dashes stop working while she is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "middle:Hwei:Aurora:2",
+          "text": "Step out of the way of Twofold Hex, then dodge the bolt coming back. Her recast hurts more when you are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Hwei:Aurora:3",
+          "text": "Stay out of Between Worlds' ring. Enemies who touch its edge are slowed, and she can hop across it freely.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dbf0eaca601d33e8ac8159a7042d74904b69d1fc9a6c159ea1840faeefe6c9ea",
+      "tips": [
+        {
+          "id": "middle:Hwei:Cassiopeia:0",
+          "text": "Do not paint a Torment spell when Cassiopeia is close; after it you are easy to rush down.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Hwei:Cassiopeia:1",
+          "text": "Keep Cassiopeia from poisoning you; her Twin Fang hurts a lot more on a poisoned target. Dodge Noxious Blast by stepping out of the area.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 5, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 40,
+              "end": 49
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 95,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Hwei:Cassiopeia:2",
+          "text": "Turn away when Cassiopeia casts Petrifying Gaze so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 32,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Hwei:Cassiopeia:3",
+          "text": "Use Gaze of the Abyss to root her when she walks in to poke; it gives you time to follow up.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2cf7bf78d2c133e1527556d77a774b0caf22261ae28edad7fc68c72b36936a9e",
+      "tips": [
+        {
+          "id": "middle:Hwei:Fizz:0",
+          "text": "Keep Hwei's Subject: Torment for when Fizz dashes in, and aim at the spot he will land in. Being rooted or pulled ruins his follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Hwei-E", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Fizz", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Hwei:Fizz:1",
+          "text": "Hold your Severing Bolt until Fizz is rooted or can't move, because it does far more damage then. It is slow, so he can easily step out of it otherwise.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Hwei:Fizz:2",
+          "text": "Stay away from Fizz when his trident is glowing; his hits hurt much more for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Hwei:Fizz:3",
+          "text": "Bait out Playful before you commit your spells; Fizz is hard to hit while it is available.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3025b064f96957a8ca3f55c586a64af698d512374c311d09828f846837758b23",
+      "tips": [
+        {
+          "id": "middle:Hwei:Malzahar:0",
+          "text": "Cast Severing Bolt at Malzahar when he is alone or stuck in place; it hits much harder on those targets.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "isolated", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Hwei:Malzahar:1",
+          "text": "Malzahar's Void Shift blocks most damage and crowd control until he's hit. Break it with a cheap poke before you commit your stun or root.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "poke", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Hwei:Malzahar:2",
+          "text": "Keep your distance from Call of the Void; being silenced mid-combo wastes your spells. Step out of the gap between the portals.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "silenced", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Hwei:Malzahar:3",
+          "text": "Avoid fighting beside minions marked by Malefic Visions; when they die, it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Hwei:Malzahar:4",
+          "text": "Hit Malzahar with Gaze of the Abyss to root him when he walks up to fight, then follow up with damage.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "rooted", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0c0b331def85813070aeb7546f3b433b6b021065d6abc5cdcc2bf5ab1c647623",
+      "tips": [
+        {
+          "id": "middle:Hwei:Orianna:0",
+          "text": "Aim Severing Bolt at Orianna when she is stunned or alone; it hurts most then. She can sidestep it, so use it when she is busy.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "isolated", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Hwei:Orianna:1",
+          "text": "Keep your distance from Orianna after painting a Torment spell, because she can rush you while it recharges.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Hwei:Orianna:2",
+          "text": "Orianna's Ball only affects the area around it. Check where it sits and stay out of range of her spells.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Hwei:Orianna:3",
+          "text": "Use Crushing Maw on Orianna to pull her toward the center, so she is slowed and can't easily kite back.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7610c41b728c262c831ff7c050d3a185c04ec9c6b24f7f4fe043d9a35bfa6bff",
+      "tips": [
+        {
+          "id": "middle:Hwei:Ryze:0",
+          "text": "Keep your distance from Ryze. He deals much more damage to targets marked with Flux.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Hwei:Ryze:1",
+          "text": "Hit Ryze with Severing Bolt when he is rooted or alone; it deals far more damage to low-health targets.",
+          "refs": [{ "kind": "champion", "key": "Ryze", "start": 4, "end": 8 }],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Hwei:Ryze:2",
+          "text": "Use Grim Visage on Ryze when he walks up to cast on you. It fears him and knocks him down, so he can't finish his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Hwei:Ryze:3",
+          "text": "Ryze needs to be in range to cast. Poke him with Devastating Fire when he walks up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e752be5cf4b2d2d203d63eb7dbf7f156b52687744493ee6cb638ecd5ca2d9dcb",
+      "tips": [
+        {
+          "id": "middle:Hwei:Sylas:0",
+          "text": "Hit Sylas with Crushing Maw when he dashes in; it pulls him to the center and slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Hwei:Sylas:1",
+          "text": "Use Severing Bolt on Sylas when he is rooted or alone; it deals far more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "isolated", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Hwei:Sylas:2",
+          "text": "Watch his health bar; Kingslayer heals him when he is low, so do not rely on a near-kill.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Hwei:Sylas:3",
+          "text": "Poke him from far away with Devastating Fire and keep your distance, since he wins close fights.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "19e6e58cec53171b21d8a60636e7c1fd58a8f5a5afb29f1398d1f61a545b5146",
+      "tips": [
+        {
+          "id": "middle:Hwei:TwistedFate:0",
+          "text": "Catch Twisted Fate with Gaze of the Abyss or Grim Visage, then follow up with damage. Rooted or feared, he cannot dodge.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Hwei:TwistedFate:1",
+          "text": "Hit Twisted Fate with Severing Bolt when he is stuck in place or alone; it hurts much more that way.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "isolated", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Hwei:TwistedFate:2",
+          "text": "Watch for Twisted Fate shuffling his cards above his head. Back away when the Gold Card is picked so the stun misses you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 10,
+              "end": 22
+            },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Hwei:TwistedFate:3",
+          "text": "When Destiny goes off, expect a gank or a teleport. Move toward your tower or stay near allies.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Hwei:TwistedFate:4",
+          "text": "Wild Cards fans out in a cone, so use Fleeting Current to run away, or step out of the cone to avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "770a4f3ff92960b9931fe6bb04cbdd02ae7c93ed5bca2fc063a639e9a39d9e87",
+      "tips": [
+        {
+          "id": "middle:Hwei:Viktor:0",
+          "text": "Walk out of Viktor's Gravity Field early; staying inside gets you stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Viktor-W", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Hwei:Viktor:1",
+          "text": "Keep distance from Viktor; his control grows the closer you stand. Use Severing Bolt to hit him from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Hwei:Viktor:2",
+          "text": "Use Gaze of the Abyss or Crushing Maw to hold Viktor still, then follow with damage while he is rooted or slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Hwei:Viktor:3",
+          "text": "Hit Viktor with two different damaging spells to leave a Signature under him, then keep him from walking out.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1dd9e5d6066b741953b21835a117430058ec7398e80bd073326364a26a79af23",
+      "tips": [
+        {
+          "id": "middle:Hwei:Yasuo:0",
+          "text": "Hit Yasuo with Gaze of the Abyss when he dashes in; the root stops his movement and sets up your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Hwei:Yasuo:1",
+          "text": "Don't waste fireballs or the eye into Wind Wall; wait for it to fade, then cast.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Hwei:Yasuo:2",
+          "text": "Land Severing Bolt on Yasuo while he is rooted for big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Hwei:Yasuo:3",
+          "text": "Stay away from minions when Yasuo has two Steel Tempest stacks; his whirlwind knocks you up and he can follow with Last Breath.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 42, "end": 55 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 115, "end": 126 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "82d51660db712fad5429a0ab9cdb8ac07f790df00aa3819617f468d903982aa1",
+      "tips": [
+        {
+          "id": "middle:Hwei:Yone:0",
+          "text": "Keep Yone at range with Molten Fissure and Devastating Fire. He wants to get close and trade.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 5, "end": 9 }],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Hwei:Yone:1",
+          "text": "Save Grim Visage or Crushing Maw for when Yone dashes in with Mortal Steel. They stop him from landing his knock up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Yone-Q", "start": 62, "end": 74 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Hwei:Yone:2",
+          "text": "Stay out of the long line of Fate Sealed at level 6. It stuns you and pulls you to him.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-R", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Hwei:Yone:3",
+          "text": "Gaze of the Abyss roots Yone, so use it when he commits. Then Severing Bolt hits him much harder.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0495dd3a5fbc820c247b9957004c52765e1507cf0d6e3202856e735cfd94e5d",
+      "tips": [
+        {
+          "id": "middle:Hwei:Zed:0",
+          "text": "Keep Crushing Maw or Gaze of the Abyss ready for when Zed dashes in; being rooted or pulled lets you survive his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 54, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Hwei:Zed:1",
+          "text": "Hit Zed with Devastating Fire when he walks up; it travels fast and does more damage to higher-health targets.",
+          "refs": [{ "kind": "champion", "key": "Zed", "start": 4, "end": 7 }],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Hwei:Zed:2",
+          "text": "Hit Zed's shadow's slash zone carefully; if Zed has just used Living Shadow, he is weak and easy to punish.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "champion", "key": "Zed", "start": 44, "end": 47 },
+            { "kind": "ability", "key": "Zed-W", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Hwei:Zed:3",
+          "text": "Pool of Reflection gives you a shield before Death Mark goes off; use it to absorb damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Hwei:Zed:4",
+          "text": "Stay away from Zed's shadows when you can; the slow from Shadow Slash only applies if a shadow hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 15, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Zed-E", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "64d9ad3e5b8c23c56cc85e922b59dc459598f90ac128ad09966171986cbcec87",
+      "tips": [
+        {
+          "id": "adc:Hwei:Ashe:0",
+          "text": "Use Gaze of the Abyss or Crushing Maw on Ashe, then follow with Devastating Fire. She has few ways to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "adc:Hwei:Ashe:1",
+          "text": "Use Severing Bolt when Ashe is rooted or stuck in place, or when she is alone. It hits harder the lower her health is.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "isolated", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Hwei:Ashe:2",
+          "text": "Stay out of Volley range after you commit a Torment spell. Ashe will rush you down while that spell is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Ashe", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Hwei:Ashe:3",
+          "text": "Hit Ashe with two different damaging spells to trigger your signature explosion. She can walk out of it, so cast it when she is slowed or pinned.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 128, "end": 134 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Hwei:Ashe:4",
+          "text": "Watch for Ashe's Enchanted Crystal Arrow when you move up the lane alone. If it is ready, stay near your team.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Ashe-R", "start": 17, "end": 40 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1f1453d5653babc40a48c8366ce4a85092b1bcbffe8aad53b54e0c4e17b0626c",
+      "tips": [
+        {
+          "id": "adc:Hwei:Caitlyn:0",
+          "text": "Hit Caitlyn with Subject: Disaster from far away. Severing Bolt reaches a long way, but it is slow, so aim where she is walking.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Hwei-Q", "start": 17, "end": 34 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Hwei:Caitlyn:1",
+          "text": "Watch the ground for Yordle Snap Trap and don't walk over it. When you are rooted, Caitlyn gets a strong Headshot on you.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 },
+            { "kind": "champion", "key": "Caitlyn", "start": 83, "end": 90 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 105,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Hwei:Caitlyn:2",
+          "text": "Stay behind your minions, because Piltover Peacemaker deals less damage to each target after the first.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 34, "end": 53 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Hwei:Caitlyn:3",
+          "text": "Root Caitlyn with Subject: Torment (Gaze of the Abyss) or pull her in with Crushing Maw, then hit her with Severing Bolt for big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Hwei-E", "start": 18, "end": 34 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Hwei:Caitlyn:4",
+          "text": "Caitlyn's net pushes her away from you, so don't chase her after she uses it. Wait until it is on cooldown to go in.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "04e0c2125f835c92af57b6dddc46f2699daf9471526a9b054cd21814d668ff79",
+      "tips": [
+        {
+          "id": "adc:Hwei:Ezreal:0",
+          "text": "Aim Devastating Fire at Ezreal when he lines up Mystic Shot; he is fragile and the fireball is fast.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Hwei:Ezreal:1",
+          "text": "Land Gaze of the Abyss when Ezreal is near, so he is rooted and cannot dodge your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Hwei:Ezreal:2",
+          "text": "Hit Ezreal with Severing Bolt while he is rooted or alone; it does much more damage then.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "isolated", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Hwei:Ezreal:3",
+          "text": "Stay behind minions; Ezreal's Mystic Shot stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8bca06122e822312e73ea70bfd5f3189479fe0d8303418eaffdcc1cc8598afb3",
+      "tips": [
+        {
+          "id": "adc:Hwei:Jhin:0",
+          "text": "Stay out of Jhin's basic attack range and do not stand still while he reloads and has traps ready; he punishes a Hwei who stays in range.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Hwei", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Hwei:Jhin:1",
+          "text": "Watch for invisible traps from Jhin before you walk into the lane; stepping on one slows you and then it explodes.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Hwei:Jhin:2",
+          "text": "Do not take damage from Jhin or his support and then stand still; Deadly Flourish roots you from very far away.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Jhin-W", "start": 66, "end": 81 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Hwei:Jhin:3",
+          "text": "Jump on Jhin after his fourth shot while he is reloading, and use Crushing Maw to pull him in and slow him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 8, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Hwei:Jhin:4",
+          "text": "Use Devastating Fire to poke Jhin from range; the fireball is fast and stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Jhin", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3dba0e796828906610f1252cf5ebb880e33f9e0fe476aeb3a2a317b6e5c5430f",
+      "tips": [
+        {
+          "id": "adc:Hwei:Jinx:0",
+          "text": "Use Gaze of the Abyss or Crushing Maw from Subject: Torment on Jinx when she stands still; being rooted or slowed leaves her open to your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Hwei-E", "start": 43, "end": 59 },
+            { "kind": "champion", "key": "Jinx", "start": 63, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 103 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Hwei:Jinx:1",
+          "text": "Send Severing Bolt from Subject: Disaster at Jinx when she is rooted or alone; it deals far more damage to such targets.",
+          "refs": [
+            { "kind": "ability", "key": "Hwei-Q", "start": 24, "end": 41 },
+            { "kind": "champion", "key": "Jinx", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Hwei:Jinx:2",
+          "text": "Wait out Flame Chompers! before you dive Jinx; if she wastes it, she will struggle to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Jinx", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Hwei:Jinx:3",
+          "text": "Stay out of the long range of Zap! and out of Jinx's rocket range; you can't afford to take slowed pokes.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Jinx", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c4f9f51d7f2db3d992f1cb84a94c5a35f95717dbe915dbf8cf3b7da2666f53ef",
+      "tips": [
+        {
+          "id": "adc:Hwei:Kaisa:0",
+          "text": "Hit Kai'Sa with Gaze of the Abyss or Crushing Maw when she dashes in, to keep her from reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Hwei:Kaisa:1",
+          "text": "Hit Kai'Sa with Severing Bolt when she is alone or rooted; it does far more damage to a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "isolated", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Hwei:Kaisa:2",
+          "text": "Outrange her with Devastating Fire and Severing Bolt from far away; Kai'Sa is weak when mages out-range her.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Hwei:Kaisa:3",
+          "text": "Watch for Killer Instinct. When she jumps on you, use Grim Visage to stop her up close.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Hwei:Kaisa:4",
+          "text": "Use Fleeting Current to give you and your support extra speed to dodge Icathian Rain's missiles and to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bdaf7cd48b41a79a858b1ccf410749ce7a4225226a55d90e9d241e856df30ddd",
+      "tips": [
+        {
+          "id": "adc:Hwei:MissFortune:0",
+          "text": "Use Gaze of the Abyss to root Miss Fortune when she walks up. Then follow with Severing Bolt for big damage on an immobilized target.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Hwei:MissFortune:1",
+          "text": "Hit Miss Fortune with any damage to end her Strut speed boost. Molten Fissure's lava is an easy way to do it.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 44,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Hwei:MissFortune:2",
+          "text": "Don't stand in Make It Rain; it slows you and adds up damage. Step out of the area fast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 15,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Hwei:MissFortune:3",
+          "text": "Save Spiraling Despair for Miss Fortune herself when she is out of position. She is easy to kill once you reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Hwei-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "MissFortune", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "938b595d32351b77e594f0b9ac92fe6ab0a52efa64faca753b3c2e8a4f5f8e73",
+      "tips": [
+        {
+          "id": "adc:Hwei:Sivir:0",
+          "text": "Use Gaze of the Abyss or Grim Visage to catch Sivir, but bait out Spell Shield first with a cheaper spell.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Sivir-E", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Hwei:Sivir:1",
+          "text": "Sivir is slowed and pinned down by Crushing Maw; follow up while she is stuck.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 15 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "adc:Hwei:Sivir:2",
+          "text": "Dodge Boomerang Blade. If it hits you on the way out, stay out of its path on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Hwei:Sivir:3",
+          "text": "Do not leave Sivir alone with the wave. Ricochet pushes fast, so clear it and keep your turret safe.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sivir-W", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Hwei:Sivir:4",
+          "text": "Use Severing Bolt on Sivir when she is alone or stuck, because it hits harder then.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "isolated", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4eb4c59026900dc71a3b0c4defac5d0443d4c97d10a48acfec79c75e0c558332",
+      "tips": [
+        {
+          "id": "adc:Hwei:Smolder:0",
+          "text": "Hit Smolder with a Subject: Disaster spell early. He is weak before he has stacked up, so zone him from last-hitting.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Hwei-Q", "start": 19, "end": 36 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Hwei:Smolder:1",
+          "text": "Use Crushing Maw to pull Smolder in, or Gaze of the Abyss to root him, then follow up with Severing Bolt.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Hwei:Smolder:2",
+          "text": "Hit Smolder with two different spells in a row. The second one triggers your signature explosion on him.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Hwei:Smolder:3",
+          "text": "Hit Smolder with the Grim Visage fear when he flies in, as it stops him from escaping or trading.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a14bd6751e517b9c2926cc418952dd9f7438395e924bd6118e5d3a5d1c416614",
+      "tips": [
+        {
+          "id": "adc:Hwei:Yunara:0",
+          "text": "Hit Yunara with Crushing Maw to pull her in and slow her. It has a delay, so aim where she is walking.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Hwei:Yunara:1",
+          "text": "Use Gaze of the Abyss to root Yunara when she steps forward, then follow with Severing Bolt for big damage.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Yunara", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Hwei:Yunara:2",
+          "text": "Poke Yunara with Devastating Fire from range while she has few Unleash stacks. Minions in the line will stop it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Hwei:Yunara:3",
+          "text": "Respect Yunara once she turns on her ultimate, since she hits fast and can dash. Keep your Grim Visage ready to stop her.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Hwei:Yunara:4",
+          "text": "Stay out of the long line of Yunara's prayer bead; being slowed leaves you open to her attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

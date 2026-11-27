@@ -1,0 +1,1001 @@
+{
+  "schemaVersion": 1,
+  "champion": "Maokai",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "91f2bee61a185e92faa29c780956eea359d45a1a94f34444d0a000f107994511",
+      "tips": [
+        {
+          "id": "support:Maokai:general:0",
+          "text": "Dash onto an enemy with Twisted Advance, then follow with Bramble Smash. Maokai can't be targeted mid-dash, so it also dodges spells.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 24, "end": 39 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 58, "end": 71 },
+            { "kind": "champion", "key": "Maokai", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Maokai:general:1",
+          "text": "Toss Sapling Toss into brush when you can. It lasts longer and hurts more, but don't stack several in the same spot.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Maokai:general:2",
+          "text": "Place saplings along the paths enemies walk, such as jungle entrances. They chase the first enemy who gets close and leave that enemy slowed.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 134, "end": 140 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Maokai:general:3",
+          "text": "Aim Nature's Grasp from the side or through the fog. The longer the wall travels, the longer enemies stay rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Maokai:general:4",
+          "text": "Cast your abilities often and take enemy spells in front of your carry. Each one shortens the cooldown on Sap Magic, which heals you on your next basic attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 106,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Maokai:general:5",
+          "text": "Use Bramble Smash when enemies stand close to you. It knocks them back, so you can peel a diver off your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "da2c0b9037a3fd92097877dde34c76bb698d4f20bed52c3fe45047e9bb9cc991",
+      "tips": [
+        {
+          "id": "support:Maokai:Bard:0",
+          "text": "Walk over Bard's shrines to crush them; enemies who step on one destroy it, so deny the healing and speed to his partner.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Maokai:Bard:1",
+          "text": "Hit Bard with Twisted Advance when he steps up to poke, then follow with Bramble Smash while he is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Maokai-W", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 73, "end": 86 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Maokai:Bard:2",
+          "text": "Toss Sapling Toss into brush before a fight; it lasts longer and hurts and slows more than one tossed in the open.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Maokai:Bard:3",
+          "text": "Cosmic Binding stuns if it hits a wall or a second target, so stand away from walls and from your minions or partner when his bolt is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Maokai:Bard:4",
+          "text": "Use Twisted Advance to dodge Cosmic Binding; you can't be targeted while you dash.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Bard-Q", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Maokai:Bard:5",
+          "text": "Keep casting spells and hitting with Sapling Toss so Sap Magic heals you often; it keeps you healthy against Bard's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 37, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 53,
+              "end": 62
+            },
+            { "kind": "champion", "key": "Bard", "start": 109, "end": 113 },
+            { "kind": "keyword", "key": "poke", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Maokai:Bard:6",
+          "text": "When Bard roams through a Magical Journey portal, you can follow through it if it looks safe, or punish his partner left alone.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Bard-E", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Maokai:Bard:7",
+          "text": "Save Nature's Grasp for a flank or a Bard who is out of position; his Tempered Fate can make it miss by freezing the target.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Bard", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Bard-R", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4d5d5da1363ddcd46718a2f9b3c9e4be90b091141b5f9efb0e017cd1a21e6e8b",
+      "tips": [
+        {
+          "id": "support:Maokai:Braum:0",
+          "text": "Throw Sapling Toss into brush near the lane to set a trap; it chases and slows whoever walks close, and Braum has to stop to deal with it.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 },
+            { "kind": "champion", "key": "Braum", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Maokai:Braum:1",
+          "text": "Use Twisted Advance to reach Braum when he steps up, then follow with Bramble Smash while he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Braum", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 70, "end": 83 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Maokai:Braum:2",
+          "text": "Do not throw Bramble Smash or Sapling Toss into Braum while his Unbreakable is up; his shield destroys them. Wait for it to drop.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Maokai-E", "start": 30, "end": 42 },
+            { "kind": "champion", "key": "Braum", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Braum-E", "start": 64, "end": 75 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Maokai:Braum:3",
+          "text": "Twisted Advance makes you untargetable as you dash, so use it to dodge Braum's Winter's Bite or to escape his stun.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Braum", "start": 71, "end": 76 },
+            { "kind": "ability", "key": "Braum-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Maokai:Braum:4",
+          "text": "Aim Nature's Grasp from a distance or from the side so Braum cannot dodge it easily; the farther it travels, the longer the root.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Braum", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f04af7d0108c65001bceef40a3d3f2d7060d389622fe0f10da432527b321279c",
+      "tips": [
+        {
+          "id": "support:Maokai:Karma:0",
+          "text": "Use Twisted Advance to close the gap on Karma; you can't be targeted while dashing and she has few ways to stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Karma", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Maokai:Karma:1",
+          "text": "Toss Sapling Toss into bushes Karma walks near. It chases her and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Karma", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Maokai:Karma:2",
+          "text": "Stay out of Karma's Inner Flame line, especially behind minions, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Karma-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Maokai:Karma:3",
+          "text": "Move out of the circle Karma's Mantra leaves after Inner Flame; it hurts when it bursts.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Karma-R", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Karma-Q", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Maokai:Karma:4",
+          "text": "Use Bramble Smash when Karma is close to knock her back and hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "22f3ccca625219d5d363f0a8d11b3d449a5556775d5070ed72d2d343096a9e32",
+      "tips": [
+        {
+          "id": "support:Maokai:Leona:0",
+          "text": "Keep Bramble Smash for when Leona dashes in; enemies close to you are knocked back and stunned, which breaks her engage.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Leona", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Maokai:Leona:1",
+          "text": "Toss Sapling Toss into brush before she walks in; it hits harder and slows her, so she can't easily reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Maokai:Leona:2",
+          "text": "Use Twisted Advance to reach Leona or her carry when she is out of position. You can't be targeted while you dash.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Leona", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Maokai:Leona:3",
+          "text": "Aim Nature's Grasp at a lane or flank she can't see coming. The farther it travels, the longer the root.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Maokai:Leona:4",
+          "text": "Don't trade into Eclipse while she has her shield up. Wait for it to end, then Bramble Smash her.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6921151cc572b722bdda3fb601a83a1e7570b4f28195181bba3344288f555531",
+      "tips": [
+        {
+          "id": "support:Maokai:Lulu:0",
+          "text": "Dash onto Lulu with Twisted Advance when she steps up; it roots her and you are untargetable while you travel, so her spells miss.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Maokai-W", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Maokai:Lulu:1",
+          "text": "Toss a sapling into the brush with Sapling Toss. It slows and damages anyone who walks near it, which punishes Lulu for stepping up to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 35, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 },
+            { "kind": "champion", "key": "Lulu", "start": 111, "end": 115 },
+            { "kind": "keyword", "key": "poke", "start": 135, "end": 139 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Maokai:Lulu:2",
+          "text": "Keep hitting Lulu or her partner with spells so Sap Magic comes back sooner. Then attack to heal back what her poke took.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 13, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 48,
+              "end": 57
+            },
+            { "kind": "keyword", "key": "poke", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Maokai:Lulu:3",
+          "text": "Aim Nature's Grasp from far away so the roots last longer. Lulu can still polymorph you, so cast it when she has used Whimsy.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Lulu-W", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Maokai:Lulu:4",
+          "text": "Use Bramble Smash on enemies close to you. It knocks them back and stuns them, so use it to break up a dive on you.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f92b4a0d9777d2bcd2f17ab672ca4a663a63f1edf28b5316c3f179d5684b080c",
+      "tips": [
+        {
+          "id": "support:Maokai:Lux:0",
+          "text": "Use Twisted Advance to reach Lux when she misses Light Binding; the root gives your team time to burst her.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Lux-Q", "start": 49, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Maokai:Lux:1",
+          "text": "Twisted Advance makes you untargetable while you dash, so use it to dodge Light Binding or Final Spark and still reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Lux-Q", "start": 74, "end": 87 },
+            { "kind": "ability", "key": "Lux-R", "start": 91, "end": 102 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Maokai:Lux:2",
+          "text": "Toss a Sapling into the brush before you step in. A brush Sapling hurts more and slows, and it also shows you if Lux is hiding there.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 },
+            { "kind": "champion", "key": "Lux", "start": 113, "end": 116 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Maokai:Lux:3",
+          "text": "Hit Lux with Bramble Smash when she walks close. It knocks her back and slows her, so she can't stay near to poke.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 13, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 },
+            { "kind": "keyword", "key": "poke", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Maokai:Lux:4",
+          "text": "Fire Nature's Grasp from far away or from a flank. Lux can step aside from a wall she sees coming, so a surprise angle works better.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Lux", "start": 51, "end": 54 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Maokai:Lux:5",
+          "text": "Her Light Binding stops at the first two enemies it hits. Stay behind a minion in its path, or walk beside it, so it doesn't land on you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d93fa7cb4c6e4e1c0ef338da8ed6e719260bfebfe0e023da0ca4e1ae4ee0e5ba",
+      "tips": [
+        {
+          "id": "support:Maokai:Milio:0",
+          "text": "Dash onto Milio with Twisted Advance when he is away from his carry; the root holds him still for your allies to follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Maokai-W", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Maokai:Milio:1",
+          "text": "Look for Milio when he is alone. Without allies near him he has little way to escape, so Twisted Advance can lock him down.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Maokai-W", "start": 89, "end": 104 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Maokai:Milio:2",
+          "text": "Toss a Sapling Toss into the brush; it chases whoever walks close and slows them. Milio's team will think twice about stepping in.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 },
+            { "kind": "champion", "key": "Milio", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Maokai:Milio:3",
+          "text": "Hold Nature's Grasp until Milio's Breath of Life is spent; it cleanses roots.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Milio", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Milio-R", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Maokai:Milio:4",
+          "text": "Use Bramble Smash when Milio walks up close; it knocks him back and slows him, so he cannot poke you freely.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 },
+            { "kind": "keyword", "key": "poke", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "83b1b071570ee401a510813cae15b20f576ec3ecabe976c0df9924864192e812",
+      "tips": [
+        {
+          "id": "support:Maokai:Nami:0",
+          "text": "Dash onto Nami with Twisted Advance when she misses Aqua Prison; she is rooted and has little left to escape with.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Maokai-W", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "Nami-Q", "start": 52, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Maokai:Nami:1",
+          "text": "Use Twisted Advance to dodge her bubble: Maokai is untargetable while dashing, so time it as Aqua Prison is about to land.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Maokai", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Nami-Q", "start": 93, "end": 104 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Maokai:Nami:2",
+          "text": "Toss a Sapling Toss into brush near her lane so it chases and slows her; it hurts more than one in the open.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Maokai:Nami:3",
+          "text": "Bramble Smash knocks back enemies close to you and slows them, so use it to peel when her team dives onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Maokai:Nami:4",
+          "text": "Her Tidal Wave travels slowly; step out of its path instead of wasting spells.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Maokai:Nami:5",
+          "text": "Wait out Tidecaller's Blessing before trading with her carry; it only lasts a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 9, "end": 30 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "01bf9a617c30405afde101f20ec10923c485f4096e546bbe83b9f6083d4be078",
+      "tips": [
+        {
+          "id": "support:Maokai:Nautilus:0",
+          "text": "Stay out of Dredge Line range and keep a minion between you and Nautilus; the anchor stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 64, "end": 72 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Maokai:Nautilus:1",
+          "text": "Use Twisted Advance to dodge his hook or ultimate when it is about to land; you are untargetable while you dash.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Maokai:Nautilus:2",
+          "text": "When he drags himself in, hit him with Bramble Smash; it knocks nearby enemies back and slows them, so you get space.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Maokai:Nautilus:3",
+          "text": "Toss a Sapling into brush on the path he walks; it chases him and slows him if he comes close.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Maokai:Nautilus:4",
+          "text": "Trade with Sap Magic when he uses abilities on you; each spell that hits you shortens its cooldown, so keep basic attacking.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 11,
+              "end": 20
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Maokai:Nautilus:5",
+          "text": "Use Nature's Grasp from a flank on him once he commits to a fight; it is hard for him to avoid.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cac791fccf331b8ed79054a233f4cce5ecc73290157f3530882198eb8665510a",
+      "tips": [
+        {
+          "id": "support:Maokai:Pantheon:0",
+          "text": "Use Twisted Advance on Pantheon when he steps up, and follow with Bramble Smash while he is rooted. He cannot jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 66, "end": 79 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Maokai:Pantheon:1",
+          "text": "Do not waste spells on Pantheon while he braces with Aegis Assault. He is immune to damage from the front, so wait it out or hit him from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Maokai:Pantheon:2",
+          "text": "Toss a Sapling Toss into the brush to guard your lane. It chases Pantheon if he walks close, and it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 65, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Maokai:Pantheon:3",
+          "text": "Keep your health up when Pantheon holds his Comet Spear charge. A thrown spear hits much harder against low health.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Maokai:Pantheon:4",
+          "text": "Save Nature's Grasp for when Pantheon lands with Grand Starfall. The roots hold him in place and your team can fight him.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1650a84b77d4f4501f5a9de58523e2b4108267ec64abdfcf60d5a09c6fc3c6f6",
+      "tips": [
+        {
+          "id": "support:Maokai:Pyke:0",
+          "text": "Use Sapling Toss on Pyke's approach path or in brush; it slows him and his Ghostwater Dive cannot dodge a sapling that is already waiting.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Pyke-W", "start": 75, "end": 90 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Maokai:Pyke:1",
+          "text": "Hit Pyke with Twisted Advance when he hooks a teammate or steps forward; it roots him and you are untargetable while you dash.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Maokai-W", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Maokai:Pyke:2",
+          "text": "Do not chase Pyke when he vanishes; he heals back damage while hidden. Back off and keep your lane partner close.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Maokai:Pyke:3",
+          "text": "Use Bramble Smash when Pyke walks up close; it knocks him back and slows him, which can cut his Bone Skewer short.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 96, "end": 107 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Maokai:Pyke:4",
+          "text": "Keep your allies healthy at level 6. Pyke's Death From Below can execute low-health targets, so use Nature's Grasp to stop him diving in.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Pyke-R", "start": 44, "end": 60 },
+            { "kind": "ability", "key": "Maokai-R", "start": 100, "end": 114 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "540a779713acdabea0358ed1858b3b1a9073c9a78f27c3a968a269ef81a25f45",
+      "tips": [
+        {
+          "id": "support:Maokai:Senna:0",
+          "text": "Use Twisted Advance on Senna when she steps up to poke or shoot; she is rooted and has no easy escape, so your team can punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Senna", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Maokai:Senna:1",
+          "text": "Toss a Sapling Toss into brush before the lane fight. Senna has long range, and a brush sapling slows and reveals her when it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Senna", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Maokai:Senna:2",
+          "text": "Bramble Smash does more damage to high-health targets and knocks back enemies standing close to you. Use it when Senna walks up to you.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 113, "end": 118 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Maokai:Senna:3",
+          "text": "Senna's Last Embrace roots after a short delay, so move out of the area before it goes off. Twisted Advance won't save you once it has gone off.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 8, "end": 20 },
+            { "kind": "ability", "key": "Maokai-W", "start": 92, "end": 107 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Maokai:Senna:4",
+          "text": "Use Nature's Grasp from a flank or from the brush so Senna cannot dodge it. The farther the brambles travel, the longer the root.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "afad6d37c0a986029bcac4bc0654cbd82d359d4f220a32aaa62f0fa014848923",
+      "tips": [
+        {
+          "id": "support:Maokai:Seraphine:0",
+          "text": "Dash onto Seraphine with Twisted Advance when she steps up to poke. She is rooted and cannot back away, and you are untargetable while dashing.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Maokai-W", "start": 25, "end": 40 },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Maokai:Seraphine:1",
+          "text": "Toss a Sapling into brush beside the lane. It lasts longer, hits harder and slows anyone who walks by.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Maokai:Seraphine:2",
+          "text": "Use Bramble Smash when Seraphine or her ally gets close. It knocks nearby enemies back and slows them, so you can disengage or set up a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Maokai:Seraphine:3",
+          "text": "Keep trading with spells to shorten Sap Magic's cooldown, then basic attack to heal. Being hit by her spells shortens it too.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 36,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Maokai:Seraphine:4",
+          "text": "Fire Nature's Grasp from a flank at level 6, ideally when she and her partner are bunched up. A long travel gives a longer root.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b7b2072e0ba4d20753d4aa3e9fdadf62d797bd8eddd28b35ed9fb41175ac6cc2",
+      "tips": [
+        {
+          "id": "support:Maokai:Sona:0",
+          "text": "Dash onto Sona with Twisted Advance; the root keeps her from running and your team can kill her.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Maokai-W", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Maokai:Sona:1",
+          "text": "Throw Sapling Toss into brush near the lane; it lasts longer and deals more damage, and Sona's range makes her walk near it.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Sona", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Maokai:Sona:2",
+          "text": "Sona's spells feed Sap Magic, so trade into her poke and attack her to heal back.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 19,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Maokai:Sona:3",
+          "text": "Use Bramble Smash when Sona steps close; it slows her and knocks her back.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sona", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Maokai:Sona:4",
+          "text": "Watch for her Power Chord attack; Hymn of Valor hits hard and Aria of Perseverance heals her partner, so kill Sona first.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Sona-passive",
+              "start": 14,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Sona-Q", "start": 34, "end": 47 },
+            { "kind": "ability", "key": "Sona-W", "start": 62, "end": 82 },
+            { "kind": "champion", "key": "Sona", "start": 110, "end": 114 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6950340b527bd401d6d6acfa28c7d0d1a287ade7c30a1020aef780d3b0af89ea",
+      "tips": [
+        {
+          "id": "support:Maokai:Thresh:0",
+          "text": "Watch Thresh's Death Sentence cast start and use Twisted Advance to dodge it; Maokai can't be targeted while dashing.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Maokai-W", "start": 49, "end": 64 },
+            { "kind": "champion", "key": "Maokai", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Maokai:Thresh:1",
+          "text": "Toss a Sapling Toss into a brush before Thresh walks through it. It chases him and slows him, and the brush version hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Thresh", "start": 40, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Maokai:Thresh:2",
+          "text": "Use Bramble Smash when Thresh walks up close. It knocks him back and slows him, which breaks up his hook-and-Flay combos.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Thresh", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Maokai:Thresh:3",
+          "text": "Root Thresh with Twisted Advance when he has used Death Sentence, then trade while he can't move.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Maokai-W", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Maokai:Thresh:4",
+          "text": "Hit Thresh with Nature's Grasp from far away so the root lasts longer. He can break out of it only by waiting it out.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Maokai-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

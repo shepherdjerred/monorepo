@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-11-27T04:20:27.107Z",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "capUsd": 60.9,
+  "stopReason": null,
+  "unitsPlanned": 2798,
+  "unitsDone": 2798,
+  "unitsStored": 2798,
+  "unitsFailedGeneration": 0,
+  "unitsFailedReferences": 0,
+  "failedReferenceExamples": [],
+  "spentUsd": 58.20253011499999,
+  "spendByStage": {
+    "generate": 41.88072654999999,
+    "generate-retry": 9.701948750000001,
+    "combos:generate": 1.9462046999999998,
+    "combos:escalate": 1.3695467499999998,
+    "triage": 3.3041033649999996
+  },
+  "seconds": 103,
+  "sets": 5376,
+  "tips": 27124,
+  "tipsPerSet": 5.045386904761905,
+  "tipsPerGeneralSet": 7.586363636363636,
+  "tipsPerMatchupSide": 4.936966640806827,
+  "hiddenTips": 481,
+  "combos": 265,
+  "glossaryEntries": 8,
+  "championFiles": 170,
+  "outputBytes": 13180696,
+  "stats": {}
+}

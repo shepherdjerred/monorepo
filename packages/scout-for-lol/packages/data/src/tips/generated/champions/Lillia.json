@@ -1,0 +1,768 @@
+{
+  "schemaVersion": 1,
+  "champion": "Lillia",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "b8eb9a647e0680127c78948ca88fa0eef0448d0b5e71d84af79daf318742ad3b",
+      "tips": [
+        {
+          "id": "jungle:Lillia:general:0",
+          "text": "Hit a champion or monster with any ability first; Dream-Laden Bough then burns their max Health over time and heals you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Lillia-passive",
+              "start": 50,
+              "end": 67
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Lillia:general:1",
+          "text": "Hit a champion before casting Lilting Lullaby, because it only puts enemies to sleep if they are carrying Dream Dust from your other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Lillia:general:2",
+          "text": "Aim Watch Out! Eep! so the enemy stands in the center of the strike, because that spot deals far more damage than the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Lillia:general:3",
+          "text": "Throw Swirlseed past a fleeing enemy; it keeps rolling until it hits someone, then leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 6, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Lillia:general:4",
+          "text": "Keep landing Blooming Blows on monsters and enemies to build Move Speed; you can walk while she swings.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-Q", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Lillia:general:5",
+          "text": "Hit the outer edge with Blooming Blows to deal extra true damage. Stay at that range when you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-Q", "start": 24, "end": 38 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Lillia:combo:0",
+          "name": "Wall hop with W",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Lillia-W" }],
+          "when": "When you want to cross a thin wall edge in the jungle to chase or escape.",
+          "whenRefs": [],
+          "text": "Watch Out! Eep! can't pass through terrain, but Lillia can hop over the edges of some thin walls if you aim just past them.",
+          "textRefs": [
+            { "kind": "ability", "key": "Lillia-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Lillia", "start": 48, "end": 54 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "dbeac1fcee9396c9c0de0655d79da404e116f037c688abd542ac92d970bffeaa",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Graves:0",
+          "text": "Hit Graves with Swirlseed from range to slow him; it rolls on until it hits someone, so aim it down his path.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Lillia-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Lillia:Graves:1",
+          "text": "Avoid jumping in with Watch Out! Eep! while Smoke Screen is up; you can't move during the windup and he will punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-W", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Graves-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Lillia:Graves:2",
+          "text": "Hit Graves with any ability before level 6 so Lilting Lullaby can put him to sleep; follow with a hit to wake him for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Lillia-R", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Lillia:Graves:3",
+          "text": "Stay close with Blooming Blows; Graves' shotgun is weak at point blank only if he can't dash, so fight when Quickdraw is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-Q", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Graves-E", "start": 108, "end": 117 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1b4c167bc7e7ec280f13b8020e960d90a85276629f7600e1e7a2d451060fad5c",
+      "tips": [
+        {
+          "id": "jungle:Lillia:JarvanIV:0",
+          "text": "Keep your distance from Jarvan's line between him and his Demacian Standard; walking through it gets you knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 58, "end": 75 },
+            { "kind": "keyword", "key": "knocked-up", "start": 105, "end": 115 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Lillia:JarvanIV:1",
+          "text": "Land Swirlseed on Jarvan as he approaches; the slow lets you kite him and keep your Blooming Blows stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Lillia:JarvanIV:2",
+          "text": "Do not fight inside Cataclysm's terrain unless you are winning; it traps you with him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 20, "end": 29 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Lillia:JarvanIV:3",
+          "text": "Hit Jarvan with an ability first so Dream Dust is on him, then use Lilting Lullaby to put him to sleep.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3200bbb46e647e67b0faebabb8610f0bd52a56774fe9c39335d1e68574634fb0",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Kayn:0",
+          "text": "Roll Swirlseed at Kayn when he steps close; it slows him and shows where he is. Then follow up with Blooming Blows.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Kayn", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 100, "end": 114 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Lillia:Kayn:1",
+          "text": "Dodge Blade's Reach so Kayn can't reach you with a long Umbral Trespass.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Kayn-R", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Lillia:Kayn:2",
+          "text": "Watch the terrain edge for the warning that Kayn is in a wall near you, and be ready to fight when he comes out.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Lillia:Kayn:3",
+          "text": "Hit Kayn with an ability first so Dream Dust is on him, then use Lilting Lullaby to put him to sleep.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Lillia-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a9268442cea4aea2279557a268e228a0d5527f31c17ef9648dcbe2b92cb16ff2",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Khazix:0",
+          "text": "Stay near minions and allies so Kha'Zix cannot get the bonus damage from Taste Their Fear on you.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 73, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Lillia:Khazix:1",
+          "text": "Swing Blooming Blows when Kha'Zix leaps onto you, and then use Swirlseed to slow him as he tries to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Khazix", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Lillia-E", "start": 63, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Lillia:Khazix:2",
+          "text": "Fight Kha'Zix right after he uses Leap, because it has a long cooldown and he is then easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Lillia:Khazix:3",
+          "text": "Use Lilting Lullaby on him once Dream Dust is on him to put him to sleep, then follow up with damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6c3fa5e051abeb72f2d020e01383f23ab1e9654fbe0750d22ca54d23c7b70035",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Kindred:0",
+          "text": "Hit Kindred with Swirlseed to slow her. It also reveals her, so you can chase her down.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lillia-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Lillia:Kindred:1",
+          "text": "Kindred is fragile, so land the centre of Watch Out! Eep! on her when she stops to fight.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Lillia-W", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Lillia:Kindred:2",
+          "text": "Don't use Lilting Lullaby on a team that has Lamb's Respite ready, or they can sit in it and live.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Kindred-R", "start": 45, "end": 59 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5a7dbe666333bd36da9f97dc928a35a98e063dda6ececc144e5ee0d3ceb74090",
+      "tips": [
+        {
+          "id": "jungle:Lillia:LeeSin:0",
+          "text": "Dodge Sonic Wave if you can; without it Lee Sin cannot dash onto you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Lillia:LeeSin:1",
+          "text": "Land Swirlseed on Lee Sin to slow him, then keep your distance and use Blooming Blows when he gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 71, "end": 85 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Lillia:LeeSin:2",
+          "text": "Lee Sin is weak to magic damage, so your abilities are good for trading against him.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Lillia:LeeSin:3",
+          "text": "Put Lilting Lullaby on Lee Sin only after Dream Dust is on him, then hit him while he sleeps.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7edffcaaf3267ffe51d0570019a729dfad8be49dce1befbeec078841a1c2f955",
+      "tips": [
+        {
+          "id": "jungle:Lillia:MasterYi:0",
+          "text": "Hit Master Yi with Swirlseed to make him slowed before he reaches you; he is easier to kite until he uses Highlander.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Lillia-E", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 106, "end": 116 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Lillia:MasterYi:1",
+          "text": "Put Master Yi to sleep with Lilting Lullaby once he has Dream Dust on him and he commits to your team. Wait until he is close.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Lillia-R", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Lillia:MasterYi:2",
+          "text": "Highlander stops slows, so save Swirlseed for when it is down and stay mobile with Blooming Blows.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Lillia-E", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Lillia:MasterYi:3",
+          "text": "Aim at where Master Yi will land after Alpha Strike, since the centre hits hardest with Watch Out! Eep!",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 13, "end": 22 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 39, "end": 51 },
+            { "kind": "ability", "key": "Lillia-W", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a493633a8ce8f78b2be1ee5c5509d2910f6f89b70c721ca1fa5f29eb6213d0be",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Naafiri:0",
+          "text": "Hit Naafiri with Swirlseed early in a fight; it slows her, so she has a harder time diving onto you or running away.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lillia-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Lillia:Naafiri:1",
+          "text": "Aim at her walking path so she takes the harder-hitting center of Watch Out! Eep!",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-W", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Lillia:Naafiri:2",
+          "text": "Use Lilting Lullaby only after one of your abilities has hit Naafiri. It only works on enemies who already have Dream Dust.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Lillia:Naafiri:3",
+          "text": "Hit Naafiri with Blooming Blows when she dives in. It stacks Move Speed for you and deals damage to her and her packmates.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "807cb3fc639464ff1a630fb71b60a69b2c307bc58c8b0d159621e54a58e970e8",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Nocturne:0",
+          "text": "Keep Swirlseed ready to hit Nocturne when he comes in; it leaves him slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Nocturne", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Lillia:Nocturne:1",
+          "text": "Watch for Nocturne's Shroud of Darkness before casting Lilting Lullaby; the shield blocks it.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 21, "end": 39 },
+            { "kind": "ability", "key": "Lillia-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Lillia:Nocturne:2",
+          "text": "Do not trade with Nocturne in a long fight. Run out of range of Unspeakable Horror so the tether breaks and does not fear you.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 64, "end": 82 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Lillia:Nocturne:3",
+          "text": "Stay near your team when Nocturne uses Paranoia; his dash cannot be stopped by crowd control and picks off a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "45e01f3a2cf421f6a64c7314e1be30952586665fa40de335b3702918c1871032",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Shyvana:0",
+          "text": "Hit Shyvana with Swirlseed early and keep your distance; she is weak when she cannot get close.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lillia-E", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Lillia:Shyvana:1",
+          "text": "Use Blooming Blows to stack move speed, then kite away from Shyvana instead of trading toe to toe.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shyvana", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Lillia:Shyvana:2",
+          "text": "Keep Lilting Lullaby for when Shyvana is in Dragon Form and diving you; Dream Dust must already be on her.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Lillia:Shyvana:3",
+          "text": "Hit her while her Fury is low; she cannot turn into a dragon and is much easier to fight.",
+          "refs": [],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8fccaec94a3c6e53eff3a6d45fd1bebe4714558fbb24b79a62da390600ae815b",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Skarner:0",
+          "text": "Kite Skarner with Swirlseed and Blooming Blows. Keep your distance, since he wants to stick to you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Lillia-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Lillia:Skarner:1",
+          "text": "Stay away from walls when Skarner charges. If he drags you into one, you are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Lillia:Skarner:2",
+          "text": "Aim the middle of the strike at Skarner when he is stuck to a target, because the center hurts far more, using Watch Out! Eep!",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Lillia-W", "start": 111, "end": 126 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Lillia:Skarner:3",
+          "text": "Step out of the way of Impale, since it can be dodged. Keep a Dream Dust mark on him so Lilting Lullaby can reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Lillia-R", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6b1e9a9531d1176b5041b5d07da5ae4aad15219c4999ceed51a70c1861a92787",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Sylas:0",
+          "text": "Stay away from Sylas when Abduct is ready; he pulls himself onto you and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Lillia:Sylas:1",
+          "text": "Sylas can steal Lilting Lullaby, so fight him when his Hijack is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Lillia-R", "start": 16, "end": 31 },
+            { "kind": "ability", "key": "Sylas-R", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Lillia:Sylas:2",
+          "text": "Do not trust Sylas's low health bar; Kingslayer heals him back up when he hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Lillia:Sylas:3",
+          "text": "Use Swirlseed to slow Sylas when he closes in, then back away and avoid his Chain Lash.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e5b29f8b597f77cf220cacfdc5d81810a71af7ddc70e459cd8517299c7efaeaa",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Talon:0",
+          "text": "Keep Swirlseed ready for when Talon jumps in; it leaves him slowed and easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Lillia:Talon:1",
+          "text": "Talon wants to burst you from behind, so stay near walls you can use and keep Blooming Blows ready to hit him when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 78, "end": 92 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Lillia:Talon:2",
+          "text": "When Talon vanishes with Shadow Assault, he is escaping or about to strike; do not chase blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Lillia:Talon:3",
+          "text": "Hit Talon with your spells first so Lilting Lullaby can work, then put him to sleep and hit him to wake him for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lillia-R", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb6a49968f417bc3a30037a44baf368e06d44c9cba18a040e26ed5c31e3b2e86",
+      "tips": [
+        {
+          "id": "jungle:Lillia:Viego:0",
+          "text": "Aim Swirlseed at Viego when he comes at you. It slows him and reveals him even if he is hiding in Harrowed Path's Mist.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Viego", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Viego-E", "start": 98, "end": 111 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Lillia:Viego:1",
+          "text": "Stay out of a straight line with Viego when he is charging Spectral Maw. It stops at the first target, so put a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Viego-W", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Lillia:Viego:2",
+          "text": "Fight Viego with your Dream Dust ticking; the healing keeps you going through his drain. Hit him with Blooming Blows to build speed for chasing or escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 102, "end": 116 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Lillia:Viego:3",
+          "text": "Do not fight Viego right after a kill. Once he possesses a dead champion he is untargetable for a moment and then gets a free Heartbreaker.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Viego-R", "start": 126, "end": 138 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Lillia:Viego:4",
+          "text": "Keep your Lilting Lullaby for when he commits to a fight. Dream Dust must be on him first, so hit him with an ability beforehand.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Lillia:Viego:5",
+          "text": "Stay healthy: Viego's Heartbreaker targets the lowest-health champion, and his Blade of the Ruined King hits harder against high-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Viego-R", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Viego-Q", "start": 79, "end": 103 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4002758005972ffff7037e2be45bf4b9cc0cbac07ac73afa58b2460e0d90eda9",
+      "tips": [
+        {
+          "id": "jungle:Lillia:XinZhao:0",
+          "text": "Keep moving and kite Xin Zhao with Blooming Blows; her speed bonus lets you stay out of his reach.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Lillia:XinZhao:1",
+          "text": "Hit Xin Zhao with Swirlseed early; it slows him, so his Audacious Charge follow-up is easier to punish.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Lillia-E", "start": 18, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Lillia:XinZhao:2",
+          "text": "Stay away when his Three Talon Strike is ready; its third attack knocks you up and leaves you open.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Lillia:XinZhao:3",
+          "text": "Use Lilting Lullaby on Xin Zhao only after Dream Dust is on him. Then your team can wake him with damage for extra burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}
