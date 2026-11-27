@@ -230,7 +230,7 @@ export async function fetchTimelineCoverage(options: {
   });
 }
 
-const TimelineEventReadSchema = TimelineEventLakeRowSchema.omit({
+export const TimelineEventReadSchema = TimelineEventLakeRowSchema.omit({
   match_id: true,
   month: true,
   observed_at: true,
@@ -328,25 +328,26 @@ export async function fetchTimelineEventPage(options: {
   });
 }
 
-const TimelineFrameReadSchema = TimelineParticipantFrameLakeRowSchema.omit({
-  match_id: true,
-  month: true,
-  observed_at: true,
-}).extend({
-  frame_index: LakeIntSchema,
-  frame_timestamp_ms: LakeIntSchema,
-  participant_id: LakeIntSchema,
-  position_x: LakeIntSchema,
-  position_y: LakeIntSchema,
-  current_gold: LakeIntSchema,
-  total_gold: LakeIntSchema,
-  // Null for a timeline the Scout Client built.
-  gold_per_second: LakeIntSchema.nullable(),
-  minions_killed: LakeIntSchema,
-  jungle_minions_killed: LakeIntSchema,
-  level: LakeIntSchema,
-  xp: LakeIntSchema,
-});
+export const TimelineFrameReadSchema =
+  TimelineParticipantFrameLakeRowSchema.omit({
+    match_id: true,
+    month: true,
+    observed_at: true,
+  }).extend({
+    frame_index: LakeIntSchema,
+    frame_timestamp_ms: LakeIntSchema,
+    participant_id: LakeIntSchema,
+    position_x: LakeIntSchema,
+    position_y: LakeIntSchema,
+    current_gold: LakeIntSchema,
+    total_gold: LakeIntSchema,
+    // Null for a timeline the Scout Client built.
+    gold_per_second: LakeIntSchema.nullable(),
+    minions_killed: LakeIntSchema,
+    jungle_minions_killed: LakeIntSchema,
+    level: LakeIntSchema,
+    xp: LakeIntSchema,
+  });
 
 export type TimelineFrameRead = Omit<
   TimelineParticipantFrameLakeRow,

@@ -12,6 +12,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   configureConsumerProfileFeatureTest,
+  createTrackedPlayer,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
@@ -52,35 +53,16 @@ function puuidOf(participantId: number): LeaguePuuid {
   return testPuuid(`story-participant-${participantId.toString()}`);
 }
 
-async function trackedPlayer(options: {
+function trackedPlayer(options: {
   guildId: DiscordGuildId;
   alias: string;
   puuid: LeaguePuuid;
 }) {
-  const row = await trpc.prisma.player.create({
-    data: {
-      serverId: options.guildId,
-      alias: options.alias,
-      creatorDiscordId: actor,
-      createdTime: created,
-      updatedTime: created,
-    },
+  return createTrackedPlayer(trpc.prisma, {
+    ...options,
+    creatorDiscordId: actor,
+    createdAt: created,
   });
-  await trpc.prisma.account.create({
-    data: {
-      serverId: options.guildId,
-      playerId: row.id,
-      alias: `${options.alias} account`,
-      puuid: options.puuid,
-      region: "AMERICA_NORTH",
-      creatorDiscordId: actor,
-      riotGameName: options.alias,
-      riotTagLine: "NA1",
-      createdTime: created,
-      updatedTime: created,
-    },
-  });
-  return row;
 }
 
 registerConsumerProfileFeatureTestLifecycle({

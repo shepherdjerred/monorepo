@@ -1,10 +1,15 @@
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import type {
+  DiscordAccountId,
+  DiscordGuildId,
+  LeaguePuuid,
+} from "@scout-for-lol/data";
 import { afterAll, beforeAll, beforeEach } from "vitest";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   addFlagOverride,
   resetFlagOverrides,
@@ -81,4 +86,45 @@ export function registerConsumerProfileFeatureTestLifecycle(options: {
       await options.feature.restore();
     }
   });
+}
+
+/** A tracked player with one Riot account, as the consumer routes find them. */
+export async function createTrackedPlayer(
+  prisma: ExtendedPrismaClient,
+  options: {
+    guildId: DiscordGuildId;
+    alias: string;
+    puuid: LeaguePuuid;
+    creatorDiscordId: DiscordAccountId;
+    createdAt: Date;
+    discordId?: DiscordAccountId;
+  },
+) {
+  const row = await prisma.player.create({
+    data: {
+      serverId: options.guildId,
+      alias: options.alias,
+      creatorDiscordId: options.creatorDiscordId,
+      ...(options.discordId === undefined
+        ? {}
+        : { discordId: options.discordId }),
+      createdTime: options.createdAt,
+      updatedTime: options.createdAt,
+    },
+  });
+  await prisma.account.create({
+    data: {
+      serverId: options.guildId,
+      playerId: row.id,
+      alias: `${options.alias} account`,
+      puuid: options.puuid,
+      region: "AMERICA_NORTH",
+      creatorDiscordId: options.creatorDiscordId,
+      riotGameName: options.alias,
+      riotTagLine: "NA1",
+      createdTime: options.createdAt,
+      updatedTime: options.createdAt,
+    },
+  });
+  return row;
 }

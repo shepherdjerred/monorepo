@@ -21,6 +21,8 @@ import {
 import {
   fullMatchRowsSql,
   MatchParticipantRowSchema,
+  TimelineEventReadSchema,
+  TimelineFrameReadSchema,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 
@@ -38,26 +40,27 @@ export const STORY_EVENT_TYPES = [
   "SKILL_LEVEL_UP",
 ] as const;
 
-const StoryEventSchema = z.object({
-  event_id: z.string(),
-  event_timestamp_ms: LakeIntSchema,
-  event_type: z.string(),
-  participant_id: LakeIntSchema.nullable(),
-  killer_id: LakeIntSchema.nullable(),
-  victim_id: LakeIntSchema.nullable(),
-  team_id: LakeIntSchema.nullable(),
-  killer_team_id: LakeIntSchema.nullable(),
-  item_id: LakeIntSchema.nullable(),
-  before_id: LakeIntSchema.nullable(),
-  after_id: LakeIntSchema.nullable(),
-  skill_slot: LakeIntSchema.nullable(),
-  level_up_type: z.string().nullable(),
-  building_type: z.string().nullable(),
-  lane_type: z.string().nullable(),
-  tower_type: z.string().nullable(),
-  monster_type: z.string().nullable(),
-  monster_sub_type: z.string().nullable(),
-  winning_team_id: LakeIntSchema.nullable(),
+/** The columns of a timeline event the story reads, as the lake read types them. */
+const StoryEventSchema = TimelineEventReadSchema.pick({
+  event_id: true,
+  event_timestamp_ms: true,
+  event_type: true,
+  participant_id: true,
+  killer_id: true,
+  victim_id: true,
+  team_id: true,
+  killer_team_id: true,
+  item_id: true,
+  before_id: true,
+  after_id: true,
+  skill_slot: true,
+  level_up_type: true,
+  building_type: true,
+  lane_type: true,
+  tower_type: true,
+  monster_type: true,
+  monster_sub_type: true,
+  winning_team_id: true,
 });
 
 export type StoryEvent = z.infer<typeof StoryEventSchema>;
@@ -69,11 +72,11 @@ const StoryAssistSchema = z.object({
 
 export type StoryAssist = z.infer<typeof StoryAssistSchema>;
 
-const StoryFrameSchema = z.object({
-  frame_timestamp_ms: LakeIntSchema,
-  participant_id: LakeIntSchema,
-  total_gold: LakeIntSchema,
-  level: LakeIntSchema,
+const StoryFrameSchema = TimelineFrameReadSchema.pick({
+  frame_timestamp_ms: true,
+  participant_id: true,
+  total_gold: true,
+  level: true,
 });
 
 export type StoryFrame = z.infer<typeof StoryFrameSchema>;
