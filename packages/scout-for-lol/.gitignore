@@ -22,6 +22,8 @@ junit.xml
 **/generated/
 !packages/data/generated/
 !packages/data/generated/permission-catalog.ts
+# Generated tips are committed content (scripts/generate-tips.ts), not build output.
+!packages/data/src/tips/generated/
 !packages/frontend/public/generated/
 !packages/frontend/public/generated/scout-showcase/
 !packages/frontend/public/generated/scout-showcase/*.png

@@ -2018,7 +2018,9 @@
       "version": "0.1.0",
       "dependencies": {
         "@scout-for-lol/domain": "workspace:*",
+        "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
+        "ai": "7.0.179",
         "chevrotain": "^13.0.0",
         "cron-parser": "^5.5.0",
         "date-fns": "^4.1.0",

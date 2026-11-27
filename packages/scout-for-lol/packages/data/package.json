@@ -35,7 +35,9 @@
     "remeda": "^2.21.2",
     "ts-pattern": "^5.7.0",
     "zod": "^4.4.3",
-    "@shepherdjerred/llm-runtime": "workspace:*"
+    "@shepherdjerred/llm-models": "workspace:*",
+    "@shepherdjerred/llm-runtime": "workspace:*",
+    "ai": "7.0.179"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",

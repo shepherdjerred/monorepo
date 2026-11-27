@@ -4,7 +4,9 @@ import {
   getAbilityFacts,
 } from "#src/data-dragon/ability-facts.ts";
 import { getChampionInfo } from "#src/data-dragon/champion.ts";
+import type { PatchChangeLine } from "#src/data-dragon/patch-changes-schema.ts";
 import type { ChampionId } from "#src/model/core/identifiers.ts";
+import { recentChampionChanges } from "#src/tips/patch-context.ts";
 import {
   getAllChampions,
   getChampionById,
@@ -24,6 +26,8 @@ export type ChampionGrounding = {
   tags: readonly string[];
   allytips: readonly string[];
   enemytips: readonly string[];
+  /** The champion's changes in the recent patches, newest first. */
+  recentChanges: readonly PatchChangeLine[];
 };
 
 const groundingCache = new Map<ChampionId, ChampionGrounding>();
@@ -61,6 +65,7 @@ export async function loadChampionGrounding(
     tags: info.tags,
     allytips: info.allytips,
     enemytips: info.enemytips,
+    recentChanges: recentChampionChanges(championId),
   };
   groundingCache.set(championId, grounding);
   return grounding;

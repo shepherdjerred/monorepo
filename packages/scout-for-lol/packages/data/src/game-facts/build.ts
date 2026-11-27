@@ -7,6 +7,7 @@ import {
   type GameFactEntry,
   type GameFactPart,
   type ItemFact,
+  type KeywordFact,
   type RuneFact,
   type SummonerSpellFact,
 } from "#src/game-facts/schema.ts";
@@ -86,8 +87,16 @@ export type RuneTreeSource = {
   }[];
 }[];
 
+/** A keyword from the tips glossary: a status such as "charmed". */
+export type KeywordSource = {
+  id: string;
+  term: string;
+  definition: string;
+};
+
 export type GameFactSources = {
   patch: string;
+  keywords: KeywordSource[];
   champions: ChampionSource[];
   abilityFacts: AbilityFactsSource[];
   items: Record<string, ItemSource>;
@@ -433,6 +442,25 @@ export function buildSummonerSpellFact(
   };
 }
 
+// --- Keywords ---------------------------------------------------------------
+
+export function buildKeywordFact(
+  patch: string,
+  keyword: KeywordSource,
+): KeywordFact {
+  return {
+    kind: "keyword",
+    patch,
+    key: keyword.id,
+    name: keyword.term,
+    description: keyword.definition,
+    facts: [],
+    parts: [],
+    icon: null,
+    keyFact: null,
+  };
+}
+
 // --- Everything -------------------------------------------------------------
 
 export function buildAllGameFacts(sources: GameFactSources): GameFact[] {
@@ -465,6 +493,9 @@ export function buildAllGameFacts(sources: GameFactSources): GameFact[] {
     ...items,
     ...buildRuneFacts(sources.patch, sources.runeTrees),
     ...spells,
+    ...sources.keywords
+      .toSorted((left, right) => left.id.localeCompare(right.id))
+      .map((keyword) => buildKeywordFact(sources.patch, keyword)),
   ].map((fact) => {
     const parsed = GameFactSchema.safeParse(fact);
     if (!parsed.success) {

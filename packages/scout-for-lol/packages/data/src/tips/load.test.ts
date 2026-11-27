@@ -120,6 +120,39 @@ describe("tip loaders", () => {
     ).toBeNull();
   });
 
+  test("hide a set a filter thinned below the minimum", async () => {
+    const [ahri, syndra] = await Promise.all([
+      loadChampionGrounding(AHRI),
+      loadChampionGrounding(SYNDRA),
+    ]);
+    const hash = computeTipInputHash(
+      FIXTURE_PROMPT_VERSION,
+      { kind: "matchup", lane: "middle", championIds: [AHRI, SYNDRA] },
+      [ahri, syndra],
+    );
+    const { forward } = ahriSyndraMidSets(hash);
+    const thinDirectory = await mkdtemp(`${tmpdir()}/scout-tips-thin-`);
+    await mkdir(`${thinDirectory}/matchup/middle`, { recursive: true });
+    await writeFile(
+      `${thinDirectory}/matchup/middle/Ahri.json`,
+      JSON.stringify({
+        schemaVersion: 1,
+        lane: "middle",
+        champion: AHRI,
+        sets: [{ ...forward, tips: forward.tips.slice(0, 2) }],
+      }),
+    );
+    const thin = createTipReader(thinDirectory);
+    expect(
+      await thin.getMatchupTips({
+        championId: AHRI,
+        opponentId: SYNDRA,
+        lane: "middle",
+      }),
+    ).toBeNull();
+    await rm(thinDirectory, { recursive: true, force: true });
+  });
+
   test("return null where the pruned matrix has nothing", async () => {
     const orianna = ChampionIdSchema.parse(61);
     expect(

@@ -1,0 +1,4 @@
+# Request cache of the tip generator (scripts/generate-tips.ts); local only.
+.tips-cache/
+# Raw eval and pipeline output (reports, judge verdicts, samples); attached to the PR that produced it.
+.tips-eval/

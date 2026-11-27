@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 157,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 157,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Block Shuriken Flip's throw with Wind Wall before Akali can dash to you, since the wall stops projectiles.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 157,
+              "slot": "W",
+              "name": "Wind Wall"
+            },
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "E",
+              "name": "Shuriken Flip"
+            }
+          ]
+        },
+        {
+          "text": "Do not chase Akali into Twilight Shroud; she turns invisible in the smoke, so wait for it to fade before you commit.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c0dd3afd4c9f298d281975f7908cc5c140fa8a5f985f63975304fb39fcd304fa",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

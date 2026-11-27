@@ -5,9 +5,11 @@ import { getChampionById } from "#src/model/riot/champion-registry.ts";
 import type { Lane } from "#src/model/riot/lane.ts";
 import { isTipSetStaleAgainstCurrentFacts } from "#src/tips/input-hash.ts";
 import {
+  GENERAL_TIPS_MIN,
   type GeneralTipFile,
   GeneralTipFileSchema,
   type GeneralTipSet,
+  MATCHUP_TIPS_MIN,
   type MatchupTipFile,
   MatchupTipFileSchema,
   type MatchupTipSet,
@@ -41,6 +43,13 @@ export type TipReader = {
 
 /** `16.23.1` → `16.23`. */
 export const CURRENT_TIP_PATCH = latestVersion.split(".").slice(0, 2).join(".");
+
+/** A set the filter thinned below the minimum is hidden, like a stale one. */
+function tooFewTips(set: MatchupTipSet | GeneralTipSet): boolean {
+  return (
+    set.tips.length < ("opponent" in set ? MATCHUP_TIPS_MIN : GENERAL_TIPS_MIN)
+  );
+}
 
 function toConsumerTips(set: MatchupTipSet | GeneralTipSet): ConsumerTips {
   return {
@@ -119,7 +128,10 @@ export function createTipReader(directory: string): TipReader {
   async function fresh(
     set: MatchupTipSet | GeneralTipSet | undefined,
   ): Promise<ConsumerTips | null> {
-    return set === undefined || (await isTipSetStaleAgainstCurrentFacts(set))
+    if (set === undefined || tooFewTips(set)) {
+      return null;
+    }
+    return (await isTipSetStaleAgainstCurrentFacts(set))
       ? null
       : toConsumerTips(set);
   }

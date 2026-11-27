@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 112,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 112,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Hold Gravity Field for when Akali dashes in; a slowed Akali cannot get away.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "W",
+              "name": "Gravity Field"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Poke her with Hextech Ray while she hides in Twilight Shroud, since area spells still reach her there.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "E",
+              "name": "Hextech Ray"
+            },
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            }
+          ]
+        }
+      ],
+      "inputHash": "d2edd9b6a0b1bfbfc59433b1a52417b3250fb3abae0f3d1682a45bf4c8d1c1a0",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 112,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Drop Gravity Field where Ahri must walk to reach her minions, so she is slowed while you poke her.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "W",
+              "name": "Gravity Field"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Don't walk into Charm's line for no reason; bait it out with a Hextech Ray first, then step up.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "E",
+              "name": "Hextech Ray"
+            }
+          ]
+        }
+      ],
+      "inputHash": "240e664cc39a0620235ed1aebd6206c32e1ee360176c90c6336f21e4b748dd82",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 112,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Use Gravity Field to slow and stun Zed as he walks in, then unload Hextech Ray on him while he is held.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "W",
+              "name": "Gravity Field"
+            },
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "E",
+              "name": "Hextech Ray"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Stay out of Zed's reach until his Living Shadow is used, since Shadow Slash then slows you only when the shadow hits you.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            }
+          ]
+        },
+        {
+          "text": "Hit Zed with Siphon Power when he steps in, so the shield absorbs his first burst of damage.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "Q",
+              "name": "Siphon Power"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c6b6086d55bc9e2b1cd83ee1969a4170956af0637e732dc15e347d2fcd75f6c8",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

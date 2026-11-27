@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 777,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 777,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Don't chase Akali into Twilight Shroud; she turns invisible inside the smoke.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            }
+          ]
+        },
+        {
+          "text": "Wait until Akali commits to Perfect Execution, then use Fate Sealed to catch her as she lands.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "R",
+              "name": "Perfect Execution"
+            },
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "R",
+              "name": "Fate Sealed"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c9ac591fa745c8c5e1811dcfd7b35cefed2e77948b2ca8ac48ca4bfb718e90e5",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 777,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Wait for Ahri to spend Charm, then dash onto her with Mortal Steel while she cannot escape.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "Q",
+              "name": "Mortal Steel"
+            },
+            { "kind": "ability", "champion": 103, "slot": "E", "name": "Charm" }
+          ]
+        },
+        {
+          "text": "Engage with Fate Sealed once Ahri's Spirit Rush is down, since she is far weaker without it.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "R",
+              "name": "Fate Sealed"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "R",
+              "name": "Spirit Rush"
+            }
+          ]
+        }
+      ],
+      "inputHash": "bbb37363feef972e7b5e3c2a4710b6843e6d888802a551b701a3e4e7fbd658de",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 777,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Stay out of Shadow Slash range; several slashes on you leave you slowed for longer.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Step in with Spirit Cleave once Zed has spent his Living Shadow, when he is most exposed.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "W",
+              "name": "Spirit Cleave"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c2b97b30e86d7454b6475e66529624abd26b8162ae601656c34cf6b3ef5074a2",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

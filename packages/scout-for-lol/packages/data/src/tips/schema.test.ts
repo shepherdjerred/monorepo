@@ -63,9 +63,9 @@ describe("tip schemas", () => {
     expect(
       MatchupTipSetSchema.safeParse({ ...forward, tips: [] }).success,
     ).toBe(false);
-    const fourTips = [...forward.tips, ...forward.tips.slice(0, 1)];
+    const tooMany = Array.from({ length: 21 }, () => forward.tips[0]);
     expect(
-      MatchupTipSetSchema.safeParse({ ...forward, tips: fourTips }).success,
+      MatchupTipSetSchema.safeParse({ ...forward, tips: tooMany }).success,
     ).toBe(false);
     const general = ahriMidGeneralSet(HASH);
     expect(

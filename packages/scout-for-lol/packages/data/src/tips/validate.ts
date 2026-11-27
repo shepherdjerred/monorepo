@@ -234,6 +234,31 @@ function checkAbilityNames(
   return issues;
 }
 
+/**
+ * A keyword cite only links a word in the text to its glossary entry, so a tip
+ * does not depend on one whose word the text lacks: drop it. A cite to an id
+ * the glossary does not have stays, and fails as a bad cite.
+ */
+export function dropAbsentKeywordCites(
+  tips: readonly Tip[],
+  glossary: ReadonlyMap<GlossaryId, GlossaryEntry>,
+): Tip[] {
+  return tips.map((tip) => {
+    const text = normalizeQuotes(tip.text);
+    const cites = tip.cites.filter((cite) => {
+      if (cite.kind !== "keyword") {
+        return true;
+      }
+      const entry = glossary.get(cite.id);
+      return (
+        entry === undefined ||
+        [entry.term, ...entry.aliases].some((term) => mentions(text, term))
+      );
+    });
+    return cites.length === tip.cites.length ? tip : { ...tip, cites };
+  });
+}
+
 export function validateTip(
   tip: Tip,
   context: TipValidationContext,
