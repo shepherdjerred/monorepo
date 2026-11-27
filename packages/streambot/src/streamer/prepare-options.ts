@@ -126,7 +126,9 @@ export function buildVideoPrepareOptions(
   return {
     width: size.width,
     height: size.height,
-    frameRate: stream.fps,
+    frameRate: outputFrameRate(stream, resolved),
+    ...(resolved.probedVideo?.interlaced === true ? { deinterlace: true } : {}),
+    ...(needsBt709Conversion(resolved) ? { convertColorToBt709: true } : {}),
     bitrateVideo: stream.bitrateKbps,
     bitrateVideoMax: stream.bitrateKbps * 2,
     bitrateAudio: stream.bitrateAudioKbps,
@@ -223,6 +225,81 @@ function isRotated(resolved: Pick<ResolvedSource, "probedVideo">): boolean {
   return rotation !== undefined && rotation !== 0;
 }
 
+/** Film, PAL and NTSC rates and their doubles: the cadences a source can be played back at exactly. */
+const STANDARD_FRAME_RATES = [
+  24_000 / 1001,
+  24,
+  25,
+  30_000 / 1001,
+  30,
+  48_000 / 1001,
+  48,
+  50,
+  60_000 / 1001,
+  60,
+  100,
+  120_000 / 1001,
+  120,
+] as const;
+
+/** 23.976 and 24 differ by 0.1%, so recognising a rate must be tighter than that. */
+const FRAME_RATE_MATCH_TOLERANCE = 0.0005;
+
+/** NTSC sits 0.1% under its integer rate, so a cap that close still counts as fitting. */
+const CAP_TOLERANCE = 0.002;
+
+/**
+ * The rate a video segment is encoded at — `-r`, the GPU subtitle canvas, and the rate Discord is
+ * told all read this one value. `stream.fps` is a cap, not a forced rate: forcing 30 made a
+ * 23.976 film judder (a 3:2 duplicate cadence) and halved 50/60p sport. The source's own rate
+ * plays when it fits under the cap; a faster source plays at the largest whole fraction of its
+ * rate that does (60 → 30, 50 → 25), so frames are dropped evenly rather than in a beat.
+ *
+ * Only a recognised standard rate is followed. ffprobe's average for a variable-rate phone or
+ * screen recording is an arbitrary number, and an unprobed source has none; both keep the cap,
+ * which is exactly the forced rate every segment used before.
+ */
+export function outputFrameRate(
+  stream: Pick<Config["stream"], "fps">,
+  resolved: Pick<ResolvedSource, "probedVideo">,
+): number {
+  const source = resolved.probedVideo?.frameRate;
+  if (source === undefined) return stream.fps;
+  const standard = STANDARD_FRAME_RATES.find(
+    (rate) => Math.abs(rate - source) / rate < FRAME_RATE_MATCH_TOLERANCE,
+  );
+  if (standard === undefined) return stream.fps;
+  // A cap within 0.2% of the source counts as fitting, so a configured 29.97 does not halve a
+  // 30 fps source.
+  const divisor = Math.max(
+    1,
+    Math.ceil(standard / (stream.fps * (1 + CAP_TOLERANCE))),
+  );
+  return standard / divisor;
+}
+
+/** ffprobe `color_space` values that mean the BT.601 matrix (625-line and 525-line). */
+const BT601_MATRICES = new Set(["bt470bg", "smpte170m"]);
+
+/**
+ * Convert to BT.709 limited range when the source is tagged as something else we can convert:
+ * a BT.601 matrix (SD material, which would otherwise be decoded with HD coefficients after the
+ * upscale and shift hue), or full range on a tagged BT.709 matrix. Untagged sources are left
+ * alone: both scalers assume BT.601 for an untagged frame, which would wrongly "convert" the
+ * untagged HD majority. HDR is already tonemapped to BT.709.
+ */
+function needsBt709Conversion(
+  resolved: Pick<ResolvedSource, "probedVideo" | "hdr">,
+): boolean {
+  const video = resolved.probedVideo;
+  if (video === undefined || resolved.hdr === true) return false;
+  const colorSpace = video.colorSpace ?? "";
+  return (
+    BT601_MATRICES.has(colorSpace) ||
+    (colorSpace === "bt709" && video.colorRange === "pc")
+  );
+}
+
 /**
  * Go Live play options. The burst and the playout ceiling travel together (see the call site in
  * the streamer). A live source also gets its rebuffer cushion; seekable media does not, because
@@ -231,12 +308,15 @@ function isRotated(resolved: Pick<ResolvedSource, "probedVideo">): boolean {
 export function buildGoLivePlayOptions(
   stream: Pick<
     Config["stream"],
-    "readrateInitialBurst" | "videoPlayoutDelayMaxMs" | "liveBufferMs"
+    "readrateInitialBurst" | "videoPlayoutDelayMaxMs" | "liveBufferMs" | "fps"
   >,
-  resolved: Pick<ResolvedSource, "live">,
+  resolved: Pick<ResolvedSource, "live" | "probedVideo">,
 ) {
   return {
     type: "go-live" as const,
+    // The rate Discord's video attributes advertise: the encoded rate, stated rather than read
+    // back from the demuxed stream's codec parameters.
+    frameRate: outputFrameRate(stream, resolved),
     readrateInitialBurst: stream.readrateInitialBurst,
     videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
     ...(resolved.live === true ? { liveBufferMs: stream.liveBufferMs } : {}),

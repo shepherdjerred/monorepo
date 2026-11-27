@@ -3,6 +3,7 @@ import {
   buildSoftwareVideoGraph,
   buildVaapiVideoGraph,
   escapeFilterPath,
+  formatFrameRate,
   SOFTWARE_TONEMAP_CHAIN,
   subtitlePtsSandwich,
 } from "../src/media/videoGraph.ts";
@@ -279,4 +280,153 @@ describe("buildVaapiVideoGraph", () => {
     );
   });
 
+  test("interlaced: deinterlace_vaapi ahead of the scale, after the upload in upload mode", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "deinterlace_vaapi=rate=frame:auto=1,scale_vaapi=w=1920:h=1080:format=nv12",
+      ],
+    });
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+        uploadInput: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "hwupload,deinterlace_vaapi=rate=frame:auto=1,scale_vaapi=w=1920:h=1080:format=nv12",
+      ],
+    });
+  });
+
+  test("BT.709 conversion rides on the SDR scale_vaapi and leaves the HDR tonemap alone", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        convertToBt709: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "scale_vaapi=w=1440:h=1080:format=nv12:out_color_matrix=bt709:out_range=tv",
+      ],
+    });
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "hdr",
+        convertToBt709: true,
+      }),
+    ).toEqual(
+      buildVaapiVideoGraph({ width: 1920, height: 1080, inputColor: "hdr" }),
+    );
+  });
+
+  test("an NTSC canvas rate is written as its exact rational", () => {
+    const graph = buildVaapiVideoGraph({
+      width: 1920,
+      height: 804,
+      frameRate: 24_000 / 1001,
+      inputColor: "sdr",
+      subtitle: { path: SUB, startTime: 0 },
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected overlay");
+    expect(graph.graph[1]?.startsWith("color=c=black@0:s=1920x804:r=24000/1001,")).toBe(true);
+  });
+});
+
+describe("buildSoftwareVideoGraph picture corrections", () => {
+  test("interlaced: bwdif (frame rate out, flagged frames only) before the scale", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: ["bwdif=mode=send_frame:deint=interlaced", "scale=1920:1080"],
+    });
+  });
+
+  test("BT.709 conversion on the SDR scale; HDR keeps its tonemap chain unchanged", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        convertToBt709: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: ["scale=1440:1080:out_color_matrix=bt709:out_range=tv"],
+    });
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "hdr",
+        convertToBt709: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: ["scale=1920:1080", SOFTWARE_TONEMAP_CHAIN],
+    });
+  });
+
+  test("an interlaced SD BT.601 source deinterlaces, then converts while it scales", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+        convertToBt709: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "bwdif=mode=send_frame:deint=interlaced",
+        "scale=1440:1080:out_color_matrix=bt709:out_range=tv",
+      ],
+    });
+  });
+});
+
+describe("formatFrameRate", () => {
+  test("integers render exactly as String() always did", () => {
+    expect(formatFrameRate(30)).toBe("30");
+    expect(formatFrameRate(25)).toBe("25");
+    expect(formatFrameRate(60)).toBe("60");
+  });
+
+  test("NTSC rates render as their exact N/1001 rational", () => {
+    expect(formatFrameRate(24_000 / 1001)).toBe("24000/1001");
+    expect(formatFrameRate(30_000 / 1001)).toBe("30000/1001");
+    expect(formatFrameRate(60_000 / 1001)).toBe("60000/1001");
+  });
+
+  test("any other fraction renders as the plain number", () => {
+    expect(formatFrameRate(12.5)).toBe("12.5");
+    expect(formatFrameRate(29.97)).toBe("29.97");
+  });
 });

@@ -24,8 +24,23 @@ export type VideoGraphSpec = {
   /**
    * Frame rate for the subtitle canvas branch. Should match the output rate so `overlay_vaapi`'s
    * framesync doesn't duplicate/drop overlay frames; omitted → lavfi `color` default (25fps).
+   * Rendered with {@link formatFrameRate}, the same spelling `-r` gets.
    */
   frameRate?: number;
+  /**
+   * The source is interlaced: deinterlace (one output frame per input frame) before scaling, so
+   * the combing is not scaled into the picture. `bwdif` on the software path, `deinterlace_vaapi`
+   * on the GPU. Both pass frames that are not flagged interlaced through untouched.
+   */
+  deinterlace?: boolean;
+  /**
+   * Convert an SDR picture to BT.709 limited range inside the scale filter. Meant for sources
+   * tagged BT.601 or full range: an SD BT.601 picture upscaled to HD is otherwise decoded with
+   * BT.709 coefficients and its hues shift. Both scalers read the input matrix and range from the
+   * frame's own tags, so only request this for sources whose tags are known. Ignored for
+   * `inputColor: "hdr"`, whose tonemap already lands on BT.709 limited range.
+   */
+  convertToBt709?: boolean;
   /**
    * Input transfer characteristics: `"hdr"` (PQ/HLG) inserts a tonemap to BT.709 SDR. Without it,
    * HDR sources get range-squashed into SDR and look washed out.
@@ -86,15 +101,33 @@ export const SOFTWARE_TONEMAP_CHAIN =
   "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709," +
   "tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p";
 
+/**
+ * Spell a frame rate the way `-r` and the lavfi `r=` option should read it: an integer as itself
+ * (so integer rates render exactly as they always have), an NTSC rate as its exact `N/1001`
+ * rational rather than a 17-digit float, and anything else as the plain number.
+ */
+export function formatFrameRate(rate: number): string {
+  if (Number.isInteger(rate)) return String(rate);
+  const ntscNumerator = Math.round(rate * 1001);
+  return ntscNumerator % 1000 === 0 &&
+    Math.abs(ntscNumerator / 1001 - rate) < 1e-9
+    ? `${String(ntscNumerator)}/1001`
+    : String(rate);
+}
+
+/** Scale options converting an SDR picture to BT.709 limited range (`scale` and `scale_vaapi` share the names). */
+const BT709_LIMITED_SCALE_OPTIONS = ":out_color_matrix=bt709:out_range=tv";
+
 /** The `subtitles=` burn filter (libass). `alpha` is enabled on the GPU overlay canvas branch. */
 function subtitlesFilter(path: string, alpha: boolean): string {
   return `subtitles=filename=${escapeFilterPath(path)}${alpha ? ":alpha=1" : ""}`;
 }
 
 /**
- * Software (`-vf`) video graph: scale → optional letterbox pad → optional HDR tonemap → optional
- * subtitle burn (PTS-compensated) → encoder output filters (e.g. `hwupload` when a hardware
- * encoder consumes software-decoded frames). Subtitles burn after the tonemap so libass renders
+ * Software (`-vf`) video graph: optional deinterlace → scale (optionally to BT.709) → optional
+ * letterbox pad → optional HDR tonemap → optional subtitle burn (PTS-compensated) → encoder output
+ * filters (e.g. `hwupload` when a hardware encoder consumes software-decoded frames). Deinterlace
+ * runs first so field combing is never scaled. Subtitles burn after the tonemap so libass renders
  * onto SDR `yuv420p` frames — burning before would tonemap the subtitle pixels themselves (and
  * libass can't take the chain's intermediate float-RGB format anyway).
  */
@@ -105,8 +138,12 @@ export function buildSoftwareVideoGraph(
   },
 ): VideoGraph {
   const { width, height, inputColor, subtitle, pad, encoderOutFilters } = spec;
+  const toBt709 = spec.convertToBt709 === true && inputColor === "sdr";
   const filters = [
-    `scale=${width}:${height}`,
+    ...(spec.deinterlace === true
+      ? ["bwdif=mode=send_frame:deint=interlaced"]
+      : []),
+    `scale=${width}:${height}${toBt709 ? BT709_LIMITED_SCALE_OPTIONS : ""}`,
     ...(pad ? [`pad=${pad.width}:${pad.height}:-1:-1:color=black`] : []),
     ...(inputColor === "hdr" ? [SOFTWARE_TONEMAP_CHAIN] : []),
     ...(subtitle
@@ -122,7 +159,8 @@ export function buildSoftwareVideoGraph(
 
 /**
  * VAAPI GPU video graph. Frames stay GPU surfaces end to end:
- * - SDR: `scale_vaapi` to NV12 (what h264_vaapi consumes).
+ * - Interlaced: `deinterlace_vaapi` (frame-rate output, flagged frames only) ahead of the scale.
+ * - SDR: `scale_vaapi` to NV12 (what h264_vaapi consumes), optionally converting to BT.709.
  * - HDR: scale first in 10-bit P010 (keeps precision, and the tonemap VPP then processes output-
  *   resolution pixels instead of 4K), then `tonemap_vaapi` to BT.709 NV12.
  * - Subtitles: a `color@0` transparent BGRA canvas (vanilla-ffmpeg stand-in for jellyfin-ffmpeg's
@@ -132,18 +170,24 @@ export function buildSoftwareVideoGraph(
  */
 export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
   const { width, height, frameRate, inputColor, subtitle, uploadInput } = spec;
-  const chain =
+  const scale =
     inputColor === "hdr"
       ? `scale_vaapi=w=${width}:h=${height}:format=p010,` +
         "tonemap_vaapi=format=nv12:t=bt709:m=bt709:p=bt709"
-      : `scale_vaapi=w=${width}:h=${height}:format=nv12`;
+      : `scale_vaapi=w=${width}:h=${height}:format=nv12${spec.convertToBt709 === true ? BT709_LIMITED_SCALE_OPTIONS : ""}`;
   // Upload mode: the decoder emitted system-memory frames; put them on the device first so the
   // rest of the graph is unchanged. See PrepareStreamOptions.hardwarePipelineMode.
-  const base = uploadInput ? `hwupload,${chain}` : chain;
+  const base = [
+    ...(uploadInput === true ? ["hwupload"] : []),
+    ...(spec.deinterlace === true
+      ? ["deinterlace_vaapi=rate=frame:auto=1"]
+      : []),
+    scale,
+  ].join(",");
   if (!subtitle) {
     return { kind: "filterChain", filters: [base] };
   }
-  const canvas = `color=c=black@0:s=${width}x${height}${frameRate === undefined ? "" : `:r=${frameRate}`}`;
+  const canvas = `color=c=black@0:s=${width}x${height}${frameRate === undefined ? "" : `:r=${formatFrameRate(frameRate)}`}`;
   const subsBranch = [
     canvas,
     "format=bgra",
