@@ -12,6 +12,7 @@ import { mapGitHubPrToStackPr } from "#client/ops/flow-enrichment.tsx";
 import { facetQuery } from "#client/ops/ops-api.ts";
 import { buildExpensiveTaskColumns } from "#client/ops/pages/monorepo-page.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
+import { CiJobs } from "./ci-jobs.tsx";
 import {
   DataTable,
   StackTree,
@@ -115,6 +116,7 @@ export function CiServiceView({
 
   return (
     <section className="eng-service-view" aria-label="CI telemetry and queue">
+      <CiJobs />
       <div className="chart-grid">
         <SeriesChart
           preset="woodpecker-pipelines"

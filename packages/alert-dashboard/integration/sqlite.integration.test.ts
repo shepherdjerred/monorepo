@@ -1,13 +1,24 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { FACET_KEYS } from "@shepherdjerred/ops-model/facets.ts";
+import {
+  CiDashboardResponseSchema,
+  type CiDashboardSample,
+} from "@shepherdjerred/ops-model/ci-dashboard.ts";
+import { Hono } from "hono";
 
 import { AsyncMutex } from "#infrastructure/async-mutex";
+import { PrismaCiDashboardRepository } from "#infrastructure/prisma-ci-dashboard-repository";
 import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
+import { registerCiDashboardRoutes } from "#server/ci-dashboard-routes";
 import {
   AlertmanagerSnapshotAlertSchema,
   AlertmanagerWebhookSchema,
 } from "#shared/schema";
-import { epochNanosecondsToInstantText, InstantTextSchema } from "#shared/time";
+import {
+  epochNanosecondsToInstantText,
+  fixedClock,
+  InstantTextSchema,
+} from "#shared/time";
 import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import {
@@ -15,6 +26,7 @@ import {
   IndexRowSchema,
   input,
   nanoseconds,
+  opsRepository,
   prisma,
   reconcileSnapshotAbsence,
   repository,
@@ -58,6 +70,100 @@ afterAll(disconnectDatabase);
 
 registerOpsRepositoryCases();
 registerWriteEfficiencyCases();
+
+describe("CI dashboard ingest and reads", () => {
+  it("keeps newer samples and preserves last-known sources independently of timing history", async () => {
+    const sampledAt = "2026-09-24T15:00:00Z";
+    const nextSample = "2026-09-24T15:01:00Z";
+    const token = "ci-fixture-token";
+    const internal = "/internal/v1/ops/ci";
+    const address = "/api/v1/ops/ci";
+    const ciRepository = new PrismaCiDashboardRepository(
+      prisma,
+      new AsyncMutex(),
+    );
+    let clock = fixedClock(nextSample);
+    let enabled = true;
+    const app = new Hono();
+    registerCiDashboardRoutes(
+      app,
+      {
+        repository: ciRepository,
+        clock: { now: () => clock.now() },
+        enabled: async () => enabled,
+      },
+      token,
+    );
+    const json = {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    };
+    const baseline: CiDashboardSample = {
+      sampledAt,
+      queue: {
+        sampledAt,
+        paused: false,
+        ready: 0,
+        waitingOnDependencies: 0,
+        running: 0,
+        oldestQueuedPipelineCreatedAt: null,
+      },
+      admission: { sampledAt, compute: 0, gates: 2 },
+      jobs: { sampledAt, partial: false, active: [], recent: [] },
+    };
+    const ingest = async (sample: CiDashboardSample) => {
+      const response = await app.request(internal, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify(sample),
+      });
+      expect(response.status).toBe(202);
+      return response.json();
+    };
+    const read = async () => {
+      const response = await app.request(address);
+      return CiDashboardResponseSchema.parse(await response.json());
+    };
+
+    await expect(
+      app.request(internal, { method: "POST" }),
+    ).resolves.toMatchObject({ status: 401 });
+    await expect(app.request(`${internal}/timings`)).resolves.toMatchObject({
+      status: 401,
+    });
+    await expect(read()).resolves.toMatchObject({ sample: null });
+    await expect(ingest(baseline)).resolves.toEqual({ stored: true });
+    await expect(ingest(baseline)).resolves.toEqual({ stored: false });
+    await expect(
+      ingest({ ...baseline, sampledAt: nextSample, queue: null, jobs: null }),
+    ).resolves.toEqual({ stored: true });
+    await expect(ingest(baseline)).resolves.toEqual({ stored: false });
+
+    const history = { sampledAt: nextSample, attempts: [] };
+    const publishTimings = await app.request(`${internal}/timings`, {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify(history),
+    });
+    expect(publishTimings.status).toBe(202);
+    const timings = await app.request(`${internal}/timings`, { headers: json });
+    expect(await timings.json()).toEqual(history);
+    expect(await read()).toMatchObject({
+      sample: { ...baseline, sampledAt: nextSample },
+      stale: false,
+      unavailableSources: ["queue", "jobs"],
+      estimates: { runs: {}, workflows: {} },
+    });
+    await expect(opsRepository.getAllFacets()).resolves.toMatchObject({
+      facets: {},
+    });
+
+    clock = fixedClock("2026-09-24T15:03:01Z");
+    await expect(read()).resolves.toMatchObject({ stale: true });
+    enabled = false;
+    expect(await read()).toMatchObject({ enabled: false, sample: null });
+  });
+});
 
 describe("SQLite email cancellation", () => {
   it("dry-runs and audits cancellation of only pending incident email", async () => {

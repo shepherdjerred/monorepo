@@ -1066,6 +1066,12 @@ patch. Histories created before that patch retain their `infra` Activity queue;
 the infra registry keeps the old Ops Activities available to drain them. The
 same worker credentials, pod limits, and metrics endpoint serve both queues.
 
+Hub CI uses two dedicated Ops workflows. `ops-ci-dashboard` samples the
+Woodpecker queue, monorepo jobs, and Kueue admission every minute.
+`ops-ci-dashboard-timings` refreshes the seven-day timing cohort every
+15 minutes. Both skip overlaps and publish through Hub's Ops ingest boundary.
+The Woodpecker queue API requires an administrator credential on the worker.
+
 The work collector reads Tracker through the credentialless `TRACKER_URL`
 bootstrap endpoint and builds issue links from `TRACKER_PUBLIC_URL`, which the
 browser can reach. New Workflow histories use the `ops-tracker-source` patch

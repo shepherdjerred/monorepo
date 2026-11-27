@@ -418,6 +418,7 @@ export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
   "alert-dashboard-incidents-auto-open-main-ci-enabled",
   "alert-dashboard-incidents-takeover-spawn-enabled",
   "alert-dashboard-daily-digest-quiet-clear",
+  "alert-dashboard-ci-jobs-enabled",
 ] as const;
 
 export type AlertDashboardBooleanFlagKey =

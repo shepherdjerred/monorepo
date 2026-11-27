@@ -1,5 +1,6 @@
 import { AsyncMutex } from "#infrastructure/async-mutex";
 import { createPrismaClient } from "#infrastructure/prisma-client";
+import { PrismaCiDashboardRepository } from "#infrastructure/prisma-ci-dashboard-repository";
 import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
 import { PrismaAlertLedgerRepository } from "#infrastructure/prisma-repository";
 import { PrismaReportRepository } from "#infrastructure/reports/prisma-report-repository";
@@ -8,6 +9,7 @@ import { PrismaReportRepository } from "#infrastructure/reports/prisma-report-re
 export async function createPrismaRepositories(databaseUrl: string): Promise<{
   ledger: PrismaAlertLedgerRepository;
   ops: PrismaOpsRepository;
+  ci: PrismaCiDashboardRepository;
   reports: PrismaReportRepository;
 }> {
   const prisma = await createPrismaClient(databaseUrl);
@@ -15,6 +17,7 @@ export async function createPrismaRepositories(databaseUrl: string): Promise<{
   return {
     ledger: new PrismaAlertLedgerRepository(prisma, writeMutex),
     ops: new PrismaOpsRepository(prisma, writeMutex),
+    ci: new PrismaCiDashboardRepository(prisma, writeMutex),
     reports: new PrismaReportRepository(prisma, writeMutex),
   };
 }

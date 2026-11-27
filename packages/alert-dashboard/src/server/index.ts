@@ -13,6 +13,7 @@ import { AlertmanagerClient } from "#infrastructure/alertmanager-client";
 import { readConfig } from "#infrastructure/config";
 import {
   alertEmailConfig,
+  ciDashboardEnabled,
   flagMetricsRecorder,
   initFeatureFlagClient,
 } from "#infrastructure/digest-flag";
@@ -71,6 +72,7 @@ initializeTracing({
 const {
   ledger: repository,
   ops: opsRepository,
+  ci: ciRepository,
   reports: reportRepository,
 } = await createPrismaRepositories(config.DATABASE_URL);
 const alertmanager = new AlertmanagerClient(config.ALERTMANAGER_URL);
@@ -209,6 +211,11 @@ const app = createApp({
   digests,
   reports,
   opsIngestToken: config.OPS_INGEST_TOKEN,
+  ciDashboard: {
+    repository: ciRepository,
+    enabled: ciDashboardEnabled,
+    clock: systemClock,
+  },
   promotionStatusUrl: config.PROMOTION_STATUS_URL,
   onWebhookIngested: () => {
     void runHomeAssistantWorker();

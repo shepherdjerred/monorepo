@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { fileURLToPath } from "node:url";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { SOURCE_IDS } from "@shepherdjerred/ops-model/snapshot.ts";
@@ -12,9 +13,17 @@ import {
   runOpsDigest,
   runOpsSnapshot,
 } from "./ops-snapshot.ts";
+import {
+  runOpsCiDashboard,
+  runOpsCiDashboardTimings,
+} from "./ops/ci-dashboard.ts";
 import { runWorkflowWithActivityWorker } from "./test-support.ts";
 
-const workflowPath = new URL("index.ts", import.meta.url).pathname;
+function workflowFile(relativePath: string): string {
+  return fileURLToPath(new URL(relativePath, import.meta.url));
+}
+
+const workflowPath = workflowFile("index.ts");
 
 const summary: OpsPublishSummary = {
   generatedAt: "2026-09-24T12:00:00.000Z",
@@ -58,10 +67,7 @@ test("replays the pre-Tracker collector command and payload unchanged", async ()
   try {
     await runWorkflowWithActivityWorker(environment, {
       activityTaskQueue: TASK_QUEUES.OPS,
-      workflowPath: new URL(
-        "replay-fixtures/ops-before-tracker.ts",
-        import.meta.url,
-      ).pathname,
+      workflowPath: workflowFile("replay-fixtures/ops-before-tracker.ts"),
       activities: {
         ...collectorActivities(attempts),
         collectOpsLinear: () => {
@@ -111,10 +117,7 @@ describe("ops snapshot workflow", () => {
     try {
       await runWorkflowWithActivityWorker(environment, {
         activityTaskQueue: TASK_QUEUES.INFRA,
-        workflowPath: new URL(
-          "replay-fixtures/ops-before-temporal.ts",
-          import.meta.url,
-        ).pathname,
+        workflowPath: workflowFile("replay-fixtures/ops-before-temporal.ts"),
         activities: {
           ...collectorActivities(attempts),
           collectOpsLinear: () =>
@@ -160,10 +163,7 @@ describe("ops snapshot workflow", () => {
       try {
         await runWorkflowWithActivityWorker(environment, {
           activityTaskQueue: TASK_QUEUES.INFRA,
-          workflowPath: new URL(
-            "replay-fixtures/ops-before-ops-queue.ts",
-            import.meta.url,
-          ).pathname,
+          workflowPath: workflowFile("replay-fixtures/ops-before-ops-queue.ts"),
           activities: {
             ...collectorActivities(new Map()),
             collectOpsLinear: () =>
@@ -313,4 +313,38 @@ describe("ops digest workflow", () => {
       await environment.teardown();
     }
   }, 60_000);
+});
+
+describe("Hub CI scheduled workflows", () => {
+  test.each([
+    [runOpsCiDashboard, "collectAndPublishCiDashboard"],
+    [runOpsCiDashboardTimings, "refreshCiDashboardTimings"],
+  ] as const)(
+    "runs %s on the isolated Ops queue",
+    async (workflow, activity) => {
+      const environment = await TestWorkflowEnvironment.createTimeSkipping();
+      let calls = 0;
+      try {
+        await runWorkflowWithActivityWorker(environment, {
+          activityTaskQueue: TASK_QUEUES.OPS,
+          workflowPath,
+          activities: {
+            [activity]: () => {
+              calls++;
+            },
+          },
+          execute: () =>
+            environment.client.workflow.execute(workflow, {
+              args: [],
+              taskQueue: TASK_QUEUES.WORKFLOWS,
+              workflowId: `test-hub-ci-${crypto.randomUUID()}`,
+            }),
+        });
+        expect(calls).toBe(1);
+      } finally {
+        await environment.teardown();
+      }
+    },
+    60_000,
+  );
 });

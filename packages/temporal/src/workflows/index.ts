@@ -151,10 +151,8 @@ import {
   type WorkerDeploymentCanaryInput,
 } from "./worker-deployment-canary.ts";
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
-import {
-  runOpsDigest as _runOpsDigest,
-  runOpsSnapshot as _runOpsSnapshot,
-} from "./ops-snapshot.ts";
+import * as opsSnapshot from "./ops-snapshot.ts";
+import * as opsCiDashboard from "./ops/ci-dashboard.ts";
 import {
   runLlmArchiveIndex as _runLlmArchiveIndex,
   type LlmArchiveIndexWorkflowInput,
@@ -397,7 +395,9 @@ export const runGlitterCorpusDaily = () =>
 
 export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
-export const runOpsSnapshot = () => _runOpsSnapshot();
+export const runOpsSnapshot = opsSnapshot.runOpsSnapshot;
+export const runOpsCiDashboard = opsCiDashboard.runOpsCiDashboard;
+export const runOpsCiDashboardTimings = opsCiDashboard.runOpsCiDashboardTimings;
 export const runRenovateDeltaEnrichment = () => _runRenovateDeltaEnrichment();
 export const runDailyRenovateRanking = renovate.runDailyRenovateRanking;
 export const runRenovateBundleDispatch = renovate.runRenovateBundleDispatch;
@@ -406,11 +406,7 @@ export async function runLlmArchiveIndex(
 ): Promise<SyncLlmArchiveIndexResult> {
   return _runLlmArchiveIndex(input);
 }
-export async function runOpsDigest(
-  input: Parameters<typeof _runOpsDigest>[0],
-): ReturnType<typeof _runOpsDigest> {
-  return _runOpsDigest(input);
-}
+export const runOpsDigest = opsSnapshot.runOpsDigest;
 export const agentChatWorkflow = agentChat.agentChatWorkflow;
 export const agentChatTurnReceiptWorkflow =
   agentChat.agentChatTurnReceiptWorkflow;

@@ -637,6 +637,81 @@
   min-width: 0;
 }
 
+.ci-jobs,
+.ci-queue-source {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ci-queue-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.ci-queue-source {
+  grid-template-rows: auto 1fr;
+}
+
+.ci-queue-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(112px, 100%), 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.ci-queue-metrics dd {
+  margin: 0;
+}
+
+.ci-queue-source-heading,
+.ci-jobs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+}
+
+.ci-queue-source-heading h3 {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 0.9rem;
+}
+
+.ci-queue-source-heading h3 span {
+  margin-inline-start: 4px;
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ci-queue-unavailable {
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+}
+
+.ci-jobs-toolbar .visual-search {
+  min-width: min(100%, 17rem);
+}
+
+.ci-job-cell {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@container content (max-width: 780px) {
+  .ci-queue-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .eng-copy-status {
     transition: none;
