@@ -248,10 +248,10 @@ describe("PVC backup policy", () => {
     expect(pvcCount).toBeGreaterThan(0);
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     // Includes one CI RAM scratch mutation per lane profile (verify,
-    // verify-extended, browser), the golden workspace clone mutation and the
-    // torvalds request overcommit.
-    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(9);
-    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(9);
+    // verify-extended, browser, tofu-validate), the golden workspace clone
+    // mutation and the torvalds request overcommit.
+    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(10);
+    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(10);
     // The retired TSMC restoration controller no longer owns a copy guard.
     expect(admissionKinds.has("copy:ValidatingAdmissionPolicy")).toBe(false);
     expect(admissionKinds.has("copy:ValidatingAdmissionPolicyBinding")).toBe(
