@@ -15,15 +15,14 @@ import {
 } from "#lib/ci/output.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import {
-  evaluateStaleBase,
-  type StaleBaseReport,
-} from "#lib/ci/stale-base/evaluate.ts";
-import { recordAndGateStaleBase } from "#lib/ci/stale-base/receipts.ts";
+  defaultStaleBaseEvaluator,
+  gateSnapshotStaleBase,
+  type StaleBaseEvaluator,
+} from "#lib/ci/stale-base/receipts.ts";
 import { waitForPr, withCancellation } from "#commands/ci.ts";
 import {
+  createLiveGitSpiceHooks,
   formatMergeStderr,
-  preflightGitSpiceLand,
-  prepareGitSpiceMerge,
   spawnGitSpiceMergeProcess,
   type MergePreparation,
   type MergeTarget,
@@ -36,26 +35,13 @@ export type LandOptions = {
   allowRedMain: boolean;
   allowStaleBase?: boolean | undefined;
 };
-
 export type MergeResult =
   number | { code: number; stderr?: string | undefined };
-
-/**
- * Merges one ready branch and returns the merge command's exit code (plus
- * captured stderr when available). A cancelled `signal` must terminate the
- * merge before it resolves.
- */
 export type MergeBranch = (
   branch: string,
   signal: AbortSignal,
 ) => Promise<MergeResult>;
 
-/**
- * git-spice keeps stack restacking and asks GitHub once (`--ready-timeout 0`)
- * after toolkit has already proven exact-head readiness. `--no-prompt` keeps
- * non-interactive shells from blocking on stdin, and stdout goes to stderr so
- * `--json` keeps stdout for the single report.
- */
 export function gitSpiceMergeArgs(branch: string): string[] {
   return [
     "branch",
@@ -69,7 +55,6 @@ export function gitSpiceMergeArgs(branch: string): string[] {
     branch,
   ];
 }
-
 export function createGitSpiceMerge(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): MergeBranch {
@@ -80,30 +65,21 @@ export function createGitSpiceMerge(
       environment,
     });
 }
-
 export const mergeWithGitSpice: MergeBranch = createGitSpiceMerge();
 
 const HeadSchema = z.object({
   head: z.object({ ref: z.string(), sha: z.string() }),
   base: z.object({ ref: z.string() }).optional(),
 });
-
 function landed(result: WaitResult, verdict: Verdict): WaitResult {
   return { ...result, verdict };
 }
-
-/**
- * GraphQL points `git-spice branch merge` needs to finish. Below this the
- * merge would be refused part-way, so land waits for the reset first.
- */
 export const MERGE_GRAPHQL_RESERVE = 200;
 
 export type LandDependencies = {
   wait: typeof waitForPr;
   merge: MergeBranch;
-  /** Checks local git-spice bootstrap prerequisites before entering CI wait. */
   preflight?: ((signal: AbortSignal) => Promise<void>) | undefined;
-  /** Validates local branch sync and retargets stale stack bases before merge. */
   prepareMerge?:
     | ((target: MergeTarget, signal: AbortSignal) => Promise<MergePreparation>)
     | undefined;
@@ -113,12 +89,7 @@ export type LandDependencies = {
     signal: AbortSignal,
     deadline: number | null,
   ) => Promise<void>;
-  staleBase?: (
-    headSha: string,
-    baseRef: string,
-    mainHeadSha: string | undefined,
-    signal: AbortSignal,
-  ) => Promise<StaleBaseReport>;
+  staleBase?: StaleBaseEvaluator | undefined;
   stateDir?: string | undefined;
   secrets?: readonly string[] | undefined;
 };
@@ -129,7 +100,6 @@ export type LandRequest = {
   signal: AbortSignal;
 };
 
-/** When the shared GraphQL bucket can next afford a merge, or null if now. */
 export async function mergeQuota(
   github: GitHubClient,
   signal: AbortSignal,
@@ -144,7 +114,6 @@ export async function mergeQuota(
   }
 }
 
-/** Sleep until the reset plus jitter, but never past the land deadline. */
 async function pauseForQuota(
   resumeAt: number,
   signal: AbortSignal,
@@ -274,33 +243,24 @@ async function evaluatePreMergeBlocker(
   ready: Snapshot,
   current: z.infer<typeof HeadSchema>,
 ): Promise<Attempt | null> {
-  const { number, signal, started } = context;
+  const { number, signal, started, dependencies } = context;
   if (current.head.sha !== ready.pr.head.sha) {
-    return {
-      done: {
-        result: landed(result, {
-          outcome: "head_changed",
-          reasons: [
-            `PR head changed from ${ready.pr.head.sha} to ${current.head.sha} before merging`,
-          ],
-          commands: [`toolkit pr land ${String(number)}`],
-        }),
-        mergeCommitSha: null,
-      },
+    const reason = `PR head changed from ${ready.pr.head.sha} to ${current.head.sha} before merging`;
+    const verdict: Verdict = {
+      outcome: "head_changed",
+      reasons: [reason],
+      commands: [`toolkit pr land ${String(number)}`],
     };
+    return { done: { result: landed(result, verdict), mergeCommitSha: null } };
   }
-  const staleVerdict = await recordAndGateStaleBase({
+  const staleVerdict = await gateSnapshotStaleBase({
     pr: number,
-    baseRef: ready.pr.base.ref,
-    report: await context.staleBase(
-      ready.pr.head.sha,
-      ready.pr.base.ref,
-      ready.main.headSha,
-      signal,
-    ),
+    ready,
+    evaluate: context.staleBase,
     allowStaleBase: context.allowStaleBase,
-    secrets: context.dependencies.secrets,
-    stateDir: context.dependencies.stateDir,
+    signal,
+    secrets: dependencies.secrets,
+    stateDir: dependencies.stateDir,
   });
   if (staleVerdict !== null) {
     return {
@@ -318,26 +278,22 @@ async function evaluatePreMergeBlocker(
       },
     };
   }
-  if (context.dependencies.prepareMerge !== undefined) {
-    const preparation = await context.dependencies.prepareMerge(
-      {
-        number,
-        branch: current.head.ref,
-        headSha: ready.pr.head.sha,
-        baseRef: current.base?.ref ?? ready.pr.base.ref,
-      },
-      signal,
-    );
+  if (dependencies.prepareMerge !== undefined) {
+    const target: MergeTarget = {
+      number,
+      branch: current.head.ref,
+      headSha: ready.pr.head.sha,
+      baseRef: current.base?.ref ?? ready.pr.base.ref,
+    };
+    const preparation = await dependencies.prepareMerge(target, signal);
     if (!preparation.ok) {
+      const verdict: Verdict = {
+        outcome: "merge_failed",
+        reasons: preparation.reasons,
+        commands: preparation.commands,
+      };
       return {
-        done: {
-          result: landed(result, {
-            outcome: "merge_failed",
-            reasons: preparation.reasons,
-            commands: preparation.commands,
-          }),
-          mergeCommitSha: null,
-        },
+        done: { result: landed(result, verdict), mergeCommitSha: null },
       };
     }
   }
@@ -442,15 +398,7 @@ export async function landPr(
     ((read, fresh) => mergeQuota(observer.github, read, fresh));
   const staleBase =
     dependencies.staleBase ??
-    ((headSha, baseRef, mainHeadSha, read) =>
-      evaluateStaleBase({
-        github: observer.github,
-        prNumber: number,
-        headSha,
-        baseRef,
-        mainHeadSha,
-        signal: read,
-      }));
+    defaultStaleBaseEvaluator(observer.github, number);
   const context: LandContext = {
     number,
     observer,
@@ -529,17 +477,7 @@ export async function landCommand(
           merge: merger,
           secrets,
           ...(merge === undefined
-            ? {
-                preflight: (read) =>
-                  preflightGitSpiceLand({
-                    number,
-                    observer,
-                    signal: read,
-                    env: mergeEnv,
-                  }),
-                prepareMerge: (target, read) =>
-                  prepareGitSpiceMerge(target, read, { env: mergeEnv }),
-              }
+            ? createLiveGitSpiceHooks(number, observer, mergeEnv)
             : {}),
         },
       );

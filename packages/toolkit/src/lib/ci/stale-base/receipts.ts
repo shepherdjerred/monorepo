@@ -2,9 +2,36 @@ import { appendFile, mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import type { Verdict } from "#lib/ci/readiness.ts";
+import type { GitHubClient } from "#lib/ci/github.ts";
+import type { Snapshot, Verdict } from "#lib/ci/readiness.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
-import { StaleBaseVerdictSchema, type StaleBaseReport } from "./evaluate.ts";
+import {
+  evaluateStaleBase,
+  StaleBaseVerdictSchema,
+  type StaleBaseReport,
+} from "./evaluate.ts";
+
+export type StaleBaseEvaluator = (
+  headSha: string,
+  baseRef: string,
+  mainHeadSha: string | undefined,
+  signal: AbortSignal,
+) => Promise<StaleBaseReport>;
+
+export function defaultStaleBaseEvaluator(
+  github: GitHubClient,
+  prNumber: number,
+): StaleBaseEvaluator {
+  return (headSha, baseRef, mainHeadSha, signal) =>
+    evaluateStaleBase({
+      github,
+      prNumber,
+      headSha,
+      baseRef,
+      mainHeadSha,
+      signal,
+    });
+}
 
 export const PrLandReceiptSchema = z.object({
   timestamp: z.string(),
@@ -102,4 +129,29 @@ export async function recordAndGateStaleBase(options: {
       "toolkit git-spice branch submit --update-only --no-web --no-prompt",
     ],
   };
+}
+
+export async function gateSnapshotStaleBase(options: {
+  readonly pr: number;
+  readonly ready: Snapshot;
+  readonly evaluate: StaleBaseEvaluator;
+  readonly allowStaleBase: boolean;
+  readonly signal: AbortSignal;
+  readonly secrets?: readonly string[] | undefined;
+  readonly stateDir?: string | undefined;
+}): Promise<Verdict | null> {
+  const report = await options.evaluate(
+    options.ready.pr.head.sha,
+    options.ready.pr.base.ref,
+    options.ready.main.headSha,
+    options.signal,
+  );
+  return recordAndGateStaleBase({
+    pr: options.pr,
+    baseRef: options.ready.pr.base.ref,
+    report,
+    allowStaleBase: options.allowStaleBase,
+    secrets: options.secrets,
+    stateDir: options.stateDir,
+  });
 }
