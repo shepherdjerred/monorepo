@@ -69,6 +69,9 @@ describe("dedicated CI agent pools", () => {
     );
     for (const [pool, cap, queue, volume] of [
       ["pr", "12", "default", "32Gi"],
+      // Light checks clone the golden snapshot too, but queue in their own
+      // reserved ClusterQueue.
+      ["pr-light", "4", "ci-light", "32Gi"],
       ["main", "10", "default", "32Gi"],
       // Maintenance workspaces clone the golden snapshot, so they keep the
       // compute workspace size rather than the gate's.

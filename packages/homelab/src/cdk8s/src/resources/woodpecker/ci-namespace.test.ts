@@ -74,6 +74,7 @@ const AGENT_DEPLOYMENTS = [
   "main",
   "maintenance",
   "pr",
+  "pr-light",
   "review",
 ].map((pool) => `woodpecker-woodpecker-agent-${pool}`);
 

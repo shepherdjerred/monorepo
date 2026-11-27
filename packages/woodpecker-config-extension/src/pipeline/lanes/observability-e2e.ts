@@ -31,6 +31,12 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
         "bun --no-install run --cwd packages/llm-observability test:e2e:ci",
       ],
       timeoutMinutes: 30,
+      // Tempo and MinIO hold admission quota while the step waits for its
+      // own, so bound them across every agent, PR and main push. Measured
+      // 2026-11-27 over 72 h (232 runs, run time p50 53 s, p90 173 s): at
+      // most three held their services at once, and replaying those
+      // arrivals at a cap of three delays 0.4% of runs past a minute.
+      concurrency: { limit: 3, group: "docker-e2e" },
       resources: MEDIUM_TIER,
       secrets: [GITHUB_DOWNLOAD],
       services: [

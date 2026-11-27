@@ -25,6 +25,12 @@ export const CI_COMPUTE_WORKFLOWS =
   CI_ADMISSION_BUDGET.legacyMaxWorkflows +
   queueWorkflows(CI_ADMISSION_BUDGET.pools, "default");
 
+/** The pr-light pool: short, service-free PR checks in a reserved queue. */
+export const CI_LIGHT_WORKFLOWS = queueWorkflows(
+  CI_ADMISSION_BUDGET.pools,
+  "ci-light",
+);
+
 export const CI_GATE_WORKFLOWS = queueWorkflows(
   CI_ADMISSION_BUDGET.pools,
   "ci-gates",

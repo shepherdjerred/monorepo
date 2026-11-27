@@ -1,4 +1,56 @@
-import type { CiStep } from "#src/pipeline/model.ts";
+import type { CiStep, ResourceTier } from "#src/pipeline/model.ts";
+import {
+  CONTAINED_TIER,
+  LIGHT_TIER,
+  SCANNER_TIER,
+} from "#src/pipeline/tiers.ts";
+
+/**
+ * Tiers whose PR workflows the `pr-light` agent pool takes: thin steps,
+ * third-party scanners and single-tool contained checks. Each requests at
+ * most 500m CPU and 1.5Gi, and their lanes finish in about a minute. Their
+ * limits are not all tight: `LIGHT_TIER` keeps 7 CPU / 12Gi so a cold cache
+ * still gets real CPU, while the scanner and contained tiers cap at 2 CPU /
+ * 4Gi. Admission reserves requests only. Every other tier -- verify, browser,
+ * medium builds, the dry-run rehearsal with its 12 CPU / 24Gi limits -- stays
+ * in `pr`.
+ */
+const PR_LIGHT_TIERS: readonly ResourceTier[] = [
+  LIGHT_TIER,
+  SCANNER_TIER,
+  CONTAINED_TIER,
+];
+
+/** A tier is its whole shape: requests and the limits that bound them. */
+function sameTier(left: ResourceTier, right: ResourceTier): boolean {
+  return (
+    left.cpuRequest === right.cpuRequest &&
+    left.cpuLimit === right.cpuLimit &&
+    left.memoryRequest === right.memoryRequest &&
+    left.memoryLimit === right.memoryLimit &&
+    left.ephemeralStorageRequest === right.ephemeralStorageRequest &&
+    left.ephemeralStorageLimit === right.ephemeralStorageLimit
+  );
+}
+
+/**
+ * A short, service-free check: no services, and every container -- the
+ * workflow's own and each ordered one -- in a light, scanner or contained
+ * tier. Anything that raises a request (RAM scratch, a heavier tier) or adds
+ * a service falls out of the pool on its own.
+ *
+ * `check-ci-admission-budget.ts` proves every `pr-light` slot fits its
+ * reserved Kueue queue at once with the largest such container or the
+ * checkout before it, so a light workflow waits only for one of its own slots.
+ */
+export function isPrLightWorkflow(step: CiStep): boolean {
+  return (
+    (step.services?.length ?? 0) === 0 &&
+    [step, ...(step.orderedSteps ?? [])].every((command) =>
+      PR_LIGHT_TIERS.some((tier) => sameTier(command.resources, tier)),
+    )
+  );
+}
 
 export type RoutingContext = {
   readonly event: string;
@@ -59,13 +111,19 @@ export function routeSteps(
     // never waits behind the PR backlog in the `pr` agent's first-in-first-out
     // queue. Its pods still share the compute quota. Benchmarks,
     // reproductions and the extended tier stay in the PR pool.
+    //
+    // Short, service-free PR checks get `pr-light` for the same reason: in
+    // `pr` a one-minute scanner waited behind every verify holding a slot
+    // while Kueue gated it. Main keeps them in its own pool.
     const pool = gate
       ? "completion"
       : main
         ? "main"
         : maintenance
           ? "maintenance"
-          : "pr";
+          : !background && isPrLightWorkflow(step)
+            ? "pr-light"
+            : "pr";
     return {
       ...step,
       agentLabels: {

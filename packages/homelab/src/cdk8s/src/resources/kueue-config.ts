@@ -13,6 +13,7 @@ import {
   CI_ADMISSION_BUDGET,
   CI_COMPUTE_WORKFLOWS,
   CI_GATE_WORKFLOWS,
+  CI_LIGHT_WORKFLOWS,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 import { MC_SANDBOX_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
@@ -30,6 +31,26 @@ export const CI_CLUSTER_QUEUE = "woodpecker";
 export const CI_LOCAL_QUEUE = "default";
 export const CI_GATE_CLUSTER_QUEUE = "woodpecker-gates";
 export const CI_GATE_LOCAL_QUEUE = "ci-gates";
+
+/**
+ * The `pr-light` pool's reserved queue, for short, service-free PR checks.
+ *
+ * An agent holds a workflow's slot while Kueue gates its pod, so a one-minute
+ * scanner in the `pr` pool waited behind every verify holding a slot there.
+ * Its own pool removes that slot wait, and this queue removes the quota wait:
+ * it holds every pr-light slot's largest pod at once, which
+ * `check-ci-admission-budget.ts` proves, so Kueue never gates a light pod.
+ *
+ * It lends nothing. Kueue lends idle quota only within a cohort, and with
+ * preemption off a lender gets its quota back only when the borrower
+ * finishes. A verify pod that borrowed it would hold it for a 5-30 minute run,
+ * gating the light checks behind verify again. The idle reserve is the price:
+ * over the 72 hours to 2026-11-27 the light checks kept about 0.2 of the four
+ * slots busy on average, so about 1.9 of its 2 CPU sat idle, in exchange for
+ * a replayed p90 start wait of about 19 seconds.
+ */
+export const CI_LIGHT_CLUSTER_QUEUE = "woodpecker-light";
+export const CI_LIGHT_LOCAL_QUEUE = "ci-light";
 
 export const CI_MAINTENANCE_CLUSTER_QUEUE = "woodpecker-maintenance";
 export const CI_MAINTENANCE_LOCAL_QUEUE = "ci-maintenance";
@@ -130,6 +151,26 @@ export function createKueueConfig(
     "kueue-local-queue",
     CI_LOCAL_QUEUE,
     CI_CLUSTER_QUEUE,
+  );
+
+  // A light workflow has no services and runs one pod at a time.
+  createClusterQueue(
+    chart,
+    "kueue-light-cluster-queue",
+    CI_LIGHT_CLUSTER_QUEUE,
+    {
+      quotas: {
+        ...CI_ADMISSION_BUDGET.lightQuota,
+        pods: String(CI_LIGHT_WORKFLOWS),
+      },
+      transition,
+    },
+  );
+  createLocalQueue(
+    chart,
+    "kueue-light-local-queue",
+    CI_LIGHT_LOCAL_QUEUE,
+    CI_LIGHT_CLUSTER_QUEUE,
   );
 
   createClusterQueue(chart, "kueue-gate-cluster-queue", CI_GATE_CLUSTER_QUEUE, {

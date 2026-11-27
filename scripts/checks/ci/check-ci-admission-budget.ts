@@ -11,8 +11,12 @@
  * neither of which can see the other, so this check reads both:
  *
  * - `packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json`, from which
- *   cdk8s builds the Kueue ClusterQueue and the agent's workflow cap;
+ *   cdk8s builds the Kueue ClusterQueues and the agents' workflow caps;
  * - the generator's step model, from `dump-steps.ts`.
+ *
+ * The reserved queues are proved differently: the gate and light reserves
+ * must each hold every one of their slots at once, so their pods are never
+ * gated and their workflows wait only for a slot.
  */
 
 import path from "node:path";
@@ -55,6 +59,8 @@ export const StepSchema = z.object({
     })
     .optional(),
   resources: TierSchema,
+  /** The largest clone pod a checkout runs before the step, one at a time. */
+  checkout: TierSchema.optional(),
   services: z
     .array(z.object({ name: z.string(), resources: TierSchema }))
     .optional(),
@@ -230,9 +236,47 @@ function unroutableViolations(
 
 /**
  * PR and main run the ordinary graph, which the step model routes once as a
- * pull request, so any of their slots may hold any of its workflows.
+ * pull request, so any of their slots may hold any of its workflows. That
+ * includes the workflows a pull request routes to `pr-light`: a main push
+ * runs them in the main pool, against compute quota.
  */
 const SHARED_COMPUTE_POOLS: ReadonlySet<string> = new Set(["pr", "main"]);
+
+/**
+ * The light reserve holds every `pr-light` slot at once, so Kueue never gates
+ * a light pod and a light workflow waits only for one of its own slots. A
+ * workflow runs its checkout pods and then each container one at a time, so a
+ * slot needs the largest of them, per resource, and never two together.
+ */
+function lightViolations(
+  lightSteps: readonly AdmissionStep[],
+  workflows: number,
+  quota: PooledAdmissionBudget["lightQuota"],
+): string[] {
+  const violations = lightSteps
+    .filter(
+      (step) => step.backend === "local" || (step.services?.length ?? 0) !== 0,
+    )
+    .map(
+      (step) =>
+        `${step.key}: the pr-light pool requires a Kubernetes workflow without services`,
+    );
+  if (lightSteps.length === 0) return violations;
+  for (const resource of METERED) {
+    const slot = Math.max(
+      ...lightSteps.flatMap((step) => [
+        request(step.resources, resource),
+        step.checkout === undefined ? 0 : request(step.checkout, resource),
+      ]),
+    );
+    if (workflows * slot > parseQuantity(quota[resource])) {
+      violations.push(
+        `${resource}: all ${workflows.toString()} pr-light slots, each holding its largest pod (${String(slot)}), must fit the ${quota[resource]} light reserve at once`,
+      );
+    }
+  }
+  return violations;
+}
 
 /**
  * Split compute slots by what they can run. Every other compute pool, such as
@@ -288,11 +332,12 @@ export function pooledAdmissionBudgetViolations(
   for (const resource of METERED) {
     if (
       parseQuantity(budget.computeQuota[resource]) +
+        parseQuantity(budget.lightQuota[resource]) +
         parseQuantity(budget.gateQuota[resource]) !==
       parseQuantity(budget.quota[resource])
     ) {
       violations.push(
-        `${resource}: compute and gate quotas must sum to the existing aggregate budget`,
+        `${resource}: compute, light and gate quotas must sum to the existing aggregate budget`,
       );
     }
   }
@@ -301,9 +346,17 @@ export function pooledAdmissionBudgetViolations(
     Object.entries(pools).map(([name, pool]) => [name, pool.queue]),
   );
   violations.push(...unroutableViolations(steps, poolQueue));
-  const gateSteps = steps.filter(
-    (step) => poolQueue.get(step.agentLabels?.["ci-pool"] ?? "") === "ci-gates",
+  const queueOf = (step: AdmissionStep) =>
+    poolQueue.get(step.agentLabels?.["ci-pool"] ?? "");
+  const gateSteps = steps.filter((step) => queueOf(step) === "ci-gates");
+  violations.push(
+    ...lightViolations(
+      steps.filter((step) => queueOf(step) === "ci-light"),
+      queueWorkflows(pools, "ci-light"),
+      budget.lightQuota,
+    ),
   );
+  // Light workflows stay in the compute proof: main runs them there.
   const computeSteps = steps.filter((step) => !gateSteps.includes(step));
   // Before routing activates, the old agent may still hold configurations
   // without today's concurrency groups. It must fit the reduced compute

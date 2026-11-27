@@ -4,10 +4,14 @@ import { parse, parseDocument } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import { completionStep } from "#src/pipeline/completion.ts";
-import { SOURCE_CACHE_PREPARATION_IMAGE } from "#src/pipeline/source-cache.ts";
+import {
+  SOURCE_CACHE_PREPARATION_IMAGE,
+  cacheSourceSteps,
+} from "#src/pipeline/source-cache.ts";
 import { CHECKOUT_TIER, LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import type { CiCommandStep, CiStep } from "#src/pipeline/model.ts";
 import {
+  WORKFLOW_CHECKOUT_TIER,
   WORKFLOW_TIMEOUT_MINUTES,
   emitWorkflow,
   wrapCommands,
@@ -290,6 +294,62 @@ function expectCloneRequests(
   }
 }
 
+const QUANTITY_UNITS: Readonly<Record<string, number>> = {
+  m: 1e-3,
+  "": 1,
+  Mi: 2 ** 20,
+  Gi: 2 ** 30,
+};
+
+function quantity(value: string): number {
+  const match = /^(\d+(?:\.\d+)?)(m|Mi|Gi)?$/u.exec(value);
+  const unit = QUANTITY_UNITS[match?.[2] ?? ""];
+  if (unit === undefined || match?.[1] === undefined)
+    throw new Error(`unsupported quantity ${value}`);
+  return Number(match[1]) * unit;
+}
+
+/**
+ * The admission proof sizes the light reserve from the checkout tier the step
+ * dump records. Every clone pod the emitter actually renders, ordinary or
+ * source-cached, must fit inside it, and the largest must be it.
+ */
+test("records the largest emitted clone pod as the workflow checkout tier", () => {
+  const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+  const cloning = testPipelineSteps().filter(
+    (step) => step.skipClone !== true && step.backend !== "local",
+  );
+  const cached = cacheSourceSteps(cloning, {
+    enabled: true,
+    credentialless: false,
+    main: false,
+    image,
+  });
+  expect(cached.some((step) => step.sourceCache !== undefined)).toBe(true);
+  const checkout = {
+    cpu: WORKFLOW_CHECKOUT_TIER.cpuRequest,
+    memory: WORKFLOW_CHECKOUT_TIER.memoryRequest,
+    "ephemeral-storage": WORKFLOW_CHECKOUT_TIER.ephemeralStorageRequest,
+  };
+  for (const step of [...cloning, ...cached]) {
+    const clones =
+      EmittedServices.parse(
+        parse(substitute(emitWorkflow(step, TEST_IDENTITY))),
+      ).clone ?? [];
+    expect(clones.length, step.key).toBeGreaterThan(0);
+    for (const [resource, limit] of Object.entries(checkout)) {
+      const requests = clones.map((clone) =>
+        quantity(
+          clone.backend_options.kubernetes.resources.requests[resource] ?? "",
+        ),
+      );
+      expect(Math.max(...requests), `${step.key} ${resource}`).toBe(
+        quantity(limit),
+      );
+    }
+  }
+});
+
 describe("pod shape", () => {
   /**
    * Services are separate pods. Without their own requests Kueue and the
@@ -416,5 +476,25 @@ describe("service entrypoints", () => {
       "-config.file=/woodpecker/src/github.com/shepherdjerred/monorepo/packages/llm-observability/test/tempo.yaml",
     ]);
     expect(tempo?.commands).toBeUndefined();
+  });
+
+  /**
+   * Tempo and MinIO hold quota while their step waits, so a literal group caps
+   * them across every PR and main push; the admission proof counts only that
+   * cap, not one per compute slot.
+   */
+  test("caps docker-e2e's held services with a fixed repository-wide group", () => {
+    const step = testPipelineSteps().find(
+      (candidate) => candidate.key === "docker-e2e",
+    );
+    if (step === undefined) throw new Error("missing docker-e2e");
+    expect(
+      z
+        .object({
+          concurrency: z.object({ limit: z.number(), group: z.string() }),
+        })
+        .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))))
+        .concurrency,
+    ).toEqual({ limit: 3, group: "docker-e2e" });
   });
 });

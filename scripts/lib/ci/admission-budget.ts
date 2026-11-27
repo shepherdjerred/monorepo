@@ -14,8 +14,11 @@ export const AdmissionBudgetSchema = z.object({
   quota: Quota,
 });
 
-/** The Kueue LocalQueue an agent pool's pods join: compute or the gate reserve. */
-export type PoolQueue = "default" | "ci-gates";
+/**
+ * The Kueue LocalQueue an agent pool's pods join: compute, the light reserve
+ * for short service-free PR checks, or the gate reserve.
+ */
+export type PoolQueue = "default" | "ci-light" | "ci-gates";
 
 const pool = (queue: PoolQueue) =>
   z
@@ -30,6 +33,7 @@ export const PooledAdmissionBudgetSchema = AdmissionBudgetSchema.extend({
   $comment: z.string(),
   legacyMaxWorkflows: z.number().int().nonnegative(),
   computeQuota: Quota,
+  lightQuota: Quota,
   gateQuota: Quota,
   pools: z
     .object({
@@ -39,6 +43,11 @@ export const PooledAdmissionBudgetSchema = AdmissionBudgetSchema.extend({
       // release notes) has its own agent so it never waits behind the PR
       // backlog, but its pods still queue for compute quota.
       maintenance: pool("default"),
+      // Short, service-free PR checks (scanners, the draft preflight, small
+      // contained checks) have their own agent and a reserved queue that fits
+      // every slot at once, so they never wait behind verify for a slot or
+      // for quota.
+      "pr-light": pool("ci-light"),
       review: pool("ci-gates"),
       completion: pool("ci-gates"),
     })
