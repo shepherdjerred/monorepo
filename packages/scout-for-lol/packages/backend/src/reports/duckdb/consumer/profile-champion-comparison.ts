@@ -9,33 +9,19 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { withPageLakeSession } from "#src/reports/duckdb/consumer/pages/page-session.ts";
 import {
-  buildMatchesSource,
-  listParam,
+  entryAccountPairs,
+  entryGamesSource,
+  gameWindow,
+  rankedEntryGames,
+  type ChampionPageEntry,
+} from "#src/reports/duckdb/consumer/pages/ranked-entry-games.ts";
+import {
   scalarParam,
-  type BoundParam,
-  GAME_CREATED_AT_SQL,
   GAME_CREATED_MS_SQL,
   PLAYED_SECONDS_SQL,
 } from "#src/reports/duckdb/lake.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
-
-function queuePredicate(queues: QueueType[] | undefined): {
-  sql: string;
-  params: BoundParam[];
-} {
-  return queues === undefined
-    ? { sql: "", params: [] }
-    : {
-        sql: "queue IN (SELECT unnest(?))",
-        params: [listParam(queues)],
-      };
-}
-
-export type ChampionComparisonEntry = {
-  entryKey: string;
-  puuids: string[];
-};
 
 const ChampionComparisonRowSchema = z.object({
   entry_key: z.string(),
@@ -77,49 +63,28 @@ export type LakeChampionRecentGame = {
 
 export async function fetchChampionComparisons(options: {
   championId: number;
-  entries: ChampionComparisonEntry[];
+  entries: ChampionPageEntry[];
   games: PlayerProfileGameWindow;
   queues?: QueueType[];
   lakeDir?: string;
 }): Promise<LakeChampionComparisonRow[]> {
-  const pairs = options.entries.flatMap((entry) =>
-    entry.puuids.map((puuid) => ({ entryKey: entry.entryKey, puuid })),
-  );
+  const pairs = entryAccountPairs(options.entries);
   if (pairs.length === 0) return [];
   return await withPageLakeSession(options.lakeDir, async (page) => {
-    const allPuuids = [...new Set(pairs.map((pair) => pair.puuid))];
-    const queues = queuePredicate(options.queues);
-    const source = buildMatchesSource(page.files, {
-      sql: ["puuid IN (SELECT unnest(?))", "champion_id = ?", queues.sql]
-        .filter((part) => part.length > 0)
-        .join(" AND "),
-      params: [
-        listParam(allPuuids),
-        scalarParam(options.championId),
-        ...queues.params,
-      ],
+    const source = entryGamesSource(page.files, {
+      pairs,
+      queues: options.queues,
+      extra: {
+        sql: "champion_id = ?",
+        params: [scalarParam(options.championId)],
+      },
     });
     if (source === undefined) return [];
-    const requestedSql = pairs.map(() => "(?, ?)").join(", ");
-    const requestedParams = pairs.flatMap((pair) => [
-      scalarParam(pair.entryKey),
-      scalarParam(pair.puuid),
-    ]);
-    const windowClause =
-      options.games === "all" ? "" : "WHERE player_game_rank <= ?";
-    const windowParams =
-      options.games === "all" ? [] : [scalarParam(options.games)];
-    const scopedSql =
-      `WITH requested(entry_key, puuid) AS (VALUES ${requestedSql}), ` +
-      `deduped AS (` +
-      `SELECT requested.entry_key, matches.* FROM (${source.sql}) AS matches ` +
-      `INNER JOIN requested ON requested.puuid = matches.puuid ` +
-      `QUALIFY row_number() OVER (` +
-      `PARTITION BY requested.entry_key, matches.match_id ORDER BY matches.puuid) = 1), ` +
-      `ranked AS (` +
-      `SELECT *, row_number() OVER (` +
-      `PARTITION BY entry_key ORDER BY ${GAME_CREATED_AT_SQL} DESC, match_id DESC) AS player_game_rank ` +
-      `FROM deduped), scoped AS (SELECT * FROM ranked ${windowClause}) `;
+    const ranked = rankedEntryGames(source, pairs);
+    const window = gameWindow(options.games);
+    const scopedSql = `${ranked.sql}, scoped AS (SELECT * FROM ranked ${window.where}) `;
+    const requestedParams = ranked.leadingParams;
+    const windowParams = window.params;
     const aggregates = await page.run({
       source,
       leadingParams: requestedParams,

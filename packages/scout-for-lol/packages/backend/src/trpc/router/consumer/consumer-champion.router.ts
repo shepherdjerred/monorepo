@@ -19,7 +19,7 @@ import { fetchChampionIndex } from "#src/reports/duckdb/consumer/pages/champion-
 import { fetchChampionMatchupInputs } from "#src/reports/duckdb/consumer/pages/champion-matchup-reads.ts";
 import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-champion-comparison.ts";
 import {
-  groupChampionPagePeople,
+  getChampionPagePeople,
   getScopedChampionPlayers,
   pageEntries,
 } from "#src/trpc/router/consumer/consumer-champion-people.ts";
@@ -149,17 +149,10 @@ export const consumerChampionRouter = router({
   index: protectedProcedure
     .input(PageScopeInput)
     .query(async ({ ctx, input }) => {
-      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+      const { accessibleGuilds, people } = await getChampionPagePeople(
         ctx.user,
         input.guildIds,
       );
-      const people = groupChampionPagePeople({
-        players,
-        guildNames: new Map(
-          accessibleGuilds.map((guild) => [guild.id, guild.name] as const),
-        ),
-        viewerDiscordId: ctx.user.discordId,
-      });
       const rows = await fetchChampionIndex({
         entries: pageEntries(people),
         games: input.games,
@@ -177,17 +170,7 @@ export const consumerChampionRouter = router({
   matchups: protectedProcedure
     .input(MatchupsInput)
     .query(async ({ ctx, input }) => {
-      const { accessibleGuilds, players } = await getScopedChampionPlayers(
-        ctx.user,
-        input.guildIds,
-      );
-      const people = groupChampionPagePeople({
-        players,
-        guildNames: new Map(
-          accessibleGuilds.map((guild) => [guild.id, guild.name] as const),
-        ),
-        viewerDiscordId: ctx.user.discordId,
-      });
+      const { people } = await getChampionPagePeople(ctx.user, input.guildIds);
       const inputs = await fetchChampionMatchupInputs({
         championId: input.championId,
         lane: input.lane,

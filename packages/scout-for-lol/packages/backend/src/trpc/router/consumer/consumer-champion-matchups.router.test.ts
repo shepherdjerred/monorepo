@@ -1,13 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
-import {
-  configureConsumerProfileFeatureTest,
-  registerConsumerProfileFeatureTestLifecycle,
-} from "#src/testing/consumer-profile-feature-test.ts";
-import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import { createChampionPageTestEnv } from "#src/testing/consumer-champion-test-env.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import {
   AHRI,
@@ -21,45 +13,19 @@ import {
   lobby,
   matchId,
   mid,
-  seedGroup as seedChampionGroup,
   soloGame,
-  writeLobbies as writeChampionLobbies,
 } from "#src/testing/consumer-champion-group.ts";
 
-const guildId = DiscordGuildIdSchema.parse("100000000000000051");
-const otherGuildId = DiscordGuildIdSchema.parse("100000000000000052");
-const profileFeature = configureConsumerProfileFeatureTest([
+const {
   guildId,
   otherGuildId,
-]);
-const trpc = await createOfflineTrpcHarness("trpc-consumer-champion-matchups");
-const { prisma: testPrisma } = trpc;
-const { lakeDir } = profileFeature;
-const viewerDiscordId = DiscordAccountIdSchema.parse("300000000000000051");
-
-const seedGroup = () =>
-  seedChampionGroup(testPrisma, { guildId, otherGuildId, viewerDiscordId });
-const writeLobbies = (
-  lobbies: Parameters<typeof writeChampionLobbies>[2],
-  extra?: Parameters<typeof writeChampionLobbies>[3],
-) => writeChampionLobbies(lakeDir, { guildId, otherGuildId }, lobbies, extra);
-
-registerConsumerProfileFeatureTestLifecycle({
-  feature: profileFeature,
-  prepare: async () => {
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await testPrisma.account.deleteMany();
-    await testPrisma.player.deleteMany();
-    await profileFeature.resetLake();
-  },
-  cleanup: async () => {
-    await testPrisma.$disconnect();
-  },
-});
-
-function caller() {
-  return trpc.authedCaller(viewerDiscordId);
-}
+  lakeDir,
+  profileFeature,
+  trpc,
+  caller,
+  seedGroup,
+  writeLobbies,
+} = await createChampionPageTestEnv("trpc-consumer-champion-matchups");
 
 describe("consumerChampion.matchups", () => {
   test("tallies each opponent for the viewer and friends, with the games a lane result rests on", async () => {

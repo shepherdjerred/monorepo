@@ -8,6 +8,7 @@ import type {
   LeaguePuuid,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import {
@@ -39,49 +40,6 @@ export const JINX = { id: 222, name: "Jinx" };
 
 export function matchId(n: number): RiotMatchId {
   return RiotMatchIdSchema.parse(`NA1_${(8_800_000_000 + n).toString()}`);
-}
-
-export async function seedPlayer(
-  testPrisma: ExtendedPrismaClient,
-  creator: DiscordAccountId,
-  options: {
-    serverId: DiscordGuildId;
-    alias: string;
-    discordId?: DiscordAccountId;
-    puuids: LeaguePuuid[];
-  },
-) {
-  const now = new Date();
-  const player = await testPrisma.player.create({
-    data: {
-      alias: options.alias,
-      ...(options.discordId === undefined
-        ? {}
-        : { discordId: options.discordId }),
-      serverId: options.serverId,
-      creatorDiscordId: creator,
-      createdTime: now,
-      updatedTime: now,
-    },
-  });
-  await testPrisma.account.createMany({
-    data: options.puuids.map((puuid, index) => ({
-      alias: `${options.alias}-${index.toString()}`,
-      puuid,
-      region: "AMERICA_NORTH",
-      playerId: player.id,
-      serverId: options.serverId,
-      creatorDiscordId: creator,
-      riotGameName: `${options.alias} Riot ${index.toString()}`,
-      riotTagLine: "NA1",
-      riotIdUpdatedAt: now,
-      lastMatchTime: now,
-      lastCheckedAt: now,
-      createdTime: now,
-      updatedTime: now,
-    })),
-  });
-  return player;
 }
 
 type Seat = {
@@ -198,8 +156,8 @@ export async function seedGroup(
   },
 ) {
   const { guildId, otherGuildId, viewerDiscordId } = scope;
-  const seedPlayer_ = (options: Parameters<typeof seedPlayer>[2]) =>
-    seedPlayer(testPrisma, viewerDiscordId, options);
+  const seedPlayer_ = (options: Parameters<typeof seedConsumerPlayer>[2]) =>
+    seedConsumerPlayer(testPrisma, viewerDiscordId, options);
   const viewer = await seedPlayer_({
     serverId: guildId,
     alias: "Northstar",

@@ -1,15 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
-import {
-  configureConsumerProfileFeatureTest,
-  registerConsumerProfileFeatureTestLifecycle,
-} from "#src/testing/consumer-profile-feature-test.ts";
+import { createChampionPageTestEnv } from "#src/testing/consumer-champion-test-env.ts";
 import type * as AccessModule from "#src/consumer/access.ts";
 import type * as InstanceModule from "#src/reports/duckdb/instance.ts";
-import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import {
   AHRI,
@@ -21,10 +13,7 @@ import {
   VIEWER_MAIN,
   JINX,
   groupGames,
-  seedGroup as seedChampionGroup,
-  seedPlayer as seedChampionPlayer,
   soloGame,
-  writeLobbies as writeChampionLobbies,
 } from "#src/testing/consumer-champion-group.ts";
 
 // Counts the DuckDB connections each request opens: a page costs one slot.
@@ -61,43 +50,21 @@ vi.mock("#src/consumer/access.ts", async () => {
   };
 });
 
-const guildId = DiscordGuildIdSchema.parse("100000000000000051");
-const otherGuildId = DiscordGuildIdSchema.parse("100000000000000052");
-const profileFeature = configureConsumerProfileFeatureTest([
+const {
   guildId,
   otherGuildId,
-]);
-const trpc = await createOfflineTrpcHarness("trpc-consumer-champion-index");
-const { prisma: testPrisma } = trpc;
-const { lakeDir } = profileFeature;
-const viewerDiscordId = DiscordAccountIdSchema.parse("300000000000000051");
-
-const seedGroup = () =>
-  seedChampionGroup(testPrisma, { guildId, otherGuildId, viewerDiscordId });
-const seedPlayer = (options: Parameters<typeof seedChampionPlayer>[2]) =>
-  seedChampionPlayer(testPrisma, viewerDiscordId, options);
-const writeLobbies = (
-  lobbies: Parameters<typeof writeChampionLobbies>[2],
-  extra?: Parameters<typeof writeChampionLobbies>[3],
-) => writeChampionLobbies(lakeDir, { guildId, otherGuildId }, lobbies, extra);
-
-registerConsumerProfileFeatureTestLifecycle({
-  feature: profileFeature,
-  prepare: async () => {
+  lakeDir,
+  profileFeature,
+  trpc,
+  caller,
+  seedGroup,
+  seedPlayer,
+  writeLobbies,
+} = await createChampionPageTestEnv("trpc-consumer-champion-index", {
+  onPrepare: () => {
     discord.unavailable = false;
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await testPrisma.account.deleteMany();
-    await testPrisma.player.deleteMany();
-    await profileFeature.resetLake();
-  },
-  cleanup: async () => {
-    await testPrisma.$disconnect();
   },
 });
-
-function caller() {
-  return trpc.authedCaller(viewerDiscordId);
-}
 
 describe("champion pages: access", () => {
   const requests = {

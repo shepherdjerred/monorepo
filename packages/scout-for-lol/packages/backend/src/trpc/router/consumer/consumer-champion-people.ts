@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
@@ -61,7 +62,7 @@ export type ChampionPagePerson = {
   alias: string;
   isViewer: boolean;
   guilds: { guildId: DiscordGuildId; name: string }[];
-  puuids: string[];
+  puuids: LeaguePuuid[];
 };
 
 /**
@@ -112,6 +113,25 @@ export function groupChampionPagePeople(options: {
       ),
     }))
     .filter((person) => person.puuids.length > 0);
+}
+
+/** The people a champion page covers, after the per-request access check. */
+export async function getChampionPagePeople(
+  user: Parameters<typeof assertConsumerPlayerScope>[0],
+  requestedGuildIds: readonly DiscordGuildId[] | undefined,
+) {
+  const { accessibleGuilds, players } = await getScopedChampionPlayers(
+    user,
+    requestedGuildIds,
+  );
+  const people = groupChampionPagePeople({
+    players,
+    guildNames: new Map(
+      accessibleGuilds.map((guild) => [guild.id, guild.name] as const),
+    ),
+    viewerDiscordId: user.discordId,
+  });
+  return { accessibleGuilds, people };
 }
 
 export function pageEntries(people: readonly ChampionPagePerson[]) {
