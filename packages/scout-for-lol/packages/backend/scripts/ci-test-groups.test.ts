@@ -13,7 +13,19 @@
  * - a suite is in the `db` group exactly when its import graph reaches the
  *   PostgreSQL test harness, so the free group stays free of PostgreSQL;
  * - the inputs each task drops are test files that task does not run, so a
- *   cache hit can never skip a file the task executes.
+ *   cache hit can never skip a file the task executes;
+ * - every `db` filter selects exactly one file, so no file runs twice;
+ * - `package.json` has one `test:ci:<group>` / `test:extended:<group>` script
+ *   per group and `turbo.json`'s `test:ci` / `test:extended` depend on exactly
+ *   those tasks, so a forgotten script or edge silently drops a group.
+ *
+ * Limit: "free" is enforced by the static import graph (literal `import`,
+ * dynamic `import("literal")`, `vi.mock`), and by forbidding `require()` and
+ * non-literal `import(x)` anywhere under src/ and scripts/ so the graph cannot
+ * be bypassed that way. A free suite that reaches PostgreSQL by another route
+ * (spawning a process, a runtime-built module path) is not detected here: the
+ * manifest has no per-step environment to point the free groups at an
+ * unreachable `SCOUT_PG_PORT` and make that fail loudly.
  *
  * Source files are never dropped from any group's inputs: the groups import the
  * same modules, so narrowing them below the whole tree would serve stale hits.
@@ -34,6 +46,7 @@ const PG_HARNESS_FILES = [
 const PG_PACKAGE = "@shepherdjerred/test-postgres";
 const INTEGRATION_EXCLUDE = "**/*.integration.test.ts";
 
+const PackageSchema = z.object({ scripts: z.record(z.string(), z.string()) });
 const StepSchema = z.object({
   group: z.string(),
   name: z.string(),
@@ -44,7 +57,12 @@ const ManifestSchema = z.object({ steps: z.array(StepSchema) });
 const TurboSchema = z.object({
   tasks: z.record(
     z.string(),
-    z.object({ inputs: z.array(z.string()).optional() }).loose(),
+    z
+      .object({
+        inputs: z.array(z.string()).optional(),
+        dependsOn: z.array(z.string()).optional(),
+      })
+      .loose(),
   ),
 });
 
@@ -158,6 +176,18 @@ function matches(pattern: string, files: readonly string[]): string[] {
   return files.filter((file) => glob.match(file));
 }
 
+/** Groups with at least one step that runs in the tier, in manifest order. */
+async function groupsOfTier(tier: "ci" | "extended"): Promise<string[]> {
+  const { steps } = ManifestSchema.parse(await readJsonc("ci-tests.json"));
+  const groups = steps
+    .filter((step) => {
+      const own = step.tier ?? "ci";
+      return own === tier || own === "shared";
+    })
+    .map((step) => step.group);
+  return [...new Set(groups)];
+}
+
 describe("backend CI test groups", () => {
   test("free shards exclude exactly the db group's files and number themselves", async () => {
     const { dbFiles, freeSteps } = await readGroups();
@@ -260,5 +290,78 @@ describe("backend CI test groups", () => {
         ).toBe(false);
       }
     }
+  });
+
+  test("every db filter selects exactly one test file", async () => {
+    const { dbFiles } = await readGroups();
+    // Vitest treats a positional argument as a substring of the file path, so
+    // `a.test.ts` would also select `sub/a.test.ts` and run it in two groups.
+    const everyTest = await scan(
+      "{src,scripts,test}/**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
+    );
+    for (const filter of dbFiles) {
+      expect(
+        everyTest.filter((file) => file.includes(filter)),
+        `${filter} must select exactly itself`,
+      ).toEqual([filter]);
+    }
+  });
+
+  test("package.json and turbo.json wire every group's task", async () => {
+    const { scripts } = PackageSchema.parse(await readJsonc("package.json"));
+    const turbo = TurboSchema.parse(await readJsonc("turbo.json"));
+    const runner = "bun ../../../../scripts/ci/run-ci-test.ts";
+    const tiers = [
+      { tier: "ci", prefix: "test:ci", suffix: "" },
+      { tier: "extended", prefix: "test:extended", suffix: " --tier extended" },
+    ] as const;
+    for (const { tier, prefix, suffix } of tiers) {
+      const groups = await groupsOfTier(tier);
+      expect(groups.length, `${tier} tier has groups`).toBeGreaterThan(0);
+      for (const group of groups) {
+        expect(scripts[`${prefix}:${group}`], `${prefix}:${group} script`).toBe(
+          `${runner} --group ${group}${suffix}`,
+        );
+        expect(
+          turbo.tasks[`${prefix}:${group}`],
+          `${prefix}:${group} turbo task`,
+        ).toBeDefined();
+      }
+      expect(
+        Object.keys(scripts)
+          .filter((name) => name.startsWith(`${prefix}:`))
+          .sort(),
+        `${prefix}:* scripts are exactly the ${tier} groups`,
+      ).toEqual(groups.map((group) => `${prefix}:${group}`).sort());
+      expect(
+        [...(turbo.tasks[prefix]?.dependsOn ?? [])].sort(),
+        `turbo.json ${prefix}.dependsOn`,
+      ).toEqual(groups.map((group) => `${prefix}:${group}`).sort());
+    }
+  });
+
+  test("no source file bypasses the import graph with require() or a computed import()", async () => {
+    const BYPASS = /(?:^|[^\w.$/])(?:require\s*\(|import\s*\(\s*[^"'\s)])/u;
+    const offenders: string[] = [];
+    const files = [
+      ...(await scan("src/**/*.ts")),
+      ...(await scan("scripts/**/*.ts")),
+    ].filter((file) => file !== "scripts/ci-test-groups.test.ts");
+    for (const file of files) {
+      const lines = (
+        await Bun.file(path.join(backendDirectory, file)).text()
+      ).split("\n");
+      lines.forEach((line, index) => {
+        const code = line.trimStart();
+        if (code.startsWith("*") || code.startsWith("//")) return;
+        if (BYPASS.test(line)) {
+          offenders.push(`${file}:${String(index + 1)}: ${code}`);
+        }
+      });
+    }
+    expect(
+      offenders,
+      "the PostgreSQL-free check reads literal imports only; use a literal import instead",
+    ).toEqual([]);
   });
 });
