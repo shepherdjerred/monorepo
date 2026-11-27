@@ -1,7 +1,7 @@
 /**
- * Lockfile, root-manifest, and patch attribution machinery for image
- * selection: JSONC/bun.lock parsing, per-closure resolution fingerprints, and
- * the content-aware manifest classifier. Split from select-image-targets.ts
+ * Lockfile and patch attribution machinery for image selection: JSONC/bun.lock
+ * parsing and per-closure resolution fingerprints (root manifests live in
+ * select-image-targets-manifests.ts). Split from select-image-targets.ts
  * (which re-exports the public pieces) to keep both files scannable; like the
  * selector, this is dependency-free and must run under `bun --no-install`
  * before any workspace install.
@@ -9,13 +9,6 @@
  * This file shapes image selection, so it is listed in GLOBAL_IMAGE_INPUTS —
  * a change here rebuilds every image (fail-safe).
  */
-
-// Top-level root-manifest keys whose changes are NOT global: repo tooling
-// (devDependencies: turbo, prettier, knip, …) and script text ship in no
-// image. Everything else — workspaces, overrides, patchedDependencies,
-// trustedDependencies, packageManager — shapes resolution or install behavior
-// for every image and stays global.
-const MANIFEST_ATTRIBUTABLE_KEYS = new Set(["devDependencies", "scripts"]);
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -28,40 +21,6 @@ export type FilePair = {
 };
 
 /**
- * Whether a root-manifest (package.json / scripts/package.json) change must
- * select every image. Allowlist, not blocklist: the change may skip the
- * global trigger ONLY if every differing top-level key is in
- * MANIFEST_ATTRIBUTABLE_KEYS. Parse failure, an unreadable base, or any other
- * differing key → true (fail open).
- */
-export function manifestChangeIsGlobal(pair: FilePair): boolean {
-  if (pair.base === null) {
-    return true;
-  }
-  let baseRaw: unknown;
-  let headRaw: unknown;
-  try {
-    baseRaw = JSON.parse(pair.base);
-    headRaw = JSON.parse(pair.head);
-  } catch {
-    return true;
-  }
-  if (!isRecord(baseRaw) || !isRecord(headRaw)) {
-    return true;
-  }
-  const keys = new Set([...Object.keys(baseRaw), ...Object.keys(headRaw)]);
-  for (const key of keys) {
-    const same =
-      JSON.stringify(baseRaw[key] ?? null) ===
-      JSON.stringify(headRaw[key] ?? null);
-    if (!same && !MANIFEST_ATTRIBUTABLE_KEYS.has(key)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Resolve a changed patch file to the "dep@version" it patches via the HEAD
  * root manifest's patchedDependencies ("dep@version" → "patches/<file>").
  * Patches apply to one exact resolved version, so the caller matches the full
@@ -69,7 +28,7 @@ export function manifestChangeIsGlobal(pair: FilePair): boolean {
  * DIFFERENT version of the same dep is correctly unaffected. Returns null
  * when the file has no manifest entry (the caller fails open); an
  * added/removed patch also changes patchedDependencies itself, which is a
- * global key in manifestChangeIsGlobal.
+ * global key (select-image-targets-manifests.ts).
  */
 export function patchedDependencyKey(
   path: string,

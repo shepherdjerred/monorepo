@@ -16,12 +16,12 @@ import {
 import {
   closureFingerprint,
   closurePackageIds,
-  manifestChangeIsGlobal,
   parseJsonc,
   parseLockfile,
   patchedDependencyKey,
   type LockfilePair,
 } from "./select-image-targets-lockfile.ts";
+import { classifyManifestChange } from "./select-image-targets-manifests.ts";
 
 const REPO_ROOT = new URL("../../..", import.meta.url).pathname;
 function selectorInputs(inputs?: SelectorInputs): SelectorInputs {
@@ -82,10 +82,39 @@ test("rebuilds both consumers of The Storm's public status contract", async () =
   ]);
 });
 
-test("service ownership changes qualify fresh candidates for every image owner", async () => {
-  expect(await select(["packages/ops-model/services.json"])).toEqual(
-    ALL_IMAGE_TARGETS,
-  );
+test("service catalog changes rebuild only the images that copy the catalog", async () => {
+  // Ownership itself no longer forces a rebuild: v2 publication reads owners
+  // from the catalog document, and an owner with no artifact is built anyway
+  // (includeMissingQualifiedImages). services.json still ships inside every
+  // image whose Dockerfile copies ops-model.
+  expect(await select(["packages/ops-model/services.json"])).toEqual([
+    "alert-dashboard",
+    "charts",
+    "ci-cache",
+    "delivery",
+    "errors",
+    "feeds",
+    "flags",
+    "golink",
+    "mail",
+    "temporal-worker",
+    "tracker",
+    "trmnl-dashboard",
+  ]);
+  // These install ops-model's manifest but copy none of its source.
+  const manifest = await select(["packages/ops-model/package.json"]);
+  const source = await select(["packages/ops-model/src/catalog.ts"]);
+  for (const target of [
+    "arcade",
+    "birmel",
+    "scout-for-lol",
+    "storm-brain",
+    "streambot",
+  ]) {
+    expect(manifest).toContain(target);
+    expect(source).not.toContain(target);
+  }
+  expect(source).toContain("storm-forum");
 });
 
 test.each(["json", "ts"])(
@@ -153,11 +182,15 @@ describe("selectImageTargets", () => {
       "packages/homelab/src/cdk8s/src/misc/common.ts",
       "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
       "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
-      "packages/homelab/src/platform-model.json",
       "packages/homelab/src/platform-model.ts",
     ]) {
       expect(await select([path])).toEqual(["infra"]);
     }
+    // golink's client build and runtime copy the platform model too.
+    expect(await select(["packages/homelab/src/platform-model.json"])).toEqual([
+      "golink",
+      "infra",
+    ]);
   });
 
   test("rebuilds both registry consumers while keeping homelab image sources scoped", async () => {
@@ -231,12 +264,6 @@ describe("selectImageTargets", () => {
     ).toContain("infra");
   });
 
-  test("rebuilds infra when the shared companion contract changes", async () => {
-    expect(
-      await select(["packages/storm-brain/contracts/companion-chat.json"]),
-    ).toContain("infra");
-  });
-
   test("leaves images alone for The Storm files outside the image context", async () => {
     for (const path of [
       "packages/the-storm/README.md",
@@ -278,42 +305,39 @@ describe("selectImageTargets", () => {
     }
   });
 
-  test("selects every image when build or selector machinery changes", async () => {
+  test("selects every image when bake, classification, or selector machinery changes", async () => {
     for (const path of [
       "docker-bake.hcl",
-      "packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts",
       "ci/scripts/images/bake-images.ts",
-      "ci/scripts/images/bake-retry.ts",
-      "ci/scripts/reporting/buildkit-env.ts",
-      "scripts/lib/ci/ci-handoff.ts",
-      "scripts/lib/ci/published-image-release.ts",
-      "ci/scripts/images/dockerhub-access.ts",
       "ci/scripts/images/image-targets.ts",
+      "ci/scripts/images/live-version-catalog.ts",
       "ci/scripts/migration-core.ts",
+      "packages/woodpecker-config-extension/src/pipeline/lanes/artifacts.ts",
       "ci/scripts/images/production-bake-environment.ts",
+      "ci/scripts/selectors/ensure-ancestor.ts",
       "ci/scripts/selectors/select-image-targets.ts",
+      "ci/scripts/selectors/select-image-targets-inputs.ts",
       "ci/scripts/selectors/select-image-targets-lockfile.ts",
       "ci/scripts/selectors/select-image-targets-pins.ts",
       "ci/scripts/selectors/select-image-targets-workspaces.ts",
-      "scripts/lib/image-pin-catalog.ts",
     ]) {
       expect(await select([path])).toEqual(ALL_IMAGE_TARGETS);
     }
   });
 
   test("does not rebuild images for orchestration-only inputs", async () => {
-    for (const path of [
-      "ci/scripts/upload-pipeline.sh",
-      ".mise.toml",
-      "turbo.json",
-    ]) {
+    for (const path of ["ci/scripts/upload-pipeline.sh", "turbo.json"]) {
       expect(await select([path])).toEqual([]);
     }
   });
 
-  test("fails open for root manifests when contents are unavailable", async () => {
+  test("fails open for an unreadable root manifest and bounds the scripts manifest", async () => {
     expect(await select(["package.json"])).toEqual(ALL_IMAGE_TARGETS);
-    expect(await select(["scripts/package.json"])).toEqual(ALL_IMAGE_TARGETS);
+    // scripts/package.json reaches only installs whose closure depends on it.
+    expect(await select(["scripts/package.json"])).toEqual([
+      "scout-for-lol",
+      "temporal-worker",
+    ]);
   });
 
   test("attributes a workspace package.json to its closure, not ALL images", async () => {
@@ -322,9 +346,9 @@ describe("selectImageTargets", () => {
     expect(await select(["packages/birmel/package.json"])).toEqual(["birmel"]);
   });
 
-  test("selects Scout for its shared base TypeScript config", async () => {
+  test("selects Scout and Temporal's build for Scout's shared base TypeScript config", async () => {
     expect(await select(["packages/scout-for-lol/tsconfig.base.json"])).toEqual(
-      ["scout-for-lol"],
+      ["scout-for-lol", "temporal-worker"],
     );
   });
 
@@ -339,6 +363,74 @@ describe("selectImageTargets", () => {
 
   test("selects nothing for unrelated documentation", async () => {
     expect(await select(["README.md"])).toEqual([]);
+  });
+});
+
+describe("inputs outside workspace closures", () => {
+  test("rebuilds infra when a contract The Storm's plugin compiles against changes", async () => {
+    for (const path of [
+      "packages/storm-brain/contracts/companion-chat.json",
+      "packages/storm-brain/contracts/content-moderation.json",
+      "packages/mc-harness/src/protocol/evidence-contract.json",
+    ]) {
+      expect(await select([path]), path).toContain("infra");
+    }
+  });
+
+  test("rebuilds Temporal for the repository sources and pins its Dockerfile copies", async () => {
+    for (const path of [
+      "scripts/lib/run.ts",
+      "packages/the-storm/promotion/README.md",
+      ".mise.toml",
+      "mise.lock",
+    ]) {
+      expect(await select([path]), path).toEqual(["temporal-worker"]);
+    }
+  });
+
+  test("rebuilds Arcade for the Pokemon agent knowledge it ships", async () => {
+    for (const path of [
+      "packages/discord-plays-pokemon/AGENTS.md",
+      "packages/discord-plays-pokemon/knowledge/README.md",
+      "packages/discord-plays-pokemon/.agents/skills/README.md",
+    ]) {
+      expect(await select([path]), path).toEqual(["arcade"]);
+    }
+  });
+
+  test("does not rebuild images for publication plumbing", async () => {
+    // None of these reaches an image's bytes, and Delivery keeps the original
+    // of any rebuilt candidate whose content did not change.
+    for (const path of [
+      "ci/scripts/images/bake-retry.ts",
+      "ci/scripts/images/dockerhub-access.ts",
+      "ci/scripts/reporting/buildkit-env.ts",
+      "ci/scripts/reporting/dockerhub-env.ts",
+    ]) {
+      expect(await select([path]), path).toEqual([]);
+    }
+    // Temporal's runtime copies all of scripts/lib, so only it rebuilds.
+    for (const path of [
+      "scripts/lib/ci/ci-handoff.ts",
+      "scripts/lib/ci/published-image-release.ts",
+      "scripts/lib/dockerhub-credentials.ts",
+      "scripts/lib/image-pin-catalog.ts",
+    ]) {
+      expect(await select([path]), path).toEqual(["temporal-worker"]);
+    }
+    // Registry visibility rebuilds only the images that copy version-catalog.
+    expect(
+      await select(["packages/version-catalog/src/image-registry.json"]),
+    ).toEqual(await select(["packages/version-catalog/src/catalog.json"]));
+    expect(
+      await select(["packages/version-catalog/src/image-registry.json"]),
+    ).not.toContain("birmel");
+    // The CI toolchain refresh lane rebuilds only the extension it lives in.
+    expect(
+      await select([
+        "packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts",
+      ]),
+    ).toEqual(["woodpecker-config-extension"]);
   });
 });
 
@@ -523,11 +615,58 @@ describe("root manifest attribution", () => {
     );
   });
 
-  test("a workspaces change stays global", async () => {
-    const head = { ...basePkg, workspaces: ["packages/a", "packages/b"] };
-    expect(await select(["package.json"], pair(head))).toEqual(
-      ALL_IMAGE_TARGETS,
+  test("an added workspace selects only the closures that depend on it", async () => {
+    // packages/b is in no image closure; llm-models is in several.
+    const unused = { ...basePkg, workspaces: ["packages/a", "packages/b"] };
+    expect(await select(["package.json"], pair(unused))).toEqual([]);
+    const shared = {
+      ...basePkg,
+      workspaces: ["packages/llm-models", "packages/a"],
+    };
+    const { targets, report } = await selectWithReasons(
+      ["package.json"],
+      pair(shared),
     );
+    expect(targets).toEqual(await select(["packages/llm-models/package.json"]));
+    expect(report.targets["scout-for-lol"]).toEqual([
+      "new workspace in package.json: packages/llm-models",
+    ]);
+  });
+
+  test("an added workspace no manifests stage copies stays global", async () => {
+    // workspace-manifests.ts would fail to read its manifest in every
+    // application image, so every application image must build.
+    const head = {
+      ...basePkg,
+      workspaces: ["packages/a", "packages/homelab/src/new-tool"],
+    };
+    const { targets, report } = await selectWithReasons(
+      ["package.json"],
+      pair(head),
+    );
+    expect(targets).toEqual(ALL_IMAGE_TARGETS);
+    expect(report.globalReason).toBe(
+      "package.json adds workspace packages/homelab/src/new-tool, whose manifest no application manifests stage copies",
+    );
+  });
+
+  test("a removed, reordered, or duplicated workspace stays global", async () => {
+    const base = { ...basePkg, workspaces: ["packages/a", "packages/c"] };
+    for (const workspaces of [
+      [],
+      ["packages/c", "packages/a", "packages/b"],
+      ["packages/a", "packages/c", "packages/a"],
+    ]) {
+      expect(
+        await select(["package.json"], {
+          rootPackageJson: {
+            base: JSON.stringify(base),
+            head: JSON.stringify({ ...basePkg, workspaces }),
+          },
+        }),
+        JSON.stringify(workspaces),
+      ).toEqual(ALL_IMAGE_TARGETS);
+    }
   });
 
   test("a new top-level key stays global", async () => {
@@ -550,21 +689,29 @@ describe("root manifest attribution", () => {
     ).toEqual(ALL_IMAGE_TARGETS);
   });
 
-  test("scripts/package.json gets the same treatment", async () => {
-    const head = { ...basePkg, devDependencies: { turbo: "2.0.0" } };
-    expect(
-      await select(["scripts/package.json"], {
-        scriptsPackageJson: {
-          base: JSON.stringify(basePkg),
-          head: JSON.stringify(head),
-        },
-      }),
-    ).toEqual([]);
+  test("scripts/package.json selects only the installs that project it", async () => {
+    const scripts = (head: object): SelectorInputs => ({
+      scriptsPackageJson: {
+        base: JSON.stringify(basePkg),
+        head: JSON.stringify(head),
+      },
+    });
+    const tooling = { ...basePkg, devDependencies: { turbo: "2.0.0" } };
+    expect(await select(["scripts/package.json"], scripts(tooling))).toEqual(
+      [],
+    );
+    const dependency = { ...basePkg, dependencies: { zod: "4.0.0" } };
+    expect(await select(["scripts/package.json"], scripts(dependency))).toEqual(
+      ["scout-for-lol", "temporal-worker"],
+    );
   });
 
-  test("manifestChangeIsGlobal treats identical content as attributable", () => {
+  test("classifyManifestChange treats identical content as attributable", () => {
     const text = JSON.stringify(basePkg);
-    expect(manifestChangeIsGlobal({ base: text, head: text })).toBe(false);
+    expect(classifyManifestChange({ base: text, head: text })).toEqual({
+      global: false,
+      addedWorkspaces: [],
+    });
   });
 });
 
