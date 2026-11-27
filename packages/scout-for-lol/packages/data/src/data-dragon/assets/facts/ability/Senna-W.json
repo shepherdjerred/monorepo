@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Senna-W",
+  "name": "Last Embrace",
+  "description": "Senna sends forth the Black Mist, dealing 70/110/150/190/230 (+90% bonus AD) physical damage to the first enemy hit. After a 1 second delay the target and other nearby enemies are Rooted for 1.25/1.5/1.75/2/2.25 second(s).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/55/60/65/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Senna-W.png",
+  "slot": "W",
+  "championKey": "Senna",
+  "championName": "Senna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    11,
+    11,
+    11,
+    11
+  ],
+  "costByRank": [
+    50,
+    55,
+    60,
+    65,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1250,
+    1250,
+    1250,
+    1250,
+    1250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11 s"
+  }
+}

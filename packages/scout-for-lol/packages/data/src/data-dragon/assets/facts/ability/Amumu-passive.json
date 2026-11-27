@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Amumu-passive",
+  "name": "Cursed Touch",
+  "description": "Amumu's basic attacks Curse his enemies, causing them to take bonus true damage from incoming magic damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Amumu-passive.png",
+  "slot": "passive",
+  "championKey": "Amumu",
+  "championName": "Amumu",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

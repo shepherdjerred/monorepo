@@ -302,6 +302,66 @@ describe("aws credential", () => {
       expect(CREDENTIAL_REGISTRY[names.accessKeyId]).toBeDefined();
       expect(CREDENTIAL_REGISTRY[names.secretAccessKey]).toBeDefined();
     }
+    const vaultRef = "op://v64ocnykdqju4ui6j6pua56xw4";
+    const r2ItemId = "du6dxzjfiml7f7qnj2peyff3ba";
+    for (const profile of ["r2-archives", "r2"]) {
+      expect(AWS_CREDENTIAL_PROFILES.get(profile)).toEqual({
+        accessKeyId: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+        secretAccessKey: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+      });
+    }
+    expect(CREDENTIAL_REGISTRY["CLOUDFLARE_R2_ACCESS_KEY_ID"]?.source).toEqual({
+      kind: "op",
+      ref: `${vaultRef}/${r2ItemId}/CLOUDFLARE_R2_ACCESS_KEY_ID`,
+    });
+    expect(
+      CREDENTIAL_REGISTRY["CLOUDFLARE_R2_SECRET_ACCESS_KEY"]?.source,
+    ).toEqual({
+      kind: "op",
+      ref: `${vaultRef}/${r2ItemId}/CLOUDFLARE_R2_SECRET_ACCESS_KEY`,
+    });
+  });
+
+  test("serves credential_process output for r2-archives and r2", async () => {
+    const savedSa = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
+    Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = FAKE_SA_TOKEN;
+    const stdout: string[] = [];
+    vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+      stdout.push(args.map(String).join(" "));
+    });
+    captureStderr();
+    try {
+      const calls: Call[] = [];
+      const run = recordingRun(calls, (argv) =>
+        argv[2]?.endsWith("/CLOUDFLARE_R2_ACCESS_KEY_ID") === true
+          ? "r2-access-id\n"
+          : "r2-secret-key\n",
+      );
+      const configPath = await absentConfig();
+      for (const profile of ["r2-archives", "r2"]) {
+        expect(
+          await runAwsCredential([profile], false, {
+            run,
+            cache: null,
+            configPath,
+          }),
+        ).toBe(0);
+      }
+      expect(stdout).toHaveLength(2);
+      for (const line of stdout) {
+        expect(JSON.parse(line)).toMatchObject({
+          Version: 1,
+          AccessKeyId: "r2-access-id",
+          SecretAccessKey: "r2-secret-key",
+        });
+      }
+    } finally {
+      if (savedSa === undefined) {
+        Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
+      } else {
+        Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = savedSa;
+      }
+    }
   });
 
   test("prints credential_process JSON", () => {

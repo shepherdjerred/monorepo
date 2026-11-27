@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Fizz",
+  "name": "Fizz",
+  "description": "Fizz is an amphibious yordle, who dwells among the reefs surrounding Bilgewater.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Fizz-passive",
+      "name": "Nimble Fighter",
+      "icon": "img/ability/Fizz-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fizz-Q",
+      "name": "Urchin Strike",
+      "icon": "img/ability/Fizz-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fizz-W",
+      "name": "Seastone Trident",
+      "icon": "img/ability/Fizz-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fizz-E",
+      "name": "Playful / Trickster",
+      "icon": "img/ability/Fizz-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Fizz-R",
+      "name": "Chum the Waters",
+      "icon": "img/ability/Fizz-R.png"
+    }
+  ],
+  "icon": "img/champion/Fizz.png",
+  "art": "img/champion-splash/Fizz_0.jpg",
+  "title": "the Tidal Trickster",
+  "roles": [
+    "Assassin",
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Fighter"
+  }
+}

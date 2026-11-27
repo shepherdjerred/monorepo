@@ -1,13 +1,22 @@
 /*
- * What Flags needs on top of @shepherdjerred/console-ui: the two-pane body,
- * the editor and its Monaco hosts, the conflict banner and the review dialog.
- * Every colour is a `--ui-*` token.
+ * What Flags needs on top of @shepherdjerred/console-ui: the page kit gives
+ * every page Hub's layout, so these rules are the two-pane body, the editor
+ * and its Monaco hosts, the conflict banner, the review dialog and the views
+ * (catalog cards, compare, diff, drift). Every colour is a `--ui-*` token.
+ * Unlayered, so they win over the shared `ui.*` layers.
  */
 
-.fl-workspace {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100dvh - 18px);
+/* Hub's sidebar rows and group spacing, so the sidebars line up. */
+.ui-nav-item {
+  height: 26px;
+}
+
+.ui-nav-group {
+  margin-top: 6px;
+}
+
+.ui-nav-group:first-child {
+  margin-top: 4px;
 }
 
 .fl-note {
@@ -20,9 +29,11 @@
   color: var(--ui-muted);
 }
 
+/* The list and the editor, as two cards side by side. */
 .fl-body {
   display: grid;
-  flex: 1;
+  align-items: start;
+  gap: 16px;
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 30rem);
 }
 
@@ -35,26 +46,19 @@
   opacity: 0.55;
 }
 
-.fl-list .ui-toolbar {
-  padding: 12px 20px;
-}
-
-.fl-list input[type="search"] {
-  width: 240px;
-}
-
 .fl-detail {
   display: flex;
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-  padding: 16px 20px 24px;
-  border-left: 1px solid var(--ui-line);
+  padding: 16px 18px 20px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-panel);
 }
 
 p.fl-detail {
   display: block;
-  padding: 16px 20px;
 }
 
 .fl-detail-head {
@@ -81,13 +85,22 @@ p.fl-detail {
   height: 14px;
 }
 
+.fl-revision {
+  font-variant-numeric: tabular-nums;
+}
+
 /* The selected row stays highlighted; the whole row is the link's hit area. */
-.ui-table tbody tr {
+.fl-table tbody tr {
   position: relative;
 }
 
-.ui-table tr[data-current] :is(th, td) {
+.fl-table tr[data-current] > * {
   background: var(--ui-active);
+}
+
+.fl-key {
+  color: var(--ui-ink);
+  font-weight: 650;
 }
 
 .fl-key::after {
@@ -96,20 +109,8 @@ p.fl-detail {
   inset: 0;
 }
 
-.fl-key {
-  font-size: 12.5px;
-}
-
-.ui-table tbody th {
-  height: 36px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--ui-line-soft);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.ui-table tbody tr:hover th {
-  background: var(--ui-hover);
+.fl-key:hover {
+  text-decoration: underline;
 }
 
 .fl-value {
@@ -118,11 +119,6 @@ p.fl-detail {
   overflow: hidden;
   vertical-align: bottom;
   text-overflow: ellipsis;
-}
-
-.ui-table .ui-glyph-icon {
-  width: 14px;
-  height: 14px;
 }
 
 /* Editor */
@@ -365,35 +361,378 @@ p.fl-detail {
   gap: 8px;
 }
 
-.fl-picker {
-  display: none;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--ui-line);
+/* Views */
+.fl-drift-chip {
+  display: inline-flex;
+  border-radius: 999px;
 }
 
+/* Overview: one card per catalog */
+.fl-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fl-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.fl-card-title {
+  padding: 14px 16px 6px;
+  font: 700 0.9rem/1.3 var(--ui-font-mono);
+}
+
+.fl-card-rows {
+  margin: 0;
+  padding: 0 8px 8px;
+  list-style: none;
+}
+
+/* The stage link covers its row; the drift chip sits above that cover. */
+.fl-card-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 8px;
+  border-radius: 6px;
+}
+
+.fl-card-row:hover {
+  background: var(--ui-hover);
+}
+
+.fl-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.fl-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.fl-card-link svg {
+  width: 15px;
+  height: 15px;
+  color: var(--ui-muted);
+}
+
+.fl-card-row .fl-drift-chip {
+  position: relative;
+  z-index: 1;
+}
+
+.fl-card-meta {
+  color: var(--ui-muted);
+  font: 0.75rem var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fl-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 10px 16px;
+  border-top: 1px solid var(--ui-line-soft);
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+}
+
+.fl-card-foot:hover {
+  background: var(--ui-hover);
+  color: var(--ui-ink);
+}
+
+.fl-card-foot svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Compare */
+.fl-cmp-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.fl-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+}
+
+.fl-cmp-body {
+  display: grid;
+  align-items: start;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 30rem);
+}
+
+.fl-cmp-detail {
+  min-width: 0;
+}
+
+.fl-cmp-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 20px;
+}
+
+.fl-cmp-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Side-by-side diff */
+.fl-diff-scroll {
+  overflow: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+
+.fl-diff {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font: 12px/1.5 var(--ui-font-mono);
+}
+
+.fl-diff-num-col {
+  width: 3.2em;
+}
+
+.fl-diff th {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-head);
+  color: var(--ui-muted);
+  font: 500 12px/1.4 var(--ui-font-sans);
+  text-align: left;
+}
+
+.fl-diff th + th,
+.fl-diff td:nth-child(3) {
+  border-left: 1px solid var(--ui-line);
+}
+
+.fl-diff td {
+  padding: 0 8px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.fl-diff-num {
+  color: var(--ui-faint);
+  text-align: right;
+  user-select: none;
+}
+
+.fl-diff-text[data-sev] {
+  background: var(--ui-sev-soft);
+  color: var(--ui-sev-ink);
+}
+
+.fl-diff-gap {
+  background: var(--ui-head);
+}
+
+.fl-diff-mark {
+  display: inline-block;
+  width: 1.2em;
+  color: var(--ui-sev);
+  user-select: none;
+}
+
+/* Drift */
+.fl-cli {
+  margin: 0 0 18px;
+  color: var(--ui-muted);
+}
+
+.fl-cli code {
+  color: var(--ui-ink);
+}
+
+.fl-drift-sections {
+  display: grid;
+  gap: 14px;
+}
+
+.fl-drift-section {
+  scroll-margin-top: 72px;
+}
+
+.fl-drift-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 18px 18px;
+}
+
+.fl-drift-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.fl-drift-title {
+  font: 700 0.95rem/1.3 var(--ui-font-mono);
+}
+
+.fl-drift-title a:hover,
+.fl-drift-key:hover,
+.fl-clean a:hover {
+  text-decoration: underline;
+}
+
+.fl-drift-category {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.fl-drift-category-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.fl-drift-items {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fl-drift-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+}
+
+.fl-drift-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.fl-drift-key {
+  justify-self: start;
+  color: var(--ui-accent);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.fl-drift-value {
+  overflow-wrap: anywhere;
+}
+
+.fl-drift-issues {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ui-sev-error-text);
+  list-style: disc;
+}
+
+.fl-remedy {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--ui-head);
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+.fl-command {
+  margin: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font: 12px/1.5 var(--ui-font-mono);
+  white-space: pre;
+}
+
+.fl-clean {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 12.5px/1.5 var(--ui-font-mono);
+}
+
+/* The sticky top bar would cover a jump target at phone width. */
 @media (max-width: 900px) {
-  .fl-workspace {
-    min-height: 0;
-  }
-  .fl-picker {
-    display: flex;
+  .fl-drift-section {
+    scroll-margin-top: 64px;
   }
   .fl-body {
     grid-template-columns: minmax(0, 1fr);
   }
-  .fl-workspace[data-flag] .fl-list {
+  .fl-body[data-flag] .fl-list {
     display: none;
   }
-  .fl-workspace:not([data-flag]) .fl-detail {
+  .fl-body:not([data-flag]) .fl-detail {
     display: none;
-  }
-  .fl-detail {
-    border-left: 0;
   }
   .fl-back {
     display: inline-flex;
   }
-  .fl-list input[type="search"] {
-    width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .fl-cmp-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* A chosen flag's diff comes before the list it was picked from. */
+  .fl-cmp-body[data-flag] .fl-cmp-detail {
+    order: -1;
+  }
+  .fl-cmp-placeholder {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .fl-table tr[data-current] > * {
+    background: none;
+  }
+  .fl-table tbody tr[data-current] {
+    border-color: var(--ui-accent);
   }
 }

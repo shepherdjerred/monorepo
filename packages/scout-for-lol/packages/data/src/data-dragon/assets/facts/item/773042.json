@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773042",
+  "name": "Muramana",
+  "description": "Awe: Grants bonus Attack Damage equal to 2% of maximum Mana.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "20"
+    },
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "7"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/773042.png",
+  "goldTotal": 2100,
+  "goldCombine": 2100,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2100 gold"
+  }
+}

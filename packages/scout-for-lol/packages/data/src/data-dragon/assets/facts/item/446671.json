@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "446671",
+  "name": "Galeforce",
+  "description": "Cloudburst II: Dash in target direction over terrain, firing three missiles at the lowest Health enemy near your destination.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "65"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "30%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/446671.png",
+  "goldTotal": 2750,
+  "goldCombine": 2750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

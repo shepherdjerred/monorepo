@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773115",
+  "name": "Nashor's Tooth",
+  "description": "Grants 65 Ability Power, 50% Attack Speed, 20% Cooldown Reduction.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "65"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "50%"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "20%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773101",
+      "name": "Stinger",
+      "icon": "img/item/773101.png"
+    },
+    {
+      "kind": "item",
+      "key": "773108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/773108.png"
+    }
+  ],
+  "icon": "img/item/773115.png",
+  "goldTotal": 2500,
+  "goldCombine": 430,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

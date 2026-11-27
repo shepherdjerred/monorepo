@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nidalee-W",
+  "name": "Bushwhack / Pounce",
+  "description": "Human Form: Nidalee places an invisible trap for 2 minutes.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/35/40/45/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nidalee-W.png",
+  "slot": "W",
+  "championKey": "Nidalee",
+  "championName": "Nidalee",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "costByRank": [
+    30,
+    35,
+    40,
+    45,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12/11/10/9 s"
+  }
+}

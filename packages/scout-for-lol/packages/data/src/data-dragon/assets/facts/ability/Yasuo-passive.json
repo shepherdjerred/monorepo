@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yasuo-passive",
+  "name": "Way of the Wanderer",
+  "description": "Yasuo's Critical Strike Chance is increased. Additionally, Yasuo builds toward a shield whenever he is moving.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Yasuo-passive.png",
+  "slot": "passive",
+  "championKey": "Yasuo",
+  "championName": "Yasuo",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

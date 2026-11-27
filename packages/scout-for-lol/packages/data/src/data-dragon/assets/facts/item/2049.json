@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2049",
+  "name": "Guardian's Amulet",
+  "description": "Recovery: Restores 10 Mana every 5 seconds.",
+  "facts": [
+    {
+      "label": "Heal and Shield Power",
+      "value": "15%"
+    },
+    {
+      "label": "Ability Power",
+      "value": "20"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/2049.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

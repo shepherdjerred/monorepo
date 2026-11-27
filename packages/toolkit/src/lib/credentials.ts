@@ -12,7 +12,6 @@ import {
   SERVICE_ACCOUNT_ENROLLMENT_MACOS,
   SERVICE_ACCOUNT_ENROLLMENT_WINDOWS,
   SERVICE_ACCOUNT_KEYCHAIN_SERVICE,
-  serviceAccountEnrollment,
   workstationSecretEnrollment,
 } from "#lib/windows-secret-store.ts";
 import {
@@ -188,17 +187,12 @@ async function readFromOnePassword(
   if (value.length === 0) {
     const reason =
       result.exit === 0
-        ? null
-        : await opFailureReason(result.stderr, token, ctx.run);
-    throw reason === null
-      ? credentialError(
-          name,
-          description,
-          serviceAccountEnrollment(ctx.platform),
-        )
-      : new Error(
-          `toolkit: ${name} (${description}) could not be read from 1Password: ${reason}`,
-        );
+        ? `returned an empty value for ${ref} (workstation service account is enrolled; verify the item and field)`
+        : ((await opFailureReason(result.stderr, token, ctx.run)) ??
+          `op read failed for ${ref} (exit ${String(result.exit)}) with no error output (workstation service account is enrolled; verify the item and field)`);
+    throw new Error(
+      `toolkit: ${name} (${description}) could not be read from 1Password: ${reason}`,
+    );
   }
   await ctx.cache?.set(ref, value);
   return { value, source: "read" };

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yuumi-W",
+  "name": "You and Me!",
+  "description": "Passive: While on her Best Friend, Yuumi gains an additional 4/5/6/7/8% Heal & Shield Power and her ally also restores 3/4/5/6/7 (+3% AP) health On-Hit. Active: Yuumi dashes to an ally champion and Attaches to them.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yuumi-W.png",
+  "slot": "W",
+  "championKey": "Yuumi",
+  "championName": "Yuumi",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

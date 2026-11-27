@@ -1,0 +1,25 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "663058",
+  "name": "Shield of Molten Stone",
+  "description": "Immovable as the Earth: Increase your armor by 20%, and gain Block Chance based on your Armor.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Armor",
+      "value": "80"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/663058.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

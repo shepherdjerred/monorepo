@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zeri-W",
+  "name": "Ultrashock Laser",
+  "description": "Zeri fires an electric pulse that deals 30/70/110/150/190 (+100% AD) (+50% AP) physical damage and Slows the first enemy hit by 30/35/40/45/50% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zeri-W.png",
+  "slot": "W",
+  "championKey": "Zeri",
+  "championName": "Zeri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1150,
+    1150,
+    1150,
+    1150,
+    1150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

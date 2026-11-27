@@ -32,6 +32,7 @@ import type {
 } from "#lib/history/types.ts";
 import {
   catalogCost,
+  grokModelCandidates,
   optionalUsageNumber,
   reportedCost,
   requiredUsageNumber,
@@ -58,16 +59,6 @@ type GrokSessionMeta = {
 };
 
 type GrokLineLocation = UsageFieldLocation;
-
-/**
- * Model ids to try against the shared catalog: the id as Grok reports it,
- * without a provider prefix, and without the `-build` agent suffix.
- */
-function grokModelCandidates(model: string): string[] {
-  const unprefixed = model.replace(/^(?:x-ai|xai)\//, "");
-  const base = unprefixed.replace(/-build$/, "");
-  return [...new Set([model, unprefixed, base])];
-}
 
 /**
  * "auto" cost: the turn's own `costUsdTicks` when Grok reported one,
@@ -186,14 +177,16 @@ function grokContentText(update: Record<string, unknown>): string | null {
  * `rawInput` is an arbitrary, tool-defined object — a shell command can
  * embed a credential in forms no fixed pattern set can fully enumerate
  * (Bearer tokens, `--user name:pass`, a `scheme://user:pass@host` URL, and
- * whatever else a future tool call happens to pass). `title`/`status` are
- * the tool's own fixed, low-cardinality metadata (e.g. "run shell command",
- * "completed") and carry no such risk, so only those are indexed; the free
- * -form `rawInput` itself is never persisted, rather than attempting to
- * pattern-match every way a secret could appear inside it.
+ * whatever else a future tool call happens to pass). On an opening `tool_call`
+ * (`invocation` true), `title`/`status` are fixed, low-cardinality metadata
+ * (e.g. "run shell command", "completed"); `tool_call_update` titles embed
+ * dynamic arguments such as file paths, so updates contribute only `status`.
  */
-function grokToolText(update: Record<string, unknown>): string {
-  const title = stringValue(update["title"]) ?? "";
+function grokToolText(
+  update: Record<string, unknown>,
+  invocation: boolean,
+): string {
+  const title = invocation ? (stringValue(update["title"]) ?? "") : "";
   const status = stringValue(update["status"]) ?? "";
   return [title, status].filter((part) => part.length > 0).join(" ");
 }
@@ -222,7 +215,7 @@ function grokToolMessage(
   invocation: boolean,
   createdAt: string | null,
 ): HistoryMessage | null {
-  const text = grokToolText(update);
+  const text = grokToolText(update, invocation);
   const toolName = invocation ? grokToolName(update) : null;
   if (toolName === null) {
     return text.length === 0 ? null : { role: "tool", text, createdAt };

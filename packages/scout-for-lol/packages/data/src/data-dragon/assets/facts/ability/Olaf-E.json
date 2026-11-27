@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Olaf-E",
+  "name": "Reckless Swing",
+  "description": "Olaf ferociously swings his axes, dealing 70/115/160/205/250 (+50% AD) true damage. If the enemy dies, the cost is refunded.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Olaf-E.png",
+  "slot": "E",
+  "championKey": "Olaf",
+  "championName": "Olaf",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

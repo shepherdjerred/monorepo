@@ -2,17 +2,12 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { prepareLoaderHls } from "@shepherdjerred/streambot/sports/loader-hls.ts";
 import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
 import { sportsPng } from "#sports-png-fixture";
-import { runCommand } from "./run-command.ts";
+import { loadIntegrationConfig, runCommand } from "./run-command.ts";
 
-const config = loadConfig({
-  BOT_TOKEN: "fixture-bot",
-  USER_TOKENS: "fixture-user",
-  VIDEOS_DIR: "/tmp/videos",
-});
+const config = loadIntegrationConfig();
 let directory: string;
 let segment: Uint8Array;
 

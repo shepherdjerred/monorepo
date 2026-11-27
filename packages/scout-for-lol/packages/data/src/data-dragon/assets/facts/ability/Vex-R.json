@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vex-R",
+  "name": "Shadow Surge",
+  "description": "Shadow excitedly surges forward, dealing 75/125/175 (+20% AP) magic damage and marking the first enemy champion hit for 4 seconds. Recast: Dash to the marked champion, dealing 150/250/350 (+50% AP) magic damage on arrival.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "2000/2500/3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vex-R.png",
+  "slot": "R",
+  "championKey": "Vex",
+  "championName": "Vex",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    2000,
+    2500,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

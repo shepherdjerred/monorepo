@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akali-R",
+  "name": "Perfect Execution",
+  "description": "Akali vaults over an enemy champion, dealing 110/220/330 (+50% bonus AD) (+30% AP) magic damage to all enemies in her path.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "675"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Akali-R.png",
+  "slot": "R",
+  "championKey": "Akali",
+  "championName": "Akali",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    90,
+    60
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    675,
+    675,
+    675
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/90/60 s"
+  }
+}

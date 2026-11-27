@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "73",
+  "name": "Exhaust",
+  "description": "Slows target enemy champion and reduces their Attack Speed and damage dealt. Summoner's Wrath: Exhaust also reduces the target's Armor and Magic Resist by 10.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "550"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerExhaust_Jade.png",
+  "cooldownSeconds": 210,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "210 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ambessa-W",
+  "name": "Repudiation",
+  "description": "Ambessa gains 50-320 (based on level) (+150% bonus AD) Shield for 1.5 seconds and braces herself for 0.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ambessa-W.png",
+  "slot": "W",
+  "championKey": "Ambessa",
+  "championName": "Ambessa",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

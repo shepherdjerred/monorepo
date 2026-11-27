@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leona-Q",
+  "name": "Shield of Daybreak",
+  "description": "Leona's next Attack Stuns for 1 seconds and deals an additional 10/35/60/85/110 (+30% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30/35/40/45/50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leona-Q.png",
+  "slot": "Q",
+  "championKey": "Leona",
+  "championName": "Leona",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "costByRank": [
+    30,
+    35,
+    40,
+    45,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5 s"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772037",
+  "name": "Elixir of Fortitude",
+  "description": "Click to Consume: Grants Health and 15 Attack Damage for 180 seconds.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/772037.png",
+  "goldTotal": 350,
+  "goldCombine": 350,
+  "keyFact": {
+    "label": "Cost",
+    "value": "350 gold"
+  }
+}

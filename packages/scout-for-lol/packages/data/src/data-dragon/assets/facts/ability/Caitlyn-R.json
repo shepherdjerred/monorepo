@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Caitlyn-R",
+  "name": "Ace in the Hole",
+  "description": "Caitlyn takes time to line up the perfect shot, dealing massive damage to a single target at a huge range. Enemy champions can intercept the bullet for their ally.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Caitlyn-R.png",
+  "slot": "R",
+  "championKey": "Caitlyn",
+  "championName": "Caitlyn",
+  "maxRank": 3,
+  "cooldownByRank": [
+    90,
+    90,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3500,
+    3500,
+    3500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "90 s"
+  }
+}

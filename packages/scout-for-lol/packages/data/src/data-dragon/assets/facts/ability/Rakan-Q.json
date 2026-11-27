@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rakan-Q",
+  "name": "Gleaming Quill",
+  "description": "Rakan flings a magical feather that deals 70/115/160/205/250 (+70% AP) magic damage to the first enemy hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rakan-Q.png",
+  "slot": "Q",
+  "championKey": "Rakan",
+  "championName": "Rakan",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    45,
+    45,
+    45,
+    45,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

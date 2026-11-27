@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Olaf",
+  "name": "Olaf",
+  "description": "An unstoppable force of destruction, the axe-wielding Olaf wants nothing but to die in glorious combat.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "645"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Olaf-passive",
+      "name": "Berserker Rage",
+      "icon": "img/ability/Olaf-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Olaf-Q",
+      "name": "Undertow",
+      "icon": "img/ability/Olaf-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Olaf-W",
+      "name": "Tough It Out",
+      "icon": "img/ability/Olaf-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Olaf-E",
+      "name": "Reckless Swing",
+      "icon": "img/ability/Olaf-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Olaf-R",
+      "name": "Ragnarok",
+      "icon": "img/ability/Olaf-R.png"
+    }
+  ],
+  "icon": "img/champion/Olaf.png",
+  "art": "img/champion-splash/Olaf_0.jpg",
+  "title": "the Berserker",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

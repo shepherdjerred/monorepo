@@ -1,4 +1,6 @@
-import { describe, expect, test } from "vitest";
+import path from "node:path";
+import { afterEach, describe, expect, test } from "vitest";
+import { createTempGitRepo, type TempGitRepo } from "../lib/test-git.ts";
 import {
   formatChecklist,
   immutableRevisionFindings,
@@ -319,6 +321,208 @@ describe("recipeChartComponents", () => {
         },
       }),
     ).toEqual(["chart:b", "chart:c"]);
+  });
+});
+
+describe("monotonic immutable revisions", () => {
+  const configRel =
+    "packages/delivery/registrations/v2/prometheus/prod/configuration.json";
+  const recipeRel =
+    "packages/delivery/registrations/v2/prometheus/prod/recipe.json";
+  let sandbox: TempGitRepo | undefined;
+
+  afterEach(async () => {
+    if (sandbox !== undefined) {
+      await sandbox.cleanup();
+      sandbox = undefined;
+    }
+  });
+
+  async function putJson(
+    rel: string,
+    body: unknown,
+    pretty = false,
+  ): Promise<void> {
+    if (sandbox === undefined) {
+      throw new Error("sandbox not initialized");
+    }
+    const text = pretty
+      ? `${JSON.stringify(body, null, 2)}\n`
+      : `${JSON.stringify(body)}\n`;
+    await Bun.write(path.join(sandbox.directory, rel), text);
+  }
+
+  async function seedMainBase(): Promise<TempGitRepo> {
+    const repo = await createTempGitRepo("service-reg-rev-");
+    sandbox = repo;
+    await putJson(configRel, {
+      id: "prometheus/prod/8",
+      content: { retention: "7d", scrapeInterval: "30s" },
+      forwardOnly: [],
+    });
+    await putJson(recipeRel, {
+      id: "prometheus/prod/4",
+      definition: { kind: "kubernetes-application", chart: "prometheus" },
+    });
+    await repo.git(["add", "."]);
+    await repo.git(["commit", "-m", "seed v2 registrations"]);
+    await repo.git(["update-ref", "refs/remotes/origin/main", "HEAD"]);
+    return repo;
+  }
+
+  test("formatting and key-order-only edits pass without a revision bump", async () => {
+    const repo = await seedMainBase();
+    await repo.git(["checkout", "-b", "chore/reformat"]);
+    await putJson(
+      configRel,
+      {
+        forwardOnly: [],
+        content: { scrapeInterval: "30s", retention: "7d" },
+        id: "prometheus/prod/8",
+      },
+      true,
+    );
+    await putJson(
+      recipeRel,
+      {
+        definition: { chart: "prometheus", kind: "kubernetes-application" },
+        id: "prometheus/prod/4",
+      },
+      true,
+    );
+    expect(
+      await immutableRevisionFindings({
+        root: repo.directory,
+        env: { ...repo.env, CI_CHANGED_BASE: "" },
+      }),
+    ).toEqual([]);
+  });
+
+  test("in-place payload changes fail and recommend the next revision for recipe and configuration", async () => {
+    const repo = await seedMainBase();
+    await repo.git(["checkout", "-b", "fix/in-place"]);
+    await putJson(configRel, {
+      id: "prometheus/prod/8",
+      content: { retention: "14d", scrapeInterval: "30s" },
+      forwardOnly: [],
+    });
+    await putJson(recipeRel, {
+      id: "prometheus/prod/4",
+      definition: { kind: "kubernetes-application", chart: "prometheus-next" },
+    });
+    const findings = await immutableRevisionFindings({
+      root: repo.directory,
+      env: { ...repo.env, CI_CHANGED_BASE: "" },
+    });
+    expect(findings).toEqual([
+      {
+        subject: "prometheus/prod",
+        item: expect.stringContaining("changed in place relative to"),
+      },
+      {
+        subject: "prometheus/prod",
+        item: expect.stringContaining("changed in place relative to"),
+      },
+    ]);
+    expect(findings[0]?.item).toContain(
+      'bump "id" and configurationRevisionId in packages/ops-model/catalog-document.json to "prometheus/prod/9"',
+    );
+    expect(findings[1]?.item).toContain(
+      'bump "id" and recipeRevisionId in packages/ops-model/catalog-document.json to "prometheus/prod/5"',
+    );
+  });
+
+  test("numeric downgrade and prefix drift fail recommending the next monotonic revision", async () => {
+    const repo = await seedMainBase();
+    await repo.git(["checkout", "-b", "fix/downgrade"]);
+    await putJson(configRel, {
+      id: "prometheus/prod/7",
+      content: { retention: "30d", scrapeInterval: "30s" },
+      forwardOnly: [],
+    });
+    await putJson(recipeRel, {
+      id: "prometheus/beta/5",
+      definition: { kind: "kubernetes-application", chart: "prometheus-v2" },
+    });
+    const findings = await immutableRevisionFindings({
+      root: repo.directory,
+      env: { ...repo.env, CI_CHANGED_BASE: "" },
+    });
+    expect(findings).toHaveLength(2);
+    expect(findings[0]?.item).toContain(
+      '"prometheus/prod/7" is non-monotonic after "prometheus/prod/8"',
+    );
+    expect(findings[0]?.item).toContain(
+      'configurationRevisionId in packages/ops-model/catalog-document.json to "prometheus/prod/9"',
+    );
+    expect(findings[1]?.item).toContain(
+      '"prometheus/beta/5" does not match monotonic prefix "prometheus/prod/<N>"',
+    );
+    expect(findings[1]?.item).toContain(
+      'recipeRevisionId in packages/ops-model/catalog-document.json to "prometheus/prod/5"',
+    );
+  });
+
+  test("reverted historical revisions on main cannot be reused and require maxHistorical + 1", async () => {
+    const repo = await seedMainBase();
+    await putJson(configRel, {
+      id: "prometheus/prod/9",
+      content: { retention: "14d", scrapeInterval: "30s" },
+      forwardOnly: [],
+    });
+    await putJson(recipeRel, {
+      id: "prometheus/prod/5",
+      definition: { kind: "kubernetes-application", chart: "prometheus-v2" },
+    });
+    await repo.git(["add", "."]);
+    await repo.git(["commit", "-m", "advance to 9 and 5"]);
+    await repo.git(["revert", "--no-edit", "HEAD"]);
+    await repo.git(["update-ref", "refs/remotes/origin/main", "HEAD"]);
+
+    await repo.git(["checkout", "-b", "feat/after-revert"]);
+    await putJson(configRel, {
+      id: "prometheus/prod/9",
+      content: { retention: "30d", scrapeInterval: "15s" },
+      forwardOnly: [],
+    });
+    await putJson(recipeRel, {
+      id: "prometheus/prod/5",
+      definition: { kind: "kubernetes-application", chart: "prometheus-v3" },
+    });
+
+    const rejected = await immutableRevisionFindings({
+      root: repo.directory,
+      env: { ...repo.env, CI_CHANGED_BASE: "" },
+    });
+    expect(rejected).toHaveLength(2);
+    expect(rejected[0]?.item).toContain(
+      '"prometheus/prod/9" reuses reverted historical revision (max seen "prometheus/prod/9")',
+    );
+    expect(rejected[0]?.item).toContain(
+      'bump "id" and configurationRevisionId in packages/ops-model/catalog-document.json to "prometheus/prod/10"',
+    );
+    expect(rejected[1]?.item).toContain(
+      '"prometheus/prod/5" reuses reverted historical revision (max seen "prometheus/prod/5")',
+    );
+    expect(rejected[1]?.item).toContain(
+      'bump "id" and recipeRevisionId in packages/ops-model/catalog-document.json to "prometheus/prod/6"',
+    );
+
+    await putJson(configRel, {
+      id: "prometheus/prod/10",
+      content: { retention: "30d", scrapeInterval: "15s" },
+      forwardOnly: [],
+    });
+    await putJson(recipeRel, {
+      id: "prometheus/prod/6",
+      definition: { kind: "kubernetes-application", chart: "prometheus-v3" },
+    });
+    expect(
+      await immutableRevisionFindings({
+        root: repo.directory,
+        env: { ...repo.env, CI_CHANGED_BASE: "" },
+      }),
+    ).toEqual([]);
   });
 });
 

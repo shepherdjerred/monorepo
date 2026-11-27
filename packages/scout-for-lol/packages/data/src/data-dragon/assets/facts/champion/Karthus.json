@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Karthus",
+  "name": "Karthus",
+  "description": "The harbinger of oblivion, Karthus is an undying spirit whose haunting songs are a prelude to the horror of his nightmarish appearance.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "450"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Karthus-passive",
+      "name": "Death Defied",
+      "icon": "img/ability/Karthus-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karthus-Q",
+      "name": "Lay Waste",
+      "icon": "img/ability/Karthus-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karthus-W",
+      "name": "Wall of Pain",
+      "icon": "img/ability/Karthus-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karthus-E",
+      "name": "Defile",
+      "icon": "img/ability/Karthus-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Karthus-R",
+      "name": "Requiem",
+      "icon": "img/ability/Karthus-R.png"
+    }
+  ],
+  "icon": "img/champion/Karthus.png",
+  "art": "img/champion-splash/Karthus_0.jpg",
+  "title": "the Deathsinger",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

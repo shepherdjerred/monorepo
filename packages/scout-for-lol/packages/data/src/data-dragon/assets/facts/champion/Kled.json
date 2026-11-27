@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kled",
+  "name": "Kled",
+  "description": "A warrior as fearless as he is ornery, the yordle Kled embodies the furious bravado of Noxus. He is an icon beloved by the empire's soldiers, distrusted by its officers, and loathed by the nobility.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "410"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kled-passive",
+      "name": "Skaarl, the Cowardly Lizard",
+      "icon": "img/ability/Kled-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kled-Q",
+      "name": "Bear Trap on a Rope",
+      "icon": "img/ability/Kled-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kled-W",
+      "name": "Violent Tendencies",
+      "icon": "img/ability/Kled-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kled-E",
+      "name": "Jousting",
+      "icon": "img/ability/Kled-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kled-R",
+      "name": "Chaaaaaaaarge!!!",
+      "icon": "img/ability/Kled-R.png"
+    }
+  ],
+  "icon": "img/champion/Kled.png",
+  "art": "img/champion-splash/Kled_0.jpg",
+  "title": "the Cantankerous Cavalier",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

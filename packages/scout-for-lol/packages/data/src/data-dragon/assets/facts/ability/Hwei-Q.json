@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hwei-Q",
+  "name": "Subject: Disaster",
+  "description": "Hwei paints visions of disaster that deal large damage to enemies. Devastating Fire Hwei launches a blazing fast fireball that explodes on the first enemy hit, dealing 50/80/110/140/170 (+80% AP) plus 3/4/5/6/7% max health magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/90/100/110/120 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Hwei-Q.png",
+  "slot": "Q",
+  "championKey": "Hwei",
+  "championName": "Hwei",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    80,
+    90,
+    100,
+    110,
+    120
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

@@ -1,4 +1,4 @@
-import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -7,8 +7,12 @@ import {
   planFile,
   type PlannedInput,
   renderPlannedGifs,
+  resolveAssetProfile,
 } from "#commands/pr/asset.ts";
+import { AWS_CREDENTIAL_PROFILES } from "#commands/brokered/aws-credential.ts";
+import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
 import { PUBLIC_HOST } from "#lib/s3/assets.ts";
+import type { ObjectStore } from "#lib/s3/object-store.ts";
 import { aggArgv, CastGifRenderError } from "#lib/s3/cast-gif.ts";
 
 describe("planFile", () => {
@@ -202,5 +206,157 @@ describe("assetCommand GIF rendering", () => {
 
     expect(process.exitCode).toBe(1);
     expect(errors[0]).toContain("toolkit git-spice branch submit --draft");
+  });
+});
+
+describe("assetCommand uploads", () => {
+  let dir: string;
+  let sent: {
+    bucket: string;
+    key: string;
+    contentType: string;
+    cacheControl?: string | undefined;
+  }[];
+  let profiles: string[];
+  let lines: string[];
+
+  const createClient = (profile: string): Promise<ObjectStore> => {
+    profiles.push(profile);
+    const unused = (): Promise<never> =>
+      Promise.reject(new Error("multipart is not used here"));
+    return Promise.resolve({
+      put: (params) => {
+        sent.push(params);
+        return Promise.resolve();
+      },
+      createMultipart: unused,
+      uploadPart: unused,
+      completeMultipart: unused,
+      abortMultipart: unused,
+    });
+  };
+
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(os.tmpdir(), "asset-upload-test-"));
+    sent = [];
+    profiles = [];
+    lines = [];
+    vi.stubEnv("AWS_PROFILE", "");
+    vi.stubEnv("AWS_ACCESS_KEY_ID", "");
+    vi.spyOn(console, "log").mockImplementation((message: unknown) => {
+      lines.push(String(message));
+    });
+  });
+
+  afterEach(async () => {
+    process.exitCode = undefined;
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  test("uploads to the public bucket under pr/assets, with no Cache-Control, on agent-share", async () => {
+    const png = path.join(dir, "after.png");
+    await writeFile(png, "png");
+    await assetCommand("9", [png], { markdown: false, createClient });
+
+    expect(profiles).toEqual(["agent-share"]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      bucket: "public-sjer-red",
+      key: "pr/assets/9/after.png",
+      contentType: "image/png",
+    });
+    expect(sent[0]?.cacheControl).toBeUndefined();
+    expect(lines).toEqual([`${PUBLIC_HOST}/pr/assets/9/after.png`]);
+  });
+
+  test("an explicit --profile wins over the default", async () => {
+    const png = path.join(dir, "after.png");
+    await writeFile(png, "png");
+    await assetCommand("9", [png], { profile: "seaweedfs", createClient });
+    expect(profiles).toEqual(["seaweedfs"]);
+  });
+
+  test("a demo directory needs index.html and uploads under its name", async () => {
+    const site = path.join(dir, "demo");
+    await mkdir(site);
+    await writeFile(path.join(site, "index.html"), "<p>");
+    await writeFile(path.join(site, "app.js"), "1");
+    await assetCommand("9", [site], { markdown: true, createClient });
+    expect(sent.map((put) => put.key)).toEqual([
+      "pr/assets/9/demo/app.js",
+      "pr/assets/9/demo/index.html",
+    ]);
+    expect(lines).toEqual([
+      `[demo (demo site)](${PUBLIC_HOST}/pr/assets/9/demo/index.html)`,
+    ]);
+  });
+
+  test("a directory without index.html still exits 1", async () => {
+    const site = path.join(dir, "bare");
+    await mkdir(site);
+    await writeFile(path.join(site, "a.txt"), "x");
+    vi.spyOn(console, "error").mockImplementation(() => {
+      /* silence */
+    });
+    await assetCommand("9", [site], { createClient });
+    expect(process.exitCode).toBe(1);
+    expect(sent).toEqual([]);
+  });
+});
+
+describe("agent-share credentials", () => {
+  test("the aws credential profile maps to registered, op-backed keys", () => {
+    const names = AWS_CREDENTIAL_PROFILES.get("agent-share");
+    expect(names).toEqual({
+      accessKeyId: "AGENT_SHARE_S3_ACCESS_KEY_ID",
+      secretAccessKey: "AGENT_SHARE_S3_SECRET_ACCESS_KEY",
+    });
+    expect(CREDENTIAL_REGISTRY["AGENT_SHARE_S3_ACCESS_KEY_ID"]?.source).toEqual(
+      {
+        kind: "op",
+        ref: "op://v64ocnykdqju4ui6j6pua56xw4/6ycjkzs7gxdadqp5wnbqy3xjta/access-key-id",
+      },
+    );
+    expect(
+      CREDENTIAL_REGISTRY["AGENT_SHARE_S3_SECRET_ACCESS_KEY"]?.source,
+    ).toEqual({
+      kind: "op",
+      ref: "op://v64ocnykdqju4ui6j6pua56xw4/6ycjkzs7gxdadqp5wnbqy3xjta/secret-access-key",
+    });
+  });
+});
+
+describe("resolveAssetProfile", () => {
+  test("defaults to agent-share when no profile or static AWS key is set", () => {
+    expect(resolveAssetProfile(undefined, {})).toBe("agent-share");
+    expect(
+      resolveAssetProfile("", { AWS_PROFILE: "", AWS_ACCESS_KEY_ID: "" }),
+    ).toBe("agent-share");
+  });
+
+  test("prefers explicit --profile over AWS_PROFILE and AWS_ACCESS_KEY_ID", () => {
+    expect(
+      resolveAssetProfile("custom", {
+        AWS_PROFILE: "other",
+        AWS_ACCESS_KEY_ID: "AKIAEXAMPLE",
+      }),
+    ).toBe("custom");
+  });
+
+  test("uses AWS_PROFILE when --profile is omitted", () => {
+    expect(
+      resolveAssetProfile(undefined, {
+        AWS_PROFILE: "env-profile",
+        AWS_ACCESS_KEY_ID: "AKIAEXAMPLE",
+      }),
+    ).toBe("env-profile");
+  });
+
+  test("returns undefined when AWS_ACCESS_KEY_ID is set without a profile", () => {
+    expect(
+      resolveAssetProfile(undefined, { AWS_ACCESS_KEY_ID: "AKIAEXAMPLE" }),
+    ).toBeUndefined();
   });
 });

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9403",
+  "name": "Savage Slice",
+  "description": "Briar sweeps in front of her, applying a stacking bleed and dealing damage that scales with her Max Health.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9403.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

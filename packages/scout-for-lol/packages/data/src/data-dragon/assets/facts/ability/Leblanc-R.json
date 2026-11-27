@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Leblanc-R",
+  "name": "Mimic",
+  "description": "LeBlanc mimics her most recent Ability, using it again. The mimicked Ability deals increased damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Leblanc-R.png",
+  "slot": "R",
+  "championKey": "Leblanc",
+  "championName": "LeBlanc",
+  "maxRank": 3,
+  "cooldownByRank": [
+    45,
+    35,
+    25
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "45/35/25 s"
+  }
+}

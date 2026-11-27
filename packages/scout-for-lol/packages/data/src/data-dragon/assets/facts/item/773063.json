@@ -1,0 +1,40 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773063",
+  "name": "Soul Shroud",
+  "description": "Whispers of the Dead: Nearby allied Champions gain 10% Cooldown Reduction and 12 Mana Regen per 5 seconds.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "520"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773037",
+      "name": "Mana Manipulator",
+      "icon": "img/item/773037.png"
+    },
+    {
+      "kind": "item",
+      "key": "773067",
+      "name": "Kindlegem",
+      "icon": "img/item/773067.png"
+    },
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    }
+  ],
+  "icon": "img/item/773063.png",
+  "goldTotal": 2285,
+  "goldCombine": 660,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2285 gold"
+  }
+}

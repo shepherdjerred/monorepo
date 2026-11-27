@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pantheon-R",
+  "name": "Grand Starfall",
+  "description": "Passive: Pantheon gains 10/20/30% Armor Penetration. Active: Pantheon gathers his strength to leap high into the air.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "5500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Pantheon-R.png",
+  "slot": "R",
+  "championKey": "Pantheon",
+  "championName": "Pantheon",
+  "maxRank": 3,
+  "cooldownByRank": [
+    180,
+    165,
+    150
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    5500,
+    5500,
+    5500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "180/165/150 s"
+  }
+}

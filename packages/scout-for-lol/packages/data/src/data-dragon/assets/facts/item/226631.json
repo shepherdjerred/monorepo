@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226631",
+  "name": "Stridebreaker",
+  "description": "Cleave: Attacks deal physical damage to nearby enemies. Breaking Shockwave: Deal physical damage and Slow nearby enemies by 40%.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "15%"
+    },
+    {
+      "label": "Health",
+      "value": "375"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226631.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

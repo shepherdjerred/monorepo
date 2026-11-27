@@ -273,25 +273,6 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
-  new KubeNetworkPolicy(chart, "temporal-worker-freshrss-netpol", {
-    metadata: { name: "temporal-worker-freshrss-netpol" },
-    spec: {
-      podSelector: { matchLabels: { component: "repo-worker" } },
-      policyTypes: ["Egress"],
-      egress: [
-        {
-          to: [
-            {
-              ...nsPeer("freshrss"),
-              podSelector: { matchLabels: { app: "freshrss" } },
-            },
-          ],
-          ports: [tcp(80)],
-        },
-      ],
-    },
-  });
-
   new KubeNetworkPolicy(chart, "temporal-worker-feeds-netpol", {
     metadata: { name: "temporal-worker-feeds-netpol" },
     spec: {

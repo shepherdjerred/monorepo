@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Mel-passive",
+  "name": "Searing Brilliance",
+  "description": "Whenever Mel uses an ability, she gains three bonus projectiles (up to nine maximum) on her next attack. When Mel deals damage through an ability or attack, she applies Overwhelm, which can stack infinitely.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Mel-passive.png",
+  "slot": "passive",
+  "championKey": "Mel",
+  "championName": "Mel",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

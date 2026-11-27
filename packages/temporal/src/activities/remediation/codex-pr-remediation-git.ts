@@ -67,7 +67,6 @@ export function remediationDenyReadPaths(
     ...new Set([
       "/run/secrets",
       "/var/run/secrets",
-      "/etc/freshrss",
       "/etc/talos",
       "/etc/kubernetes",
       "/proc/1",

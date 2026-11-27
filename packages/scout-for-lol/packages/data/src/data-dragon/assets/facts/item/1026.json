@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "1026",
+  "name": "Blasting Wand",
+  "description": "Grants 45 Ability Power.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "45"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/1026.png",
+  "goldTotal": 850,
+  "goldCombine": 850,
+  "keyFact": {
+    "label": "Cost",
+    "value": "850 gold"
+  }
+}

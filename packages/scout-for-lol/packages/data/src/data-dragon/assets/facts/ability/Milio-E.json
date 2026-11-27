@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Milio-E",
+  "name": "Warm Hugs",
+  "description": "Milio wraps an ally champion in protective flames, granting 45/75/105/135/165 (+45% AP) Shield and 12/14/16/18/20% Move Speed for 2.5 seconds. This ability has 2 charges and the effects stack on repeat targets.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "650"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Milio-E.png",
+  "slot": "E",
+  "championKey": "Milio",
+  "championName": "Milio",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    650,
+    650,
+    650,
+    650,
+    650
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.5 s"
+  }
+}

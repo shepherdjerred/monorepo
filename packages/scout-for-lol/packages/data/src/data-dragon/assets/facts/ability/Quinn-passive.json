@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Quinn-passive",
+  "name": "Harrier",
+  "description": "Valor, Quinn's Demacian eagle, periodically marks enemies with Harrier. Quinn's first basic attack against Harrier targets will deal bonus physical damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Quinn-passive.png",
+  "slot": "passive",
+  "championKey": "Quinn",
+  "championName": "Quinn",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

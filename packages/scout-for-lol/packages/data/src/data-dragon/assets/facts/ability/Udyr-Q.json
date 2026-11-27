@@ -1,0 +1,52 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Udyr-Q",
+  "name": "Wilding Claw",
+  "description": "Claw Stance: Udyr gains 20/32/44/56/68/80% Attack Speed and his Attacks deal 6/12/18/24/30/36 (+20% bonus AD) (+1/1.2/1.4/1.6/1.8/2% bonus Health) physical damage On-Hit for 4 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Udyr-Q.png",
+  "slot": "Q",
+  "championKey": "Udyr",
+  "championName": "Udyr",
+  "maxRank": 6,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

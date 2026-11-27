@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Chogath-Q",
+  "name": "Rupture",
+  "description": "Cho'Gath ruptures the ground, Knocking Up enemies for 1 second, dealing 80/135/190/245/300 (+100% AP) magic damage, and Slowing them by 60% for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Chogath-Q.png",
+  "slot": "Q",
+  "championKey": "Chogath",
+  "championName": "Cho'Gath",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

@@ -311,7 +311,7 @@ async function sendAuditEmail(
     });
     const result = await deliverReport(report);
     homelabAuditEmailSentTotal.inc({ outcome: "success" });
-    jsonLog("info", "Homelab audit email accepted by Postal", {
+    jsonLog("info", "Homelab audit email accepted by Mail broker", {
       subject: result.subject,
       messageId: result.messageId,
       recipientId: result.recipientId,

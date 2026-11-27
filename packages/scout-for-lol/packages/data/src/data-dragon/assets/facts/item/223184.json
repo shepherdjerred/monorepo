@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223184",
+  "name": "Guardian's Hammer",
+  "description": "Grants 25 Attack Damage, 35% Attack Speed, 5% Life Steal.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "35%"
+    },
+    {
+      "label": "Life Steal",
+      "value": "5%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223184.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Briar-E",
+  "name": "Chilling Scream",
+  "description": "Begin Charging: Briar removes Blood Frenzy and gathers energy, gaining 35% damage reduction and restoring 10/11.5/13/14.5/16% max Health Health over 1 second.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Briar-E.png",
+  "slot": "E",
+  "championKey": "Briar",
+  "championName": "Briar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16 s"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zaahen-passive",
+  "name": "Cultivation of War",
+  "description": "Zaahen's attacks and abilities against enemy champions grant him stacks of Determination, gaining bonus Attack Damage per stack. When filled with Determination, Zaahen gains increased Attack Damage and can revive.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Zaahen-passive.png",
+  "slot": "passive",
+  "championKey": "Zaahen",
+  "championName": "Zaahen",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

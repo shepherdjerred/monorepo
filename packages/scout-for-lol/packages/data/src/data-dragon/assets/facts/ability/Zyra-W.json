@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zyra-W",
+  "name": "Rampant Growth",
+  "description": "Zyra plants a Seed that lasts 60 seconds. These Seeds grant True Sight of enemy champions that step on them for 2 seconds, but are still destroyed.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zyra-W.png",
+  "slot": "W",
+  "championKey": "Zyra",
+  "championName": "Zyra",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

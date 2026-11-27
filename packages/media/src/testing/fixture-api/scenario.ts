@@ -45,10 +45,10 @@ export const SCENARIO_COOKIE = "media-fixture-scenario";
  * the router turns it into the typed error body.
  */
 export class FixtureFailure extends Error {
-  readonly status: 500 | 502;
+  readonly status: 403 | 500 | 502;
   readonly code: string;
 
-  constructor(status: 500 | 502, code: string, message: string) {
+  constructor(status: 403 | 500 | 502, code: string, message: string) {
     super(message);
     this.name = "FixtureFailure";
     this.status = status;

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Maokai",
+  "name": "Maokai",
+  "description": "Maokai is a rageful, towering treant who fights the unnatural horrors of the Shadow Isles.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "665"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Maokai-passive",
+      "name": "Sap Magic",
+      "icon": "img/ability/Maokai-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Maokai-Q",
+      "name": "Bramble Smash",
+      "icon": "img/ability/Maokai-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Maokai-W",
+      "name": "Twisted Advance",
+      "icon": "img/ability/Maokai-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Maokai-E",
+      "name": "Sapling Toss",
+      "icon": "img/ability/Maokai-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Maokai-R",
+      "name": "Nature's Grasp",
+      "icon": "img/ability/Maokai-R.png"
+    }
+  ],
+  "icon": "img/champion/Maokai.png",
+  "art": "img/champion-splash/Maokai_0.jpg",
+  "title": "the Twisted Treant",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

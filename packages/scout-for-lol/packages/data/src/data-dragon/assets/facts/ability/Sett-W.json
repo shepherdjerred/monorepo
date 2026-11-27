@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sett-W",
+  "name": "Haymaker",
+  "description": "Passive: Sett stores 100% of damage taken as Grit, up to 50% max Health. Grit decays quickly 4 seconds after the damage was taken.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sett-W.png",
+  "slot": "W",
+  "championKey": "Sett",
+  "championName": "Sett",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    16.5,
+    15,
+    13.5,
+    12
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/16.5/15/13.5/12 s"
+  }
+}

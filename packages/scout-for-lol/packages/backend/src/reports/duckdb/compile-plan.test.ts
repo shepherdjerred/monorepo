@@ -487,9 +487,9 @@ function globalPrematchSql(where?: ScoutQlPredicate): string {
 }
 
 describe("non-player rows", () => {
-  const PLAYERS_ONLY = ") m WHERE m.puuid IS NOT NULL)";
+  const PLAYERS_ONLY = ") m WHERE m.participant_kind <> 'bot')";
 
-  test("global participant aggregates keep players only", () => {
+  test("global participant aggregates leave out bots", () => {
     expect(
       mustCompile(makeInput({ scope: GLOBAL_SCOPE })).aggregateSql,
     ).toContain(PLAYERS_ONLY);
@@ -497,7 +497,7 @@ describe("non-player rows", () => {
 
   test("a tracked scope needs no filter: the accounts join drops a NULL puuid", () => {
     const sql = mustCompile(makeInput()).aggregateSql;
-    expect(sql).not.toContain("m.puuid IS NOT NULL");
+    expect(sql).not.toContain("m.participant_kind <> 'bot'");
     expect(sql).toContain("JOIN accounts a ON a.puuid = m.puuid");
   });
 

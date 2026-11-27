@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771018",
+  "name": "Cloak of Agility",
+  "description": "Grants 15% Critical Strike Chance.",
+  "facts": [
+    {
+      "label": "Critical Strike Chance",
+      "value": "15%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771018.png",
+  "goldTotal": 730,
+  "goldCombine": 730,
+  "keyFact": {
+    "label": "Cost",
+    "value": "730 gold"
+  }
+}

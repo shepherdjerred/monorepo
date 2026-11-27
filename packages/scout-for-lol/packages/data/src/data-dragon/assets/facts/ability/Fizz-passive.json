@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fizz-passive",
+  "name": "Nimble Fighter",
+  "description": "Fizz can move through units and takes a flat amount of reduced damage from all sources",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Fizz-passive.png",
+  "slot": "passive",
+  "championKey": "Fizz",
+  "championName": "Fizz",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

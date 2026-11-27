@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Velkoz-R",
+  "name": "Life Form Disintegration Ray",
+  "description": "Vel'Koz channels a ray of energy that follows the cursor, dealing a total of 450/700/950 (+125% AP) magic damage over 2.5 seconds and Slowing by 20%. Deals true damage instead to enemies recently damaged by Organic Deconstruction.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1575"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Velkoz-R.png",
+  "slot": "R",
+  "championKey": "Velkoz",
+  "championName": "Vel'Koz",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    90,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1575,
+    1575,
+    1575
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/90/80 s"
+  }
+}

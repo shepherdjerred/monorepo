@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nilah",
+  "name": "Nilah",
+  "description": "Nilah is an ascetic warrior from a distant land, seeking the world's deadliest, most titanic opponents so that she might challenge and destroy them.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "570"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "225"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nilah-passive",
+      "name": "Joy Unending",
+      "icon": "img/ability/Nilah-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nilah-Q",
+      "name": "Formless Blade",
+      "icon": "img/ability/Nilah-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nilah-W",
+      "name": "Jubilant Veil",
+      "icon": "img/ability/Nilah-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nilah-E",
+      "name": "Slipstream",
+      "icon": "img/ability/Nilah-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nilah-R",
+      "name": "Apotheosis",
+      "icon": "img/ability/Nilah-R.png"
+    }
+  ],
+  "icon": "img/champion/Nilah.png",
+  "art": "img/champion-splash/Nilah_0.jpg",
+  "title": "the Joy Unbound",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+{{ if and (eq .chezmoi.os "darwin") (ne .profile "assistant-host") -}}
+{{ include ".chezmoitemplates/launchagent-reload.sh" }}
+# {{ include "Library/LaunchAgents/com.jerred.herdr-worktree-pool.plist" | sha256sum }}
+reload_agent com.jerred.herdr-worktree-pool "$HOME/bin/herdr-worktree-pool"
+{{ end -}}

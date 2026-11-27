@@ -228,12 +228,6 @@
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
   },
   {
-    "namespace": "phoenix",
-    "name": "pgdata-phoenix-postgresql-0",
-    "backup": "enabled",
-    "reason": "Phoenix users, API keys, datasets, annotations, and sampled LLM traces"
-  },
-  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",
@@ -250,18 +244,6 @@
     "name": "woodpecker-trivy-db",
     "backup": "disabled",
     "reason": "Rebuildable vulnerability database cache"
-  },
-  {
-    "namespace": "freshrss",
-    "name": "freshrss-data",
-    "backup": "enabled",
-    "reason": "FreshRSS application and subscription state"
-  },
-  {
-    "namespace": "freshrss",
-    "name": "freshrss-extensions",
-    "backup": "enabled",
-    "reason": "FreshRSS extension state"
   },
   {
     "namespace": "golink",

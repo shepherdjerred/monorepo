@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lulu-R",
+  "name": "Wild Growth",
+  "description": "Lulu enlarges an ally, Knocking Up surrounding enemies for 1 second. The enlarged ally gains 275/425/575 (+55% AP) max Health and Slows surrounding enemies by 30/45/60% for 7 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lulu-R.png",
+  "slot": "R",
+  "championKey": "Lulu",
+  "championName": "Lulu",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

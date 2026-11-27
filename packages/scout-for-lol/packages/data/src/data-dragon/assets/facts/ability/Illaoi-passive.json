@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Illaoi-passive",
+  "name": "Prophet of an Elder God",
+  "description": "Illaoi and the Vessels she creates spawn Tentacles on nearby impassible terrain. Tentacles swing at spirits, Vessels, and victims of Illaoi's Harsh lesson.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Illaoi-passive.png",
+  "slot": "passive",
+  "championKey": "Illaoi",
+  "championName": "Illaoi",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

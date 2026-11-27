@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viego-passive",
+  "name": "Sovereign's Domination",
+  "description": "Enemies who fall before Viego become wraiths. By attacking a wraith, Viego temporarily seizes control of the dead enemy's body, healing for a percentage of his target's max health and gaining access to their basic abilities and items.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Viego-passive.png",
+  "slot": "passive",
+  "championKey": "Viego",
+  "championName": "Viego",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

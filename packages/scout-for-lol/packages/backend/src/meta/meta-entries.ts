@@ -1,6 +1,14 @@
-import { ENEMY_TRAITS } from "#src/report-lake/crawl/meta-partials.ts";
+import {
+  BOOTS_ITEM_IDS,
+  ENEMY_TRAITS,
+} from "#src/report-lake/crawl/meta-partials.ts";
 import type { MetaPartialKind } from "#src/report-lake/crawl/meta-partials.ts";
-import type { ChampionSlice } from "@scout-for-lol/data/meta/meta-serving.ts";
+import {
+  META_DURATION_BUCKETS,
+  MetaDurationBucketSchema,
+  type ChampionSlice,
+  type MatchupSlice,
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 import { wilsonInterval } from "#src/meta/wilson.ts";
 
 /**
@@ -32,6 +40,11 @@ const RUNE_LIMIT = 6;
 const SPELL_LIMIT = 4;
 const SKILL_ORDER_LIMIT = 4;
 const LIFT_ITEM_LIMIT = 10;
+const BOOTS_LIMIT = 6;
+const KEYSTONE_LIMIT = 4;
+const SINGLE_SPELL_LIMIT = 8;
+const ITEMS_AFTER_CORE_LIMIT = 8;
+const MATCHUP_SPELL_LIMIT = 4;
 
 function counted(games: number, wins: number, denominator: number) {
   return {
@@ -126,21 +139,133 @@ export type SliceEntries = Pick<
   | "spells"
   | "skillOrders"
   | "itemLift"
+  | "durations"
+  | "boots"
+  | "keystones"
+  | "singleSpells"
+  | "itemsAfterCore"
 >;
+
+const BOOTS = new Set(BOOTS_ITEM_IDS);
+
+/**
+ * Items people buy after the core: the slice's listed core items minus the
+ * most-played build path's items and the boots. With no build path above the
+ * floor there is no core to subtract, so nothing is served.
+ */
+function itemsAfterCoreOf(
+  coreItems: readonly ChampionSlice["coreItems"][number][],
+  topPath: readonly number[] | undefined,
+): ChampionSlice["coreItems"] {
+  if (topPath === undefined) return [];
+  const core = new Set(topPath);
+  return coreItems
+    .filter((item) => !core.has(item.itemId) && !BOOTS.has(item.itemId))
+    .slice(0, ITEMS_AFTER_CORE_LIMIT);
+}
+
+/** The spell pairs of each opponent in a matchup slice, keyed by opponent id. */
+export function matchupSpellsOf(
+  rows: SliceRows,
+): Map<string, NonNullable<MatchupSlice["opponents"][number]["spells"]>> {
+  const matchupGames = new Map(
+    (rows.get("matchup") ?? []).map((entry) => [entry.key1, entry.games]),
+  );
+  const byOpponent = new Map<string, RollupRow[]>();
+  for (const entry of rows.get("matchup_spell") ?? []) {
+    const games = matchupGames.get(entry.key1);
+    // A pair is only listed under a matchup that is itself listed.
+    if (games === undefined) continue;
+    byOpponent.set(entry.key1, [...(byOpponent.get(entry.key1) ?? []), entry]);
+  }
+  return new Map(
+    [...byOpponent].map(([opponent, entries]) => [
+      opponent,
+      byGamesThenKey(
+        entries.map((entry) => [
+          entry.key2,
+          {
+            spellIds: ids(entry.key2),
+            games: entry.games,
+            wins: entry.wins,
+            winRate: wilsonInterval(entry.wins, entry.games),
+            share: wilsonInterval(
+              entry.games,
+              Math.max(matchupGames.get(opponent) ?? 0, entry.games),
+            ),
+            denominator: "matchup_games" as const,
+          },
+        ]),
+      ).slice(0, MATCHUP_SPELL_LIMIT),
+    ]),
+  );
+}
 
 export function entriesOf(rows: SliceRows, sliceGames: number): SliceEntries {
   const of = (kind: MetaPartialKind) => rows.get(kind) ?? [];
+  const allCoreItems = byGamesThenKey(
+    of("item").map((entry) => [
+      entry.key1,
+      {
+        itemId: Number(entry.key1),
+        ...counted(entry.games, entry.wins, sliceGames),
+        denominator: "slice_games" as const,
+      },
+    ]),
+  );
+  const topPath = byGamesThenKey(
+    of("build_path").map((entry) => [
+      entry.key1,
+      { games: entry.games, key: entry.key1 },
+    ]),
+  ).at(0);
   return {
-    coreItems: byGamesThenKey(
-      of("item").map((entry) => [
+    coreItems: allCoreItems.slice(0, CORE_ITEM_LIMIT),
+    itemsAfterCore: itemsAfterCoreOf(
+      allCoreItems,
+      topPath === undefined ? undefined : ids(topPath.key),
+    ),
+    durations: META_DURATION_BUCKETS.flatMap((bucket) =>
+      of("duration")
+        .filter(
+          (entry) => MetaDurationBucketSchema.parse(entry.key1) === bucket,
+        )
+        .map((entry) => ({
+          bucket,
+          ...counted(entry.games, entry.wins, entry.kind_total),
+          denominator: "games_with_duration" as const,
+        })),
+    ),
+    boots: byGamesThenKey(
+      of("boots").map((entry) => [
         entry.key1,
         {
           itemId: Number(entry.key1),
+          ...counted(entry.games, entry.wins, entry.kind_total),
+          denominator: "games_with_boots" as const,
+        },
+      ]),
+    ).slice(0, BOOTS_LIMIT),
+    keystones: byGamesThenKey(
+      of("keystone").map((entry) => [
+        entry.key1,
+        {
+          perkId: Number(entry.key1),
+          ...counted(entry.games, entry.wins, entry.kind_total),
+          denominator: "games_with_keystone" as const,
+        },
+      ]),
+    ).slice(0, KEYSTONE_LIMIT),
+    singleSpells: byGamesThenKey(
+      of("spell_single").map((entry) => [
+        entry.key1,
+        {
+          spellId: Number(entry.key1),
           ...counted(entry.games, entry.wins, sliceGames),
           denominator: "slice_games" as const,
         },
       ]),
-    ).slice(0, CORE_ITEM_LIMIT),
+    ).slice(0, SINGLE_SPELL_LIMIT),
     buildPaths: byGamesThenKey(
       of("build_path").map((entry) => [
         entry.key1,

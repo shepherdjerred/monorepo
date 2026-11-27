@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Galio-Q",
+  "name": "Winds of War",
+  "description": "Galio fires two windblasts that deal 70/105/140/175/210 (+70% AP) magic damage each. When the windblasts meet, they combine into a tornado that deals 8% (+4% AP) max Health magic damage over 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Galio-Q.png",
+  "slot": "Q",
+  "championKey": "Galio",
+  "championName": "Galio",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

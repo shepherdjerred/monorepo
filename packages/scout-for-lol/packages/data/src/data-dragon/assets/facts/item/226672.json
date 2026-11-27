@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226672",
+  "name": "Kraken Slayer",
+  "description": "Bring It Down: Every third Attack deals bonus physical damage On-Hit, increased based on their missing Health.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "7%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226672.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

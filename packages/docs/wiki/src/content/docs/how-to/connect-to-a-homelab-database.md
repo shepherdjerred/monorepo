@@ -17,7 +17,6 @@ clusters; they have no public database ingress.
 | `bugsink-postgresql`    | `bugsink`    | `bugsink`    | `bugsink_db`                      |
 | `delivery-postgresql`   | `delivery`   | `delivery`   | `delivery_db`                     |
 | `grafana-postgresql`    | `prometheus` | `grafana`    | `grafana`                         |
-| `phoenix-postgresql`    | `phoenix`    | `phoenix`    | `phoenix_db`                      |
 | `scout-beta-postgresql` | `scout-beta` | `scout`      | `scout`                           |
 | `scout-prod-postgresql` | `scout-prod` | `scout`      | `scout`                           |
 | `temporal-postgresql`   | `temporal`   | `temporal`   | `temporal`, `temporal_visibility` |

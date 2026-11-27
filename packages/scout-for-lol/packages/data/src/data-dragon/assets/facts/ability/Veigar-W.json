@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Veigar-W",
+  "name": "Dark Matter",
+  "description": "Veigar summons dark matter from the sky, dealing 85/140/195/250/305 (+70/80/90/100/110% AP) magic damage. Every 50 stacks of Phenomenal Evil reduce this Ability's Cooldown by 10%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "950"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Veigar-W.png",
+  "slot": "W",
+  "championKey": "Veigar",
+  "championName": "Veigar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    950,
+    950,
+    950,
+    950,
+    950
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

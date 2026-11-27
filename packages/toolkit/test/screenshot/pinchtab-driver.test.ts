@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createPinchtabHttpClient } from "#lib/pinchtab-cli/client.ts";
 import { resolvePinchtabConnection } from "#lib/pinchtab-cli/http.ts";
 import {
+  assertAuthRouteReachable,
   captureScreenshot,
   type PinchtabDriverClient,
 } from "#lib/screenshot/pinchtab-driver.ts";
@@ -191,6 +192,37 @@ describe("pinchtab lease tracking & tab cleanup", () => {
 
     const remaining = await readdir(nodePath.join(tempTendDir, "leases"));
     expect(remaining).toEqual([]);
+  });
+
+  test("navigates Streambot preview through Discord OAuth start and validates route prefix", async () => {
+    expect(() =>
+      assertAuthRouteReachable("streambot-preview-login", "/plex"),
+    ).not.toThrow();
+    expect(() =>
+      assertAuthRouteReachable("streambot-preview-login", "plex"),
+    ).toThrow(/streambot-preview-login/);
+
+    const { client, events } = makeFakeClient({
+      currentUrl: () =>
+        Promise.resolve({ success: true, data: "http://localhost:5188/plex" }),
+    });
+
+    await captureScreenshot({
+      baseUrl: "http://localhost:5188",
+      route: "/plex",
+      outPath: nodePath.join(tempTendDir, "streambot.png"),
+      authFlow: { flow: "streambot-preview-login" },
+      waitForSelector: "main",
+      client,
+    });
+
+    expect(events).toEqual([
+      "createSession",
+      "navigateNewTab:http://localhost:5188/api/auth/discord/start?returnTo=%2Fplex",
+      "screenshot:tab_test_1",
+      "closeTab:tab_test_1",
+      "revokeSession:ses_test_1",
+    ]);
   });
 });
 

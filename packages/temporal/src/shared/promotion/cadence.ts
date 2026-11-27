@@ -6,6 +6,7 @@ import { promotionDispatchAt } from "#shared/promotion/model.ts";
 
 export const PROMOTION_TIMEZONE = "America/Los_Angeles";
 export const PROMOTION_SWEEP_HOURS = [8, 12, 16, 20] as const;
+export const REDDIT_OUTREACH_INTERVAL_MS = 5 * 60_000;
 
 /** Preferred times add constraints; they never shorten the source's actual cooldown. */
 export function promotionWindow(

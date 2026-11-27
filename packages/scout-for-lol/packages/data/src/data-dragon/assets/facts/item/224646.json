@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "224646",
+  "name": "Stormsurge",
+  "description": "Stormraider: Dealing 25% of a champion's maximum Health within 2.5s applies Squall: to them and grants 25% Move Speed for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "90"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "15"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/224646.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

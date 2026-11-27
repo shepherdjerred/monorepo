@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viktor-passive",
+  "name": "Glorious Evolution",
+  "description": "Viktor gains Hex Fragments whenever he kills an enemy. With every 100 Hex Fragments he obtains, Viktor permanently augments an active ability.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Viktor-passive.png",
+  "slot": "passive",
+  "championKey": "Viktor",
+  "championName": "Viktor",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

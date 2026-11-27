@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Jhin",
+  "name": "Jhin",
+  "description": "Jhin is a meticulous criminal psychopath who believes murder is art. Once an Ionian prisoner, but freed by shadowy elements within Ionia's ruling council, the serial killer now works as their cabal's assassin.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "655"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Jhin-passive",
+      "name": "Whisper",
+      "icon": "img/ability/Jhin-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jhin-Q",
+      "name": "Dancing Grenade",
+      "icon": "img/ability/Jhin-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jhin-W",
+      "name": "Deadly Flourish",
+      "icon": "img/ability/Jhin-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jhin-E",
+      "name": "Captive Audience",
+      "icon": "img/ability/Jhin-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jhin-R",
+      "name": "Curtain Call",
+      "icon": "img/ability/Jhin-R.png"
+    }
+  ],
+  "icon": "img/champion/Jhin.png",
+  "art": "img/champion-splash/Jhin_0.jpg",
+  "title": "the Virtuoso",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

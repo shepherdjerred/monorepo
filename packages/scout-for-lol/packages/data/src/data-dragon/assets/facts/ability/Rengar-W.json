@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rengar-W",
+  "name": "Battle Roar",
+  "description": "Rengar roars, dealing 50/80/110/140/170 (+80% AP) magic damage to nearby enemies and restoring 50% of the damage taken in the last 1.5 seconds as Health.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rengar-W.png",
+  "slot": "W",
+  "championKey": "Rengar",
+  "championName": "Rengar",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0.25 s"
+  }
+}

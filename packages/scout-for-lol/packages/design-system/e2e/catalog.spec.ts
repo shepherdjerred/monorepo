@@ -10,17 +10,27 @@ const stories = await loadStorybookStories(
   new URL("../storybook-static/index.json", import.meta.url),
 );
 
-// Both skins and both modes, without multiplying the suite by four.
+// Both skins and both modes of the modern skin, plus classic light, without
+// multiplying the suite by four. Modern light is the mode the soft surfaces
+// are tuned against, so it runs alongside modern dark.
 const themes = [
   { skin: "modern", mode: "dark" },
+  { skin: "modern", mode: "light" },
   { skin: "classic", mode: "light" },
 ] as const;
 
 const themeTokens = (theme: (typeof themes)[number]) => {
-  return theme.skin === "modern"
-    ? scoutThemes["modern-dark"]
-    : scoutThemes["classic-light"];
+  return scoutThemes[`${theme.skin}-${theme.mode}`];
 };
+
+/**
+ * The production CSS minifier writes `#ffffff` as `#fff`, so a computed custom
+ * property and the token JSON can name the same colour differently.
+ */
+function normalizeHex(value: string): string {
+  const hex = value.trim().toLowerCase();
+  return hex.replace(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/, "#$1$1$2$2$3$3");
+}
 
 for (const story of stories) {
   for (const theme of themes) {
@@ -29,34 +39,28 @@ for (const story of stories) {
 
       const expectedColors = themeTokens(theme).colors;
       await expect
-        .poll(async () =>
-          page.locator("html").evaluate((root) => {
+        .poll(async () => {
+          const computed = await page.locator("html").evaluate((root) => {
             const styles = getComputedStyle(root);
             return {
-              canvas: styles
-                .getPropertyValue("--scout-color-canvas")
-                .trim()
-                .toLowerCase(),
-              surface: styles
-                .getPropertyValue("--scout-color-surface")
-                .trim()
-                .toLowerCase(),
-              text: styles
-                .getPropertyValue("--scout-color-text")
-                .trim()
-                .toLowerCase(),
-              textMuted: styles
-                .getPropertyValue("--scout-color-text-muted")
-                .trim()
-                .toLowerCase(),
+              canvas: styles.getPropertyValue("--scout-color-canvas"),
+              surface: styles.getPropertyValue("--scout-color-surface"),
+              text: styles.getPropertyValue("--scout-color-text"),
+              textMuted: styles.getPropertyValue("--scout-color-text-muted"),
             };
-          }),
-        )
+          });
+          return {
+            canvas: normalizeHex(computed.canvas),
+            surface: normalizeHex(computed.surface),
+            text: normalizeHex(computed.text),
+            textMuted: normalizeHex(computed.textMuted),
+          };
+        })
         .toEqual({
-          canvas: expectedColors.canvas.toLowerCase(),
-          surface: expectedColors.surface.toLowerCase(),
-          text: expectedColors.text.toLowerCase(),
-          textMuted: expectedColors.textMuted.toLowerCase(),
+          canvas: normalizeHex(expectedColors.canvas),
+          surface: normalizeHex(expectedColors.surface),
+          text: normalizeHex(expectedColors.text),
+          textMuted: normalizeHex(expectedColors.textMuted),
         });
 
       // Champion art and rank crests resolve through scoutAssetsPlugin. A

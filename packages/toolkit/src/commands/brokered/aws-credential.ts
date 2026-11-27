@@ -28,6 +28,13 @@ export const AWS_CREDENTIAL_PROFILES: ReadonlyMap<
     },
   ],
   [
+    "agent-share",
+    {
+      accessKeyId: "AGENT_SHARE_S3_ACCESS_KEY_ID",
+      secretAccessKey: "AGENT_SHARE_S3_SECRET_ACCESS_KEY",
+    },
+  ],
+  [
     "b2-velero",
     {
       accessKeyId: "B2_VELERO_ACCESS_KEY_ID",
@@ -46,6 +53,20 @@ export const AWS_CREDENTIAL_PROFILES: ReadonlyMap<
     {
       accessKeyId: "B2_SEAWEEDFS_BACKUPS_ACCESS_KEY_ID",
       secretAccessKey: "B2_SEAWEEDFS_BACKUPS_SECRET_ACCESS_KEY",
+    },
+  ],
+  [
+    "r2-archives",
+    {
+      accessKeyId: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+      secretAccessKey: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+    },
+  ],
+  [
+    "r2",
+    {
+      accessKeyId: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+      secretAccessKey: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
     },
   ],
 ]);

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3349",
+  "name": "Lucent Singularity",
+  "description": "Lucent Singularity",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/3349.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

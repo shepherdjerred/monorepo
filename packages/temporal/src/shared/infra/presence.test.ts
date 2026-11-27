@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  HOUSEHOLD_RESIDENTS,
+  LEGACY_HOUSEHOLD_RESIDENTS,
   PRESENCE_COOLDOWN_SECONDS,
   cooldownBucket,
+  householdResidents,
   isConfirmedAway,
   shouldLock,
 } from "./presence.ts";
@@ -47,6 +50,17 @@ describe("shouldLock", () => {
 
   it("does not lock if someone in a named zone is still home", () => {
     expect(shouldLock(["Work", "home"])).toBe(false);
+  });
+});
+
+describe("householdResidents", () => {
+  it("counts only Jerred once the patch is active", () => {
+    expect(householdResidents(true)).toEqual(HOUSEHOLD_RESIDENTS);
+    expect(householdResidents(true)).toEqual(["person.jerred"]);
+  });
+
+  it("keeps the previous household for replay", () => {
+    expect(householdResidents(false)).toEqual(LEGACY_HOUSEHOLD_RESIDENTS);
   });
 });
 

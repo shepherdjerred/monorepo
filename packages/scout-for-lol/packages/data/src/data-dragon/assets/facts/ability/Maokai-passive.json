@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Maokai-passive",
+  "name": "Sap Magic",
+  "description": "Maokai's basic attack also heals him and deals additional damage on a moderate cooldown. Each time Maokai casts a spell or is struck by an enemy's spell, this cooldown is reduced.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Maokai-passive.png",
+  "slot": "passive",
+  "championKey": "Maokai",
+  "championName": "Maokai",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

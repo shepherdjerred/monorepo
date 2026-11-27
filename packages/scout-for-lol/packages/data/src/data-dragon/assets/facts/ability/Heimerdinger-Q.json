@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Heimerdinger-Q",
+  "name": "H-28 G Evolution Turret",
+  "description": "Heimerdinger constructs a Turret that attacks nearby enemies. Heimerdinger can have 3 turrets active at once.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Turret Kit & 20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "350"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Heimerdinger-Q.png",
+  "slot": "Q",
+  "championKey": "Heimerdinger",
+  "championName": "Heimerdinger",
+  "maxRank": 5,
+  "cooldownByRank": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Turret Kit & 20 Mana",
+  "rangeByRank": [
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "1 s"
+  }
+}

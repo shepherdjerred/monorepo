@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773057",
+  "name": "Sheen",
+  "description": "Spellblade: After using an ability, the next Basic Attack deals bonus physical damage equal to base Attack Damage On-Hit (2 second cooldown).",
+  "facts": [
+    {
+      "label": "Mana",
+      "value": "200"
+    },
+    {
+      "label": "Ability Power",
+      "value": "25"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/771052.png"
+    },
+    {
+      "kind": "item",
+      "key": "771027",
+      "name": "Sapphire Crystal",
+      "icon": "img/item/771027.png"
+    }
+  ],
+  "icon": "img/item/773057.png",
+  "goldTotal": 1200,
+  "goldCombine": 365,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1200 gold"
+  }
+}

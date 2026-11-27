@@ -230,7 +230,7 @@ describe("dataDragonDisallowedChangePaths", () => {
 });
 
 describe("buildImageOnlySkipEmailContent", () => {
-  test("builds the expected Postal message content", () => {
+  test("builds the expected outbound mail message content", () => {
     const input: DataDragonUpdateInput = {
       mode: "weekly-refresh",
       currentVersion: "16.10.1",

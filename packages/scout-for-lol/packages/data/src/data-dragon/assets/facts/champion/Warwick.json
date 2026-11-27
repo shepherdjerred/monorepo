@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Warwick",
+  "name": "Warwick",
+  "description": "Warwick is a monster who hunts the gray alleys of Zaun. Transformed by agonizing experiments, his body is fused with an intricate system of chambers and pumps, machinery filling his veins with alchemical rage.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "620"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Warwick-passive",
+      "name": "Eternal Hunger",
+      "icon": "img/ability/Warwick-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Warwick-Q",
+      "name": "Jaws of the Beast",
+      "icon": "img/ability/Warwick-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Warwick-W",
+      "name": "Blood Hunt",
+      "icon": "img/ability/Warwick-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Warwick-E",
+      "name": "Primal Howl",
+      "icon": "img/ability/Warwick-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Warwick-R",
+      "name": "Infinite Duress",
+      "icon": "img/ability/Warwick-R.png"
+    }
+  ],
+  "icon": "img/champion/Warwick.png",
+  "art": "img/champion-splash/Warwick_0.jpg",
+  "title": "the Uncaged Wrath of Zaun",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

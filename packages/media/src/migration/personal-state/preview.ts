@@ -37,6 +37,17 @@ function reviewedSeerrClaims(
       400,
     );
   if (
+    input.recordHistoryOnly &&
+    (selection === undefined ||
+      input.movieEditions.length > 0 ||
+      reviewed.some(({ reason }) => reason !== "owner_reviewed_history_only"))
+  )
+    throw new MediaError(
+      "invalid_input",
+      "History recording requires an exact history-only selection and no edition assignments",
+      400,
+    );
+  if (
     input.historyOnly.some(
       (key) => !reviewed.some((claim) => claim.provenanceKey === key),
     )
@@ -239,7 +250,8 @@ export async function previewPersonalMigration(
       sourceKind: row.sourceKind,
     })),
     ...review,
-    library,
+    library: input.recordHistoryOnly ? [] : library,
+    ...(input.recordHistoryOnly ? { recordHistoryOnly: true } : {}),
     stateHash: snapshotHash(nativeJson(state)),
     monitoring: parsed.flatMap(({ row, capture }) =>
       capture.snapshot.records

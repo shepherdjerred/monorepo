@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Anivia-W",
+  "name": "Crystallize",
+  "description": "Anivia summons a wall of ice 400/500/600/700/800 units wide. The wall lasts for 5 seconds before it melts.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Anivia-W.png",
+  "slot": "W",
+  "championKey": "Anivia",
+  "championName": "Anivia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    17,
+    17,
+    17,
+    17,
+    17
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "17 s"
+  }
+}

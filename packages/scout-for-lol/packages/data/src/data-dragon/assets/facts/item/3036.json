@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3036",
+  "name": "Lord Dominik's Regards",
+  "description": "Giant Slayer: Deal up to 15% bonus damage against champions based on their bonus Health.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "35"
+    },
+    {
+      "label": "Armor Penetration",
+      "value": "35%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3035",
+      "name": "Last Whisper",
+      "icon": "img/item/3035.png"
+    },
+    {
+      "kind": "item",
+      "key": "6670",
+      "name": "Noonquiver",
+      "icon": "img/item/6670.png"
+    }
+  ],
+  "icon": "img/item/3036.png",
+  "goldTotal": 3300,
+  "goldCombine": 550,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3300 gold"
+  }
+}

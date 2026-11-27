@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226621",
+  "name": "Dawncore",
+  "description": "First Light: Gain 3% Heal and Shield Power and 15 Ability Power per 100% Base Mana Regen.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "45"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "12%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "200%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226621.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

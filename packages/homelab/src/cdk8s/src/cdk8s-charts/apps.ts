@@ -41,7 +41,6 @@ import { createMediaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo
 import { createHomeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/home.ts";
 import { createSyncthingApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/syncthing.ts";
 import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/golink.ts";
-import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/freshrss.ts";
 import { createPinchtabApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/pinchtab.ts";
 import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-db.ts";
@@ -52,7 +51,6 @@ import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
-import { createPhoenixApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/phoenix.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/service-probes.ts";
@@ -151,7 +149,6 @@ export async function createAppsChart(app: App) {
   createHomeApp(chart);
   createSyncthingApp(chart);
   createGolinkApp(chart);
-  createFreshrssApp(chart);
   createPinchtabApp(chart);
   createGlitterBoysLauncherApp(chart);
   createArcadeApp(chart);
@@ -163,7 +160,6 @@ export async function createAppsChart(app: App) {
     createTemporalDataApp(chart);
   }
   createBugsinkApp(chart);
-  createPhoenixApp(chart);
   createTasknotesApp(chart);
   createTemporalApp(chart);
   if (deliveryExecutorActivation() !== undefined)

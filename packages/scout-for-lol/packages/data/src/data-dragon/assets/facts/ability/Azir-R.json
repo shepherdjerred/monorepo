@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Azir-R",
+  "name": "Emperor's Divide",
+  "description": "Azir summons a wall of armored soldiers that charges forward, Knocking Back enemies and dealing 200/400/600 (+75% AP) magic damage. The soldiers remain, blocking enemy paths for 5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Azir-R.png",
+  "slot": "R",
+  "championKey": "Azir",
+  "championName": "Azir",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    105,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/105/90 s"
+  }
+}

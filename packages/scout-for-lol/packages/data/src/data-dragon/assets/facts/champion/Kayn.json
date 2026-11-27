@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Kayn",
+  "name": "Kayn",
+  "description": "A peerless practitioner of lethal shadow magic, Shieda Kayn battles to achieve his true destiny—to one day lead the Order of Shadow into a new era of Ionian supremacy.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "655"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Kayn-passive",
+      "name": "The Darkin Scythe",
+      "icon": "img/ability/Kayn-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayn-Q",
+      "name": "Reaping Slash",
+      "icon": "img/ability/Kayn-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayn-W",
+      "name": "Blade's Reach",
+      "icon": "img/ability/Kayn-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayn-E",
+      "name": "Shadow Step",
+      "icon": "img/ability/Kayn-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Kayn-R",
+      "name": "Umbral Trespass",
+      "icon": "img/ability/Kayn-R.png"
+    }
+  ],
+  "icon": "img/champion/Kayn.png",
+  "art": "img/champion-splash/Kayn_0.jpg",
+  "title": "the Shadow Reaper",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

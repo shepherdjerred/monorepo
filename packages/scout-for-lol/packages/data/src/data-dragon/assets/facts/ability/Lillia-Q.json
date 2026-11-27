@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lillia-Q",
+  "name": "Blooming Blows",
+  "description": "Passively, Lillia gains stacking Move Speed when hitting enemies with spells. She can activate this to deal magic damage to nearby enemies, dealing extra true damage on the edge.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lillia-Q.png",
+  "slot": "Q",
+  "championKey": "Lillia",
+  "championName": "Lillia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    5.5,
+    5,
+    4.5,
+    4
+  ],
+  "costByRank": [
+    65,
+    65,
+    65,
+    65,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6/5.5/5/4.5/4 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lillia-E",
+  "name": "Swirlseed",
+  "description": "Lillia lobs a swirlseed overhead, dealing 60/85/110/135/160 (+50% AP) magic damage where it lands and revealing and Slowing them by 40% for 3 seconds. If no enemies are hit, the seed rolls until it hits an enemy or collides with terrain.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "700"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lillia-E.png",
+  "slot": "E",
+  "championKey": "Lillia",
+  "championName": "Lillia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    700,
+    700,
+    700,
+    700,
+    700
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12 s"
+  }
+}

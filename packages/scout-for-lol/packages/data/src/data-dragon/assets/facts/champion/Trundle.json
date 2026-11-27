@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Trundle",
+  "name": "Trundle",
+  "description": "Trundle is a hulking and devious troll with a particularly vicious streak, and there is nothing he cannot bludgeon into submission—not even the Freljord itself. Fiercely territorial, he chases down anyone foolish enough to enter his domain.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Trundle-passive",
+      "name": "King's Tribute",
+      "icon": "img/ability/Trundle-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Trundle-Q",
+      "name": "Chomp",
+      "icon": "img/ability/Trundle-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Trundle-W",
+      "name": "Frozen Domain",
+      "icon": "img/ability/Trundle-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Trundle-E",
+      "name": "Pillar of Ice",
+      "icon": "img/ability/Trundle-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Trundle-R",
+      "name": "Subjugate",
+      "icon": "img/ability/Trundle-R.png"
+    }
+  ],
+  "icon": "img/champion/Trundle.png",
+  "art": "img/champion-splash/Trundle_0.jpg",
+  "title": "the Troll King",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

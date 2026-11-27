@@ -738,18 +738,6 @@
       "component": true
     },
     {
-      "name": "freshrss/freshrss",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "1.30.4@sha256:af44385229541bee24aa9148d0ff8f3b40e095373c63a2c0f74e09a27d3c59df"
-    },
-    {
       "name": "oven/bun",
       "category": "upstream",
       "artifactType": "image",
@@ -1304,22 +1292,6 @@
         "versioning": "semver"
       },
       "value": "2.6.3@sha256:d19378dc3ad8fac46b2d554019540e84d607c176b3e0774a10c55458f1288fa0"
-    },
-    {
-      "name": "arizephoenix/phoenix",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
-      },
-      "value": "version-22.0.0-nonroot@sha256:1cc6e3962b16d784055bcf71cea03ad50386564002ace1a11c1b409d34a08cf8",
-      "notes": [
-        "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
-        "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
-      ]
     },
     {
       "name": "temporalio/server",

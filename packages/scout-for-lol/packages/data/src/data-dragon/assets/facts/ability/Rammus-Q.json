@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rammus-Q",
+  "name": "Powerball",
+  "description": "Rammus curls into a ball, gaining 25-39.1% (based on level) Move Speed, accelerating up to 150-234.6% (based on level) Move Speed over 6 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rammus-Q.png",
+  "slot": "Q",
+  "championKey": "Rammus",
+  "championName": "Rammus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    10.5,
+    9,
+    7.5,
+    6
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/10.5/9/7.5/6 s"
+  }
+}

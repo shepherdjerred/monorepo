@@ -532,9 +532,9 @@ describe("what the gate does not count", () => {
       requested.push(url);
       return Promise.resolve({ status: 502, body: "" });
     };
-    const policies = [otherPolicy("freshrss", "freshrss")];
+    const policies = [otherPolicy("feeds", "feeds")];
     const finishedJob = { ...readyPod, status: { phase: "Succeeded" } };
-    const scaledToZero = await runCheck(parseCheckArguments(["freshrss"]), {
+    const scaledToZero = await runCheck(parseCheckArguments(["feeds"]), {
       ...dependencies(cluster(policies, [finishedJob]).run),
       fetchUrl: badGateway,
     });
@@ -544,13 +544,13 @@ describe("what the gate does not count", () => {
     );
     expect(requested).toEqual([]);
 
-    const running = await runCheck(parseCheckArguments(["freshrss"]), {
+    const running = await runCheck(parseCheckArguments(["feeds"]), {
       ...dependencies(cluster(policies, [readyPod]).run),
       fetchUrl: badGateway,
     });
     expect(running.exitCode).toBe(1);
     expect(running.output).toMatch(/^FAIL\s+urls\s+0\/2 URLs/mu);
-    expect(requested).toEqual(["https://freshrss.sjer.red/"]);
+    expect(requested).toEqual(["https://feeds.sjer.red/"]);
   });
 
   test("an old Failed pod is noted; one that failed in the window fails the gate", async () => {

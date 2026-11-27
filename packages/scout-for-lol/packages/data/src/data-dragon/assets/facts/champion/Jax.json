@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Jax",
+  "name": "Jax",
+  "description": "Unmatched in both his skill with unique armaments and his biting sarcasm, Jax is the last known weapons master of Icathia.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "650"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Jax-passive",
+      "name": "Relentless Assault",
+      "icon": "img/ability/Jax-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jax-Q",
+      "name": "Leap Strike",
+      "icon": "img/ability/Jax-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jax-W",
+      "name": "Empower",
+      "icon": "img/ability/Jax-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jax-E",
+      "name": "Counter Strike",
+      "icon": "img/ability/Jax-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Jax-R",
+      "name": "Grandmaster-at-Arms",
+      "icon": "img/ability/Jax-R.png"
+    }
+  ],
+  "icon": "img/champion/Jax.png",
+  "art": "img/champion-splash/Jax_0.jpg",
+  "title": "Grandmaster at Arms",
+  "roles": [
+    "Fighter"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter"
+  }
+}

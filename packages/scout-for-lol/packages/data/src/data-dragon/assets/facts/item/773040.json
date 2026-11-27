@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773040",
+  "name": "Seraph's Embrace",
+  "description": "Insight: Grants Ability Power equal to 3% of maximum Mana.",
+  "facts": [
+    {
+      "label": "Mana",
+      "value": "1000"
+    },
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Mana Regen per 5 seconds",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/773040.png",
+  "goldTotal": 2700,
+  "goldCombine": 2700,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2700 gold"
+  }
+}

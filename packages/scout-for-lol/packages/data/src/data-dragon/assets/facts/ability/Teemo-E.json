@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Teemo-E",
+  "name": "Toxic Shot",
+  "description": "Passive: Teemo's Attacks apply poison On-Hit, dealing an additional 9/23/37/51/65 (+30% AP) (+5% bonus AD) magic damage plus 24/48/72/96/120 (+40% AP) (+10% bonus AD) magic damage over 4 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "680"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Teemo-E.png",
+  "slot": "E",
+  "championKey": "Teemo",
+  "championName": "Teemo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    680,
+    680,
+    680,
+    680,
+    680
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

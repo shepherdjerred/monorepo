@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3599",
+  "name": "Kalista's Black Spear",
+  "description": "Active - Consume: Bind with an ally for the remainder of the game, becoming Oathsworn Allies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/3599.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

@@ -14,6 +14,7 @@ export const PlaybackStateSchema = z.enum([
   "buffering",
   "stopped",
 ]);
+export const PlaybackSourceSchema = z.enum(["plex", "tautulli"]);
 export const PlaybackSessionViewSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -31,7 +32,7 @@ export const PlaybackSessionViewSchema = z.object({
   progressMs: z.number().int().nonnegative(),
   completed: z.boolean(),
   state: PlaybackStateSchema,
-  source: z.enum(["plex", "tautulli"]),
+  source: PlaybackSourceSchema,
   // The movie or episode that was played. Null when the play matches no title
   // Media holds in Plex today, or the reader may not open that title.
   media: MediaReferenceSchema.nullable(),
@@ -40,6 +41,26 @@ export const PlaybackHistorySchema = z.object({
   items: z.array(PlaybackSessionViewSchema),
   nextCursor: z.string().nullable(),
 });
+const PlaybackTimelineItemSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("session"), session: PlaybackSessionViewSchema }),
+  z.object({
+    kind: z.literal("plex_view"),
+    id: z.string(),
+    source: z.enum(["view", "last_watched"]),
+    mediaKind: z.enum(["movie", "episode"]),
+    title: z.string(),
+    seriesTitle: z.string().nullable(),
+    seasonNumber: z.int().nullable(),
+    episodeNumber: z.int().nullable(),
+    viewedAt: z.iso.datetime(),
+    userName: z.string().nullable(),
+  }),
+]);
+export const PlaybackTimelineSchema = z.object({
+  items: z.array(PlaybackTimelineItemSchema),
+  nextCursor: z.string().nullable(),
+});
+export type PlaybackTimelineItem = z.infer<typeof PlaybackTimelineItemSchema>;
 export const PlaybackPeopleSchema = z.array(
   z.object({ id: z.string(), displayName: z.string() }),
 );
@@ -75,11 +96,38 @@ export const PlaybackQuerySchema = z
     to: z.iso.datetime().optional(),
     userId: z.string().min(1).optional(),
     search: z.string().max(200).optional(),
+    source: PlaybackSourceSchema.optional(),
     cursor: z.uuid().optional(),
     limit: z.coerce.number().int().min(1).max(100).default(50),
   })
   .strict();
 export type PlaybackQuery = z.infer<typeof PlaybackQuerySchema>;
+
+const sessionCursor = z
+  .string()
+  .regex(/^session:[0-9a-f-]{36}$/u)
+  .transform((cursor) => cursor.slice("session:".length))
+  .pipe(z.uuid())
+  .transform((id) => ({ kind: "session" as const, id }));
+const plexViewCursor = z
+  .string()
+  .regex(/^(view|last_watched):[1-9]\d{0,15}$/u)
+  .transform((cursor) => {
+    const [source, sourceViewId] = cursor.split(":");
+    return { kind: "plex_view" as const, source, sourceViewId };
+  })
+  .pipe(
+    z.object({
+      kind: z.literal("plex_view"),
+      source: z.enum(["view", "last_watched"]),
+      sourceViewId: z.string(),
+    }),
+  );
+export const PlaybackTimelineQuerySchema = PlaybackQuerySchema.extend({
+  view: z.literal("timeline"),
+  cursor: z.union([sessionCursor, plexViewCursor]).optional(),
+});
+export type PlaybackTimelineQuery = z.infer<typeof PlaybackTimelineQuerySchema>;
 
 // The importer consumes normalized, ungrouped historical rows, never credentials.
 export const TautulliHistoryRowSchema = z

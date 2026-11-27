@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Neeko",
+  "name": "Neeko",
+  "description": "Hailing from a long lost tribe of vastaya, Neeko can blend into any crowd by borrowing the appearances of others, even absorbing something of their emotional state to tell friend from foe in an instant.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "610"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Neeko-passive",
+      "name": "Inherent Glamour",
+      "icon": "img/ability/Neeko-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Neeko-Q",
+      "name": "Blooming Burst",
+      "icon": "img/ability/Neeko-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Neeko-W",
+      "name": "Shapesplitter",
+      "icon": "img/ability/Neeko-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Neeko-E",
+      "name": "Tangle-Barbs",
+      "icon": "img/ability/Neeko-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Neeko-R",
+      "name": "Pop Blossom",
+      "icon": "img/ability/Neeko-R.png"
+    }
+  ],
+  "icon": "img/champion/Neeko.png",
+  "art": "img/champion-splash/Neeko_0.jpg",
+  "title": "the Curious Chameleon",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

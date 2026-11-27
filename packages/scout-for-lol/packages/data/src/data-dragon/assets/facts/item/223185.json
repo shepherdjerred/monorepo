@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223185",
+  "name": "Guardian's Dirk",
+  "description": "Agricultural Reaper: Increases effects of Power Flower by 20%.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "25"
+    },
+    {
+      "label": "Lethality",
+      "value": "11"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223185.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

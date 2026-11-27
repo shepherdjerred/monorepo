@@ -87,12 +87,13 @@ function findScheduleById(id: string) {
   return schedule;
 }
 
-test("Reddit outreach is registered on a 15-minute interval and starts paused", () => {
+test("Reddit outreach is registered on a five-minute interval and starts paused", () => {
   const schedule = findScheduleById("the-storm-reddit-outreach");
   expect(schedule).toMatchObject({
     workflowType: "runStormRedditOutreach",
-    timing: { kind: "interval", every: "15 minutes" },
+    timing: { kind: "interval", every: 5 * 60_000 },
     overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "1 minute",
     workflowExecutionTimeout: "15 minutes",
   });
   expect(buildScheduleState(schedule, {})).toEqual({
@@ -323,17 +324,17 @@ test("dependency summary timeout covers every retried report phase", () => {
   );
 });
 
-test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
-  const schedule = findScheduleById("freshrss-sync-hourly");
-  expect(schedule.workflowType).toBe("runFreshRssSyncWorkflow");
+test("Feeds refresh runs every 30 minutes on the shared Workflow queue", () => {
+  const schedule = findScheduleById("feeds-refresh");
+  expect(schedule.workflowType).toBe("runFeedsRefreshWorkflow");
   expect(schedule.timing).toEqual({
     kind: "cron",
-    expression: "7 * * * *",
+    expression: "13,43 * * * *",
     timezone: "America/Los_Angeles",
   });
   expect(schedule.taskQueue).toBe(TASK_QUEUES.WORKFLOWS);
   expect(schedule.catchupWindow).toBe("5 minutes");
-  expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
+  expect(schedule.workflowExecutionTimeout).toBe("5 minutes");
 });
 
 test("Flags inventory sync starts on the shared Workflow queue", () => {
@@ -580,7 +581,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "deliveryDispatchWorkflow",
   "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
-  "runFreshRssSyncWorkflow",
   "runFeedsRefreshWorkflow",
   "runFlagInventorySync",
   "runLlmBilledCostReconciliation",
@@ -678,6 +678,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "scoutPostMatchDiscoveryWorkflow",
   "scoutIngestionReconciliationWorkflow",
   "scoutParticipantCrawlWorkflow",
+  // Repeats one bounded delete-batch Activity (at most 50 times per run) while
+  // batches come back full; no Workflow-level sleeps.
+  "scoutCrawlFrontierPruneWorkflow",
   "scoutPipelineReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
@@ -916,7 +919,6 @@ test("terminates workflows for schedules being removed", async () => {
     'WorkflowType = "backupStormForumWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runVeleroR2OrphanAuditWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "syncGolinks" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runFliptFlagInventory" AND ExecutionStatus = "Running"',
   ]);
 });
 

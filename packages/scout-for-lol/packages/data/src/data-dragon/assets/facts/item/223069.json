@@ -1,0 +1,37 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223069",
+  "name": "Void Immolation",
+  "description": "Immolate: After taking or dealing damage, deal magic damage per second to nearby enemies for 5 seconds. Desolate: Killing an enemy deals magic damage around them.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "1000"
+    },
+    {
+      "label": "Armor",
+      "value": "100"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "80"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "200%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223069.png",
+  "goldTotal": 6000,
+  "goldCombine": 6000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "6000 gold"
+  }
+}

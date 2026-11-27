@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8139",
+  "name": "Taste of Blood",
+  "description": "Heal when you damage an enemy champion.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/GreenTerror_TasteOfBlood.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

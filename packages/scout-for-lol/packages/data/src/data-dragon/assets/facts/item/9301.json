@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9301",
+  "name": "Shield Slam",
+  "description": "Leona slams her shield, dealing damage in a cone that scales with her armor.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9301.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

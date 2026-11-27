@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vladimir-E",
+  "name": "Tides of Blood",
+  "description": "Begin Charging: Vladimir charges up a reservoir of blood, spending up to 8% max Health Health. While at full charge, Vladimir is Slowed by 20%.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Vladimir-E.png",
+  "slot": "E",
+  "championKey": "Vladimir",
+  "championName": "Vladimir",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    11,
+    9,
+    7,
+    5
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/11/9/7/5 s"
+  }
+}

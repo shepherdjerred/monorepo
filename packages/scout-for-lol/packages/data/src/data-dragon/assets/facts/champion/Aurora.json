@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Aurora",
+  "name": "Aurora",
+  "description": "From the moment she was born, Aurora navigated life with a unique ability to move between the spirit and material realms.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "607"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Aurora-passive",
+      "name": "Spirit Abjuration",
+      "icon": "img/ability/Aurora-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aurora-Q",
+      "name": "Twofold Hex",
+      "icon": "img/ability/Aurora-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aurora-W",
+      "name": "Across the Veil",
+      "icon": "img/ability/Aurora-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aurora-E",
+      "name": "The Weirding",
+      "icon": "img/ability/Aurora-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Aurora-R",
+      "name": "Between Worlds",
+      "icon": "img/ability/Aurora-R.png"
+    }
+  ],
+  "icon": "img/champion/Aurora.png",
+  "art": "img/champion-splash/Aurora_0.jpg",
+  "title": "the Witch Between Worlds",
+  "roles": [
+    "Mage",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Assassin"
+  }
+}

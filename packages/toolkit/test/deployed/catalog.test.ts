@@ -109,6 +109,8 @@ describe("deployed registry derived from the service catalog", () => {
     "discord-plays-mario-kart",
     "obsidian-headless",
     "postal",
+    "freshrss",
+    "phoenix",
   ])("does not advertise retired workload %s", (selector) => {
     expect(resolveServiceSelector(selector)).toBeNull();
   });

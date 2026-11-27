@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "31",
+  "name": "Poro Toss",
+  "description": "Toss a Poro at your enemies. If it hits, you can quickly travel to your target as a follow up.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "2500"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerPoroThrow.png",
+  "cooldownSeconds": 20,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20 s"
+  }
+}

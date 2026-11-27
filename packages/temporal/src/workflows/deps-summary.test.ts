@@ -182,7 +182,7 @@ describe("dependency summary delivery checkpoint", () => {
     const events: string[] = [];
     const deliverActivityReport = (): never => {
       events.push("deliver-failed");
-      throw new Error("Postal unavailable");
+      throw new Error("Mail API unavailable");
     };
     let failure: unknown;
     try {

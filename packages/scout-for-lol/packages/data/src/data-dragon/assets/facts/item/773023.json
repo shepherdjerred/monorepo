@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773023",
+  "name": "Twin Shadows",
+  "description": "Active 120s Summons up to 2 invulnerable ghosts that seek out the two nearest enemy champions for 6 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "40"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773098",
+      "name": "Lucky Pick",
+      "icon": "img/item/773098.png"
+    },
+    {
+      "kind": "item",
+      "key": "771033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/771033.png"
+    }
+  ],
+  "icon": "img/item/773023.png",
+  "goldTotal": 1900,
+  "goldCombine": 735,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1900 gold"
+  }
+}

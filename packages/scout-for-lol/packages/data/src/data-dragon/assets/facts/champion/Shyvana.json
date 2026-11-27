@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Shyvana",
+  "name": "Shyvana",
+  "description": "Shyvana is a fearsome half-dragon warrior. Though she often appears humanoid, she also rules the skies as a dragon, incinerating her foes with fiery breath.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "625"
+    },
+    {
+      "label": "Move speed",
+      "value": "350"
+    },
+    {
+      "label": "Attack range",
+      "value": "150"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Shyvana-passive",
+      "name": "Scalemail",
+      "icon": "img/ability/Shyvana-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shyvana-Q",
+      "name": "Emberstrike",
+      "icon": "img/ability/Shyvana-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shyvana-W",
+      "name": "Inferno Aegis",
+      "icon": "img/ability/Shyvana-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shyvana-E",
+      "name": "Molten Burst",
+      "icon": "img/ability/Shyvana-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Shyvana-R",
+      "name": "Dragon's Descent",
+      "icon": "img/ability/Shyvana-R.png"
+    }
+  ],
+  "icon": "img/champion/Shyvana.png",
+  "art": "img/champion-splash/Shyvana_0.jpg",
+  "title": "the Half-Dragon",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

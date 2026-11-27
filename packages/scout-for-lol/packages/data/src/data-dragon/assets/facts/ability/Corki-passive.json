@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Corki-passive",
+  "name": "Hextech Munitions",
+  "description": "A percentage of Corki's basic attack damage is dealt as bonus true damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Corki-passive.png",
+  "slot": "passive",
+  "championKey": "Corki",
+  "championName": "Corki",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "7",
+  "name": "Heal",
+  "description": "Restores Health and grants Move Speed to you and target allied champion.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "875"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerHeal.png",
+  "cooldownSeconds": 240,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "240 s"
+  }
+}

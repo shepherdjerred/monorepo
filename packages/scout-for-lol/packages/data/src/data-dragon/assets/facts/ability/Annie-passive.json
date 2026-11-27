@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Annie-passive",
+  "name": "Pyromania",
+  "description": "After casting 4 spells, Annie's next offensive spell will stun the target. Annie begins the game and respawns with Pyromania available.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Annie-passive.png",
+  "slot": "passive",
+  "championKey": "Annie",
+  "championName": "Annie",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

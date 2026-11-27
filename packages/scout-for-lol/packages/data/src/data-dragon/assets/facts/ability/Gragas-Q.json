@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gragas-Q",
+  "name": "Barrel Roll",
+  "description": "Gragas rolls a cask that explodes after 4 seconds, dealing between 80/120/160/200/240 (+80% AP) magic damage and 120/180/240/300/360 (+120% AP) magic damage and Slowing for between 40/45/50/55/60 and 60/67.5/75/82.5/90% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "850"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gragas-Q.png",
+  "slot": "Q",
+  "championKey": "Gragas",
+  "championName": "Gragas",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    850,
+    850,
+    850,
+    850,
+    850
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Twitch-Q",
+  "name": "Ambush",
+  "description": "Twitch Camouflages and gains 10% Move Speed for 10/11/12/13/14 seconds. The Move Speed increases to 30% while near an enemy champion that can't see him.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Twitch-Q.png",
+  "slot": "Q",
+  "championKey": "Twitch",
+  "championName": "Twitch",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16 s"
+  }
+}

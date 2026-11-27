@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rumble-R",
+  "name": "The Equalizer",
+  "description": "Rumble launches a line of rockets, creating a burning trail that lasts 4.5 seconds, Slowing by 35% and dealing 120/200/280 (+40% AP) magic damage per second. Rumble can control the direction of the trail by clicking and dragging while casting this Ability.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1750"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rumble-R.png",
+  "slot": "R",
+  "championKey": "Rumble",
+  "championName": "Rumble",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    105,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1750,
+    1750,
+    1750
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/105/80 s"
+  }
+}

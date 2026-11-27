@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226657",
+  "name": "Rod of Ages",
+  "description": "Timeless: After 2 combat rounds, this item gains an additional 50 Ability Power, 300 Health, and 400 Mana, and you gain a level. Eternity: Taking damage from champions restores 7% of premitigation damage as Mana.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Health",
+      "value": "350"
+    },
+    {
+      "label": "Mana",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226657.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

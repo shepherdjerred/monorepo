@@ -1,4 +1,8 @@
-import { runCommand } from "./run-command.ts";
+import {
+  loadIntegrationConfig,
+  NEVER_ABORT,
+  runCommand,
+} from "./run-command.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -13,7 +17,6 @@ import {
 } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
 import { cleanRollingSrt } from "@shepherdjerred/streambot/sources/subtitle-clean.ts";
-import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 
 /**
  * Real-ffmpeg integration tests. These run ONLY via `bun run test:integration` — run it where
@@ -22,13 +25,7 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
  * (scoped to `test/`). They hard-fail (never skip) if a binary is missing.
  */
 
-const config = loadConfig({
-  BOT_TOKEN: "bot-token",
-  USER_TOKENS: "user-token",
-  VIDEOS_DIR: "/tmp/videos",
-});
-
-const NEVER_ABORT = new AbortController().signal;
+const config = loadIntegrationConfig();
 const CUE = "HELLO SUBTITLE WORLD";
 const SRT = `1\n00:00:00,000 --> 00:00:03,000\n${CUE}\n`;
 const FORCED_CUE = "FORCED ONLY LINE";

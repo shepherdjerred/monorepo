@@ -155,6 +155,30 @@ describe("Reddit draft evidence contract", () => {
     expect(guardRedditInviteDraft(invite, input)).toEqual(invite);
   });
 
+  it("accepts supporting evidence across the server facts' line wrapping", () => {
+    const draft = {
+      ...invite,
+      evidence: [
+        {
+          requestQuote: "Java and Bedrock",
+          factQuote: "ViaVersion supports compatible older Java clients",
+        },
+      ],
+    };
+    const wrappedFacts = {
+      ...input,
+      serverFacts:
+        "Java and Bedrock players share the same survival worlds through Geyser. ViaVersion supports\ncompatible older Java clients, and we recommend the newest supported client versions.",
+    };
+    expect(guardRedditInviteDraft(draft, wrappedFacts)).toEqual(draft);
+    expect(
+      guardRedditInviteDraft(draft, {
+        ...wrappedFacts,
+        serverFacts: wrappedFacts.serverFacts.replace("older", "newer"),
+      }).reply,
+    ).toBeNull();
+  });
+
   it.each(["Seattle", "Washington", "Pacific Northwest", "PNW"])(
     "declines drafts that repeat the more specific location %s",
     (location) => {

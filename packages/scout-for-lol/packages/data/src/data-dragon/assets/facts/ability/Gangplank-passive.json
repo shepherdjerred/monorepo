@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gangplank-passive",
+  "name": "Trial by Fire",
+  "description": "Every few seconds, Gangplank's melee strike will set his opponent on fire.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Gangplank-passive.png",
+  "slot": "passive",
+  "championKey": "Gangplank",
+  "championName": "Gangplank",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

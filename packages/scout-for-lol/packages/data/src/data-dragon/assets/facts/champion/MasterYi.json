@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "MasterYi",
+  "name": "Master Yi",
+  "description": "Master Yi has tempered his body and sharpened his mind, so that thought and action have become almost as one. Though he chooses to enter into violence only as a last resort, the grace and speed of his blade ensures resolution is always swift.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "355"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "MasterYi-passive",
+      "name": "Double Strike",
+      "icon": "img/ability/MasterYi-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MasterYi-Q",
+      "name": "Alpha Strike",
+      "icon": "img/ability/MasterYi-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MasterYi-W",
+      "name": "Meditate",
+      "icon": "img/ability/MasterYi-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MasterYi-E",
+      "name": "Wuju Style",
+      "icon": "img/ability/MasterYi-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "MasterYi-R",
+      "name": "Highlander",
+      "icon": "img/ability/MasterYi-R.png"
+    }
+  ],
+  "icon": "img/champion/MasterYi.png",
+  "art": "img/champion-splash/MasterYi_0.jpg",
+  "title": "the Wuju Bladesman",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

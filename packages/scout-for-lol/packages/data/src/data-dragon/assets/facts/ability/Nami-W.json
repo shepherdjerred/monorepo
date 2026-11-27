@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nami-W",
+  "name": "Ebb and Flow",
+  "description": "Nami unleashes a stream of water that bounces between allied and enemy champions. Each champion can only be hit once, and it hits up to 3 targets.Restores 55/80/105/130/155 (+40% AP) Health to allies and will bounce to a nearby enemy champion.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "725"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nami-W.png",
+  "slot": "W",
+  "championKey": "Nami",
+  "championName": "Nami",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    10,
+    10,
+    10,
+    10
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    725,
+    725,
+    725,
+    725,
+    725
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10 s"
+  }
+}

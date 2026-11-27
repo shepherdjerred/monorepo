@@ -54,6 +54,7 @@ export function distribution(values: readonly (number | null)[]) {
     count: samples.length,
     missing: values.length - samples.length,
     p50Seconds: rank(0.5),
+    p90Seconds: rank(0.9),
     p95Seconds: rank(0.95),
   };
 }
@@ -191,6 +192,19 @@ export function latencyReport(
           .map((entry) => entry.elapsedSeconds),
       ),
       initialQueue: distribution(entries.map((entry) => entry.queueSeconds)),
+      workflows: [
+        ...Map.groupBy(
+          entries.flatMap((entry) => entry.workflows),
+          (workflow) => workflow.name,
+        ),
+      ].map(([name, workflows]) => ({
+        name,
+        ...distribution(
+          workflows
+            .filter((workflow) => workflow.state === "success")
+            .map((workflow) => workflow.elapsedSeconds),
+        ),
+      })),
       phases: [
         ...Map.groupBy(
           entries.flatMap((entry) =>
@@ -223,10 +237,15 @@ export function formatLatency(
 ): string {
   return [
     `${String(report.count)} pipelines: ${report.since} — ${report.until}`,
-    ...report.cohorts.map(
-      (group) =>
-        `${group.cohort}: ${String(group.count)} runs; successful latency n=${String(group.latency.count)}, p50=${String(group.latency.p50Seconds)}s, p95=${String(group.latency.p95Seconds)}s`,
-    ),
+    ...report.cohorts.flatMap((group) => [
+      `${group.cohort}: ${String(group.count)} runs; successful latency n=${String(group.latency.count)}, p50=${String(group.latency.p50Seconds)}s, p90=${String(group.latency.p90Seconds)}s, p95=${String(group.latency.p95Seconds)}s`,
+      ...group.workflows
+        .filter((workflow) => workflow.count > 0)
+        .map(
+          (workflow) =>
+            `  workflow ${workflow.name}: n=${String(workflow.count)}, p50=${String(workflow.p50Seconds)}s, p90=${String(workflow.p90Seconds)}s, p95=${String(workflow.p95Seconds)}s`,
+        ),
+    ]),
     `Fresh ready heads: ${String(report.freshReadyHeads.count)}/${String(report.freshReadyHeads.requiredSamples)} minimum; enough samples=${String(report.freshReadyHeads.enoughSamples)}`,
     ...report.limitations,
   ].join("\n");

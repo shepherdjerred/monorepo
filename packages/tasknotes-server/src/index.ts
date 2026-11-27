@@ -6,6 +6,7 @@ import { getDatabase } from "./infrastructure/database.ts";
 import { tasksTotal, uptimeSeconds } from "./metrics.ts";
 import { InMemoryFacetStore } from "./v1/stores/in-memory-store.ts";
 import { PrismaFacetStore } from "./v1/stores/prisma-store.ts";
+import { requireWebRoot, webIndexExists, webRootPath } from "./web-ui.ts";
 
 const hasDatabaseUrl =
   Bun.env["DATABASE_URL"] !== undefined && Bun.env["DATABASE_URL"] !== "";
@@ -13,9 +14,15 @@ const v1Store = hasDatabaseUrl
   ? new PrismaFacetStore(getDatabase())
   : new InMemoryFacetStore();
 
+const webRoot = webRootPath();
+if (Bun.env.NODE_ENV === "production") {
+  requireWebRoot(webRoot);
+}
+
 const app = createFacetApp({
   store: v1Store,
   enableRequestLogging: true,
+  ...(webIndexExists(webRoot) ? { webRoot } : {}),
 });
 
 const startTime = Date.now();

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771011",
+  "name": "Giant's Belt",
+  "description": "Grants 380 Health.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "380"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771011.png",
+  "goldTotal": 1000,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

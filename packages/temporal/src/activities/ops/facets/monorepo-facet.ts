@@ -1,4 +1,5 @@
 import type { S3Client } from "@aws-sdk/client-s3";
+import type { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 import catalogDocumentJson from "@shepherdjerred/ops-model/catalog-document.json" with { type: "json" };
 import { z } from "zod";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
@@ -7,10 +8,16 @@ import type {
   FlagsFacet,
   GitHubFacet,
   MonorepoAudit,
+  MonorepoCodeReview,
   MonorepoFacet,
   RenovateFacet,
 } from "@shepherdjerred/ops-model/facets.ts";
 import { monorepoTurboHitRatio7d } from "#observability/metrics-ops.ts";
+import {
+  buildCodeReviewPoolAudit,
+  collectMonorepoCodeReview,
+  type CollectMonorepoCodeReviewOptions,
+} from "./monorepo-code-review.ts";
 import {
   clearDiagnosticsCache,
   fetchRecentDiagnostics,
@@ -257,8 +264,12 @@ function buildAudits(input: {
   nowIso: string;
   flags?: FlagsFacet | undefined;
   renovate?: RenovateFacet | undefined;
+  codeReview?: MonorepoCodeReview | undefined;
 }): MonorepoAudit[] {
   const audits: MonorepoAudit[] = [];
+  if (input.codeReview !== undefined) {
+    audits.push(buildCodeReviewPoolAudit(input.codeReview, input.nowIso));
+  }
   if (input.flags !== undefined) {
     const hasDrift = input.flags.namespaces.some(
       (ns) => ns.prodStatus !== "ok" || ns.betaStatus !== "ok",
@@ -294,15 +305,28 @@ export async function collectMonorepoFacet(input: {
   services: ServiceIndex;
   now?: Date;
   s3Client?: S3Client;
+  prometheus?: PrometheusClient | undefined;
+  codeReviewOptions?:
+    | Pick<
+        CollectMonorepoCodeReviewOptions,
+        "loadRuntimeConfig" | "readCoordinator"
+      >
+    | undefined;
   github?: GitHubFacet | undefined;
   renovate?: RenovateFacet | undefined;
   bugsink?: BugsinkFacet | undefined;
   flags?: FlagsFacet | undefined;
 }): Promise<MonorepoFacet> {
   const now = input.now ?? new Date();
-  const [inventory, diagnostics] = await Promise.all([
+  const [inventory, diagnostics, codeReview] = await Promise.all([
     loadWorkspaceInventory(input.services),
     fetchRecentDiagnostics(input.s3Client, now),
+    collectMonorepoCodeReview({
+      now,
+      prometheus: input.prometheus,
+      loadRuntimeConfig: input.codeReviewOptions?.loadRuntimeConfig,
+      readCoordinator: input.codeReviewOptions?.readCoordinator,
+    }),
   ]);
 
   if (diagnostics.turboHitRatio7d !== null) {
@@ -341,6 +365,8 @@ export async function collectMonorepoFacet(input: {
       nowIso: now.toISOString(),
       flags: input.flags,
       renovate: input.renovate,
+      codeReview,
     }),
+    codeReview,
   };
 }

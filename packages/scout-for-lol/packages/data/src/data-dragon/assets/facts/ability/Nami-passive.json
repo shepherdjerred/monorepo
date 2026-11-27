@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nami-passive",
+  "name": "Surging Tides",
+  "description": "When Nami's Abilities hit allied champions they gain Move Speed for a short duration.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Nami-passive.png",
+  "slot": "passive",
+  "championKey": "Nami",
+  "championName": "Nami",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

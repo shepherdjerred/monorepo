@@ -29,18 +29,6 @@ sccache = "0.19.0"
 "cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-version depName=dotnet-sdk
 dotnet = "10.0.404"
-# The C# UniFFI generator is built by tasknotes-core's xtask from its
-# source-controlled 0.32 retarget. It is not a global tool: the generated
-# bindings must match the core's exact UniFFI ABI.
-# Explicit deep-quality tools. These are scheduled/operator gates, not ordinary
-# PR-lane work, but they stay pinned with the rest of the repository toolchain.
-"cargo:cargo-mutants" = "27.1.0"
-"cargo:cargo-llvm-cov" = "0.9.2"
-# tasknotes-core's `deny` script (supply-chain + license + build-script bans).
-# No mise registry entry exists, so this names the backend explicitly; `github:`
-# fetches the release binary and verifies its artifact attestation and SLSA
-# provenance, where `cargo:` would build it from source on every CI image bake.
-"github:EmbarkStudios/cargo-deny" = "0.22.0"
 # renovate: datasource=github-releases depName=corretto/corretto-25 versioning=loose
 java = "corretto-25.0.5.1.2"
 # The Storm plugin build (packages/the-storm/plugin). No Gradle wrapper: this pin
@@ -60,9 +48,8 @@ jq = "1.8.2"
 # Link checker for the weekly Temporal link-rot report (root lychee.toml);
 # pinned here so local runs match the worker image's binary.
 lychee = "0.24.2"
-# Semantic YAML/JSON comparison in the Minecraft config-drift check test
-# (misc/minecraft-drift-check.test.ts shells out to yq, matching the yq the
-# init container runs at deploy time)
+# YAML/JSON query CLI for operator and agent shell use (docs and runbooks pipe
+# through yq); matches the yq the Minecraft init container runs at deploy time.
 yq = "4.54.3"
 # Shared local/CI Postgres for scout-for-lol dev + tests. Prebuilt binaries
 # (initdb/pg_ctl/psql/createdb/dropdb); major 18 matches the homelab clusters

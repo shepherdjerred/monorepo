@@ -1,11 +1,15 @@
 import { expect, test } from "vitest";
+import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import {
   ArtifactVersionSchema,
   EnvironmentSchema,
   OverviewSchema,
   VersionSetRevisionSchema,
 } from "@shepherdjerred/delivery/contract";
-import { publishedProfileInputs } from "#lib/mc/published-profile.ts";
+import {
+  publishedProfileInputs,
+  registeredReader,
+} from "#lib/mc/published-profile.ts";
 
 const original = ArtifactVersionSchema.parse({
   id: "minecraft/image/original",
@@ -121,3 +125,100 @@ test.each([
     ).rejects.toThrow();
   },
 );
+
+test("registeredReader uses Tailscale unauthenticated reads first and falls back to DELIVERY_API_TOKEN on 401", async () => {
+  const savedApi = Bun.env["DELIVERY_API_TOKEN"];
+  const savedPublisher = Bun.env["DELIVERY_PUBLISHER_TOKEN"];
+  Reflect.deleteProperty(Bun.env, "DELIVERY_API_TOKEN");
+  Bun.env["DELIVERY_PUBLISHER_TOKEN"] = "publisher-must-never-be-used";
+  try {
+    const tokensSeen: (string | undefined)[] = [];
+    const tailscaleOnly = await registeredReader({
+      makeClient: (_url, token) => {
+        tokensSeen.push(token);
+        return reader();
+      },
+      resolveApiToken: () => {
+        throw new Error("Tailscale read must not resolve DELIVERY_API_TOKEN");
+      },
+    });
+    await tailscaleOnly.overview();
+    await tailscaleOnly.version("minecraft/accepted");
+    expect(tokensSeen).toEqual([undefined]);
+
+    tokensSeen.length = 0;
+    const fallbackClient = await registeredReader({
+      deliveryUrl: "https://delivery.tailnet-1a49.ts.net",
+      makeClient: (_url, token) => {
+        tokensSeen.push(token);
+        if (token === undefined) {
+          return {
+            latestQualifiedArtifact: () => {
+              Bun.env["DELIVERY_API_TOKEN"] = "fallback-api-token";
+              return Promise.reject(
+                new DeliveryClientError(401, "UNAUTHORIZED", "login required"),
+              );
+            },
+            overview: () => {
+              Bun.env["DELIVERY_API_TOKEN"] = "fallback-api-token";
+              return Promise.reject(
+                new DeliveryClientError(401, "UNAUTHORIZED", "login required"),
+              );
+            },
+            version: () =>
+              Promise.reject(
+                new DeliveryClientError(401, "UNAUTHORIZED", "login required"),
+              ),
+          };
+        }
+        return reader();
+      },
+    });
+    await fallbackClient.overview();
+    await fallbackClient.version("minecraft/accepted");
+    expect(tokensSeen).toEqual([undefined, "fallback-api-token"]);
+
+    Bun.env["DELIVERY_API_TOKEN"] = "ambient-api-token";
+    tokensSeen.length = 0;
+    const ambientClient = await registeredReader({
+      deliveryUrl: "https://delivery.tailnet-1a49.ts.net",
+      makeClient: (_url, token) => {
+        tokensSeen.push(token);
+        return reader();
+      },
+    });
+    await ambientClient.latestQualifiedArtifact({
+      serviceId: "minecraft",
+      component: "image:the-storm-server",
+      kind: "image",
+    });
+    expect(tokensSeen).toEqual(["ambient-api-token"]);
+
+    Reflect.deleteProperty(Bun.env, "DELIVERY_API_TOKEN");
+    const non401 = await registeredReader({
+      deliveryUrl: "https://delivery.tailnet-1a49.ts.net",
+      makeClient: () => ({
+        ...reader(),
+        overview: () =>
+          Promise.reject(
+            new DeliveryClientError(500, "INTERNAL", "server down"),
+          ),
+      }),
+      resolveApiToken: () => {
+        throw new Error("non-401 must not fall back to token resolution");
+      },
+    });
+    await expect(non401.overview()).rejects.toThrow("server down");
+  } finally {
+    if (savedApi === undefined) {
+      Reflect.deleteProperty(Bun.env, "DELIVERY_API_TOKEN");
+    } else {
+      Bun.env["DELIVERY_API_TOKEN"] = savedApi;
+    }
+    if (savedPublisher === undefined) {
+      Reflect.deleteProperty(Bun.env, "DELIVERY_PUBLISHER_TOKEN");
+    } else {
+      Bun.env["DELIVERY_PUBLISHER_TOKEN"] = savedPublisher;
+    }
+  }
+});

@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Trundle-E",
+  "name": "Pillar of Ice",
+  "description": "Trundle creates an icy pillar for 6 seconds, briefly Knocking Back enemies directly over it and Slowing nearby enemies by 34/38/42/46/50%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "75 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Trundle-E.png",
+  "slot": "E",
+  "championKey": "Trundle",
+  "championName": "Trundle",
+  "maxRank": 5,
+  "cooldownByRank": [
+    21,
+    19.5,
+    18,
+    16.5,
+    15
+  ],
+  "costByRank": [
+    75,
+    75,
+    75,
+    75,
+    75
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "21/19.5/18/16.5/15 s"
+  }
+}

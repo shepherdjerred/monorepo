@@ -35,11 +35,12 @@ export const wikiRedirects = {
   "/temporal/workflows/pr-bots": "/explanation/temporal/event-surfaces/",
   "/temporal/workflows/repo-upkeep": "/explanation/temporal/workflow-families/",
   "/temporal/workflows/scout": "/explanation/temporal/workflow-families/",
-  "/how-to/route-a-service-to-braintrust":
-    "/how-to/route-a-service-to-phoenix/",
+  "/how-to/route-a-service-to-braintrust": "/explanation/llm-stack/",
+  "/how-to/route-a-service-to-phoenix/": "/explanation/llm-stack/",
   "/how-to/cut-a-namespace-over-to-enforced-policies/":
     "/how-to/check-a-namespace-under-enforced-policies/",
   "/explanation/homelab/postal-smtp-tls/":
     "/explanation/homelab/mail-smtp-tls/",
   "/how-to/check-flipt-flag-inventory/": "/how-to/check-flag-inventory/",
+  "/how-to/manage-freshrss-repo-feeds/": "/how-to/manage-feeds/",
 };

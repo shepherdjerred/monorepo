@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zyra-Q",
+  "name": "Deadly Spines",
+  "description": "Zyra causes thick vines to spread and explode into spines, dealing 60/100/140/180/220 (+65% AP) magic damage. If this Ability is cast near a Seed, the Seed grows into a Thorn Spitter that deals 15-75 (based on level) (+20% AP) magic damage and lasts 8 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "55 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zyra-Q.png",
+  "slot": "Q",
+  "championKey": "Zyra",
+  "championName": "Zyra",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6.5,
+    6,
+    5.5,
+    5
+  ],
+  "costByRank": [
+    55,
+    55,
+    55,
+    55,
+    55
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6.5/6/5.5/5 s"
+  }
+}

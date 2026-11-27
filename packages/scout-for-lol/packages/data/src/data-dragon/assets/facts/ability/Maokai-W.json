@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Maokai-W",
+  "name": "Twisted Advance",
+  "description": "Maokai transforms into a moving mass of roots, becoming Untargetable and dashing to an enemy. Upon arrival, he Roots the enemy for 1/1.1/1.2/1.3/1.4 second(s) and deals 60/85/110/135/160 (+40% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "525"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Maokai-W.png",
+  "slot": "W",
+  "championKey": "Maokai",
+  "championName": "Maokai",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    525,
+    525,
+    525,
+    525,
+    525
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

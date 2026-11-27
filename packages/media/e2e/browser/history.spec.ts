@@ -94,7 +94,7 @@ test("the owner sees every stream, the household's numbers, and plays that link 
   await expect(rows).toHaveCount(50);
   expect(await rows.first().innerText()).toBe(firstTitle);
   await page.getByRole("button", { name: "Show more plays" }).click();
-  await expect(rows).toHaveCount(64);
+  await expect(rows).toHaveCount(68);
   await expect(
     page.getByRole("button", { name: "Show more plays" }),
   ).toHaveCount(0);
@@ -105,14 +105,54 @@ test("the owner sees every stream, the household's numbers, and plays that link 
   await expect(unlinked.first().locator("span:visible").first()).toHaveText(
     /\S/u,
   );
-  expect(await unlinked.count()).toBeLessThan(64);
+  expect(await unlinked.count()).toBeLessThan(68);
 
   // No member-facing contract value, and nothing wider than the screen.
   await expect(page.locator("#main")).not.toContainText(
-    /direct_|transcode|tautulli|direct play|direct stream/iu,
+    /direct_|transcode|direct play|direct stream/iu,
   );
   expect(await horizontalOverflow(page)).toBe(0);
   expect(await violationDetails(page)).toEqual([]);
+});
+
+test("prior Plex views are searchable in History alongside timed sessions", async ({
+  page,
+}) => {
+  await openAs(page, "owner", "/history?search=bear");
+  await settle(page);
+  const archived = plays(page)
+    .getByRole("listitem")
+    .filter({ hasText: "Plex view" });
+  await expect(archived).toContainText("The Bear");
+  await expect(archived).toContainText("System · Season 1 · Episode 1");
+  await expect(archived.getByRole("link")).toHaveCount(0);
+  await expect(archived.locator("time")).toHaveAttribute(
+    "datetime",
+    "2025-07-17T20:43:00.000Z",
+  );
+  await expect(archived).not.toContainText(/ min on |Finished|Partly watched/u);
+
+  await page
+    .getByRole("combobox", { name: "History source" })
+    .selectOption("tautulli");
+  await expect
+    .poll(() => address(page))
+    .toBe("/history?search=bear&source=tautulli");
+  await expect(archived).toHaveCount(0);
+  await expect(plays(page).getByRole("listitem").first()).toContainText(
+    "Tautulli",
+  );
+
+  await openAs(
+    page,
+    "member",
+    "/history?source=plex&to=2026-01-01T00%3A00%3A00.000Z",
+  );
+  await settle(page);
+  await expect(plays(page).getByRole("listitem")).toHaveText([
+    /The Apartment.*Plex view/u,
+  ]);
+  await expect(section(page, "Statistics")).toHaveCount(0);
 });
 
 test("the bars are drawn from their values, with no style written into the page", async ({

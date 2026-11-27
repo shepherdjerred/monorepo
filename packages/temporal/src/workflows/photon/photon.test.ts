@@ -1,3 +1,4 @@
+import { once } from "node:events";
 import { ApplicationFailure } from "@temporalio/common";
 import { temporalWorkflowTracingModulePath } from "@shepherdjerred/temporal-observability/interceptors";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
@@ -180,17 +181,28 @@ describe("Photon durable conversation and delivery", () => {
   );
 });
 describe("Photon durable conversation admission", () => {
-  test("serializes commands, durably rejects conflicts/full queues, and resumes pending admission after a worker restart", async () => {
+  test("serializes commands, durably rejects conflicts/full queues, and resumes pending admission after a worker restart", async ({
+    signal,
+  }) => {
     // Exercise poller restarts against the current full Temporal server.
     const { createLeasedLocalTemporalEnvironment } =
       await import("#lib/fixtures/temporal-lease.ts");
     const env = await createLeasedLocalTemporalEnvironment();
     const first = message("first");
+    const last = message("pending-49");
+    const backlog = [
+      message("late", "2026-10-03T11:59:59.000Z"),
+      ...Array.from({ length: 47 }, (_, index) =>
+        message(`pending-${String(index + 2)}`),
+      ),
+      last,
+    ];
     const workflowId = photonConversationWorkflowId(first.conversationId);
     const prepared: PhotonCommand[] = [];
     const release = Promise.withResolvers<undefined>();
     const entered = Promise.withResolvers<undefined>();
     const delivered: string[] = [];
+    const delivery = new EventTarget();
     const activityWorker = await Worker.create({
       connection: env.nativeConnection,
       taskQueue: TASK_QUEUES.AGENT_CHAT_PHOTON,
@@ -205,6 +217,8 @@ describe("Photon durable conversation admission", () => {
             await release.promise;
           }
           delivered.push(input.messageId);
+          if (input.messageId === last.messageId)
+            delivery.dispatchEvent(new Event("last-delivery"));
           return { messageId: "outgoing" };
         },
       },
@@ -232,15 +246,8 @@ describe("Photon durable conversation admission", () => {
             fingerprint: "b".repeat(64),
           }),
         ).rejects.toMatchObject({ cause: { type: "PhotonMessageConflict" } });
-        await admitPhotonMessage(
-          env.client.workflow,
-          message("late", "2026-10-03T11:59:59.000Z"),
-        );
-        for (let index = 2; index < 50; index += 1)
-          await admitPhotonMessage(
-            env.client.workflow,
-            message(`pending-${String(index)}`),
-          );
+        for (const pending of backlog)
+          await admitPhotonMessage(env.client.workflow, pending);
         await expect(
           admitPhotonMessage(env.client.workflow, message("overflow")),
         ).rejects.toMatchObject({ cause: { type: "PhotonQueueFull" } });
@@ -262,12 +269,21 @@ describe("Photon durable conversation admission", () => {
         workflowBundle,
       });
       await resumed.runUntil(async () => {
+        const lastDelivery = once(delivery, "last-delivery", { signal });
         release.resolve(undefined);
-        await expect.poll(() => delivered.length, { timeout: 20_000 }).toBe(50);
+        // Wait for the final child to persist its Activity result before replay.
+        await lastDelivery;
+        await env.client.workflow.withAbortSignal(signal, () =>
+          env.client.workflow
+            .getHandle(photonCommandWorkflowId(last.messageId))
+            .result(),
+        );
         expect(prepared.map((input) => input.sourceSequence)).toEqual(
           Array.from({ length: 50 }, (_, index) => index + 1),
         );
-        expect(delivered[0]).toBe(first.messageId);
+        expect(delivered).toEqual(
+          [first, ...backlog].map((input) => input.messageId),
+        );
         await replay(env, workflowId);
         await env.client.workflow.getHandle(workflowId).cancel();
       });

@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226617",
+  "name": "Moonstone Renewer",
+  "description": "Starlit Grace: Healing or shielding yourself or an ally chains to the other champion, healing 20% or shielding 25% of the original amount.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "35"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "30"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "125%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226617.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

@@ -7,7 +7,10 @@ import static org.mockito.Mockito.when;
 import com.shepherdjerred.thestorm.arena.app.ArenaCatalog;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
+import com.shepherdjerred.thestorm.core.compute.ComputeSettings;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
+import com.shepherdjerred.thestorm.core.compute.PlatformComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -29,6 +32,7 @@ import com.shepherdjerred.thestorm.stats.app.StatsConfig;
 import com.shepherdjerred.thestorm.stats.app.StatsService;
 import com.shepherdjerred.thestorm.stats.app.StatsTransport;
 import com.shepherdjerred.thestorm.stats.app.StatsWire;
+import com.shepherdjerred.thestorm.stats.domain.GeoIpDatabase;
 import com.shepherdjerred.thestorm.towns.app.TownListings;
 import com.shepherdjerred.thestorm.towns.app.TownMembership;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
@@ -95,6 +99,20 @@ final class StatsPaperTest {
     }
   }
 
+  public static class AsyncHarnessPlugin extends JavaPlugin {
+    @Override
+    public void onEnable() {
+      enabling.accept(this);
+    }
+  }
+
+  public static class DeferredHarnessPlugin extends JavaPlugin {
+    @Override
+    public void onEnable() {
+      enabling.accept(this);
+    }
+  }
+
   @TempDir Path tempDir;
 
   private ServerMock server;
@@ -140,6 +158,8 @@ final class StatsPaperTest {
           module.enable(context);
         };
     harnessPlugin = MockBukkit.load(HarnessPlugin.class);
+    server.getScheduler().performTicks(1L);
+    assertThat(module.ready()).isTrue();
   }
 
   @AfterEach
@@ -352,7 +372,7 @@ final class StatsPaperTest {
               new StatsService.Clocks(
                   now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
         var ports = StatsPaperPorts.discover(customServices);
-        var reader = new PlayerStateReader(server, ports, now::get);
+        var reader = new PlayerStateReader(server, ports, now::get, GeoIpDatabase.empty());
         var sampler =
             new StatsSampler(
                 new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
@@ -613,7 +633,7 @@ final class StatsPaperTest {
               new StatsService.Clocks(
                   now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
         var ports = StatsPaperPorts.discover(customServices);
-        var reader = new PlayerStateReader(server, ports, now::get);
+        var reader = new PlayerStateReader(server, ports, now::get, GeoIpDatabase.empty());
         var sampler =
             new StatsSampler(
                 new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
@@ -693,6 +713,206 @@ final class StatsPaperTest {
     }
   }
 
+  @Test
+  void resolvesJoiningPlayerCountryOfflineAndOmitsPrivatePeerAddresses() throws Exception {
+    var exportedBatches = new ArrayList<StatsWire.IngestBatch>();
+    StatsTransport recordingTransport =
+        new StatsTransport() {
+          @Override
+          public CompletableFuture<Void> send(StatsWire.IngestBatch batch) {
+            exportedBatches.add(batch);
+            return CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public void close() {}
+        };
+
+    var customConfig =
+        new StatsConfig(
+            "The Storm",
+            "https://stats.ts-mc.net",
+            "STORM_STATS_INGEST_URL",
+            "STORM_STATS_INGEST_TOKEN",
+            15,
+            60);
+    var rng = new SplittableRandom(123L);
+    var logger = mock(org.slf4j.Logger.class);
+    var json = tools.jackson.databind.json.JsonMapper.builder().build();
+
+    try (var customDatabase = StormDatabase.open(tempDir.resolve("geoip-stats.db"))) {
+      customDatabase.migrate("stats", JooqStatsStore.class.getClassLoader());
+      var customStore = new JooqStatsStore(customDatabase);
+      try (var customService =
+          new StatsService(
+              new StatsService.Dependencies(
+                  customConfig,
+                  customStore,
+                  recordingTransport,
+                  () -> CompletableFuture.completedFuture(true)),
+              new StatsService.Clocks(
+                  now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
+        var ports = StatsPaperPorts.discover(new Services());
+        var reader = new PlayerStateReader(server, ports, now::get, GeoIpDatabase.bundled());
+        var listener = new StatsSessionListener(customService, reader);
+        server.getPluginManager().registerEvents(listener, harnessPlugin);
+        try {
+          var publicPlayer = addHumanPlayerWithIp("PublicUsa", "8.8.8.8");
+          var tailscalePlayer = addHumanPlayerWithIp("TailnetPeer", "100.96.247.28");
+          assertThat(publicPlayer.getName()).isEqualTo("PublicUsa");
+          assertThat(tailscalePlayer.getName()).isEqualTo("TailnetPeer");
+
+          waitForAsyncDb(customService);
+          var outboxEvents = customStore.pendingEvents(10).get();
+          assertThat(outboxEvents).hasSize(2);
+
+          var firstOutboxJson = json.readTree(outboxEvents.get(0).eventJson());
+          assertThat(firstOutboxJson.required("type").asString()).isEqualTo("session_started");
+          assertThat(firstOutboxJson.required("playerName").asString()).isEqualTo("PublicUsa");
+          assertThat(firstOutboxJson.required("countryCode").asString()).isEqualTo("US");
+          assertThat(firstOutboxJson.required("countryName").asString()).isEqualTo("United States");
+          assertThat(outboxEvents.get(0).eventJson()).doesNotContain("8.8.8.8");
+
+          var secondOutboxJson = json.readTree(outboxEvents.get(1).eventJson());
+          assertThat(secondOutboxJson.required("playerName").asString()).isEqualTo("TailnetPeer");
+          assertThat(secondOutboxJson.required("countryCode").isNull()).isTrue();
+          assertThat(secondOutboxJson.required("countryName").isNull()).isTrue();
+          assertThat(outboxEvents.get(1).eventJson()).doesNotContain("100.96.247.28");
+
+          customService.flush().get();
+          assertThat(exportedBatches).hasSize(1);
+          var wireBatchJson = json.writeValueAsString(exportedBatches.getFirst());
+          assertThat(wireBatchJson)
+              .contains("\"countryCode\":\"US\"")
+              .contains("\"countryName\":\"United States\"")
+              .doesNotContain("8.8.8.8")
+              .doesNotContain("100.96.247.28");
+        } finally {
+          org.bukkit.event.HandlerList.unregisterAll(listener);
+        }
+      }
+    }
+  }
+
+  @Test
+  void loadsBundledGeoIpOffMainThreadAndAbortsLateStartupAfterDisable() throws Exception {
+    var dataDir = tempDir.resolve("AsyncStartup");
+    Files.createDirectories(dataDir);
+    Files.copy(SHIPPED_STATS_YML, dataDir.resolve("stats.yml"));
+
+    var preOnline = addHumanPlayerWithIp("PreExistingUsa", "8.8.8.8");
+    assertThat(preOnline.getName()).isEqualTo("PreExistingUsa");
+
+    var callerThread = Thread.currentThread();
+    var loaderThread = new AtomicReference<Thread>();
+    var asyncModule =
+        new StatsModule(
+            ignored -> Optional.empty(),
+            () -> {
+              loaderThread.set(Thread.currentThread());
+              return GeoIpDatabase.bundled();
+            });
+
+    try (var asyncDb = StormDatabase.open(dataDir.resolve("async-stats.db"));
+        var pool =
+            PlatformComputePool.open(harnessPlugin.getComponentLogger(), new ComputeSettings(1))) {
+      var asyncServices = new Services();
+      enabling =
+          loaded -> {
+            LifecycleEventManager<Plugin> lifecycle = loaded.getLifecycleManager();
+            var context =
+                new ModuleContext(
+                    loaded,
+                    lifecycle,
+                    new PaperScheduler(loaded),
+                    pool,
+                    asyncDb,
+                    asyncServices,
+                    dataDir,
+                    now::get,
+                    new SplittableRandom(7L),
+                    loaded.getComponentLogger(),
+                    ProductAnalytics.disabled());
+            asyncModule.enable(context);
+          };
+      MockBukkit.load(AsyncHarnessPlugin.class);
+      try {
+        awaitOffThreadLoad(loaderThread);
+        assertThat(loaderThread.get()).isNotNull().isNotSameAs(callerThread);
+        assertThat(asyncModule.ready()).isFalse();
+
+        server.getScheduler().performTicks(1L);
+        assertThat(asyncModule.ready()).isTrue();
+
+        var asyncService = asyncServices.require(StatsService.class);
+        waitForAsyncDb(asyncService);
+        var outbox = asyncService.store().pendingEvents(10).get();
+        assertThat(outbox)
+            .extracting(com.shepherdjerred.thestorm.stats.app.StatsStore.PendingEvent::eventJson)
+            .anyMatch(eventJson ->
+                eventJson.contains("\"playerName\":\"PreExistingUsa\"")
+                    && eventJson.contains("\"countryCode\":\"US\""));
+      } finally {
+        asyncModule.disable();
+      }
+    }
+
+    verifyDisableBeforeMainThreadCallbackCancelsStartup(dataDir);
+  }
+
+  private static void awaitOffThreadLoad(AtomicReference<Thread> loaderThread) {
+    long deadlineNanos = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+    while (loaderThread.get() == null) {
+      if (System.nanoTime() >= deadlineNanos) {
+        throw new AssertionError("Timed out waiting for ComputePool to execute GeoIP loader");
+      }
+      java.util.concurrent.locks.LockSupport.parkNanos(1_000_000L);
+    }
+  }
+
+  private void verifyDisableBeforeMainThreadCallbackCancelsStartup(Path dataDir) {
+    var deferredTasks = new ArrayList<Runnable>();
+    ComputePool deferredPool =
+        new ComputePool() {
+          @Override
+          public java.util.concurrent.Executor executor() {
+            return deferredTasks::add;
+          }
+
+          @Override
+          public void close() {}
+        };
+    var disabledModule = new StatsModule(ignored -> Optional.empty(), GeoIpDatabase::bundled);
+    try (var deferredDb = StormDatabase.open(dataDir.resolve("deferred-stats.db"))) {
+      enabling =
+          loaded -> {
+            LifecycleEventManager<Plugin> lifecycle = loaded.getLifecycleManager();
+            var context =
+                new ModuleContext(
+                    loaded,
+                    lifecycle,
+                    new PaperScheduler(loaded),
+                    deferredPool,
+                    deferredDb,
+                    new Services(),
+                    dataDir,
+                    now::get,
+                    new SplittableRandom(9L),
+                    loaded.getComponentLogger(),
+                    ProductAnalytics.disabled());
+            disabledModule.enable(context);
+          };
+      MockBukkit.load(DeferredHarnessPlugin.class);
+      assertThat(deferredTasks).hasSize(1);
+      assertThat(disabledModule.ready()).isFalse();
+
+      disabledModule.disable();
+      deferredTasks.forEach(Runnable::run);
+      server.getScheduler().performTicks(1L);
+      assertThat(disabledModule.ready()).isFalse();
+    }
+  }
+
   private PlayerMock addHumanPlayer(String name) {
     var player =
         new PlayerMock(server, name, java.util.UUID.randomUUID()) {
@@ -704,6 +924,30 @@ final class StatsPaperTest {
           @Override
           public int getProtocolVersion() {
             return 775;
+          }
+        };
+    server.addPlayer(player);
+    return player;
+  }
+
+  private PlayerMock addHumanPlayerWithIp(String name, String ipLiteral) {
+    var peerAddress =
+        new java.net.InetSocketAddress(java.net.InetAddress.ofLiteral(ipLiteral), 25565);
+    var player =
+        new PlayerMock(server, name, java.util.UUID.randomUUID()) {
+          @Override
+          public String getClientBrandName() {
+            return "vanilla";
+          }
+
+          @Override
+          public int getProtocolVersion() {
+            return 775;
+          }
+
+          @Override
+          public java.net.InetSocketAddress getAddress() {
+            return peerAddress;
           }
         };
     server.addPlayer(player);

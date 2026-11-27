@@ -27,8 +27,9 @@ tracked matches; that corpus has no erasure path yet.
    bun run scripts/repair/erase-crawled-player.ts --riot-id 'Name#TAG' --region EU_WEST
    ```
 
-   The output names the PUUID's SHA-256, whether the crawl's frontier holds
-   the player, and how many Explore copies name them.
+   The output names the PUUID's SHA-256, whether the crawl's frontier still
+   holds the player (the pruner drops rows nobody claimed, so a crawled player
+   may have none), and how many Explore copies name them.
 
 2. Rerun with `--apply`. In one transaction it records the hash in
    `ErasedPuuid` and deletes the player's `CrawlFrontier` row. It then redacts

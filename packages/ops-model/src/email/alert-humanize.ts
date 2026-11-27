@@ -14,7 +14,7 @@ export type AlertMetadataInput = {
 /** Specific everyday workload names for multi-tenant catalog buckets. */
 const SPECIFIC_APP_TITLES: Readonly<Record<string, string>> = {
   golink: "Golink",
-  freshrss: "FreshRSS",
+  feeds: "Feeds",
   redlib: "Redlib",
   stash: "Stash",
   syncthing: "Syncthing",

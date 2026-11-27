@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3866",
+  "name": "Runic Compass",
+  "description": "Support Quest: Earn 0 gold from this item to transform it into Bounty of Worlds. Shared Riches: (0s, max 0 charges) While near an ally champion, damage enemy champions or kill minions to gain gold.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "60"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "50%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "5"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3866.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

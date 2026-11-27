@@ -56,9 +56,18 @@ test("a long list is windowed, pages in on scroll and keeps its place", async ({
   await page.evaluate(() => {
     globalThis.scrollTo(0, 150 * 48 + 17);
   });
+  // As the virtualizer measures the rows above the viewport it moves the
+  // scroll by what each differs from its estimate (a wrapped title is taller
+  // than a usual row), so the jump has landed once it has reached the target
+  // and stops moving. Where the rows sit afterwards is checked below.
   await expect
     .poll(() => page.evaluate(() => globalThis.scrollY))
-    .toBe(150 * 48 + 17);
+    .toBeGreaterThanOrEqual(150 * 48 + 17);
+  await expect(async () => {
+    const first = await page.evaluate(() => globalThis.scrollY);
+    await page.waitForTimeout(250);
+    expect(await page.evaluate(() => globalThis.scrollY)).toBe(first);
+  }).toPass();
   // A row well inside the viewport, so clicking it does not scroll the page.
   const rowInView = () =>
     page.evaluate(

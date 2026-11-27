@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zeri",
+  "name": "Zeri",
+  "description": "A headstrong, spirited young woman from Zaun's working-class, Zeri channels her electric magic to charge herself and her custom-crafted gun. Her volatile power mirrors her emotions, its sparks reflecting her lightning-fast approach to life.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "600"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zeri-passive",
+      "name": "Living Battery",
+      "icon": "img/ability/Zeri-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zeri-Q",
+      "name": "Burst Fire",
+      "icon": "img/ability/Zeri-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zeri-W",
+      "name": "Ultrashock Laser",
+      "icon": "img/ability/Zeri-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zeri-E",
+      "name": "Spark Surge",
+      "icon": "img/ability/Zeri-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zeri-R",
+      "name": "Lightning Crash",
+      "icon": "img/ability/Zeri-R.png"
+    }
+  ],
+  "icon": "img/champion/Zeri.png",
+  "art": "img/champion-splash/Zeri_0.jpg",
+  "title": "The Spark of Zaun",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

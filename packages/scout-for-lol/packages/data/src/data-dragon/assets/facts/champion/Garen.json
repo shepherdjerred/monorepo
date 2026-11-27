@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Garen",
+  "name": "Garen",
+  "description": "A proud and noble warrior, Garen fights as one of the Dauntless Vanguard.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "690"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Garen-passive",
+      "name": "Perseverance",
+      "icon": "img/ability/Garen-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Garen-Q",
+      "name": "Decisive Strike",
+      "icon": "img/ability/Garen-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Garen-W",
+      "name": "Courage",
+      "icon": "img/ability/Garen-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Garen-E",
+      "name": "Judgment",
+      "icon": "img/ability/Garen-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Garen-R",
+      "name": "Demacian Justice",
+      "icon": "img/ability/Garen-R.png"
+    }
+  ],
+  "icon": "img/champion/Garen.png",
+  "art": "img/champion-splash/Garen_0.jpg",
+  "title": "The Might of Demacia",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

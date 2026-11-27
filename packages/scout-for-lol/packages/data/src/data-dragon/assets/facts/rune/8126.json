@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8126",
+  "name": "Cheap Shot",
+  "description": "Deal bonus true damage to enemy champions with impaired movement or actions.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    },
+    {
+      "label": "Cooldown",
+      "value": "4s"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/CheapShot.png",
+  "tree": "Domination",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Domination"
+  }
+}

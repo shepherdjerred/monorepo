@@ -190,10 +190,15 @@ function pageRows<Post extends PostIdentity>(
   const since = Date.parse(window.since);
   const until = Date.parse(window.until);
   const rows = new Map<string, Post>();
-  let reachedCutoff = false;
+  let lastUnpinned = Number.POSITIVE_INFINITY;
+  let newestFirst = true;
   let truncated = false;
   for (const post of page.posts) {
     const created = listingCreatedAt(post);
+    if (input.isPinned?.(post) !== true) {
+      newestFirst &&= created <= lastUnpinned;
+      lastUnpinned = created;
+    }
     if (created > until || community.checkpoint.settled[post.id] !== undefined)
       continue;
     if (!seen.has(post.id)) {
@@ -205,10 +210,7 @@ function pageRows<Post extends PostIdentity>(
       result.inspected++;
       input.onInspected?.();
     }
-    if (created < since) {
-      if (input.isPinned?.(post) !== true) reachedCutoff = true;
-      continue;
-    }
+    if (created < since) continue;
     rows.set(post.id, post);
     if (!community.discovered.has(post.id)) {
       community.discovered.add(post.id);
@@ -217,6 +219,7 @@ function pageRows<Post extends PostIdentity>(
       input.onPost?.(post);
     }
   }
+  const reachedCutoff = newestFirst && lastUnpinned < since;
   return { rows, since, until, reachedCutoff, truncated };
 }
 

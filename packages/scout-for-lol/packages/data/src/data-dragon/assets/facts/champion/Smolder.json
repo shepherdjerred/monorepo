@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Smolder",
+  "name": "Smolder",
+  "description": "Hidden amongst the craggy cliffs of the Noxian frontier, under the watchful eyes of his mother, a young dragon is learning what it means to be heir to the Camavoran imperial dragon lineage.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "575"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Smolder-passive",
+      "name": "Dragon Practice",
+      "icon": "img/ability/Smolder-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Smolder-Q",
+      "name": "Super Scorcher Breath",
+      "icon": "img/ability/Smolder-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Smolder-W",
+      "name": "Achooo!",
+      "icon": "img/ability/Smolder-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Smolder-E",
+      "name": "Flap, Flap, Flap",
+      "icon": "img/ability/Smolder-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Smolder-R",
+      "name": "MMOOOMMMM!",
+      "icon": "img/ability/Smolder-R.png"
+    }
+  ],
+  "icon": "img/champion/Smolder.png",
+  "art": "img/champion-splash/Smolder_0.jpg",
+  "title": "the Fiery Fledgling",
+  "roles": [
+    "Marksman",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman, Mage"
+  }
+}

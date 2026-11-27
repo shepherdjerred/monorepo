@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "RekSai-R",
+  "name": "Void Rush",
+  "description": "Rek'Sai targets an enemy damaged by her in the last 5 seconds and then dives underground, becoming Untargetable.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/RekSai-R.png",
+  "slot": "R",
+  "championKey": "RekSai",
+  "championName": "Rek'Sai",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1500,
+    1500,
+    1500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

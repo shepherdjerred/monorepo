@@ -1,0 +1,23 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773516",
+  "name": "Perfect Hex Core",
+  "description": "",
+  "facts": [],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773515",
+      "name": "Hex Core mk-2",
+      "icon": "img/item/773515.png"
+    }
+  ],
+  "icon": "img/item/773516.png",
+  "goldTotal": 3000,
+  "goldCombine": 750,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

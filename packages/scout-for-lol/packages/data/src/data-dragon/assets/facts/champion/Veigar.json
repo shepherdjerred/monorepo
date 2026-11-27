@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Veigar",
+  "name": "Veigar",
+  "description": "An enthusiastic master of dark sorcery, Veigar has embraced powers that few mortals dare approach.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "550"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Veigar-passive",
+      "name": "Phenomenal Evil Power",
+      "icon": "img/ability/Veigar-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Veigar-Q",
+      "name": "Baleful Strike",
+      "icon": "img/ability/Veigar-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Veigar-W",
+      "name": "Dark Matter",
+      "icon": "img/ability/Veigar-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Veigar-E",
+      "name": "Event Horizon",
+      "icon": "img/ability/Veigar-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Veigar-R",
+      "name": "Primordial Burst",
+      "icon": "img/ability/Veigar-R.png"
+    }
+  ],
+  "icon": "img/champion/Veigar.png",
+  "art": "img/champion-splash/Veigar_0.jpg",
+  "title": "the Tiny Master of Evil",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

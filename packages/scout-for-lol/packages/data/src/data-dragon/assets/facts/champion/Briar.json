@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Briar",
+  "name": "Briar",
+  "description": "A failed experiment by the Black Rose, Briar's uncontrollable bloodlust required a special pillory to focus her frenzied mind. After years of confinement, this living weapon broke free from her restraints and unleashed herself into the world.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "625"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Briar-passive",
+      "name": "Crimson Curse",
+      "icon": "img/ability/Briar-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Briar-Q",
+      "name": "Head Rush",
+      "icon": "img/ability/Briar-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Briar-W",
+      "name": "Blood Frenzy / Snack Attack",
+      "icon": "img/ability/Briar-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Briar-E",
+      "name": "Chilling Scream",
+      "icon": "img/ability/Briar-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Briar-R",
+      "name": "Certain Death",
+      "icon": "img/ability/Briar-R.png"
+    }
+  ],
+  "icon": "img/champion/Briar.png",
+  "art": "img/champion-splash/Briar_0.jpg",
+  "title": "the Restrained Hunger",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

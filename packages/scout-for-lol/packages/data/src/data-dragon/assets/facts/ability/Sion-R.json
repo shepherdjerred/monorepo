@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sion-R",
+  "name": "Unstoppable Onslaught",
+  "description": "Sion charges Unstoppably in a direction for 8 seconds, turning towards the mouse cursor. Sion stops on colliding with an enemy champion or wall or on Recasting this Ability.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "7500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sion-R.png",
+  "slot": "R",
+  "championKey": "Sion",
+  "championName": "Sion",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    100,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    7500,
+    7500,
+    7500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/100/60 s"
+  }
+}

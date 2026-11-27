@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Skarner-Q",
+  "name": "Shattered Earth / Upheaval",
+  "description": "Skarner rips a boulder from the ground, empowering his next 3 Attacks with 20/25/30/35/40% Attack Speed and dealing 10/20/30/40/50 (+90% bonus AD) (+3% bonus Health) physical damage to surrounding enemies.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Skarner-Q.png",
+  "slot": "Q",
+  "championKey": "Skarner",
+  "championName": "Skarner",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    6.75,
+    5.5,
+    4.25,
+    3
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/6.75/5.5/4.25/3 s"
+  }
+}

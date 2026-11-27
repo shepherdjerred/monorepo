@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223040",
+  "name": "Seraph's Embrace",
+  "description": "Awe: Gain Ability Power equal to 4% bonus Mana. Lifeline: Upon taking damage that would reduce your Health below 30%, gain a 350 + 0% current Mana Shield for 3s (0s).",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "60"
+    },
+    {
+      "label": "Mana",
+      "value": "1200"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "25"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223040.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

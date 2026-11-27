@@ -1,0 +1,24 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8306",
+  "name": "Hextech Flashtraption",
+  "description": "While Flash is on cooldown it is replaced by Hexflash. Hexflash: Channel, then blink to a new location.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    },
+    {
+      "label": "Cooldown",
+      "value": "20s. Goes on a 10s cooldown when you enter champion combat"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/HextechFlashtraption.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

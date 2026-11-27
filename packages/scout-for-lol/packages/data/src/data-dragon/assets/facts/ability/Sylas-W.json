@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sylas-W",
+  "name": "Kingslayer",
+  "description": "Sylas lunges at an enemy with magical force dealing 75/110/145/180/215 (+60% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sylas-W.png",
+  "slot": "W",
+  "championKey": "Sylas",
+  "championName": "Sylas",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    10.5,
+    9,
+    7.5,
+    6
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/10.5/9/7.5/6 s"
+  }
+}

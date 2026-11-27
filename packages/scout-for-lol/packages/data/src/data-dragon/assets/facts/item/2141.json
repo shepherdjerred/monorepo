@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2141",
+  "name": "Cappa Juice",
+  "description": "Helps you get on a head. Active - Consume: This juice does nothing.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2141.png",
+  "goldTotal": 300,
+  "goldCombine": 300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "300 gold"
+  }
+}
