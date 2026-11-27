@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 105,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 105,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Land Playful / Trickster on the smoke Akali hides in; its area damage reveals her position.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 105,
+              "slot": "E",
+              "name": "Playful / Trickster"
+            }
+          ]
+        },
+        {
+          "text": "Stay out of reach until Shuriken Flip is on cooldown, then engage; she has no way to escape.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "E",
+              "name": "Shuriken Flip"
+            }
+          ]
+        },
+        {
+          "text": "Engage when Akali's energy is low, because Five Point Strike is her main damage and it stops working.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            }
+          ]
+        }
+      ],
+      "inputHash": "66661c6b64823f727e3c37bc69bfb58e161b851764facf034c64ce8b57abaa57",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

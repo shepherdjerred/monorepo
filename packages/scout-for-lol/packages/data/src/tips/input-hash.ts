@@ -4,7 +4,11 @@ import {
   type ChampionGrounding,
   loadChampionGrounding,
 } from "#src/tips/grounding.ts";
-import type { GeneralTipSet, MatchupTipSet } from "#src/tips/schema.ts";
+import type {
+  GeneralTipSet,
+  MatchupTipSet,
+  WikiRevisions,
+} from "#src/tips/schema.ts";
 
 /**
  * A generation unit. A matchup unit is the unordered pair: one model call
@@ -41,7 +45,13 @@ export function stableStringify(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function projectChampion(grounding: ChampionGrounding): JsonValue {
+/** The grounding the generator writes sets from today; see `groundingVersion` in the schema. */
+export const CURRENT_GROUNDING_VERSION = 2;
+
+function projectChampion(
+  grounding: ChampionGrounding,
+  groundingVersion: number,
+): JsonValue {
   const abilities: Record<string, JsonValue> = {};
   for (const [slot, ability] of Object.entries(grounding.facts.abilities)) {
     abilities[slot] = {
@@ -53,6 +63,9 @@ function projectChampion(grounding: ChampionGrounding): JsonValue {
       rangeByRank: ability.rangeByRank,
       dataValues: ability.dataValues,
       resolvedDescription: ability.resolvedDescription,
+      ...(groundingVersion >= 2 && ability.mechanics !== undefined
+        ? { mechanics: ability.mechanics }
+        : {}),
     };
   }
   return {
@@ -63,6 +76,17 @@ function projectChampion(grounding: ChampionGrounding): JsonValue {
     allytips: grounding.allytips,
     enemytips: grounding.enemytips,
     abilities,
+    ...(groundingVersion >= 2
+      ? {
+          recentChanges: grounding.recentChanges.map((line) => ({
+            patch: line.patch,
+            ability: line.ability,
+            stat: line.stat,
+            before: line.before,
+            after: line.after,
+          })),
+        }
+      : {}),
   };
 }
 
@@ -73,6 +97,8 @@ function projectChampion(grounding: ChampionGrounding): JsonValue {
 export function projectTipUnit(
   unit: TipUnit,
   groundings: readonly ChampionGrounding[],
+  wiki: WikiRevisions = {},
+  groundingVersion = 1,
 ): JsonValue {
   const byId = new Map(
     groundings.map((grounding) => [grounding.championId, grounding]),
@@ -86,21 +112,43 @@ export function projectTipUnit(
           `no grounding supplied for champion ${championId.toString()}`,
         );
       }
-      return projectChampion(grounding);
+      return projectChampion(grounding, groundingVersion);
     });
-  return { kind: unit.kind, lane: unit.lane, champions };
+  // Wiki revisions only join the projection when a unit used the wiki, so sets
+  // written before the wiki existed keep their hashes.
+  return Object.keys(wiki).length === 0
+    ? { kind: unit.kind, lane: unit.lane, champions }
+    : { kind: unit.kind, lane: unit.lane, champions, wiki };
 }
 
 /** SHA-256 (hex) of the prompt version and the unit's grounding projection. */
+/** What a unit's hash covers beyond the prompt version and the committed facts. */
+export type TipHashExtras = {
+  /** The wiki pages the unit used, page title to revision id. */
+  wiki?: WikiRevisions | undefined;
+  /** The grounding's version; absent is 1. */
+  groundingVersion?: number | undefined;
+};
+
 export function computeTipInputHash(
   promptVersion: string,
   unit: TipUnit,
   groundings: readonly ChampionGrounding[],
+  extras: TipHashExtras = {},
 ): string {
   return new Bun.CryptoHasher("sha256")
     .update(promptVersion)
     .update("\n")
-    .update(stableStringify(projectTipUnit(unit, groundings)))
+    .update(
+      stableStringify(
+        projectTipUnit(
+          unit,
+          groundings,
+          extras.wiki ?? {},
+          extras.groundingVersion ?? 1,
+        ),
+      ),
+    )
     .digest("hex");
 }
 
@@ -124,8 +172,10 @@ export function isTipSetStale(
   groundings: readonly ChampionGrounding[],
 ): boolean {
   return (
-    computeTipInputHash(set.promptVersion, tipSetUnit(set), groundings) !==
-    set.inputHash
+    computeTipInputHash(set.promptVersion, tipSetUnit(set), groundings, {
+      wiki: set.wiki,
+      groundingVersion: set.groundingVersion,
+    }) !== set.inputHash
   );
 }
 

@@ -54,18 +54,18 @@ describe("tip schemas", () => {
     expect(reverse.champion).not.toBe(forward.champion);
   });
 
-  test("rejects tips over 160 characters and tip counts out of range", () => {
+  test("rejects tips over the 240-character ceiling and tip counts out of range", () => {
     const { forward } = ahriSyndraMidSets(HASH);
-    const longTip = { text: "x".repeat(161), cites: [] };
+    const longTip = { text: "x".repeat(241), cites: [] };
     expect(
       MatchupTipSetSchema.safeParse({ ...forward, tips: [longTip] }).success,
     ).toBe(false);
     expect(
       MatchupTipSetSchema.safeParse({ ...forward, tips: [] }).success,
     ).toBe(false);
-    const fourTips = [...forward.tips, ...forward.tips.slice(0, 1)];
+    const tooMany = Array.from({ length: 21 }, () => forward.tips[0]);
     expect(
-      MatchupTipSetSchema.safeParse({ ...forward, tips: fourTips }).success,
+      MatchupTipSetSchema.safeParse({ ...forward, tips: tooMany }).success,
     ).toBe(false);
     const general = ahriMidGeneralSet(HASH);
     expect(

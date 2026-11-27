@@ -1,0 +1,11 @@
+{
+  "kind": "keyword",
+  "patch": "16.23.1",
+  "key": "silenced",
+  "name": "Silenced",
+  "description": "Cannot cast abilities for a short time.",
+  "facts": [],
+  "parts": [],
+  "icon": null,
+  "keyFact": null
+}

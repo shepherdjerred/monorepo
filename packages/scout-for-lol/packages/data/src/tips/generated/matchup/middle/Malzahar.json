@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 90,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 90,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Hit Akali with Call of the Void as she commits to a dash, since its projectiles can leave her silenced.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            },
+            { "kind": "keyword", "id": "silenced" }
+          ]
+        },
+        {
+          "text": "Hit Akali with area spells while she hides in Twilight Shroud; they reveal her position.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            }
+          ]
+        },
+        {
+          "text": "Hold Void Swarm until Akali steps in among your minions, so the Voidlings have a target.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "W",
+              "name": "Void Swarm"
+            }
+          ]
+        }
+      ],
+      "inputHash": "853c5650dcf86a0b41b1a6b94728252d5f071d7a74a879dbeb4dc810087885ca",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 90,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Silence Ahri with Call of the Void as she moves in, so she cannot cast Charm or her other spells on you.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            },
+            { "kind": "keyword", "id": "silenced" },
+            { "kind": "ability", "champion": 103, "slot": "E", "name": "Charm" }
+          ]
+        },
+        {
+          "text": "Keep Malefic Visions on Ahri and refresh it with Call of the Void while you trade; the damage keeps ticking on her.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "E",
+              "name": "Malefic Visions"
+            },
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            }
+          ]
+        },
+        {
+          "text": "Stand behind minion waves when Ahri is near, since Charm hits the first champion it reaches.",
+          "cites": [
+            { "kind": "ability", "champion": 103, "slot": "E", "name": "Charm" }
+          ]
+        }
+      ],
+      "inputHash": "0a84e7e4d630a528d4490fda896e8d668f54a46759544a8a2cc745e87bac75d3",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 90,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Hit Zed with Call of the Void as he closes in; its silence stops his abilities for a moment, so he can't easily get away.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            },
+            { "kind": "keyword", "id": "silenced" }
+          ]
+        },
+        {
+          "text": "Keep Malefic Visions on Zed during the trade; it keeps ticking damage on him while he tries to fight back.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "E",
+              "name": "Malefic Visions"
+            }
+          ]
+        },
+        {
+          "text": "Watch for Living Shadow on Zed; once it's out, Shadow Slash can get you slowed if you stand near it.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        }
+      ],
+      "inputHash": "a0f40c9ff1c64034a5b9303334cf0a16de5f72f3e3ca976211031882f8948ce6",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

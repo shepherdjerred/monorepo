@@ -6,6 +6,12 @@ import {
   SummonerSpellIdSchema,
 } from "#src/model/core/identifiers.ts";
 import { type Lane, LaneSchema } from "#src/model/riot/lane.ts";
+import {
+  COMBOS_MAX,
+  COMBO_REFS_MAX,
+  ComboRefSchema,
+  ComboSchema,
+} from "#src/tips/combos/combo-schema.ts";
 
 /**
  * Generated tips: short, grounded advice written ahead of time by a model and
@@ -28,12 +34,26 @@ import { type Lane, LaneSchema } from "#src/model/riot/lane.ts";
 
 export const TIP_FILE_SCHEMA_VERSION = 1;
 
+/**
+ * The length a tip's own words may take. An official ability name is not
+ * counted (some are long, "Flap, Flap, Flap"), so the stored schema allows the
+ * names on top, and the validator holds the rest to this.
+ */
 export const TIP_TEXT_MAX_LENGTH = 160;
+export const TIP_TEXT_HARD_MAX_LENGTH = 240;
 export const GLOSSARY_DEFINITION_MAX_LENGTH = 200;
-export const MATCHUP_TIPS_MIN = 1;
-export const MATCHUP_TIPS_MAX = 3;
+/**
+ * Tips per set. A generated set has `MIN` to `MAX` tips, as many distinct
+ * true ones as the matchup supports. A reader shows a set only when it still
+ * has `MIN` tips, so a set the filter thinned below that is hidden, like a
+ * stale one. A stored matchup set may hold fewer (the first pilot wrote one to
+ * three), so the stored schema only asks for one.
+ */
+export const MATCHUP_TIPS_MIN = 3;
+export const MATCHUP_TIPS_MAX = 20;
 export const GENERAL_TIPS_MIN = 3;
-export const GENERAL_TIPS_MAX = 6;
+export const GENERAL_TIPS_MAX = 15;
+const STORED_MATCHUP_TIPS_MIN = 1;
 
 /** Lowercase slug naming a glossary keyword, e.g. `charmed`. */
 export const GlossaryIdSchema = z
@@ -87,18 +107,36 @@ export type AbilityCite = Extract<Cite, { kind: "ability" }>;
 export type AbilityNumberCite = Extract<Cite, { kind: "abilityNumber" }>;
 
 export const TipSchema = z.strictObject({
-  text: z.string().trim().min(1).max(TIP_TEXT_MAX_LENGTH),
+  text: z.string().trim().min(1).max(TIP_TEXT_HARD_MAX_LENGTH),
   cites: z.array(CiteSchema),
 });
 export type Tip = z.infer<typeof TipSchema>;
 
 const InputHashSchema = z.string().regex(/^[0-9a-f]{64}$/);
 
+/**
+ * The wiki pages a set was written from, page title to revision id. Absent on
+ * sets written before the wiki was used. A wiki edit changes a revision id, so
+ * the generator regenerates only the sets that used the edited page.
+ */
+export const WikiRevisionsSchema = z.record(
+  z.string().min(1),
+  z.number().int().positive(),
+);
+export type WikiRevisions = z.infer<typeof WikiRevisionsSchema>;
+
 const GenerationStampSchema = z.strictObject({
   /** SHA-256 of `promptVersion` and the grounding facts; see `input-hash.ts`. */
   inputHash: InputHashSchema,
   promptVersion: z.string().min(1),
   model: z.string().min(1),
+  wiki: WikiRevisionsSchema.optional(),
+  /**
+   * What the grounding held. Absent is version 1 (ability facts, tags and
+   * Riot's tips); version 2 adds CommunityDragon ability mechanics and the
+   * champion's changes in the recent patches.
+   */
+  groundingVersion: z.number().int().positive().optional(),
 });
 
 export const MatchupTipSetSchema = z
@@ -107,7 +145,9 @@ export const MatchupTipSetSchema = z
     /** The champion the tips are written for. */
     champion: ChampionIdSchema,
     opponent: ChampionIdSchema,
-    tips: z.array(TipSchema).min(MATCHUP_TIPS_MIN).max(MATCHUP_TIPS_MAX),
+    tips: z.array(TipSchema).min(STORED_MATCHUP_TIPS_MIN).max(MATCHUP_TIPS_MAX),
+    /** Up to three of the champion's combos in this lane that bear on the matchup. */
+    comboRefs: z.array(ComboRefSchema).max(COMBO_REFS_MAX).optional(),
   })
   .extend(GenerationStampSchema.shape)
   .refine((set) => set.champion !== set.opponent, {
@@ -120,6 +160,8 @@ export const GeneralTipSetSchema = z
     lane: LaneSchema,
     champion: ChampionIdSchema,
     tips: z.array(TipSchema).min(GENERAL_TIPS_MIN).max(GENERAL_TIPS_MAX),
+    /** Well-known combos, tricks, rotations and terrain spots; empty or absent for a simple kit. */
+    combos: z.array(ComboSchema).max(COMBOS_MAX).optional(),
   })
   .extend(GenerationStampSchema.shape);
 export type GeneralTipSet = z.infer<typeof GeneralTipSetSchema>;

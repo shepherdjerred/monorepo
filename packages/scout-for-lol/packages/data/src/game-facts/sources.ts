@@ -5,6 +5,7 @@ import { runes } from "#src/data-dragon/runes.ts";
 import { summoner } from "#src/data-dragon/summoner.ts";
 import versionData from "#src/data-dragon/assets/version.json" with { type: "json" };
 import type { GameFactSources } from "#src/game-facts/build.ts";
+import { GlossaryFileSchema } from "#src/tips/schema.ts";
 
 /** The slice of `assets/champion/<Key>.json` the facts need. */
 const ChampionFileSchema = z.object({
@@ -30,6 +31,20 @@ const ChampionFileSchema = z.object({
 });
 
 const assetsRoot = `${import.meta.dir}/../data-dragon/assets`;
+const GLOSSARY_PATH = `${import.meta.dir}/../tips/generated/glossary.json`;
+
+/** The tips glossary's keywords; none before a glossary exists. */
+async function loadKeywords(): Promise<GameFactSources["keywords"]> {
+  const file = Bun.file(GLOSSARY_PATH);
+  if (!(await file.exists())) {
+    return [];
+  }
+  return GlossaryFileSchema.parse(await file.json()).entries.map((entry) => ({
+    id: entry.id,
+    term: entry.term,
+    definition: entry.definition,
+  }));
+}
 
 /**
  * Read the committed Data Dragon snapshot. Champions come from the
@@ -68,6 +83,7 @@ export async function loadGameFactSources(): Promise<GameFactSources> {
   );
   return {
     patch: z.object({ version: z.string().min(1) }).parse(versionData).version,
+    keywords: await loadKeywords(),
     champions: [...champions.values()].toSorted((left, right) =>
       left.id.localeCompare(right.id),
     ),
