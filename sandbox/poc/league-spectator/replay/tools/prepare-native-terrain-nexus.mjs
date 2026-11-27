@@ -9,18 +9,22 @@ import { readExactMapBin } from "./exact-map-bin.mjs";
 import { mapBinHash } from "./map-scene-assets.mjs";
 import { readMap11PlaceableInventory } from "./map11-world-catalog.mjs";
 import { exportNativeTerrainStructureModels } from "./native-terrain-structure-model-export.mjs";
+import { championArchiveExecutableHashes } from "./research/native-terrain-champion-model-catalog.mjs";
+import { currentTerrainPositionBuild } from "./research/native-terrain-byte-codecs.mjs";
 import { createPosition944ReaderFromCodecs } from "./research/native-terrain-positions-944-reader.mjs";
 import { createExactTerrainByteCodecs } from "./research/native-terrain-positions-944.mjs";
+import {
+  currentMap11WadIndexSha256,
+  prepareNativeTerrainTurrets,
+  turretPlacementReceiptDigests,
+} from "./research/native-terrain-turrets.mjs";
 import {
   readKeyedPlaceableSpan,
   uniqueInstalledOffset,
 } from "./verify-installed-map11-placements.mjs";
 import { openLocalWad } from "./wad.mjs";
 
-const build = "16.23.840.6595";
 const protocol = "8bbfcd5af2bc92db";
-const installedExeSha256 =
-  "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156";
 const archivedMapSha256 =
   "b8709c64290fe8327ee1d14e927628efddd6dcea9ef1968989098d8477e71c3c";
 const installedMapSha256 =
@@ -35,6 +39,10 @@ const reviewedReplays = new Map([
   [
     "d7cabb0b7ba965f317863d128238847a0b9b0e4cc0cdbcfa3077c537b10fdf2b",
     [1073742412, 1073742413],
+  ],
+  [
+    "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1",
+    [1073742159, 1073742155],
   ],
 ]);
 const nexusPlacements = [
@@ -81,11 +89,12 @@ const [
   decoderFile,
   exporter,
   outArg,
+  placementFile,
   ...extra
 ] = process.argv.slice(2);
 if (!outArg || extra.length)
   throw Error(
-    "Usage: bun prepare-native-terrain-nexus.mjs <installation> <saved ROFL> <archived materials.bin> <exact decoder> <ordinal exporter bin dir> <new .cache subdirectory>",
+    "Usage: bun prepare-native-terrain-nexus.mjs <installation> <saved ROFL> <archived materials.bin> <exact decoder> <ordinal exporter bin dir> <new .cache subdirectory> [current turret placement receipt]",
   );
 
 const output = resolve(outArg);
@@ -100,19 +109,32 @@ const replay = Uint8Array.from(await bytes(replayFile));
 const replaySha256 = sha(replay);
 const contexts = reviewedReplays.get(replaySha256);
 if (!contexts) throw Error("Expected a reviewed exact-build replay");
-const { packetReader } = prepareReplayForSeek(replay.buffer, (input, target) =>
-  zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+const options = { allowCurrentBuild: true };
+const prepared = prepareReplayForSeek(
+  replay.buffer,
+  (input, target) =>
+    zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+  options,
 );
-if (packetReader.build !== build || packetReader.protocol !== protocol)
+const { packetReader, observations } = prepared;
+const { build } = packetReader;
+const current = build === currentTerrainPositionBuild;
+const installedExeSha256 = championArchiveExecutableHashes[build];
+if (installedExeSha256 === undefined || packetReader.protocol !== protocol)
   throw Error("Unexpected Nexus replay build or protocol");
 const decoder = await bytes(decoderFile);
-const codecs = createExactTerrainByteCodecs(decoder, packetReader);
+const codecs = createExactTerrainByteCodecs(decoder, packetReader, options);
 const readPosition = createPosition944ReaderFromCodecs(codecs);
 
 const executable = join(installation, "Game", "League of Legends.exe");
 if (sha(await bytes(executable)) !== installedExeSha256)
   throw Error("Installed game executable differs from reviewed build");
-const wad = await openLocalWad(installation, archive, Bun.zstdDecompressSync);
+const wad = await openLocalWad(
+  installation,
+  archive,
+  Bun.zstdDecompressSync,
+  current ? currentMap11WadIndexSha256 : undefined,
+);
 const [archived, installedBytes] = await Promise.all([
   bytes(archivedMapFile),
   wad(entryPath),
@@ -128,6 +150,61 @@ const tree = readExactMapBin(archived, "16.21.829.8620", {
 });
 const inventory = readMap11PlaceableInventory(tree, "09e8f830");
 const chunks = new Map(tree.objects.map((object) => [object.pathHash, object]));
+let placementReceiptSha256;
+if (current) {
+  if (!placementFile)
+    throw Error("Current Nexus requires the reviewed turret placements");
+  const placementBytes = await bytes(placementFile);
+  placementReceiptSha256 = sha(placementBytes);
+  if (placementReceiptSha256 !== turretPlacementReceiptDigests[build])
+    throw Error("Current Nexus placement receipt differs from its pin");
+  const { opening } = prepareNativeTerrainTurrets(
+    prepared,
+    JSON.parse(
+      new TextDecoder("utf-8", { fatal: true }).decode(placementBytes),
+    ),
+    options,
+  );
+  const rows = inventory.registration.filter(
+    ({ kind, attackableType }) =>
+      kind === "barracks" || [0, 1, 2].includes(attackableType),
+  );
+  const turretAnchors = new Map(opening.map((row) => [row.mapNameHash, row]));
+  const firstContext = turretAnchors.get(rows[0]?.mapNameHash)?.context;
+  if (!firstContext || rows.length !== 38)
+    throw Error("Unexpected current Nexus registration cohort");
+  const verifiedNexuses = new Map();
+  for (const [index, row] of rows.entries()) {
+    const context = firstContext + index;
+    if (row.attackableType === 0) {
+      const anchor = turretAnchors.get(row.mapNameHash);
+      if (
+        anchor?.context !== context ||
+        anchor.worldPosition.some(
+          (coordinate, axis) => coordinate !== row.transform[3][axis],
+        )
+      )
+        throw Error(
+          "Nexus registration disagrees with a recorded turret anchor",
+        );
+      turretAnchors.delete(row.mapNameHash);
+    }
+    if (row.attackableType === 2) verifiedNexuses.set(row.mapNameHash, context);
+  }
+  if (
+    turretAnchors.size !== 0 ||
+    verifiedNexuses.size !== nexusPlacements.length ||
+    nexusPlacements.some(
+      ({ mapNameHash }, index) =>
+        verifiedNexuses.get(mapNameHash) !== contexts[index],
+    )
+  )
+    throw Error("Nexus registration differs from the reviewed contexts");
+} else if (placementFile !== undefined) {
+  throw Error(
+    "A turret placement receipt is only used by current Nexus extraction",
+  );
+}
 const instances = nexusPlacements.map(({ mapNameHash, skinId }, index) => {
   const placement = inventory.placeables[mapNameHash];
   if (placement?.attackableType !== 2 || placement.asset !== `nexus/${skinId}`)
@@ -161,6 +238,14 @@ const byContext = new Map(
   instances.map((instance) => [instance.context, instance]),
 );
 const terminalPackets = [];
+const terminalLoss = current
+  ? observations.structures?.find(
+      ({ kind }) => kind === "match-ending-structure-loss",
+    )
+  : undefined;
+const terminalEvidence = [];
+if (current && (!terminalLoss || !byContext.has(terminalLoss.context)))
+  throw Error("Expected a corroborated terminal Nexus loss");
 const frames = packetReader.keyframes;
 for (const [index, frame] of frames.entries()) {
   // A seek immediately before the next keyframe reads this snapshot and all
@@ -201,7 +286,10 @@ for (const [index, frame] of frames.entries()) {
       }
       // This is the 63-byte Nexus cohort, distinct from the 41-byte turret
       // state whose lifecycle bits have been verified.
-      if (opcode === 1012 && packet.payload.length === 63) {
+      const nexusSnapshot = current
+        ? Buffer.from(packet.payload).toString("hex") === "be71a6"
+        : packet.payload.length === 63;
+      if (opcode === 1012 && nexusSnapshot) {
         if (seenSnapshot.has(context))
           throw Error("Duplicate Nexus snapshot packet");
         seenSnapshot.add(context);
@@ -216,17 +304,38 @@ for (const [index, frame] of frames.entries()) {
         animationName: readNexusDeathCue(packet.payload, codecs.decodeSyncByte),
       });
     }
+    if (
+      terminalLoss &&
+      packet.stream === 1 &&
+      opcode === 172 &&
+      packet.payload.length === 116 &&
+      context === terminalLoss.context &&
+      packet.secondTimeBits === terminalLoss.secondTimeBits &&
+      packet.timeSeconds === terminalLoss.timeSeconds
+    )
+      terminalEvidence.push({
+        ...terminalLoss,
+        opcode,
+        payloadSha256: sha(packet.payload),
+      });
   }
   for (const instance of instances) {
     if (
-      !seenPosition.has(instance.context) ||
+      (!current && !seenPosition.has(instance.context)) ||
       !seenSnapshot.has(instance.context)
     )
       throw Error("Recorded Nexus position or independent snapshot is absent");
     instance.observedKeyframeSeconds.push(frame.timeSeconds);
   }
 }
-if (
+if (current) {
+  if (
+    terminalEvidence.length !== 1 ||
+    terminalPackets.length !== 0 ||
+    terminalEvidence[0].timeSeconds <= frames.at(-1).timeSeconds
+  )
+    throw Error("Unexpected current Nexus terminal evidence");
+} else if (
   terminalPackets.length !== 1 ||
   terminalPackets[0].timeSeconds <= frames.at(-1).timeSeconds
 )
@@ -311,11 +420,19 @@ const manifest = {
   map: { archive, entryPath, archivedMapSha256, installedMapSha256 },
   decoderSha256: sha(decoder),
   toolchain,
-  scope:
-    "Authored opening models at recorded Nexus keyframes and a recorded NexusDeath cue. Continuous lifetime, terminal mesh state, and NexusDeath cue binding to the Death clip are unverified.",
+  scope: current
+    ? "Authored opening models bound by registered turret and Nexus contexts; indexed Nexus snapshots have no position payload. Terminal mesh and animation are unresolved."
+    : "Authored opening models at recorded Nexus keyframes and a recorded NexusDeath cue. Continuous lifetime, terminal mesh state, and NexusDeath cue binding to the Death clip are unverified.",
   assets,
   instances,
   terminalPackets,
+  ...(current
+    ? {
+        terminalEvidence: terminalEvidence[0],
+        placementReceiptSha256,
+        positionEvidence: "authored-registration",
+      }
+    : {}),
 };
 await writeFile(
   join(destination, "manifest.json"),

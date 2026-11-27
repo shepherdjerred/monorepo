@@ -16,7 +16,45 @@ async function expectActor(
   expect(draw.actorIndexCounts.includes(indexCount)).toBe(visible);
 }
 
-export async function verifyRecordedTeamVision(page: Page, testInfo: TestInfo) {
+async function verifyCurrentTeamVision(page: Page, testInfo: TestInfo) {
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  const heimerdinger = [1_073_742_161, 16_356] as const;
+  const illaoi = [1_073_742_166, 43_938] as const;
+  await page.goto(`${replayPath}?t=32.8&perspective=red`);
+  await expect(vision).toHaveValue("red");
+  await expectActor(page, heimerdinger, false);
+  await expectActor(page, illaoi, true);
+  await seek(page, 33);
+  await expectActor(page, heimerdinger, true);
+  await seek(page, 32.8);
+  await expectActor(page, heimerdinger, false);
+  await seek(page, 0);
+  await expectActor(page, heimerdinger, false);
+  await expectActor(page, illaoi, true);
+  await vision.selectOption("blue");
+  await expectActor(page, heimerdinger, true);
+  await expectActor(page, illaoi, false);
+  await seek(page, 33);
+  await expectActor(page, illaoi, true);
+  await seek(page, 33.1);
+  await expectActor(page, illaoi, false);
+  await page.getByLabel("League of Legends replay scene").screenshot({
+    path: testInfo.outputPath("recorded-current-blue-unit-visibility.png"),
+  });
+  await vision.selectOption("all");
+  await expectActor(page, heimerdinger, true);
+  await expectActor(page, illaoi, true);
+}
+
+export async function verifyRecordedTeamVision(
+  page: Page,
+  testInfo: TestInfo,
+  current: boolean,
+) {
+  if (current) {
+    await verifyCurrentTeamVision(page, testInfo);
+    return;
+  }
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   await page.goto(`${replayPath}?t=33&perspective=red`);
   await expect(vision).toHaveValue("red");

@@ -5,15 +5,19 @@ import { createRequire } from "node:module";
 import { join, relative, resolve, sep } from "node:path";
 import { zstdDecompressSync } from "node:zlib";
 import { createReplayPacketReader } from "../../../../../packages/scout-for-lol/packages/replay/src/observations/packet-reader.mjs";
+import { readExactMapBin } from "./exact-map-bin.mjs";
 import {
+  currentAnnouncerSource,
   exactAnnouncerSource,
   heraldAudioSource,
   infernalTransitionSource,
+  readCurrentAnnouncerCandidates,
   readExactHeraldAudio,
   readExactInfernalTransition,
   readExactTerrainAnnouncerCandidates,
   scheduleAnnouncerWindow,
 } from "./research/exact-terrain-announcer.mjs";
+import { openLocalWad } from "./wad.mjs";
 
 const [
   replayPath,
@@ -22,10 +26,23 @@ const [
   outputPath,
   infernalPackPath,
   heraldBankPath,
+  profile,
+  installation,
+  ...extra
 ] = process.argv.slice(2);
 assert.ok(
-  replayPath && packPath && decoderPath && outputPath,
-  "Usage: bun verify-exact-terrain-announcer.mjs <saved ROFL> <Female1 English WPK> <vgmstream-cli> <new .cache directory> [Infernal transition WPK [Rift Herald audio BNK]]",
+  replayPath &&
+    packPath &&
+    decoderPath &&
+    outputPath &&
+    extra.length === 0 &&
+    (profile === undefined
+      ? installation === undefined
+      : profile === "--current-installation" &&
+        installation &&
+        infernalPackPath &&
+        heraldBankPath),
+  "Usage: bun verify-exact-terrain-announcer.mjs <saved ROFL> <Female1 English WPK> <vgmstream-cli> <new .cache directory> [elemental transition WPK [Rift Herald audio BNK [--current-installation <League installation>]]]",
 );
 const output = resolve(outputPath);
 const cachePath = relative(resolve(".cache"), output);
@@ -41,10 +58,70 @@ const replaySha256 = sha256(Buffer.from(replay));
 const reader = createReplayPacketReader(replay, (input, target) =>
   zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
 );
-const cues = readExactTerrainAnnouncerCandidates(reader, replaySha256);
+const current = installation !== undefined;
+const cues = current
+  ? readCurrentAnnouncerCandidates(reader, replaySha256)
+  : readExactTerrainAnnouncerCandidates(reader, replaySha256);
+
+async function verifyCurrentDefinitions(root) {
+  const [wad, global] = await Promise.all([
+    openLocalWad(
+      root,
+      "DATA/FINAL/Maps/Shipping/Map11.wad.client",
+      zstdDecompressSync,
+    ),
+    openLocalWad(root, "DATA/FINAL/Global.wad.client", zstdDecompressSync),
+  ]);
+  const config = readExactMapBin(await wad.byHash(0x4081e5c462798b73n));
+  const globalSha256 = sha256(await global.byHash(0x5a791d818ae738a6n));
+  assert.equal(config.sourceSha256, currentAnnouncerSource.mapSha256);
+  assert.equal(globalSha256, currentAnnouncerSource.globalSha256);
+  const definitions = new Map(
+    config.objects.map((object) => [object.pathHash, object]),
+  );
+  const routes = [
+    [
+      "eed72eea",
+      "e473389d",
+      "OnStartGameMessage1",
+      "Play_vo_Announcer_@voice@_StartGameMessage1Map@MapNumber@",
+    ],
+    [
+      "f751e943",
+      "0dd87d95",
+      "OnMinionsSpawn",
+      "Play_vo_Announcer_@voice@_MinionSpawn",
+    ],
+    [
+      "eed72eea",
+      "d7744c04",
+      "OnDragonTerrainTransitionMountain",
+      "Play_sfx_Env_Map11_SRX_Transition_Stinger_oba",
+    ],
+    [
+      "eed72eea",
+      "222f2ed6",
+      "OnKillRiftHerald_Spectator",
+      "Play_sfx_SRU_RiftHerald_death_reverb",
+    ],
+  ];
+  for (const [tableId, entryId, name, event] of routes) {
+    const table = definitions.get(tableId).fields["1df05e4b"];
+    const matches = table.entries.filter((entry) => entry.key.value === name);
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].value.value, Number.parseInt(entryId, 16));
+    const sound =
+      definitions.get(entryId).fields["8e6ce07e"].fields["6cfc6633"];
+    assert.equal(sound.value, event);
+  }
+  return { mapSha256: config.sourceSha256, globalSha256 };
+}
+const authored = current
+  ? await verifyCurrentDefinitions(installation)
+  : undefined;
 const pack = await readFile(packPath);
 assert.equal(sha256(pack), exactAnnouncerSource.packSha256);
-const sources = cues.map((cue) => ({
+const sources = cues.slice(0, 2).map((cue) => ({
   cue,
   pack,
   channels: exactAnnouncerSource.channels,
@@ -53,7 +130,7 @@ if (infernalPackPath) {
   const infernalPack = await readFile(infernalPackPath);
   assert.equal(sha256(infernalPack), infernalTransitionSource.packSha256);
   sources.push({
-    cue: readExactInfernalTransition(reader, replaySha256),
+    cue: current ? cues[2] : readExactInfernalTransition(reader, replaySha256),
     pack: infernalPack,
     channels: exactAnnouncerSource.channels,
   });
@@ -107,7 +184,7 @@ if (heraldBankPath) {
   const bank = await readFile(heraldBankPath);
   assert.equal(sha256(bank), heraldAudioSource.bankSha256);
   sources.push({
-    cue: readExactHeraldAudio(reader, replaySha256),
+    cue: current ? cues[3] : readExactHeraldAudio(reader, replaySha256),
     bank,
     channels: heraldAudioSource.channels,
   });
@@ -260,9 +337,14 @@ try {
         build: reader.build,
         protocol: reader.protocol,
         ...exactAnnouncerSource,
-        ...(infernalPackPath && {
-          infernalPackSha256: infernalTransitionSource.packSha256,
-        }),
+        ...(current
+          ? {
+              authored,
+              elementalPackSha256: infernalTransitionSource.packSha256,
+            }
+          : infernalPackPath && {
+              infernalPackSha256: infernalTransitionSource.packSha256,
+            }),
         ...(heraldBankPath && {
           heraldBankSha256: heraldAudioSource.bankSha256,
         }),

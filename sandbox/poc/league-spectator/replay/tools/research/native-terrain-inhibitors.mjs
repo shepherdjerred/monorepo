@@ -1,5 +1,8 @@
-const build = "16.23.840.6595";
-const protocol = "8bbfcd5af2bc92db";
+import {
+  assertExactTerrainReplay,
+  currentTerrainPositionBuild,
+} from "./native-terrain-byte-codecs.mjs";
+
 const inhibitorCount = 6;
 
 function readSnapshot(packetReader, timeSeconds) {
@@ -27,10 +30,10 @@ function readSnapshot(packetReader, timeSeconds) {
 }
 
 /** Snapshot and loss evidence for the supported short and Ranked Map11 fixtures. */
-export function prepareNativeTerrainInhibitors(prepared) {
+export function prepareNativeTerrainInhibitors(prepared, options) {
   const { packetReader, observations } = prepared;
-  if (packetReader.build !== build || packetReader.protocol !== protocol)
-    throw Error("Expected exact-build Map11 replay");
+  assertExactTerrainReplay(packetReader, options);
+  const current = packetReader.build === currentTerrainPositionBuild;
   const opening = readSnapshot(packetReader, 0);
   if (
     opening.size !== inhibitorCount ||
@@ -49,28 +52,49 @@ export function prepareNativeTerrainInhibitors(prepared) {
     const { context, timeSeconds } = loss;
     if (
       !opening.has(context) ||
-      history.has(context) ||
+      (!current && history.has(context)) ||
       !Number.isFinite(timeSeconds) ||
       timeSeconds <= 0 ||
       timeSeconds > packetReader.durationSeconds
     )
       throw Error("Unsupported inhibitor loss history");
-    history.set(context, timeSeconds);
+    const times = history.get(context) ?? [];
+    if (times.length && timeSeconds <= times.at(-1))
+      throw Error("Inhibitor loss clocks must be ordered per actor");
+    times.push(timeSeconds);
+    history.set(context, times);
   }
 
   const snapshots = new Map();
+  const disputed = new Map();
+  const unresolvedSnapshotStates = [];
   for (const { timeSeconds, chunkOffset } of packetReader.keyframes) {
     const states =
       timeSeconds === 0 ? opening : readSnapshot(packetReader, timeSeconds);
     const snapshot = new Map();
     for (const context of opening.keys()) {
       const state = states.get(context);
-      if (state === undefined) throw Error("Missing indexed inhibitor state");
-      const lostAt = history.get(context) ?? Infinity;
+      const times = history.get(context) ?? [];
+      const lostAt = times[0] ?? Infinity;
+      if (state === undefined) {
+        if (!current || timeSeconds <= lostAt)
+          throw Error("Missing indexed inhibitor state");
+        unresolvedSnapshotStates.push({ context, timeSeconds });
+        snapshot.set(context, "unknown");
+        continue;
+      }
       if (losses !== null && timeSeconds !== lostAt) {
         const expected = timeSeconds > lostAt ? "destroyed" : "alive";
-        if (state !== expected)
+        if (state !== expected && (!current || expected !== "destroyed"))
           throw Error("Inhibitor snapshot differs from verified loss history");
+        if (state !== expected && !disputed.has(context))
+          disputed.set(context, {
+            context,
+            reason:
+              "Indexed inhibitor is alive after a verified loss; exact return time is unresolved",
+            lossTimes: times,
+            firstLivingSnapshotAfterLoss: timeSeconds,
+          });
       }
       snapshot.set(
         context,
@@ -81,6 +105,10 @@ export function prepareNativeTerrainInhibitors(prepared) {
   }
   return {
     losses,
+    presentationOmissions: [...disputed.values()],
+    unresolvedSnapshotStates,
+    renderableLosses:
+      losses?.filter(({ context }) => !disputed.has(context)) ?? null,
     read(timeSeconds, options) {
       const { keyframe } = packetReader.read(timeSeconds, options);
       const snapshot = snapshots.get(keyframe.chunkOffset);
@@ -91,11 +119,13 @@ export function prepareNativeTerrainInhibitors(prepared) {
           context,
           keyframeState,
           seekState:
-            losses === null
+            losses === null ||
+            disputed.has(context) ||
+            keyframeState === "unknown"
               ? timeSeconds === keyframe.timeSeconds
                 ? keyframeState
                 : "unknown"
-              : timeSeconds >= (history.get(context) ?? Infinity)
+              : timeSeconds >= (history.get(context)?.[0] ?? Infinity)
                 ? "destroyed"
                 : "alive",
         })),

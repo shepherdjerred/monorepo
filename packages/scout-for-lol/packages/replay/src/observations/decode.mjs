@@ -100,10 +100,10 @@ export function decodeReplayObservations(
 export function decodeParsedReplayObservations(
   replay,
   decompress,
-  { lifecycle = true, observeRawPacket } = {},
+  { lifecycle = true, observeRawPacket, allowCurrentBuild = false } = {},
 ) {
   const levelObserver = lifecycle
-    ? createReplayActorLevelObserver(replay)
+    ? createReplayActorLevelObserver(replay, { allowCurrentBuild })
     : null;
   const returnObserver = levelObserver
     ? optionalObserver(
@@ -113,13 +113,13 @@ export function decodeParsedReplayObservations(
     : null;
   const turretObserver = levelObserver
     ? optionalObserver(
-        () => createReplayTurretObserver(replay),
+        () => createReplayTurretObserver(replay, { allowCurrentBuild }),
         ReplayTurretValidationError,
       )
     : null;
   const structureObserver = levelObserver
     ? optionalObserver(
-        () => createReplayStructureObserver(replay),
+        () => createReplayStructureObserver(replay, { allowCurrentBuild }),
         ReplayStructureValidationError,
       )
     : null;
@@ -132,9 +132,12 @@ export function decodeParsedReplayObservations(
   const binding = verifyReplayParticipantBindings(
     replay,
     decompress,
-    levelObserver === null && observeRawPacket === undefined
+    levelObserver === null &&
+      observeRawPacket === undefined &&
+      !allowCurrentBuild
       ? undefined
       : {
+          allowCurrentBuild,
           ...(observeRawPacket === undefined ? {} : { observeRawPacket }),
           observeGameplayPacket(packet, opcode, context) {
             levelObserver?.observeGameplayPacket(packet, opcode, context);

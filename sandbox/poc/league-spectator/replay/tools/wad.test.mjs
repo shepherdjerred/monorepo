@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, unlink, rmdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -21,9 +22,21 @@ test("reads exact 64-bit path hashes through the same bounded WAD entry path", a
   bytes.writeBigUInt64LE(Bun.hash.xxHash3(bytes.subarray(304)), 296);
   await writeFile(file, bytes);
   try {
-    const read = await openLocalWad(root, "Map.wad.client", () => {
+    const decompress = () => {
       throw Error("Unexpected decompression");
-    });
+    };
+    const indexSha256 = createHash("sha256")
+      .update(bytes.subarray(0, 304))
+      .digest("hex");
+    const read = await openLocalWad(
+      root,
+      "Map.wad.client",
+      decompress,
+      indexSha256,
+    );
+    await expect(
+      openLocalWad(root, "Map.wad.client", decompress, "0".repeat(64)),
+    ).rejects.toThrow("WAD archive index differs from the pinned census");
     expect(await read.byHash(hash)).toEqual(new Uint8Array([1, 2, 3, 4]));
     expect(await read("assets/original/texture.tex")).toEqual(
       await read.byHash(hash),

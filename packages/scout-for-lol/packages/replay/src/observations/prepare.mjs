@@ -7,13 +7,18 @@ import { decodeParsedReplayObservations } from "./decode.mjs";
 import { createTurretSnapshotCollector } from "./replay-turret-state.mjs";
 
 /** One original envelope traversal; observers retain scalar evidence, not packet history. */
-export function prepareReplayForSeek(buffer, decompress) {
+export function prepareReplayForSeek(
+  buffer,
+  decompress,
+  { allowCurrentBuild = false } = {},
+) {
   const { replay, byteLength } = openReplayPacketSource(buffer, decompress);
   const indexObserver = createReplayKeyframeIndexObserver(replay);
   const turretObserver = createTurretSnapshotCollector();
   let observations;
   try {
     observations = decodeParsedReplayObservations(replay, decompress, {
+      allowCurrentBuild,
       observeRawPacket(packet) {
         indexObserver.observeRawPacket(packet);
         turretObserver.observeRawPacket(packet);

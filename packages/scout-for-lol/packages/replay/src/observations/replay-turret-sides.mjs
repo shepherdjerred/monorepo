@@ -103,10 +103,11 @@ export function createReplayTurretSideObserver(replay) {
   };
 }
 
-export function readReplayTurretSides(replay, decompress) {
+export function readReplayTurretSides(replay, decompress, options) {
   const side = createReplayTurretSideObserver(replay);
-  const turrets = createReplayTurretObserver(replay);
+  const turrets = createReplayTurretObserver(replay, options);
   const binding = verifyReplayParticipantBindings(replay, decompress, {
+    ...options,
     observeGameplayPacket(packet, opcode, context) {
       side.observeGameplayPacket(packet, opcode, context);
       turrets.observeGameplayPacket(packet, opcode, context);

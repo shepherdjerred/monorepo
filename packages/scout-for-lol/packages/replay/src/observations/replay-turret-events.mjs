@@ -4,6 +4,22 @@ import { verifyReplayParticipantBindings } from "./replay-participant-bindings.m
 const destructionWidths = new Set([27, 29, 30, 31, 32, 33]);
 const decoder = new TextDecoder("utf-8", { fatal: true });
 
+function currentTurretScope(replay, { allowCurrentBuild = false } = {}) {
+  return (
+    allowCurrentBuild &&
+    replay.build === "16.23.841.8428" &&
+    replay.protocol === "8bbfcd5af2bc92db"
+  );
+}
+
+export function supportsReplayTurretEvents(replay, options) {
+  return (
+    currentTurretScope(replay, options) ||
+    (replay.protocol === "8bbfcd5af2bc92db" &&
+      (replay.build === "16.23.839.9929" || replay.build === "16.23.840.6595"))
+  );
+}
+
 export class ReplayTurretValidationError extends Error {
   constructor(message) {
     super(message);
@@ -84,11 +100,8 @@ export function verifyTurretDestructions(
   });
 }
 
-export function createReplayTurretObserver(replay) {
-  if (
-    (replay.build !== "16.23.839.9929" && replay.build !== "16.23.840.6595") ||
-    replay.protocol !== "8bbfcd5af2bc92db"
-  )
+export function createReplayTurretObserver(replay, options) {
+  if (!supportsReplayTurretEvents(replay, options))
     throw new ReplayTurretValidationError(
       "Unsupported turret event build or protocol",
     );
@@ -97,13 +110,15 @@ export function createReplayTurretObserver(replay) {
   const candidates = [];
   const notices = new Set();
   const deaths = new Map();
+  const allowWidth28 = currentTurretScope(replay, options);
   return {
     observeGameplayPacket(packet, opcode, context) {
       const { timeSeconds, secondTimeBits, payload } = packet;
       if (opcode === 557) {
         if (
           candidates.length >= expected ||
-          !destructionWidths.has(payload.length)
+          (!destructionWidths.has(payload.length) &&
+            !(allowWidth28 && payload.length === 28))
         )
           throw new ReplayTurretValidationError(
             "Unexpected turret-destruction candidate packet",
@@ -139,9 +154,12 @@ export function createReplayTurretObserver(replay) {
   };
 }
 
-export function readReplayTurretDestructions(replay, decompress) {
-  const observer = createReplayTurretObserver(replay);
+export function readReplayTurretDestructions(replay, decompress, options) {
+  const observer = createReplayTurretObserver(replay, options);
   return observer.finish(
-    verifyReplayParticipantBindings(replay, decompress, observer),
+    verifyReplayParticipantBindings(replay, decompress, {
+      ...options,
+      ...observer,
+    }),
   );
 }

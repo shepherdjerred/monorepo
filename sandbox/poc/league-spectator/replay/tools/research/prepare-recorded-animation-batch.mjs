@@ -10,10 +10,16 @@ import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { zstdDecompressSync } from "node:zlib";
 import { openReplay } from "../../transport.mjs";
+import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/prepare.mjs";
 import { mapBinHash } from "../map-scene-assets.mjs";
 import { auditChampionAnimation } from "../verify-native-terrain-champion-animation.mjs";
 import { openLocalWad } from "../wad.mjs";
 import { assertExactTerrainReplay } from "./native-terrain-byte-codecs.mjs";
+import {
+  readChampionModelSelections,
+  verifyNativeCatalogOpening,
+} from "./native-terrain-champion-model-catalog.mjs";
+import { createExactTerrainByteCodecs } from "./native-terrain-positions-944.mjs";
 import {
   recordedAnimationRequests,
   supportsRecordedAnimationRequest,
@@ -29,9 +35,10 @@ const [
   output,
   ...extra
 ] = process.argv.slice(2);
-if (!output || extra.length)
+const current = extra.length === 1 && extra[0] === "--current-build";
+if (!output || (extra.length && !current))
   throw Error(
-    "Usage: bun prepare-recorded-animation-batch.mjs <exact Windows installation> <original ROFL> <archived macOS executable> <champion source manifest> <ordinal model manifest> <AnimationPack.dll> <new private .cache subdirectory>",
+    "Usage: bun prepare-recorded-animation-batch.mjs <exact Windows installation> <original ROFL> <archived macOS executable> <champion source manifest> <ordinal model manifest> <AnimationPack.dll> <new private .cache subdirectory> [--current-build]",
   );
 
 const sha = (bytes) =>
@@ -51,17 +58,24 @@ const emit = (name, value) =>
 
 const replayBytes = Uint8Array.from(await readFile(replayFile));
 const replaySha256 = sha(replayBytes);
-assert.equal(
-  replaySha256,
-  "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668",
-);
+if (!current)
+  assert.equal(
+    replaySha256,
+    "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668",
+  );
 const replay = openReplay(replayBytes.buffer);
-assertExactTerrainReplay(replay);
+const options = { allowCurrentBuild: current };
+assertExactTerrainReplay(replay, options);
+if (current) assert.equal(replay.build, "16.23.841.8428");
 const sources = await json(championsFile);
 const models = await json(modelsFile);
 for (const manifest of [sources, models]) {
-  assertExactTerrainReplay(manifest);
-  assert.equal(manifest.replaySha256, replaySha256);
+  assertExactTerrainReplay(manifest, options);
+  assert.equal(manifest.build, replay.build);
+  assert.equal(
+    current ? manifest.nativeOpening?.replaySha256 : manifest.replaySha256,
+    replaySha256,
+  );
 }
 assert.equal(models.sourceManifestSha256, await digest(championsFile));
 const exporterPath = await realpath(exporter);
@@ -70,9 +84,48 @@ const toolkitSha256 = await digest(
   join(dirname(exporterPath), "LeagueToolkit.dll"),
 );
 assert.equal(toolkitSha256, models.toolchain.assemblies["LeagueToolkit.dll"]);
-const actors = new Map(sources.actors.map((actor) => [actor.context, actor]));
 const decompress = (input, target) =>
   zstdDecompressSync(input, { maxOutputLength: target.byteLength });
+const skinKey = ({ champion, skinId }) => `${champion.toLowerCase()}-${skinId}`;
+let selected = sources.actors;
+if (current) {
+  assert.deepEqual(sources.nativeOpening, models.nativeOpening);
+  const prepared = prepareReplayForSeek(
+    replayBytes.buffer,
+    decompress,
+    options,
+  );
+  const codecs = createExactTerrainByteCodecs(
+    await readFile(executable),
+    replay,
+    options,
+  );
+  const originalSelections = readChampionModelSelections(
+    prepared,
+    codecs,
+    options,
+  );
+  verifyNativeCatalogOpening(
+    sources.nativeOpening,
+    originalSelections,
+    replaySha256,
+  );
+  const footerRows = new Map(
+    prepared.observations.binding.verified.map(({ context, footerRow }) => [
+      context,
+      footerRow,
+    ]),
+  );
+  selected = originalSelections.map((row) => {
+    const skin = sources.skins.find(
+      (candidate) => skinKey(candidate) === skinKey(row),
+    );
+    assert.ok(skin, "Current actor lacks a source skin");
+    return { ...skin, ...row, footerRow: footerRows.get(row.context) };
+  });
+}
+const actors = new Map(selected.map((actor) => [actor.context, actor]));
+assert.equal(actors.size, 10);
 const packets = [];
 const payloads = new Map();
 const lastByActor = new Map();
@@ -126,6 +179,7 @@ const oracle = runPython(
   "recorded-animation-packet-oracle.py",
   executable,
   destination,
+  ...(current ? ["--current-build"] : []),
 );
 assert.ok(oracle.success, oracle.stderr.toString());
 const decoded = await json(out("packet-reader.json"));
@@ -160,22 +214,25 @@ const audit = await auditChampionAnimation(
   names,
   {
     includeEvents: true,
+    ...options,
   },
 );
-assertExactTerrainReplay(audit);
+assertExactTerrainReplay(audit, options);
 const actorAssets = new Map();
 const clips = new Map();
 
 async function readActorAssets(actor) {
   const { context, champion, skinId, footerRow, archive, resources } = actor;
   const source = audit.actors.find((row) => row.context === context);
-  const model = models.actors.find((row) => row.context === context);
+  const model = current
+    ? models.assets[skinKey(actor)]
+    : models.actors.find((row) => row.context === context);
   for (const row of [source, model]) {
     assert.equal(row.champion, champion);
     assert.equal(row.skinId, skinId);
-    assert.equal(row.footerRow, footerRow);
+    if (!current) assert.equal(row.footerRow, footerRow);
   }
-  assert.equal(source.creationSha256, actor.creationSha256);
+  if (!current) assert.equal(source.creationSha256, actor.creationSha256);
   const ordinalRoot = `${champion.toLowerCase()}-${skinId}`;
   const rigRow = resources.skeleton;
   assert.equal(rigRow.sha256, model.inputs.skeleton.sha256);
@@ -281,9 +338,11 @@ async function bakeClip(authored, { rig, wad, ordinalFolder }) {
     authored.sha256,
     "--rig-sha256",
     rig.sha256,
+    ...(current ? ["--current-build"] : []),
   );
   assert.ok(await Bun.file(out(receiptPath)).exists(), bake.stderr.toString());
   const native = await json(out(receiptPath));
+  assert.equal(native.build, replay.build);
   assert.equal(native.sourceRigSha256, rig.sha256);
   assert.equal(native.sourceAnmSha256, authored.sha256);
   if (!bake.success) {

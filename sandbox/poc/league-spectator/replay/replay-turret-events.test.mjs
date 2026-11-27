@@ -45,6 +45,54 @@ test("requires a global notice and same-context death on the exact recorded cloc
   ).toEqual([]);
 });
 
+test("admits the 28-byte destruction only for the opted-in current build", () => {
+  const rows = Array.from({ length: 10 }, (_, index) => ({
+    FRIENDLY_TURRET_LOST: index < 5 ? "1" : "0",
+  }));
+  const replay = {
+    build: "16.23.841.8428",
+    protocol: "8bbfcd5af2bc92db",
+    end: 0,
+    duration: 20,
+    bytes: Buffer.concat([
+      Buffer.alloc(256),
+      Buffer.from(JSON.stringify({ statsJson: JSON.stringify(rows) })),
+      Buffer.alloc(4),
+    ]),
+  };
+  const packet = (size) => ({ ...first, payload: new Uint8Array(size) });
+  expect(() => createReplayTurretObserver(replay)).toThrow(
+    "Unsupported turret event build or protocol",
+  );
+  const options = { allowCurrentBuild: true };
+  expect(() =>
+    createReplayTurretObserver({ ...replay, protocol: "0" }, options),
+  ).toThrow("Unsupported turret event build or protocol");
+  const old = createReplayTurretObserver(
+    { ...replay, build: "16.23.840.6595" },
+    options,
+  );
+  expect(() =>
+    old.observeGameplayPacket(packet(28), 557, first.context),
+  ).toThrow("Unexpected turret-destruction candidate packet");
+  const current = createReplayTurretObserver(replay, options);
+  expect(() =>
+    current.observeGameplayPacket(packet(26), 557, first.context),
+  ).toThrow("Unexpected turret-destruction candidate packet");
+  current.observeGameplayPacket(packet(28), 557, first.context);
+  expect(() => current.finish(binding)).toThrow(
+    "differ from the footer losses",
+  );
+  current.observeGameplayPacket(packet(5), 675, 0);
+  expect(() => current.finish(binding)).toThrow(
+    "distinct corroborated context and clock",
+  );
+  current.observeGameplayPacket(packet(116), 172, first.context);
+  expect(current.finish(binding)).toEqual([
+    { kind: "turret-destruction", ...first },
+  ]);
+});
+
 test("rejects missing counts, shifted clocks, repeated structures and champion contexts", () => {
   const run = (candidate, changed = notices, witness = deaths) =>
     verifyTurretDestructions(candidate, changed, witness, binding, 2, 20);

@@ -27,17 +27,17 @@ const encodeTeamByte = invert(
   (byte) => rotate(((0x91 - byte) & 0xff) ^ 0xd4, 1) ^ 0x7f,
 );
 
-function creationBody(context, champion) {
+function creationBody(context, champion, earlyByteMode = 1) {
   const name = new TextEncoder().encode(champion);
   const compact = context ^ 0x40000000;
   return Uint8Array.of(
-    0x0f,
+    7 | (earlyByteMode << 3),
     0x08,
     0xa4,
     0xb8,
     0x4a,
     0x1b,
-    ...new Uint8Array(15),
+    ...new Uint8Array(14 + Number([1, 5, 6, 7].includes(earlyByteMode))),
     encodeNameByte(name.length),
     ...name.map(encodeNameByte),
     encodeContextByte(compact & 0x7f),
@@ -127,6 +127,12 @@ describe("exact terrain champion identities", () => {
     const read = createNativeTerrainChampionCreation88Reader(identity, codecs);
     const payload = creationBody(contexts[0], "Beryl");
     expect(read(payload)).toEqual({ context: contexts[0], champion: "Beryl" });
+    for (const mode of [2, 4]) {
+      expect(read(creationBody(contexts[0], "Beryl", mode))).toEqual({
+        context: contexts[0],
+        champion: "Beryl",
+      });
+    }
     expect(() => read(payload.subarray(0, -1))).toThrow("hero creation width");
     const unknown = new Uint8Array(payload);
     unknown[0] |= 0x80;

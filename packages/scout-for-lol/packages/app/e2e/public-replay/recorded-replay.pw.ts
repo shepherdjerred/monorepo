@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
 import { verifyRecordedNeutralObjectives } from "./recorded-neutral-assertions.ts";
 import {
@@ -30,17 +30,21 @@ import {
 import {
   verifyLaterRecordedLaneWaves,
   verifyRecordedChemtechAnchor,
-  verifyRecordedInhibitors,
+  verifyRecordedStructures,
   verifyRecordedWorldActors,
 } from "./recorded-world-assertions.ts";
 
 const footerMetadata = z.object({ statsJson: z.string() });
+const footerCount = z.string().regex(/^\d+$/).transform(Number);
 const footerRoster = z
   .array(
     z.object({
       TEAM: z.enum(["100", "200"]),
       WIN: z.enum(["Win", "Fail", "LeaverFail"]),
-      CHAMPIONS_KILLED: z.string().regex(/^\d+$/).transform(Number),
+      CHAMPIONS_KILLED: footerCount,
+      NUM_DEATHS: footerCount,
+      ASSISTS: footerCount,
+      LEVEL: footerCount,
     }),
   )
   .length(10);
@@ -71,7 +75,39 @@ async function readFooterScores(replayFile: string) {
     ),
     redKills: red.reduce((total, player) => total + player.CHAMPIONS_KILLED, 0),
     winner: blueWon ? "Blue team won" : "Red team won",
+    roster: [
+      { table: "Blue team roster", players: blue },
+      { table: "Red team roster", players: red },
+    ],
   };
+}
+
+async function verifyFooterRoster(
+  page: Page,
+  teams: Awaited<ReturnType<typeof readFooterScores>>["roster"],
+) {
+  for (const { table, players } of teams) {
+    const roster = page.getByRole("table", { name: table });
+    const columns = await roster.getByRole("columnheader").allTextContents();
+    const stats = ["Kills", "Deaths", "Assists", "Level"];
+    const indexes = stats.map((name) => columns.indexOf(name) - 1);
+    expect(indexes.every((index) => index >= 0)).toBe(true);
+    for (const [index, player] of players.entries()) {
+      const cells = await roster
+        .getByRole("row")
+        .nth(index + 1)
+        .getByRole("cell")
+        .allTextContents();
+      expect(indexes.map((column) => cells[column])).toEqual(
+        [
+          player.CHAMPIONS_KILLED,
+          player.NUM_DEATHS,
+          player.ASSISTS,
+          player.LEVEL,
+        ].map(String),
+      );
+    }
+  }
 }
 
 function verifyCameraProjection(
@@ -155,8 +191,16 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   });
   await page.goto(replayPath);
   const play = page.getByRole("button", { name: "Play", exact: true });
+  const playbackError = page
+    .getByRole("region", { name: "Replay player" })
+    .getByRole("alert");
   const canvas = page.getByLabel("League of Legends replay scene");
   const score = page.getByRole("group", { name: "Replay team score" });
+  await expect(play.or(playbackError)).toBeVisible();
+  if (await playbackError.isVisible())
+    throw new Error(
+      `Recorded playback failed: ${await playbackError.innerText()}`,
+    );
   await expect(play).toBeVisible();
   const vision = page.getByRole("combobox", {
     name: fixture.unitVisibility ? "Unit visibility" : "Vision",
@@ -302,24 +346,17 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
       fixture.championHealth,
     );
   }
-  await verifyRecordedWorldActors(
-    page,
-    fixture.paths.keys(),
-    traffic.requested,
-    testInfo,
-  );
+  await verifyRecordedWorldActors(page, fixture, traffic.requested, testInfo);
   await verifyLaterRecordedLaneWaves(
     page,
-    fixture.paths.keys(),
+    fixture,
     traffic.requested,
     testInfo,
   );
-  await verifyRecordedInhibitors(
-    page,
-    fixture.paths.keys(),
-    traffic.requested,
-    { testInfo, expectedLosses: fixture.descriptor.durationSeconds > 1490.2 },
-  );
+  await verifyRecordedStructures(page, fixture, traffic.requested, {
+    testInfo,
+    expectedLosses: fixture.descriptor.durationSeconds > 1490.2,
+  });
   const lateTime = Math.floor(fixture.descriptor.durationSeconds * 0.85);
   await seek(page, lateTime);
   const lateMatch = await readRecordedDraw(page);
@@ -328,13 +365,12 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await canvas.screenshot({
     path: testInfo.outputPath("late-match-overview.png"),
   });
-  if (terrainRanges !== undefined && fixture.descriptor.durationSeconds > 1200)
-    await verifyRecordedTerrainTransitions(
-      page,
-      terrainRanges,
-      testInfo,
-      Bun.env["SCOUT_REPLAY_E2E_EXPECT_INFERNAL_TERRAIN"] === "1",
-    );
+  await verifyRecordedTerrainTransitions(
+    page,
+    terrainRanges,
+    fixture,
+    testInfo,
+  );
   const slider = page.getByRole("slider", { name: "Replay time" });
   await slider.press("End");
   await expect(score.getByText(result.winner)).toBeVisible();
@@ -344,6 +380,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await expect(score).toContainText(
     new RegExp(String.raw`Red team\s*${result.redKills.toString()}\s*kills`),
   );
+  await verifyFooterRoster(page, result.roster);
   await expect(slider).toHaveAttribute("aria-busy", "false");
   const end = Number(await slider.inputValue());
   // The range control steps in tenths while the ROFL records milliseconds.
@@ -434,11 +471,17 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
     traffic.requested,
     testInfo,
   );
-  if (fixture.unitVisibility) await verifyRecordedTeamVision(page, testInfo);
+  if (fixture.unitVisibility)
+    await verifyRecordedTeamVision(
+      page,
+      testInfo,
+      fixture.descriptor.gameBuild === "16.23.841.8428",
+    );
   if (fixture.championAnimationCueCount > 0)
     await verifyRecordedChampionAnimation(
       page,
       {
+        current: fixture.descriptor.gameBuild === "16.23.841.8428",
         long: fixture.descriptor.durationSeconds > 100,
         cueCount: fixture.championAnimationCueCount,
       },

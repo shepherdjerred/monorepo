@@ -18,8 +18,12 @@ function terrainSubstitution(codecs) {
 }
 
 /** Read identity and optionally the authored skin selection from the exact hero factory. */
-export function createNativeTerrainChampionCreation88Reader(replay, codecs) {
-  assertExactTerrainReplay(replay);
+export function createNativeTerrainChampionCreation88Reader(
+  replay,
+  codecs,
+  options,
+) {
+  assertExactTerrainReplay(replay, options);
   const substitute = terrainSubstitution(codecs);
   const decodeOptionalScalar = (byte) =>
     rotate(
@@ -67,7 +71,10 @@ export function createNativeTerrainChampionCreation88Reader(replay, codecs) {
     )
       throw Error("Unsupported opcode 88 opening hero creation form");
 
-    let cursor = 20;
+    // The early byte at object +0x23 is supplied by the stream only in
+    // branches 1, 5, 6, and 7 of the native jump table at 0x10611f4.
+    const earlyByteMode = (flag0 >>> 3) & 7;
+    let cursor = 19 + Number([1, 5, 6, 7].includes(earlyByteMode));
     function readVarUint(decode, terminalBit = 0) {
       let value = 0;
       for (let shift = 0; shift < 35 && cursor < payload.length; shift += 7) {
@@ -137,12 +144,18 @@ export function createNativeTerrainChampionCreation88Reader(replay, codecs) {
 }
 
 /** Corroborate actor identities by opening creation and independent team packets. */
-export function bindNativeTerrainChampionIdentities(prepared, codecs) {
+export function bindNativeTerrainChampionIdentities(prepared, codecs, options) {
   const { packetReader, observations } = prepared;
-  assertExactTerrainReplay(observations);
+  assertExactTerrainReplay(observations, options);
+  if (
+    packetReader.build !== observations.build ||
+    packetReader.protocol !== observations.protocol
+  )
+    throw Error("Champion identities disagree about replay build or protocol");
   const readCreation = createNativeTerrainChampionCreation88Reader(
     packetReader,
     codecs,
+    options,
   );
   const substitute = terrainSubstitution(codecs);
   const decodeTeamByte = (byte) =>

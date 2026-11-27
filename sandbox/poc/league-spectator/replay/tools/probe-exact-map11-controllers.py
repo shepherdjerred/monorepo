@@ -4,6 +4,7 @@ import argparse
 import importlib
 import json
 import struct
+from math import isfinite
 from pathlib import Path
 
 motion = importlib.import_module("probe-exact-fog-turret-motion")
@@ -120,8 +121,62 @@ class ControllerOracle(motion.MotionOracle):
         )
 
 
-def evaluate(source, archive, navgrid, *, validate_replay=False):
-    oracle = ControllerOracle(motion.turret.MachImage(archive), navgrid)
+class ControllerOracle8428(ControllerOracle):
+    EXECUTABLE_SLICE_SHA256 = "de6db1683eb61358d0aaf9fac44ef722850a927263eae7f68212add8621a500e"
+
+
+def dependent_mesh_controllers(controllers, name, mesh_ids):
+    affected = {int(key) for key, entry in controllers.items() if entry.get("nameHash") == name}
+    while True:
+        dependents = {
+            int(key) for key, entry in controllers.items() if affected.intersection(entry.get("children", []))
+        }
+        if dependents <= affected:
+            return [key for key in mesh_ids if key in affected]
+        affected.update(dependents)
+
+
+def recover_animated_windows(tracks, snapshots, diagnostics):
+    windows = []
+    for event in diagnostics:
+        name = int(event["nameHash"], 16)
+        start = event["timeSeconds"]
+        end = min((time for time, names in snapshots.values() if time > start and name in names), default=None)
+        if start <= 0 or end is None:
+            raise ValueError(f"Animated Map11 controller {name:08x} lacks a verified boundary snapshot")
+        event["firstVerifiedSnapshotSeconds"] = end
+        windows.extend(
+            {"controllerId": key, "startSeconds": start, "endSeconds": end}
+            for key in event["affectedMeshControllerIds"]
+        )
+
+    windows.sort(key=lambda row: (row["controllerId"], row["startSeconds"]))
+    last_end = {}
+    for window in windows:
+        key, start, end = (window[field] for field in ("controllerId", "startSeconds", "endSeconds"))
+        if key in last_end and start <= last_end[key]:
+            raise ValueError(f"Overlapping animated Map11 controller windows for {key:08x}")
+        last_end[key] = end
+        points = tracks[key]
+        prior = [point for point in points if point[0] < start]
+        at_snapshot = next(state for time, state in reversed(points) if time <= end)
+        if prior[-1][1] != at_snapshot:
+            prior.append([end, at_snapshot])
+        # No interpolation was checked. The absolute snapshot resupplies
+        # the first Boolean state that can be published after this write.
+        tracks[key] = prior + [point for point in points if point[0] > end]
+    return windows
+
+
+def evaluate(source, archive, navgrid, *, validate_replay=False, animation_diagnostics=None):
+    build = source["build"]
+    latest = build == "16.23.841.8428"
+    if source.get("comparisonOnly") or (build != "16.23.840.6595" and not (latest and validate_replay)):
+        raise ValueError("Expected pinned exact-build Map11 controller inputs")
+    if animation_diagnostics is not None and not latest:
+        raise ValueError("Animated controller omissions are only supported for build 16.23.841.8428")
+    oracle_type = ControllerOracle8428 if latest else ControllerOracle
+    oracle = oracle_type(motion.turret.MachImage(archive), navgrid)
     oracle.install_host()
     oracle.initialize(source["controllers"])
     mesh_ids = source["meshControllerIds"]
@@ -136,11 +191,28 @@ def evaluate(source, archive, navgrid, *, validate_replay=False):
         name, visible, transition = oracle.read_update(row)
         if visible is None:
             if validate_replay:
-                raise ValueError(f"Unbound recorded Map11 controller {name:08x}")
+                raise ValueError(
+                    f"Unbound recorded Map11 controller {name:08x} "
+                    f"in stream {row['stream']} chunk {row['chunk']} at {row['timeSeconds']}s"
+                )
             unmatched_names.add(f"{name:08x}")
             continue
         if transition != 0:
-            raise ValueError("Animated controller transition remains unverified")
+            if animation_diagnostics is None or row["stream"] != 1 or not isfinite(transition) or transition < 0:
+                raise ValueError(
+                    f"Animated Map11 controller transition remains unverified for {name:08x} "
+                    f"at {row['timeSeconds']}s (transition value: {transition})"
+                )
+            affected = dependent_mesh_controllers(source["controllers"], name, mesh_ids)
+            animation_diagnostics.append(
+                {
+                    "nameHash": f"{name:08x}",
+                    "timeSeconds": row["timeSeconds"],
+                    "targetVisible": visible,
+                    "transitionValue": transition,
+                    "affectedMeshControllerIds": affected,
+                }
+            )
         if row["stream"] == 2:
             if validate_replay:
                 snapshot = snapshots.setdefault(row["chunk"], (row["timeSeconds"], set()))
@@ -152,7 +224,7 @@ def evaluate(source, archive, navgrid, *, validate_replay=False):
             continue
         oracle.apply(name, visible, transition)
         time = row["timeSeconds"]
-        writes.append({"nameHash": f"{name:08x}", "timeSeconds": time, "visible": visible})
+        writes.append({"nameHash": f"{name:08x}", "timeSeconds": time, "visible": visible, "animated": transition != 0})
         for key, points in tracks.items():
             next_value = oracle.visible(oracle.instances[str(key)])
             if points[-1][1] != next_value:
@@ -161,35 +233,96 @@ def evaluate(source, archive, navgrid, *, validate_replay=False):
                 else:
                     points.append([time, next_value])
     if validate_replay:
-        validate_snapshot_cohort(snapshots, source["snapshotChunks"])
+        validate_snapshot_cohort(snapshots, source["snapshotChunks"], writes, latest=latest)
+    windows = (
+        [] if animation_diagnostics is None else recover_animated_windows(tracks, snapshots, animation_diagnostics)
+    )
     return {
-                "replaySha256": source["replaySha256"],
-                "build": source["build"],
-                "protocol": source["protocol"],
-                "geometrySha256": source["geometrySha256"],
-                "materialsSha256": source["materialsSha256"],
-                "tracks": [{"controllerId": key, "points": points} for key, points in tracks.items()],
-                "unresolvedMeshControllerIds": unresolved,
-                "unboundRecordedNameHashes": sorted(unmatched_names),
-                "ordinaryWrites": writes,
+        "replaySha256": source["replaySha256"],
+        "build": source["build"],
+        "protocol": source["protocol"],
+        "geometrySha256": source["geometrySha256"],
+        "materialsSha256": source["materialsSha256"],
+        "tracks": [{"controllerId": key, "points": points} for key, points in tracks.items()],
+        "unresolvedMeshControllerIds": unresolved,
+        **({"unresolvedWindows": windows} if windows else {}),
+        "unboundRecordedNameHashes": sorted(unmatched_names),
+        "ordinaryWrites": [
+            {key: value for key, value in write.items() if key != "animated"}
+            for write in writes
+            if not write["animated"]
+        ],
     }
 
 
-# Both exact-save opening and recurring snapshots emit this Map11 cohort.
+# Every supported Map11 snapshot includes these controllers.
 MAP11_SNAPSHOT_NAMES = {
-    0x7067ADC8, 0xD1751A06, 0x6204D1E5, 0x625C62D8, 0x5086EB70, 0x17614A1D,
-    0xDBA9FCB3, 0x5CBA1BE9, 0x2978241B, 0xA28A5AF4, 0x699B9AC4, 0x5571AC30,
-    0x0B6005AA, 0x2936ED63, 0x0125CAD8, 0xD4A12099,
+    0x7067ADC8,
+    0xD1751A06,
+    0x6204D1E5,
+    0x625C62D8,
+    0x5086EB70,
+    0x17614A1D,
+    0xDBA9FCB3,
+    0x5CBA1BE9,
+    0x2978241B,
+    0xA28A5AF4,
+    0x699B9AC4,
+    0x5571AC30,
+    0x0B6005AA,
+    0x2936ED63,
+    0x0125CAD8,
+    0xD4A12099,
 }
 
+# These authored names join the recurring cohort after their first ordinary
+# writes. The pinned long replay records the four writes in the same tick.
+MAP11_DEFERRED_SNAPSHOT_NAMES = {0x309B774B, 0x81D63653, 0x3E5A58CE, 0x82BF1ADE}
+# The .8428 elemental controller activation adds both authored names in one tick.
+MAP11_8428_ELEMENTAL_SNAPSHOT_NAMES = {0x738C8DA8, 0x215400AA}
 
-def validate_snapshot_cohort(snapshots, recorded_chunks):
+
+def validate_snapshot_cohort(snapshots, recorded_chunks, writes, *, latest=False):
     if not snapshots or next(iter(snapshots.values()))[0] != 0:
         raise ValueError("Missing the opening recorded Map11 controller snapshot")
-    if set(snapshots) != set(recorded_chunks) or any(
-        names != MAP11_SNAPSHOT_NAMES for _, names in snapshots.values()
-    ):
-        raise ValueError("Incomplete recorded Map11 controller snapshot")
+    chunks = set(recorded_chunks)
+    if snapshots.keys() - chunks:
+        raise ValueError("Map11 controller snapshot lies outside recorded snapshot chunks")
+    missing_chunks = chunks - snapshots.keys()
+    if missing_chunks:
+        chunk = min(missing_chunks)
+        raise ValueError(f"Missing recorded Map11 controller snapshot in chunk {chunk}")
+    deferred = [MAP11_DEFERRED_SNAPSHOT_NAMES]
+    if latest:
+        deferred.append(MAP11_8428_ELEMENTAL_SNAPSHOT_NAMES)
+    deferred_names = set.union(*deferred)
+    first_deferred_writes = {}
+    for write in writes:
+        name = int(write["nameHash"], 16)
+        if name in deferred_names:
+            first_deferred_writes.setdefault(name, write["timeSeconds"])
+        elif name not in MAP11_SNAPSHOT_NAMES:
+            raise ValueError(f"Unverified Map11 controller write outside the snapshot cohort for {name:08x}")
+    activated = {}
+    for cohort in deferred:
+        present = cohort & first_deferred_writes.keys()
+        if not present:
+            continue
+        activation_times = {first_deferred_writes[name] for name in present}
+        if present != cohort or len(activation_times) != 1:
+            raise ValueError("Unverified partial or staggered Map11 controller cohort activation")
+        activated.setdefault(activation_times.pop(), set()).update(cohort)
+    for chunk, (time, names) in snapshots.items():
+        if time in activated:
+            raise ValueError(f"Ambiguous Map11 controller activation in snapshot chunk {chunk}")
+        expected = MAP11_SNAPSHOT_NAMES.union(*(cohort for at, cohort in activated.items() if at < time))
+        missing = ", ".join(f"{name:08x}" for name in sorted(expected - names))
+        unexpected = ", ".join(f"{name:08x}" for name in sorted(names - expected))
+        if missing or unexpected:
+            raise ValueError(
+                f"Inconsistent recorded Map11 controller snapshot in chunk {chunk} at {time}s "
+                f"(missing: {missing or 'none'}, unexpected: {unexpected or 'none'})"
+            )
 
 
 def main():

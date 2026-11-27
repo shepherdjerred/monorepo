@@ -1,8 +1,14 @@
 // Sparse access to one immutable Riot RMAN/WAD. Format reference: CommunityDragon/CDTB.
+import { createHash } from "node:crypto";
 import { resolve, sep } from "node:path";
 import { createRmanChunkReader } from "./rman-chunks.mjs";
 
-export async function openLocalWad(installation, name, decompress) {
+export async function openLocalWad(
+  installation,
+  name,
+  decompress,
+  indexSha256,
+) {
   const root = resolve(installation, "Game");
   const path = resolve(root, name);
   if (!path.startsWith(root + sep))
@@ -25,7 +31,7 @@ export async function openLocalWad(installation, name, decompress) {
       throw Error("Installed WAD changed or was truncated during read");
     return bytes;
   }
-  return readWad(name, range, decompress);
+  return readWad(name, range, decompress, indexSha256);
 }
 
 export async function openWad(manifest, name, cacheRoot, decompress) {
@@ -70,7 +76,7 @@ export async function openWad(manifest, name, cacheRoot, decompress) {
   return read;
 }
 
-async function readWad(name, range, decompress) {
+async function readWad(name, range, decompress, indexSha256) {
   const header = await range(0, 272);
   if (header[0] !== 82 || header[1] !== 87 || header[2] !== 3)
     throw Error("Unsupported WAD header");
@@ -80,6 +86,12 @@ async function readWad(name, range, decompress) {
   const index = await range(272, count * 32),
     d = new DataView(index.buffer),
     entries = new Map();
+  if (
+    indexSha256 !== undefined &&
+    createHash("sha256").update(header).update(index).digest("hex") !==
+      indexSha256
+  )
+    throw Error(`WAD archive index differs from the pinned census: ${name}`);
   for (let i = 0; i < count; i++) {
     const o = i * 32;
     entries.set(d.getBigUint64(o, true), {

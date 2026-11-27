@@ -166,8 +166,15 @@ Pass `--lane-minion-models <private-lane-directory>/manifest.json` and
 `--lane-minion-models-sha256 <manifest-sha256>` to the recorded package
 builder. The actor proof binds the wave to its original barracks, class,
 team and recorded waypoints. The renderer uses bounded path intervals up
-to each contextual terminal event. Later waves, facing and death presentation
-remain unverified.
+to each contextual terminal event. Facing and death presentation remain
+unverified.
+
+For the reviewed 16.23.841.8428 Rift recording, use
+`--corroborated-waves-8428` with the lane evidence exporter to include the
+verified later waves. The exporter checks the current archive and records
+excluded births by reason. The private renderer draws units during recorded
+path intervals. The first-wave profile remains available as
+`--first-wave-8428`.
 
 Run the offline announcer verifier with a saved ROFL, the matching Female1
 English WPK, and the local vgmstream decoder. It verifies the recorded welcome
@@ -193,6 +200,12 @@ media 56523430. Append the Rift Herald audio BNK (Map11 WAD entry
 checks 232,332 stereo frames for the stinger and 314,891 mono frames for
 Herald at 44.1 kHz, including normal and double speed, seeking, post-cue
 silence, and rewind.
+
+For the reviewed 16.23.841.8428 Rift recording, the optional terrain WPK and
+Herald audio BNK select the recorded Mountain transition and Herald cues. The
+Infernal and Mountain transitions resolve to the same authored fixed stinger.
+The verifier checks the packet witnesses and the audio against the original
+recording.
 
 The verifier uses headless offline audio and selects the default Map11 voice.
 For a private package build, pass `--announcer-preview <verified-timing-directory>`.
@@ -254,7 +267,7 @@ integrity checks, and share links that restore the clock, camera, and vision in
 a fresh browser context. The synthetic engine draws a labeled test canvas.
 
 Use the recorded-replay harness to exercise the same Scout player with a saved
-16.23.840.6595 ROFL and its prepared Map11 assets. From the repository root,
+16.23.840.6595 or 16.23.841.8428 ROFL and its prepared Map11 assets. From the repository root,
 build the package in a new direct child of the ignored `.cache` directory. Use
 the same decoded terrain, materials, and model manifests as the loopback preview.
 
@@ -277,12 +290,52 @@ prepared resources to that ROFL's SHA-256. The worker decodes the saved replay
 in the browser, and the normal player controls drive the Map11 renderer. The
 production package contract requires coverage for all legal lineups and skins.
 
+For another saved replay of the same build, add
+`--scout-recovery-db $absoluteDesktopDatabasePath` to the private package command.
+Keep the replay's original `PLATFORM-gameId.rofl` filename. The builder opens the
+Scout Desktop recovery database read-only and checks the game ID, exact build,
+Map11 CLASSIC mode, roster, and the recorded participant fingerprint and
+duration against the ROFL. This supplies match provenance. The builder still
+validates the terrain, models, and replay observations. Recorded dragon cues
+for additional replays require an explicit world-unit or announcer input and
+must pass the original dragon-evidence checks.
+
+For a catalog-backed build, pass the catalog to `--champion-models` and its
+reviewed digest to `--champion-catalog-sha256`. The builder selects the
+models from the saved opening packets and validates the model bytes. Pass
+a verified Map11 controller receipt to `--terrain-visibility` with its digest
+in `--terrain-visibility-sha256`. The browser harness checks the rendered
+draws at the recorded transition times and after rewinding.
+
+The private 16.23.841.8428 package requires the reviewed catalog for the
+actual replay build. To prepare its champion position decoder from the
+matching archive, use the replay-specific decoder command below. With a
+verified visibility receipt, the newer package omits mesh groups whose
+controller state remains unresolved. When only a transition is unresolved,
+the package retains the verified state up to the recorded write and resumes
+drawing at the next corroborated snapshot. Its terrain, champion movement
+and scoreboard are evidence channels for the recorded match.
+
+Use current-build structure manifests with the matching `--turret-placements`
+receipt. The package omits actors with contradictory turret or unresolved
+inhibitor lifetimes. Verified inhibitor loss events remain in the jump menu.
+For the current recording the Nexus cutoff uses the verified terminal loss.
+The authored request manifest passed in `--champion-animation-cues` supplies
+verified action windows from the loaded skins. Passive locomotion and death
+animation still require native selection evidence.
+
+To check the positional byte maps for another build, pass the original ROFL
+to `prepare-native-terrain-decoder.mjs` with `--for-replay <saved-rofl>`.
+The tool checks the replay's build and protocol against the pinned macOS
+archive before deriving the maps. This command prepares a private decoder
+artifact. Playback preparation has its own build and evidence requirements.
+
 ### Verify playback from a paired upload
 
 Build the recorded app and private package before starting the backend handoff.
 In the backend workspace, use the local PostgreSQL test harness and point the
 opt-in test at the original Scout Desktop recovery database and the directory
-containing the two saved replay files named in the test. The test opens the
+containing the saved replay files listed in the inputs. The test opens the
 recovery database read-only and pairs its own local test device.
 
 ```powershell
@@ -293,8 +346,18 @@ $env:SCOUT_REPLAY_PROOF_GAMES = ConvertTo-Json -InputObject $savedGames -Compres
 bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/scout-client/real-replay-upload.integration.test.ts
 ```
 
-Supply `$savedGames` as an array of objects with a string `gameId` and numeric
-`durationSeconds` for each saved match.
+Supply `$savedGames` as an array of objects with a string `gameId`, numeric
+`durationSeconds`, and the saved match's numeric `queueId`. The queue
+defaults to 710 for the original fixtures.
+
+For a canonical Riot Match-V5 result, set `SCOUT_REPLAY_PROOF_CANONICAL_MATCH`
+to the absolute path of the saved response and leave
+`SCOUT_REPLAY_PROOF_OUTBOX` unset. Set `SCOUT_REPLAY_PROOF_OWNER_CHAMPION` to the
+unique champion independently verified as the uploader. The harness binds
+the Riot account to the replay's local UUID in its isolated test database and
+serves the original result through the receipted archive path. Use one game
+in `SCOUT_REPLAY_PROOF_GAMES` for this mode. Keep the match response and ROFL
+in private storage.
 
 In the app workspace, keep the manifest and ROFL inputs above. Once the receipt
 appears, select the game ID matching that ROFL and run against the uploaded
@@ -336,6 +399,11 @@ For **Unit visibility**, generate the [exact team tracks](tools/research/README.
 from the same ROFL and pass `--team-vision` and `--team-vision-sha256` to the
 private package builder. The selected side filters the 3D actors and minimap
 markers with the same recorded masks. Terrain fog shading remains unverified.
+For the current-build preview, pass `--current` to the verifier with the
+matching macOS archive and the reviewed `scene.json` before team tracks are
+added. The verifier restricts the tracks to the actors that scene can draw.
+Units with pending initialization stay absent from the selected-team view
+until their first observed mask.
 
 Add recorded health to the roster and above the visible champion models by
 preparing the same replay with

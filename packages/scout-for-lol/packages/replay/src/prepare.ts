@@ -13,6 +13,7 @@ export type PreparedReplayForSeek = Readonly<{
 export function prepareReplayForSeek(
   buffer: ArrayBuffer,
   decompress: ReplayDecompressor,
+  options?: Readonly<{ allowCurrentBuild?: boolean }>,
 ): PreparedReplayForSeek {
-  return prepare(buffer, decompress);
+  return prepare(buffer, decompress, options);
 }

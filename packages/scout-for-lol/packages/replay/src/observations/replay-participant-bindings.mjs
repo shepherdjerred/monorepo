@@ -62,7 +62,13 @@ function* collectAssistEvidence(
       stream === 1 &&
       (opcode === 700 || (opcode === 172 && payload.length === 44))
     )
-      candidates.push({ opcode, context, secondTimeBits, timeSeconds });
+      candidates.push({
+        opcode,
+        context,
+        secondTimeBits,
+        timeSeconds,
+        payloadLength: payload.length,
+      });
     if (stream === 1) observeGameplayPacket?.(packet, opcode, context);
     yield packet;
   }
@@ -74,6 +80,7 @@ export function matchParticipantCombatProfiles(
   combatEvents,
   candidates,
   footerStats,
+  allowConcurrentKillCorroboration = false,
 ) {
   if (
     opening.length !== 10 ||
@@ -89,7 +96,7 @@ export function matchParticipantCombatProfiles(
         kills: 0,
         deaths: 0,
         assistClocks: new Map(),
-        corroboratingClocks: new Set(),
+        corroboratingClocks: new Map(),
       },
     ]),
   );
@@ -106,7 +113,13 @@ export function matchParticipantCombatProfiles(
     others.push(event);
     killClocks.set(secondTimeBits, others);
   }
-  for (const { opcode, context, secondTimeBits, timeSeconds } of candidates) {
+  for (const {
+    opcode,
+    context,
+    secondTimeBits,
+    timeSeconds,
+    payloadLength,
+  } of candidates) {
     const stats = actorStats.get(context);
     if (!stats) continue;
     const teammates = killClocks
@@ -126,7 +139,24 @@ export function matchParticipantCombatProfiles(
         "Assist evidence differs from the teammate kill primary clock",
       );
     if (opcode === 172) stats.assistClocks.set(secondTimeBits, timeSeconds);
-    else stats.corroboratingClocks.add(secondTimeBits);
+    else {
+      // A same-clock double kill can carry an opcode 700 for the actor's
+      // own kill. An assist still requires its own opcode 172 evidence.
+      const isOwnKillWitness =
+        allowConcurrentKillCorroboration &&
+        payloadLength === 5 &&
+        killClocks
+          .get(secondTimeBits)
+          .some(
+            (event) =>
+              event.context === context && event.timeSeconds === timeSeconds,
+          );
+      const previous = stats.corroboratingClocks.get(secondTimeBits);
+      stats.corroboratingClocks.set(
+        secondTimeBits,
+        isOwnKillWitness && previous === undefined,
+      );
+    }
   }
 
   const verified = [];
@@ -145,8 +175,10 @@ export function matchParticipantCombatProfiles(
     { team, kills, deaths, assistClocks, corroboratingClocks },
   ] of actorStats) {
     if (
-      assistClocks.size !== corroboratingClocks.size ||
-      [...assistClocks.keys()].some((bits) => !corroboratingClocks.has(bits))
+      [...assistClocks.keys()].some((bits) => !corroboratingClocks.has(bits)) ||
+      [...corroboratingClocks].some(
+        ([bits, ownKill]) => !assistClocks.has(bits) && !ownKill,
+      )
     )
       throw Error(
         "Assist clocks do not corroborate across opcodes 172 and 700",
@@ -184,7 +216,7 @@ export function matchParticipantCombatProfiles(
 export function verifyReplayParticipantBindings(
   replay,
   decompress,
-  { observeGameplayPacket, observeRawPacket } = {},
+  { observeGameplayPacket, observeRawPacket, allowCurrentBuild = false } = {},
 ) {
   const teams = replay.roster.map(({ team }) => team);
   if (
@@ -213,7 +245,15 @@ export function verifyReplayParticipantBindings(
     stats.map(([k, d]) => [k, d]),
   );
   return {
-    ...matchParticipantCombatProfiles(opening, events, candidates, stats),
+    ...matchParticipantCombatProfiles(
+      opening,
+      events,
+      candidates,
+      stats,
+      allowCurrentBuild &&
+        replay.build === "16.23.841.8428" &&
+        replay.protocol === "8bbfcd5af2bc92db",
+    ),
     events,
   };
 }

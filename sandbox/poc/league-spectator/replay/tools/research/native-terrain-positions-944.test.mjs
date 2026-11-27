@@ -10,6 +10,8 @@ import {
 import { createPreparedTerrainByteCodecs } from "./native-terrain-byte-codecs.mjs";
 
 const replay = { build: "16.23.840.6595", protocol: "8bbfcd5af2bc92db" };
+const currentReplay = { ...replay, build: "16.23.841.8428" };
+const currentOptions = { allowCurrentBuild: true };
 
 test("rejects unknown replay and client identities", () => {
   const bytes = new Uint8Array(39_463_840);
@@ -28,6 +30,7 @@ test("rejects unknown replay and client identities", () => {
 });
 
 const localClient = process.env.SCOUT_RESEARCH_OPCODE944_MAC_CLIENT;
+const currentClient = process.env.SCOUT_RESEARCH_OPCODE944_CURRENT_MAC_CLIENT;
 const referenceBody = process.env.SCOUT_RESEARCH_OPCODE944_BODY;
 test("rejects unpinned prepared input through both loaders", async () => {
   const sameSize = new Uint8Array(1024);
@@ -45,6 +48,87 @@ test("rejects unpinned prepared input through both loaders", async () => {
     /replay protocol/,
   );
 });
+
+test("requires explicit opt-in for the current build and checks its protocol", async () => {
+  const bytes = new Uint8Array(1024);
+  assert.throws(
+    () => createExactTerrainByteCodecs(bytes, currentReplay),
+    /replay protocol/,
+  );
+  await assert.rejects(
+    createPreparedTerrainByteCodecs(bytes, currentReplay),
+    /replay protocol/,
+  );
+  assert.throws(
+    () =>
+      createExactTerrainByteCodecs(
+        bytes,
+        { ...currentReplay, protocol: "0" },
+        currentOptions,
+      ),
+    /replay protocol/,
+  );
+  await assert.rejects(
+    createPreparedTerrainByteCodecs(bytes, currentReplay, currentOptions),
+    /digest/,
+  );
+});
+
+test(
+  "pinned current archive and x86 slice independently reproduce the prepared maps",
+  { skip: !currentClient },
+  async () => {
+    const client = await readFile(currentClient);
+    const slice = client.subarray(0x4000, 0x4000 + 39_463_840);
+    const maps = prepareExactTerrainDecoder(
+      client,
+      currentReplay,
+      currentOptions,
+    );
+    assert.deepEqual(
+      prepareExactTerrainDecoder(slice, currentReplay, currentOptions),
+      maps,
+    );
+    assert.throws(
+      () => createExactTerrainByteCodecs(slice, replay),
+      /client slice/,
+    );
+    if (localClient) {
+      const previousClient = await readFile(localClient);
+      assert.deepEqual(prepareExactTerrainDecoder(previousClient), maps);
+      assert.throws(
+        () =>
+          createExactTerrainByteCodecs(
+            previousClient,
+            currentReplay,
+            currentOptions,
+          ),
+        /archive digest|client slice/,
+      );
+    }
+
+    const codecs = createExactTerrainByteCodecs(
+      slice,
+      currentReplay,
+      currentOptions,
+    );
+    const prepared = await createPreparedTerrainByteCodecs(
+      maps,
+      currentReplay,
+      currentOptions,
+    );
+    for (const [name, decode] of Object.entries(codecs))
+      for (let byte = 0; byte < 256; byte++)
+        assert.equal(decode(byte), prepared[name](byte));
+
+    // A modification to the other architecture must still fail the archive pin.
+    client[client.length - 1] ^= 1;
+    assert.throws(
+      () => createExactTerrainByteCodecs(client, currentReplay, currentOptions),
+      /archive digest/,
+    );
+  },
+);
 
 test(
   "prepared and executable byte codecs agree on every byte",

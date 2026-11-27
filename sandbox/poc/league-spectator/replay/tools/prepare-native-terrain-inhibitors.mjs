@@ -9,7 +9,13 @@ import { mapBinHash } from "./map-scene-assets.mjs";
 import { readMap11PlaceableInventory } from "./map11-world-catalog.mjs";
 import { exportNativeTerrainStructureModels } from "./native-terrain-structure-model-export.mjs";
 import { prepareNativeTerrainInhibitors } from "./research/native-terrain-inhibitors.mjs";
-import { prepareNativeTerrainTurrets } from "./research/native-terrain-turrets.mjs";
+import { championArchiveExecutableHashes } from "./research/native-terrain-champion-model-catalog.mjs";
+import { currentTerrainPositionBuild } from "./research/native-terrain-byte-codecs.mjs";
+import {
+  currentMap11WadIndexSha256,
+  prepareNativeTerrainTurrets,
+  turretPlacementReceiptDigests,
+} from "./research/native-terrain-turrets.mjs";
 import {
   readKeyedPlaceableSpan,
   uniqueInstalledOffset,
@@ -38,11 +44,20 @@ if (parent !== cache && !parent.startsWith(cache + sep))
 const destination = join(parent, basename(output));
 const bytes = (path) => Bun.file(path).bytes();
 const archive = "DATA/FINAL/Maps/Shipping/Map11.wad.client";
+const replay = Uint8Array.from(await bytes(replayFile));
+const options = { allowCurrentBuild: true };
+const prepared = prepareReplayForSeek(
+  replay.buffer,
+  (input, target) =>
+    zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+  options,
+);
+const { packetReader } = prepared;
+const current = packetReader.build === currentTerrainPositionBuild;
 const receiptBytes = await bytes(receiptFile);
 const placementReceiptSha256 = sha(receiptBytes);
 if (
-  placementReceiptSha256 !==
-  "e8b440a974777974ed09cfc799b0e21ed01ee6a809543e3fe04a639fca04ed40"
+  placementReceiptSha256 !== turretPlacementReceiptDigests[packetReader.build]
 )
   throw Error("Unexpected exact Map11 turret placement receipt");
 const receipt = JSON.parse(
@@ -50,16 +65,17 @@ const receipt = JSON.parse(
 );
 const executable = join(installation, "Game", "League of Legends.exe");
 const installedExeSha256 = sha(await bytes(executable));
-if (
-  installedExeSha256 !==
-  "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156"
-)
+if (installedExeSha256 !== championArchiveExecutableHashes[packetReader.build])
   throw Error("Installed game executable differs from reviewed build");
-const wad = await openLocalWad(installation, archive, Bun.zstdDecompressSync);
-const [archived, installedBytes, replayBytes] = await Promise.all([
+const wad = await openLocalWad(
+  installation,
+  archive,
+  Bun.zstdDecompressSync,
+  current ? currentMap11WadIndexSha256 : undefined,
+);
+const [archived, installedBytes] = await Promise.all([
   bytes(archivedMaterials),
   wad(receipt.entryPath),
-  bytes(replayFile),
 ]);
 const installed = Buffer.from(installedBytes);
 if (
@@ -72,13 +88,8 @@ const tree = readExactMapBin(archived, receipt.archivedBuild, {
 });
 const inventory = readMap11PlaceableInventory(tree, "09e8f830");
 const chunks = new Map(tree.objects.map((object) => [object.pathHash, object]));
-const replay = Uint8Array.from(replayBytes);
-const prepared = prepareReplayForSeek(replay.buffer, (input, target) =>
-  zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
-);
-const { packetReader } = prepared;
-const { opening } = prepareNativeTerrainTurrets(prepared, receipt);
-const inhibitors = prepareNativeTerrainInhibitors(prepared);
+const { opening } = prepareNativeTerrainTurrets(prepared, receipt, options);
+const inhibitors = prepareNativeTerrainInhibitors(prepared, options);
 const openingInhibitors = new Set(
   inhibitors.read(0).inhibitors.map(({ context }) => context),
 );
@@ -183,6 +194,12 @@ const manifest = {
   turretAnchors,
   instances,
   losses: inhibitors.losses,
+  ...(current
+    ? {
+        presentationOmissions: inhibitors.presentationOmissions,
+        unresolvedSnapshotStates: inhibitors.unresolvedSnapshotStates,
+      }
+    : {}),
 };
 await writeFile(
   join(destination, "manifest.json"),

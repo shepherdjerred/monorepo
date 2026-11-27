@@ -1,9 +1,24 @@
-const build = "16.23.840.6595";
-const protocol = "8bbfcd5af2bc92db";
+import {
+  currentTerrainPositionBuild,
+  isExactTerrainReplay,
+} from "./native-terrain-byte-codecs.mjs";
+
+const compatibilityVersions = new Map([
+  ["16.23.840.6595", "16.23.8406595"],
+  [currentTerrainPositionBuild, "16.23.8418428"],
+]);
 const materialsPath = "data/maps/mapgeometry/map11/base_srx.materials.bin";
 const installedMaterialsSha256 =
   "ed38cba7aaa4390e8b2a2cfe778d5f1151152b9b97f2c90883c17b27b510d67a";
 const placeableCount = 24;
+export const turretPlacementReceiptDigests = Object.freeze({
+  "16.23.840.6595":
+    "e8b440a974777974ed09cfc799b0e21ed01ee6a809543e3fe04a639fca04ed40",
+  [currentTerrainPositionBuild]:
+    "5bef1df159d14f9a75d7c8f193cc5a396a85ec945815bfcce9bf80b8fb3d675c",
+});
+export const currentMap11WadIndexSha256 =
+  "bd7d3d901aa1c96eb7f4969fdafedf500f99f636b1653ea45233274ac34e8b92";
 
 // Opening opcode 921 uses three substitutions for decimal instance-name
 // suffixes in this protocol. For the reverse form the name suffix appears
@@ -51,9 +66,10 @@ function readMapNameHash(payload) {
   return value;
 }
 
-function readInstalledPlacements(receipt) {
+function readInstalledPlacements(receipt, build) {
   if (
-    receipt?.installedCompatibilityVersion?.split("+")[0] !== "16.23.8406595" ||
+    receipt?.installedCompatibilityVersion?.split("+")[0] !==
+      compatibilityVersions.get(build) ||
     receipt.installedSha256 !== installedMaterialsSha256 ||
     receipt.entryPath !== materialsPath ||
     receipt.attackableType !== 0 ||
@@ -124,16 +140,65 @@ function readOpeningBindings(packetReader, placements) {
   return bindings;
 }
 
+function findCurrentPresentationOmission(packetReader, losses) {
+  const loss = losses.find(
+    ({ context, mapNameHash, timeSeconds }) =>
+      context === 1073742154 &&
+      mapNameHash === 392430785 &&
+      timeSeconds === 2392.406078125,
+  );
+  if (!loss) return [];
+  const { keyframe, packets } = packetReader.read(2400.68212890625);
+  if (keyframe.timeSeconds !== 2400.68212890625)
+    throw Error("Expected the indexed disputed turret snapshot");
+  const candidates = [];
+  let opcode;
+  let context = 0;
+  for (const packet of packets) {
+    if (packet.stream !== 2 || packet.chunkOffset !== keyframe.chunkOffset)
+      break;
+    opcode = packet.explicitOpcode ?? opcode;
+    context =
+      packet.marker & 32
+        ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
+        : packet.paramBits;
+    if (
+      context === loss.context &&
+      opcode === 1012 &&
+      packet.payload.length === 41
+    )
+      candidates.push(packet.payload[13]);
+  }
+  if (candidates.length !== 1 || candidates[0] !== 0xed)
+    throw Error("Unexpected disputed turret snapshot evidence");
+  return [
+    {
+      context: loss.context,
+      mapNameHash: loss.mapNameHash,
+      reason: "Recorded turret snapshot indicates alive after verified loss",
+      lossTimeSeconds: loss.timeSeconds,
+      snapshotTimeSeconds: keyframe.timeSeconds,
+      snapshotStateByte: candidates[0],
+    },
+  ];
+}
+
 /** Place only the corroborated turret losses and their seek-state cohort. */
-export function prepareNativeTerrainTurrets(prepared, placementReceipt) {
+export function prepareNativeTerrainTurrets(
+  prepared,
+  placementReceipt,
+  options,
+) {
   const { packetReader, observations, readTurretState } = prepared;
   if (
-    packetReader.build !== build ||
-    packetReader.protocol !== protocol ||
+    !isExactTerrainReplay(packetReader, options) ||
     !Array.isArray(observations.turrets)
   )
     throw Error("Expected exact-build Map11 replay turret observations");
-  const placements = readInstalledPlacements(placementReceipt);
+  const placements = readInstalledPlacements(
+    placementReceipt,
+    packetReader.build,
+  );
   const bindings = readOpeningBindings(packetReader, placements);
   const withPlacement = (row) => {
     const binding = bindings.get(row.context);
@@ -141,12 +206,24 @@ export function prepareNativeTerrainTurrets(prepared, placementReceipt) {
       throw Error("Turret loss or state has no verified Map11 position");
     return { ...row, ...binding };
   };
+  const losses = observations.turrets.map(withPlacement);
+  const presentationOmissions =
+    packetReader.build === currentTerrainPositionBuild
+      ? findCurrentPresentationOmission(packetReader, losses)
+      : [];
+  const omittedContexts = new Set(
+    presentationOmissions.map(({ context }) => context),
+  );
   return {
     opening: Array.from(bindings, ([context, binding]) => ({
       context,
       ...binding,
     })),
-    losses: observations.turrets.map(withPlacement),
+    losses,
+    renderableLosses: losses.filter(
+      ({ context }) => !omittedContexts.has(context),
+    ),
+    presentationOmissions,
     read(timeSeconds, options) {
       const state = readTurretState(timeSeconds, options);
       if (!state) throw Error("Prepared turret state is unavailable");

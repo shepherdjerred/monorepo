@@ -5,6 +5,11 @@ import { dirname, join } from "node:path";
 import { archivedAnimationFormat } from "./archived-animation-format.mjs";
 import { readExactMapBin } from "./exact-map-bin.mjs";
 import { mapBinHash } from "./map-scene-assets.mjs";
+import {
+  archivedChampionBuild,
+  championArchiveExecutableHashes,
+  currentChampionBuild,
+} from "./research/native-terrain-champion-model-catalog.mjs";
 import { openLocalWad } from "./wad.mjs";
 
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -15,7 +20,7 @@ export async function auditChampionAnimation(
   manifestPath,
   replayBytes,
   nameProbes,
-  { includeEvents = false } = {},
+  { includeEvents = false, allowCurrentBuild = false } = {},
 ) {
   const manifestBytes = await readFile(manifestPath);
   const manifest = JSON.parse(manifestBytes);
@@ -23,20 +28,30 @@ export async function auditChampionAnimation(
     await readFile(join(installation, "Game", "League of Legends.exe")),
   );
   const replaySha256 = hash(replayBytes);
+  const current = allowCurrentBuild && manifest.build === currentChampionBuild;
+  const selected =
+    current && manifest.nativeOpening?.replaySha256 === replaySha256
+      ? manifest.nativeOpening.rows.map(({ context, champion, skinId }) => ({
+          ...manifest.skins.find(
+            (skin) => skin.champion === champion && skin.skinId === skinId,
+          ),
+          context,
+        }))
+      : manifest.actors;
   if (
     manifest.schema !== 1 ||
-    manifest.build !== "16.23.840.6595" ||
-    executableSha256 !==
-      "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156" ||
+    (!current && manifest.build !== archivedChampionBuild) ||
+    executableSha256 !== championArchiveExecutableHashes[manifest.build] ||
     manifest.installedExeSha256 !== executableSha256 ||
-    manifest.replaySha256 !== replaySha256 ||
-    manifest.actors.length !== 10 ||
-    new Set(manifest.actors.map(({ context }) => context)).size !== 10
+    (current ? manifest.nativeOpening?.replaySha256 : manifest.replaySha256) !==
+      replaySha256 ||
+    selected?.length !== 10 ||
+    new Set(selected.map(({ context }) => context)).size !== 10
   )
     throw Error("Exact ten-participant champion provenance required");
 
   const actors = [];
-  for (const actor of manifest.actors) {
+  for (const actor of selected) {
     const { champion, skinId, context, rootPath, resources, archive } = actor;
     if (
       !/^[A-Za-z0-9_]+$/.test(champion) ||

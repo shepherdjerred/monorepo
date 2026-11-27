@@ -36,9 +36,26 @@ async function verifyLaterCue(
 
 export async function verifyRecordedChampionAnimation(
   page: Page,
-  fixture: { long: boolean; cueCount: number },
+  fixture: { current: boolean; long: boolean; cueCount: number },
   testInfo: TestInfo,
 ) {
+  if (fixture.current) {
+    expect(fixture.cueCount).toBe(502);
+    await verifyLaterCue(page, testInfo, {
+      actor: "1073742167",
+      indexCount: 16_995,
+      clocks: [57.2, 57.8],
+      screenshot: "recorded-current-wukong-action.png",
+    });
+    expect(await paletteAt(page, 58.3, 16_995)).toBeUndefined();
+    await verifyLaterCue(page, testInfo, {
+      actor: "1073742164",
+      indexCount: 20_190,
+      clocks: [864.1, 864.8],
+      screenshot: "recorded-current-jhin-reload.png",
+    });
+    return;
+  }
   const { long, cueCount } = fixture;
   const contexts = { wukong: "1073742167", jinx: "1073742169" };
   const target = long ? contexts.wukong : contexts.jinx;

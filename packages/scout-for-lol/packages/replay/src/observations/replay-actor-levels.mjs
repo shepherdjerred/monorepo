@@ -5,25 +5,57 @@ import { replayPacketEnvelopes } from "./transport.mjs";
 const levelByCode = new Map(
   [
     0x72, 0xc5, 0x51, 0x5e, 0x9d, 0x43, 0x5f, 0x81, 0x94, 0xf8, 0x9a, 0x89,
-    0xae, 0x8f, 0x93, 0xef,
+    0xae, 0x8f, 0x93, 0xef, 0x7c, 0x53,
   ].map((code, index) => [code, 3 + index]),
 );
 const decoder = new TextDecoder("utf-8", { fatal: true });
+const defaultLevelCap = 18;
+export const supportsLevelOverride = ({ build, protocol }) =>
+  build === "16.23.840.6595" && protocol === "8bbfcd5af2bc92db";
+export const maximumReplayActorLevel = (
+  replay,
+  { allowCurrentBuild = false } = {},
+) =>
+  allowCurrentBuild &&
+  replay.build === "16.23.841.8428" &&
+  replay.protocol === "8bbfcd5af2bc92db"
+    ? 20
+    : supportsLevelOverride(replay)
+      ? 19
+      : defaultLevelCap;
+const rotateByte = (value, shift) =>
+  ((value << shift) | (value >>> (8 - shift))) & 0xff;
 
-function footerLevels(replay) {
+// The exact 16.23.840.6595 opcode 652 reader and setter store an optional
+// override of the standard level cap.
+export function readClassicLevelCap(payload) {
+  const selector = payload[0] & 7;
+  if (payload.length !== (selector < 4 ? 1 : 2))
+    throw Error("Invalid recorded champion level-cap body");
+  const encoded =
+    selector < 4 ? [0x43, 0x83, 0xc2, 0x03][selector] : payload[1];
+  const override = (rotateByte(rotateByte(encoded, 4) ^ 0xff, 6) + 14) & 0xff;
+  return override || defaultLevelCap;
+}
+
+function footerLevels(replay, maximumLevel) {
   const bytes = replay.bytes.subarray(
     replay.end + 256,
     replay.bytes.length - 4,
   );
   const rows = JSON.parse(JSON.parse(decoder.decode(bytes)).statsJson);
   return rows.map(({ LEVEL }) => {
-    if (typeof LEVEL !== "string" || !/^(?:[1-9]|1[0-8])$/.test(LEVEL))
+    if (
+      typeof LEVEL !== "string" ||
+      !/^(?:[1-9]|1[0-9]|20)$/.test(LEVEL) ||
+      Number(LEVEL) > maximumLevel
+    )
       throw Error("Invalid champion level in the replay footer");
     return Number(LEVEL);
   });
 }
 
-function nextLevel(actor, packet) {
+function nextLevel(actor, packet, maximumLevel) {
   const { payload, timeSeconds, secondTimeBits } = packet;
   if (actor.level === 1 && payload.length === 1) {
     if (payload[0] === 0x85) return 2;
@@ -43,13 +75,26 @@ function nextLevel(actor, packet) {
     }
   } else if (payload.length === 2) {
     const level = levelByCode.get(payload[1]);
-    if (level === actor.level + 1) return level;
+    if (
+      level === actor.level + 1 &&
+      level <= actor.levelCap &&
+      level <= maximumLevel
+    )
+      return level;
+    // Recorded 16.23.840.6595 matches also reannounce level nine.
+    if (maximumLevel > defaultLevelCap && level === 9 && actor.level === 9)
+      return 9;
   }
   throw Error("Unrecognized or nonconsecutive actor level notification");
 }
 
 /** Decode the observed 16.23 level notifications and reconcile the final roster. */
-export function decodeActorLevelEnvelopes(envelopes, binding, expectedLevels) {
+export function decodeActorLevelEnvelopes(
+  envelopes,
+  binding,
+  expectedLevels,
+  maximumLevel = defaultLevelCap,
+) {
   const packets = [];
   let context;
   let opcode;
@@ -63,10 +108,15 @@ export function decodeActorLevelEnvelopes(envelopes, binding, expectedLevels) {
     const { marker, paramBits } = packet;
     context =
       marker & 32 ? (context + ((paramBits << 24) >> 24)) >>> 0 : paramBits;
-    if (opcode === 1011)
-      packets.push({ context, ...levelPacketFields(packet) });
+    if (opcode === 1011 || (maximumLevel > defaultLevelCap && opcode === 652))
+      packets.push({ context, opcode, ...levelPacketFields(packet) });
   }
-  return decodeActorLevelPackets(packets, binding, expectedLevels);
+  return decodeActorLevelPackets(
+    packets,
+    binding,
+    expectedLevels,
+    maximumLevel,
+  );
 }
 
 function levelPacketFields({ payload, timeSeconds, secondTimeBits }) {
@@ -77,7 +127,12 @@ function levelPacketFields({ payload, timeSeconds, secondTimeBits }) {
   };
 }
 
-function decodeActorLevelPackets(packets, binding, expectedLevels) {
+function decodeActorLevelPackets(
+  packets,
+  binding,
+  expectedLevels,
+  maximumLevel,
+) {
   const states = new Map();
   const visitedRows = new Set();
   for (const { context, footerRow } of [
@@ -97,6 +152,7 @@ function decodeActorLevelPackets(packets, binding, expectedLevels) {
     states.set(context, {
       footerRow,
       level: 1,
+      levelCap: defaultLevelCap,
       bootstrapClock: null,
     });
   }
@@ -113,10 +169,16 @@ function decodeActorLevelPackets(packets, binding, expectedLevels) {
     contexts.map((context, index) => [context, Math.floor(index / 5)]),
   );
   for (const packet of packets) {
-    const { context, timeSeconds, secondTimeBits } = packet;
+    const { context, opcode, timeSeconds, secondTimeBits } = packet;
     const actor = states.get(context);
     if (!actor) continue;
-    actor.level = nextLevel(actor, packet);
+    if (opcode === 652) {
+      actor.levelCap = readClassicLevelCap(packet.payload);
+      continue;
+    }
+    const level = nextLevel(actor, packet, maximumLevel);
+    if (level === actor.level) continue;
+    actor.level = level;
     events.push({
       kind: "actor-level",
       context,
@@ -156,22 +218,34 @@ function decodeActorLevelPackets(packets, binding, expectedLevels) {
 }
 
 /** Observe only level packet fields during the shared combat/binding scan. */
-export function createReplayActorLevelObserver(replay) {
+export function createReplayActorLevelObserver(replay, options) {
   const packets = [];
+  const maximumLevel = maximumReplayActorLevel(replay, options);
   return {
     observeGameplayPacket(packet, opcode, context) {
-      if (opcode === 1011)
-        packets.push({ context, ...levelPacketFields(packet) });
+      if (opcode === 1011 || (maximumLevel > defaultLevelCap && opcode === 652))
+        packets.push({ context, opcode, ...levelPacketFields(packet) });
     },
     finish(binding) {
-      return decodeActorLevelPackets(packets, binding, footerLevels(replay));
+      return decodeActorLevelPackets(
+        packets,
+        binding,
+        footerLevels(replay, maximumLevel),
+        maximumLevel,
+      );
     },
   };
 }
 
-export function readReplayActorLevels(replay, decompress, binding) {
+export function readReplayActorLevels(replay, decompress, binding, options) {
+  const maximumLevel = maximumReplayActorLevel(replay, options);
   const envelopes = replayTimedPacketEnvelopes(
     replayPacketEnvelopes(replay, decompress),
   );
-  return decodeActorLevelEnvelopes(envelopes, binding, footerLevels(replay));
+  return decodeActorLevelEnvelopes(
+    envelopes,
+    binding,
+    footerLevels(replay, maximumLevel),
+    maximumLevel,
+  );
 }

@@ -18,11 +18,16 @@ import {
   createNativeTerrainChampionCreation88Reader,
 } from "./research/native-terrain-champion-identities.mjs";
 import { createExactTerrainByteCodecs } from "./research/native-terrain-positions-944.mjs";
+import {
+  archivedChampionBuild,
+  championArchiveExecutableHashes,
+  currentChampionBuild,
+  verifyNativeCatalogOpening,
+} from "./research/native-terrain-champion-model-catalog.mjs";
 import { openLocalWad } from "./wad.mjs";
 
 const installedExeSha256 =
-  "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156";
-const build = "16.23.840.6595";
+  championArchiveExecutableHashes[archivedChampionBuild];
 const protocol = "8bbfcd5af2bc92db";
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const inflate = (input, output) =>
@@ -36,12 +41,16 @@ const [installation, replayPath, decoderPath, outputPath] = census
   : archivedSkins
     ? [args[1], undefined, undefined, args[6]]
     : args;
-if (!installation || !outputPath || args.length !== (census ? 3 : archivedSkins ? 7 : 4))
+if (
+  !installation ||
+  !outputPath ||
+  args.length !== (census ? 3 : archivedSkins ? 7 : 4)
+)
   throw Error(
     [
       "Usage: bun prepare-native-terrain-champions.mjs <installation> <local ROFL> <decoder> <new .cache directory>",
       "       bun prepare-native-terrain-champions.mjs --archive-census <installation> <new .cache directory>",
-      "       bun prepare-native-terrain-champions.mjs --prepare-archived-skins <installation> <census.json> <census SHA-256> <selection.json> <selection SHA-256> <new .cache directory>",
+      "       bun prepare-native-terrain-champions.mjs --prepare-archived-skins <installation> <census.json> <census SHA-256> <selection or native opening proof JSON> <selection or proof SHA-256> <new .cache directory>",
     ].join("\n"),
   );
 const out = resolve(outputPath);
@@ -53,22 +62,30 @@ if (
   resolve(".cache", rel) !== out
 )
   throw Error("Champion exports must stay in a private .cache directory");
-if (
-  hash(await readFile(join(installation, "Game", "League of Legends.exe"))) !==
-  installedExeSha256
-)
-  throw Error(
-    "Installed client differs from the reviewed 16.23.840.6595 executable",
-  );
+// Archived extraction verifies the selected WAD indices against the pinned
+// census. The executable remains required to create a census or read a replay.
+const readExecutableHash = async () =>
+  hash(await readFile(join(installation, "Game", "League of Legends.exe")));
 
 if (census) {
-  await writeArchiveCensus();
+  const executableHash = await readExecutableHash();
+  const archiveBuild = Object.keys(championArchiveExecutableHashes).find(
+    (candidate) =>
+      championArchiveExecutableHashes[candidate] === executableHash,
+  );
+  assert.ok(archiveBuild, "Unreviewed installed executable for archive census");
+  await writeArchiveCensus(archiveBuild, executableHash);
   process.exit(0);
 }
 if (archivedSkins) {
   await writeSelectedArchivedSkins();
   process.exit(0);
 }
+assert.equal(
+  await readExecutableHash(),
+  installedExeSha256,
+  "Installed client differs from the reviewed replay extraction executable",
+);
 
 const replayBytes = await Bun.file(replayPath).arrayBuffer();
 const prepared = prepareReplayForSeek(replayBytes, inflate);
@@ -141,10 +158,12 @@ async function exportSkin(champion, skinId, censusArchive, censusSkin) {
     throw Error("Unresolved original skin selector");
   const directory = champion.toLowerCase() + "-" + skinId;
   const archive = `DATA/FINAL/Champions/${champion}.wad.client`;
+  if (censusArchive) assert.equal(archive, censusArchive.archive);
   const read = await openLocalWad(
     installation,
     archive,
     Bun.zstdDecompressSync,
+    censusArchive?.archiveIndexSha256,
   );
   const skinPath = `data/characters/${champion.toLowerCase()}/skins/skin${skinId}.bin`;
   const skinBytes = await read(skinPath);
@@ -162,10 +181,6 @@ async function exportSkin(champion, skinId, censusArchive, censusSkin) {
   const materialOverrideCount =
     field(mesh, "materialOverride")?.elements?.length ?? 0;
   if (censusSkin) {
-    assert.equal(archive, censusArchive.archive);
-    const index = await readArchiveIndex(archive);
-    assert.equal(index.archiveIndexBytes, censusArchive.archiveIndexBytes);
-    assert.equal(index.archiveIndexSha256, censusArchive.archiveIndexSha256);
     assert.equal(hash(skinBytes), censusSkin.sourceSha256);
     assert.equal(root.pathHash, censusSkin.rootPathHash);
     assert.deepEqual(field(mesh, "simpleSkin"), censusSkin.simpleSkin);
@@ -257,27 +272,65 @@ async function readArchiveIndex(archive) {
 async function writeSelectedArchivedSkins() {
   await requireCanonicalPrivateOutput();
   const [, , censusPath, censusSha256, selectionPath, selectionSha256] = args;
-  async function readPinned(path, sha256, kind) {
+  async function readPinned(path, sha256) {
     assert.match(sha256, /^[a-f0-9]{64}$/);
     const bytes = await readFile(path);
-    assert.equal(hash(bytes), sha256, `${kind} digest differs`);
+    assert.equal(hash(bytes), sha256, "Archive input digest differs");
     const value = JSON.parse(bytes);
     assert.equal(value.schema, 1);
-    assert.equal(value.kind, kind);
-    assert.equal(value.build, build);
     assert.equal(value.protocol, protocol);
     return value;
   }
-  const source = await readPinned(censusPath, censusSha256, "exact-native-terrain-archived-skin-census");
-  const selection = await readPinned(selectionPath, selectionSha256, "exact-native-terrain-skin-selection");
-  assert.equal(source.installedExeSha256, installedExeSha256);
-  assert(Array.isArray(selection.skins) && selection.skins.length > 0);
+  const source = await readPinned(censusPath, censusSha256);
+  assert.equal(source.kind, "exact-native-terrain-archived-skin-census");
+  const build = source.build;
+  assert.ok(Object.hasOwn(championArchiveExecutableHashes, build));
+  const executableHash = championArchiveExecutableHashes[build];
+  assert.equal(source.installedExeSha256, executableHash);
+  const selection = await readPinned(selectionPath, selectionSha256);
+  let nativeOpening;
+  let requestedSkins;
+  if (build === currentChampionBuild) {
+    assert.equal(await readExecutableHash(), executableHash);
+    assert.equal(
+      selection.kind,
+      "recorded-opening-champion-skin-native-log-proof",
+    );
+    assert.equal(selection.replayBuild, build);
+    assert.match(selection.replaySha256, /^[a-f0-9]{64}$/);
+    assert.match(selection.nativeLogSha256, /^[a-f0-9]{64}$/);
+    assert.equal(selection.nativeSelectionsMatched, 10);
+    requestedSkins = selection.rows;
+    nativeOpening = {
+      replaySha256: selection.replaySha256,
+      nativeLogSha256: selection.nativeLogSha256,
+      proofSha256: selectionSha256,
+      rows: requestedSkins.map(({ context, champion, skinId }) => ({
+        context,
+        champion,
+        skinId,
+      })),
+    };
+    verifyNativeCatalogOpening(
+      nativeOpening,
+      requestedSkins,
+      selection.replaySha256,
+    );
+  } else {
+    assert.equal(selection.kind, "exact-native-terrain-skin-selection");
+    assert.equal(selection.build, build);
+    requestedSkins = selection.skins;
+  }
+  assert(Array.isArray(requestedSkins) && requestedSkins.length > 0);
   const archives = new Map(
-    source.archiveRoots.map((archive) => [archive.champion.toLowerCase(), archive]),
+    source.archiveRoots.map((archive) => [
+      archive.champion.toLowerCase(),
+      archive,
+    ]),
   );
   assert.equal(archives.size, source.archiveRoots.length);
   const selected = new Map();
-  for (const { champion, skinId } of selection.skins) {
+  for (const { champion, skinId } of requestedSkins) {
     assert.equal(typeof champion, "string");
     assert.match(champion, /^[a-z0-9_]+$/i);
     assert(Number.isSafeInteger(skinId) && skinId >= 0 && skinId <= 10000);
@@ -285,8 +338,12 @@ async function writeSelectedArchivedSkins() {
     const archive = archives.get(normalized);
     const matches = archive?.skins.filter((skin) => skin.skinId === skinId);
     const key = `${normalized}-${skinId}`;
-    assert(matches?.length === 1, `Skin absent from exact archive census: ${key}`);
-    assert(!selected.has(key), `Duplicate skin selection: ${key}`);
+    assert(
+      matches?.length === 1,
+      `Skin absent from exact archive census: ${key}`,
+    );
+    if (nativeOpening === undefined)
+      assert(!selected.has(key), `Duplicate skin selection: ${key}`);
     selected.set(key, [archive, matches[0]]);
   }
   await mkdir(out);
@@ -295,28 +352,38 @@ async function writeSelectedArchivedSkins() {
     const [archive, skin] = selected.get(key);
     const { champion } = archive;
     const { skinId } = skin;
+    assert.match(archive.archiveIndexSha256, /^[a-f0-9]{64}$/);
     skins.push({
       champion,
       skinId,
+      archiveIndexSha256: archive.archiveIndexSha256,
       ...(await exportSkin(champion, skinId, archive, skin)),
     });
   }
-  const manifest = JSON.stringify({
-    schema: 1,
-    kind: "exact-native-terrain-skin-inputs",
-    build,
-    protocol,
-    installedExeSha256,
-    sourceCensusSha256: censusSha256,
-    selectionSha256,
-    scope: "Private archived model inputs. Match legality, conversion and model admission are separate.",
-    skins,
-  }, null, 2);
+  const manifest = JSON.stringify(
+    {
+      schema: 1,
+      kind: "exact-native-terrain-skin-inputs",
+      build,
+      protocol,
+      installedExeSha256: executableHash,
+      sourceCensusSha256: censusSha256,
+      selectionSha256,
+      ...(nativeOpening === undefined ? {} : { nativeOpening }),
+      scope:
+        "Private archived model inputs. Match legality, conversion and model admission are separate.",
+      skins,
+    },
+    null,
+    2,
+  );
   await writeFile(join(out, "manifest.json"), manifest, { flag: "wx" });
-  console.log(JSON.stringify({ skins: skins.length, manifestSha256: hash(manifest) }));
+  console.log(
+    JSON.stringify({ skins: skins.length, manifestSha256: hash(manifest) }),
+  );
 }
 
-async function writeArchiveCensus() {
+async function writeArchiveCensus(build, installedExeSha256) {
   await requireCanonicalPrivateOutput();
   const archiveDirectory = "DATA/FINAL/Champions";
   const archiveFiles = (

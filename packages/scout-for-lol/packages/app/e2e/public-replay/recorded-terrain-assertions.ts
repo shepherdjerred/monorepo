@@ -31,6 +31,8 @@ export async function readRecordedTerrainRanges(
       points,
     ]),
   );
+  const omitted = new Set(fixture.terrainVisibility.omittedMeshControllerIds);
+  const windows = fixture.terrainVisibility.unresolvedWindows ?? [];
   const materialNames = new Set(
     fixture.terrainMaterials?.bindings.map(({ material }) => material),
   );
@@ -57,6 +59,16 @@ export async function readRecordedTerrainRanges(
   });
   return (time: number) =>
     ranges.filter(({ controller }) => {
+      if (omitted.has(controller)) return false;
+      if (
+        windows.some(
+          ({ controllerId, startSeconds, endSeconds }) =>
+            controllerId === controller &&
+            time >= startSeconds &&
+            time < endSeconds,
+        )
+      )
+        return false;
       const points = tracks.get(controller);
       if (points === undefined) return true;
       const active = points.findLast(([at]) => at <= time);
@@ -134,11 +146,37 @@ function verifyTerrainRanges(
 
 export async function verifyRecordedTerrainTransitions(
   page: Page,
-  rangesAt: TerrainRanges,
+  rangesAt: TerrainRanges | undefined,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   testInfo: TestInfo,
-  infernal: boolean,
 ) {
-  if (infernal) {
+  if (rangesAt === undefined || fixture.terrainVisibility === undefined) return;
+  // Keep the reviewed timing and replacement-geometry assertions for the
+  // reference match. Held-out matches use the transition times in their tracks.
+  if (
+    fixture.descriptor.sha256 !==
+    "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668"
+  ) {
+    const tenths = new Set(
+      [
+        ...fixture.terrainVisibility.tracks.flatMap(({ points }) =>
+          points.slice(1).map(([at]) => at),
+        ),
+        ...(fixture.terrainVisibility.unresolvedWindows ?? []).flatMap(
+          ({ startSeconds, endSeconds }) => [startSeconds, endSeconds],
+        ),
+      ].map((at) => Math.ceil(at * 10)),
+    );
+    for (const at of [...tenths].sort((left, right) => left - right)) {
+      await verifyTransitionDraws(page, rangesAt, testInfo, {
+        name: `terrain-transition-${String(at)}`,
+        before: (at - 1) / 10,
+        after: at / 10,
+      });
+    }
+    return;
+  }
+  if (Bun.env["SCOUT_REPLAY_E2E_EXPECT_INFERNAL_TERRAIN"] === "1") {
     await verifyRecordedTerrainTransition(page, rangesAt, testInfo, {
       name: "infernal",
       before: 762,
@@ -183,6 +221,21 @@ async function verifyRecordedTerrainTransition(
   }
   expect(beforeControllers.has(replacement)).toBe(false);
   expect(afterControllers.has(replacement)).toBe(true);
+  await verifyTransitionDraws(page, rangesAt, testInfo, {
+    name,
+    before,
+    after,
+  });
+}
+
+async function verifyTransitionDraws(
+  page: Page,
+  rangesAt: TerrainRanges,
+  testInfo: TestInfo,
+  { name, before, after }: { name: string; before: number; after: number },
+) {
+  const beforeRanges = rangesAt(before);
+  const afterRanges = rangesAt(after);
   const canvas = page.getByLabel("League of Legends replay scene");
   await seek(page, before);
   verifyTerrainRanges(await readRecordedDraw(page), beforeRanges);

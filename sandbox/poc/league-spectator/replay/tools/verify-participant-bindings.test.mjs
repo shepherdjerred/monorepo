@@ -86,3 +86,43 @@ test("requires corroboration at the same exact clock and exact footer totals", (
     ),
   ).toThrow("differ from the footer totals");
 });
+
+test("the current-build profile excludes only an exact concurrent own-kill witness", () => {
+  const concurrentKill = { ...events[0], context: 1002 };
+  const ownKillWitness = {
+    opcode: 700,
+    context: concurrentKill.context,
+    secondTimeBits: concurrentKill.secondTimeBits,
+    timeSeconds: concurrentKill.timeSeconds,
+    payloadLength: 5,
+  };
+  const expected = rows.map((row) => [...row]);
+  expected[2] = [1, 0, 0];
+  const read = (packets, currentBuild = true) =>
+    matchParticipantCombatProfiles(
+      opening,
+      [...events, concurrentKill],
+      packets,
+      expected,
+      currentBuild,
+    );
+  expect(read([...corroborated, ownKillWitness]).assists).toEqual([
+    expect.objectContaining({ context: 1001 }),
+  ]);
+  for (const witness of [
+    { ...ownKillWitness, payloadLength: 4 },
+    { ...ownKillWitness, context: 1003 },
+  ])
+    expect(() => read([...corroborated, witness])).toThrow(
+      "Assist clocks do not corroborate",
+    );
+  expect(() => read([...corroborated, ownKillWitness, ownKillWitness])).toThrow(
+    "Assist clocks do not corroborate",
+  );
+  expect(() => read([...corroborated, ownKillWitness], false)).toThrow(
+    "Assist clocks do not corroborate",
+  );
+  expect(() => read([...corroborated.slice(0, 2), ownKillWitness])).toThrow(
+    "Assist clocks do not corroborate",
+  );
+});

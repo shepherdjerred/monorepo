@@ -3,6 +3,7 @@ import {
   createReplayActorKdaTracks,
   sampleReplayActorKda,
 } from "./replay-actor-kda.mjs";
+import { maximumReplayActorLevel } from "./replay-actor-levels.mjs";
 function withinReplay(timeSeconds, duration) {
   return (
     Number.isFinite(timeSeconds) && timeSeconds >= 0 && timeSeconds <= duration
@@ -37,6 +38,9 @@ export function createReplayActorStateSampler({
   )
     throw Error("Actor state requires verified level and return evidence");
   const { initialLevel } = levels;
+  const maximumDecodedLevel = maximumReplayActorLevel(replay, {
+    allowCurrentBuild: true,
+  });
   const tracks = createReplayActorKdaTracks(replay, binding);
   for (const track of tracks.values()) {
     track.levels = [];
@@ -59,7 +63,7 @@ export function createReplayActorStateSampler({
       !withinReplay(timeSeconds, duration) ||
       timeSeconds < (previous?.timeSeconds ?? 0) ||
       level !== (previous?.level ?? initialLevel) + 1 ||
-      level > 18
+      level > maximumDecodedLevel
     )
       throw Error("Invalid verified actor level transition");
     track.levels.push({ timeSeconds, level });

@@ -20,14 +20,16 @@ import {
   createNativePositionSceneTrace,
 } from "./research/native-position-scene.mjs";
 import { createNavgridGroundHeight } from "./research/native-terrain-ground.mjs";
+import { currentTerrainPositionBuild } from "./research/native-terrain-byte-codecs.mjs";
 import { bindNativeTerrainChampionIdentities } from "./research/native-terrain-champion-identities.mjs";
 import {
   loadChampionModelCatalog,
   readChampionModelSelections,
 } from "./research/native-terrain-champion-model-catalog.mjs";
+import { validateRecordedTerrainVisibility } from "./research/recorded-terrain-visibility.mjs";
 
 // Reviewed initial-visibility export of the installed 16.23.840.6595 Map11.
-const build = "16.23.840.6595";
+const terrainExportBuild = "16.23.840.6595";
 const localDigests = {
   "map.mapgeo":
     "d6d8d434b977ee43bbc05aeb61d586476c692585da9cf7b2971906091539d1a5",
@@ -47,12 +49,14 @@ const { positionals, values } = parseArgs({
   args: process.argv.slice(2),
   options: {
     "position-decoder": { type: "string" },
+    "scout-recovery-db": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
     "worker-decompressor": { type: "string" },
     "camera-globals": { type: "string" },
     "terrain-materials": { type: "string" },
     "terrain-visibility": { type: "string" },
+    "terrain-visibility-sha256": { type: "string" },
     "infernal-terrain-export": { type: "string" },
     "champion-models": { type: "string" },
     "champion-catalog-sha256": { type: "string" },
@@ -89,6 +93,20 @@ const { positionals, values } = parseArgs({
 const [terrainRoot, threeCore, replayPath, ...receiptPaths] = positionals;
 const rawReplayOnly = receiptPaths.length === 0;
 const privatePackageOutput = values["private-package-output"];
+const recoveryPath = values["scout-recovery-db"];
+const terrainVisibilityPath = values["terrain-visibility"];
+const terrainVisibilityDigest = values["terrain-visibility-sha256"];
+assert.ok(
+  terrainVisibilityDigest === undefined ||
+    (privatePackageOutput !== undefined &&
+      terrainVisibilityPath !== undefined &&
+      /^[a-f\d]{64}$/u.test(terrainVisibilityDigest)),
+  "--terrain-visibility-sha256 requires a SHA-256 pin, --terrain-visibility, and a private package",
+);
+assert.ok(
+  recoveryPath === undefined || privatePackageOutput !== undefined,
+  "Saved Scout Desktop recovery is available for private packages",
+);
 const cameraGlobalsPath = values["camera-globals"];
 assert.ok(
   cameraGlobalsPath === undefined || privatePackageOutput !== undefined,
@@ -204,7 +222,8 @@ assert.ok(
 );
 assert.ok(
   values["champion-catalog-sha256"] === undefined ||
-    (values["champion-models"] !== undefined && privatePackageOutput !== undefined),
+    (values["champion-models"] !== undefined &&
+      privatePackageOutput !== undefined),
   "The champion catalog pin requires --champion-models and a private package output",
 );
 assert.ok(
@@ -305,7 +324,7 @@ async function loadTerrainMaterials(manifestPath, meshes, proof, assetDigests) {
   );
   const manifest = JSON.parse(manifestBytes);
   assert.equal(manifest.schema, 1);
-  assert.equal(manifest.build, build);
+  assert.equal(manifest.build, terrainExportBuild);
   assert.equal(manifest.protocol, proof.protocol);
   assert.deepEqual(manifest.source, {
     wadSha256:
@@ -379,7 +398,11 @@ async function loadTerrainMaterials(manifestPath, meshes, proof, assetDigests) {
   return { bindings, texturedTriangles, routes: materialRoutes };
 }
 
-async function loadLegacyChampionModelRoutes(manifestPath, identity, observations) {
+async function loadLegacyChampionModelRoutes(
+  manifestPath,
+  identity,
+  observations,
+) {
   const exported = JSON.parse(await readFile(manifestPath, "utf8"));
   assert.equal(exported.schema, 1);
   assert.equal(exported.kind, "exact-native-terrain-models");
@@ -825,7 +848,10 @@ async function loadStructureModelRoutes(
       `Structure model ${field} mismatch`,
     );
   assert.equal(exported.placementReceiptSha256, placementSha256);
-  assert.equal(exported.instances.length, 22);
+  const omissions = turrets.presentationOmissions ?? [];
+  assert.deepEqual(exported.presentationOmissions ?? [], omissions);
+  assert.equal(exported.instances.length, 22 - omissions.length);
+  const omittedContexts = new Set(omissions.map(({ context }) => context));
   const { routes, assetIds, bindings } = await loadWorldModelBindings(
     manifestPath,
     exported.assets,
@@ -836,7 +862,9 @@ async function loadStructureModelRoutes(
     turrets.opening.map((instance) => [instance.context, instance]),
   );
   const losses = new Map(
-    turrets.losses.map(({ context, timeSeconds }) => [context, timeSeconds]),
+    (turrets.renderableLosses ?? turrets.losses).map(
+      ({ context, timeSeconds }) => [context, timeSeconds],
+    ),
   );
   const seen = new Set();
   const usedAssets = new Set();
@@ -844,7 +872,12 @@ async function loadStructureModelRoutes(
     ({ context, mapNameHash, transform, assetId, destroyedAtSeconds }) => {
       const surveyed = openings.get(context);
       const modelId = assetIds.get(assetId);
-      assert.ok(surveyed && modelId !== undefined && !seen.has(context));
+      assert.ok(
+        surveyed &&
+          modelId !== undefined &&
+          !seen.has(context) &&
+          !omittedContexts.has(context),
+      );
       seen.add(context);
       usedAssets.add(modelId);
       assert.equal(mapNameHash, surveyed.mapNameHash);
@@ -862,7 +895,7 @@ async function loadStructureModelRoutes(
   );
   assert.ok([...losses.keys()].every((context) => seen.has(context)));
   assert.equal(usedAssets.size, bindings.length);
-  return { bindings, instances, routes };
+  return { bindings, instances, routes, omissions };
 }
 
 async function loadInhibitorModelRoutes(
@@ -872,6 +905,7 @@ async function loadInhibitorModelRoutes(
   prepared,
   turrets,
   placementSha256,
+  decoderOptions,
 ) {
   assert.match(digest, /^[a-f0-9]{64}$/);
   const source = await readFile(manifestPath);
@@ -902,9 +936,15 @@ async function loadInhibitorModelRoutes(
   );
   const { prepareNativeTerrainInhibitors } =
     await import("./research/native-terrain-inhibitors.mjs");
-  const observed = prepareNativeTerrainInhibitors(prepared);
+  const observed = prepareNativeTerrainInhibitors(prepared, decoderOptions);
   assert.notEqual(observed.losses, null);
   assert.deepEqual(exported.losses, observed.losses);
+  const omissions = observed.presentationOmissions ?? [];
+  assert.deepEqual(exported.presentationOmissions ?? [], omissions);
+  assert.deepEqual(
+    exported.unresolvedSnapshotStates ?? [],
+    observed.unresolvedSnapshotStates ?? [],
+  );
   const openingContexts = observed
     .read(0)
     .inhibitors.map(({ context }) => context);
@@ -927,8 +967,11 @@ async function loadInhibitorModelRoutes(
     110,
   );
   const lossTimes = new Map(
-    observed.losses.map(({ context, timeSeconds }) => [context, timeSeconds]),
+    (observed.renderableLosses ?? observed.losses).map(
+      ({ context, timeSeconds }) => [context, timeSeconds],
+    ),
   );
+  const omittedContexts = new Set(omissions.map(({ context }) => context));
   const instances = exported.instances.map(
     ({ context, assetId, transform, team }) => {
       assert.equal(team, assetId === "inhibitor-0" ? 100 : 200);
@@ -944,14 +987,21 @@ async function loadInhibitorModelRoutes(
     },
   );
   assert.equal(instances.filter(({ teamId }) => teamId === 100).length, 3);
-  return { routes, bindings, instances };
+  return {
+    routes,
+    bindings,
+    losses: observed.losses,
+    omittedContexts: [...omittedContexts],
+    instances: instances.filter(({ context }) => !omittedContexts.has(context)),
+  };
 }
 
 async function loadNexusModelRoutes(
   manifestPath,
   identity,
-  packetReader,
+  { packetReader, observations },
   decoderBytes,
+  placementSha,
 ) {
   const exported = JSON.parse(await readFile(manifestPath, "utf8"));
   assert.equal(exported.schema, 1);
@@ -995,16 +1045,28 @@ async function loadNexusModelRoutes(
     new Set(instances.map(({ participantId }) => participantId)).size,
     2,
   );
-  const [cue] = exported.terminalPackets;
-  assert.equal(exported.terminalPackets.length, 1);
-  assert.equal(cue.opcode, 669);
-  assert.equal(cue.animationName, "NexusDeath");
-  // The observed 14-byte form was independently decoded by the original
-  // build's string reader. Unknown terminal payloads remain unadmitted.
-  assert.equal(
-    cue.payloadSha256,
-    "63be8511d25e00d09a0eaa068850153e0d750e18cffb0c523245b40c00fc158f",
-  );
+  const current = identity.build === currentTerrainPositionBuild;
+  const cue = current ? exported.terminalEvidence : exported.terminalPackets[0];
+  if (current) {
+    assert.deepEqual(exported.terminalPackets, []);
+    assert.equal(exported.placementReceiptSha256, placementSha);
+    assert.equal(exported.positionEvidence, "authored-registration");
+    assert.equal(cue.opcode, 172);
+    const terminal = observations.structures?.filter(
+      ({ kind }) => kind === "match-ending-structure-loss",
+    );
+    assert.equal(terminal?.length, 1);
+    for (const field of ["kind", "context", "timeSeconds", "secondTimeBits"])
+      assert.equal(terminal[0][field], cue[field]);
+  } else {
+    assert.equal(exported.terminalPackets.length, 1);
+    assert.equal(cue.opcode, 669);
+    assert.equal(cue.animationName, "NexusDeath");
+    assert.equal(
+      cue.payloadSha256,
+      "63be8511d25e00d09a0eaa068850153e0d750e18cffb0c523245b40c00fc158f",
+    );
+  }
   assert.ok(
     cue.timeSeconds > snapshots.at(-1) &&
       cue.timeSeconds <= packetReader.durationSeconds,
@@ -1026,9 +1088,10 @@ async function loadNexusModelRoutes(
         : packet.paramBits;
     if (
       packet.stream === 1 &&
-      opcode === 669 &&
+      opcode === cue.opcode &&
       context === cue.context &&
       packet.timeSeconds === cue.timeSeconds &&
+      (!current || packet.secondTimeBits === cue.secondTimeBits) &&
       sha256(packet.payload) === cue.payloadSha256
     )
       matching.push(packet);
@@ -1036,12 +1099,14 @@ async function loadNexusModelRoutes(
   assert.equal(
     matching.length,
     1,
-    "Nexus animation cue differs from saved replay",
+    "Nexus terminal evidence differs from saved replay",
   );
   return {
     bindings,
     instances,
-    cue: { context: cue.context, timeSeconds: cue.timeSeconds },
+    ...(current
+      ? { terminalLoss: { context: cue.context, timeSeconds: cue.timeSeconds } }
+      : { cue: { context: cue.context, timeSeconds: cue.timeSeconds } }),
     routes,
   };
 }
@@ -1060,28 +1125,52 @@ const [bytes, receipts, , baseMetadata, baseMesh, projection] =
   ]);
 const replayBuffer = new Uint8Array(bytes).buffer;
 const replay = openReplay(replayBuffer);
-assert.equal(replay.build, build);
+const currentBuild = replay.build === currentTerrainPositionBuild;
+if (currentBuild) {
+  assert.ok(
+    privatePackageOutput !== undefined &&
+      values["champion-catalog-sha256"] !== undefined,
+    "Current-build packages require a private output and a pinned champion catalog",
+  );
+} else {
+  assert.equal(replay.build, terrainExportBuild);
+}
+const decoderOptions = { allowCurrentBuild: currentBuild };
 const identity = {
   replaySha256: sha256(bytes),
-  build,
+  build: replay.build,
   protocol: replay.protocol,
   durationMilliseconds: replay.durationMilliseconds,
   participantCount: replay.roster.length,
 };
 const proof = JSON.parse(projection);
+assert.equal(proof.build, terrainExportBuild);
+assert.equal(identity.protocol, proof.protocol);
+assert.equal(identity.participantCount, proof.participantCount);
 const shortFixture =
   identity.replaySha256 ===
   "d7cabb0b7ba965f317863d128238847a0b9b0e4cc0cdbcfa3077c537b10fdf2b";
-// Both digests were independently corroborated as exact-build Map11 games.
+const reviewedReplay =
+  shortFixture || identity.replaySha256 === proof.replaySha256;
+// The current digest was corroborated by mode, queue and map messages in the
+// saved Riot client log. The current Map11 geometry, navgrid and texture input
+// bytes also matched the reviewed terrain export.
+const reviewedCurrentReplay =
+  currentBuild &&
+  identity.replaySha256 ===
+    "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
 if (shortFixture) {
   assert.ok(rawReplayOnly);
-  assert.equal(identity.build, proof.build);
-  assert.equal(identity.protocol, proof.protocol);
-  assert.equal(identity.participantCount, proof.participantCount);
   assert.equal(identity.durationMilliseconds, 76063);
-} else {
+} else if (reviewedReplay) {
   for (const [field, value] of Object.entries(identity))
     assert.equal(proof[field], value);
+} else if (!reviewedCurrentReplay) {
+  assert.ok(recoveryPath, "Replay lacks reviewed Map11 provenance");
+  const { verifyRecordedRift } =
+    await import("./research/recorded-terrain-provenance.mjs");
+  await verifyRecordedRift({ recoveryPath, replayPath, bytes, replay });
+  assert.equal(sha256(await readFile(replayPath)), identity.replaySha256);
 }
 assert.equal(proof.staticMesh.sha256, localDigests["map/map.bin"]);
 const infernalTerrainExport = values["infernal-terrain-export"];
@@ -1144,28 +1233,41 @@ const decoderBytes =
   values["position-decoder"] === undefined
     ? undefined
     : await readFile(values["position-decoder"]);
-const replayPreparation = prepareReplayForSeek(replayBuffer, decompress);
+const replayPreparation = prepareReplayForSeek(
+  replayBuffer,
+  decompress,
+  decoderOptions,
+);
 let prepared = replayPreparation;
 let championModelSelections;
 if (decoderBytes !== undefined) {
   const { createExactTerrainByteCodecs } =
     await import("./research/native-terrain-positions-944.mjs");
-  const codecs = createExactTerrainByteCodecs(decoderBytes, identity);
+  const codecs = createExactTerrainByteCodecs(
+    decoderBytes,
+    identity,
+    decoderOptions,
+  );
   const { binding } = bindNativeTerrainChampionIdentities(
     replayPreparation,
     codecs,
+    decoderOptions,
   );
   const previous = replayPreparation.observations;
   const levels =
     binding.verified.length > previous.binding.verified.length
-      ? readReplayActorLevels(replay, decompress, binding)
+      ? readReplayActorLevels(replay, decompress, binding, decoderOptions)
       : previous.levels;
   prepared = {
     ...replayPreparation,
     observations: { ...previous, binding, levels },
   };
   if (values["champion-catalog-sha256"] !== undefined)
-    championModelSelections = readChampionModelSelections(prepared, codecs);
+    championModelSelections = readChampionModelSelections(
+      prepared,
+      codecs,
+      decoderOptions,
+    );
 }
 const { observations } = prepared;
 const trace = rawReplayOnly
@@ -1253,19 +1355,23 @@ if (values["terrain-materials"] !== undefined) {
     texturedTriangles: mats.texturedTriangles,
   };
 }
-if (values["terrain-visibility"] !== undefined) {
+if (terrainVisibilityPath !== undefined) {
   assert.ok(
     materialRoutes,
     "Terrain visibility requires reviewed terrain materials",
   );
-  const bytes = await readFile(values["terrain-visibility"]);
+  const bytes = await readFile(terrainVisibilityPath);
+  const reviewedDigests = [
+    "39970872e3dda6634c1389be84947fd06d7305c7d519558d9dd248e43517b766",
+    "f4cca91d895b984af25b5ce76814ad09a230571660265cda8f69dca7950fc0dc",
+    "060b9ea9cd7228f81c78f89979b426782b3a1342d02420466b86f85933f154db",
+    "41e89c0f415121960d48ab1f9930a2e29f2c650f3ac51ad2516697be6f3e91e8",
+  ];
+  const digest = sha256(bytes);
   assert.ok(
-    [
-      "39970872e3dda6634c1389be84947fd06d7305c7d519558d9dd248e43517b766",
-      "f4cca91d895b984af25b5ce76814ad09a230571660265cda8f69dca7950fc0dc",
-      "060b9ea9cd7228f81c78f89979b426782b3a1342d02420466b86f85933f154db",
-      "41e89c0f415121960d48ab1f9930a2e29f2c650f3ac51ad2516697be6f3e91e8",
-    ].includes(sha256(bytes)),
+    terrainVisibilityDigest === undefined
+      ? reviewedDigests.includes(digest)
+      : terrainVisibilityDigest === digest,
     "Terrain visibility does not match a native controller receipt",
   );
   const receipt = JSON.parse(bytes);
@@ -1277,10 +1383,21 @@ if (values["terrain-visibility"] !== undefined) {
     receipt.materialsSha256,
     "ed38cba7aaa4390e8b2a2cfe778d5f1151152b9b97f2c90883c17b27b510d67a",
   );
+  const omittedMeshControllerIds =
+    terrainVisibilityDigest === undefined
+      ? []
+      : validateRecordedTerrainVisibility(
+          receipt,
+          JSON.parse(metadata).meshes,
+          replay.duration,
+          { omitUnresolved: currentBuild },
+        );
   // The reviewed map export omits the three mask-2 geometry meshes that
   // replace these pieces on Infernal terrain.
   const missingReplacementMeshControllerIds =
-    infernalTerrainExport === undefined ? [0x4aefd282, 0xa8951ff3] : [];
+    infernalTerrainExport === undefined && !reviewedCurrentReplay
+      ? [0x4aefd282, 0xa8951ff3]
+      : [];
   scene.terrainVisibility = {
     tracks: receipt.tracks.filter(
       ({ controllerId }) =>
@@ -1288,6 +1405,17 @@ if (values["terrain-visibility"] !== undefined) {
     ),
     unresolvedMeshControllerIds: receipt.unresolvedMeshControllerIds,
     missingReplacementMeshControllerIds,
+    ...(omittedMeshControllerIds.length === 0
+      ? {}
+      : { omittedMeshControllerIds }),
+    ...(currentBuild && receipt.unresolvedWindows !== undefined
+      ? {
+          unresolvedWindows: receipt.unresolvedWindows.filter(
+            ({ controllerId }) =>
+              !missingReplacementMeshControllerIds.includes(controllerId),
+          ),
+        }
+      : {}),
   };
 }
 let championModelRoutes;
@@ -1295,28 +1423,39 @@ if (values["champion-models"] !== undefined) {
   const pin = values["champion-catalog-sha256"];
   const models =
     pin === undefined
-      ? await loadLegacyChampionModelRoutes(values["champion-models"], identity, observations)
-      : await loadChampionModelCatalog(values["champion-models"], pin, identity, championModelSelections);
+      ? await loadLegacyChampionModelRoutes(
+          values["champion-models"],
+          identity,
+          observations,
+        )
+      : await loadChampionModelCatalog(
+          values["champion-models"],
+          pin,
+          identity,
+          championModelSelections,
+        );
   championModelRoutes = models.routes;
   scene.championModels = { bindings: models.bindings };
 }
 let structureModelRoutes;
 let inhibitorModelRoutes;
+let placementSha;
 if (values["turret-placements"] !== undefined) {
-  const { prepareNativeTerrainTurrets } =
+  const { prepareNativeTerrainTurrets, turretPlacementReceiptDigests } =
     await import("./research/native-terrain-turrets.mjs");
   const placementBytes = await readFile(values["turret-placements"]);
-  const placementSha = sha256(placementBytes);
+  placementSha = sha256(placementBytes);
   assert.equal(
     placementSha,
-    "e8b440a974777974ed09cfc799b0e21ed01ee6a809543e3fe04a639fca04ed40",
+    turretPlacementReceiptDigests[identity.build],
     "Map11 turret placement receipt digest differs from the reviewed file",
   );
   const turrets = prepareNativeTerrainTurrets(
     prepared,
     JSON.parse(placementBytes),
+    decoderOptions,
   );
-  const { losses } = turrets;
+  const losses = turrets.renderableLosses ?? turrets.losses;
   for (const { worldPosition } of losses) {
     assert.ok(
       [0, 2].every(
@@ -1337,6 +1476,11 @@ if (values["turret-placements"] !== undefined) {
     scene.structureModels = {
       bindings: structures.bindings,
       instances: structures.instances,
+      ...(structures.omissions.length === 0
+        ? {}
+        : {
+            omittedContexts: structures.omissions.map(({ context }) => context),
+          }),
     };
     structureModelRoutes = structures.routes;
   }
@@ -1348,11 +1492,18 @@ if (values["turret-placements"] !== undefined) {
       prepared,
       turrets,
       placementSha,
+      decoderOptions,
     );
     scene.inhibitorModels = {
       bindings: inhibitors.bindings,
       instances: inhibitors.instances,
+      ...(inhibitors.omittedContexts.length === 0
+        ? {}
+        : { omittedContexts: inhibitors.omittedContexts }),
     };
+    scene.inhibitorLosses = inhibitors.losses.map(({ timeSeconds }) => ({
+      timeSeconds,
+    }));
     inhibitorModelRoutes = inhibitors.routes;
   }
 }
@@ -1361,13 +1512,16 @@ if (values["nexus-models"] !== undefined) {
   const nexus = await loadNexusModelRoutes(
     values["nexus-models"],
     identity,
-    prepared.packetReader,
+    prepared,
     decoderBytes,
+    placementSha,
   );
   scene.nexusModels = {
     bindings: nexus.bindings,
     instances: nexus.instances,
-    cue: nexus.cue,
+    ...(nexus.cue === undefined
+      ? { terminalLoss: nexus.terminalLoss }
+      : { cue: nexus.cue }),
   };
   nexusModelRoutes = nexus.routes;
 }
@@ -1402,12 +1556,19 @@ if (decoderBytes !== undefined) {
   if (values["worker-decompressor"] !== undefined) {
     const { createPreparedTerrainByteCodecs } =
       await import("./research/native-terrain-byte-codecs.mjs");
-    await createPreparedTerrainByteCodecs(decoderBytes, identity);
+    await createPreparedTerrainByteCodecs(
+      decoderBytes,
+      identity,
+      decoderOptions,
+    );
     motionWorker = {
       script: await buildMotionWorker(values["worker-decompressor"]),
       decoderBytes,
     };
-    scene.workerMotion = { waypointOrigin };
+    scene.workerMotion = {
+      waypointOrigin,
+      ...(currentBuild ? decoderOptions : {}),
+    };
   } else {
     const [
       { createPosition944Reader },
@@ -1462,16 +1623,20 @@ if (decoderBytes !== undefined) {
 }
 const worldUnitModelRoutes = new Map();
 if (scoutScene) {
-  const { decodeRecordedDragonKills } =
-    await import("./research/recorded-dragon-kills.mjs");
-  const dragonKills = decodeRecordedDragonKills(
-    replayBuffer,
-    decompress,
-  ).events;
-  scene.dragonKills = dragonKills.map(({ timeSeconds, actorContext }) => ({
-    timeSeconds,
-    actorContext,
-  }));
+  let dragonKills;
+  if (
+    reviewedReplay ||
+    values["world-unit-models"] !== undefined ||
+    (!currentBuild && announcerDirectory !== undefined)
+  ) {
+    const { decodeRecordedDragonKills } =
+      await import("./research/recorded-dragon-kills.mjs");
+    dragonKills = decodeRecordedDragonKills(replayBuffer, decompress).events;
+    scene.dragonKills = dragonKills.map(({ timeSeconds, actorContext }) => ({
+      timeSeconds,
+      actorContext,
+    }));
+  }
   if (values["world-unit-models"] !== undefined) {
     const units = await loadWorldUnitModelRoutes(
       values["world-unit-models"],
@@ -1571,13 +1736,14 @@ if (scoutScene) {
       instances: [...existing.instances, ...units.instances],
     };
   }
-  const { prepareNativeTerrainInhibitors } =
-    await import("./research/native-terrain-inhibitors.mjs");
-  const { losses: inhibitorLosses } = prepareNativeTerrainInhibitors(prepared);
-  if (inhibitorLosses !== null) {
-    scene.inhibitorLosses = inhibitorLosses.map(({ timeSeconds }) => ({
-      timeSeconds,
-    }));
+  if (scene.inhibitorLosses === undefined && !currentBuild) {
+    const { prepareNativeTerrainInhibitors } =
+      await import("./research/native-terrain-inhibitors.mjs");
+    const { losses } = prepareNativeTerrainInhibitors(prepared);
+    if (losses !== null)
+      scene.inhibitorLosses = losses.map(({ timeSeconds }) => ({
+        timeSeconds,
+      }));
   }
   scene.championEliminations = createReplayObservationEliminations(
     observations.binding,

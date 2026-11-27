@@ -5,7 +5,7 @@ import {
   type TestInfo,
 } from "@playwright/test";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
-import { replayPath } from "./recorded-replay-data.ts";
+import { replayPath, type readRecordedReplay } from "./recorded-replay-data.ts";
 import { seek } from "./recorded-replay-fixture.ts";
 
 export async function drawsNear(
@@ -65,9 +65,20 @@ function projectToViewport(
   return [project(0) / w, project(1) / w];
 }
 
+async function verifyCurrentWaveDraws(page: Page, laneMarkers: Locator) {
+  await seek(page, 40);
+  await expect(laneMarkers).toHaveCount(36);
+  const draw = await readRecordedDraw(page);
+  for (const indices of [3189, 3669, 3213, 3228]) {
+    expect(
+      draw.actorIndexCounts.filter((count) => count === indices),
+    ).toHaveLength(9);
+  }
+}
+
 export async function verifyRecordedWorldActors(
   page: Page,
-  paths: Iterable<string>,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   requested: Set<string>,
   testInfo: TestInfo,
 ) {
@@ -75,7 +86,7 @@ export async function verifyRecordedWorldActors(
   const minimap = page.getByRole("button", { name: "Replay minimap" });
   const zoomIn = page.getByRole("button", { name: "Zoom in" });
   const overview = page.getByRole("button", { name: "Map overview" });
-  const worldAssets = [...paths];
+  const worldAssets = [...fixture.paths.keys()];
   const dragonAsset = worldAssets.find((url) =>
     url.endsWith(
       "/world-unit-models/bc30c9bfd1f8ea056feb5e70f0ef4787cc848ae4a737c236575064d41011eee0.glb",
@@ -99,7 +110,24 @@ export async function verifyRecordedWorldActors(
   if (orderMinionAsset !== undefined || chaosMinionAsset !== undefined) {
     const orderIndices = 3189;
     const chaosIndices = 3669;
-    const firstOrderPosition = [3453.746, 1501.309] as const;
+    const currentWave =
+      fixture.descriptor.sha256 ===
+      "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
+    const wave = currentWave
+      ? ({
+          firstOrderId: 1_073_742_588,
+          order: [3451.747, 1501.119],
+          chaos: [11_902.353, 11_612.3],
+          nextOrder: [3801.053, 1493.728],
+          nextChaos: [11_657.828, 11_364.484],
+        } as const)
+      : ({
+          firstOrderId: 1_073_742_625,
+          order: [3453.746, 1501.309],
+          chaos: [11_894.787, 11_602.582],
+          nextOrder: [3803.058, 1493.624],
+          nextChaos: [11_648.5, 11_356.443],
+        } as const);
     expect(requested).toContain(orderMinionAsset);
     expect(requested).toContain(chaosMinionAsset);
     await seek(page, 29.9);
@@ -110,7 +138,7 @@ export async function verifyRecordedWorldActors(
     expect(beforeWave.actorIndexCounts).not.toContain(chaosIndices);
     await seek(page, 34.2);
     const firstOrderMarker = laneMarkers.and(
-      minimap.locator('[data-map-actor-id="1073742625"]'),
+      minimap.locator(`[data-map-actor-id="${String(wave.firstOrderId)}"]`),
     );
     await expect(firstOrderMarker).toHaveAttribute(
       "data-map-actor-team",
@@ -126,26 +154,20 @@ export async function verifyRecordedWorldActors(
       Number.parseFloat(element.style.top),
     ]);
     expect(markerPosition[0]).toBeCloseTo(
-      ((3453.746 + 1.104897) * 100) / 14_719.505287,
+      ((wave.order[0] + 1.104897) * 100) / 14_719.505287,
       2,
     );
     expect(markerPosition[1]).toBeCloseTo(
-      ((14_792.210938 - 1501.309) * 100) / 14_759.455139,
+      ((14_792.210938 - wave.order[1]) * 100) / 14_759.455139,
       2,
     );
-    expect(await drawsNear(page, orderIndices, firstOrderPosition)).toBe(true);
-    expect(await drawsNear(page, chaosIndices, [11_894.787, 11_602.582])).toBe(
-      true,
-    );
-    await centerMinimapOn(minimap, firstOrderPosition);
+    expect(await drawsNear(page, orderIndices, wave.order)).toBe(true);
+    expect(await drawsNear(page, chaosIndices, wave.chaos)).toBe(true);
+    await centerMinimapOn(minimap, wave.order);
     await zoomIn.click();
     await zoomIn.click();
     const centeredWave = await readRecordedDraw(page);
-    const minionOrigin = actorOriginAt(
-      centeredWave,
-      orderIndices,
-      firstOrderPosition,
-    );
+    const minionOrigin = actorOriginAt(centeredWave, orderIndices, wave.order);
     if (minionOrigin === undefined)
       throw new Error("The recorded Order minion did not draw.");
     for (const component of projectToViewport(
@@ -168,12 +190,9 @@ export async function verifyRecordedWorldActors(
         Number.parseFloat(element.style.left),
       ),
     ).toBeGreaterThan(markerPosition[0] ?? Infinity);
-    expect(await drawsNear(page, orderIndices, [3803.058, 1493.624])).toBe(
-      true,
-    );
-    expect(await drawsNear(page, chaosIndices, [11_648.5, 11_356.443])).toBe(
-      true,
-    );
+    expect(await drawsNear(page, orderIndices, wave.nextOrder)).toBe(true);
+    expect(await drawsNear(page, chaosIndices, wave.nextChaos)).toBe(true);
+    if (currentWave) await verifyCurrentWaveDraws(page, laneMarkers);
   }
   if (dragonAsset !== undefined) {
     // Map11 opcode 96 paths at recorded speed 330 for actor 1073787778.
@@ -250,29 +269,57 @@ export async function verifyRecordedWorldActors(
 
 export async function verifyLaterRecordedLaneWaves(
   page: Page,
-  paths: Iterable<string>,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   requested: Set<string>,
   testInfo: TestInfo,
 ) {
-  const superMinionAsset = [...paths].find((url) =>
-    url.endsWith(
-      "/world-unit-models/c5f51dfe9ce9bc4cb0dc894b32c4dbce4493bce8ffd3f9ab29ae48386babd939.glb",
-    ),
+  const current = fixture.descriptor.gameBuild === "16.23.841.8428";
+  const superDigest = current
+    ? "073e531c2e2b0429ae11394684accc91871874b0c0f8ef860769229bcceb8f5b"
+    : "c5f51dfe9ce9bc4cb0dc894b32c4dbce4493bce8ffd3f9ab29ae48386babd939";
+  const superMinionAsset = [...fixture.paths.keys()].find((url) =>
+    url.endsWith(`/world-unit-models/${superDigest}.glb`),
   );
   if (superMinionAsset === undefined) return;
   expect(requested).toContain(superMinionAsset);
+  const lane = current
+    ? ({
+        early: [
+          [3370.494, 13_348.48],
+          [3049.756, 13_178.975],
+        ],
+        siege: [
+          [4107.88, 13_533.39],
+          [6392.584, 13_594.593],
+        ],
+        superAt: 2076,
+        superCount: 8568,
+        superPosition: [11_532.108, 11_256.113],
+      } as const)
+    : ({
+        early: [
+          [1231.891, 11_140.272],
+          [1236.067, 11_358.696],
+        ],
+        siege: [
+          [13_622.953, 4261.558],
+          [13_693.553, 6182.826],
+        ],
+        superAt: 1500,
+        superCount: 9966,
+        superPosition: [5831.008, 1308.293],
+      } as const);
   await seek(page, 120);
-  expect(await drawsNear(page, 3189, [1231.891, 11_140.272])).toBe(true);
-  expect(await drawsNear(page, 3669, [1236.067, 11_358.696])).toBe(true);
+  expect(await drawsNear(page, 3189, lane.early[0])).toBe(true);
+  expect(await drawsNear(page, 3669, lane.early[1])).toBe(true);
   await seek(page, 1200);
-  expect(await drawsNear(page, 3462, [13_622.953, 4261.558])).toBe(true);
-  expect(await drawsNear(page, 4815, [13_693.553, 6182.826])).toBe(true);
-  await seek(page, 1500);
-  const superMinionPosition = [5831.008, 1308.293] as const;
-  expect(await drawsNear(page, 9966, superMinionPosition)).toBe(true);
+  expect(await drawsNear(page, 3462, lane.siege[0])).toBe(true);
+  expect(await drawsNear(page, 4815, lane.siege[1])).toBe(true);
+  await seek(page, lane.superAt);
+  expect(await drawsNear(page, lane.superCount, lane.superPosition)).toBe(true);
   await centerMinimapOn(
     page.getByRole("button", { name: "Replay minimap" }),
-    superMinionPosition,
+    lane.superPosition,
   );
   const zoomIn = page.getByRole("button", { name: "Zoom in" });
   await zoomIn.click();
@@ -282,16 +329,72 @@ export async function verifyLaterRecordedLaneWaves(
   });
   await page.getByRole("button", { name: "Map overview" }).click();
   await seek(page, 120);
-  expect(await drawsNear(page, 9966, superMinionPosition)).toBe(false);
+  expect(await drawsNear(page, lane.superCount, lane.superPosition)).toBe(
+    false,
+  );
 }
 
-export async function verifyRecordedInhibitors(
+async function verifyCurrentStructureLosses(
   page: Page,
-  paths: Iterable<string>,
+  paths: string[],
+  testInfo: TestInfo,
+) {
+  const witnesses = [
+    {
+      kind: "structure",
+      indices: 10_074,
+      position: [981, 10_441],
+      before: 856.4,
+      after: 856.5,
+    },
+    {
+      kind: "inhibitor",
+      indices: 6675,
+      position: [3210.616, 3217.527],
+      before: 2062.5,
+      after: 2062.6,
+    },
+    {
+      kind: "nexus",
+      indices: 14_340,
+      position: [13_243, 13_235],
+      before: 2407.2,
+      after: 2407.3,
+    },
+  ] as const;
+  for (const witness of witnesses) {
+    const { kind, indices, position, before, after } = witness;
+    if (!paths.some((url) => url.includes(`/${kind}-models/`))) continue;
+    await seek(page, before);
+    expect(await drawsNear(page, indices, position)).toBe(true);
+    await seek(page, after);
+    expect(await drawsNear(page, indices, position)).toBe(false);
+    await seek(page, before);
+    expect(await drawsNear(page, indices, position)).toBe(true);
+    await page.getByLabel("League of Legends replay scene").screenshot({
+      path: testInfo.outputPath(`recorded-current-${kind}-before-loss.png`),
+    });
+  }
+  if (paths.some((url) => url.includes("/inhibitor-models/"))) {
+    const events = page.getByRole("combobox", { name: "Jump to event" });
+    await expect(
+      events.getByRole("option", { name: /inhibitor destroyed/i }),
+    ).toHaveCount(5);
+  }
+}
+
+export async function verifyRecordedStructures(
+  page: Page,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   requested: Set<string>,
   { expectedLosses, testInfo }: { expectedLosses: boolean; testInfo: TestInfo },
 ) {
-  const assets = [...paths].filter((url) =>
+  const paths = [...fixture.paths.keys()];
+  if (fixture.descriptor.gameBuild === "16.23.841.8428") {
+    await verifyCurrentStructureLosses(page, paths, testInfo);
+    return;
+  }
+  const assets = paths.filter((url) =>
     /\/inhibitor-models\/[^/]+\.glb$/.test(url),
   );
   if (assets.length === 0) return;

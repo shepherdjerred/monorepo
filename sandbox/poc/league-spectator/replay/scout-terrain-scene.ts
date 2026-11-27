@@ -21,6 +21,11 @@ import {
   replayInventorySceneSchema,
   type ReplayInventoryPoints,
 } from "./scout-terrain-inventory.ts";
+import {
+  currentTerrainPositionBuild,
+  terrainPositionBuild,
+  terrainPositionProtocol,
+} from "./tools/research/native-terrain-byte-codecs.mjs";
 import { createNavgridGroundHeight } from "./tools/research/native-terrain-ground.mjs";
 import { sampleNativeTerrainMotion } from "./tools/research/native-terrain-motion-sample.mjs";
 import { sampleNativeTerrainWorldUnits } from "./tools/research/native-terrain-world-unit-sample.mjs";
@@ -99,10 +104,14 @@ const worldModelInstance = z.object({
   position,
   basis: z.array(z.number()).length(9),
 });
+const recordedStructureLoss = z.object({
+  context: z.number().int().positive(),
+  timeSeconds: z.number().positive(),
+});
 export const SceneSchema = z.object({
   identity: z.object({
-    build: z.literal("16.23.840.6595"),
-    protocol: z.literal("8bbfcd5af2bc92db"),
+    build: z.enum([terrainPositionBuild, currentTerrainPositionBuild]),
+    protocol: z.literal(terrainPositionProtocol),
     durationMilliseconds: z.number().int().positive(),
     participantCount: z.literal(10),
     replaySha256: z.string().regex(/^[a-f0-9]{64}$/),
@@ -228,6 +237,16 @@ export const SceneSchema = z.object({
         .nonempty(),
       unresolvedMeshControllerIds: z.array(z.number().int().positive()),
       missingReplacementMeshControllerIds: z.array(z.number().int().positive()),
+      omittedMeshControllerIds: z.array(z.number().int().positive()).optional(),
+      unresolvedWindows: z
+        .array(
+          z.object({
+            controllerId: z.number().int().positive(),
+            startSeconds: z.number().nonnegative(),
+            endSeconds: z.number().positive(),
+          }),
+        )
+        .optional(),
     })
     .optional(),
   championModels: z
@@ -246,18 +265,33 @@ export const SceneSchema = z.object({
             destroyedAtSeconds: z.number().nonnegative().nullable(),
           }),
         )
-        .length(22),
+        .min(1)
+        .max(22),
+      omittedContexts: z.array(participantId).optional(),
     })
+    .refine(({ instances, omittedContexts }) => {
+      const contexts = [
+        ...instances.map(({ context }) => context),
+        ...(omittedContexts ?? []),
+      ];
+      return contexts.length === 22 && new Set(contexts).size === 22;
+    }, "Expected 22 accounted-for turret contexts")
     .optional(),
   nexusModels: z
     .object({
       bindings: z.array(modelBinding).length(2),
       instances: z.array(worldModelInstance).length(2),
-      cue: z.object({
-        context: z.number().int().positive(),
-        timeSeconds: z.number().positive(),
-      }),
+      cue: recordedStructureLoss.optional(),
+      terminalLoss: recordedStructureLoss.optional(),
     })
+    .refine(({ cue, terminalLoss, instances }) => {
+      const loss = terminalLoss ?? cue;
+      return (
+        loss !== undefined &&
+        (cue === undefined || terminalLoss === undefined) &&
+        instances.some(({ context }) => context === loss.context)
+      );
+    }, "Expected one loss witness for a rendered Nexus")
     .optional(),
   inhibitorModels: z
     .object({
@@ -269,8 +303,17 @@ export const SceneSchema = z.object({
             destroyedAtSeconds: z.number().positive().nullable(),
           }),
         )
-        .length(6),
+        .min(1)
+        .max(6),
+      omittedContexts: z.array(participantId).optional(),
     })
+    .refine(({ instances, omittedContexts }) => {
+      const contexts = [
+        ...instances.map(({ context }) => context),
+        ...(omittedContexts ?? []),
+      ];
+      return contexts.length === 6 && new Set(contexts).size === 6;
+    }, "Expected six accounted-for inhibitor contexts")
     .optional(),
   worldUnitModels: z
     .object({
@@ -307,7 +350,10 @@ export const SceneSchema = z.object({
     })
     .optional(),
   workerMotion: z
-    .object({ waypointOrigin: z.tuple([z.number().int(), z.number().int()]) })
+    .object({
+      waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
+      allowCurrentBuild: z.literal(true).optional(),
+    })
     .optional(),
   navgrid: z
     .object({
@@ -456,7 +502,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
 
 async function loadWorkerMotion(
   identity: TerrainScene["identity"],
-  waypointOrigin: [number, number],
+  workerMotion: NonNullable<TerrainScene["workerMotion"]>,
   signal: AbortSignal,
   assets: TerrainMotionAssets,
 ) {
@@ -497,7 +543,7 @@ async function loadWorkerMotion(
           { once: true },
         );
         worker.postMessage(
-          { identity, waypointOrigin, replayBytes, decoderBytes },
+          { identity, ...workerMotion, replayBytes, decoderBytes },
           [replayBytes, decoderBytes],
         );
       },
@@ -529,12 +575,7 @@ export async function loadSceneMotion(
     assets.read("/heights.bin").then((buffer) => new Float32Array(buffer)),
     scene.workerMotion === undefined
       ? undefined
-      : loadWorkerMotion(
-          scene.identity,
-          scene.workerMotion.waypointOrigin,
-          signal,
-          assets,
-        ),
+      : loadWorkerMotion(scene.identity, scene.workerMotion, signal, assets),
   ]);
   if (decoded === undefined) return { scene, heights };
   const ground = createNavgridGroundHeight(

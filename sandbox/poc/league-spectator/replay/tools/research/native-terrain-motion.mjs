@@ -1,9 +1,7 @@
 import { movementWorldPaths } from "../../movement-records.mjs";
+import { isExactTerrainReplay } from "./native-terrain-byte-codecs.mjs";
 import { readNativeTerrainReturnPosition } from "./native-terrain-motion-return.mjs";
 import { sampleNativeTerrainMotion } from "./native-terrain-motion-sample.mjs";
-
-const build = "16.23.840.6595";
-const protocol = "8bbfcd5af2bc92db";
 
 function addSnapshots(actors, frames, durationSeconds) {
   let previousTime = -Infinity;
@@ -150,15 +148,14 @@ export function prepareNativeTerrainMotion(
   prepared,
   keyframes,
   timedPackets,
-  { readWaypoints, readMoveSpeed, waypointOrigin },
+  { readWaypoints, readMoveSpeed, waypointOrigin, allowCurrentBuild = false },
 ) {
   const { packetReader, observations } = prepared;
   const { durationSeconds } = packetReader;
   if (
-    packetReader.build !== build ||
-    packetReader.protocol !== protocol ||
-    observations.build !== build ||
-    observations.protocol !== protocol ||
+    !isExactTerrainReplay(packetReader, { allowCurrentBuild }) ||
+    packetReader.build !== observations.build ||
+    packetReader.protocol !== observations.protocol ||
     !Number.isFinite(durationSeconds) ||
     durationSeconds <= 0 ||
     !Array.isArray(observations.returns) ||

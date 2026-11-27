@@ -8,16 +8,16 @@ import { readExactMapBin } from "./exact-map-bin.mjs";
 import { mapBinHash } from "./map-scene-assets.mjs";
 import { readMap11PlaceableInventory } from "./map11-world-catalog.mjs";
 import { exportNativeTerrainStructureModels } from "./native-terrain-structure-model-export.mjs";
-import { prepareNativeTerrainTurrets } from "./research/native-terrain-turrets.mjs";
+import { championArchiveExecutableHashes } from "./research/native-terrain-champion-model-catalog.mjs";
+import { currentTerrainPositionBuild } from "./research/native-terrain-byte-codecs.mjs";
+import {
+  currentMap11WadIndexSha256,
+  prepareNativeTerrainTurrets,
+  turretPlacementReceiptDigests,
+} from "./research/native-terrain-turrets.mjs";
 import { readKeyedPlaceableSpan } from "./verify-installed-map11-placements.mjs";
 import { openLocalWad } from "./wad.mjs";
 
-const build = "16.23.840.6595";
-const protocol = "8bbfcd5af2bc92db";
-const placementReceiptSha256 =
-  "e8b440a974777974ed09cfc799b0e21ed01ee6a809543e3fe04a639fca04ed40";
-const installedExeSha256 =
-  "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156";
 const archive = "DATA/FINAL/Maps/Shipping/Map11.wad.client";
 const [
   installation,
@@ -44,6 +44,18 @@ const json = (data) =>
   JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data));
 const blob = (file, data) => ({ file, bytes: data.length, sha256: sha(data) });
 const field = (node, name) => node?.fields?.[mapBinHash(name)];
+const replay = Uint8Array.from(await bytes(replayFile));
+const options = { allowCurrentBuild: true };
+const prepared = prepareReplayForSeek(
+  replay.buffer,
+  (input, target) =>
+    zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+  options,
+);
+const { build, protocol } = prepared.packetReader;
+const current = build === currentTerrainPositionBuild;
+const placementReceiptSha256 = turretPlacementReceiptDigests[build];
+const installedExeSha256 = championArchiveExecutableHashes[build];
 const receiptBytes = await bytes(receiptFile);
 if (sha(receiptBytes) !== placementReceiptSha256)
   throw Error("Unexpected reviewed Map11 placement receipt digest");
@@ -54,7 +66,12 @@ if (sha(old) !== receipt.archivedSha256)
 const executable = join(installation, "Game", "League of Legends.exe");
 if (sha(await bytes(executable)) !== installedExeSha256)
   throw Error("Installed game executable differs from reviewed build");
-const wad = await openLocalWad(installation, archive, Bun.zstdDecompressSync);
+const wad = await openLocalWad(
+  installation,
+  archive,
+  Bun.zstdDecompressSync,
+  current ? currentMap11WadIndexSha256 : undefined,
+);
 const installed = await wad(receipt.entryPath);
 if (sha(installed) !== receipt.installedSha256)
   throw Error("Installed Map11 bytes differ from placement receipt");
@@ -97,11 +114,14 @@ for (const record of receipt.records) {
     );
 }
 
-const replay = Uint8Array.from(await bytes(replayFile));
-const prepared = prepareReplayForSeek(replay.buffer, (input, target) =>
-  zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+const {
+  opening,
+  renderableLosses: losses,
+  presentationOmissions,
+} = prepareNativeTerrainTurrets(prepared, receipt, options);
+const disputedContexts = new Set(
+  presentationOmissions.map(({ context }) => context),
 );
-const { opening, losses } = prepareNativeTerrainTurrets(prepared, receipt);
 const lossTimes = new Map(
   losses.map(({ context, timeSeconds }) => [context, timeSeconds]),
 );
@@ -110,6 +130,7 @@ const omitted = [];
 for (const { context, mapNameHash } of opening) {
   const { asset, transform, characterRecord } =
     inventory.placeables[mapNameHash];
+  if (disputedContexts.has(context)) continue;
   if (asset !== "turret/0" && asset !== "turret/3") {
     omitted.push({
       context,
@@ -129,7 +150,7 @@ for (const { context, mapNameHash } of opening) {
   });
 }
 if (
-  instances.length !== 22 ||
+  instances.length !== 22 - presentationOmissions.length ||
   instances.filter(({ destroyedAtSeconds }) => destroyedAtSeconds !== null)
     .length !== losses.length
 )
@@ -208,6 +229,7 @@ const manifest = {
   assets,
   instances,
   omitted,
+  ...(current ? { presentationOmissions } : {}),
   snapshotEvidence: {
     lastSnapshotSeconds: lastFrame.timeSeconds,
     keyframes: reader.keyframes.length,

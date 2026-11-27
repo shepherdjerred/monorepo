@@ -30,10 +30,18 @@ def initialize(size, fields):
 
 
 def main():
-    binary = Path(sys.argv[1]).read_bytes()
+    archive, *options = sys.argv[1:]
+    if options not in ([], ["--first-wave-8428"], ["--corroborated-waves-8428"]):
+        raise ValueError("Expected the exact archive and an optional current-build lane profile")
+    binary = Path(archive).read_bytes()
     digest = hashlib.sha256(binary).hexdigest()
-    if digest != "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15":
-        raise ValueError("Expected reviewed exact 16.23.840.6595 transport executable bytes")
+    expected = (
+        "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
+        if options
+        else "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15"
+    )
+    if digest != expected:
+        raise ValueError("Expected the reviewed executable bytes for the lane profile")
     image = MachImage(binary)
     table = image.image[0x21485C0:0x21486C0]
     runtime = unicorn.Uc(unicorn.UC_ARCH_X86, unicorn.UC_MODE_64)

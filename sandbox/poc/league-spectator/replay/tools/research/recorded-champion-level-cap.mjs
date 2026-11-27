@@ -1,26 +1,11 @@
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { zstdDecompressSync } from "node:zlib";
+import { readClassicLevelCap } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-actor-levels.mjs";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
 
 const classicLevelCap = 18;
-const rotateByte = (value, shift) =>
-  ((value << shift) | (value >>> (8 - shift))) & 0xff;
-
-function readClassicLevelCap(payload) {
-  // Reader 0x11dc7c0 starts with a three-bit selector after its context
-  // header. ROFL carries the context in the envelope, outside this body.
-  const selector = payload[0] & 7;
-  if (payload.length !== (selector < 4 ? 1 : 2))
-    throw Error("Invalid recorded champion level-cap body");
-  // Selector 3 writes the selector itself. The other short cases write literals.
-  const encoded =
-    selector < 4 ? [0x43, 0x83, 0xc2, 0x03][selector] : payload[1];
-  // Handler 0x101a60 invokes the original setter at 0x186ae0.
-  const override = (rotateByte(rotateByte(encoded, 4) ^ 0xff, 6) + 14) & 0xff;
-  return override || classicLevelCap;
-}
 
 export function extractRecordedChampionLevelCaps(
   rawReplay,

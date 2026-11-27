@@ -13,14 +13,19 @@ from unicorn import x86_const as r
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from macho import MachImage
 
-if len(sys.argv) != 3 or not __debug__:
+if (len(sys.argv) != 3 and (len(sys.argv) != 4 or sys.argv[3] != "--current-build")) or not __debug__:
     raise ValueError(
-        "Usage: recorded-animation-packet-oracle.py <archived executable> <cue directory>, assertions enabled"
+        "Usage: recorded-animation-packet-oracle.py <archived executable> <cue directory> [--current-build], assertions enabled"
     )
 directory = Path(sys.argv[2])
 batch = directory / "packet-requests.json"
 binary = Path(sys.argv[1]).read_bytes()
-assert hashlib.sha256(binary).hexdigest() == "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15"
+expected_sha = (
+    "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
+    if len(sys.argv) == 4
+    else "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15"
+)
+assert hashlib.sha256(binary).hexdigest() == expected_sha
 image = MachImage(binary)
 vm = u.Uc(u.UC_ARCH_X86, u.UC_MODE_64)
 vm.mem_map(image.base, len(image.image))

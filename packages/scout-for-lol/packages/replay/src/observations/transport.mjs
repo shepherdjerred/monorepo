@@ -9,6 +9,10 @@ const decoder = new TextDecoder("utf-8", { fatal: true });
 const packetRecordTypes = new Map([
   ["16.23.839.9929/8bbfcd5af2bc92db", [1, 2, 3]],
   ["16.23.840.6595/8bbfcd5af2bc92db", [1, 2, 3]],
+  // Verified by traversing every envelope in five saved containers. Body
+  // interpretation remains gated by its own exact-build observations.
+  ["16.23.841.3489/8bbfcd5af2bc92db", [1, 2, 3]],
+  ["16.23.841.8428/8bbfcd5af2bc92db", [1, 2, 3]],
 ]);
 
 function readTwoTeamWinner(participants) {

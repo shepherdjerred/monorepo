@@ -6,12 +6,53 @@ import { createNativeTerrainChampionCreation88Reader } from "./native-terrain-ch
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const digestPattern = /^[a-f0-9]{64}$/;
+export const archivedChampionBuild = "16.23.840.6595";
+export const currentChampionBuild = "16.23.841.8428";
+export const championArchiveExecutableHashes = Object.freeze({
+  [archivedChampionBuild]:
+    "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156",
+  [currentChampionBuild]:
+    "f0fd2b02e3bb69d4573629c0daca863cc010556a1dbdd28ef3ef24ef10b9b733",
+});
 
-export function readChampionModelSelections(prepared, codecs) {
+export function verifyNativeCatalogOpening(opening, selections, replaySha256) {
+  assert.ok(
+    opening && Array.isArray(opening.rows),
+    "Native opening roster required",
+  );
+  assert.equal(
+    opening.replaySha256,
+    replaySha256,
+    "Native roster belongs to another replay",
+  );
+  assert.match(replaySha256, digestPattern);
+  assert.match(opening.nativeLogSha256, digestPattern);
+  assert.match(opening.proofSha256, digestPattern);
+  assert.equal(opening.rows.length, 10);
+  assert.equal(selections.length, opening.rows.length);
+  const rowsByContext = new Map(opening.rows.map((row) => [row.context, row]));
+  assert.equal(rowsByContext.size, opening.rows.length);
+  for (const { context, champion, skinId } of selections) {
+    const row = rowsByContext.get(context);
+    assert.ok(
+      Number.isSafeInteger(context) && context > 0 && context <= 0xffffffff,
+    );
+    assert.match(champion, /^[a-z0-9_]+$/i);
+    assert.ok(Number.isSafeInteger(skinId) && skinId >= 0 && skinId <= 10000);
+    assert.ok(
+      row && row.champion === champion && row.skinId === skinId,
+      "Opening selection disagrees with the native roster",
+    );
+    rowsByContext.delete(context);
+  }
+}
+
+export function readChampionModelSelections(prepared, codecs, options) {
   const { observations, packetReader } = prepared;
   const readCreation = createNativeTerrainChampionCreation88Reader(
     observations,
     codecs,
+    options,
   );
   const { keyframe, packets } = packetReader.read(0);
   assert.equal(keyframe.timeSeconds, 0);
@@ -106,6 +147,18 @@ export async function loadChampionModelCatalog(
     "Champion catalog protocol differs",
   );
   assert.ok(!Object.hasOwn(catalog, "replaySha256"));
+  if (identity.build === currentChampionBuild) {
+    assert.equal(
+      catalog.installedExeSha256,
+      championArchiveExecutableHashes[currentChampionBuild],
+    );
+    assert.match(catalog.sourceCensusSha256, digestPattern);
+    verifyNativeCatalogOpening(
+      catalog.nativeOpening,
+      selections,
+      identity.replaySha256,
+    );
+  }
   assert.ok(
     catalog.assets &&
       !Array.isArray(catalog.assets) &&

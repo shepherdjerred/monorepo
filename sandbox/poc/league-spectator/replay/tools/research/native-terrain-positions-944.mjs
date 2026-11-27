@@ -3,8 +3,11 @@ import { readFile } from "node:fs/promises";
 import {
   assertExactTerrainReplay,
   codecsFromTerrainByteMaps,
+  currentTerrainPositionBuild,
   preparedBytes,
   preparedSha256,
+  terrainPositionBuild,
+  terrainPositionProtocol,
 } from "./native-terrain-byte-codecs.mjs";
 import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-944-reader.mjs";
 
@@ -13,7 +16,12 @@ const sliceSize = 39_463_840;
 const fatSize = 76_111_280;
 const sliceSha256 =
   "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa";
+const currentSliceSha256 =
+  "de6db1683eb61358d0aaf9fac44ef722850a927263eae7f68212add8621a500e";
+const currentFatSha256 =
+  "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7";
 const substitutionOffset = 0x2148f00;
+const replicationSubstitutionOffset = 0x21485c0;
 const substitutionSha256 =
   "328528d693ab5d96a815b6706694025a980e609019304aeb2e5e32797011c04b";
 
@@ -29,20 +37,36 @@ function swapAdjacentBits(byte) {
   return ((byte >>> 1) & 0x55) | ((byte << 1) & 0xaa);
 }
 
-function createCodecsFromClient(clientBytes) {
+function createCodecsFromClient(clientBytes, build) {
   if (!(clientBytes instanceof Uint8Array))
-    throw Error("Expected local 16.23.840.6595 macOS client bytes");
-  const slice =
-    clientBytes.length === fatSize
-      ? clientBytes.subarray(sliceOffset, sliceOffset + sliceSize)
-      : clientBytes;
-  if (slice.length !== sliceSize || sha256(slice) !== sliceSha256)
+    throw Error(`Expected local ${build} macOS client bytes`);
+  const currentBuild = build === currentTerrainPositionBuild;
+  const fat = clientBytes.length === fatSize;
+  if (currentBuild && fat && sha256(clientBytes) !== currentFatSha256)
+    throw Error("Unexpected current macOS client archive digest");
+  const slice = fat
+    ? clientBytes.subarray(sliceOffset, sliceOffset + sliceSize)
+    : clientBytes;
+  if (
+    slice.length !== sliceSize ||
+    sha256(slice) !== (currentBuild ? currentSliceSha256 : sliceSha256)
+  )
     throw Error("Unexpected macOS client slice");
   const substitution = Uint8Array.from(
     slice.subarray(substitutionOffset, substitutionOffset + 256),
   );
   if (sha256(substitution) !== substitutionSha256)
     throw Error("Unexpected exact terrain byte substitution");
+  if (
+    currentBuild &&
+    sha256(
+      slice.subarray(
+        replicationSubstitutionOffset,
+        replicationSubstitutionOffset + 256,
+      ),
+    ) !== substitutionSha256
+  )
+    throw Error("Unexpected exact terrain replication byte substitution");
 
   const decodePositionByte = (byte) => {
     const rotated = rotateLeft((rotateLeft(byte ^ 0xff, 2) + 0xfe) & 0xff, 4);
@@ -71,13 +95,18 @@ function requirePreparedDigest(bytes) {
 }
 
 /** Four 256-byte maps, indexed by wire byte, with no executable data. */
-export function prepareExactTerrainDecoder(clientBytes) {
+export function prepareExactTerrainDecoder(
+  clientBytes,
+  replay = { build: terrainPositionBuild, protocol: terrainPositionProtocol },
+  options,
+) {
+  assertExactTerrainReplay(replay, options);
   const {
     decodePositionByte,
     decodeSyncByte,
     decodeReplicationVectorByte,
     decodeReplicationTailByte,
-  } = createCodecsFromClient(clientBytes);
+  } = createCodecsFromClient(clientBytes, replay.build);
   const bytes = new Uint8Array(preparedBytes);
   for (let byte = 0; byte < 256; byte++) {
     bytes[byte] = decodePositionByte(byte);
@@ -89,24 +118,24 @@ export function prepareExactTerrainDecoder(clientBytes) {
   return bytes;
 }
 
-export function createExactTerrainByteCodecs(decoderBytes, replay) {
-  assertExactTerrainReplay(replay);
+export function createExactTerrainByteCodecs(decoderBytes, replay, options) {
+  assertExactTerrainReplay(replay, options);
   if (
     !(decoderBytes instanceof Uint8Array) ||
     decoderBytes.length !== preparedBytes
   )
-    return createCodecsFromClient(decoderBytes);
+    return createCodecsFromClient(decoderBytes, replay.build);
   const maps = Uint8Array.from(decoderBytes);
   requirePreparedDigest(maps);
   return codecsFromTerrainByteMaps(maps);
 }
 
-export function createPosition944Reader(decoderBytes, replay) {
+export function createPosition944Reader(decoderBytes, replay, options) {
   return createPosition944ReaderFromCodecs(
-    createExactTerrainByteCodecs(decoderBytes, replay),
+    createExactTerrainByteCodecs(decoderBytes, replay, options),
   );
 }
 
-export async function loadPosition944Reader(decoderPath, replay) {
-  return createPosition944Reader(await readFile(decoderPath), replay);
+export async function loadPosition944Reader(decoderPath, replay, options) {
+  return createPosition944Reader(await readFile(decoderPath), replay, options);
 }

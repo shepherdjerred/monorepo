@@ -3,9 +3,11 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  currentAnnouncerSource,
   exactAnnouncerSource,
   heraldAudioSource,
   infernalTransitionSource,
+  readCurrentAnnouncerCandidates,
   readExactHeraldAudio,
   readExactInfernalTransition,
   readExactTerrainAnnouncerCandidates,
@@ -26,6 +28,8 @@ const infernalReceiptSha256 =
   "f52db6acd31f7887e2a405292d62f9dbb346808334b44463b3e7e0a7852334b7";
 const objectiveReceiptSha256 =
   "0060f8a929873f55e30f5d303222ea042799f2d7b136e3b7ec046110d4341aed";
+const currentReceiptSha256 =
+  "33ec8c642051dfcc110824dd82313b29e1c7e1778e378c34b7df91f50bed559d";
 
 export async function readLocalAnnouncerPreview(
   directory,
@@ -34,6 +38,9 @@ export async function readLocalAnnouncerPreview(
 ) {
   const receipt = await readFile(join(directory, "receipt.json"));
   const receiptSha256 = sha256(receipt);
+  const isCurrent =
+    identity.replaySha256 === currentAnnouncerSource.replaySha256 &&
+    identity.build === currentAnnouncerSource.build;
   const isLong =
     identity.replaySha256 === infernalTransitionSource.replaySha256;
   const includesHerald = isLong && receiptSha256 === objectiveReceiptSha256;
@@ -41,14 +48,28 @@ export async function readLocalAnnouncerPreview(
     includesHerald || (isLong && receiptSha256 === infernalReceiptSha256);
   assert.ok(
     includesInfernal ||
+      (isCurrent && receiptSha256 === currentReceiptSha256) ||
       receiptSha256 === receiptDigests.get(identity.replaySha256),
     "Announcer receipt must match the reviewed copy for this ROFL",
   );
   const evidence = JSON.parse(receipt.toString("utf8"));
-  const cues = readExactTerrainAnnouncerCandidates(
-    packetReader,
-    identity.replaySha256,
-  );
+  const cues = isCurrent
+    ? readCurrentAnnouncerCandidates(packetReader, identity.replaySha256)
+    : readExactTerrainAnnouncerCandidates(packetReader, identity.replaySha256);
+  if (isCurrent) {
+    assert.equal(evidence.replaySha256, identity.replaySha256);
+    assert.equal(evidence.build, identity.build);
+    assert.equal(evidence.protocol, identity.protocol);
+    assert.deepEqual(evidence.authored, {
+      mapSha256: currentAnnouncerSource.mapSha256,
+      globalSha256: currentAnnouncerSource.globalSha256,
+    });
+    assert.equal(
+      evidence.elementalPackSha256,
+      infernalTransitionSource.packSha256,
+    );
+    assert.equal(evidence.heraldBankSha256, heraldAudioSource.bankSha256);
+  }
   if (includesInfernal) {
     assert.equal(
       evidence.infernalPackSha256,

@@ -1,12 +1,31 @@
-const build = "16.23.840.6595";
-const protocol = "8bbfcd5af2bc92db";
+export const terrainPositionBuild = "16.23.840.6595";
+export const currentTerrainPositionBuild = "16.23.841.8428";
+export const terrainPositionProtocol = "8bbfcd5af2bc92db";
 export const preparedBytes = 1024;
 export const preparedSha256 =
   "14d1c21833a71917e12ff44a3ae8d9a6c40ee2401d94f0b3824991022c1c124c";
 
-export function assertExactTerrainReplay(replay) {
-  if (replay?.build !== build || replay?.protocol !== protocol)
-    throw Error("Expected exact 16.23.840.6595 replay protocol");
+export function isExactTerrainReplay(
+  replay,
+  { allowCurrentBuild = false } = {},
+) {
+  return (
+    replay?.protocol === terrainPositionProtocol &&
+    (replay.build === terrainPositionBuild ||
+      (allowCurrentBuild && replay.build === currentTerrainPositionBuild))
+  );
+}
+
+export function assertExactTerrainReplay(
+  replay,
+  { allowCurrentBuild = false } = {},
+) {
+  if (!isExactTerrainReplay(replay, { allowCurrentBuild }))
+    throw Error(
+      allowCurrentBuild
+        ? `Expected exact ${terrainPositionBuild} or ${currentTerrainPositionBuild} replay protocol`
+        : `Expected exact ${terrainPositionBuild} replay protocol`,
+    );
 }
 
 /** Used by loaders only after authenticating a copy of the map bytes. */
@@ -20,8 +39,8 @@ export function codecsFromTerrainByteMaps(maps) {
 }
 
 /** Verify the exact prepared maps before creating browser worker readers. */
-export async function createPreparedTerrainByteCodecs(bytes, replay) {
-  assertExactTerrainReplay(replay);
+export async function createPreparedTerrainByteCodecs(bytes, replay, options) {
+  assertExactTerrainReplay(replay, options);
   if (!(bytes instanceof Uint8Array) || bytes.length !== preparedBytes)
     throw Error("Unexpected prepared exact terrain decoder size");
   const maps = Uint8Array.from(bytes);

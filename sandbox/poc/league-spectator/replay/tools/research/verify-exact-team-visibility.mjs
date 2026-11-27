@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import { zstdDecompressSync } from "node:zlib";
 import {
   openReplay,
@@ -14,11 +15,31 @@ import {
   prepareExactTerrainDecoder,
 } from "./native-terrain-positions-944.mjs";
 
-const [replayPath, decoderPath, python, proofPath, tracksPath, scenePath] =
-  process.argv.slice(2);
-if (!replayPath || !decoderPath || !python || !proofPath || !tracksPath)
+const { positionals, values } = parseArgs({
+  allowPositionals: true,
+  options: { current: { type: "boolean", default: false } },
+});
+const [
+  replayPath,
+  decoderPath,
+  python,
+  proofPath,
+  tracksPath,
+  scenePath,
+  ...extra
+] = positionals;
+const current = values.current;
+if (
+  !replayPath ||
+  !decoderPath ||
+  !python ||
+  !proofPath ||
+  !tracksPath ||
+  extra.length ||
+  (current && !scenePath)
+)
   throw Error(
-    "Usage: bun verify-exact-team-visibility.mjs <saved-rofl> <exact-macos-binary> <python-with-unicorn> <proof-json> <tracks-json> [admitted-scene-json]",
+    "Usage: bun verify-exact-team-visibility.mjs [--current] <saved-rofl> <exact-macos-binary> <python-with-unicorn> <proof-json> <tracks-json> [admitted-scene-json; required with --current]",
   );
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -27,16 +48,23 @@ const replay = openReplay(replayBytes);
 const replaySha256 = sha256(new Uint8Array(replayBytes));
 assert.equal(
   replaySha256,
-  "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668",
+  current
+    ? "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
+    : "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668",
 );
 const image = await Bun.file(decoderPath).bytes();
 const binarySha256 = sha256(image);
-const decoder = prepareExactTerrainDecoder(image);
-const codecs = createExactTerrainByteCodecs(decoder, replay);
+const options = { allowCurrentBuild: current };
+const decoder = prepareExactTerrainDecoder(image, replay, options);
+const codecs = createExactTerrainByteCodecs(decoder, replay, options);
 const inflate = (input, target) =>
   zstdDecompressSync(input, { maxOutputLength: target.byteLength });
-const prepared = prepareReplayForSeek(replayBytes, inflate);
-const { binding } = bindNativeTerrainChampionIdentities(prepared, codecs);
+const prepared = prepareReplayForSeek(replayBytes, inflate, options);
+const { binding } = bindNativeTerrainChampionIdentities(
+  prepared,
+  codecs,
+  options,
+);
 const actors = new Map(
   binding.verified.map(({ context, footerRow }) => {
     const { champion, team } = prepared.observations.roster[footerRow - 1];
@@ -48,6 +76,12 @@ let sceneSha256 = null;
 if (scenePath) {
   const sceneBytes = await Bun.file(scenePath).bytes();
   sceneSha256 = sha256(sceneBytes);
+  if (current)
+    assert.equal(
+      sceneSha256,
+      "f9da8ecd935ffe403d39e4c2ef649c6aa86875846a91a45989c0a4096211bd4c",
+      "Current team visibility requires the reviewed v6 scene and roster",
+    );
   const scene = JSON.parse(new TextDecoder().decode(sceneBytes));
   assert.equal(scene.identity.replaySha256, replaySha256);
   assert.equal(scene.identity.build, replay.build);
@@ -156,6 +190,7 @@ const oracle = Bun.spawnSync(
       new URL("./exact-team-visibility-oracle.py", import.meta.url),
     ),
     decoderPath,
+    ...(current ? ["--current"] : []),
   ],
   {
     stdin: new TextEncoder().encode(JSON.stringify(bodies)),
@@ -163,7 +198,11 @@ const oracle = Bun.spawnSync(
   },
 );
 assert.equal(oracle.exitCode, 0);
-const native = JSON.parse(new TextDecoder().decode(oracle.stdout));
+const oracleText = new TextDecoder("utf-8", { fatal: true })
+  .decode(oracle.stdout)
+  .trim();
+const native = JSON.parse(oracleText);
+assert.deepEqual(Object.keys(native.bodies).sort(), bodies.toSorted());
 assert.deepEqual(native.slots, { 100: 1, 200: 2 });
 const teamForSlot = new Map(
   Object.entries(native.slots).map(([team, slot]) => [slot, Number(team)]),
@@ -277,8 +316,14 @@ const artifact = JSON.stringify({
   replaySha256,
   tracks,
 });
-await Bun.write(tracksPath, artifact);
 const tracksSha256 = sha256(artifact);
+if (current)
+  assert.equal(
+    tracksSha256,
+    "c2cf2a71c991078e164027ec43fc2ee8fa868237e71bca251e7fee0e13264e43",
+    "Current team visibility differs from the reviewed tracks",
+  );
+await Bun.write(tracksPath, artifact);
 await Bun.write(
   proofPath,
   JSON.stringify(
@@ -288,8 +333,10 @@ await Bun.write(
       protocol: replay.protocol,
       replaySha256,
       binarySha256,
-      scope:
-        "Original packet readers, component mask operations and selected-view query with supplied inputs. Archived champion mask transitions after an initialize request. Full snapshot registration, live callback acceptance and terrain fog remain unverified.",
+      ...(current ? { nativeOracleSha256: sha256(oracleText) } : {}),
+      scope: current
+        ? "Continuous team-mask replay after the first observed initialize request, plus the exact current native packet reader, set/clear operations and selected-view query with supplied inputs. Five champion snapshot comparisons differ. Snapshot registration, live callback acceptance, terrain fog and obscured champion presentation remain unresolved."
+        : "Original packet readers, component mask operations and selected-view query with supplied inputs. Archived champion mask transitions after an initialize request. Full snapshot registration, live callback acceptance and terrain fog remain unverified.",
       transportPackets: sequence,
       cohorts: Object.fromEntries(cohorts),
       native,

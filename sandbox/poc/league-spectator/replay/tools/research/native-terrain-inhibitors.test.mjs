@@ -28,7 +28,9 @@ function preparedFixture(lateValue = 0x81, verified = true) {
           explicitOpcode: index === 0 ? 947 : null,
           marker: index === 0 ? 0 : 32,
           paramBits: index === 0 ? 1073742125 : 1,
-          payload: Uint8Array.of(index === 0 && timeSeconds >= 10 ? lateValue : 0x91),
+          payload: Uint8Array.of(
+            index === 0 && timeSeconds >= 10 ? lateValue : 0x91,
+          ),
         }));
         return { keyframe, packets };
       },
@@ -66,4 +68,24 @@ test("only reports exact snapshot state when the loss history is unavailable", (
   assert.equal(overlay.read(0).inhibitors[0].seekState, "alive");
   assert.equal(overlay.read(8).inhibitors[0].seekState, "unknown");
   assert.equal(overlay.read(10).inhibitors[0].seekState, "destroyed");
+});
+
+test("keeps current losses while leaving unsupported and returned states unresolved between snapshots", () => {
+  const options = { allowCurrentBuild: true };
+  for (const value of [0x80, 0x91]) {
+    const prepared = preparedFixture(value);
+    prepared.packetReader.build = "16.23.841.8428";
+    const overlay = prepareNativeTerrainInhibitors(prepared, options);
+    assert.equal(overlay.losses.length, 1);
+    assert.equal(overlay.read(12).inhibitors[0].seekState, "unknown");
+    if (value === 0x80) {
+      assert.deepEqual(overlay.unresolvedSnapshotStates, [
+        { context: 1073742125, timeSeconds: 10 },
+      ]);
+    } else {
+      assert.equal(overlay.renderableLosses.length, 0);
+      assert.equal(overlay.presentationOmissions[0].context, 1073742125);
+      assert.equal(overlay.read(10).inhibitors[0].seekState, "alive");
+    }
+  }
 });

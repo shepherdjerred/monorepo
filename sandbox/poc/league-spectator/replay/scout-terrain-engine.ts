@@ -89,11 +89,13 @@ function recordedTimeline(
                 mapPoint: data.mapPointAt(position),
               },
             ],
-    ) ??
-    (data.inhibitorTimes ?? []).map((timeSeconds) => ({
-      timeSeconds,
-      label: "Inhibitor destroyed",
-    }));
+    ) ?? [];
+  const positionedInhibitorLosses = new Set(
+    inhibitors.map(({ timeSeconds }) => timeSeconds),
+  );
+  const unpositionedInhibitorLosses = (data.inhibitorTimes ?? [])
+    .filter((timeSeconds) => !positionedInhibitorLosses.has(timeSeconds))
+    .map((timeSeconds) => ({ timeSeconds, label: "Inhibitor destroyed" }));
   return [
     ...data.turretLosses.map(({ point, timeSeconds }) => ({
       timeSeconds,
@@ -105,6 +107,7 @@ function recordedTimeline(
       label: `${champion} slays a dragon`,
     })),
     ...inhibitors,
+    ...unpositionedInhibitorLosses,
     ...neutral,
     ...eliminations,
   ].sort((a, b) => a.timeSeconds - b.timeSeconds);

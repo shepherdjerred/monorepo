@@ -1,16 +1,18 @@
 import { createReplayObservationActorSampler } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/decode.mjs";
 
-const build = "16.23.840.6595";
-const protocol = "8bbfcd5af2bc92db";
+import { isExactTerrainReplay } from "./native-terrain-byte-codecs.mjs";
 
 /** Decode champion positions directly from their own verified keyframe packets. */
-export function prepareNativeTerrainChampionKeyframes(prepared, readBody) {
+export function prepareNativeTerrainChampionKeyframes(
+  prepared,
+  readBody,
+  options,
+) {
   const { packetReader, observations } = prepared;
   if (
-    packetReader.build !== build ||
-    packetReader.protocol !== protocol ||
-    observations.build !== build ||
-    observations.protocol !== protocol ||
+    !isExactTerrainReplay(packetReader, options) ||
+    packetReader.build !== observations.build ||
+    packetReader.protocol !== observations.protocol ||
     typeof readBody !== "function"
   )
     throw Error("Expected the exact-build replay and opcode 944 decoder");

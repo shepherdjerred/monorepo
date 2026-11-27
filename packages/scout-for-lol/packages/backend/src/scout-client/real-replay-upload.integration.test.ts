@@ -3,9 +3,14 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  RawMatchSchema,
   type DiscordAccountId,
+  type LeaguePuuid,
 } from "@scout-for-lol/data";
+import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
+import { normalizeGameBuild } from "@scout-for-lol/domain/artifacts/replay-transport.mjs";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { Database } from "bun:sqlite";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -26,6 +31,8 @@ const outboxPath = Bun.env["SCOUT_REPLAY_PROOF_OUTBOX"];
 const replayDirectory = Bun.env["SCOUT_REPLAY_PROOF_DIRECTORY"];
 const handoffPath = Bun.env["SCOUT_REPLAY_PROOF_HANDOFF"];
 const replayGames = Bun.env["SCOUT_REPLAY_PROOF_GAMES"];
+const canonicalMatchPath = Bun.env["SCOUT_REPLAY_PROOF_CANONICAL_MATCH"];
+const ownerChampion = Bun.env["SCOUT_REPLAY_PROOF_OWNER_CHAMPION"];
 const handoffReleasePath = "/__replay_proof";
 const handoffWindowMs = 120_000;
 const ReplayGamesSchema = z
@@ -33,6 +40,7 @@ const ReplayGamesSchema = z
     z.object({
       gameId: z.string().regex(/^[1-9]\d*$/u),
       durationSeconds: z.number().positive(),
+      queueId: z.number().int().positive().default(710),
     }),
   )
   .nonempty()
@@ -70,10 +78,20 @@ function readRecoveredMatch(outbox: string, gameId: string) {
 }
 
 /** Keeps replay bytes in a private scratch directory while preserving the SDK command contract. */
-function scratchReplayStore(directory: string) {
+function scratchReplayStore(
+  directory: string,
+  canonical?: { key: string; text: string },
+) {
   const metadata = new Map<string, Record<string, string>>();
   return {
     async send(command: GetObjectCommand | PutObjectCommand) {
+      if (
+        canonical &&
+        !(command instanceof PutObjectCommand) &&
+        command.input.Key === canonical.key
+      ) {
+        return { Body: { transformToString: async () => canonical.text } };
+      }
       const key = z
         .string()
         .regex(/^replays\/NA1\/\d+\/[a-f0-9]{64}\.rofl$/u)
@@ -137,6 +155,7 @@ async function handOffReplays(
 async function createPairedUploader(
   prisma: ExtendedPrismaClient,
   ownerId: DiscordAccountId,
+  puuid: LeaguePuuid,
 ) {
   const deviceId = await createTestScoutClientDevice(prisma, ownerId);
   const token = `sct_${crypto.randomUUID()}`;
@@ -151,7 +170,6 @@ async function createPairedUploader(
     updatedTime: new Date(),
     alias: "replay-proof",
   };
-  const puuid = LeaguePuuidSchema.parse("p".repeat(78));
   await prisma.player.create({
     data: {
       ...accountMetadata,
@@ -164,20 +182,207 @@ async function createPairedUploader(
   return { deviceId, puuid, token };
 }
 
+async function readCanonicalProof(
+  matchPath: string,
+  champion: string,
+  game: z.infer<typeof ReplayGamesSchema>[number],
+  directory: string,
+) {
+  const { matchObjectKey } = await import("#src/report-store/s3-raw-source.ts");
+  const text = await Bun.file(matchPath).text();
+  const match = RawMatchSchema.parse(JSON.parse(text));
+  const matchId = RiotMatchIdSchema.parse(`NA1_${game.gameId}`);
+  expect(match.metadata.matchId).toBe(matchId);
+  expect(match.info.gameId.toString()).toBe(game.gameId);
+  expect(match.info.queueId).toBe(game.queueId);
+  const owners = match.info.participants.filter(
+    (member) => member.championName === champion,
+  );
+  const owner = owners.length === 1 ? owners[0] : undefined;
+  if (!owner) throw new Error("Canonical proof needs a unique owner champion");
+  const replay = Bun.file(path.join(directory, `NA1-${game.gameId}.rofl`));
+  const bytes = Buffer.from(await replay.arrayBuffer());
+  const footerLength = bytes.readUInt32LE(bytes.length - 4);
+  if (
+    footerLength <= 0 ||
+    footerLength > 4 * 1024 * 1024 ||
+    footerLength > bytes.length - 4
+  )
+    throw new Error("Invalid replay footer length");
+  const { statsJson } = z
+    .object({ statsJson: z.string() })
+    .parse(JSON.parse(bytes.subarray(-4 - footerLength, -4).toString("utf8")));
+  const footerRows = z
+    .array(
+      z.object({
+        PUUID: z.string(),
+        RIOT_ID_GAME_NAME: z.string(),
+        RIOT_ID_TAG_LINE: z.string(),
+        SKIN: z.string(),
+        TEAM: z.string(),
+        CHAMPIONS_KILLED: z.string(),
+        NUM_DEATHS: z.string(),
+        ASSISTS: z.string(),
+      }),
+    )
+    .parse(JSON.parse(statsJson));
+  const rows = footerRows.filter(
+    (row) =>
+      row.RIOT_ID_GAME_NAME === owner.riotIdGameName &&
+      row.RIOT_ID_TAG_LINE === owner.riotIdTagline &&
+      row.SKIN === owner.championName &&
+      row.TEAM === owner.teamId.toString() &&
+      row.CHAMPIONS_KILLED === owner.kills.toString() &&
+      row.NUM_DEATHS === owner.deaths.toString() &&
+      row.ASSISTS === owner.assists.toString(),
+  );
+  const row = rows.length === 1 ? rows[0] : undefined;
+  if (!row)
+    throw new Error("Canonical owner cannot be joined to the replay footer");
+  const archive = ArtifactDescriptorSchema.parse({
+    kind: "match",
+    key: matchObjectKey(matchId, new Date(match.info.gameCreation)),
+    bytes: Buffer.byteLength(text),
+    digest: new Bun.CryptoHasher("sha256").update(text).digest("hex"),
+    contentType: "application/json",
+    capturedAt: new Date().toISOString(),
+  });
+  return {
+    archive,
+    text,
+    matchId,
+    gameVersion: match.info.gameVersion,
+    puuid: LeaguePuuidSchema.parse(owner.puuid),
+    alias: {
+      lcuUuid: z.uuid().parse(row.PUUID),
+      gameName: row.RIOT_ID_GAME_NAME,
+      tagLine: row.RIOT_ID_TAG_LINE,
+    },
+  };
+}
+
+async function readConfiguredCanonicalProof(
+  games: z.infer<typeof ReplayGamesSchema>,
+  directory: string,
+) {
+  const canonicalGame = games.length === 1 ? games[0] : undefined;
+  if (canonicalMatchPath !== undefined && (!canonicalGame || !ownerChampion))
+    throw new Error(
+      "Canonical replay proof requires one game and SCOUT_REPLAY_PROOF_OWNER_CHAMPION",
+    );
+  return canonicalMatchPath !== undefined && canonicalGame && ownerChampion
+    ? await readCanonicalProof(
+        canonicalMatchPath,
+        ownerChampion,
+        canonicalGame,
+        directory,
+      )
+    : undefined;
+}
+
+async function seedCanonicalProof(
+  prisma: ExtendedPrismaClient,
+  canonical: NonNullable<
+    Awaited<ReturnType<typeof readConfiguredCanonicalProof>>
+  >,
+) {
+  const { rawArchiveReceiptRecord } =
+    await import("#src/report-lake/durable-receipts.ts");
+  const { recordReceipt } =
+    await import("#src/database/durable/receipt-repository.ts");
+  expect(
+    await recordReceipt(
+      prisma,
+      rawArchiveReceiptRecord({
+        matchId: canonical.matchId,
+        artifact: canonical.archive,
+      }),
+    ),
+  ).toEqual({ outcome: "applied" });
+  await prisma.leagueIdentityAlias.create({
+    data: {
+      ...canonical.alias,
+      puuid: canonical.puuid,
+      source: "riot_id",
+      ownerVerified: true,
+    },
+  });
+}
+
+async function seedOutboxProof(
+  prisma: ExtendedPrismaClient,
+  {
+    deviceId,
+    puuid,
+  }: Pick<
+    Awaited<ReturnType<typeof createPairedUploader>>,
+    "deviceId" | "puuid"
+  >,
+  {
+    gameId,
+    queueId,
+  }: Pick<z.infer<typeof ReplayGamesSchema>[number], "gameId" | "queueId">,
+  sequence: number,
+) {
+  if (outboxPath === undefined)
+    throw new Error("Replay proof outbox is missing");
+  const { observer, body } = readRecoveredMatch(outboxPath, gameId);
+  expect(body.queueId).toBe(queueId);
+  await prisma.leagueIdentityAlias.upsert({
+    where: { lcuUuid: observer },
+    create: {
+      lcuUuid: observer,
+      puuid,
+      gameName: "fixture",
+      tagLine: "NA1",
+      // Seed the only valid stored alias source in the isolated database.
+      source: "riot_id",
+      ownerVerified: true,
+    },
+    update: {},
+  });
+  await prisma.scoutClientObservation.create({
+    data: {
+      observationId: crypto.randomUUID(),
+      deviceId,
+      sequence: BigInt(sequence + 1),
+      capturedAt: new Date(),
+      protocolVersion: 1,
+      schemaVersion: 1,
+      appVersion: "0.1.0",
+      kind: "post_game",
+      leaguePatch: body.gameVersion,
+      platformId: "NA1",
+      gameId,
+      localPuuid: puuid,
+      localLcuUuid: observer,
+      payload: {
+        resource: "post_game",
+        data: z.json().parse(body),
+      },
+      bodyDigest: new Bun.CryptoHasher("sha256")
+        .update(JSON.stringify(body))
+        .digest("hex"),
+      disposition: "ACCEPTED",
+    },
+  });
+  return body.gameVersion;
+}
+
 test.skipIf(
-  outboxPath === undefined ||
-    replayDirectory === undefined ||
-    replayGames === undefined,
+  replayDirectory === undefined ||
+    replayGames === undefined ||
+    (outboxPath === undefined && canonicalMatchPath === undefined),
 )(
   "the saved desktop matches upload and serve the original replay on anonymous routes",
   async () => {
-    if (
-      outboxPath === undefined ||
-      replayDirectory === undefined ||
-      replayGames === undefined
-    )
+    if (replayDirectory === undefined || replayGames === undefined)
       throw new Error("Replay proof inputs are missing");
     const games = ReplayGamesSchema.parse(JSON.parse(replayGames));
+    const canonical = await readConfiguredCanonicalProof(
+      games,
+      replayDirectory,
+    );
     const objectDirectory = await mkdtemp(
       path.join(tmpdir(), "scout-replay-proof-"),
     );
@@ -188,12 +393,16 @@ test.skipIf(
           ...(await importOriginal()),
           prisma,
         }));
-        const store = scratchReplayStore(objectDirectory);
+        const store = scratchReplayStore(
+          objectDirectory,
+          canonical && { key: canonical.archive.key, text: canonical.text },
+        );
         vi.doMock("#src/storage/s3-client.ts", () => ({
           createS3Client: () => store,
         }));
         const ownerId = DiscordAccountIdSchema.parse("190000000000000001");
         vi.stubEnv("ENVIRONMENT", "dev");
+        if (canonical) vi.stubEnv("S3_BUCKET_NAME", "local-replay-proof");
         vi.doMock("#src/configuration/flags.ts", async (importOriginal) => ({
           ...(await importOriginal()),
           isPolicyEnabled: async (key: string, attributes: { user?: string }) =>
@@ -206,7 +415,9 @@ test.skipIf(
         const { deviceId, puuid, token } = await createPairedUploader(
           prisma,
           ownerId,
+          canonical?.puuid ?? LeaguePuuidSchema.parse("p".repeat(78)),
         );
+        if (canonical) await seedCanonicalProof(prisma, canonical);
 
         const handoff = Promise.withResolvers<undefined>();
         const server = Bun.serve({
@@ -233,45 +444,16 @@ test.skipIf(
           const replayIds: Record<string, string> = {};
           for (const [
             sequence,
-            { gameId, durationSeconds },
+            { gameId, durationSeconds, queueId },
           ] of games.entries()) {
-            const { observer, body } = readRecoveredMatch(outboxPath, gameId);
-            expect(body.queueId).toBe(710);
-            await prisma.leagueIdentityAlias.upsert({
-              where: { lcuUuid: observer },
-              create: {
-                lcuUuid: observer,
-                puuid,
-                gameName: "fixture",
-                tagLine: "NA1",
-                // Seed the only valid stored alias source in the isolated database.
-                source: "riot_id",
-                ownerVerified: true,
-              },
-              update: {},
-            });
-            await prisma.scoutClientObservation.create({
-              data: {
-                observationId: crypto.randomUUID(),
-                deviceId,
-                sequence: BigInt(sequence + 1),
-                capturedAt: new Date(),
-                protocolVersion: 1,
-                schemaVersion: 1,
-                appVersion: "0.1.0",
-                kind: "post_game",
-                leaguePatch: body.gameVersion,
-                platformId: "NA1",
-                gameId,
-                localPuuid: puuid,
-                localLcuUuid: observer,
-                payload: { resource: "post_game", data: z.json().parse(body) },
-                bodyDigest: new Bun.CryptoHasher("sha256")
-                  .update(JSON.stringify(body))
-                  .digest("hex"),
-                disposition: "ACCEPTED",
-              },
-            });
+            const gameVersion =
+              canonical?.gameVersion ??
+              (await seedOutboxProof(
+                prisma,
+                { deviceId, puuid },
+                { gameId, queueId },
+                sequence,
+              ));
             const file = Bun.file(
               path.join(replayDirectory, `NA1-${gameId}.rofl`),
             );
@@ -314,7 +496,7 @@ test.skipIf(
               gameId,
               sha256,
               bytes: file.size,
-              gameBuild: "16.23.840.6595",
+              gameBuild: normalizeGameBuild(gameVersion),
               protocol: "8bbfcd5af2bc92db",
               durationSeconds,
               mapId: 11,

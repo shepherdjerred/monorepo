@@ -110,6 +110,48 @@ test("binds forward and reversed packet names to unordered authored coordinates"
   );
 });
 
+test("retains the current disputed turret event while omitting its presentation", () => {
+  const { prepared, receipt, packets } = fixture();
+  const currentContext = 1073742154;
+  const lossTime = 2392.406078125;
+  const snapshotTime = 2400.68212890625;
+  receipt.installedCompatibilityVersion = "16.23.8418428+branch";
+  receipt.records.at(-1).mapNameHash = 392430785;
+  packets[0].paramBits = currentContext;
+  packets[0].payload = namePacket(392430785, 0);
+  prepared.observations.turrets[0].context = currentContext;
+  prepared.observations.turrets[0].timeSeconds = lossTime;
+  prepared.packetReader.build = "16.23.841.8428";
+  const readOpening = prepared.packetReader.read;
+  const payload = new Uint8Array(41);
+  payload[13] = 0xed;
+  prepared.packetReader.read = (time) =>
+    time === 0
+      ? readOpening(time)
+      : {
+          keyframe: { timeSeconds: snapshotTime, chunkOffset: 2 },
+          packets: [
+            {
+              stream: 2,
+              chunkOffset: 2,
+              explicitOpcode: 1012,
+              paramBits: currentContext,
+              payload,
+            },
+          ],
+        };
+  const overlay = prepareNativeTerrainTurrets(prepared, receipt, {
+    allowCurrentBuild: true,
+  });
+  assert.equal(overlay.losses.length, 3);
+  assert.equal(overlay.renderableLosses.length, 2);
+  assert.equal(overlay.presentationOmissions[0].context, currentContext);
+  assert.equal(
+    overlay.presentationOmissions[0].snapshotTimeSeconds,
+    snapshotTime,
+  );
+});
+
 test("rejects missing or conflicting packet identities and unbound losses", () => {
   const { prepared, receipt, packets } = fixture();
   const [name] = packets.splice(0, 1);

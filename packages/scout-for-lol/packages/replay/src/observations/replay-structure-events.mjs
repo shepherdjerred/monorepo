@@ -1,6 +1,9 @@
 // Scout-owned observation implementation; research paths re-export this module.
 import { verifyReplayParticipantBindings } from "./replay-participant-bindings.mjs";
-import { createReplayTurretObserver } from "./replay-turret-events.mjs";
+import {
+  createReplayTurretObserver,
+  supportsReplayTurretEvents,
+} from "./replay-turret-events.mjs";
 
 const decoder = new TextDecoder("utf-8", { fatal: true });
 
@@ -105,11 +108,8 @@ export function verifyReplayStructureEvents(
   return verified;
 }
 
-export function createReplayStructureObserver(replay) {
-  if (
-    (replay.build !== "16.23.839.9929" && replay.build !== "16.23.840.6595") ||
-    replay.protocol !== "8bbfcd5af2bc92db"
-  )
+export function createReplayStructureObserver(replay, options) {
+  if (!supportsReplayTurretEvents(replay, options))
     throw new ReplayStructureValidationError(
       "Unsupported structure event build or protocol",
     );
@@ -171,10 +171,11 @@ export function createReplayStructureObserver(replay) {
   };
 }
 
-export function readReplayStructureEvents(replay, decompress) {
-  const structures = createReplayStructureObserver(replay);
-  const turrets = createReplayTurretObserver(replay);
+export function readReplayStructureEvents(replay, decompress, options) {
+  const structures = createReplayStructureObserver(replay, options);
+  const turrets = createReplayTurretObserver(replay, options);
   const binding = verifyReplayParticipantBindings(replay, decompress, {
+    ...options,
     observeGameplayPacket(packet, opcode, context) {
       structures.observeGameplayPacket(packet, opcode, context);
       turrets.observeGameplayPacket(packet, opcode, context);

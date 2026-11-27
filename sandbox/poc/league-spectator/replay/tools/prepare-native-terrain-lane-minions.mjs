@@ -33,14 +33,31 @@ assert.ok(
 );
 const destination = join(parent, basename(output));
 
-const build = "16.23.840.6595";
-const installedExeSha256 =
-  "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156";
 const archive = "DATA/FINAL/Maps/Shipping/Map11.wad.client";
 const materialsSha256 =
   "ed38cba7aaa4390e8b2a2cfe778d5f1151152b9b97f2c90883c17b27b510d67a";
-const mapBinSha256 =
-  "338a12c915c8fc2c38a7d5ac9e4ae1e15a1a4ccd0115f2e4f6050e15497ca0f6";
+const archiveByBuild = new Map([
+  [
+    "16.23.840.6595",
+    {
+      installedExeSha256:
+        "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156",
+      mapBinSha256:
+        "338a12c915c8fc2c38a7d5ac9e4ae1e15a1a4ccd0115f2e4f6050e15497ca0f6",
+    },
+  ],
+  [
+    "16.23.841.8428",
+    {
+      installedExeSha256:
+        "f0fd2b02e3bb69d4573629c0daca863cc010556a1dbdd28ef3ef24ef10b9b733",
+      mapBinSha256:
+        "bf4b0fdfe1070103cad2d5f1e36a637f7c0d11a565f841acdbe3738fac6fe69d",
+      archiveIndexSha256:
+        "bd7d3d901aa1c96eb7f4969fdafedf500f99f636b1653ea45233274ac34e8b92",
+    },
+  ],
+]);
 const skinDigests = new Map([
   [
     "sru_orderminionmelee",
@@ -75,6 +92,18 @@ const skinDigests = new Map([
     "07ba2aa3e3791f9d3951998a8ba3069f1104ab4607e812a7e873cb1c1f5ec702",
   ],
 ]);
+const actorSource = await readFile(actorPath);
+assert.match(actorDigest, /^[a-f0-9]{64}$/);
+assert.equal(sha(actorSource), actorDigest, "Lane actor proof digest mismatch");
+const actorProof = JSON.parse(actorSource);
+assert.equal(actorProof.kind, "exact-terrain-lane-minion-waypoint-evidence");
+const { build } = actorProof;
+const archiveIdentity = archiveByBuild.get(build);
+assert.ok(archiveIdentity, "Lane actor proof uses an unreviewed game build");
+const { installedExeSha256, mapBinSha256, archiveIndexSha256 } =
+  archiveIdentity;
+assert.equal(actorProof.materialsSha256, materialsSha256);
+assert.equal(actorProof.mapBinSha256, mapBinSha256);
 assert.equal(
   sha(
     await Bun.file(join(installation, "Game", "League of Legends.exe")).bytes(),
@@ -82,25 +111,26 @@ assert.equal(
   installedExeSha256,
   "Installed game file differs from the reviewed exact build",
 );
-const wad = await openLocalWad(installation, archive, Bun.zstdDecompressSync);
+const wad = await openLocalWad(
+  installation,
+  archive,
+  Bun.zstdDecompressSync,
+  archiveIndexSha256,
+);
 const materials = readExactMapBin(
   await wad("data/maps/mapgeometry/map11/base_srx.materials.bin"),
 );
 const map = readExactMapBin(await wad("data/maps/shipping/map11/map11.bin"));
 assert.equal(materials.sourceSha256, materialsSha256);
 assert.equal(map.sourceSha256, mapBinSha256);
-const actorSource = await readFile(actorPath);
-assert.match(actorDigest, /^[a-f0-9]{64}$/);
-assert.equal(sha(actorSource), actorDigest, "Lane actor proof digest mismatch");
-const actorProof = JSON.parse(actorSource);
-assert.equal(actorProof.kind, "exact-terrain-lane-minion-waypoint-evidence");
-assert.equal(actorProof.build, build);
-assert.equal(actorProof.materialsSha256, materialsSha256);
-assert.equal(actorProof.mapBinSha256, mapBinSha256);
 const nativeDecoder = await readFile(nativeDecoderPath);
 assert.equal(sha(nativeDecoder), actorProof.nativeReaderSha256);
 assert.equal(
-  sha(prepareExactTerrainDecoder(nativeDecoder)),
+  sha(
+    prepareExactTerrainDecoder(nativeDecoder, actorProof, {
+      allowCurrentBuild: build === "16.23.841.8428",
+    }),
+  ),
   actorProof.decoderSha256,
 );
 const { registration } = bindMap11BarracksDefinitions(
@@ -148,6 +178,7 @@ await writeFile(
     kind: "exact-native-terrain-lane-minion-assets",
     build,
     archive,
+    ...(archiveIndexSha256 === undefined ? {} : { archiveIndexSha256 }),
     installedExeSha256,
     materialsSha256,
     mapBinSha256,

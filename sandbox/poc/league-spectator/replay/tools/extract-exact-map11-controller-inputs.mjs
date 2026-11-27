@@ -17,21 +17,30 @@ if (
   !geometryMetadata ||
   !materialBin ||
   !output ||
-  (mode !== undefined && mode !== "--same-build") ||
+  (mode !== undefined &&
+    mode !== "--same-build" &&
+    mode !== "--exact-8428" &&
+    mode !== "--compare-8428-packets") ||
   process.argv.length > 7
 )
   throw Error(
-    "Usage: bun extract-exact-map11-controller-inputs.mjs <saved-rofl> <map.json> <base_srx.materials.bin> <new-input.json> [--same-build]",
+    "Usage: bun extract-exact-map11-controller-inputs.mjs <saved-rofl> <map.json> <base_srx.materials.bin> <new-input.json> [--same-build | --exact-8428 | --compare-8428-packets]",
   );
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const long = "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668";
 const short =
   "d7cabb0b7ba965f317863d128238847a0b9b0e4cc0cdbcfa3077c537b10fdf2b";
+const comparePackets = mode === "--compare-8428-packets";
 const bytes = readFileSync(replayPath);
 const replaySha256 = sha(bytes);
 if (mode === undefined) assert.ok([short, long].includes(replaySha256));
 const replay = openReplay(Uint8Array.from(bytes).buffer);
-assert.equal(replay.build, "16.23.840.6595");
+assert.equal(
+  replay.build,
+  comparePackets || mode === "--exact-8428"
+    ? "16.23.841.8428"
+    : "16.23.840.6595",
+);
 assert.equal(replay.protocol, "8bbfcd5af2bc92db");
 const map = readFileSync(geometryMetadata);
 const geometrySha256 = sha(map);
@@ -128,7 +137,8 @@ writeFileSync(
       meshControllerIds,
       controllers,
       packets,
-      ...(mode === "--same-build" ? { snapshotChunks: [...snapshotChunks] } : {}),
+      ...(mode === undefined ? {} : { snapshotChunks: [...snapshotChunks] }),
+      ...(comparePackets ? { comparisonOnly: true } : {}),
     },
     null,
     2,

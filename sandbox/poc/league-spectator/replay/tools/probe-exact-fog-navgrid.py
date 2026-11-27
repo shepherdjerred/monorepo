@@ -21,6 +21,7 @@ def sha(data):
 
 
 class FogNavgrid:
+    EXECUTABLE_SLICE_SHA256 = MACH_SHA
     ARENA = 0x10000000
     ARENA_SIZE = 0x4000000
     STREAM = ARENA + 0x100
@@ -33,8 +34,8 @@ class FogNavgrid:
     TERRAIN_QUERIES = (0x16DD420, 0x16DD4C0, 0x16E15B0)
 
     def __init__(self, image, navgrid):
-        if sha(image.binary) != MACH_SHA or sha(navgrid) != MAP_SHA:
-            raise ValueError("Expected archived 16.23.840.6595 and exact Map11 navgrid")
+        if sha(image.binary) != self.EXECUTABLE_SLICE_SHA256 or sha(navgrid) != MAP_SHA:
+            raise ValueError("Expected the pinned archived executable and exact Map11 navgrid")
         self.image = image
         self.base = image.base
         self.data = navgrid

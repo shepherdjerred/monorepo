@@ -9,11 +9,14 @@ import {
   validateOrdinalModelLayout,
 } from "./ordinal-model-layout.mjs";
 import { openLocalWad } from "./wad.mjs";
+import {
+  archivedChampionBuild,
+  championArchiveExecutableHashes,
+  currentChampionBuild,
+  verifyNativeCatalogOpening,
+} from "./research/native-terrain-champion-model-catalog.mjs";
 
-const expectedBuild = "16.23.840.6595";
 const expectedProtocol = "8bbfcd5af2bc92db";
-const executableHash =
-  "89d73a9e6d886c291f5b3cf42904e5e8b014148b56490d2b6c862ea96cc9f156";
 const args = process.argv.slice(2);
 const archiveCatalog = args[0] === "--archive-catalog";
 const sourcePin = archiveCatalog ? args[3] : null;
@@ -67,9 +70,12 @@ const manifest = json(manifestBytes);
 const sourceManifestSha256 = sha(manifestBytes);
 const digestPattern = /^[a-f0-9]{64}$/;
 const inputSkins = archiveCatalog ? manifest.skins : manifest.actors;
+const currentArchive =
+  archiveCatalog && manifest.build === currentChampionBuild;
+const executableHash = championArchiveExecutableHashes[manifest.build];
 if (
   manifest.schema !== 1 ||
-  manifest.build !== expectedBuild ||
+  (!currentArchive && manifest.build !== archivedChampionBuild) ||
   manifest.protocol !== expectedProtocol ||
   manifest.installedExeSha256 !== executableHash ||
   !Array.isArray(inputSkins)
@@ -83,9 +89,29 @@ if (archiveCatalog) {
     !digestPattern.test(manifest.sourceCensusSha256) ||
     !digestPattern.test(manifest.selectionSha256) ||
     inputSkins.length === 0 ||
-    new Set(inputSkins.map(({ champion, skinId }) => `${champion.toLowerCase()}-${skinId}`)).size !== inputSkins.length
+    new Set(
+      inputSkins.map(
+        ({ champion, skinId }) => `${champion.toLowerCase()}-${skinId}`,
+      ),
+    ).size !== inputSkins.length
   )
     throw Error("Pinned canonical archive skin inputs required");
+  if (currentArchive) {
+    const { nativeOpening } = manifest;
+    verifyNativeCatalogOpening(
+      nativeOpening,
+      nativeOpening?.rows,
+      nativeOpening?.replaySha256,
+    );
+    const keys = (skins) =>
+      [...new Set(skins.map(({ champion, skinId }) => `${champion}-${skinId}`))]
+        .sort()
+        .join("/");
+    if (keys(nativeOpening.rows) !== keys(inputSkins))
+      throw Error(
+        "Native opening roster differs from archive skin input selection",
+      );
+  }
 } else if (
   !digestPattern.test(manifest.replaySha256) ||
   inputSkins.length !== 10 ||
@@ -94,7 +120,9 @@ if (archiveCatalog) {
 ) {
   throw Error("Exact ten-participant opening skin manifest required");
 }
+// Archive catalog inputs carry the reviewed WAD index for every skin.
 if (
+  (!archiveCatalog || currentArchive) &&
   sha(
     await Bun.file(join(installation, "Game", "League of Legends.exe")).bytes(),
   ) !== executableHash
@@ -121,13 +149,19 @@ const blob = (file, bytes) => ({
 const sameReference = (left, right) =>
   left?.type === right?.type && left?.value === right?.value;
 const wadCache = new Map();
-function openWad(archive) {
-  if (!wadCache.has(archive))
+function openWad(archive, archiveIndexSha256) {
+  const key = JSON.stringify([archive, archiveIndexSha256]);
+  if (!wadCache.has(key))
     wadCache.set(
-      archive,
-      openLocalWad(installation, archive, Bun.zstdDecompressSync),
+      key,
+      openLocalWad(
+        installation,
+        archive,
+        Bun.zstdDecompressSync,
+        archiveIndexSha256,
+      ),
     );
-  return wadCache.get(archive);
+  return wadCache.get(key);
 }
 async function tool(file, ...args) {
   const child = Bun.spawn(
@@ -198,7 +232,7 @@ async function describeMaterial(materialRef, definitions, root, wad, archive) {
 
 function baseColor(material) {
   for (const pattern of [
-    /^Diffuse_?Texture$/i,
+    /^(Diffuse_?Texture|Diffuse_Sword_Texture)$/i,
     /^(Diffuse_Color|Diff_Tex)$/i,
     /^Main_?Texture$/i,
   ]) {
@@ -249,7 +283,12 @@ for (const actor of inputSkins) {
     resources.skin.reference !== skinPath
   )
     throw Error(`Original opening skin paths differ for ${champion}`);
-  const wad = await openWad(archive);
+  if (archiveCatalog && !digestPattern.test(actor.archiveIndexSha256))
+    throw Error(`Pinned WAD archive index required for ${champion}`);
+  const wad = await openWad(
+    archive,
+    archiveCatalog ? actor.archiveIndexSha256 : undefined,
+  );
   const bin = await verifySaved(
     `${directory}/skin.bin`,
     resources.skin,
@@ -373,7 +412,9 @@ for (const actor of inputSkins) {
   }
   const result = {
     champion,
-    ...(archiveCatalog ? {} : { context, footerRow }),
+    ...(archiveCatalog
+      ? { archiveIndexSha256: actor.archiveIndexSha256 }
+      : { context, footerRow }),
     skinId,
     skinScale,
     hiddenRanges,
@@ -483,8 +524,12 @@ if (sha(await Bun.file(runtime).bytes()) !== runtimeSha256)
 if (archiveCatalog && actors.some((actor) => !actor.model))
   throw Error(
     "Incomplete archive catalog: " +
-      actors.filter((actor) => !actor.model)
-        .map(({ champion, skinId, unresolved }) => `${champion}-${skinId}: ${unresolved}`)
+      actors
+        .filter((actor) => !actor.model)
+        .map(
+          ({ champion, skinId, unresolved }) =>
+            `${champion}-${skinId}: ${unresolved}`,
+        )
         .join("; "),
   );
 const receipt = archiveCatalog
@@ -497,10 +542,15 @@ const receipt = archiveCatalog
       sourceManifestSha256,
       sourceCensusSha256: manifest.sourceCensusSha256,
       selectionSha256: manifest.selectionSha256,
+      ...(currentArchive ? { nativeOpening: manifest.nativeOpening } : {}),
       toolchain: { assemblies: dlls, runtimeSha256 },
-      scope: "Archived SKN, SKL and authored base-color images. Match legality, native shader passes and animation are separate.",
+      scope:
+        "Archived SKN, SKL and authored base-color images. Match legality, native shader passes and animation are separate.",
       assets: Object.fromEntries(
-        actors.map((asset) => [`${asset.champion.toLowerCase()}-${asset.skinId}`, asset]),
+        actors.map((asset) => [
+          `${asset.champion.toLowerCase()}-${asset.skinId}`,
+          asset,
+        ]),
       ),
     }
   : {
@@ -517,15 +567,13 @@ const receipt = archiveCatalog
       actors,
     };
 const receiptText = JSON.stringify(receipt, null, 2);
-await writeFile(
-  join(output, "manifest.json"),
-  receiptText,
-  { flag: "wx" },
-);
+await writeFile(join(output, "manifest.json"), receiptText, { flag: "wx" });
 console.log(
   JSON.stringify({
     output,
-    ...(archiveCatalog ? { manifestSha256: sha(new TextEncoder().encode(receiptText)) } : {}),
+    ...(archiveCatalog
+      ? { manifestSha256: sha(new TextEncoder().encode(receiptText)) }
+      : {}),
     models: actors.filter((actor) => actor.model).length,
     unresolved: actors
       .filter((actor) => actor.unresolved)

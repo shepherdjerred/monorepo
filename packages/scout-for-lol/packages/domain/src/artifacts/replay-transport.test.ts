@@ -27,7 +27,12 @@ describe("build-specific replay transport", () => {
       getReplayContainerLayout("16.22.834.8910", "20e09df23c66b85e"),
     ).toThrow("transport admission is preparing");
   });
-  it.each(["16.23.839.9929", "16.23.840.6595"])(
+  it.each([
+    "16.23.839.9929",
+    "16.23.840.6595",
+    "16.23.841.3489",
+    "16.23.841.8428",
+  ])(
     "admits the observed %s container without enabling browser decoding",
     (build) => {
       const protocol = "8bbfcd5af2bc92db";

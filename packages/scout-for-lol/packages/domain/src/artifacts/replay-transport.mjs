@@ -42,6 +42,16 @@ export const REPLAY_CONTAINER_LAYOUTS = Object.freeze([
     chunkHeaderBytes: 18,
     compressionTag: 4,
   }),
+  // Verified against five complete saved containers, including their exact
+  // declared chunk counts and Zstd output widths.
+  ...["16.23.841.3489", "16.23.841.8428"].map((build) =>
+    Object.freeze({
+      build,
+      protocol: "8bbfcd5af2bc92db",
+      chunkHeaderBytes: 18,
+      compressionTag: 4,
+    }),
+  ),
   ...[
     ["15.24.734.7485", "61eece772542bd96"], // NA1-5455036925
     ["16.1.737.4870", "f884daa8c6569569"], // NA1-5464063815

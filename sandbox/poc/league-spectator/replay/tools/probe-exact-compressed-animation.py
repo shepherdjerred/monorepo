@@ -28,6 +28,7 @@ for name in ("client", "animation", "rig", "receipt", "clip"):
     parser.add_argument(f"--{name}", required=True, type=Path)
 parser.add_argument("--animation-sha256", required=True, help="Expected ANM digest from the authored clip provenance")
 parser.add_argument("--rig-sha256", required=True, help="Expected SKL digest from the matching model provenance")
+parser.add_argument("--current-build", action="store_true", help="Use the pinned 16.23.841.8428 executable")
 args = parser.parse_args()
 paths = {name: getattr(args, name).resolve() for name in ("client", "animation", "rig", "receipt", "clip")}
 if len(set(paths.values())) != len(paths):
@@ -37,8 +38,13 @@ if not __debug__:
 if not all(re.fullmatch(r"[a-f0-9]{64}", digest) for digest in (args.animation_sha256, args.rig_sha256)):
     parser.error("Expected lowercase SHA-256 digests for the authored clip and matching rig")
 client, anm, skl = (paths[name].read_bytes() for name in ("client", "animation", "rig"))
-if sha(client) != "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15":
-    raise ValueError("Unexpected 16.23.840.6595 universal Mac executable digest")
+build, client_sha = (
+    ("16.23.841.8428", "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7")
+    if args.current_build
+    else ("16.23.840.6595", "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15")
+)
+if sha(client) != client_sha:
+    raise ValueError(f"Unexpected {build} universal Mac executable digest")
 
 
 def validate_source(animation, skeleton):
@@ -229,7 +235,7 @@ phase = "mathematics-initializer"
 result = {
     "schema": 1,
     "kind": "exact-original-compressed-animation-pose-probe",
-    "build": "16.23.840.6595",
+    "build": build,
     "macExecutableSha256": sha(client),
     "macX86SliceSha256": sha(m.binary),
     "sourceAnmSha256": sha(anm),

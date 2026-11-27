@@ -82,3 +82,57 @@ test("rejects wrong clocks, level codes, sequences and incomplete progressions",
   );
   expect(() => attempt()).toThrow("differs from the bound footer row");
 });
+
+test("admits recorded level 19 only after an exact actor cap override", () => {
+  const progression = [
+    level(500, 10, 10, [0x85]),
+    ...[
+      0x72, 0xc5, 0x51, 0x5e, 0x9d, 0x43, 0x5f, 0x81, 0x94, 0xf8, 0x9a, 0x89,
+      0xae, 0x8f, 0x93, 0xef, 0x7c,
+    ].map((code, index) => level(500, index + 20, index + 20, [0x8d, code])),
+  ];
+  const cap = level(500, 11, 11, [0x4f, 0x7e], 652);
+  const expectedLevels = [1, 1, 19, 1, 1, 1, 1, 1, 1, 1];
+  const read = (packets, maximumLevel = 19) =>
+    decodeActorLevelEnvelopes(packets, binding, expectedLevels, maximumLevel);
+  const [first, ...later] = progression;
+  const repeatNine = level(500, 26.5, 27, [0xaa, 0x5f]);
+  const events = read([
+    first,
+    cap,
+    ...later.slice(0, 7),
+    repeatNine,
+    ...later.slice(7),
+  ]).events;
+  expect(events.at(-1)?.level).toBe(19);
+  expect(events.filter((event) => event.level === 9)).toHaveLength(1);
+  expect(() => read(progression)).toThrow("Unrecognized or nonconsecutive");
+  expect(() => read([first, cap, ...later], 18)).toThrow(
+    "Unrecognized or nonconsecutive",
+  );
+});
+
+test("the current-build profile requires a two-byte level-20 transition and cap", () => {
+  const progression = [
+    level(500, 10, 10, [0x85]),
+    ...[
+      0x72, 0xc5, 0x51, 0x5e, 0x9d, 0x43, 0x5f, 0x81, 0x94, 0xf8, 0x9a, 0x89,
+      0xae, 0x8f, 0x93, 0xef, 0x7c,
+    ].map((code, index) => level(500, index + 20, index + 20, [0x8d, code])),
+  ];
+  const cap = level(500, 5, 5, [0x4d, 0x7e], 652);
+  const level20 = level(500, 40, 40, [0xb2, 0x53]);
+  const expectedLevels = [1, 1, 20, 1, 1, 1, 1, 1, 1, 1];
+  const read = (packets, maximumLevel = 20) =>
+    decodeActorLevelEnvelopes(packets, binding, expectedLevels, maximumLevel);
+  expect(read([cap, ...progression, level20]).events.at(-1)?.level).toBe(20);
+  expect(() => read([...progression, level20])).toThrow(
+    "Unrecognized or nonconsecutive",
+  );
+  expect(() => read([cap, ...progression, level20], 19)).toThrow(
+    "Unrecognized or nonconsecutive",
+  );
+  expect(() =>
+    read([cap, ...progression, level(500, 40, 40, [0x89, 0x16, 0x53])]),
+  ).toThrow("Unrecognized or nonconsecutive");
+});

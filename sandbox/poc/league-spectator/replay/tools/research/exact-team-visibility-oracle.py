@@ -14,9 +14,17 @@ from macho import MachImage
 
 
 def main():
-    binary = Path(sys.argv[1]).read_bytes()
-    if hashlib.sha256(binary).hexdigest() != "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15":
-        raise ValueError("Expected archived exact 16.23.840.6595 executable bytes")
+    source, *options = sys.argv[1:]
+    if options not in ([], ["--current"]):
+        raise ValueError("Expected an exact executable path and optional --current")
+    build, digest = (
+        ("16.23.841.8428", "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7")
+        if options
+        else ("16.23.840.6595", "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15")
+    )
+    binary = Path(source).read_bytes()
+    if hashlib.sha256(binary).hexdigest() != digest:
+        raise ValueError(f"Expected archived exact {build} executable bytes")
     image = MachImage(binary)
     vm = u.Uc(u.UC_ARCH_X86, u.UC_MODE_64)
     vm.mem_map(image.base, len(image.image))
@@ -107,7 +115,11 @@ def main():
             put(obj, "Q", image.base + vtable)
             put(obj + 8, "I", opcode)
             put(obj + 16, "B", 0xff)
-            if call(entry, obj, cursor, body + 2) != 1 or get(cursor, "Q") != body + 2 or get(obj + 12, "I") != envelope_context:
+            if (
+                call(entry, obj, cursor, body + 2) != 1
+                or get(cursor, "Q") != body + 2
+                or get(obj + 12, "I") != envelope_context
+            ):
                 raise ValueError("Native reader rejected archived mask payload")
             put(component + 0x24, "I", initial)
             if call(callback, component, obj) != 1:

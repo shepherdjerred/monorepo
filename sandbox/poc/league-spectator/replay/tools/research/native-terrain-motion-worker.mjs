@@ -15,6 +15,7 @@ async function prepareMotion({
   waypointOrigin,
   replayBytes,
   decoderBytes,
+  allowCurrentBuild = false,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -35,14 +36,21 @@ async function prepareMotion({
     replay.roster.length !== identity.participantCount
   )
     throw new Error("Replay motion identity differs from the scene.");
+  const options = { allowCurrentBuild: allowCurrentBuild === true };
   const codecs = await createPreparedTerrainByteCodecs(
     new Uint8Array(decoderBytes),
     replay,
+    options,
   );
-  const replayPreparation = prepareReplayForSeek(replayBytes, decompress);
+  const replayPreparation = prepareReplayForSeek(
+    replayBytes,
+    decompress,
+    options,
+  );
   const { binding } = bindNativeTerrainChampionIdentities(
     replayPreparation,
     codecs,
+    options,
   );
   const prepared = {
     ...replayPreparation,
@@ -51,6 +59,7 @@ async function prepareMotion({
   const keyframes = prepareNativeTerrainChampionKeyframes(
     prepared,
     createPosition944ReaderFromCodecs(codecs),
+    options,
   );
   const { motion, coverage } = prepareNativeTerrainMotion(
     prepared,
@@ -60,6 +69,7 @@ async function prepareMotion({
       readWaypoints: createWaypointReaderFromCodecs(codecs),
       readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
       waypointOrigin,
+      ...options,
     },
   );
   return { type: "ready", frames: keyframes.frames, motion, coverage };

@@ -4,7 +4,9 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  championArchiveExecutableHashes,
   corroborateChampionModelSelections,
+  currentChampionBuild,
   loadChampionModelCatalog,
 } from "./native-terrain-champion-model-catalog.mjs";
 
@@ -117,6 +119,64 @@ test("loads pinned build-authored GLBs for the decoded skin selectors", async ()
     await expect(
       loadChampionModelCatalog(manifest, pin, identity, selections),
     ).rejects.toThrow("Champion model digest differs");
+
+    await writeFile(join(root, assets["champion0-0"].model.file), modelBytes);
+    const current = {
+      ...identity,
+      build: currentChampionBuild,
+      replaySha256: "a".repeat(64),
+    };
+    const currentCatalog = {
+      ...JSON.parse(contents),
+      build: current.build,
+      installedExeSha256: championArchiveExecutableHashes[current.build],
+      sourceCensusSha256: "b".repeat(64),
+    };
+    const uncorroborated = JSON.stringify(currentCatalog);
+    await writeFile(manifest, uncorroborated);
+    await expect(
+      loadChampionModelCatalog(
+        manifest,
+        sha256(uncorroborated),
+        current,
+        selections,
+      ),
+    ).rejects.toThrow("Native opening roster required");
+    const corroborated = JSON.stringify({
+      ...currentCatalog,
+      nativeOpening: {
+        rows: heroes,
+        replaySha256: current.replaySha256,
+        nativeLogSha256: "c".repeat(64),
+        proofSha256: "d".repeat(64),
+      },
+    });
+    await writeFile(manifest, corroborated);
+    const currentPin = sha256(corroborated);
+    expect(
+      (
+        await loadChampionModelCatalog(
+          manifest,
+          currentPin,
+          current,
+          selections,
+        )
+      ).bindings,
+    ).toEqual(loaded.bindings);
+    await expect(
+      loadChampionModelCatalog(
+        manifest,
+        currentPin,
+        { ...current, replaySha256: "e".repeat(64) },
+        selections,
+      ),
+    ).rejects.toThrow("Native roster belongs to another replay");
+    await expect(
+      loadChampionModelCatalog(manifest, currentPin, current, [
+        { ...selections[0], skinId: 1 },
+        ...selections.slice(1),
+      ]),
+    ).rejects.toThrow("Opening selection disagrees with the native roster");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

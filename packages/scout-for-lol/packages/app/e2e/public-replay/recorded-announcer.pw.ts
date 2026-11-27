@@ -15,6 +15,20 @@ const objectiveCues = [
   { mediaId: 56_523_430, frames: 232_332, time: 758.777796875 },
   { mediaId: 963_276_642, frames: 314_891, time: 922.249119140625 },
 ];
+const currentObjectiveCues = [
+  { mediaId: 56_523_430, frames: 232_332, time: 880.05915234375 },
+  { mediaId: 963_276_642, frames: 314_891, time: 975.6594067382813 },
+];
+
+test.use({
+  launchOptions: {
+    args: [
+      "--use-angle=swiftshader",
+      "--enable-unsafe-swiftshader",
+      "--mute-audio",
+    ],
+  },
+});
 
 test("announcer preview stays silent until enabled and follows the replay clock", async ({
   baseURL,
@@ -26,9 +40,12 @@ test("announcer preview stays silent until enabled and follows the replay clock"
   const clipPaths = [...fixture.paths.keys()].filter(
     (url) => url.includes("/announcer-preview/") && url.endsWith(".wav"),
   );
-  const additionalCues = objectiveCues.filter(({ mediaId }) =>
+  const current = fixture.descriptor.gameBuild === "16.23.841.8428";
+  const expectedObjectives = current ? currentObjectiveCues : objectiveCues;
+  const additionalCues = expectedObjectives.filter(({ mediaId }) =>
     clipPaths.some((url) => url.endsWith(`/${String(mediaId)}.wav`)),
   );
+  if (current) expect(additionalCues).toEqual(currentObjectiveCues);
   expect(clipPaths).toHaveLength(2 + additionalCues.length);
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   await installRecordedAudioProbe(page);
@@ -122,7 +139,7 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     .toMatchObject({ offset: 0, rate: 4 });
   for (const cue of additionalCues) {
     await pause.click();
-    const start = Math.floor(cue.time);
+    const start = Math.floor(cue.time - (current ? 1 : 0));
     await seek(page, start);
     const beforeObjective = await readRecordedAudioProbe(page);
     await play.click();

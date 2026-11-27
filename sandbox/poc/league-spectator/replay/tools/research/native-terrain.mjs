@@ -346,7 +346,17 @@ export function createTerrainRenderer(
   const { materials, textures } = uploadDiffuseTextures(gl, bindings);
   const opaqueTerrain = [];
   const blendedTerrain = [];
+  const omittedControllers = new Set(
+    scene.terrainVisibility?.omittedMeshControllerIds,
+  );
+  const unresolvedByController = new Map();
+  for (const window of scene.terrainVisibility?.unresolvedWindows ?? []) {
+    const windows = unresolvedByController.get(window.controllerId) ?? [];
+    windows.push(window);
+    unresolvedByController.set(window.controllerId, windows);
+  }
   for (const group of groups) {
+    if (omittedControllers.has(group.controllerId)) continue;
     const binding = materials.get(group.material);
     if (binding === undefined) continue;
     const pass =
@@ -355,12 +365,27 @@ export function createTerrainRenderer(
       ...group,
       ...binding,
       visibility: visibilityTracks.get(group.controllerId),
+      windows: unresolvedByController.get(group.controllerId),
     });
   }
   function drawTerrainGroup(
     time,
-    { indexOffset, indexCount, texture, alphaTest: cutoff, visibility },
+    {
+      indexOffset,
+      indexCount,
+      texture,
+      alphaTest: cutoff,
+      visibility,
+      windows,
+    },
   ) {
+    if (
+      windows?.some(
+        ({ startSeconds, endSeconds }) =>
+          time >= startSeconds && time < endSeconds,
+      )
+    )
+      return;
     if (visibility !== undefined) {
       let i = visibility.length - 1;
       while (i > 0 && visibility[i][0] > time) i--;
@@ -606,13 +631,15 @@ export function createTerrainRenderer(
       if (structureModels !== undefined || nexusModels !== undefined)
         modelRenderer.draw(viewProjection.elements, visibleStructures);
       if (nexusModels !== undefined) {
-        const { instances, cue } = scene.nexusModels;
+        const { instances, terminalLoss, cue } = scene.nexusModels;
+        const loss = terminalLoss ?? cue;
         modelRenderer.draw(
           viewProjection.elements,
           instances.filter(
             ({ context }) =>
               visible(context) &&
-              (context !== cue.context || frame.timeSeconds < cue.timeSeconds),
+              (context !== loss.context ||
+                frame.timeSeconds < loss.timeSeconds),
           ),
         );
       }

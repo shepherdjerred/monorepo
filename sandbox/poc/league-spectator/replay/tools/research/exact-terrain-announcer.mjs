@@ -25,9 +25,23 @@ export const heraldAudioSource = Object.freeze({
   channels: 1,
 });
 
+export const currentAnnouncerSource = Object.freeze({
+  replaySha256:
+    "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1",
+  build: "16.23.841.8428",
+  mapSha256: "bf4b0fdfe1070103cad2d5f1e36a637f7c0d11a565f841acdbe3738fac6fe69d",
+  globalSha256:
+    "d25473c8218476ab44c227a33caa44c599b629c729eab5460085fd63d8fd1485",
+});
+
 function readExactMap11Sound(packetReader, replaySha256, witness) {
-  assertExactTerrainReplay(packetReader);
-  if (replaySha256 !== infernalTransitionSource.replaySha256)
+  const current = replaySha256 === currentAnnouncerSource.replaySha256;
+  assertExactTerrainReplay(packetReader, { allowCurrentBuild: current });
+  if (
+    current
+      ? packetReader.build !== currentAnnouncerSource.build
+      : replaySha256 !== infernalTransitionSource.replaySha256
+  )
     throw Error("Expected the reviewed long Map11 replay");
   const { packets } = packetReader.read(witness.windowEnd);
   let opcode = null;
@@ -63,16 +77,26 @@ function readExactMap11Sound(packetReader, replaySha256, witness) {
 
 // The exact-build 880 reader accepted both full bodies. The archived
 // announcement entries name fixed Wwise events without team/actor tokens.
+const elementalSound = {
+  wwiseEventId: 3124037542,
+  mediaId: 56523430,
+  frames: 232332,
+  wemSha256: "c91f653429199a5c171a7c059ffd2fc1e29d44cc531a86fcf507e8f3050cbaf7",
+};
+const heraldSound = {
+  name: "OnKillRiftHerald_Spectator",
+  wwiseEventId: 2916753568,
+  mediaId: 963276642,
+  frames: 314891,
+  wemSha256: "7177e18178a6d228e26805a855aa856b913ca7b02465f036d787a0da164eed84",
+};
+
 export function readExactInfernalTransition(packetReader, replaySha256) {
   const chunkOffset = 7339694;
   const blockOffset = 210869;
   return {
     name: "OnDragonTerrainTransitionInfernal",
-    wwiseEventId: 3124037542,
-    mediaId: 56523430,
-    frames: 232332,
-    wemSha256:
-      "c91f653429199a5c171a7c059ffd2fc1e29d44cc531a86fcf507e8f3050cbaf7",
+    ...elementalSound,
     event: 194,
     timeSeconds: readExactMap11Sound(packetReader, replaySha256, {
       chunkOffset,
@@ -89,12 +113,7 @@ export function readExactHeraldAudio(packetReader, replaySha256) {
   const chunkOffset = 9097928;
   const blockOffset = 518703;
   return {
-    name: "OnKillRiftHerald_Spectator",
-    wwiseEventId: 2916753568,
-    mediaId: 963276642,
-    frames: 314891,
-    wemSha256:
-      "7177e18178a6d228e26805a855aa856b913ca7b02465f036d787a0da164eed84",
+    ...heraldSound,
     event: 201,
     timeSeconds: readExactMap11Sound(packetReader, replaySha256, {
       chunkOffset,
@@ -131,6 +150,61 @@ const sounds = new Map([
     },
   ],
 ]);
+
+const currentCues = [
+  [
+    159,
+    sounds.get(159),
+    {
+      windowEnd: 21,
+      chunkOffset: 40710,
+      blockOffset: 119067,
+      body: "27a29b03691abc565656565656d15656568f995001ba",
+    },
+  ],
+  [
+    157,
+    sounds.get(157),
+    {
+      windowEnd: 32,
+      chunkOffset: 40710,
+      blockOffset: 146343,
+      body: "bfa21c03401abc5656565656562f51456bdb",
+    },
+  ],
+  [
+    196,
+    { name: "OnDragonTerrainTransitionMountain", ...elementalSound },
+    {
+      windowEnd: 881,
+      chunkOffset: 8391266,
+      blockOffset: 190389,
+      body: "bfa25203401abc5656565656562f51456bdb",
+    },
+  ],
+  [
+    201,
+    heraldSound,
+    {
+      windowEnd: 977,
+      chunkOffset: 9353716,
+      blockOffset: 370066,
+      body: "25a21103a21abc5656b5de56ae56565656b5de56ae56565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656567676767656565656565656560fbf601abc56565656565656fcbc56ae32079d29282c32",
+    },
+  ],
+];
+
+export function readCurrentAnnouncerCandidates(packetReader, replaySha256) {
+  if (replaySha256 !== currentAnnouncerSource.replaySha256)
+    throw Error("Expected the reviewed current Map11 replay");
+  return currentCues.map(([event, sound, witness]) => ({
+    ...sound,
+    event,
+    timeSeconds: readExactMap11Sound(packetReader, replaySha256, witness),
+    chunkOffset: witness.chunkOffset,
+    blockOffset: witness.blockOffset,
+  }));
+}
 
 const rotateByte = (byte, bits) =>
   ((byte << bits) | (byte >>> (8 - bits))) & 255;
