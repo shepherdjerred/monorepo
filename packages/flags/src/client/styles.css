@@ -118,6 +118,8 @@ p.fl-detail {
   max-width: 26ch;
   overflow: hidden;
   vertical-align: bottom;
+  /* The kit's .ui-data cells wrap; a long variant value stays one line. */
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
