@@ -1,7 +1,7 @@
 import {
   parseTemporalReplayTargets,
   replayTemporalHistories,
-} from "@shepherdjerred/root-scripts/temporal-replay.ts";
+} from "@shepherdjerred/script-kit/temporal-replay.ts";
 import { z } from "zod";
 
 const ScoutStageSchema = z.enum(["beta", "prod"]);

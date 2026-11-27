@@ -5,7 +5,7 @@ import {
 import {
   acquireTemporalTendLease,
   type TemporalTendLeaseHandle,
-} from "@shepherdjerred/root-scripts/lib/temporal/temporal-tend-lease.ts";
+} from "@shepherdjerred/script-kit/temporal-tend-lease.ts";
 
 const leasedEnvironments = new WeakMap<
   TestWorkflowEnvironment,

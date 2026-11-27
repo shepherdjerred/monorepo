@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Worker } from "@temporalio/worker";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { replayTemporalHistoryBatch } from "@shepherdjerred/root-scripts/temporal-replay.ts";
+import { replayTemporalHistoryBatch } from "@shepherdjerred/script-kit/temporal-replay.ts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 

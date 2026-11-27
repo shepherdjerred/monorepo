@@ -1,0 +1,37 @@
+{
+  "name": "@shepherdjerred/script-kit",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Self-contained script helpers shared by Temporal replay tooling and commit validation",
+  "exports": {
+    "./run-temporal-node.ts": "./src/run-temporal-node.ts",
+    "./temporal-replay.ts": "./src/temporal-replay.ts",
+    "./temporal-tend-lease.ts": "./src/temporal-tend-lease.ts",
+    "./commit-message.ts": {
+      "types": "./types/commit-message.d.ts",
+      "default": "./src/commit-message.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun --no-install build src/run-temporal-node.ts src/temporal-replay.ts src/temporal-tend-lease.ts src/commit-message.ts --outdir dist --target bun --packages external",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bunx --no-install eslint --cache ."
+  },
+  "dependencies": {
+    "@temporalio/client": "1.26.0",
+    "@temporalio/worker": "1.26.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.5",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "5.0.5",
+    "eslint": "^10.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.5"
+  }
+}

@@ -17,9 +17,8 @@
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/release-tools": "workspace:*",
     "@shepherdjerred/s3-signed-request": "workspace:*",
+    "@shepherdjerred/script-kit": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
-    "@temporalio/client": "1.26.0",
-    "@temporalio/worker": "1.26.0",
     "fast-xml-builder": "1.3.1",
     "fast-xml-parser": "5.11.1",
     "fast-xml-validator": "1.4.2",
@@ -46,22 +45,6 @@
     "./lib/static-site-publication.ts": "./lib/static-site-publication.ts",
     "./lib/s3-static-site.ts": "./lib/s3-static-site.ts",
     "./lib/seaweedfs.ts": "./lib/seaweedfs.ts",
-    "./run-temporal-node.ts": {
-      "types": "./run-temporal-node.ts",
-      "default": "./run-temporal-node.ts"
-    },
-    "./temporal-replay.ts": {
-      "types": "./temporal-replay.ts",
-      "default": "./temporal-replay.ts"
-    },
-    "./lib/temporal/temporal-tend-lease.ts": {
-      "types": "./lib/temporal/temporal-tend-lease.ts",
-      "default": "./lib/temporal/temporal-tend-lease.ts"
-    },
-    "./lib/commit-message.ts": {
-      "types": "./types/commit-message.d.ts",
-      "default": "./lib/commit-message.ts"
-    },
     "./lib/run.ts": "./lib/run.ts",
     "./lib/ci/ci-handoff.ts": "./lib/ci/ci-handoff.ts",
     "./lib/ci/ci-environment.ts": "./lib/ci/ci-environment.ts",

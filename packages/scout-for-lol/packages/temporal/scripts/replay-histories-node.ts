@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   parseTemporalReplayTargets,
   replayTemporalHistories,
-} from "@shepherdjerred/root-scripts/temporal-replay.ts";
+} from "@shepherdjerred/script-kit/temporal-replay.ts";
 
 const WorkflowIdSchema = z.string().regex(/^scout-(?:beta|prod)-[\w.:-]+$/u);
 async function main(): Promise<void> {

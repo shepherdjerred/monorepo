@@ -1,5 +1,5 @@
 import path from "node:path";
-import { runTemporalNodeScript } from "@shepherdjerred/root-scripts/run-temporal-node.ts";
+import { runTemporalNodeScript } from "@shepherdjerred/script-kit/run-temporal-node.ts";
 import { z } from "zod";
 
 const packageRoot = path.resolve(import.meta.dir, "..");

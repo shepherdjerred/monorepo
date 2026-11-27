@@ -6,7 +6,7 @@ import {
   buildReviewRequestMarker,
 } from "@shepherdjerred/code-review/request-review";
 import { z } from "zod";
-import { validateCommitMessage } from "@shepherdjerred/root-scripts/lib/commit-message.ts";
+import { validateCommitMessage } from "@shepherdjerred/script-kit/commit-message.ts";
 import { isTelemetryCaptureError } from "#runtime/telemetry.ts";
 import { parseHeadSha, splitRepo } from "#domain/evidence-parsers.ts";
 import type {

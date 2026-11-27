@@ -7,7 +7,7 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { validateCommitMessage } from "../lib/commit-message.ts";
+import { validateCommitMessage } from "@shepherdjerred/script-kit/commit-message.ts";
 
 async function main(): Promise<void> {
   const commitMsgFile = process.argv[2];
