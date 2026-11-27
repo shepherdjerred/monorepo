@@ -1,12 +1,7 @@
 import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
-import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { MATCH_UI_READ_COLUMNS } from "#src/report-lake/loadout.ts";
-import {
-  withDuckDBConnection,
-  type DuckDBSession,
-} from "#src/reports/duckdb/instance.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
 import {
   buildMatchesSource,
   buildTimelineCoverageSource,
@@ -15,12 +10,11 @@ import {
   buildTimelineParticipantFramesSource,
   listParam,
   scalarParam,
-  withLakeQueryRetry,
-  type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 import {
   fullMatchRowsSql,
   MatchParticipantRowSchema,
+  runSource,
   TimelineEventReadSchema,
   TimelineFrameReadSchema,
   type LakeMatchParticipantRow,
@@ -94,16 +88,6 @@ export type MatchStoryRead = {
   frames: StoryFrame[];
 };
 
-async function runOn<T>(
-  session: DuckDBSession,
-  source: SqlFragment,
-  sql: string,
-  schema: z.ZodType<T>,
-): Promise<T[]> {
-  const rows = await session.run(sql, bindParams(session, source.params));
-  return rows.map((row) => schema.parse(row));
-}
-
 const EVENT_COLUMNS = Object.keys(StoryEventSchema.shape).join(", ");
 const FRAME_COLUMNS = Object.keys(StoryFrameSchema.shape).join(", ");
 
@@ -119,85 +103,77 @@ export async function fetchMatchStoryRead(options: {
   matchId: RiotMatchId;
   lakeDir?: string;
 }): Promise<MatchStoryRead> {
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) => {
-      const predicate = {
-        sql: "match_id = ?",
-        params: [scalarParam(options.matchId)],
-      };
-      const matches = buildMatchesSource(
-        files,
-        predicate,
-        MATCH_UI_READ_COLUMNS,
-      );
-      const coverage = buildTimelineCoverageSource(files, predicate);
-      const events = buildTimelineEventsSource(files, {
-        sql: "match_id = ? AND event_type IN (SELECT unnest(?))",
-        params: [
-          scalarParam(options.matchId),
-          listParam([...STORY_EVENT_TYPES]),
-        ],
-      });
-      const assists = buildTimelineEventParticipantsSource(files, {
-        sql: "match_id = ? AND role = 'assist'",
-        params: [scalarParam(options.matchId)],
-      });
-      const frames = buildTimelineParticipantFramesSource(files, predicate);
-      return await withDuckDBConnection(async (session) => {
-        const rows =
-          matches === undefined
-            ? []
-            : await runOn(
-                session,
-                matches,
-                fullMatchRowsSql(matches.sql),
-                MatchParticipantRowSchema,
-              );
-        const coverageRows =
-          coverage === undefined
-            ? []
-            : await runOn(
-                session,
-                coverage,
-                `SELECT frame_count FROM (${coverage.sql}) LIMIT 1`,
-                CoverageSchema,
-              );
-        return {
-          rows,
-          hasTimeline: coverageRows.length > 0,
-          events:
-            events === undefined
-              ? []
-              : await runOn(
-                  session,
-                  events,
-                  `SELECT ${EVENT_COLUMNS} FROM (${events.sql}) ` +
-                    `ORDER BY event_timestamp_ms, frame_index, event_index, event_id`,
-                  StoryEventSchema,
-                ),
-          assists:
-            assists === undefined
-              ? []
-              : await runOn(
-                  session,
-                  assists,
-                  `SELECT event_id, participant_id FROM (${assists.sql}) ` +
-                    `ORDER BY event_id, role_index`,
-                  StoryAssistSchema,
-                ),
-          frames:
-            frames === undefined
-              ? []
-              : await runOn(
-                  session,
-                  frames,
-                  `SELECT ${FRAME_COLUMNS} FROM (${frames.sql}) ` +
-                    `ORDER BY frame_timestamp_ms, participant_id`,
-                  StoryFrameSchema,
-                ),
-        };
-      });
-    },
-  );
+  return await withLakePage(options.lakeDir, async (page) => {
+    const { files, session } = page;
+    const predicate = {
+      sql: "match_id = ?",
+      params: [scalarParam(options.matchId)],
+    };
+    const matches = buildMatchesSource(files, predicate, MATCH_UI_READ_COLUMNS);
+    const coverage = buildTimelineCoverageSource(files, predicate);
+    const events = buildTimelineEventsSource(files, {
+      sql: "match_id = ? AND event_type IN (SELECT unnest(?))",
+      params: [scalarParam(options.matchId), listParam([...STORY_EVENT_TYPES])],
+    });
+    const assists = buildTimelineEventParticipantsSource(files, {
+      sql: "match_id = ? AND role = 'assist'",
+      params: [scalarParam(options.matchId)],
+    });
+    const frames = buildTimelineParticipantFramesSource(files, predicate);
+    const rows =
+      matches === undefined
+        ? []
+        : await runSource({
+            session,
+            source: matches,
+            sql: fullMatchRowsSql(matches.sql),
+            schema: MatchParticipantRowSchema,
+          });
+    const coverageRows =
+      coverage === undefined
+        ? []
+        : await runSource({
+            session,
+            source: coverage,
+            sql: `SELECT frame_count FROM (${coverage.sql}) LIMIT 1`,
+            schema: CoverageSchema,
+          });
+    return {
+      rows,
+      hasTimeline: coverageRows.length > 0,
+      events:
+        events === undefined
+          ? []
+          : await runSource({
+              session,
+              source: events,
+              sql:
+                `SELECT ${EVENT_COLUMNS} FROM (${events.sql}) ` +
+                `ORDER BY event_timestamp_ms, frame_index, event_index, event_id`,
+              schema: StoryEventSchema,
+            }),
+      assists:
+        assists === undefined
+          ? []
+          : await runSource({
+              session,
+              source: assists,
+              sql:
+                `SELECT event_id, participant_id FROM (${assists.sql}) ` +
+                `ORDER BY event_id, role_index`,
+              schema: StoryAssistSchema,
+            }),
+      frames:
+        frames === undefined
+          ? []
+          : await runSource({
+              session,
+              source: frames,
+              sql:
+                `SELECT ${FRAME_COLUMNS} FROM (${frames.sql}) ` +
+                `ORDER BY frame_timestamp_ms, participant_id`,
+              schema: StoryFrameSchema,
+            }),
+    };
+  });
 }

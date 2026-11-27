@@ -35,3 +35,21 @@ export async function withLakePage<T>(
       ),
   );
 }
+
+/**
+ * A reader that serves both a whole page and a lone request. Given a `page` it
+ * runs on that page's files and session and takes no slot of its own; without
+ * one it resolves the lake and takes its own, as it always has, and `session`
+ * is `undefined` so each statement opens its own connection.
+ */
+export async function inLakePage<T>(
+  options: { page?: LakePage | undefined; lakeDir?: string | undefined },
+  query: (files: LakeFiles, session: DuckDBSession | undefined) => Promise<T>,
+): Promise<T> {
+  return options.page === undefined
+    ? await withLakeQueryRetry(
+        options.lakeDir ?? resolveLakeDir(),
+        async (files) => await query(files, undefined),
+      )
+    : await query(options.page.files, options.page.session);
+}
