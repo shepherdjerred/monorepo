@@ -1,8 +1,40 @@
 import type { Snapshot } from "#lib/ci/readiness.ts";
+import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 
 export const CI_HEAD = "a".repeat(40);
 export const CI_BASE = "b".repeat(40);
 export const CI_PIPELINE_URL = "https://woodpecker.sjer.red/repos/1/pipeline/7";
+
+export const MAIN_WOODPECKER_CONFIG = {
+  baseUrl: "https://woodpecker.sjer.red",
+  token: "test",
+  repoId: 1,
+};
+
+const MAIN_REQUIRED_WORKFLOWS = [
+  "verify",
+  "homelab-release-admission",
+  "images",
+  "helm-push",
+  "argocd-sync",
+];
+
+export function mainPipeline(
+  number: number,
+  event: string,
+  status = "success",
+): WoodpeckerPipeline {
+  return {
+    number,
+    event,
+    status,
+    commit: CI_HEAD,
+    branch: "main",
+    ref: "refs/heads/main",
+    finished: status === "running" ? 0 : number,
+    workflows: MAIN_REQUIRED_WORKFLOWS.map((name) => ({ name, state: status })),
+  };
+}
 
 export function ciFixture(): Snapshot {
   return {
